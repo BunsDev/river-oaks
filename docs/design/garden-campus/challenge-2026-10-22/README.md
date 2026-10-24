@@ -1,6 +1,6 @@
 # Campus challenge evidence for #507 / PR #575
 
-Candidate `6ab4260de51ed51ec59b6a39d79978aad78a2b6a`, district `river-oaks-gardens-3`, layout 3.2. This packet publishes retained local fixture evidence for independent review; it does not record Val approval or production/device acceptance. The older `finish/` sheets remain historical comparisons.
+Candidate `6ab4260de51ed51ec59b6a39d79978aad78a2b6a`, district `river-oaks-gardens-3`, layout 3.2. This packet publishes retained local fixture evidence for independent review. Val's acceptance of its visual and resource evidence is recorded in the [ledger](../../../superpowers/plans/2026-10-21-campus-challenge-507.md) (2026-10-23); it records no production/device acceptance. The older `finish/` sheets remain historical comparisons.
 
 ## Review views
 
@@ -18,13 +18,13 @@ Candidate `6ab4260de51ed51ec59b6a39d79978aad78a2b6a`, district `river-oaks-garde
 
 ## Decisions for Val
 
-- [ ] Record reviewer, date and candidate for plan/aerial/east/west/under-bridge/actual-office acceptance, identifying any rejected pose.
-- [ ] Decide the acceptable resource boundary after inspecting the paired control; no intentional-cache or zero-retention claim is made.
-- [ ] Preserve physical-device/GPU, visible-UI keyboard/accessibility and live-auth gaps.
-- [ ] Track built-client/no-HMR admitted-session revision recovery in #512 release acceptance. The current lifecycle harness remains a teardown smoke test; fresh server state, legacy manifest fallback and possible Vite reload prevent independent deployed recovery proof.
-- [ ] Separately authorize landing if desired. An open green PR cannot be marked delivered under the register workflow, which requires exact merge proof.
+- [x] Visual and resource evidence. Val (repository owner) answered "Accepted" on 2026-10-23 for this packet at `24f41d4b`/`91da966b`: views 11/12/02/14, the aerial, the aimed office outlook and the resource receipt, including the unattributed +10/+10 first-reload step. No pose was rejected. The acceptance covers these recorded captures only; later campus runtime changes on main postdate them.
+- [ ] Accept the entry-evidence boundary: E1/E2/E3 are authored seams, not surveyed historical doors. Not yet put to Val; no production/device/accessibility sign-off is implied.
+- Preserved gaps: physical-device/GPU, visible-UI keyboard/accessibility and live auth.
+- Built-client/no-HMR admitted-session revision recovery is tracked in #512 release acceptance. The lifecycle harness remains a teardown smoke test; fresh server state, legacy manifest fallback and possible Vite reload prevent independent deployed recovery proof.
+- Landing was authorized by Val on 2026-10-24 (open-PR sweep). Landing publishes this evidence; it does not tick the entry-evidence box or close #507.
 
-Close recommendation: keep #507 open until the required visual and resource evidence decisions are recorded. Do not interpret source/test acceptance as release approval.
+Close recommendation: keep #507 open until the entry-evidence boundary is decided. Do not interpret source/test acceptance as release approval.
 
 
 ## Historical control comparison
