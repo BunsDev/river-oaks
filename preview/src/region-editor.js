@@ -1,5 +1,6 @@
 import { dismissOnOutsideClick } from './modal-dismiss.js';
 import { blankRegion, buildingFits, editableRegion, insideRegion, mapPoint, nextRegionId, parcelFits, regionPoint, spawnClear, terrainIndex, REGION_DRAFT_STORAGE_KEY, REGION_MAP_SIZE } from './region-draft.js';
+import { APPROVED_SPACES } from './approved-spaces.js';
 import './region-editor.css';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -15,7 +16,7 @@ const svgNode = (tag, attributes = {}, text = '') => {
   return node;
 };
 
-export function createRegionEditor({ onChange = () => {}, getOwnerChoices = async () => [] } = {}) {
+export function createRegionEditor({ onChange = () => {}, getOwnerChoices = async () => [], approvedSpacesEnabled = () => false } = {}) {
   const dialog = document.createElement('dialog'); dialog.className = 'region-editor';
   dialog.setAttribute('aria-label', 'Design a region');
   dialog.innerHTML = `<div class="region-editor-shell">
@@ -185,6 +186,25 @@ export function createRegionEditor({ onChange = () => {}, getOwnerChoices = asyn
                 { value: 'east', label: 'East face (rotates with building)' },
                 { value: 'north', label: 'North face (rotates with building)' },
                 { value: 'west', label: 'West face (rotates with building)' }] });
+            // An approved furnished space (#420): the region names a reviewed revision and the
+            // server places it at this entrance, checking fit, neighbours and routes on publish.
+            // Offered only where the server can place one (RIVER_OAKS_APPROVED_SPACES).
+            const spaces = !approvedSpacesEnabled() ? [] : APPROVED_SPACES.filter(record => record.placement.buildingKinds.includes(item.kind)
+              && record.placement.categories.includes(item.interior.category));
+            if (spaces.length) {
+              field('Furnished layout', item.interior.space ? `${item.interior.space.id}@${item.interior.space.revision}` : '', next => {
+                const record = spaces.find(candidate => `${candidate.id}@${candidate.revision}` === next);
+                if (!record) { delete item.interior.space; return; }
+                delete item.interior.generation;
+                item.interior.space = { id: record.id, revision: record.revision, sha256: record.documentSha256 };
+              }, { options: [{ value: '', label: 'Built-in layout' },
+                ...spaces.map(record => ({ value: `${record.id}@${record.revision}`, label: `${record.name}, approved revision ${record.revision}` }))] });
+              if (item.interior.space) {
+                const note = document.createElement('p');
+                note.textContent = 'Publishing places this reviewed layout whole at the entrance, with its terrace outside. The building must fit it; nothing is resized.';
+                fields.append(note);
+              }
+            }
           }
         }
       }

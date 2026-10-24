@@ -30,7 +30,7 @@ async function setup(t) {
   // Synthetic catalog records let the room's real fenced publication transaction
   // exercise the authored district office/IPIC geometry. The creator region editor
   // cannot author these district-only venues; its HTTP path has separate coverage.
-  const keys = Object.fromEntries(['catalog', 'region', 'draft', 'history'].map(key => [key, `${prefix}:${key}`]));
+  const keys = Object.fromEntries(['catalog', 'region', 'draft', 'history', 'revocations'].map(key => [key, `${prefix}:${key}`]));
   const initial = { id: worldId, regionSha256: hash(data), revision: 1 };
   await redis.hset(keys.catalog, worldId, JSON.stringify(initial));
   await redis.hset(keys.region, worldId, JSON.stringify(data));

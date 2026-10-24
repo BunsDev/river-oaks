@@ -30,6 +30,7 @@ The package has `schema_version: 1` and these fields (optional fields are marked
 | `buildings` | Up to 80 structures with unique slug `id`, `center`, `size: [width, depth, height]`, `yaw_deg`, and `kind` (`retail`, `residential`, or `parking`) |
 | `buildings[].interior` | Optional on up to eight buildings at least 6 × 6 m. `name` (1–64 characters), `category` (`art`, `clothes`, `restaurant`, or `wellness` for retail; `home` for residential), and `entrance` (`south`, `east`, `north`, or `west`) select a walk-in room and its door on that face of the building. Residential homes may set `access` to `owner` for Jevica and invited visitors, or `public` for everyone. Omitted `access` is public. |
 | `buildings[].interior.generation` | Optional versioned levels for a retail venue or home. `version: 1` and `levels` (1–8) are required when present; `seed`, `levelSeeds` and `overrides` are optional. The building must have enough height and entrance clearance for the requested stack. |
+| `buildings[].interior.space` | Optional on a retail `restaurant` venue, instead of `generation`. `id`, `revision` and `sha256` name one reviewed furnished-space revision; nothing else is accepted. See [approved furnished spaces](#approved-furnished-spaces). |
 | `trees` | Up to 256 trees with unique slug `id`, `position`, `height_m`, and `crown_radius_m` |
 | `places` | 4–64 named spots with unique slug `id` and `position` |
 | `parcels` | Optional list of up to 32 named, nonoverlapping rectangular plots. Each has `id`, `name`, and `bounds_m: [west, south, east, north]`; each side is at least 6 m. `owner_id` may name an account. |
@@ -105,6 +106,56 @@ region revision subject to compatibility checks. A legacy `interior` without
 `generation` retains its existing single-room behavior. [World Studio](world-studio.md)
 provides previews, level and layer controls, authored edits, undo and export
 before publication.
+
+### Approved furnished spaces
+
+Approved spaces are off unless the service sets `RIVER_OAKS_APPROVED_SPACES=1`. Off,
+the catalog has no reviewed revisions: publishing a region that places one fails
+`approved_space_unknown`, a revision draft that keeps one can't be saved or applied,
+and the editor doesn't offer **Furnished layout**. Every world then stays on
+protocol 3. The world directory (`GET /api/worlds`) carries `approvedSpaces: true`
+only when the flag is on, and the editor reads it there.
+
+A restaurant venue can place one reviewed furnished space instead of a built-in or
+generated layout. The pilot offers one: **Corner Café, revision 1**, the World Studio
+template Val accepted on 2026-10-17 (#418). In the region editor, select the building
+and choose it under **Furnished layout**. In a package file, give the building's
+interior a reference:
+
+```json
+{ "name": "Corner Café", "category": "restaurant", "entrance": "south",
+  "space": { "id": "corner-cafe", "revision": 1,
+    "sha256": "ab210ecbd57ea7bfb00fb549832b3f33e05aa36d19c757b56bc88f166f6ad5ef" } }
+```
+
+The reference is all the region carries. The server resolves the layout from the
+repository's reviewed record (`preview/src/approved-spaces.js`), never from the
+upload, and refuses an unknown revision, a digest that doesn't match it, or assets
+that changed since its review. Approval or profile claims in the file are refused
+as unknown fields. Private Studio documents can't be published this way.
+
+The reviewed doorway is placed on the building's mapped entrance with one rigid
+turn and shift; nothing is resized. The building must hold the 16 × 12 m café floor
+behind that face, at least 16.2 m wide and 12.1 m deep. The terrace, its furniture and the
+arrival stand outside the facade on level ground (within 5 cm of the doorway's
+height), clear of roads and their drawn curbs and sidewalks, trees, other buildings,
+other parcels, arrivals and named places. Publication then walks every required route with the game's own movement:
+from the arrival to seating, service, preparation and the terrace and back, and
+from the arrival to the nearest street. Any failure leaves the region unpublished
+and names the rule, for example `approved_space_fit` or `approved_space_route`.
+
+Visitors and the server use the same compiled plan: the café's furnishings are its
+collision and its rendering. Walking, entry, exit and reconnecting work as in other
+venues; the café has no residents, and its furniture offers no seating or other
+actions yet. A world with an approved space needs the current browser: an older
+page gets **Refresh** for that world and can still visit every other world.
+
+Only the world's owner can place an approved space in a revision. Applying a
+revision checks the reviewed record again, and the commit itself refuses a revision
+that has been revoked in the catalog meanwhile, leaving the previous world live.
+Revocation stops new placements and revisions that keep the café; a world already
+showing it keeps it until its owner revises it away. Creations can't be placed where
+they would block the café's routes.
 
 The server validates and compiles the package once, then stores the compiled
 world and its SHA-256 digest alongside its catalog entry. The browser and
