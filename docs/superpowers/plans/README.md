@@ -267,17 +267,32 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (90)
+## Historical, not in the register (105)
 
 | Plan | PRs mentioned |
 | --- | --- |
-| [2026-10-23-police-pursuit-598](2026-10-23-police-pursuit-598.md)<br>Police pursuit #598 Implementation Plan | #598, #597 |
+| [2026-10-23-two-player-perf-budget](2026-10-23-two-player-perf-budget.md)<br>Two-player performance budget | #583, #582, #584 |
+| [2026-10-23-procedural-tools-evaluation](2026-10-23-procedural-tools-evaluation.md)<br>External procedural tools evaluation (#588) | #588, #616 |
+| [2026-10-23-police-pursuit-598](2026-10-23-police-pursuit-598.md)<br>Police pursuit #598 Implementation Plan | #598, #597, #616 |
+| [2026-10-23-phase1-review](2026-10-23-phase1-review.md)<br>Phase 1 review against #580 and #581 | #580, #581, #594 |
+| [2026-10-23-mvp-regression](2026-10-23-mvp-regression.md)<br>Current-main world expansion MVP regression | #611, #587, #583 |
+| [2026-10-23-likeness-consent-audit-518](2026-10-23-likeness-consent-audit-518.md)<br>Likeness consent, quota and audit follow-up #518 ledger | #518, #615, #592 |
+| [2026-10-23-faster-pr-checks](2026-10-23-faster-pr-checks.md)<br>Faster pull request checks | #607, #594 |
+| [2026-10-23-district-height-audit](2026-10-23-district-height-audit.md)<br>District building height audit (follow-up to #588) | #588 |
 | [2026-10-23-destination-slice-584-586](2026-10-23-destination-slice-584-586.md)<br>Destination slice: city kit, assembly and Bayou Market Commons (#584, #585, #586) | #584, #585, #586 |
+| [2026-10-23-delivery-lifecycle](2026-10-23-delivery-lifecycle.md)<br>Verified delivery cadence and proactive retirement | #622, #607, #624 |
+| [2026-10-23-crime-melee-597](2026-10-23-crime-melee-597.md)<br>#597 First criminal action: melee, rival health, wanted stars | #597, #596, #603 |
+| [2026-10-23-campus-readiness-socket-512](2026-10-23-campus-readiness-socket-512.md)<br>Campus readiness socket-replacement correction (#512) | #512, #545, #505 |
+| [2026-10-23-campus-followup-505](2026-10-23-campus-followup-505.md)<br>Garden Campus #505 follow-up ledger | #505, #506, #512 |
+| [2026-10-22-world-policy-596](2026-10-22-world-policy-596.md)<br>#596 World rules: shared clock, danger zones and owner policy | #596, #597, #598 |
+| [2026-10-22-world-manifest-581](2026-10-22-world-manifest-581.md)<br>World manifest foundation #581 | #581 |
 | [2026-10-22-world-expansion](2026-10-22-world-expansion.md)<br>World expansion execution ledger | #580, #588, #581 |
 | [2026-10-22-login-flicker](2026-10-22-login-flicker.md)<br>Login flicker and Character Studio in development | — |
+| [2026-10-22-likeness-intake-518](2026-10-22-likeness-intake-518.md)<br>Likeness intake #518 implementation ledger | #518, #590, #591 |
 | [2026-10-22-dependabot-python-audit](2026-10-22-dependabot-python-audit.md)<br>Dependabot Python audit correction | #553, #554 |
 | [2026-10-22-dependabot-553-554](2026-10-22-dependabot-553-554.md)<br>Dependabot review and delivery, 2026-10-22 | #553, #554, #570 |
 | [2026-10-22-character-tier-identity-443](2026-10-22-character-tier-identity-443.md)<br>#443 viewer-local graphics tiers keep one replicated identity | #443, #517, #545 |
+| [2026-10-22-campus-evidence-508](2026-10-22-campus-evidence-508.md)<br>Campus #508 acceptance evidence plan | #508, #510, #505 |
 | [2026-10-22-baseline-followup-580](2026-10-22-baseline-followup-580.md)<br>Issue 580 independent follow-up audit | #594, #600 |
 | [2026-10-20-incremental-archive-bundles](2026-10-20-incremental-archive-bundles.md)<br>Archive bundles that build on the default branch | — |
 | [2026-10-20-garment-bake-provenance-554](2026-10-20-garment-bake-provenance-554.md)<br>Garment bake provenance (#554) | #554, #545, #566 |

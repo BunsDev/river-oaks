@@ -7,6 +7,21 @@ import { createOfficeWorldScene } from '../src/office-world-scene.js';
 import { officeLayout, OFFICE_LAYOUT_LEGACY, OFFICE_LAYOUT_PENTHOUSE } from '../src/office-layouts.js';
 import { atmosphereFor } from '../src/atmosphere.js';
 
+test('a lost office snapshot is released and recaptured after the first restored main frame', () => {
+  const scene = new THREE.Scene(), original = new THREE.Color('skyblue'); scene.background = original;
+  const renderer = fakeRenderer();
+  const skyline = createOfficeSkyline({ renderer, scene, eye: new THREE.Vector3(0, 2, 0), floorY: 0, size: 16 });
+  assert.equal(skyline.capture(), true);
+  const texture = skyline.texture; let released = 0;
+  copies(renderer)[0].target.addEventListener('dispose', () => released++);
+  skyline.releaseGraphics(); assert.equal(released, 1); assert.equal(scene.background, original);
+  assert.equal(skyline.pending, false); assert.equal(skyline.capture(), false);
+  skyline.mainFrameRendered(); assert.equal(skyline.pending, true);
+  const before = copies(renderer).length;
+  assert.equal(skyline.capture(), true); assert.equal(copies(renderer).length - before, 6);
+  assert.equal(scene.background, texture); skyline.dispose();
+});
+
 // A renderer that records every draw: enough of the WebGLRenderer surface for the capture,
 // with no GPU. `onRender` sees each district face (drawn into the capture's temporary 2D
 // target); `onCopy` sees each copy of a face into the resident cube.
@@ -308,6 +323,18 @@ test('skipping the arrival still captures once, on the first frame inside', t =>
   v.scene.skip(); v.draw(0); v.draw(16);
   assert.equal(faces(s.renderer).length, 6); assert.ok(s.seen.length === 6 && s.seen.every(face => face.district));
   assert.equal(s.districtGroup.visible, false);
+});
+
+test('graphics recovery inside the office recaptures the visible district after a main frame', t => {
+  const s = street({ layout: OFFICE_LAYOUT_PENTHOUSE }), v = visit(t, s);
+  v.scene.skip(); v.draw(0); v.draw(16);
+  assert.equal(faces(s.renderer).length, 6);
+  v.scene.releaseGraphics(); v.draw(32);
+  assert.equal(faces(s.renderer).length, 6, 'first rebuild the main frame');
+  v.draw(48);
+  assert.equal(faces(s.renderer).length, 12);
+  assert.ok(s.seen.slice(6).every(face => face.district && !face.body && !face.lobby));
+  assert.equal(s.districtGroup.visible, false, 'the office keeps its presentation afterward');
 });
 
 test('the legacy room and the off switch never capture or change the sky', t => {

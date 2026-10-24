@@ -19,6 +19,7 @@ import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.
 import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
 import { plazaSalonRack } from '../preview/src/plaza-salon-plan.js';
 import { objectCollider, blocksPlayer, blocksResident } from '../preview/src/creator-object.js';
+import { verifyApprovedSpaceRoutes } from '../preview/src/approved-space-plan.js';
 import { cafeSeat, plazaSalonPlan } from '../preview/src/plaza-salon-plan.js';
 import { createCafeGames } from './cafe-games.js';
 import { createDartsGames } from './darts-games.js';
@@ -34,7 +35,7 @@ import { createScreenings } from './screenings.js';
 import { SCREENING_VENUES } from '../preview/src/screening-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { accountName } from '../preview/src/resident-names.js';
-import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, validateWorldId } from '../preview/src/world-contract.js';
+import { DEFAULT_WORLD_ID, validateWorldId, worldProtocolVersion } from '../preview/src/world-contract.js';
 import { checkpointFailureReason } from './recovery-diagnostics.js';
 import { CRIME_RULES, CRIME_TARGETS, createCrime } from './crime.js';
 import { createPolice } from './police.js';
@@ -130,6 +131,15 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const residentBlocked=blocksResident;
   const localById = new Map(state.locals.map(local => [local.id,local]));
   const worldFingerprint = digest(worldData);
+  // The lowest client protocol that can draw this world (world-contract.js).
+  const protocolVersion = worldProtocolVersion(worldData);
+  // Approved furnished spaces (#420) keep their reviewed routes walkable with creations in place.
+  const approvedSpacePlans=(worldData.buildingInteriors??[]).filter(plan=>plan.kind==='approved-space');
+  const approvedSpaceRoutesBlocked=(objects=[...builds.values()].filter(item=>item.kind==='object'))=>{
+    if(!approvedSpacePlans.length)return false;
+    const trial=createWalkingEnvironment(worldData,objects.map(objectCollider).filter(Boolean));
+    return approvedSpacePlans.some(plan=>verifyApprovedSpaceRoutes(plan,trial,{roads:worldData.roads}).status!=='passed');
+  };
   const residentIdentities = state.locals.map(({id,name,indoor,storeId})=>({id,name,indoor,storeId}));
   const roads=buildRoads(worldData);
   // The same rule the browser's builder mode previews (shared-build.js).
@@ -1093,6 +1103,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       const collider=objectCollider({...definition,position:message.position,ground,yaw});
       if([...players.values(),...police.snapshot().units.map(unit=>({...unit,altitude:0,levelId:null}))].some(other=>blocksPlayer(collider,other)))return reject('blocked_build_site',BUILD_REASONS.player);
       if(state.locals.some(local=>residentBlocked(collider,local)))return reject('blocked_build_site',BUILD_REASONS.resident);
+      if(definition.assembly && approvedSpaceRoutesBlocked([...[...builds.values()].filter(item=>item.kind==='object'&&item.id!==previous?.id),
+        {...definition,kind:'object',position:message.position,ground,yaw}]))
+        return reject('blocked_build_site','Keep the routes into and around the approved space clear.');
       const item=placing
         ? {id:`build-${revision+1}`,ownerId:userId,ownerName:player.name,kind:kind.id,finish:finish.id,position:[...message.position],ground,yaw,createdAt:time,...(definition.assembly?{assembly:copy(definition.assembly)}:{})}
         : {...previous,...(definition.assembly?{assembly:copy(definition.assembly)}:{}),position:[...message.position],ground,yaw};
@@ -1177,7 +1190,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,worldPolicy:publicWorldPolicy(),crime:crime.snapshot(now()),police:police.snapshot(),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.snapshot()}:{}),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion,revision,elapsed,worldPolicy:publicWorldPolicy(),crime:crime.snapshot(now()),police:police.snapshot(),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.snapshot()}:{}),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -1554,7 +1567,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
   const listPlaces = () => placesOf(worldData);
-  return {worldId,join,rename,leave,command,step,snapshot,checkpoint,restore,reset,
+  return {worldId,protocolVersion,approvedSpaceRoutesBlocked:()=>approvedSpaceRoutesBlocked(),join,rename,leave,command,step,snapshot,checkpoint,restore,reset,
     // World rules (#596): the public rule and the one violence decision for #597's attacks.
     worldPolicy:publicWorldPolicy,violenceFor,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.

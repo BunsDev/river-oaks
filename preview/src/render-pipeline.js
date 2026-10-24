@@ -113,6 +113,13 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4, blo
     renderer.transmissionResolutionScale=scale;
     occlusion.setSize(Math.max(1, Math.round(width * pixelRatio * scale)), Math.max(1, Math.round(height * pixelRatio * scale)));
   };
+  // These Three dispose methods release GPU allocations/listeners and retain
+  // pass configuration, CPU noise and target descriptors for lazy re-upload.
+  const releaseGraphics = () => {
+    occlusion.dispose(); occlusion.gtaoMaterial.dispose();
+    bloom.dispose(); bloom.materialHighPassFilter.dispose();
+    output.dispose(); render.dispose(); composer.dispose();
+  };
   return {
     occlusion,
     resize(width, height, pixelRatio) { if(width<=0||height<=0)return; size = { width, height, pixelRatio }; applySize(); sized=true; },
@@ -171,6 +178,7 @@ export function createRenderPipeline(renderer, scene, camera, { samples = 4, blo
       const previous = renderer.getRenderTarget(); renderer.setRenderTarget(target);
       try { return renderer.compileAsync(object, camera, targetScene); } finally { renderer.setRenderTarget(previous); }
     },
-    dispose() { aoExteriorRoot = aoInteriorLayer = null; occlusion.dispose(); bloom.dispose(); output.dispose(); render.dispose(); composer.dispose(); },
+    releaseGraphics,
+    dispose() { aoExteriorRoot = aoInteriorLayer = null; releaseGraphics(); },
   };
 }

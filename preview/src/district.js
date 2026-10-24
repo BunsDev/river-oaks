@@ -189,6 +189,9 @@ export function buildDistrictBuildings(world) {
         return {storeId:store.id,along:(sx*dx+sy*dy)/length,distance:Math.abs(sx*dy-sy*dx)/length,name:store.name};
       }).filter(entry=>entry.distance<0.2 && entry.along>=0 && entry.along<=length);
       const entryAt=offset=>entries.some(entry=>Math.abs(entry.along-offset)<1.15);
+      // An approved furnished space (#420) brings its own walls and frontage. A storefront
+      // recess behind any other bay would reach into it, so those bays are solid stone.
+      const approvedRoom=rooms.find(room=>room.approvedSpace&&room.buildingId===building.id);
       for (let k = 0; k < bays; k++) {
         const t = (k+0.5)/bays, x = a[0]+dx*t, z = -(a[1]+dy*t);
         const nx=winding*dy/length, nz=winding*dx/length, rebuiltBay=rebuilt(t*length), rebuiltUpper=rebuilt(t*length,true);
@@ -198,9 +201,15 @@ export function buildDistrictBuildings(world) {
         // a room fronting another edge turns this bay into solid party wall.
         const inE = -nx, inN = nz;
         const bay0 = [a[0]+dx*k/bays+inE*1.4, a[1]+dy*k/bays+inN*1.4], bay1 = [a[0]+dx*(k+1)/bays+inE*1.4, a[1]+dy*(k+1)/bays+inN*1.4];
-        const open = retailHeight ? uncoveredBay(rooms, bay0, bay1) : [0, 1];
-        const cover = retailHeight && (!open || open[0] > 0 || open[1] < 1) ? coveringRoom(rooms, bay0, bay1) : null;
-        const fronting = !cover || entries.some(entry => entry.storeId === cover.storeId);
+        let open = retailHeight ? uncoveredBay(rooms, bay0, bay1) : [0, 1];
+        let cover = retailHeight && (!open || open[0] > 0 || open[1] < 1) ? coveringRoom(rooms, bay0, bay1) : null;
+        let fronting = !cover || entries.some(entry => entry.storeId === cover.storeId), recessed = open;
+        if (approvedRoom && retailHeight) {
+          // Glazing only where the space stands behind the facade; no recess anywhere.
+          const free = uncoveredBay([approvedRoom], bay0, bay1);
+          open = !free ? [0, 1] : free[0] > 0 ? [0, free[0]] : free[1] < 1 ? [free[1], 1] : null;
+          cover = approvedRoom; fronting = false; recessed = null;
+        }
         const shifted = (depth, height, fraction) => { const p = at(depth, height); const offset = (fraction - 0.5) * span; p[0] += dx / length * offset; p[2] -= dy / length * offset; return p; };
         // Cut the entry out of this single outward-facing sheet, so the door
         // does not reflect twice through a second pane behind its opening.
@@ -241,7 +250,7 @@ export function buildDistrictBuildings(world) {
         if(!rebuiltBay && !solidCenter) for (const offset of [-span * 0.28, span * 0.28]) part(spot, along(at(0.26, 4.085), offset), [0.11, 0.015, 0.11], yaw, index, 0, disc);
         if (retailHeight) {
           const bayStart=[a[0]+dx*k/bays,a[1]+dy*k/bays],bayEnd=[a[0]+dx*(k+1)/bays,a[1]+dy*(k+1)/bays];
-          for (const [t0,t1] of officeRetailOpenings(officeLobby,building.id,bayStart,bayEnd,open)) {
+          for (const [t0,t1] of officeRetailOpenings(officeLobby,building.id,bayStart,bayEnd,recessed)) {
             const width = Math.max(0.2, span*(t1-t0)), shift = ((t0+t1)/2-0.5)*span;
             const atc=(depth,height)=>{const p=at(depth,height);p[0]+=dx/length*shift;p[2]-=dy/length*shift;return p;};
             const nearest=world.stores.filter(store=>store.building_id===building.id).sort((left,right)=>Math.hypot(left.facade[0]-x,left.facade[1]+z)-Math.hypot(right.facade[0]-x,right.facade[1]+z))[0];

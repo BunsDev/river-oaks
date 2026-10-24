@@ -7,9 +7,9 @@ import { createRedisRoom } from './redis-room.js';
 import { createRedisLandmarks } from './landmarks.js';
 import { createWorldLandmarks } from './world-landmarks.js';
 import { createDistributedServer } from './distributed-app.js';
-import { createRedisWorldCatalog } from './world-catalog.js';
+import { APPROVED_SPACES_OFF, createRedisWorldCatalog } from './world-catalog.js';
 import { roomPrefixFor, accountPrefixFor, populationKeyFor } from './world-keys.js';
-import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
+import { DEFAULT_WORLD_ID, validateWorldId, worldProtocolVersion } from '../preview/src/world-contract.js';
 import { createWorldRouter } from './world-router.js';
 import { createRedisSocial } from './social.js';
 import { createRedisGroups } from './groups.js';
@@ -24,10 +24,11 @@ import { createRedisCyclingMiles } from './cycling-miles.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
-  characterStudioEnabled=true,characterMetrics=null,characterMetricsEnabled=false,moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null,screeningHosts=[],officeLayout,campusOperators=[],districtEpoch=0,connectionLifetime,rotateNoticeMs}={}) {
+  characterStudioEnabled=true,characterMetrics=null,characterMetricsEnabled=false,moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,approvedSpacesEnabled=false,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null,screeningHosts=[],officeLayout,campusOperators=[],districtEpoch=0,connectionLifetime,rotateNoticeMs}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
-  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
+  // Default off: approvedSpacesEnabled (RIVER_OAKS_APPROVED_SPACES=1) lets regions place approved furnished spaces (#420).
+  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix,...(approvedSpacesEnabled?{}:{approvedSpaces:APPROVED_SPACES_OFF})}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
   // Default off: RIVER_OAKS_WORKPLACE=1 enables the fixture-only workplace (#214).
   const workplace=workplaceEnabled?createWorkplace({store:createRedisWorkplaceStore({redis,prefix}),
     allowed:async id=>!(await security.isBanned(id))&&await waitlist.isApproved(id),
@@ -79,7 +80,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??data.title});
-      const game=createDistributedServer({characterMetrics:metrics,characterStudioEnabled,assetGateSecret,auth:sharedAuth,room,worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,characters,events,workplace,officeDesk,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
+      const game=createDistributedServer({characterMetrics:metrics,characterStudioEnabled,assetGateSecret,auth:sharedAuth,room,protocolVersion:worldProtocolVersion(data),worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,characters,events,workplace,officeDesk,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(connectionLifetime?{connectionLifetime}:{}),...(rotateNoticeMs?{rotateNoticeMs}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);

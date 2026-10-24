@@ -90,7 +90,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       const lightBlend=skipped?1:ease(elapsed/.8);if(!live)lease.lights(worldLights,lightBlend);
       const inside=!entering&&(skipped||time>=ARRIVAL.closingEnd);
       // The capture sees the street's own lighting, not the cabin's (office-skyline.js).
-      if(inside&&skyline?.pending){lease.lights(worldLights,0);skyline.capture();lease.lights(worldLights,lightBlend);}
+      if(inside&&skyline?.pending){lease.inside(false);lease.lights(worldLights,0);skyline.capture();lease.lights(worldLights,lightBlend);}
       lease.inside(inside&&!(live&&frame.done));
       office.object.visible=!entering&&['opening','arriving','office'].includes(frame.phase);
       street.lobby.setEntryOpen(entering?ease(elapsed/.8):1);
@@ -136,8 +136,10 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
         }),null);
         actors.update(now,street.camera);office.update?.(now/1000);
         if(live&&current.done)skyline.render(()=>lease.render(1/60));else lease.render(1/60);
+        skyline?.mainFrameRendered();
         return current;
       },
+      releaseGraphics(){skyline?.releaseGraphics();},
       skip(){skipped=true;},get position(){return current?.position??position;},
       inspect(){return {camera:{position:street.camera.position.toArray(),quaternion:street.camera.quaternion.toArray(),verticalFov:street.camera.fov},actors:actors.stats(),duration:approach.duration+ARRIVAL.duration,dimensions:ARRIVAL,presentation:'shared-world',skyline:skyline?.stats??null,precompile:precompile&&{queued,remaining:precompile.length,compiling,batches},elevation:stage.position.y-basePosition.y,phase:current?.phase,progress:current?.progress,skipped,avatar:street.avatar.object.position.toArray(),
         // The rendered shoes' world height: where the body is drawn, not only where it is placed.
