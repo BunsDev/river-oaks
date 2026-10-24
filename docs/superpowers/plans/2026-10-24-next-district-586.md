@@ -84,7 +84,7 @@ I will not edit:
   modules (onfoot-637-640).
 - The `bayou-market-commons` recipe and lock, kit `catalog.js`, `assemble.js` and
   `render.js` (#641).
-- `east-garden-commons.js` and `lantern-walk.js` (#623 and #641).
+- `east-garden-commons.js` (#623 and #641). `lantern-walk.js` is one exception: an import plus one chip-visibility line, so the Commons status hides in Heights. It merges with #623's head without conflicts (`git merge-file`), and #641 does not touch it.
 
 ## Checks
 
@@ -110,16 +110,52 @@ I will not edit:
 
 ## Results
 
-Not started.
+Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unless noted.
+
+- **Reachable area: complete for 2×.** `node preview/audit/world-expansion-footprint.js --reachable` samples from the District spawn on foot. Reserved land, upper floors, flight, travel and islands are excluded.
+
+  | Grid | Gardens | Commons | Bayou Heights | Added by Heights | Ratio to Gardens |
+  | --- | ---: | ---: | ---: | ---: | ---: |
+  | 1 m | 46,549 | 52,130 | 93,906 | 41,776 | 2.0174× |
+  | 0.5 m | 46,477.75 | 52,030.75 | 93,509.75 | 41,479 | 2.0119× |
+
+  The margin over 2× is 554.25 m² at 0.5 m. The first layout measured 1.969×. Replacing one Yale storefront block with Twentieth Street Square, which joins Heights Green to Yale Street, closed the gap. The fresh Commons sample is the current main value; the base commit has the same Commons fingerprint. It differs from the historical table in `docs/world-expansion.md` (51,962) by 0.13%.
+- **Pinned composed-world sha256.** Base `1c23170f` and branch are identical for:
+  - garage `5fc38cbe54099258f54a199f314eb0f6910a0488dff6efe6d692037b73e38b80`;
+  - Gardens `df44715b918971e92630d480c200a048b3cd8b371e69625d08edb2a7a96eaf6b`;
+  - Commons `d5f1179d93732630368c9b1ff7419931e72816f815b8db048c23eadff4346315`.
+
+  Heights is `5824c9a38f81399597f3880ecb7c3f79e45077e0263497d860f432fd9a56d674`.
+- **Recipes.** All seven build with connectivity 1 and within budgets, and `destination check` reproduces every lock. The crossroads' pieces, surfaces, solids and stats equal the base. Totals: 1,321 pieces, 176 shells, 521 solids and 783,488 authored triangles. Client meshes per plan are 21–62, against a budget of 70.
+- **Focused tests.**
+  - `preview/tests/bayou-heights.test.js`: 8/8.
+  - `server/tests/bayou-heights.test.js`: 6/6 with `REDIS_URL`.
+  - With main's #630 activation rehearsal and the Commons migration suite on isolated Redis: 16/16.
+- **Core gate.** `pnpm run verify` passed:
+  - agent: 237/237;
+  - preview: 4,021 passed, 1 skipped;
+  - server: 893 passed, 226 Redis-only skips;
+  - desktop: 115 passed, 3 skipped;
+  - build, Python and secrets.
+
+  The first post-rebase run failed `scripts/tests/land-pr.test.js`, "queue release did not wake the lander", at load about 37. It passed alone (29/29), and the rerun passed. The log is kept in the session scratchpad.
+- **Redis server suite.** `test:server` with `REDIS_URL` on an isolated Redis passed 1,161/1,161 at load about 22. The pre-rebase run at load about 37 failed one test (1,158/1,159): the Commons Redis fence's travel request was rejected. That test passed alone twice. The browser stages of `verify full` were not run as a whole; see Gaps.
+- **Production build.** The Heights recipes and scene are `assets/bayou-heights-*.js`: 30,761 bytes, 8,593 gzipped. The chunk is reached only through `import()` for `bayou-heights-1` and is not modulepreloaded. The District-only matched production transfer comparison is support task D.
+- **Lantern Walk chip.** Before the fix, the Commons status chip ("Lantern Walk · 0 of 5 lit") stayed on screen across all of Heights, because the client treated everything east of the District edge as the Commons. `preview/tests/lantern-walk-client.test.js` failed on "Bayou Heights hides the Commons chip" before the fix and passes after it. The journey now checks the chip on both sides of the footbridge.
+- **Browser journey and captures.** Pending; see Next step.
+- **Performance.** Not started. ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e). The `#626` decision is recorded only on #643's branch (D11).
 
 ## Gaps and coordination
 
-- Streaming, unload and chunk-bounded loading depend on #623. Until it merges, the
-  Heights scene is loaded with the revision, like Commons on main.
-- Human visual approval, physical devices, hosted multiplayer and Unreal parity are
-  separate acceptance.
+- Streaming, unload and chunk-bounded loading depend on #623. Until it merges, the Heights scene loads with the revision, like Commons on main. Kit plans more than 300 m from the camera are not drawn.
+- Residents do not route across locations. That work is support task B, river-oaks-3e, on `feat/resident-locations-20261024`. Once residents can stand in Heights, the Heights rollback must relocate them as it does players.
+- `verify full` browser stages (security-browser, reflections, experience, shared, ipic-screening) were not run here as a whole, because the shared browser lock has a long queue. The Heights journey runs on its own, and hosted CI runs the matrix, including the new `heights` shard.
+- Human visual approval, physical devices, hosted multiplayer and Unreal parity are separate acceptance.
 
 ## Next step
 
-Author the Heights recipes, build them, measure their walkable area, and iterate the
-layout toward the 2× target before wiring the runtime.
+1. Get the local `pnpm run test:experience bayou-heights` result and inspect its pedestrian captures in `output/playwright/heights-*.png`.
+2. Get the hosted checks on #649.
+3. Get the ABBA performance results (D) and the review and rehearsal (C) from river-oaks-3e.
+4. Post one evidence comment each on #586 and #638.
+5. Fix any review findings and re-verify.

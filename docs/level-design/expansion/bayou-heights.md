@@ -39,7 +39,7 @@ The seven plans hold 1,321 pieces, 176 building shells and 521 solids, at about 
 - **Icehouse table.** A two-chair table (`chess-icehouse`) under the existing authoritative table-game rules: chess, checkers, Connect Four, reversi and morris. Sitting, invitations, moves, checkpoints and departure rules are the existing server authority.
 - **Heights Bandstand.** The landmark on the green. Its stage is solid, so it blocks bodies and low flight, as the water tower's legs do.
 - **Places to linger.** The lawn and greenway benches, the picnic grove, the market stalls, the icehouse patio, the square's café tables and the esplanade benches.
-- **Arrival.** Crossing the footbridge announces Bayou Heights in the walking notice. Crossing back announces Bayou Market Commons.
+- **Arrival.** Crossing the footbridge announces Bayou Heights in the walking notice. Crossing back announces Bayou Market Commons. The Commons Lantern Walk status chip shows only on the Commons side of the bridge.
 
 ## Movement, authority and the manifest
 
