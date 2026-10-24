@@ -16,15 +16,19 @@ export const STALE_SNAPSHOT_MS = 8_000;
 // for a while (a long frame, sleep, a hidden tab) has had no chance to read its socket, and
 // one late check is no verdict; a page whose every check runs late still gets one.
 export const QUIET_CHECKS = 5;
+// When the browser itself reports no network, the silence needs no further proof: a socket
+// that has missed several snapshots is gone. A socket the loss did not reach (a local
+// server) keeps delivering and stays.
+export const OFFLINE_STALE_MS = 750;
 
-export function createStalenessWatch({ staleMs = STALE_SNAPSHOT_MS, checks = QUIET_CHECKS } = {}) {
+export function createStalenessWatch({ staleMs = STALE_SNAPSHOT_MS, checks = QUIET_CHECKS, offlineMs = OFFLINE_STALE_MS, online = () => globalThis.navigator?.onLine !== false } = {}) {
   let last = 0, quiet = 0;
   return {
     heard(now) { last = now; quiet = 0; },
     // Back in view or online: count the checks afresh.
     resume() { quiet = 0; },
     // True when the socket should be treated as dead at this check.
-    stale(now) { quiet++; return now - last > staleMs && quiet >= checks; },
+    stale(now) { quiet++; return online() ? now - last > staleMs && quiet >= checks : now - last > offlineMs; },
   };
 }
 

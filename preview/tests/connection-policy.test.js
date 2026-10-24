@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CONNECTING, IMPROVED, QUIET_CHECKS, STALE_SNAPSHOT_MS, UPDATING, closeNotice, createStalenessWatch, retryDelay } from '../src/connection-policy.js';
+import { CONNECTING, IMPROVED, OFFLINE_STALE_MS, QUIET_CHECKS, STALE_SNAPSHOT_MS, UPDATING, closeNotice, createStalenessWatch, retryDelay } from '../src/connection-policy.js';
 
 test('retries back off to 30 s, with each delay drawn from the upper half of its step', () => {
   const steps = [1000, 2000, 4000, 8000, 16000, 30000, 30000];
@@ -64,4 +64,27 @@ test('other closes keep their meaning and whether the page retries', () => {
   assert.equal(closeNotice(1006).status, 'Connection lost. Rejoining the town…');
   assert.equal(closeNotice(4901, 'No town updates.').terminal, false);
   assert.equal(CONNECTING.status, 'Connecting to the town…');
+});
+
+test('a page the browser reports offline admits a silent socket at once, and a socket still delivering stays (#290)', () => {
+  let online = true;
+  const watch = createStalenessWatch({ online: () => online });
+  watch.heard(0);
+  assert.equal(watch.stale(OFFLINE_STALE_MS + 1), false, 'online: a short silence is nothing');
+  online = false;
+  assert.equal(watch.stale(OFFLINE_STALE_MS + 1), true, 'offline: the same silence is a dead socket, with no quiet checks to wait out');
+  // A socket the network loss did not reach (a local server) keeps delivering and stays.
+  const local = createStalenessWatch({ online: () => false });
+  for (let now = 0; now <= 5000; now += 200) { local.heard(now); assert.equal(local.stale(now + 100), false, `delivering at ${now}`); }
+  assert.ok(OFFLINE_STALE_MS >= 600 && OFFLINE_STALE_MS < 1000, 'several missed snapshots, and well inside a watchdog tick');
+  // By default the watch asks the browser.
+  const saved = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  try {
+    Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { onLine: false } });
+    const browser = createStalenessWatch(); browser.heard(0);
+    assert.equal(browser.stale(OFFLINE_STALE_MS + 1), true);
+    Object.defineProperty(globalThis, 'navigator', { configurable: true, value: {} });
+    const unknown = createStalenessWatch(); unknown.heard(0);
+    assert.equal(unknown.stale(OFFLINE_STALE_MS + 1), false, 'a browser that cannot tell counts as online');
+  } finally { if (saved) Object.defineProperty(globalThis, 'navigator', saved); else delete globalThis.navigator; }
 });
