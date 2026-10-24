@@ -14,8 +14,11 @@ async page => {
   const ready=async tab=>{
     await tab.emulateMedia({reducedMotion:'reduce'});
     await tab.addInitScript(()=>{
-      const Original=window.WebSocket;window.__commonsSockets=[];
-      window.WebSocket=class extends Original{constructor(...args){super(...args);if(new URL(args[0],location.href).pathname==='/multiplayer')window.__commonsSockets.push(this);}};
+      const Original=window.WebSocket;window.__commonsSockets=[];window.__commonsRefusals=[];
+      window.WebSocket=class extends Original{constructor(...args){super(...args);if(new URL(args[0],location.href).pathname!=='/multiplayer')return;window.__commonsSockets.push(this);
+        // A stalled walk reports the town's latest refusals and corrections, so a CI first failure explains itself.
+        this.addEventListener('message',event=>{try{const data=JSON.parse(event.data),reply=data.result??data;if(reply?.ok!==false&&!data.correction)return;
+          window.__commonsRefusals.push({t:Math.round(performance.now()),error:reply?.error??null,at:(data.correction??reply?.correction)?.position??null});window.__commonsRefusals.splice(0,window.__commonsRefusals.length-12);}catch{/* not JSON */}});}};
     });
     await tab.goto(`${origin}/?motion-debug=1`);
     await tab.waitForFunction(revision=>window.__riverMultiplayer?.().connected
@@ -32,7 +35,7 @@ async page => {
       for(;;){
         const pose=await tab.evaluate(()=>window.__riverCarriage().pose),dx=target[0]-pose.position[0],dz=-target[1]-pose.position[2],distance=Math.hypot(dx,dz);
         if(distance<.35){await releaseKeys();break;}
-        if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose})}`);
+        if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose,refusals:await tab.evaluate(()=>window.__commonsRefusals)})}`);
         const heading=Math.atan2(-dx,-dz),difference=Math.atan2(Math.sin(heading-pose.yaw),Math.cos(heading-pose.yaw));
         if(Math.abs(difference)>.035){
           await releaseKeys();
@@ -57,7 +60,9 @@ async page => {
     }
     }finally{await releaseKeys();}
     const target=points.at(-1);
-    await tab.waitForFunction(target=>{const town=window.__riverMultiplayer(),p=town.snapshot.players.find(p=>p.id===town.selfId);return Math.hypot(p.position[0]-target[0],p.position[1]-target[1])<.6;},target,{timeout:10000});
+    try{await tab.waitForFunction(target=>{const town=window.__riverMultiplayer(),p=town.snapshot.players.find(p=>p.id===town.selfId);return Math.hypot(p.position[0]-target[0],p.position[1]-target[1])<.6;},target,{timeout:10000});}
+    catch(error){throw new Error(`${label}: the town did not confirm arrival ${JSON.stringify(await tab.evaluate(()=>{const town=window.__riverMultiplayer();
+      return {pose:window.__riverCarriage().pose.position,town:town.snapshot.players.find(p=>p.id===town.selfId)?.position,connected:town.connected,refusals:window.__commonsRefusals};}).catch(()=>null))} (${error.message})`);}
     routes.push({label,seconds:(Date.now()-started)/1000,start:start.position,end:(await self(tab)).position,samples});console.log(`${label} reached`);
   };
   try{
@@ -143,6 +148,7 @@ async page => {
     await Promise.all([walk(page,nav.route((await self(page)).position.slice(0,2),starts[0].position.slice(0,2)),'owner home'),walk(peer,nav.route((await self(peer)).position.slice(0,2),starts[1].position.slice(0,2)),'alice home')]);
     check((await page.evaluate(()=>performance.timeOrigin))===timeOrigins[0]&&(await peer.evaluate(()=>performance.timeOrigin))===timeOrigins[1],'Round trip preserved both documents without reload');
     check(errors.length===0,`No page errors: ${errors.join('; ')}`);
-    return {checks,routes,reconnectMs,lanternWalk,views,scope:'Two rendered fixture clients, normal keyboard walking from original District arrivals; shared chess and Lantern Walk activities; no physical-device or production acceptance'};
+    const refusals={owner:await page.evaluate(()=>window.__commonsRefusals),alice:await peer.evaluate(()=>window.__commonsRefusals)};
+    return {checks,routes,reconnectMs,lanternWalk,views,refusals,scope:'Two rendered fixture clients, normal keyboard walking from original District arrivals; shared chess and Lantern Walk activities; no physical-device or production acceptance'};
   }finally{await peerContext.close();}
 }
