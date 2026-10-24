@@ -1,0 +1,101 @@
+# Touch play on phones
+
+How each keyboard command is reached by touch, what the browser journeys
+check, and a short physical-iPhone pass for a person to run. Phone emulation
+in Chromium and Playwright's WebKit supports regression testing. It does not
+replace a real iPhone, Safari's software keyboard, safe areas or VoiceOver
+(#288).
+
+## Journeys
+
+| Journey | What it checks | Engines |
+| --- | --- | --- |
+| `touch-hold` | A 390×844 touch phone covers a tap, walking while looking, a second walk finger, touchcancel, the page hiding, capture loss, the Town chat command mid-hold, three fingers lifted out of order and a rotation mid-hold. Nothing keeps moving, nothing is selected by accident and chat text stays text. | Chromium uses real CDP touches. WebKit uses real taps and a real mouse hold. Cases that need two contacts at once are listed as not run, because Playwright's WebKit can only tap. |
+| `touch-layout` | 390×844 and 375×667, portrait and landscape: no horizontal scroll; walking controls on screen, uncovered and at least 44 px; the panel scrolls; focus returns when the panel or a conversation closes. The landscape overlap below is reported as KNOWN. | Chromium and WebKit emulation |
+| `touch-people`, `carriage-mobile`, `background-input` | Existing touch selection, ride controls and background release | Chromium |
+
+Run one with `pnpm run test:experience <journey>`. Prefix
+`RIVER_OAKS_EXPERIENCE_BROWSER=webkit` for WebKit. Name the report with a
+`*-local.json` `RIVER_OAKS_E2E_REPORT` so the tracked one stays untouched.
+These journeys are local. No hosted shard runs them.
+
+## Command → touch path
+
+The movement pad appears under **Show movement controls** in the walking
+console. On screens up to 900 px wide an open **Town chat** dock hides the
+walking console, and the dock opens by default. Tap **Town chat** to fold it,
+and the console and pad appear. **Play & rides** opens the Play dock; its
+**Character** tab holds the avatar controls.
+
+| Keys | Command | Touch path | Checked by |
+| --- | --- | --- | --- |
+| W A S D | Walk | Hold ↑ ← ↓ → on the movement pad | `touch-hold` |
+| ← → | Turn | Hold the turn buttons at either end of the pad, or drag on the scene | `touch-hold` (drag) |
+| Mouse drag | Look | Drag on the scene. While a thumb holds a walk button, a second finger looks. | `touch-hold` (Chromium) |
+| Shift | Brisk walk | **None.** The sprint button has been hidden for every form since the beast forms were removed (2b5062b6). | — |
+| E | Talk | **Find a local to talk to** / **Meet someone nearby**, or tap the person | `touch-people`, `touch-layout` |
+| F, Shift+F | Doors and stairs | **Step inside** / **Go down one level**, shown when close enough | Code path |
+| Z | Sit or water | **Sit down** (the label follows the place) | Code path |
+| Q, G | Call the ride, get in or out | Character → **Call Jev** / **Ride with Jev** / **Step out** | `carriage-mobile` |
+| J | Walk with Jev | Character → **Walk with Jev** | Code path |
+| B, Space, C | Fly, rise, lower (Jevica) | Character → **Take flight**, then hold **Rise** / **Lower** | Code path |
+| V | Camera | Character → **Third person** / **First person** | Code path |
+| Y | Voice | **Join voice** in the walking console or the chat dock | Code path |
+| M | Mute, or push to talk | The mic button. In push-to-talk mode, hold it to talk. Lifting or a cancelled touch stops transmitting, and the tap that ends a hold never turns the microphone on. | `voice-ui` unit |
+| Enter | Send chat | The chat field and **Send** | `touch-hold` (chat field) |
+| Escape | Close a conversation | **Close** in the conversation | `touch-layout` |
+| ⌘/Ctrl+B, ⌘/Ctrl+Shift+B | Explore rail, Play dock | The Explore button, **Play & rides** | `touch-layout` (panel) |
+| / | Search places | Explore → Places → **Search the district** | Code path |
+| ?, ⌘/Ctrl+K | Commands and keys | **Commands**, then search and tap a command | `touch-hold` (Town chat) |
+
+"Code path" means the control exists as a touchable button, but no journey
+taps it on a phone yet.
+
+**Known gap: landscape.** At 844×390 and 667×375 the walking console, with
+the pad shown, reaches up under the top-right stack. **Commands** covers →
+and the right turn button, **People** covers **More**, and **Play & rides**
+covers the main action. A tap there opens the HUD button instead. Portrait
+is clear. Fixing it needs a layout decision for short screens, so this lane
+records it rather than changing the HUD.
+
+## Ten-minute iPhone and VoiceOver pass
+
+Use a signed-in, approved account on a physical iPhone in Safari. Note the
+model, iOS version and build commit, then mark each line pass or fail. Add a
+screenshot for any fail.
+
+1. **Layout (1 min).** In portrait, check that nothing sits under the notch,
+   Dynamic Island or home indicator. Tap **Town chat** to fold it, then open
+   **Show movement controls**; the pad and the console buttons should all
+   show. Note whether you expected to see the pad without folding chat.
+   Rotate to landscape and note whether **Commands** covers the → buttons
+   (the known gap above), then rotate back.
+2. **Holds (3 min).**
+   - Hold ↑ with a thumb and drag the scene with a second finger. The view
+     turns while you walk; lifting both stops you.
+   - Hold ↑ and add a finger on →. Lift ↑: you keep moving right. Lift →:
+     you stop.
+   - Hold ↑ and swipe to the app switcher, then return. You are not moving.
+   - Hold ↑ and, with another finger, tap **Commands**, search "town chat"
+     and tap **Town chat**. The keyboard opens in the chat field, typing
+     "wasd" gives text only, and you are still when it closes.
+   - Hold ↑ and rotate the phone. Nothing moves once you lift.
+   - Put three fingers down at once. Nothing gets stuck, and no conversation
+     opens unless you tapped a person.
+3. **Network (2 min, with the #290 change).** Turn on Airplane Mode while walking. Within about two
+   seconds the page says it lost the town. Try to sit; it says to reconnect
+   first. Turn Airplane Mode off; the page rejoins on its own. Sit on a bench
+   and toggle Airplane Mode as you tap **Sit down**. After rejoining you are
+   either seated or told it was not confirmed, never seated twice.
+4. **VoiceOver (3 min).** Turn on VoiceOver with the accessibility shortcut.
+   - Swipe through the walking console. Each control has a spoken name, such
+     as "Walk forward" or "Show movement controls".
+   - Double-tap the Explore button, swipe inside the panel, then close it.
+     Focus returns to the button that opened it.
+   - Double-tap **Meet someone nearby**, then close the conversation. Focus
+     returns to the scene or the button.
+   - If voice is on: in push-to-talk mode, double-tap and hold the mic button
+     to talk, then release. Talking stops.
+5. **Display (1 min).** Under Settings → Accessibility, turn on Larger Text
+   and Reduce Motion. Reload the page; text and buttons still fit and nothing
+   overlaps.
