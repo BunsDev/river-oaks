@@ -104,9 +104,10 @@ test('the two Commons blocks are distinct assemblies of the same kit', () => {
   const plan = assembleNeighborhood(commons), shells = id => piecesOf(plan, `bayou-market-commons/${id}/`).filter(piece => piece.piece === 'building/shell' && !piece.id.endsWith('/rear'));
   const market = shells('market-row'), court = shells('garden-court');
   assert.ok(market.length >= 4 && court.length >= 4);
-  assert.ok(market.every(piece => piece.style === 'market-row') && court.every(piece => piece.style === 'garden-court'));
-  assert.equal(new Set([...market, ...court].map(piece => piece.wall)).size >= 3, true);
-  assert.ok(court.some(piece => piece.variant === 'loggia') && market.some(piece => ['canopy', 'awning'].includes(piece.variant)));
+  assert.ok(market.every(piece => piece.style === 'luxe-modern') && court.every(piece => piece.style === 'luxe-court'));
+  // Limestone gallery fronts on Market Row; travertine loggias and galleries in the court.
+  assert.ok(market.every(piece => piece.wall === 'limestone' && piece.variant === 'gallery' && piece.roof === 'reveal'));
+  assert.ok(court.every(piece => piece.wall === 'travertine') && court.some(piece => piece.variant === 'loggia'));
   assert.ok(plan.surfaces.some(surface => surface.id === 'bayou-market-commons/garden-court/court'));
   // Every primary frontage faces the street it lines.
   assert.ok(market.every(piece => piece.faces[0] === 'south') && court.every(piece => piece.faces[0] === 'north'));
@@ -174,7 +175,7 @@ test('ground faces the sky and textured surfaces carry metric UVs', async () => 
   const byMaterial = name => meshes.filter(mesh => mesh.material.name === `city-kit/${name}`);
   const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), normal = new THREE.Vector3();
   // Draped paving and lawn would be culled from above if wound downward; box tops and bottoms cancel.
-  for (const name of ['lane-brick', 'paver-sidewalk', 'plaza-stone', 'lawn:overlay']) {
+  for (const name of ['granite-sett', 'paver-sidewalk', 'plaza-stone', 'lawn:overlay']) {
     let up = 0, area = 0;
     for (const mesh of byMaterial(name)) {
       const position = mesh.geometry.attributes.position;
@@ -187,9 +188,45 @@ test('ground faces the sky and textured surfaces carry metric UVs', async () => 
     assert.ok(area > 0 && up / area > .5, `${name} faces up (${(up / area).toFixed(2)})`);
   }
   // Brick, stucco and granite repeat by the metre rather than stretching one tile across a wall.
-  for (const name of ['brick-rose', 'brick-umber', 'stucco-ivory', 'curb-granite']) {
+  for (const name of ['limestone', 'travertine', 'stucco-ivory', 'curb-granite']) {
     const spans = byMaterial(name).map(mesh => { const uv = mesh.geometry.attributes.uv; let min = Infinity, max = -Infinity; for (let i = 0; i < uv.count; i++) { min = Math.min(min, uv.getX(i)); max = Math.max(max, uv.getX(i)); } return max - min; });
     assert.ok(spans.length && Math.max(...spans) > 10, `${name} UV span ${Math.max(...spans)}`);
   }
   kit.userData.dispose();
+});
+
+test('Market Street is one granite floor with the District gateway, inlaid bands and channel drains', () => {
+  const plan = assembleNeighborhood(commons), lane = plan.pieces.find(piece => piece.id === 'bayou-market-commons/market-street/lane');
+  assert.equal(lane.material, 'granite-sett');
+  // Bands fall between the street trees, every 9 m, inside the lane.
+  const bands = plan.pieces.filter(piece => piece.piece === 'street/band' && piece.id.includes('/market-street/'));
+  const trees = plan.pieces.filter(piece => piece.piece === 'landscape/street-tree' && piece.id.includes('/market-street/')).map(piece => piece.at[0]);
+  assert.ok(bands.length >= 4);
+  for (const band of bands) {
+    assert.ok(band.rect[1] > lane.rect[1] && band.rect[3] < lane.rect[3], band.id);
+    assert.ok(trees.every(x => Math.abs(x - (band.rect[0] + band.rect[2]) / 2) > 1.5), `${band.id} clears the trees`);
+  }
+  const drains = plan.pieces.filter(piece => piece.piece === 'street/channel');
+  assert.deepEqual(drains.map(piece => piece.id.split('/').pop()).sort(), ['drain-n', 'drain-s']);
+  for (const drain of drains) assert.ok(drain.rect[1] >= lane.rect[1] && drain.rect[3] <= lane.rect[3], 'drains lie inside the curbs');
+  // A porcelain threshold marks where the District street becomes Market Street.
+  const threshold = plan.pieces.find(piece => piece.id === 'bayou-market-commons/gateway-threshold');
+  assert.ok(threshold && threshold.rect[0] < 1 && threshold.rect[3] - threshold.rect[1] >= 6);
+});
+
+test('street furniture speaks the District vocabulary: orbital lamps, grates, porcelain planters', async () => {
+  const THREE = await import('three');
+  const plan = assembleNeighborhood(commons), kit = buildCityKit(plan, { groundAt: () => 0, ground: 0 }), meshes = [];
+  kit.traverse(item => { if (item.isMesh) meshes.push(item); });
+  const named = name => meshes.filter(mesh => mesh.material.name === `city-kit/${name}`);
+  // Orbital lamps: an opal globe and a brass ring at each lamp, as on District streets.
+  const lamps = plan.pieces.filter(piece => piece.piece === 'furniture/lamp').length;
+  assert.ok(lamps > 0 && named('opal-glow').length === 1 && named('lamp-teal').length === 1);
+  // Tree grates span each pit once, so the trunk rises through the round opening.
+  const [grate] = named('tree-grate'), uv = grate.geometry.attributes.uv;
+  let min = Infinity, max = -Infinity; for (let i = 0; i < uv.count; i++) { min = Math.min(min, uv.getX(i)); max = Math.max(max, uv.getX(i)); }
+  assert.ok(min >= -1e-4 && max <= 1 + 1e-4, `grate UVs ${min}..${max}`);
+  assert.ok(grate.material.map instanceof THREE.DataTexture);
+  let disposed = false; grate.material.map.addEventListener('dispose', () => { disposed = true; });
+  kit.userData.dispose(); assert.ok(disposed, 'the grate texture is released with the kit');
 });
