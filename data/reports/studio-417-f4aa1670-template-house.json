@@ -1,0 +1,96 @@
+{
+  "createdAt": "2026-10-23T18:47:58.311Z",
+  "results": [
+    {
+      "name": "studio-template-journey",
+      "status": "passed",
+      "seconds": 64.747,
+      "result": {
+        "passed": true,
+        "templateId": "house",
+        "checks": [
+          "Courtyard House opens with its required routes passing",
+          "valid edit (dining-table finish) is accepted with routes passing",
+          "blocking the bathroom is refused with a finding",
+          "the refused move leaves coffee-table where it was",
+          "undo restores the original finish",
+          "redo reapplies the edit",
+          "save keeps the house assessment context",
+          "reload reopens the saved draft and reassesses it",
+          "a stale tab cannot overwrite the newer saved draft",
+          "the other tab's save is kept",
+          "the saved layout assesses as passing",
+          "walked to all 5 required destinations and back to the arrival",
+          "returned to the editor after the walk"
+        ],
+        "tour": [
+          {
+            "target": "house-1",
+            "waypoints": 4,
+            "reached": [
+              -2,
+              -2
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 11.144
+          },
+          {
+            "target": "house-2",
+            "waypoints": 2,
+            "reached": [
+              -1,
+              4
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 17.359
+          },
+          {
+            "target": "house-3",
+            "waypoints": 2,
+            "reached": [
+              2,
+              3
+            ],
+            "home": [
+              0,
+              -8.6
+            ],
+            "seconds": 16.807
+          },
+          {
+            "target": "house-4",
+            "waypoints": 6,
+            "reached": [
+              4,
+              -2
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 13.319
+          },
+          {
+            "target": "house-5",
+            "waypoints": 2,
+            "reached": [
+              -2,
+              -8
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 3.803
+          }
+        ]
+      }
+    }
+  ]
+}

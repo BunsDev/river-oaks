@@ -10,6 +10,10 @@
 
 **Spec:** User attachment `/Users/buns/.codex/attachments/0fcf05f9-8827-4e37-9d99-ef55f78cdb29/pasted-text-1.txt` and GitHub issue #598.
 
+## Current acceptance status
+
+Implementation and local acceptance are verified: full-v6 passed 18/18 phases on f78ac5cfd87feb607b66f3b8e7251debd0dc549d with 74 stable source hashes; 27 shared journeys and 19 screening checks passed, and the current-source 24-check police journey has inspected full-rendering captures. The 32-player comparison retained six officers with warm main-thread CPU p95 rising 7.229→7.360 ms. Final protected delivery is pending updated-head CI and confirmed merge of PR621. Historical entries below retain the failures and their original scope.
+
 ## Global constraints
 
 Preserve peaceful default, server identity/position authority, existing navigation, bounded work, unrelated edits and historical receipts. No cars, jail, economy, external inference or new navigation framework. The maintainer subsequently authorized commit, push and merge to main; deployment and production activation remain outside the task.
@@ -33,9 +37,9 @@ Surrender is authenticated intent without identity/position fields. It prevents 
 - [x] Task 1: Add `server/police.js` and behavioral `server/tests/police.test.js`. Test visible pursuit, blocked sight, obstacle routes, caps/fairness, search/return timers, surrender/capture and validated save/load. Run red before implementation and green after.
 - [x] Task 2: Integrate director with `server/world.js`, existing crime resolver, command gates, collision/navigation updates and checkpoint migration. Add real-world and transport tests including Redis writer takeover/reconnect, forged surrender, policy-off and exactly-once arrest.
 - [x] Task 3: Validate snapshot police fields in `preview/src/town-snapshot.js`, render police through existing remote actors, extend crime HUD with surrender/status and restrained cues using existing assets. Add focused client tests and actual two-browser journey with rendered captures and reduced motion.
-- [ ] Task 4: Run focused suites, `pnpm run agent:doctor`, `pnpm run verify`, isolated-Redis `pnpm run verify full`, affected multiplayer browser journeys and bounded performance measurements. Preserve first failures and exact revisions. Obtain independent review, address findings, and prepare reviewable delivery with explicit remaining acceptance gaps.
+- [x] Task 4: Run focused suites, `pnpm run agent:doctor`, `pnpm run verify`, isolated-Redis `pnpm run verify full`, affected multiplayer browser journeys and bounded performance measurements. Preserve first failures and exact revisions. Obtain independent review, address findings, and prepare reviewable delivery with explicit remaining acceptance gaps.
 
-## Ownership and current evidence
+## Initial ownership and evidence (historical)
 
 Owned worktree: `/Users/buns/Documents/GitHub/BunsDev/river-oaks-police-598`; branch `feat/police-pursuit-598-20261023`; base `f4aa1670`. Task register `police-pursuit-598`. Prior crime checkout contains unrelated dirty edits and is preserved. #598 remains open; prerequisite implementation is present on base. Repository-wide GitHub inventory is running separately; direct issue and open-PR checks found no competing police PR.
 
@@ -97,7 +101,7 @@ The audit found high-severity GHSA-mrhx-c7xc-m3w5 in transitive Zod4.1.11, pinne
 
 Final-source full profile has now been started separately with the owned isolated Redis (`/tmp/police598-full-final.txt`); use its actual returned exec session, not completed cell77. It must establish final-source broad acceptance after the small source/dependency corrections. Browser6267 remains the single queued focused police journey. Goal remains active; rendered acceptance and successful final full profile remain unproved.
 
-## Requirement audit (implementation evidence; final acceptance pending)
+## Interim requirement audit (historical; superseded below)
 
 | Requested requirement | Current implementation and direct evidence | Remaining proof |
 | --- | --- | --- |
@@ -338,3 +342,82 @@ The failing test passes unchanged in isolation1/1 (`/tmp/police598-agent-queue-i
 Current main advanced to00a36290 while verification was queued. GitHub reported new conflicts. Fetched main and merged with `--no-commit` before full-v6 source capture. Resolved the three conflicted files by retaining both Lantern Walk and police imports, public snapshot sections and private checkpoint state, plus main's generated plans index with the existing police row/count added. Other main content merged normally. No unrelated source was discarded. Combined police/world/UI/snapshot and Lantern Walk server/client tests pass43/43, zero skips; agent-runner regressions pass13/13; production build passes. Logs: `/tmp/police598-current-main-focused.txt`, `-agent.txt`, `-build.txt`. Diff and syntax checks pass.
 
 Publish this verified integration so hosted checks overlap the preserved full-v6 queue. Full/performance/source-identity and current-head hosted acceptance remain required before protected landing; no merge to main, deployment or retirement is claimed. The original Redis40681/16498 remains owned and live.
+
+## d2cb04b0 verification blocked audit
+
+Three consecutive goal turns after the latest-main publication were verified waits on the same external-verification dependency. In the third, original full-v6 session22279 was polled live and process18912, current holder59954 and Redis40681 were independently confirmed live. The same job is still queued behind two runs; full-v6 and performance-final receipts remain absent. Hosted Python3.11/3.13, dependency review, access journey and several analyses passed; remaining required checks are live, with no actionable failure. Current runtime source is preserved. Mark the goal blocked on external results, leaving the exact pipeline, Redis and evidence intact. Resume by inspecting `/tmp/police598-final-v6.txt`, full-v6/performance/source-hash receipts and PR621 checks on d2cb04b0; fix failures and finish protected landing only after required acceptance. This status-only ledger note remains uncommitted to avoid restarting CI. No main merge or deployment is claimed.
+
+
+## Documentation-main synchronization for current-head CI
+
+Current main advanced from00a36290 to c3d1196 solely through procedural-tool evaluation documentation, images and experiments (#616). Inspected the complete compare; no police runtime or package change was involved. While original full-v6 process18912 remained queued before source capture, merged that update normally and confirmed zero staged changes under server/preview/shared or package/lock/workspace files. Ruff lint passes and format check reports528 files already formatted; staged diff check passes. Preserved the pre-existing uncommitted ledger edit.
+
+Committed and pushed signed f78ac5cfd87feb607b66f3b8e7251debd0dc549d; GitHub confirms its signature is valid. PR621 now contains current main and is waiting on hosted checks. Existing full-v6 process18912, preceding holder59954 and Redis40681 remain live; no test was duplicated or restarted. Final full/performance/source-identity evidence and protected landing remain required. This continuation made concrete integration/publication progress; no merge to main or deployment is claimed.
+
+
+## Full-v6 non-browser progress on frozen f78ac5cf
+
+Original process18912 is actively executing on f78ac5cfd87feb607b66f3b8e7251debd0dc549d. The current receipt proves dependency audit passed, tooling217/217 passed with zero skips, and preview3902 passed with1 existing skip of3903 total; isolated-Redis server tests are now running. Independently compared all74 recorded source hashes during the run: zero changes. Hosted Desktop passed on this exact head; Python3.11/3.13 and dependency review passed, with no failed Verify job observed. Remaining phases, final performance and protected landing are unproven. This is concrete verification progress, not a wait-only blocker checkpoint. Keep the source frozen and preserve the same job/Redis.
+
+
+## Full-v6 thirteen-phase non-browser milestone
+
+The same running profile on f78ac5cf passed all13 non-browser phases: dependency audit, tooling217/217, preview3902 passed/1 existing skip, isolated-Redis server1128/1128 with zero skips, desktop115 passed/3 existing Windows skips, build, Python lint/format/tests, synthetic demo and its expected verifier contract, secrets and secret-history. Preserved the still-running receipt as `.runtime/police598/full-v6-nonbrowser-interim.json`; it is not a completed full-profile receipt. Security-browser is running; remaining browser phases and final performance are unproven. Hosted CI has no failed job observed; the completed Python, dependency review and campus-traversal jobs pass.
+
+Rechecked a potential migration collision after the Lantern Walk integration: main00a36290 still used checkpoint15 and Redis writer generations17/18, and Lantern Walk's optional state validates absent legacy payloads. The police checkpoint16 and generations19/20 therefore retain the intended migration/fencing boundary. This audit found no new defect and introduced no code change. Continue the existing process18912 and preserve Redis40681; final acceptance and protected landing remain pending.
+
+
+## Current-head hosted crime journey passed
+
+Hosted Verify development-shared job120747279534 passed on f78ac5cf; inspected its raw log and confirmed `Running crime-shared` followed by `Passed crime-shared`. Preserved `.runtime/police598/ci-development-f78ac5cf.txt`. The renderer is Linux Chromium/Mesa llvmpipe with quarter resolution and simplified surface-normal shading; this supplies current-head behavioral transport/UI evidence, not full-quality GPU or physical-device acceptance. Earlier inspected Metal captures retain their recorded scope. Local original18912 continues through experience street traversal; final full/performance/source-hash proof and protected landing remain required.
+
+
+## Hosted Verify passed; current-main freshness gate
+
+Hosted Verify40052156174 completed successfully on f78ac5cf, including its aggregate preview gate; Desktop had also passed. The local original18912 remains live,15 phases passed, and campus experience journeys are still progressing. Final full/performance/source-hash evidence remains unproven.
+
+Ran the external merge guard in read-only `--check-only` mode. It refused because main advanced to c786ce1d65adb6f96f184a10edfe476dfea2b794 through #620's report-only LiDAR audit. Inspected the complete main compare: Python LiDAR code/tests, audit script, report and documentation changed; no server/client/world-data change. Preserved `/tmp/police598-guard-check.txt`. Keep the active source frozen, then use the protected lander to update the branch and require fresh hosted checks after local full/performance acceptance. This is a branch-freshness requirement, not a new approval requirement or a failed police regression. No merge to main has occurred.
+
+
+## Full-v6 experience suite passed
+
+The same original18912 run on f78ac5cf passed all17 experience journeys, including full street traversal, office/computer flows, campus desktop/phone circulation, suite persistence and the two-player Commons Lantern Walk. Preserved `experience-v6-passed.json`. The profile now has16 passed phases; shared multiplayer has begun on Chromium/Apple M5 Max Metal with full rendering. Shared, screening, final32-player performance and terminal source-hash validation remain unproven. Preserve this actual run and its captures rather than starting another.
+
+
+## Current-source full-rendering police acceptance
+
+The full-v6 shared runner passed `crime-shared` on f78ac5cf:24 checks in18.272seconds, Chromium/Apple M5 Max Metal with full rendering. Preserved the exact result/camera metadata and source image hashes/mtime in `.runtime/police598/crime-v6/receipt.json`, plus its interim shared report and three PNGs. Viewed all three actual saved images: the midnight-palette officer is visible with the Police pursue label and body separation; the390px phone HUD presents a readable Surrender control; safe arrival shows the relocated avatar and cleared-wanted text. The normal65-degree first-person observer station retains its live camera/actor measurements.
+
+This closes the earlier old-source/full-quality evidence gap for the police flow: initial reduced motion, keyboard surrender, peaceful observer exclusion, peer-visible arrest, authoritative safe arrival and actual rendered local-pose convergence all passed on the currently verified source. It is local engineering/browser evidence, not physical-device or human accessibility acceptance. The broader shared suite remains live, and final shared/screening/performance/source-hash plus protected landing remain unproven. No completion claim is made from this focused journey alone.
+
+
+## Final local acceptance audit and latest-main validation
+
+Original full-v6 process18912 completed successfully on f78ac5cfd87feb607b66f3b8e7251debd0dc549d:18/18 phases passed. Counts are217/217 tooling,3902 preview passes/1 existing skip,1128/1128 isolated-Redis server passes with zero skips,115 desktop passes/3 existing Windows PowerShell skips,17 experience journeys,27 shared journeys and19 screening checks. Build, Python checks, synthetic demo and its declared verifier contract, secrets/history, security-browser and reflections passed. Before/after maps contain74 identical hashes and matched the live source at terminal inspection. `.runtime/police598/full-v6-evidence/` retains receipts, reports, console and a checked SHA256 copy manifest; generated tracked reports were restored only after their evidence copies matched.
+
+The final32-player fixture interleaves identical wanted/player positions with policy off versus six capped police units, recording20 cold and140 warm samples per world. Warm main-thread CPU median is0.350→0.470ms; p95 is7.229→7.360ms (0.131ms additional), maximum99.039→102.769ms. Warm wall p95 is7.243→7.362ms, maximum99.960→103.526ms. Snapshot JSON is72191→73448bytes (1257 additional). The observed cap is six. `.runtime/police598/performance-final.json` preserves every sample and source hashes; `.runtime/police598/measure-final.mjs` reproduces the fixture. These local short-window simulation results support bounded incremental cost; they do not establish hosted/network scalability, long-duration stability or target-device frame performance. The broader release/performance gate remains #599.
+
+| Objective requirement | Authoritative evidence | Local conclusion |
+| --- | --- | --- |
+| Existing server navigation, authority and collision; no new framework | Director/world integration, real wall-route and actual LOS tests, full server1128/1128; Westcreek west-side capture/restore regression | Proven |
+| Globally capped stable units, star scaling and deterministic multi-player fairness | Director tests for six-unit cap,10 wanted accounts, later first responses, hidden accounts and one route-search budget;32-player fixture observed six | Proven |
+| Visible pursuit, bounded last-seen search, walkable movement and return | Existing navigation wall test checks every movement segment; last-seen immutability and search/return expiry tests; current rendered pursuit | Proven |
+| Strict authenticated surrender/incapacity, short exactly-once arrest, health recovery and safe relocation | World tests and real memory/Redis takeover/reconnect tests; current Metal crime journey verifies peer arrest and rendered local safe-arrival convergence | Proven |
+| Safe danger-zone exit, disconnect and emergency off | Direct safe-ground departure, immediate disconnect/off and mid-arrest cancellation regressions; hosted/local policy journeys | Proven |
+| Compact snapshots/checkpoints, migration and fenced writers | Snapshot validation, atomic restore rejection, checkpoint15→16, appearance-reader compatibility and Redis19/20 writer tests | Proven |
+| Recognizable existing-rig figures, readable matching HUD, keyboard/reduced-motion and restrained cues | Current-source24-check Metal crime journey; three actual inspected captures; UI tests cover eligibility, focus, late replies, sound lifecycle and heading convention | Proven within recorded engineering/browser scope |
+| No police cars, jail, economy or external inference | Reviewed owned source diff, existing Sable rig/palette/sound reuse and bounded synchronous director; no inference/service/asset dependency added | Proven |
+| Existing performance envelope | Structural six-unit/one-search bounds and the explicit32-player baseline comparison above | Supported by measured local scope; no broader release claim |
+| Review and verification | Independent findings reproduced and fixed; focused43 checks, full18 phases and hosted Verify/Desktop on f78ac5cf | Proven for recorded source |
+| Authorized protected delivery | PR621 is published, signed and merge-authorized; current main must be integrated and fresh exact-head checks must pass | Pending |
+
+After the full run ended, merged current mainc005074dfec5b30a036064cc54b79c347d693fec without conflicts. It contains #620's LiDAR audit, #625's queue/lifecycle fix and #617's delivered office/IPIC test-harness/report update. Server, preview production source/assets, shared/config and dependency inputs exactly match tested f78ac5cf. Changes to recorded full-source inputs are only inherited local-queue code and lander tests; the extra office/IPIC helper is an inherited test-only invitation-flow update. Queue/lander tests pass29/29, all Python tests pass156/156 (66 reported warnings), Ruff lint/format pass530 files, the inherited office/IPIC helper passes syntax check, and staged diff validation passes. Fresh hosted checks will verify this integration; no full-profile pass on the new merge revision is fabricated.
+
+No external review or inline review findings were present on PR621 at inspection; the only issue comment was the automatic Vercel preview status. Preserve the separate crime-police-598 owner's checkout/commit and all raw failures. Next: commit/push this verified integration and final evidence, publish exact scopes, run the protected lander with the maintainer's existing authorization, inspect actual merge/head/check evidence and reconcile delivery. Do not retire the worktree or claim production activation.
+
+
+## Cold-obstacle diagnostic and publication preflight
+
+Resolved the outstanding cold-routing concern with three fresh existing-navigation detours on actual Westcreek geometry, using 4 m, 8 m and 16 m synthetic physical obstacles. Cold route CPU times were 5.355, 6.179 and 7.633 ms; warm repeats were 0.935, 1.240 and 1.039 ms. Every route exists and every returned segment passes the same physical `canTravel` check. The first navigation-construction diagnostic also records 74.397 ms of cold initialization, separately from route/tick cost; subsequent initialization was 1.614/1.490 ms. Fixture bounds initially used north coordinates where the collider contract requires Three.js z; corrected that invalid diagnostic setup before timing, without any production edit. Raw results and navigation SHA256 are in `.runtime/police598/performance-obstacles.json`; the reproducible fixture is `measure-obstacles.mjs`. These bounded local cases supplement the 32-player comparison without claiming universal or hosted timing guarantees.
+
+Final staged integration has passing inherited queue/lander tests (29/29), Python tests (156/156), Ruff lint/format, syntax and diff checks. Production police/game/dependency inputs match the successful full run. The maintainer-authorized merge remains pending the protected landing workflow and fresh checks on the updated branch; no further approval question is required.

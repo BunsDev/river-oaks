@@ -49,14 +49,14 @@ export function createQueue({ file, lock, pid = process.pid, host = hostname(), 
       return new Promise((resolve, reject) => {
         let watcher;
         const finish = error => { clearTimeout(timer); watcher?.close(); error ? reject(error) : resolve(); };
-        const check = () => {
+        const check = (expired = false) => {
           try {
             const position = queue.list().findIndex(entry => mine(entry, id));
             if (position < 0) finish(new Error(`${id} is no longer queued by this session.`));
-            else if (position === 0) finish();
+            else if (position === 0 || expired) finish();
           } catch (error) { finish(error); }
         };
-        const timer = setTimeout(finish, timeoutMs);
+        const timer = setTimeout(() => check(true), timeoutMs);
         try {
           watcher = watchDirectory(dirname(file), (_event, name) => { if (name === null || String(name) === basename(file)) check(); });
           watcher.on('error', () => watcher.close()); // Keep the timer fallback.

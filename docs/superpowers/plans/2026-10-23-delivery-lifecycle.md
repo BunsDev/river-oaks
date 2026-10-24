@@ -16,10 +16,10 @@ The implementation preserves every required precommit check/review, publishes an
 - [x] Measure eight recent merged PRs and inspect current inventory; preserve raw evidence under `.runtime/delivery-lifecycle/`.
 - [x] Publish the proposed delivery cadence and retirement table in workflow docs, with root instruction pointers.
 - [x] Focused tooling/document verification and independent review (51 passed, zero skips; two documentation findings addressed; independent source review found no substantive issue).
-- [ ] Required precommit core, signed commit and authorized draft PR.
-- [ ] `pnpm run verify` before commit and fresh hosted checks; measure the real filesystem queue comparison separately from hosted throughput.
-- [ ] Mark ready and enqueue through the installed guard once required checks/review pass; confirm actual merge on refreshed main.
-- [ ] Reconcile all cleanup candidates, exercise guarded retirement on eligible authorized work or name each blocker/owner/action; preserve raw evidence and verify restoration/removal.
+- [x] Required precommit core, signed commit and authorized ready PR #624.
+- [x] `pnpm run verify` before commit and fresh hosted checks; real filesystem queue comparison recorded separately from hosted throughput.
+- [x] Mark ready and enqueue through the installed guard once required checks/review pass; actual #624 merge confirmed on refreshed main.
+- [x] Exercise guarded retirement on eligible #508 work; preserve evidence and verify restoration/removal. Final postmerge inventory and own-checkout disposition remain below.
 - [ ] Reconcile register and final handoff, including exact delivery and retirement proof.
 
 ## Timing baseline
@@ -157,3 +157,17 @@ Post-terminal inventory at 23:41:55 UTC counts 45 worktrees and 47 local branche
 ## Precommit gate and publication checkpoint
 
 Required `pnpm run verify` subsequently passed all 11 phases at base `132a75a2e0ae0653548de594c7b908fda94a47d6` with the reviewed owned patch present (`dirty: true`). The driver compared all eight owned-file SHA-256 hashes before publication and found no source drift. The raw receipt is `core-precommit-passed.json`; focused 53/53, zero skips, independent review, controlled timing and real retirement evidence remain separately scoped. This final paragraph records the result without changing runtime behavior. Fresh hosted checks at the resulting signed head remain required.
+
+## Confirmed delivery and final documentation checkpoint
+
+PR [#624](https://github.com/BunsDev/river-oaks/pull/624) merged through the installed guard at `2026-10-24T01:21:03Z` as `827886fd3161af42f6e74e7bbd0adf7c44c5d371`. Reviewed integration head was `7c07e6f3a46845e01a5b1a238a455d8d48a0a568`; all eight owned files match signed source `65eed96bc67f2300f9ccc7e0705f840b2013b8c8`. Independent REST audit confirmed final checks/statuses acceptable, no posted review/inline findings, matching integration/merge trees and merge ancestry on refreshed main (`merge-audit-624.json`). The published workflow and root instructions now contain the executable proactive retirement rule. Earlier pending-process paragraphs above are historical checkpoints, superseded by this terminal evidence.
+
+Source Verify [40043305612](https://github.com/BunsDev/river-oaks/actions/runs/40043305612) passed all 15 jobs on attempt 1. Fresh integration Verify [40045923067](https://github.com/BunsDev/river-oaks/actions/runs/40045923067) passed all 15 final jobs after the existing lander's single failed-job retry. Attempt 1's places job hit its confirmed 30-minute deadline; raw log, annotations and attempt metadata are preserved under `integration-7c07-first/`. Its last completed assertion was the account-change Computer gate at 00:50:01 UTC; the precise stalled await and underlying cause remain unproven. An initial filtered excerpt omitted later checks; the full log confirms forgery checks passed. No source, assertion, authentication or timeout was changed for retry. The passing retry is not a root-cause fix and supplies no physical/production acceptance.
+
+The observed own landing queue wait was approximately 1,871.8 seconds from enqueue to first sampled front position (one-second sampling; not exact acquisition time). Precommit core finished to ready was 10.957 seconds, then ready to enqueue 0.879 seconds. This real run separately exposes heavy local queue and hosted retry costs; the controlled 29.8-second versus 9.8-millisecond notification comparison establishes only bounded local turn-handoff improvement.
+
+Final documentation owns only the stale register-authority paragraph in `docs/architecture.md` and this ledger reconciliation. The task map now points to the shared common-Git live register and snapshot-only sweeps, matching the actual workflow. This checkpoint requires its own verification and guarded delivery; it does not retroactively change #624's verification scope. Final candidate inventory, external recovery material, own-session release and any guarded retirement proof will be recorded in the live register and external manifests after delivery, since a checkout cannot contain a committed receipt of its own subsequent removal. The final handoff must keep #505 human/device/rendered acceptance open and retain one-floor-per-press lifts.
+
+### Final checkpoint first failure and fallback correction
+
+The final checkpoint's fresh core at `827886fd` stopped in tooling: the real-filesystem lost-entry test received no notification and the 30-second fallback resolved rather than rejecting the missing entry (`docs-core-first-failure.json`, `docs-core.log`). The lander's subsequent ownership check still failed closed before GitHub access; no unsafe turn or merge was observed. A deterministic regression with notifications disabled reproduced the helper gap (`fallback-red.log`). The narrow correction makes the timer run the same ownership check, rejecting lost entries while still resolving on timeout for an owned entry waiting behind another holder. Focused and core reruns, independent review and fresh hosted checks are required before publishing this correction. This supersedes the documentation-only scope described above; it changes no queue authority or polling interval.
