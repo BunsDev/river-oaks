@@ -1,10 +1,10 @@
 # Two-player performance: paired baseline comparison
 
-Paired on the same Mac and browser, current `main` stays within the provisional engineering budgets against the historical #580 baseline. Frame time, CPU submission and reconnect all pass, on both desktop and phone-sized profiles. The Phase 1 report's desktop two-client "+49.7% frame p95" and #583's phone two-client "+49.7%" are the same artifact. With vsync on, frame p95 moves in whole 60 Hz refresh steps (16.7 → 33.4 → 50.0 ms), so one step reads as +50%. Unpaired runs taken under different host load decide which step a sample lands on. No source regression was found, so no renderer change was made. The rest of this report proposes a protocol amendment that removes the artifact from future gates.
+Paired on the same Mac and browser, `main` at `98ac7d7b` stays within the provisional engineering budgets against the historical #580 baseline *as measured by the amendment proposed below* (mean frame interval and uncapped frame p95). Frame time, CPU submission and reconnect all pass on that basis, on both desktop and phone-sized profiles. Under the budget's current wording in `docs/world-expansion.md`, which applies to warmed frame p95, the vsync-locked phone two-client p95 reads +49.6% and would be over; whether to adopt the amendment is still a decision. The Phase 1 report's desktop two-client "+49.7% frame p95" and #583's phone two-client "+49.7%" are the same artifact. With vsync on, frame p95 moves in whole 60 Hz refresh steps (16.7 → 33.4 → 50.0 ms), so one step reads as +50%. Unpaired runs taken under different host load decide which step a sample lands on. No source regression was found, so no renderer change was made. The rest of this report proposes a protocol amendment that removes the artifact from future gates.
 
 ## Protocol
 
-- **Arms:** base `6ff47ba1` (the revision the historical #580 baseline measured) and candidate `main` at `98ac7d7b`. Each runs from its own worktree with the same extended harness, `preview/audit/world-expansion-baseline.js`; only the measured application source differs.
+- **Arms:** base `6ff47ba1` (the revision the historical #580 baseline measured) and candidate `main` at `98ac7d7b`. Each runs from its own worktree with the same extended harness, `preview/audit/world-expansion-baseline.js`; only the measured application source differs. The measured harness is the one recorded in the reports' source hashes (branch commit `ef11a82e`). The later main merge `07ca386d` rewrote `world-expansion-baseline.js` and `baseline-options.js` to keep #584–586's options; that merged harness has passed its unit tests but has not been run end to end.
 - **Order:** ABBA, base-1, main-1, main-2, base-2, under one held browser lock (2026-10-24 00:35–01:24 UTC) so that no other local browser run interleaved.
 - **Vsync-on runs:** the Phase 1 protocol. Desktop 1440×1000 at DPR 1 and the phone-sized 390×844 viewport at DPR 2, Sharp quality, reduced motion, fixed arrival camera. Three warmed 30-second samples per player count, with 5 seconds of warmup each.
 - **Vsync-off runs:** the same protocol with `--vsync=off` (desktop only), which removes the refresh cap so intervals measure frame cost. The CPU profiles were recorded in a separate unmeasured window after the timed samples.
@@ -47,8 +47,11 @@ Vsync off (frame cost uncapped, desktop), [compare-vsync-off.json](two-player-pe
 | 1 client | CPU submission p95 | 10.70 ms | 10.85 ms | +1.4% | within |
 | 2 clients | frame mean | 23.85 ms | 25.06 ms | +5.1% | within |
 | 2 clients | CPU submission p95 | 38.45 ms | 41.30 ms | +7.4% | within |
-| 2 clients | frame p95 | 45.4 ms | 47.85 ms | +5.4% | informational |
+| 1 client | frame p95 | 13.8 ms | 14.85 ms | +7.6% | informational (within under the amendment) |
+| 2 clients | frame p95 | 45.4 ms | 47.85 ms | +5.4% | informational (within under the amendment) |
 | reconnect | | 1.469 s | 1.533 s | +4.4% | within |
+
+The committed comparison was produced before the tool budgeted uncapped p95. With that rule (the amendment's item 2), `node preview/audit/baseline-compare.js --base=…/base-off-1.json,…/base-off-2.json --candidate=…/main-off-1.json,…/main-off-2.json` on the same four reports gives identical values and decides both frame p95 rows within budget (2026-10-24, open-PR sweep).
 
 Draw calls (1,629–1,707), triangles, and renderer geometries/textures (530/162 for one client, 546/166 for two) are identical between arms.
 
@@ -88,7 +91,7 @@ This removes no measurement and lowers no threshold. It replaces a metric that c
 
 These receipts cover revision `98ac7d7b` plus this branch's working changes. The measured application source is unchanged; the changes add harness options, tests and documentation. [Compact receipt](two-player-perf-20261023/verification.json).
 
-**Focused:** `node --test preview/tests/baseline-options.test.js preview/tests/baseline-compare.test.js`, 8/8 passed with 0 skipped.
+**Focused:** `node --test preview/tests/baseline-options.test.js preview/tests/baseline-compare.test.js`, 8/8 passed with 0 skipped at the measured revision. After the main merge and the uncapped-p95 budget, the same command passes 10/10.
 
 **Core** (`pnpm run verify`, Homebrew Python 3.12 first on PATH): all 11 stages passed. Results: tooling 207/207; preview 3,885 passed with 1 skip (the existing obstructed Vince glazing case); server 824 passed with 218 Redis-dependent skips (core runs without Redis); desktop 115 passed with 3 Windows-only skips; Python 149 passed; build, demo and secrets passed. The first attempt ran under the host's default Python 3.9 and failed 4 tooling tests on `tarfile.extractall(filter=…)`, which needs a newer Python. That failed receipt is preserved locally and is not counted.
 

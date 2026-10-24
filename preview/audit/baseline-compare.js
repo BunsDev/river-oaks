@@ -2,8 +2,9 @@
 // rounds of base and candidate taken under one held browser lock:
 //   node preview/audit/baseline-compare.js --base=a1.json,a2.json --candidate=b1.json,b2.json --output=compare.json
 // Each arm's value is the mean over its reports of the per-report median across
-// samples. Budgets apply to continuous metrics; vsync-locked frame p95 is
-// reported but not decided on, because it moves in whole refresh steps.
+// samples. Budgets apply to continuous metrics. Frame p95 is decided on only when
+// uncapped (vsync off); vsync-locked p95 is reported but not decided on, because it
+// moves in whole refresh steps.
 import { readFile, writeFile } from 'node:fs/promises';
 
 const median = values => {
@@ -52,7 +53,8 @@ export function compareBaselines(base, candidate) {
   const vsync = new Set(arms.flat().map(item => item.vsync));
   if (vsync.size !== 1) throw new Error('Compare reports taken with the same vsync setting');
   const keys = [...arms[0][0].result.keys()].filter(key => arms.flat().every(item => item.result.has(key)));
-  const kinds = { ...Object.fromEntries(SAMPLE_METRICS.map(([name, kind]) => [name, kind])), reconnectMs: 'reconnect' };
+  const uncapped = [...vsync][0] === 'off';
+  const kinds = { ...Object.fromEntries(SAMPLE_METRICS.map(([name, kind]) => [name, kind])), reconnectMs: 'reconnect', ...uncapped ? { frameP95Ms: 'frame' } : {} };
   const rows = [];
   for (const key of keys) {
     const names = Object.keys(arms[0][0].result.get(key)).filter(name => arms.flat().every(item => Number.isFinite(item.result.get(key)[name])));

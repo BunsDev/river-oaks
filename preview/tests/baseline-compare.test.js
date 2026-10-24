@@ -18,6 +18,14 @@ test('a refresh-step p95 change is reported but does not fail the budget', () =>
   assert.deepEqual(result.heads, { base: ['base'], candidate: ['main'] });
 });
 
+test('uncapped frame p95 is budgeted like the frame mean', () => {
+  const off = two => report({ vsync: 'off', two });
+  const within = compareBaselines([off([24, 38, 45.4])], [off([25, 41, 47.9])]);
+  assert.deepEqual([row(within, 'desktop/2p', 'frameP95Ms').decision, row(within, 'desktop/2p', 'frameP95Ms').budget], ['within', .1]);
+  const over = compareBaselines([off([24, 38, 45.4])], [off([25, 41, 52])]);
+  assert.deepEqual(over.over, ['desktop/2p frameP95Ms']);
+});
+
 test('continuous frame, CPU and reconnect regressions fail their own budgets', () => {
   const result = compareBaselines([report()], [report({ two: [37, 15.6, 50], reconnectMs: 1250 })]);
   assert.deepEqual(result.over, ['desktop/2p frameMeanMs', 'desktop/2p cpuSubmissionP95Ms', 'desktop/reconnect reconnectMs']);
