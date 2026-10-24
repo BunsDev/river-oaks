@@ -26,6 +26,7 @@ Read the scoped AGENTS.md in the subsystem you change.
 5. For multi-step work, create/update a task-specific ledger in
    `docs/superpowers/plans/`: objective, files owned, checks, results, gaps, next step.
    Historical reports are evidence of their recorded revision, not today's status.
+6. Evaluate local retirement at session start, after each verified merge and before handoff using [the proactive retirement rule](docs/project-management/workflow.md#proactive-retirement-rule). Apply eligible, authorized cleanup in the same session; preserve every blocked candidate with its owner and next action. Age, an expired lease and a missing upstream never authorize removal.
 
 ## Implement and verify
 
@@ -42,6 +43,7 @@ Read the scoped AGENTS.md in the subsystem you change.
   A skip is not evidence. Read console test counts and `.runtime/agent/<profile>.json`.
 - Never commit without verification. Do not merge, publish, deploy, or resolve
   review threads unless authorized and the work is actually addressed.
+- Follow [the delivery cadence](docs/project-management/workflow.md#delivery-cadence): publish verified increments as drafts when authorized so hosted checks can overlap independent local checks. Mark ready and enqueue promptly once required local checks and review pass and merge authorization exists. Keep observing the same lander until terminal; do not leave an authorized green PR waiting for routine confirmation.
 
 ## Boundaries
 

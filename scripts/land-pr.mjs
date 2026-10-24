@@ -22,7 +22,7 @@ async function waitFor(check, sleep, poll, limit, what) {
 // github: pull, updateBranch, verifyRun, failedJobs, rerunFailed, and for
 // deleteRemoteBranch also mergedOnDefault(sha) and deleteBranch(ref), false if
 // it was already gone. guard(pr): {code, output}.
-export async function land({ pr, owner, github, guard, queue, log = () => {}, sleep, poll = 30000, attempts = 4, limit = 120, deleteRemoteBranch = false }) {
+export async function land({ pr, owner, github, guard, queue, log = () => {}, sleep, poll = 30000, attempts = 4, limit = 120, deleteRemoteBranch = false, waitForQueue = (id, ms) => queue.waitForTurn(id, ms) }) {
   // Off by default: the source branch is deleted only when asked, and only once
   // the merge commit is confirmed on the default branch. A refusal is not an error.
   const finish = async pull => {
@@ -35,7 +35,13 @@ export async function land({ pr, owner, github, guard, queue, log = () => {}, sl
   };
   queue.enqueue(pr, owner);
   try {
-    for (let ahead; (ahead = queue.position(pr)) > 0;) { log(`#${pr}: ${ahead} ahead in the landing queue; waiting.`); await sleep(poll); }
+    for (;;) {
+      const ahead = queue.position(pr);
+      if (ahead < 0) throw new Error(`#${pr} is no longer queued by this session.`);
+      if (ahead === 0) break;
+      log(`#${pr}: ${ahead} ahead in the landing queue; waiting.`);
+      await waitForQueue(pr, poll);
+    }
     const run = (head, attempt) => waitFor(async () => { const value = await github.verifyRun(head); return value?.status === 'completed' && value.attempt >= attempt && value; }, sleep, poll, limit, `Verify on ${head.slice(0, 7)}`);
     for (let attempt = 0; attempt < attempts; attempt++) {
       const pull = await waitFor(async () => { const value = await github.pull(pr); return (value.merged || value.state !== 'open' || value.mergeable_state !== 'unknown') && value; }, sleep, poll, limit, `GitHub to compute #${pr}'s merge state`);
