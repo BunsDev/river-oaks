@@ -86,6 +86,19 @@ pnpm run land --status                # who is queued
 The queue only orders sessions that use it. Landing still needs the same merge
 authorization as any other merge.
 
+**Unsigned commits.** The merge guard refuses any unverified commit, and most
+sessions here cannot sign locally. Before landing, run `pnpm run sign-branch
+<branch>`: it lists the unverified commits and the rebuild it would make. With
+`--apply` it rebuilds the branch's own changes on current `main` as one commit
+through GitHub's `createCommitOnBranch` (which GitHub signs) on a temporary branch,
+checks that the new tree equals `main` merged with the old head, that `main` is its
+only parent and that GitHub verified it, then moves the branch with
+`--force-with-lease` on the exact old head. The old head is kept at
+`refs/sign-branch-backup/<branch>/<sha>` in the local repository, and the temporary
+branch is always deleted. It refuses conflicts with `main` and anything other than
+regular-file changes (executable bits, symlinks, submodules). The branch's commits
+become one, so use it for your own branches, not someone else's history.
+
 **Waiting on GitHub.** Every session on this machine shares one account's API
 quota, and it ran out several times on 2026-10-23, stalling landing and signing. Do
 not poll with `gh pr view`/`gh pr checks` loops or `gh pr checks --watch`: they
