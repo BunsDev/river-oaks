@@ -1,5 +1,5 @@
 import {releaseTransmissionTargets} from './transmission-targets.js';
-import { WebGLRenderTarget, HalfFloatType, PCFSoftShadowMap } from 'three';
+import { WebGLRenderTarget, HalfFloatType, PCFShadowMap } from 'three';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 export const CHARACTER_PORTRAIT_SIZE=Object.freeze({width:3840,height:2160});
@@ -15,7 +15,7 @@ export function portraitPixels({renderer,scene,camera}){
   const linear=new WebGLRenderTarget(width,height,{samples:4,type:HalfFloatType});
   const target=new WebGLRenderTarget(width,height,{depthBuffer:false}),output=new OutputPass();
   try{
-    Object.assign(renderer.shadowMap,{enabled:true,type:PCFSoftShadowMap,autoUpdate:true,needsUpdate:true});
+    Object.assign(renderer.shadowMap,{enabled:true,type:PCFShadowMap,autoUpdate:true,needsUpdate:true});
     camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setRenderTarget(linear);complete();renderer.render(scene,camera);
     // Three renders offscreen scenes in linear HDR. Apply the same ACES and
     // sRGB output transform as the live preview exactly once before readback.

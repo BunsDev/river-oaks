@@ -12,13 +12,18 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
   renderer.domElement.setAttribute('aria-label','Live character preview');renderer.domElement.setAttribute('role','img');host.append(renderer.domElement);
   const scene=new THREE.Scene();scene.background=new THREE.Color('#cbd8d1');
   const camera=new THREE.PerspectiveCamera(30,1,.05,30);
   const key=new THREE.DirectionalLight('#fff0df',3.1),fill=new THREE.HemisphereLight('#f2f6ff','#64766d',2),rim=new THREE.DirectionalLight('#c5e6e5',2.2);
+  key.castShadow=true;key.shadow.mapSize.set(1024,1024);
+  Object.assign(key.shadow.camera,{left:-1.5,right:1.5,top:2,bottom:-1.5,near:.1,far:12});key.shadow.normalBias=.012;key.shadow.bias=-.0001;
   key.position.set(3,4,4);rim.position.set(-3,3,-2);scene.add(key,fill,rim);
-  const pedestal=new THREE.Mesh(new THREE.CylinderGeometry(.65,.68,.05,64),new THREE.MeshStandardMaterial({color:'#a8bdb2',roughness:.87}));pedestal.position.y=-.028;scene.add(pedestal);
+  const pedestal=new THREE.Mesh(new THREE.CylinderGeometry(.65,.68,.05,64),new THREE.MeshStandardMaterial({color:'#a8bdb2',roughness:.87}));pedestal.position.y=-.028;pedestal.receiveShadow=true;scene.add(pedestal);
   let avatar=null,costume=null,colors=null,loadedId=null,wanted=null,loading=false,disposed=false,frame=0,previous=null,distance=0;
+  let visible=true;
+  const visibility=new IntersectionObserver(entries=>{visible=entries.at(-1)?.isIntersecting??false;if(visible)renderDirty=true;previous=null;});visibility.observe(host);
   let yaw=0,turntable=false,pose='idle',framing='full',renderDirty=true;
   const resize=new ResizeObserver(()=>{const {width,height}=host.getBoundingClientRect();renderer.setSize(Math.max(1,width),Math.max(1,height),false);camera.aspect=Math.max(1,width)/Math.max(1,height);camera.updateProjectionMatrix();renderDirty=true;});resize.observe(host);
   const release=()=>{colors?.dispose();costume?.dispose();avatar?.dispose();avatar?.object.removeFromParent();avatar=costume=colors=null;loadedId=null;};
@@ -46,7 +51,7 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
 
   const draw=now=>{
     if(disposed)return;frame=requestAnimationFrame(draw);
-    if(document.hidden){previous=null;return;}
+    if(document.hidden||!visible){previous=null;return;}
     const dt=previous===null?0:Math.min(.05,(now-previous)/1000);previous=now;
     if(turntable&&!reducedMotion){yaw=(yaw+dt*.25)%(Math.PI*2);renderDirty=true;}
     if(avatar){
@@ -80,6 +85,6 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
       if(['idle','walk','wave'].includes(options.pose))pose=options.pose;if(['full','portrait'].includes(options.framing))framing=options.framing;
       if(options.lighting){const warm=options.lighting==='warm';scene.background.set(warm?'#dfcdbb':'#cbd8d1');key.color.set(warm?'#ffd1a6':'#fff0df');fill.intensity=warm?1.6:2;}
       renderDirty=true;},
-    dispose(){disposed=true;cancelAnimationFrame(frame);resize.disconnect();release();pedestal.geometry.dispose();pedestal.material.dispose();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();},
+    dispose(){disposed=true;cancelAnimationFrame(frame);resize.disconnect();visibility.disconnect();release();pedestal.geometry.dispose();pedestal.material.dispose();key.shadow.dispose();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();},
   };
 }
