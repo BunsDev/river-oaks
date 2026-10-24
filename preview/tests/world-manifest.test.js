@@ -192,7 +192,7 @@ test('authored Commons partitions the original reservation without overlaps or t
   const value=validateWorldManifest(read('world-manifest')), district=value.locations.find(location=>location.id==='river-oaks-district');
   const commons=value.locations.find(location=>location.id==='east-garden-commons');
   assert.equal(commons.status,'authored');
-  assert.equal(commons.content_revision,'east-garden-commons-blockout-1');
+  assert.equal(commons.content_revision,'east-garden-commons-market-1');
   assert.equal(commons.entries[0].position_m[0],district.bounds_m[2]);
   assert.equal(commons.entries[0].position_m[1],-1335);
   const area=location=>{const [w,s,e,n]=locationWorldBounds(location);return (e-w)*(n-s);};

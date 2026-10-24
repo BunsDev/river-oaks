@@ -2,6 +2,7 @@ import { createCommonsLayout, commonsCollisionRings, COMMONS_REVISION } from '..
 import { groundSurfaceHeight } from './world-surface.js';
 import manifest from '../public/data/world-manifest.json' with { type: 'json' };
 import { validateWorldManifest } from './world-manifest.js';
+import { composeCommonsDestination } from '../../shared/commons-destination.js';
 
 export function validateCommonsRegistration(registration, layout) {
   const location = validateWorldManifest(registration).locations.find(item => item.id === layout.id);
@@ -22,7 +23,7 @@ export function validateCommonsRegistration(registration, layout) {
 export function attachEastGardenCommons(world) {
   if (world.eastGardenCommons || world.scene !== 'district' || !world.stores?.some(store=>store.id==='osm-node-8172494977')) throw new Error('Commons needs an unexpanded District');
   const edgeHeights = Array.from({length:13},(_,i)=>groundSurfaceHeight(world,world.bounds_m[2],-(-1338+i*.5)));
-  const layout = createCommonsLayout({districtBounds:world.bounds_m,edgeHeights});
+  const layout = composeCommonsDestination(createCommonsLayout({districtBounds:world.bounds_m,edgeHeights}));
   validateCommonsRegistration(manifest, layout);
   return {...world,bounds_m:[...layout.bounds],eastGardenCommons:layout,
     collisionPolygons:[...(world.collisionPolygons??[]),...commonsCollisionRings(layout)]};
