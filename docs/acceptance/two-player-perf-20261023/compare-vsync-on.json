@@ -1,0 +1,300 @@
+{
+  "vsync": "on",
+  "heads": {
+    "base": [
+      "6ff47ba13762de25180b8e4b073b01662d7f9505"
+    ],
+    "candidate": [
+      "98ac7d7b3a5a8db5416d88c69905e13eb205bb84"
+    ]
+  },
+  "reports": {
+    "base": 2,
+    "candidate": 2
+  },
+  "rows": [
+    {
+      "workload": "desktop/1p",
+      "metric": "frameMeanMs",
+      "base": 16.835,
+      "candidate": 16.67,
+      "change": -0.01,
+      "budget": 0.1,
+      "decision": "within"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "cpuSubmissionP95Ms",
+      "base": 14.9,
+      "candidate": 11.15,
+      "change": -0.252,
+      "budget": 0.1,
+      "decision": "within"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "cpuSubmissionP50Ms",
+      "base": 10.95,
+      "candidate": 8.75,
+      "change": -0.201,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "frameP95Ms",
+      "base": 16.8,
+      "candidate": 16.8,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "missedTwoRefreshes",
+      "base": 0,
+      "candidate": 0,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "drawCalls",
+      "base": 1630,
+      "candidate": 1638,
+      "change": 0.005,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "geometries",
+      "base": 530,
+      "candidate": 530,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "textures",
+      "base": 162,
+      "candidate": 162,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "frameMeanMs",
+      "base": 35.055,
+      "candidate": 33.43,
+      "change": -0.046,
+      "budget": 0.1,
+      "decision": "within"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "cpuSubmissionP95Ms",
+      "base": 14.25,
+      "candidate": 14.7,
+      "change": 0.032,
+      "budget": 0.1,
+      "decision": "within"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "cpuSubmissionP50Ms",
+      "base": 11.2,
+      "candidate": 10.8,
+      "change": -0.036,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "frameP95Ms",
+      "base": 50,
+      "candidate": 50,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "missedTwoRefreshes",
+      "base": 0.184,
+      "candidate": 0.159,
+      "change": -0.138,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "drawCalls",
+      "base": 1702.5,
+      "candidate": 1697,
+      "change": -0.003,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "geometries",
+      "base": 546,
+      "candidate": 546,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "textures",
+      "base": 166,
+      "candidate": 166,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/reconnect",
+      "metric": "reconnectMs",
+      "base": 1196.788,
+      "candidate": 968.313,
+      "change": -0.191,
+      "budget": 0.2,
+      "decision": "within"
+    },
+    {
+      "workload": "phone-viewport/1p",
+      "metric": "frameMeanMs",
+      "base": 16.67,
+      "candidate": 16.675,
+      "change": 0,
+      "budget": 0.1,
+      "decision": "within"
+    },
+    {
+      "workload": "phone-viewport/1p",
+      "metric": "cpuSubmissionP95Ms",
+      "base": 11.4,
+      "candidate": 11.55,
+      "change": 0.013,
+      "budget": 0.1,
+      "decision": "within"
+    },
+    {
+      "workload": "phone-viewport/1p",
+      "metric": "cpuSubmissionP50Ms",
+      "base": 9,
+      "candidate": 9.2,
+      "change": 0.022,
+      "decision": "informational"
+    },
+    {
+      "workload": "phone-viewport/1p",
+      "metric": "frameP95Ms",
+      "base": 16.75,
+      "candidate": 16.7,
+      "change": -0.003,
+      "decision": "informational"
+    },
+    {
+      "workload": "phone-viewport/1p",
+      "metric": "missedTwoRefreshes",
+      "base": 0,
+      "candidate": 0,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "phone-viewport/1p",
+      "metric": "drawCalls",
+      "base": 1226,
+      "candidate": 1230.5,
+      "change": 0.004,
+      "decision": "informational"
+    },
+    {
+      "workload": "phone-viewport/1p",
+      "metric": "geometries",
+      "base": 523,
+      "candidate": 523,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "phone-viewport/1p",
+      "metric": "textures",
+      "base": 149,
+      "candidate": 149,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "phone-viewport/2p",
+      "metric": "frameMeanMs",
+      "base": 26.865,
+      "candidate": 26.05,
+      "change": -0.03,
+      "budget": 0.1,
+      "decision": "within"
+    },
+    {
+      "workload": "phone-viewport/2p",
+      "metric": "cpuSubmissionP95Ms",
+      "base": 12.65,
+      "candidate": 11.75,
+      "change": -0.071,
+      "budget": 0.1,
+      "decision": "within"
+    },
+    {
+      "workload": "phone-viewport/2p",
+      "metric": "cpuSubmissionP50Ms",
+      "base": 10.1,
+      "candidate": 8.95,
+      "change": -0.114,
+      "decision": "informational"
+    },
+    {
+      "workload": "phone-viewport/2p",
+      "metric": "frameP95Ms",
+      "base": 33.4,
+      "candidate": 49.95,
+      "change": 0.496,
+      "decision": "informational"
+    },
+    {
+      "workload": "phone-viewport/2p",
+      "metric": "missedTwoRefreshes",
+      "base": 0.014,
+      "candidate": 0.097,
+      "change": 5.73,
+      "decision": "informational"
+    },
+    {
+      "workload": "phone-viewport/2p",
+      "metric": "drawCalls",
+      "base": 1268.5,
+      "candidate": 1273,
+      "change": 0.004,
+      "decision": "informational"
+    },
+    {
+      "workload": "phone-viewport/2p",
+      "metric": "geometries",
+      "base": 539,
+      "candidate": 539,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "phone-viewport/2p",
+      "metric": "textures",
+      "base": 153,
+      "candidate": 153,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "phone-viewport/reconnect",
+      "metric": "reconnectMs",
+      "base": 1077.169,
+      "candidate": 958.641,
+      "change": -0.11,
+      "budget": 0.2,
+      "decision": "within"
+    }
+  ],
+  "over": []
+}

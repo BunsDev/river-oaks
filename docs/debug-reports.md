@@ -19,6 +19,7 @@ They describe what happened, can preview the whole report, and then **Copy** (Ma
 | `environment` | Browser, platform, desktop app or not, languages, time zone, cores, memory, connection, screen, viewport, device pixel ratio, zoom, motion, transparency, contrast and colour-scheme preferences, theme |
 | `performance` | Uptime, navigation and paint timing, JS heap. Frame times over the last 600 frames (fps, median, p90, p99, max, frames over 33 and 50 ms, last 120 values), long tasks, slowest resources |
 | `renderer` | WebGL version, GPU vendor and model, limits, key extensions, pixel ratio, drawing buffer, shadows, last frame's draw calls and triangles, GPU memory counts, context loss, graphics quality and pipeline |
+| `graphicsRecovery` | Current recovery state and the latest 20 `{lostAt, restoredAt, outcome}` cycles, in milliseconds since page navigation; outcomes include pending, restored, timeout, loop and rebuild failure |
 | `scene` | Objects, meshes, instanced meshes and instances, skinned meshes, lights by type, materials, textures |
 | `game` | World, loaded state, walking, flying or riding, position and yaw (10 cm), room, camera, place, multiplayer state, open panels, loading or error text |
 | `access` | Sign-in screen state, signed in or not, admin or not (no account id) |

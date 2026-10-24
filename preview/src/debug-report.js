@@ -263,3 +263,15 @@ export function reportMarkdown(report) {
 
 // Read-only access for tests and the debug panel.
 export const diagnosticLogs = () => logs;
+
+// Context timings contain no identity or input. Return copies so report readers
+// cannot mutate the live record; long visits retain only the latest 20 cycles.
+export function createGraphicsCycleLog(limit = 20) {
+  const cycles = [];
+  return {
+    lost(at) { cycles.push({ lostAt: Math.round(at), restoredAt: null, outcome: 'pending' }); if (cycles.length > limit) cycles.shift(); },
+    restored(at) { if (cycles.length) cycles.at(-1).restoredAt = Math.round(at); },
+    outcome(value) { if (cycles.length) cycles.at(-1).outcome = value; },
+    get cycles() { return cycles.map(cycle => ({ ...cycle })); },
+  };
+}
