@@ -64,6 +64,32 @@ function check(name) { report.checks.push(name); console.log(`✓ ${name}`); }
 try {
   const page = await app.firstWindow();
   console.log(`Desktop test window: ${report.mode}`);
+  // DIAG ONLY (#371, never merged): a timeline of what can close Settings after the reload.
+  await page.addInitScript(() => {
+    const diag = window.__diag = { events: [] };
+    const push = (type, extra = {}) => diag.events.push({ t: Math.round(performance.now()), type, ...extra });
+    const close = HTMLDialogElement.prototype.close;
+    HTMLDialogElement.prototype.close = function (...args) { push('dialog.close()', { id: this.id, open: this.open, stack: new Error().stack.split('\n').slice(2, 8).map(line => line.trim()).join(' | ') }); return close.apply(this, args); };
+    document.addEventListener('close', event => push('close event', { id: event.target?.id }), true);
+    document.addEventListener('cancel', event => push('cancel event', { id: event.target?.id }), true);
+    const Socket = window.WebSocket;
+    window.WebSocket = class extends Socket {
+      constructor(...args) {
+        super(...args);
+        const url = String(args[0]);
+        if (url.includes('/multiplayer')) { push('ws new'); this.addEventListener('open', () => push('ws open')); this.addEventListener('close', event => push('ws close', { code: event.code, reason: event.reason })); }
+      }
+    };
+    const watch = () => {
+      const host = document.querySelector('#canvas-host');
+      if (!host) { setTimeout(watch, 50); return; }
+      let state = host.dataset.multiplayer; push('multiplayer', { state });
+      new MutationObserver(() => { if (host.dataset.multiplayer !== state) push('multiplayer', { state: state = host.dataset.multiplayer }); }).observe(host, { attributes: true, attributeFilter: ['data-multiplayer'] });
+    };
+    watch();
+    try { new PerformanceObserver(list => { for (const entry of list.getEntries()) if (entry.duration >= 1000) push('longtask', { ms: Math.round(entry.duration) }); }).observe({ type: 'longtask', buffered: true }); } catch { /* unsupported */ }
+    document.addEventListener('pointerdown', event => push('pointerdown', { target: event.target?.id || event.target?.className?.toString?.().slice(0, 40) || event.target?.tagName }), true);
+  });
   page.setDefaultTimeout(120000);
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => {
@@ -253,6 +279,7 @@ try {
     return { samples: intervals.length, medianMs: intervals[Math.floor(intervals.length * 0.5)], p95Ms: intervals[Math.floor(intervals.length * 0.95)], meanFps: 1000 * intervals.length / intervals.reduce((a, b) => a + b, 0), canvas: [canvas.width, canvas.height], quality: JSON.parse(host.dataset.quality), renderer: JSON.parse(host.dataset.renderStats) };
   });
   report.performance.autoSettledMs = settledMs;
+  report.diag = await page.evaluate(() => window.__diag).catch(() => null);
   assert.ok(report.performance.samples > 100, 'render loop keeps advancing');
   for (const fullScreen of [true, false]) {
     const transition = await app.evaluate(async ({ BrowserWindow }, fullScreen) => {
@@ -340,6 +367,7 @@ try {
   const failedPage=await app.firstWindow();
   report.failureUI=await failedPage.evaluate(()=>({position:document.querySelector('#walking-hud')?.dataset.position,body:document.body.className,places:document.querySelector('#explore-section')?.textContent,walking:document.querySelector('#walking-hud')?.textContent})).catch(()=>null);
   await failedPage.screenshot({path:join(root,`output/playwright/desktop-${report.mode}-failure.png`)}).catch(()=>{});
+  report.diag = await failedPage.evaluate(() => ({ ...window.__diag, now: Math.round(performance.now()), settingsOpen: document.querySelector('#settings-dialog')?.open, gateHidden: document.querySelector('#access-gate, .access-gate, [data-access-gate]')?.hidden ?? null })).catch(() => null);
   throw error;
 } finally {
   await mkdir(join(root, 'data/reports'), { recursive: true });
