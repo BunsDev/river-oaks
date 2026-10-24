@@ -7,6 +7,8 @@ import re
 
 import httpx
 import numpy as np
+from shapely import contains_xy
+from shapely.geometry import Polygon
 
 
 def extract_vegetation(points, bounds, *, voxel_size=0.65, ground_radius=12):
@@ -95,6 +97,106 @@ def extract_vegetation(points, bounds, *, voxel_size=0.65, ground_radius=12):
         ]
         if retained.any()
         else None,
+    }
+
+
+def measure_building_heights(
+    points, buildings, *, inset=1.5, ground_band=(2, 12), percentile=95, min_returns=20
+):
+    """Roof height above same-survey ground for each footprint ring.
+
+    Roof: class-6 returns inside the footprint shrunk by `inset` m, so wall and eave
+    returns along the outline are excluded. Ground: median class-2 returns in a band
+    outside the footprint. A high percentile, not the maximum, so a stray return
+    cannot set the roof. Z is relative to that ground, not an asserted datum.
+    """
+    points = np.asarray(points, dtype=float)
+    if points.ndim != 2 or points.shape[1] != 5 or not np.isfinite(points).all():
+        raise ValueError("LiDAR points must be finite [east, north, z, class, excluded] rows")
+    kept = points[points[:, 4] == 0]
+    roof_points, ground_points = kept[kept[:, 3] == 6], kept[kept[:, 3] == 2]
+    rows = []
+    for building in buildings:
+        ring = building["ring"]
+        if len({tuple(point) for point in ring}) < 3:
+            raise ValueError(f"Building {building['id']} ring needs three distinct points")
+        footprint = Polygon(ring)
+        roof = roof_points[
+            contains_xy(footprint.buffer(-inset), roof_points[:, 0], roof_points[:, 1])
+        ]
+        band = footprint.buffer(ground_band[1]).difference(footprint.buffer(ground_band[0]))
+        ground = ground_points[contains_xy(band, ground_points[:, 0], ground_points[:, 1])]
+        row = {
+            "id": building["id"],
+            "footprint_m2": round(footprint.area, 1),
+            "roof_returns": len(roof),
+            "ground_returns": len(ground),
+        }
+        if len(roof) < min_returns or len(ground) < min_returns:
+            kind = "roof" if len(roof) < min_returns else "ground"
+            rows.append(
+                row
+                | {
+                    "height_m": None,
+                    "unmeasured_reason": f"fewer than {min_returns} {kind} returns",
+                }
+            )
+            continue
+        ground_z = float(np.median(ground[:, 2]))
+        heights = roof[:, 2] - ground_z
+        rows.append(
+            row
+            | {
+                "ground_z_m": round(ground_z, 2),
+                "height_m": round(float(np.percentile(heights, percentile)), 2),
+                "median_m": round(float(np.median(heights)), 2),
+                "returns_per_m2": round(len(roof) / footprint.area, 2),
+            }
+        )
+    return rows
+
+
+def audit_heights(buildings, measured, *, tolerance_m=3.0):
+    """Compare authored heights with measured ones without changing either.
+
+    A height whose source starts with "authored" is a documented design override:
+    reported, never failed. Any other gap above the tolerance fails; a building that
+    could not be measured blocks the audit rather than passing it.
+    """
+    by_id = {row["id"]: row for row in measured}
+    rows = []
+    for building in buildings:
+        if building["id"] not in by_id:
+            raise ValueError(f"Measurement missing for building {building['id']}")
+        height, source = by_id[building["id"]]["height_m"], building.get("height_source") or ""
+        authored = building["size"][2]
+        row = {
+            "id": building["id"],
+            "authored_m": authored,
+            "measured_m": height,
+            "height_source": source,
+        }
+        if height is None:
+            rows.append(row | {"status": "unmeasured"})
+            continue
+        gap = round(authored - height, 2)
+        status = (
+            "authored-override"
+            if source.startswith("authored")
+            else "within-tolerance"
+            if abs(gap) <= tolerance_m
+            else "exceeds-tolerance"
+        )
+        rows.append(row | {"authored_minus_measured_m": gap, "status": status})
+    statuses = {row["status"] for row in rows}
+    return {
+        "status": "failed"
+        if "exceeds-tolerance" in statuses
+        else "blocked"
+        if "unmeasured" in statuses
+        else "passed",
+        "tolerance_m": tolerance_m,
+        "buildings": rows,
     }
 
 
