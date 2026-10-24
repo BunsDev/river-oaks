@@ -26,7 +26,7 @@ export async function signBranch({ branch, git, github, apply = false, message, 
 
   const merged = mergeTree(git, main, head);
   const changes = git(['diff', '--no-renames', '--raw', '-z', git(['merge-base', main, head]), head], { raw: true });
-  const { additions, deletions } = fileChanges(git, head, changes);
+  const { additions, deletions } = fileChanges(git, merged, changes);
   const subjects = git(['log', '--no-merges', '--format=%s', `${main}..${head}`]).split('\n').filter(Boolean).reverse();
   const [headline, ...rest] = (message ?? defaultMessage(subjects, unsigned)).split('\n');
   const plan = { status: 'planned', branch, oldHead: head, main, expectedTree: merged, unsigned, files: additions.length + deletions.length };
@@ -57,14 +57,15 @@ function mergeTree(git, main, head) {
 }
 
 // Only regular files can be expressed through createCommitOnBranch; anything else
-// (symlinks, submodules, mode changes) must be signed another way.
-function fileChanges(git, head, raw) {
+// (symlinks, submodules, mode changes) must be signed another way. Contents come from
+// the merged tree, so a file main also changed keeps both sides' edits.
+function fileChanges(git, merged, raw) {
   const fields = raw.toString('utf8').split('\0'), additions = [], deletions = [];
   for (let i = 0; i + 1 < fields.length; i += 2) {
     const [oldMode, newMode, , , status] = fields[i].replace(/^:/, '').split(' '), path = fields[i + 1];
     if (status === 'D') { deletions.push({ path }); continue; }
     if (newMode !== '100644' || (status === 'M' && oldMode !== newMode)) throw new Error(`${path} has mode ${newMode}${status === 'M' ? ` (was ${oldMode})` : ''}; createCommitOnBranch can only write regular files.`);
-    additions.push({ path, contents: git(['show', `${head}:${path}`], { raw: true }).toString('base64') });
+    additions.push({ path, contents: git(['show', `${merged}:${path}`], { raw: true }).toString('base64') });
   }
   return { additions, deletions };
 }

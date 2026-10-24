@@ -90,6 +90,21 @@ test('apply replaces the branch with one signed commit whose tree is main merged
   assert.equal((await signBranch({ branch: 'feat', git, github, apply: true })).status, 'already-signed');
 });
 
+test('a file that main also changed, without conflict, is rebuilt with both sides', async t => {
+  const repo = repository(t), lines = n => Array.from({ length: 8 }, (_, i) => `${i + 1}${i === n ? ' edited' : ''}\n`).join('');
+  run(repo.work, 'switch', '-q', 'main'); repo.commit({ 'shared.txt': lines(-1) }, 'shared'); run(repo.work, 'push', '-q', 'origin', 'main');
+  run(repo.work, 'switch', '-q', 'feat'); run(repo.work, 'merge', '-q', '--no-edit', 'main');
+  repo.commit({ 'shared.txt': lines(0) }, 'branch edits the first line'); run(repo.work, 'push', '-q', 'origin', 'feat');
+  run(repo.work, 'switch', '-q', 'main'); repo.commit({ 'shared.txt': lines(7) }, 'main edits the last line'); run(repo.work, 'push', '-q', 'origin', 'main');
+  run(repo.work, 'switch', '-q', 'feat');
+  const github = fakeGitHub(repo), main = run(repo.origin, 'rev-parse', 'main');
+  const expected = run(repo.work, 'merge-tree', '--write-tree', main, run(repo.origin, 'rev-parse', 'feat'));
+  const result = await signBranch({ branch: 'feat', git: localGit(repo.work), github, apply: true });
+  assert.equal(result.status, 'signed');
+  assert.equal(run(repo.origin, 'rev-parse', `${result.newHead}^{tree}`), expected);
+  assert.match(run(repo.origin, 'show', `${result.newHead}:shared.txt`), /^1 edited\n[\s\S]*\n8 edited$/);
+});
+
 test('a rebuilt tree that differs from the expected merge leaves the branch alone', async t => {
   const repo = repository(t), github = fakeGitHub(repo, { tamper: true }), before = run(repo.origin, 'rev-parse', 'feat');
   await assert.rejects(signBranch({ branch: 'feat', git: localGit(repo.work), github, apply: true }), /differs from the expected/);
