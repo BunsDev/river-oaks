@@ -22,6 +22,7 @@ import { objectCollider, blocksPlayer, blocksResident } from '../preview/src/cre
 import { cafeSeat, plazaSalonPlan } from '../preview/src/plaza-salon-plan.js';
 import { createCafeGames } from './cafe-games.js';
 import { createDartsGames } from './darts-games.js';
+import { createLanternWalk } from './lantern-walk.js';
 import { IPIC_DARTS, atIpicDartsLine } from '../preview/src/ipic-plan.js';
 import { createAxeGames } from './axe-games.js';
 import { AXE_LANES, AXE_ROOM_DARTS, AXE_ROOM_INTERIOR, atAxeLane, atAxeRoomDarts } from '../preview/src/axe-room-plan.js';
@@ -177,6 +178,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     atLane:player=>onFootIn(player,axeRoom) ? atAxeLane(roomPoint(axeRoom,player)) : null,
     // The thrower's real distance to the target decides the axe's rotation (axe-rules.js).
     distanceTo:(player,laneId)=>{const lane=AXE_LANES.find(item=>item.id===laneId);return axeRoom&&lane?lane.target-roomPoint(axeRoom,player)[1]:NaN;}});
+  // Bayou Market Commons' Lantern Walk (lantern-walk.js): lanterns come from the composed destination.
+  const lanternWalk=createLanternWalk({lanterns:worldData.eastGardenCommons?.destination?.lanterns??[],changed:()=>revision++,now});
   // Venue screenings (screenings.js): the server decides who is in the venue and who may host.
   const screenings=createScreenings({players,grants:screeningHosts,changed:()=>revision++,
     inVenue:(player,venueId)=>!player.levelId && !offices.has(player.id)
@@ -893,6 +896,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       const reply=(message.type==='darts'?dartsGames:axeGames).command(player,message,time);
       return reply.ok?{...reply,player:publicPlayer(player)}:reply;
     }
+    if(message.type==='lanterns') {
+      if(!lanternWalk.enabled)return reject('invalid_command');
+      const reply=lanternWalk.command(player,message);
+      return reply.ok?{...reply,player:publicPlayer(player)}:reply;
+    }
     if(message.type==='screening')return screenings.command(player,message,time,{sessionId});
     if(message.type==='interaction' && player.performing)return reject('performing','Leave the stage first.');
     if(message.type==='office')return offices.command(player,message,time);
@@ -1097,7 +1105,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (!Number.isFinite(delta) || delta<=0) return;
     const duration=Math.min(delta,0.25),time=now();
     clearExpiredLedgers(time);
-    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(time);campus.prune(time);
+    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();lanternWalk.prune(time);screenings.prune(time);campus.prune(time);
     for (const [id,hold] of focus) if (hold.until<=time || !reachable(players.get(id),localById.get(hold.localId))) focus.delete(id);
     const held=new Set([...focus.values()].map(hold=>hold.localId));
     for (const local of state.locals) {
@@ -1121,7 +1129,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,worldPolicy:publicWorldPolicy(),crime:crime.snapshot(now()),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
+    return {type:'snapshot',interactions:social,worldId,protocolVersion:WORLD_PROTOCOL_VERSION,revision,elapsed,worldPolicy:publicWorldPolicy(),crime:crime.snapshot(now()),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.snapshot()}:{}),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
@@ -1135,8 +1143,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   function checkpoint() {
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
     interactions.prune();
-    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();screenings.prune(now());
-    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),screenings:screenings.checkpoint(now()),worldPolicy,crime:crime.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
+    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();lanternWalk.prune(now());screenings.prune(now());
+    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.checkpoint()}:{}),screenings:screenings.checkpoint(now()),worldPolicy,crime:crime.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
       if(!player.performing)return player;
       const {performing,...rest}=player;
       return {...rest,position:stageStepDown(player)??performing.from};
@@ -1285,6 +1293,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       // Darts lines are optional in the payload: older checkpoints restore with none.
       const nextDarts=dartsGames.validate(recovered.dartsGames??[]);
       const nextAxes=axeGames.validate(recovered.axeGames??[]);
+      // Only a world with the Commons destination has lanterns; older checkpoints restore dark.
+      const nextLanterns=lanternWalk.validate(recovered.lanternWalk);
       // Checkpoint v9 adds screenings; older ones restore with a fresh, stopped timeline.
       if((saved.version<9)!==(recovered.screenings===undefined))throw new Error('Invalid screening version');
       const nextScreenings=saved.version>=9?screenings.validate(recovered.screenings,now()):screenings.blank();
@@ -1442,6 +1452,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       cafeGames.load(nextCafe);
       dartsGames.load(nextDarts);
       axeGames.load(nextAxes);
+      lanternWalk.load(nextLanterns);
       screenings.load(nextScreenings);
       interactions.restore(nextInteractions);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;voiceIdentities.clear();
@@ -1460,6 +1471,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     cafeGames.clear();
     dartsGames.clear();
     axeGames.clear();
+    lanternWalk.clear();
     screenings.reset();
     const fresh=createCommunity(worldData,environment.rooms,{carriage:false,sharedPopulation});
     fresh.generation=state.generation+1;

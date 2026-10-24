@@ -3,7 +3,7 @@ async page => {
   const {createResidentNavigation}=await import('../src/navigation.js');
   const {arrivalPedestrianRoute}=await import('../audit/baseline-580-route.js');
   const {plazaSalonSeats}=await import('../src/plaza-salon-plan.js');
-  const revision='east-garden-commons-blockout-1',world=await loadDistrictData({districtRevision:revision});
+  const revision='east-garden-commons-market-1',world=await loadDistrictData({districtRevision:revision});
   const nav=createResidentNavigation(world),edge=world.eastGardenCommons.edge,checks=[],routes=[],errors=[];
   const check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);console.log(label);};
   page.on('pageerror',error=>errors.push(error.message));

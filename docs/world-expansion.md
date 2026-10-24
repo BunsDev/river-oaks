@@ -18,7 +18,7 @@ The District bounds span 253.944040393926 metres east/west and 290.4306195230893
 
 ## Existing implementation seams
 
-The browser `loadWorld` in `preview/src/main.js` selects the default District or a separate `region-v1` world, then attaches vegetation, the approved gallery and the server-selected Gardens revision. `server/district-data.js` constructs the server District. `server/world.js` enforces the current bounds and movement environment. Both paths now support the opt-in `east-garden-commons-blockout-1` revision, which composes Commons after Gardens and announces it through existing HTTP/socket revision synchronization. Default revisions are preserved. Existing separate creator worlds are not seamless neighboring locations.
+The browser `loadWorld` in `preview/src/main.js` selects the default District or a separate `region-v1` world, then attaches vegetation, the approved gallery and the server-selected Gardens revision. `server/district-data.js` constructs the server District. `server/world.js` enforces the current bounds and movement environment. Both paths now support the opt-in `east-garden-commons-market-1` revision (which superseded `east-garden-commons-blockout-1`), which composes Commons and its [Bayou Market Commons](level-design/expansion/bayou-market-commons.md) destination after Gardens and announces it through existing HTTP/socket revision synchronization. Default revisions are preserved. Existing separate creator worlds are not seamless neighboring locations.
 
 ## Acceptance still required
 
@@ -79,3 +79,7 @@ The integrated review preserves the published Commons partition and adds malform
 ## Reviewed Mac baseline
 
 [The Phase 1 Mac evidence report](acceptance/phase1-review-20261023.md) records twelve warmed 30-second samples on reviewed head `c2cac2d3`, exact source hashes, raw measurements and matched arrival images. Desktop frame p95 medians were 16.7 ms solo and 50.0 ms with two full clients on the Mac; the phone-sized Mac viewport measured 16.8 ms and 33.4 ms. The desktop two-client result exceeds the proposed 10% allowance against the earlier 33.4 ms sample median. Different host loads and incomplete historical source-hash coverage prevent causal attribution; this is not a passing performance gate. Physical iPhone testing is deferred by the user. The evidence supports a pinned engineering baseline while phase acceptance remains open.
+
+## First playable destination
+
+[Bayou Market Commons](level-design/expansion/bayou-market-commons.md) (#586) completes the Commons slice with Market Street, two kit-built blocks, the Bayou Green, the Bayou Lantern water tower and the Lantern Walk shared activity. It is built from the [city kit and neighborhood assembly pipeline](city-kit.md) (#584, #585), which also assembles a second, preview-only neighborhood from the same kit. It adds no area beyond the registered Commons bounds, so the 3–5× reachable-area target above remains open.
