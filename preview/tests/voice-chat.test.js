@@ -10,7 +10,7 @@ function fakeSdk() {
   const sdk = { rooms: [], loads: 0, micCalls: [], micError: null, connectError: null, connectGate: null };
   class Publication { constructor() { this.isSubscribed = true; this.calls = []; } setSubscribed(value) { this.isSubscribed = value; this.calls.push(value); } }
   class Participant { constructor(identity) { this.identity = identity; this.trackPublications = new Map([['t-' + identity, new Publication()]]); } get publication() { return this.trackPublications.get('t-' + this.identity); } }
-  class LocalParticipant { constructor(room) { this.room = room; this.micEnabled = false; } async setMicrophoneEnabled(on) { if (on && sdk.micError) throw sdk.micError; this.micEnabled = on; sdk.micCalls.push(on); } }
+  class LocalParticipant { constructor(room) { this.room = room; this.micEnabled = false; } async setMicrophoneEnabled(on) { if (on && sdk.micError) throw sdk.micError; if (on && sdk.micGate) await sdk.micGate; this.micEnabled = on; sdk.micCalls.push(on); } }
   class Room {
     constructor(options) { this.options = options; this.handlers = {}; this.localParticipant = new LocalParticipant(this); this.remoteParticipants = new Map(); this.state = 'disconnected'; this.canPlaybackAudio = true; this.disconnected = 0; this.switched = []; sdk.rooms.push(this); }
     on(event, handler) { (this.handlers[event] ??= []).push(handler); return this; }
@@ -376,3 +376,76 @@ test('a performer on the plaza stage is heard across the plaza, where someone ta
   h.voice.sync(far.map(player => player.id === 'alice' ? { ...player, performing: false } : player), 'me');
   assert.equal(alice.publication.isSubscribed, false);
 });
+
+test('hidden visibility releases the transmit latch so only a new deliberate hold can speak', async () => {
+  const h = harness({ prefs: { pushToTalk: true } }); await h.ready();
+  h.voice.setTransmit(true); await settle(); assert.equal(h.voice.state.mic, 'on');
+  h.doc.visibilityState = 'hidden'; h.emit('visibilitychange'); await settle(); assert.equal(h.voice.state.mic, 'off');
+  h.doc.visibilityState = 'visible'; h.emit('visibilitychange'); await settle(); assert.equal(h.voice.state.mic, 'off');
+  h.voice.setTransmit(true); await settle(); assert.equal(h.voice.state.mic, 'on');
+  h.voice.dispose();
+});
+
+test('a microphone grant arriving after background release cannot restart transmit', async () => {
+  const h = harness({ prefs: { pushToTalk: true } }); await h.ready();
+  let grant; h.sdk.micGate = new Promise(resolve => { grant = resolve; });
+  h.voice.setTransmit(true); await settle(); assert.equal(h.voice.state.mic, 'requesting');
+  h.emit('blur'); await settle(); grant(); await settle();
+  assert.equal(h.voice.state.mic, 'off'); assert.equal(h.room().localParticipant.micEnabled, false);
+  h.voice.dispose();
+});
+
+for (const reason of ['blur', 'hidden', 'key release']) for (const reconnect of ['room', 'town']) {
+  test(`${reason} fences microphone restoration during a deferred ${reconnect} rejoin`, async () => {
+    const h = harness({ prefs: { pushToTalk: true, autoUnmute: true } }); await h.ready();
+    h.voice.setTransmit(true); await settle(); assert.equal(h.voice.state.mic, 'on');
+    let connect; h.sdk.connectGate = new Promise(resolve => { connect = resolve; });
+    let joining;
+    if (reconnect === 'room') joining = h.voice.rejoin();
+    else { h.voice.onConnectionLost(false); h.voice.sync([{ id: 'me', voice: { space: 'outdoor', id: null } }], 'me'); }
+    await settle();
+    if (reason === 'hidden') { h.doc.visibilityState = 'hidden'; h.emit('visibilitychange'); }
+    else if (reason === 'blur') h.emit('blur');
+    else h.voice.setTransmit(false);
+    connect(); await joining; await settle();
+    assert.equal(h.voice.state.status, 'joined'); assert.equal(h.voice.state.mic, 'off');
+    assert.equal(h.room().localParticipant.micEnabled, false);
+    h.doc.visibilityState = 'visible'; h.emit('visibilitychange');
+    h.voice.setTransmit(true); await settle(); assert.equal(h.voice.state.mic, 'on');
+    h.voice.dispose();
+  });
+}
+
+test('blur leaves an open microphone on: a later space change restores it and auto-unmute still applies', async () => {
+  const h = harness(); await h.ready();
+  await h.voice.setMic(true);
+  h.emit('blur'); await settle();
+  assert.equal(h.voice.state.mic, 'on', 'switching apps or focusing an embedded page keeps an open microphone');
+  h.queue.join.push(h.lease({ space: 'osm-node-1', participantIdentity: 'p2' }));
+  h.voice.sync(h.players(['me', null, 'osm-node-1']), 'me'); await settle();
+  assert.deepEqual([h.voice.state.status, h.voice.state.space, h.voice.state.mic], ['joined', 'osm-node-1', 'on'], 'the space change restores the microphone');
+  assert.equal(h.room().localParticipant.micEnabled, true);
+  h.preferences.set({ autoUnmute: true }); h.voice.leave(); await settle();
+  h.emit('blur'); await h.voice.join(); await settle();
+  assert.equal(h.voice.state.mic, 'on', 'auto-unmute still applies after a blur');
+  h.voice.dispose();
+});
+
+for (const reason of ['hidden', 'pagehide']) {
+  test(`${reason} blocks automatic microphone re-enabling after return until the resident unmutes`, async () => {
+    const h = harness({ prefs: { autoUnmute: true } }); await h.ready();
+    await h.voice.setMic(true);
+    if (reason === 'hidden') { h.doc.visibilityState = 'hidden'; h.emit('visibilitychange'); await settle(); h.doc.visibilityState = 'visible'; h.emit('visibilitychange'); }
+    else { h.emit('pagehide'); await settle(); h.emit('pageshow', { persisted: true }); }
+    await settle(); assert.equal(h.voice.state.mic, 'off');
+    // Back in view, neither a rejoin nor a fresh join turns the microphone on by itself.
+    if (reason === 'hidden') await h.voice.rejoin(); else await h.voice.join();
+    await settle();
+    assert.deepEqual([h.voice.state.status, h.voice.state.mic], ['joined', 'off']);
+    assert.equal(h.room().localParticipant.micEnabled, false);
+    // A deliberate unmute restores automatic behaviour.
+    await h.voice.setMic(true); await h.voice.rejoin(); await settle();
+    assert.deepEqual([h.voice.state.status, h.voice.state.mic], ['joined', 'on']);
+    h.voice.dispose();
+  });
+}

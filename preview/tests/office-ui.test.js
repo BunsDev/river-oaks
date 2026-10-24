@@ -28,7 +28,7 @@ function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=
  }
  const original={document:globalThis.document,window:globalThis.window,matchMedia:globalThis.matchMedia};
  const root=new Element('body'),host=new Element('div'),panelHost=new Element('div');root.append(host,panelHost);
- globalThis.document={body:root,createElement:tag=>new Element(tag),addEventListener(){},hidden:false};globalThis.window={addEventListener(){}};globalThis.matchMedia=()=>({matches:false});
+ globalThis.document=Object.assign(new EventTarget(),{body:root,createElement:tag=>new Element(tag),hidden:false});globalThis.window=new EventTarget();globalThis.matchMedia=()=>({matches:false});
 
  const player={id:'owner',name:'Jevica',position:[...officesFor(data)[0].entrance,0],office:null};
  const calls=[],voiceCalls=[],scenes=[],prepared=[],renders=[];let pending=null,disposed=0;
@@ -327,4 +327,18 @@ test('choosing a view with the pointer returns keys to the office; the touch pad
  // Chrome may close a modal dialog on a second Escape without a cancel event: treat it as leaving.
  dialog.open=false;dialog.emit('close');await tick();await tick();
  assert.ok(f.calls.some(c=>c.action==='leave'),'an unexpected close leaves the office');assert.equal(f.ui.active,false);
+});
+
+test('backgrounding releases office movement, look drag and push-to-talk without waiting for a render', async t => {
+  const f = setup(t); await tick(); f.find('office-enter').emit('click'); await tick(); f.ui.update(6000, .016);
+  const dialog = f.find('office-visit'); f.mp.voice.state.pushToTalk = true;
+  dialog.emit('keydown', { code: 'KeyW' }); dialog.emit('keydown', { code: 'KeyM' });
+  dialog.emit('pointerdown', { pointerId: 4, clientX: 20 });
+  const before = structuredClone(f.ui.pose);
+  window.dispatchEvent(new Event('pagehide'));
+  assert.equal(f.voiceCalls.at(-1), false, 'pagehide mutes transmit before any frame');
+  dialog.emit('keydown', { code: 'KeyW', repeat: true }); dialog.emit('keydown', { code: 'KeyM', repeat: true });
+  assert.equal(f.voiceCalls.at(-1), false, 'a stale repeated key cannot restart transmit');
+  dialog.emit('pointermove', { pointerId: 4, clientX: 120 }); f.ui.update(6300, .1);
+  assert.deepEqual(f.ui.pose.position, before.position); assert.equal(f.ui.pose.yaw, before.yaw);
 });

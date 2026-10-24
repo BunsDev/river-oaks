@@ -1,3 +1,4 @@
+import { bindPageLifecycle } from './background-lifecycle.js';
 // Neural generation uses the loopback bridge; device fallback permits localService voices only.
 import {readSpeechTimings} from './speech-timings.js';
 export const VOICE_PRESETS = ['af_heart','bm_fable','bf_emma','am_fenrir','af_kore','am_eric','af_sarah','am_liam','af_sky','am_onyx','af_jessica','am_echo','af_nova','am_puck','af_river','am_adam','af_alloy','bm_george','af_aoede','bm_daniel','bf_isabella','af_nicole','am_michael','af_bella'];
@@ -121,8 +122,7 @@ export function createLocalSpeech(onStatus = () => {}, {prepare = async()=>null}
     },
   });
   const suspend=()=>{queue.cancel();for(const face of fading)face.dispose();fading.clear();};
-  window.addEventListener('blur', suspend);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) suspend(); });
+  bindPageLifecycle({ release: suspend });
   return {
     get mode() { return mode; },
     get speakingId() { return speakingId; },

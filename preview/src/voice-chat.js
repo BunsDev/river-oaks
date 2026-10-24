@@ -1,3 +1,4 @@
+import { bindPageLifecycle } from './background-lifecycle.js';
 // Shared voice in the browser: the client side of server/voice.js. The town
 // server names the room and the identity; this controller only joins what it
 // was handed, keeps the lease renewed, and stops capture the moment voice ends.
@@ -26,6 +27,7 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
   const state = { status: 'unavailable', mic: 'off', deafened: false, playbackBlocked: false, space: null, participantIdentity: null, expiresAt: 0, message: MESSAGES.unavailable, peers: new Map() };
   let generation = 0, room = null, sdk = null, audioContext = null, renewTimer = null, renewRetried = false, joinedAt = 0;
   let available = false, authorizedSpace = null, wanted = false, micGranted = false, disposed = false, token = null, restoreMicUntil = 0, moved = false;
+  let releaseGeneration = 0, automaticMicAllowed = true;
   const identityToPlayer = new Map(), playerToIdentity = new Map(), lastPlayers = new Map();
   // One audio graph per subscribed remote track, keyed by participant identity
   // (a track can arrive before the snapshot names its player; it stays silent until then).
@@ -128,6 +130,7 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
     token = null;
   }
   async function connectLease(gen, rejoining) {
+    const release = releaseGeneration;
     const { status, data } = await request('join', {});
     if (stale(gen)) return false;
     if (status !== 200) {
@@ -152,7 +155,7 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
     scheduleRenew(data.renewMs ?? 15_000);
     applySubscriptions();
     const restore = restoreMicUntil >= now(); restoreMicUntil = 0;
-    if ((preferences.get().autoUnmute || restore) && micGranted && !state.deafened) await setMic(true);
+    if (release === releaseGeneration && (preferences.get().autoUnmute || restore) && micGranted && !state.deafened) await setMic(true, { automatic: true });
     return true;
   }
   async function join() {
@@ -166,12 +169,12 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
   }
   async function rejoin() {
     if (disposed || !available) return false;
-    const previous = { deafened: state.deafened, mic: state.mic };
+    const previous = { deafened: state.deafened, mic: state.mic, release: releaseGeneration };
     endRoom('rejoining', MESSAGES.rejoining, { keepIntent: true });
     const gen = ++generation;
     try {
       const ok = await connectLease(gen, true);
-      if (ok && previous.mic === 'on' && micGranted && !previous.deafened) await setMic(true);
+      if (ok && previous.release === releaseGeneration && previous.mic === 'on' && micGranted && !previous.deafened) await setMic(true, { automatic: true });
       return ok;
     } catch { if (!stale(gen)) set({ status: 'error', message: MESSAGES.lost }); return false; }
   }
@@ -189,26 +192,32 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
     if (status === 503) { if (!renewRetried) { renewRetried = true; scheduleRenew(RENEW_RETRY_MS); } else leave('lost'); return; }
     leave('revoked');
   }
-  async function setMic(on) {
+  let micAttempt = 0, micWanted = false;
+  async function setMic(on, { automatic = false } = {}) {
     if (state.status !== 'joined' || !room) return false;
-    const gen = generation;
+    if (on && automatic && (!automaticMicAllowed || doc?.hidden || doc?.visibilityState === 'hidden')) return false;
+    if (on && !automatic) automaticMicAllowed = true;
+    const gen = generation, attempt = ++micAttempt, participant = room.localParticipant; micWanted = Boolean(on);
     if (!on) {
-      try { await room.localParticipant.setMicrophoneEnabled(false); } catch { /* nothing to release */ }
-      if (!stale(gen)) { state.mic = 'off'; set({ message: label() }); }
+      try { await participant.setMicrophoneEnabled(false); } catch { /* nothing to release */ }
+      if (!stale(gen) && attempt === micAttempt) { state.mic = 'off'; set({ message: label() }); }
       return true;
     }
     if (state.deafened) return false;
     set({ mic: 'requesting', message: 'Asking for the microphone…' });
     try {
       ensureAudio();
-      await room.localParticipant.setMicrophoneEnabled(true);
-      if (stale(gen)) { try { await room?.localParticipant.setMicrophoneEnabled(false); } catch { /* already gone */ } return false; }
+      await participant.setMicrophoneEnabled(true);
+      if (stale(gen) || attempt !== micAttempt) {
+        if (stale(gen) || !micWanted) try { await participant.setMicrophoneEnabled(false); } catch { /* already gone */ }
+        return false;
+      }
       micGranted = true;
       state.mic = 'on';
       set({ message: label() });
       return true;
     } catch (error) {
-      if (stale(gen)) return false;
+      if (stale(gen) || attempt !== micAttempt) return false;
       const kind = micState(error);
       set({ mic: kind, message: kind === 'off' ? MESSAGES.lost : MESSAGES[kind] });
       return false;
@@ -274,12 +283,22 @@ export function createVoiceChat({ request, preferences, loadTransport = () => im
     const next = Boolean(value);
     if (next === held) return;
     held = next;
-    if (!preferences.get().pushToTalk || state.status !== 'joined') return;
+    if (!preferences.get().pushToTalk) return;
+    // A released hold also cancels restoring it after a rejoin or town reconnect still under way.
+    if (!held) { releaseGeneration++; restoreMicUntil = 0; }
+    if (state.status !== 'joined') return;
     void setMic(held);
   }
-  on(doc, 'visibilitychange', () => { if (doc.visibilityState === 'hidden' && state.mic === 'on') void setMic(false); });
-  on(win, 'blur', () => setTransmit(false));
-  on(win, 'pagehide', () => { if (state.status !== 'unavailable' && state.status !== 'idle') leave('pagehide'); });
+  // Every release ends a push-to-talk hold. Blur alone (another app or an embedded page took
+  // focus) leaves an open microphone and auto-unmute as the resident set them; leaving the
+  // page's view stops automatic re-enabling until the resident unmutes again.
+  listeners.push(bindPageLifecycle({ document: doc, window: win, release(reason) {
+    setTransmit(false);
+    if (reason === 'blur') return;
+    releaseGeneration++; automaticMicAllowed = false; restoreMicUntil = 0;
+    if (reason === 'hidden' && ['on', 'requesting'].includes(state.mic)) void setMic(false);
+    if (reason === 'pagehide' && state.status !== 'unavailable' && state.status !== 'idle') leave('pagehide');
+  } }));
   const unsubscribe = preferences.subscribe(next => { if (room && next.deviceId) void room.switchActiveDevice?.('audioinput', next.deviceId).catch?.(() => {}); });
   return {
     get state() { return snapshot(); },
