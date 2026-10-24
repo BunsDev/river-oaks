@@ -68,14 +68,14 @@ async page => {
   check(saved.character.published.revision===1&&saved.selection.character.palette==='rose','Wear publishes and equips the owner revision');
   const deferredCases=['save','read'];
   const holdResponse=async pattern=>{
-   let release,captured,captureFailed,finished,routeError,timer,first=true;
+   let release,captured,captureFailed,finished,routeError,timer,request,started,first=true;
    const gate=new Promise(resolve=>{release=resolve;}),done=new Promise(resolve=>{finished=resolve;});
    const received=new Promise((resolve,reject)=>{timer=setTimeout(()=>reject(new Error('Expected held account response was not captured')),15000);captured=()=>{clearTimeout(timer);resolve();};captureFailed=error=>{clearTimeout(timer);reject(error);};});
    // The capture can fail while a preceding browser action is still pending.
    received.catch(()=>{});
-   const handler=async route=>{if(!first)return route.continue();first=false;try{const response=await route.fetch();captured();await gate;await route.fulfill({response});}catch(error){routeError=error;captureFailed(error);}finally{finished();}};
+   const handler=async route=>{if(!first)return route.continue();first=false;request=route.request();started=Date.now();try{const response=await route.fetch();captured();await gate;await route.fulfill({response});}catch(error){routeError=error;captureFailed(error);}finally{finished();}};
    await page.route(pattern,handler);
-   const held={received,release:async()=>{clearTimeout(timer);release();if(!first)await done;await page.unroute(pattern,handler);if(routeError)throw routeError;}};
+   const held={received,diagnostics:()=>({elapsedMs:Date.now()-started,failure:request?.failure()?.errorText??null}),release:async()=>{clearTimeout(timer);release();if(!first)await done;await page.unroute(pattern,handler);if(routeError)throw routeError;}};
    heldResponses.push(held);return held;
   };
   if(deferredCases.includes('save')){
@@ -85,7 +85,7 @@ async page => {
    await page.waitForTimeout(2200);await page.locator('input[name=player-character][value=rowan]').check();
    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='rowan-human'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
    await page.getByRole('button',{name:'Open character studio',exact:true}).click();
-   check(['loading','saving'].includes(await dialog.getAttribute('data-account-phase')),'The delayed account operation is still pending on reopen');await held.release();
+   check(['loading','saving'].includes(await dialog.getAttribute('data-account-phase')),`The delayed save is still pending on reopen: ${JSON.stringify({...held.diagnostics(),phase:await dialog.getAttribute('data-account-phase'),status:await dialog.locator('[data-account-status]').textContent()})}`);await held.release();
    await page.waitForFunction(()=>document.querySelector('.character-studio').dataset.accountPhase==='ready');
    check(await dialog.getAttribute('data-palette')==='rose','A delayed save preserves the retained visible edit across reopening');
    check(await dialog.locator('[data-wear]').isEnabled(),'Reopening during a delayed save refreshes selection after the save settles');
@@ -101,7 +101,7 @@ async page => {
    await page.waitForTimeout(2200);await page.locator('input[name=player-character][value=rowan]').check();
    await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerAppearance==='rowan-human'&&document.querySelector('#canvas-host').dataset.playerReady==='true');
    await page.getByRole('button',{name:'Open character studio',exact:true}).click();
-   check(['loading','saving'].includes(await dialog.getAttribute('data-account-phase')),'The delayed account operation is still pending on reopen');await held.release();
+   check(['loading','saving'].includes(await dialog.getAttribute('data-account-phase')),`The delayed read is still pending on reopen: ${JSON.stringify({...held.diagnostics(),phase:await dialog.getAttribute('data-account-phase'),status:await dialog.locator('[data-account-status]').textContent()})}`);await held.release();
    await page.waitForFunction(()=>document.querySelector('.character-studio').dataset.accountPhase==='ready');
    check(await dialog.getAttribute('data-palette')==='midnight','A delayed read does not replace the retained local edit');
    await dialog.getByRole('radio',{name:'Rose silk',exact:true}).click();

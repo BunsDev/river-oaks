@@ -120,13 +120,17 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
   $('[data-retry]').addEventListener('click',()=>accountAction(()=>account.retry()));
   $('[data-refresh]').addEventListener('click',()=>accountAction(()=>account.load()));
   $('[data-load-draft]').addEventListener('click',()=>{draft.restore(editable(accountState.character.draft));comparing=false;render();});
-  function open(){
+  function open(event){
     if(closed||dialog.open||!canOpen()||document.querySelector('dialog[open]'))return;
     const confirmed=getDefinition();if(!valid(confirmed))return;
     const confirmedDraft=editable(confirmed);
     if(retained&&sameLook(retained,baseline))retained=null;baseline=confirmedDraft;
     draft=createCharacterDraft({ownerId,definition:retained??confirmedDraft});comparing=false;spinning=false;
-    returnFocus=document.activeElement;onOpen();dialog.showModal();readFavorites();showFavorites();
+    // Safari does not focus buttons on pointer/touch activation. Return to the
+    // actual entry control rather than the previously focused page element.
+    returnFocus=event?.currentTarget===trigger?trigger:document.activeElement;
+    if(!returnFocus||returnFocus===document.body)returnFocus=trigger;
+    onOpen();dialog.showModal();readFavorites();showFavorites();
     $('[name=pose]').value='idle';$('[name=pose]').disabled=reducedMotion;$('[data-turntable]').disabled=reducedMotion;$('[data-turntable]').setAttribute('aria-pressed','false');$('#cs-yaw').value='0';
     $('[name=framing]').value='full';$('[name=lighting]').value='day';
     try{preview=createCharacterPreview({host:stage,ownerId,reducedMotion,onStatus:setStatus});}
