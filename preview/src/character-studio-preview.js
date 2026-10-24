@@ -12,12 +12,15 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
+  // The shared CPU acceptance profile draws no shadows (main.js, shared-runner.js). This preview
+  // redraws every frame, so under that profile a shadow pass starves the page it shares a CPU with.
+  const softwareRendering=import.meta.env.DEV&&import.meta.env.VITE_SHARED_SOFTWARE_RENDERING==='1';
+  renderer.shadowMap.enabled=!softwareRendering;renderer.shadowMap.type=THREE.PCFShadowMap;
   renderer.domElement.setAttribute('aria-label','Live character preview');renderer.domElement.setAttribute('role','img');host.append(renderer.domElement);
   const scene=new THREE.Scene();scene.background=new THREE.Color('#cbd8d1');
   const camera=new THREE.PerspectiveCamera(30,1,.05,30);
   const key=new THREE.DirectionalLight('#fff0df',3.1),fill=new THREE.HemisphereLight('#f2f6ff','#64766d',2),rim=new THREE.DirectionalLight('#c5e6e5',2.2);
-  key.castShadow=true;key.shadow.mapSize.set(1024,1024);
+  key.castShadow=!softwareRendering;key.shadow.mapSize.set(1024,1024);
   Object.assign(key.shadow.camera,{left:-1.5,right:1.5,top:2,bottom:-1.5,near:.1,far:12});key.shadow.normalBias=.012;key.shadow.bias=-.0001;
   key.position.set(3,4,4);rim.position.set(-3,3,-2);scene.add(key,fill,rim);
   const pedestal=new THREE.Mesh(new THREE.CylinderGeometry(.65,.68,.05,64),new THREE.MeshStandardMaterial({color:'#a8bdb2',roughness:.87}));pedestal.position.y=-.028;pedestal.receiveShadow=true;scene.add(pedestal);
