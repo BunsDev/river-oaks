@@ -20,8 +20,6 @@ const canvas2d = (width, height) => headless ? null : Object.assign(document.cre
 const RENDER_MATERIALS = {
   // A dim, warm shop interior seen through storefront glass.
   'shop-interior': { color: '#15100c', roughness: .95, emissive: '#8a5228', emissiveIntensity: .16 },
-  // A lit boutique behind gallery glass: warm ivory walls, brighter than a street shop.
-  'gallery-interior': { color: '#4a3f35', roughness: .9, emissive: '#f2d6ae', emissiveIntensity: .3 },
   // Market stall produce; peaches and lemons reuse the apricot canvas and brass.
   'produce-red': { color: '#a8382c', roughness: .55 },
   'produce-green': { color: '#5d8a3a', roughness: .7 },
@@ -200,7 +198,7 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       put(batch, wall, L / 2, -inset / 2, (head + floor + U) / 2, L, floor + U - head, inset);
       for (const u of [.2, L - .2]) put(batch, wall, u, -inset / 2, (sill + head) / 2, .4, head - sill, inset);
       put(detail, m('glass-dark'), L / 2, -inset + .03, (sill + head) / 2, L - .4, head - sill, .04);
-      for (let u = 1.4; u < L - .9; u += 1.2) put(detail, accent, u, .1, (sill + head) / 2, .06, head - sill + .12, .5);
+      for (let u = 1.4; u < L - .9; u += 1.6) put(detail, accent, u, .1, (sill + head) / 2, .06, head - sill + .12, .5);
       put(detail, trim, L / 2, .02, sill - .03, L - .3, .06, .16);
       put(detail, trim, L / 2, .012, head + .03, L - .3, .06, .1);
       // Stone coursing: a fine reveal at each floor line.
@@ -228,22 +226,21 @@ function renderShell(piece, batch, detail, m, ground, signs) {
     }
     // Storefronts: kickplate, glazing with mullions and transom, a warm interior, a door.
     for (let i = 0; i < bays && piece.variant === 'gallery'; i++) {
-      // Gallery fronts: floor-to-head glass in slim black steel, a lit interior with
-      // shelving, a limestone fascia, and a cantilevered bronze canopy hung on rods
+      // Gallery fronts: floor-to-head glass in slim black steel over a dark, warm
+      // interior, a limestone fascia, and a cantilevered bronze canopy hung on rods
       // with a downlight strip along its edge.
       const u0 = i * bay + .35, u1 = (i + 1) * bay - .35, width = u1 - u0, mid = (u0 + u1) / 2, glassMid = ground + 1.94, glassHeight = 3.62;
       if (width < .8) continue;
       put(detail, trim, mid, -recess + .08, ground + .06, width, .12, .12);
       put(detail, glass, mid, -recess + .05, glassMid, width, glassHeight, .03);
-      put(detail, m('gallery-interior'), mid, -recess + .015, glassMid, width, glassHeight, .01);
+      put(detail, m('shop-interior'), mid, -recess + .015, glassMid, width, glassHeight, .01);
       const panes = Math.max(2, Math.round(width / 1.6)), pane = width / panes;
-      // Per pane: a lit display niche with two brass shelves, and a pendant above it.
+      // Dark glass reads deep when only small lights show: one slim brass display rail
+      // per bay and a pendant per pane, with nothing pale filling the glass.
+      put(detail, m('metal-brass'), mid, -recess + .03, ground + 1.05, width * .8, .04, .01);
       for (let k = 0; k < panes; k++) {
-        const centre = u0 + pane * (k + .5);
         if (i === Math.floor(bays / 2) && k === Math.floor(panes / 2)) continue;
-        for (const level of [1.05, 1.7]) put(detail, m('metal-brass'), centre, -recess + .03, ground + level, pane * .55, .05, .01);
-        put(detail, m('porcelain'), centre, -recess + .03, ground + .45, pane * .6, .7, .01);
-        put(detail, m('lamp-glow'), centre, -recess + .03, ground + 3.3, .22, .09, .01);
+        put(detail, m('lamp-glow'), u0 + pane * (k + .5), -recess + .03, ground + 3.3, .22, .09, .01);
       }
       for (let k = 0; k <= panes; k++) put(detail, trim, u0 + width * k / panes, -recess + .08, glassMid, .05, glassHeight, .08);
       put(detail, trim, mid, -recess + .08, ground + 3.77, width + .05, .07, .08);
@@ -260,7 +257,7 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       put(detail, trim, mid, -recess + .08, ground + .25, width, .5, .12);
       put(detail, glass, mid, -recess + .05, ground + 1.95, width, 2.9, .03);
       // A warm interior just behind the glass, in front of the core wall.
-      put(detail, m(style.signPalette === 'noir' ? 'gallery-interior' : 'shop-interior'), mid, -recess + .015, ground + 1.95, width, 2.9, .01);
+      put(detail, m('shop-interior'), mid, -recess + .015, ground + 1.95, width, 2.9, .01);
       // Display shelves and pendant lights read as a furnished shop through the glass.
       for (const level of [1.05, 1.85]) put(detail, m('metal-brass'), mid, -recess + .03, ground + level, width * .78, .1, .01);
       for (let k = 0, lights = Math.max(1, Math.floor(width / 1.8)); k < lights; k++) put(detail, m('lamp-glow'), u0 + width * (k + .5) / lights, -recess + .03, ground + 3.0, .32, .14, .01);
@@ -311,12 +308,13 @@ function renderFurniture(piece, batch, m, groundAt) {
       // The District's mid-century orbital lamp (street-furniture.js): a deep-teal
       // column, a porcelain disc, an opal globe and a brass orbital ring.
       const place = (material, geometry, up) => batch.place(material, geometry, x, up, y);
-      place(m('lamp-teal'), new THREE.CylinderGeometry(.17, .17, .24, 16), g + .12);
-      place(m('lamp-teal'), new THREE.CylinderGeometry(.05, .06, 4.9, 12), g + 2.6);
-      place(m('metal-brass'), new THREE.CylinderGeometry(.075, .075, .065, 12), g + 4.7);
-      place(m('porcelain'), new THREE.SphereGeometry(1, 20, 10).scale(.61, .11, .61), g + 5.08);
-      place(m('opal-glow'), new THREE.SphereGeometry(1, 16, 8).scale(.28, .19, .28), g + 4.93);
-      place(m('metal-brass'), new THREE.TorusGeometry(.58, .023, 6, 40).rotateX(Math.PI / 2), g + 5.02);
+      // Segment counts are sized for street distance; each lamp's geometry is merged per block.
+      place(m('lamp-teal'), new THREE.CylinderGeometry(.17, .17, .24, 10), g + .12);
+      place(m('lamp-teal'), new THREE.CylinderGeometry(.05, .06, 4.9, 8), g + 2.6);
+      place(m('metal-brass'), new THREE.CylinderGeometry(.075, .075, .065, 8), g + 4.7);
+      place(m('porcelain'), new THREE.SphereGeometry(1, 14, 6).scale(.61, .11, .61), g + 5.08);
+      place(m('opal-glow'), new THREE.SphereGeometry(1, 10, 6).scale(.28, .19, .28), g + 4.93);
+      place(m('metal-brass'), new THREE.TorusGeometry(.58, .023, 4, 28).rotateX(Math.PI / 2), g + 5.02);
       break;
     }
     case 'furniture/bollard':
@@ -328,9 +326,9 @@ function renderFurniture(piece, batch, m, groundAt) {
       break;
     case 'furniture/cafe-set': {
       // A round marble bistro table on a bronze pedestal, with four timber chairs facing it.
-      batch.place(m('porcelain'), new THREE.CylinderGeometry(.38, .38, .03, 28), x, g + .75, y);
-      batch.place(m('bronze-satin'), new THREE.CylinderGeometry(.03, .03, .72, 10), x, g + .37, y);
-      batch.place(m('bronze-satin'), new THREE.CylinderGeometry(.2, .22, .03, 20), x, g + .015, y);
+      batch.place(m('porcelain'), new THREE.CylinderGeometry(.38, .38, .03, 18), x, g + .75, y);
+      batch.place(m('bronze-satin'), new THREE.CylinderGeometry(.03, .03, .72, 8), x, g + .37, y);
+      batch.place(m('bronze-satin'), new THREE.CylinderGeometry(.2, .22, .03, 12), x, g + .015, y);
       for (const [u, v] of [[.64, 0], [-.64, 0], [0, .64], [0, -.64]]) {
         const out = Math.hypot(u, v), du = u / out, dv = v / out, chairYaw = Math.atan2(dv, du);
         const [cx, cy] = local(u, v), [bx, by] = local(u + du * .2, v + dv * .2);

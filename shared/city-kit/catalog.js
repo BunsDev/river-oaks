@@ -51,16 +51,17 @@ export const KIT_MATERIALS = Object.freeze({
   'lamp-glow': { color: '#fff2cf', emissive: '#ffd99a', emissiveIntensity: 1.6 },
   'lantern-glass': { color: '#f6e7c4', roughness: .2, emissive: '#ffbf66', emissiveIntensity: 0, lantern: true },
   // Luxury palette, matched to the District's street vocabulary (street-furniture.js,
-  // retro-palette.js): charcoal granite setts, porcelain banding, honed limestone and
-  // travertine, black steel, satin bronze, and the District's deep-teal lamp metal.
+  // retro-palette.js): charcoal granite setts, a stone threshold, honed limestone,
+  // black steel, satin bronze, and the District's deep-teal lamp metal.
   'granite-sett': { surface: 'pavement', color: '#70726f', tile: 1.8, textureContrast: .7 },
   porcelain: { color: '#f5eee0', roughness: .55 },
   // Honed ashlar: the running-bond pavement map at large-format scale reads as fine
   // stone coursing, without the weathered sandstone's mottling.
   limestone: { surface: 'pavement', color: '#f4efe6', tile: 5, textureContrast: .32 },
   travertine: { surface: 'pavement', color: '#ecdfca', tile: 4, textureContrast: .42 },
-  // Warm limestone inlay bands in the granite lane.
-  'inlay-limestone': { color: '#b9b0a2', roughness: .5 },
+  // A warm grey stone inlay in the granite lane, close to the setts in value so it
+  // reads as laid stone rather than a painted road marking.
+  'inlay-limestone': { color: '#8e877c', roughness: .75 },
   'steel-black': { color: '#1b1d1f', roughness: .36, metalness: .7 },
   'bronze-satin': { color: '#7a6040', roughness: .3, metalness: .85 },
   'lamp-teal': { color: '#1f454a', roughness: .5, metalness: .65 },
@@ -87,9 +88,9 @@ export const KIT_STYLES = Object.freeze({
     storefronts: ['gallery'], awnings: ['canvas-teal'],
     windows: 'ribbon', roofs: ['reveal'], setback: 0, signage: 'letters', signPalette: 'noir',
   },
-  // The court in warm travertine and bronze: deep loggias and gallery fronts.
+  // The court in honed limestone and bronze, matching Market Row: deep loggias and gallery fronts.
   'luxe-court': {
-    wall: ['travertine'], trim: 'bronze-satin', accent: 'metal-brass',
+    wall: ['limestone'], trim: 'bronze-satin', accent: 'metal-brass',
     storefronts: ['loggia', 'gallery', 'loggia'], awnings: ['canvas-rose'],
     windows: 'tall', roofs: ['reveal', 'stepped'], setback: 0, signage: 'blade', signPalette: 'noir',
   },
@@ -112,7 +113,8 @@ export const KIT_PIECES = Object.freeze({
   // across each lane, and sidewalk corners (street/sidewalk).
   'street/intersection': { family: 'street', collision: 'none', material: 'lane-brick', triangles: 40 },
   'street/crosswalk': { family: 'street', collision: 'none', material: 'lane-brick', triangles: 160 },
-  // Flush inlays in a shared lane: porcelain cross bands and black-steel channel drains.
+  // Flush inlays in a shared lane: stone bands (Market Street keeps only its gateway
+  // threshold) and black-steel channel drains.
   'street/band': { family: 'street', collision: 'none', material: 'inlay-limestone', triangles: 16 },
   'street/channel': { family: 'street', collision: 'none', material: 'steel-black', triangles: 8 },
   'street/court': { family: 'street', collision: 'surface', material: 'plaza-stone', triangles: 200 },

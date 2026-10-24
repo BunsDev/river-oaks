@@ -2,14 +2,14 @@
   "id": "bayou-market-commons",
   "kit": "city-kit-1",
   "seed": 1912,
-  "hash": "934e393a5939ee60",
-  "recipeHash": "7a1389e1a163f003",
+  "hash": "f0cff8030fbd0ef5",
+  "recipeHash": "36e99b2ce5194c7a",
   "overridesHash": "4b2dbc0e698b01ec",
   "stats": {
-    "pieces": 138,
+    "pieces": 128,
     "buildings": 19,
     "solids": 62,
-    "materials": 15,
-    "triangles": 95928
+    "materials": 14,
+    "triangles": 95768
   }
 }

@@ -3,7 +3,7 @@
   "title": "Bayou Market Commons",
   "kit": "city-kit-1",
   "seed": 1912,
-  "inspiration": "Patterns only, no copied buildings: a short, tree-lined luxury shopping street in honed limestone and travertine with gallery glazing (in the spirit of the District itself), shaded garden courts (Montrose), a bayou-edge green (Buffalo Bayou) and an elevated water tower as the neighborhood's wayfinding landmark.",
+  "inspiration": "Patterns only, no copied buildings: a short, tree-lined luxury shopping street in honed limestone with gallery glazing (in the spirit of the District itself), shaded garden courts (Montrose), a bayou-edge green (Buffalo Bayou) and an elevated water tower as the neighborhood's wayfinding landmark.",
   "anchor": "east-garden-commons/district-promenade",
   "site": [
     0,
@@ -39,10 +39,6 @@
         ]
       ],
       "paving": "granite-sett",
-      "bands": {
-        "offset": 2.5,
-        "spacing": 9
-      },
       "drains": true
     }
   ],
@@ -209,7 +205,7 @@
         0.7,
         3
       ],
-      "note": "A porcelain threshold where the District street becomes Market Street."
+      "note": "A stone threshold where the District street becomes Market Street."
     },
     {
       "id": "lantern-gateway",
@@ -550,7 +546,7 @@
         54
       ],
       "height": 14,
-      "wall": "travertine"
+      "wall": "limestone"
     },
     {
       "id": "context-north-2",
@@ -572,7 +568,7 @@
         -41
       ],
       "height": 8.1,
-      "wall": "travertine"
+      "wall": "limestone"
     },
     {
       "id": "context-south-1",
