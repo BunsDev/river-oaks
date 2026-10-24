@@ -91,6 +91,28 @@ const closed = ws => new Promise(resolve => ws.once('close', (code) => resolve(c
 
 // Each sign-in start holds a pending slot for twenty minutes; one address used
 // to be able to take every slot and block sign-in for everyone.
+// No Redis: a synthetic room whose committed view cannot be read, and a ticket store
+// that records what it issued, behind the real HTTP edge.
+test('a ticket is returned, not orphaned, when the room view cannot be read', async t => {
+  const issued = [], identity = { userId: 'alice', name: 'alice', sessionId: 'alice-session', csrfToken: 'test-csrf', expiresAt: Date.now() + 60_000 };
+  const security = { allow: async () => true, isBanned: async () => false, consumeTicket: async () => false,
+    issueTicket: async (user, worldId) => { const ticket = `ticket-${issued.length}`; issued.push({ ticket, userId: user.userId, worldId }); return ticket; } };
+  const auth = { authenticate: async req => req.headers.cookie === 'test_session=alice' ? identity : null, handle: async () => false };
+  let reads = 0;
+  const room = { worldId: 'harbour-cafe', read: async () => { reads++; throw new Error('synthetic Redis failure'); },
+    request: async () => ({ ok: false }), tick: async () => null };
+  // The room was created from world data that asks for protocol 4.
+  const app = createDistributedServer({ auth, security, room, waitlist: approvedWaitlist, origin, protocolVersion: 4 });
+  await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
+  t.after(() => app.close());
+  const response = await fetch(`http://127.0.0.1:${app.server.address().port}/api/multiplayer/ticket?world=harbour-cafe`, {
+    method: 'POST', headers: { Origin: origin, Cookie: 'test_session=alice', 'X-CSRF-Token': 'test-csrf' } });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ticket: 'ticket-0', worldId: 'harbour-cafe', protocolVersion: 4, moderator: false });
+  assert.deepEqual(issued, [{ ticket: 'ticket-0', userId: 'alice', worldId: 'harbour-cafe' }], 'the one ticket issued is the one returned');
+  assert.equal(reads, 1);
+});
+
 test('one address can start only a few sign-ins at a time, across instances', live, async t => {
   const { nodes } = await fixture(t);
   for (let i = 0; i < SIGN_INS_PER_ADDRESS; i++) assert.notEqual((await fetch(nodes[i % 2].url + '/auth/login')).status, 429);

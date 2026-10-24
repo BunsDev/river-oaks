@@ -214,8 +214,10 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
         if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
         const ticket = await security.issueTicket(identity, worldId);
         // The committed snapshot names the lowest protocol that can draw this world.
-        // Before the room's first commit, the world data it was created from decides.
-        const protocolVersion = ticket ? (await room.read())?.snapshot?.protocolVersion ?? worldProtocol : worldProtocol;
+        // Before the room's first commit, or when its view cannot be read, the world data
+        // it was created from decides; the socket rechecks before it joins. The issued
+        // ticket is always returned, never left behind a failed read.
+        const protocolVersion = ticket ? (await room.read().catch(() => null))?.snapshot?.protocolVersion ?? worldProtocol : worldProtocol;
         return ticket ? json(res, 200, { ticket, worldId, protocolVersion, moderator: moderatorIds.has(identity.userId) })
           : json(res, 429, { error: 'Please wait before reconnecting.' });
       }
