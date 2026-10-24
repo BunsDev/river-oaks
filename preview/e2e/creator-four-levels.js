@@ -14,6 +14,7 @@ async page => {
     && document.querySelector('#canvas-host')?.dataset.playerReady === 'true');
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');
+  await page.locator('.world-portal-publish').waitFor({state:'visible'});if(!await page.locator('.world-portal-publish').evaluate(node=>node.open))await page.locator('.world-portal-publish > summary').click();
   await page.locator('.world-portal-form input[name=title]').fill('Four Level Gallery');
   await page.locator('.world-portal-form input[name=id]').fill(worldId);
   await page.locator('.world-portal-form input[name=region]').setInputFiles({ name: 'four-level-region.json',
