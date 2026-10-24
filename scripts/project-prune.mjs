@@ -70,13 +70,19 @@ export function planRetirement({root,branch,expectedHead,register,pulls,activity
   if(!Array.isArray(pulls))block('github-unknown');
   else {
     if(pulls.some(p=>p.state==='open'&&p.head?.ref===branch))block('open-pr');
-    const pr=pulls.find(p=>p.number===task?.pr);
-    if(!pr?.merged_at||pr.head?.sha!==head||!pr.merge_commit_sha)block('exact-merged-pr-required');
+    const pr=pulls.find(p=>p.number===task?.pr),merged=pr?.merged_at&&pr.merge_commit_sha?pr.head?.sha:null;
+    const ancestor=(a,b)=>git(root,['merge-base','--is-ancestor',a,b],true)!==null;
+    // The lander updates the branch on GitHub before merging, so the local copy can stop
+    // short of the merged head. Accept it only as a strict ancestor on the same branch
+    // that the merge brought to the default branch, with that merged head on it too.
+    const before=merged&&merged!==head&&git(root,['rev-parse','--verify','--quiet',`${pr.merge_commit_sha}^1`],true);
+    const behind=Boolean(before&&head&&pr.head.ref===branch&&ancestor(head,merged)&&ancestor(merged,defaultRef)&&!ancestor(head,before));
+    if(!merged||(merged!==head&&!behind))block('exact-merged-pr-required');
     else {
       const merge=pr.merge_commit_sha;
       if(git(root,['merge-base','--is-ancestor',merge,defaultRef],true)===null)block('merge-not-on-default');
       const tree=git(root,['rev-parse',`${merge}^{tree}`],true);
-      if(!tree||git(root,['rev-parse',`${head}^{tree}`],true)!==tree)block('aggregate-tree-review-required');
+      if(!tree||git(root,['rev-parse',`${merged}^{tree}`],true)!==tree)block('aggregate-tree-review-required');
     }
   }
   return {branch,head,taskId:task?.id??null,worktrees:owned.map(w=>w.path),blockers:[...new Set(blockers)],eligible:blockers.length===0};
