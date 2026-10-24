@@ -136,3 +136,22 @@ test('the rendered District approach corner remains walkable when waypoints are 
   }
   assert.ok(Math.hypot(state.position[0] - target[0], state.position[2] + target[1]) < .15);
 });
+
+
+test('keyboard return from the Market reserve uses clearance east of the planted tree row', () => {
+  const start = [-2586.7009940755697, -1360.401354261221, 18.37222868285045];
+  const blocked = createWalkingState(environment, start);
+  blocked.yaw = .006079999959484666;
+  for (let i = 0; i < 120; i++) stepWalking(blocked, environment, { forward: 1, fast: true }, 1 / 60);
+  assert.ok(blocked.position[2] > 1360, 'the captured nearly north heading meets the tree row');
+  const state = createWalkingState(environment, start), centre = edge + 80;
+  for (const point of [[centre + 1, -1365], [centre + 1, -1334], [centre, -1334]]) {
+    let remaining = 12000;
+    while (Math.hypot(state.position[0] - point[0], state.position[2] + point[1]) >= .15) {
+      assert.ok(--remaining > 0, 'the clearance route remains walkable');
+      stepWalking(state, environment, steerWalkingToward(state, point, 1 / 60), 1 / 60);
+      assert.ok(environment.isFree(state.position[0], state.position[2]));
+    }
+  }
+  assert.ok(Math.hypot(state.position[0] - centre, state.position[2] - 1334) < .15);
+});

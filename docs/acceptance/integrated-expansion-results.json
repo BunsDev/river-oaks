@@ -1,5 +1,5 @@
 {
-  "scope": "Automated source/headless evidence only; browser, full, hosted, visual and human acceptance remain pending.",
+  "scope": "Source, headless and local browser evidence with exact scope below; full final-source delivery, performance budget resolution and human acceptance remain incomplete.",
   "regeneration": {
     "createdAt": "2026-10-23T23:23:48.561Z",
     "revision": "c2598c65d2566816b967596661ca924972d43f44",
@@ -488,5 +488,143 @@
       ],
       "finishedAt": "2026-10-23T23:23:38.939Z"
     }
+  },
+  "browserCheckpoint": {
+    "head": "9b05d745041f029ed9e2ac76a1cada67d9c4bf66",
+    "twoPlayerJourney": {
+      "name": "east-garden-commons",
+      "status": "passed",
+      "seconds": 209.381
+    },
+    "journeyChecks": [
+      "Both players start in the original District",
+      "Existing walking routes connect both arrivals to the eastern gateway",
+      "Two real clients reached the Commons by keyboard walking",
+      "Both clients completed the shared Commons chess game through the normal board UI",
+      "Reconnect keeps identity and Commons position",
+      "Four lanterns lit by two players; the round waits for the fifth",
+      "Both clients see the completed Lantern Walk credited to both players",
+      "The shared status announces the lit Bayou Lantern",
+      "Round trip preserved both documents without reload",
+      "No page errors: "
+    ],
+    "authoringRendered": "passed; output/playwright/neighborhood-review-1792801913594",
+    "hostedPreview": "passed; https://github.com/BunsDev/river-oaks/actions/runs/40042539937/job/120720516591",
+    "remaining": "Rendered loop startup failed before travel; keyboard gate hit Market tree during return from reserve; corrections queued. Status notice overlap correction not yet browser-verified."
+  },
+  "matchedCheckpoint": {
+    "scope": "Local Chromium development build, Gardens and Commons revisions in the same current source, fixture accounts and in-memory loopback authority. Phone-sized viewport uses the same desktop GPU, not physical mobile hardware. Resource bytes include Vite development modules, not a production initial-download budget. Two-player samples render two full browser clients concurrently on this host. GPU memory bytes, live auth, hosted performance and human accessibility are not measured.",
+    "report": ".runtime/world-streaming/matched-2026-10-24T00-15-18.996Z/report.json",
+    "collectionStatus": "passed",
+    "budgetStatus": "unresolved exceedances; collecting frame-phase diagnostics",
+    "p95Medians": [
+      {
+        "viewport": "desktop",
+        "players": 1,
+        "gardens": {
+          "frame": 16.8,
+          "cpuSubmission": 10.6
+        },
+        "market": {
+          "frame": 16.7,
+          "cpuSubmission": 12.5
+        },
+        "percentChange": {
+          "frame": -0.6,
+          "cpuSubmission": 17.92
+        }
+      },
+      {
+        "viewport": "desktop",
+        "players": 2,
+        "gardens": {
+          "frame": 33.4,
+          "cpuSubmission": 12.3
+        },
+        "market": {
+          "frame": 50,
+          "cpuSubmission": 16.3
+        },
+        "percentChange": {
+          "frame": 49.7,
+          "cpuSubmission": 32.52
+        }
+      },
+      {
+        "viewport": "phone-viewport",
+        "players": 1,
+        "gardens": {
+          "frame": 16.7,
+          "cpuSubmission": 12.6
+        },
+        "market": {
+          "frame": 16.7,
+          "cpuSubmission": 13.3
+        },
+        "percentChange": {
+          "frame": 0.0,
+          "cpuSubmission": 5.56
+        }
+      },
+      {
+        "viewport": "phone-viewport",
+        "players": 2,
+        "gardens": {
+          "frame": 33.4,
+          "cpuSubmission": 13.9
+        },
+        "market": {
+          "frame": 33.4,
+          "cpuSubmission": 15.7
+        },
+        "percentChange": {
+          "frame": 0.0,
+          "cpuSubmission": 12.95
+        }
+      }
+    ],
+    "inspectedCaptures": [
+      "desktop-river-oaks-gardens-3-2-players-0.png",
+      "desktop-east-garden-commons-market-1-2-players-0.png",
+      "phone-viewport-river-oaks-gardens-3-2-players-0.png",
+      "phone-viewport-east-garden-commons-market-1-2-players-0.png"
+    ]
+  },
+  "productionTransferCheckpoint": {
+    "head": "9b05d745041f029ed9e2ac76a1cada67d9c4bf66",
+    "scope": "Production build served by existing game server static asset and synthetic authenticated fixture routes; same current source with Gardens versus Market authority. Local uncompressed HTTP bytes, no CDN compression, not untouched historical baseline. Three fresh browser contexts per configuration; initial arrival and asset readiness only.",
+    "status": "passed",
+    "samples": [
+      {
+        "revision": "river-oaks-gardens-3",
+        "iteration": 0,
+        "totalTransferBytes": 46044636
+      },
+      {
+        "revision": "river-oaks-gardens-3",
+        "iteration": 1,
+        "totalTransferBytes": 46044636
+      },
+      {
+        "revision": "river-oaks-gardens-3",
+        "iteration": 2,
+        "totalTransferBytes": 46044636
+      },
+      {
+        "revision": "east-garden-commons-market-1",
+        "iteration": 0,
+        "totalTransferBytes": 46044644
+      },
+      {
+        "revision": "east-garden-commons-market-1",
+        "iteration": 1,
+        "totalTransferBytes": 46044644
+      },
+      {
+        "revision": "east-garden-commons-market-1",
+        "iteration": 2,
+        "totalTransferBytes": 46044644
+      }
+    ]
   }
 }

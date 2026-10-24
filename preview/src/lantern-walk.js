@@ -49,7 +49,7 @@ export function createLanternWalkClient({ getLayout, getPose, getSnapshot, send,
     // Only progress is announced; the running clock is visual (aria-hidden).
     status = document.createElement('p'); status.id = 'lantern-walk-status'; status.hidden = true;
     status.innerHTML = '<span role="status" aria-live="polite" class="lantern-walk-progress"></span><span aria-hidden="true" class="lantern-walk-clock"></span>';
-    (document.querySelector('#viewport') ?? document.body).append(status);
+    (document.querySelector('#world-status-stack') ?? document.querySelector('#viewport') ?? document.body).append(status);
     return status;
   }
   function update() {

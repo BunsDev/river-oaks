@@ -69,7 +69,9 @@ async page => {
     }, edge);
     await tab.goto(`${origin}/?motion-debug=1`);
     await tab.waitForFunction(() => window.__riverMultiplayer?.().connected && window.__riverMultiplayer().snapshot?.districtRevision === 'east-garden-commons-market-1'
-      && document.querySelector('#canvas-host')?.dataset.playerReady === 'true');
+      && document.querySelector('#canvas-host')?.dataset.playerReady === 'true'
+      && JSON.parse(document.querySelector('#viewport')?.dataset.assetProgress ?? '{}').done
+      && window.__riverCarriage?.()?.pose?.position?.every(Number.isFinite));
     if (await tab.locator('#panel-toggle').getAttribute('aria-expanded') === 'true') await tab.locator('#panel-toggle').click();
     if (await tab.locator('.visit-tools').evaluate(node => node.open)) await tab.locator('.visit-tools-toggle').click();
   };
@@ -78,15 +80,18 @@ async page => {
       const deadline = Date.now() + 180000;
       for (;;) {
         const pose = await point(tab), dx = target[0] - pose.position[0], dz = -target[1] - pose.position[2], distance = Math.hypot(dx, dz);
-        if (distance < .4) break;
+        if (distance < .15) break;
         if (Date.now() > deadline) throw new Error(`${label} stalled: ${JSON.stringify({ target, pose, stream: await tab.evaluate(() => window.__riverSpatialStream()) })}`);
         const heading = Math.atan2(-dx, -dz), difference = Math.atan2(Math.sin(heading - pose.yaw), Math.cos(heading - pose.yaw));
         if (Math.abs(difference) > .035) {
           const box = await tab.locator('#canvas-host').boundingBox(), x = box.x + box.width * .5, y = box.y + box.height * .4;
           await tab.mouse.move(x, y); await tab.mouse.down(); await tab.mouse.move(x + Math.max(-box.width * .35, Math.min(box.width * .35, -difference / .003)), y, { steps: 3 }); await tab.mouse.up(); continue;
         }
-        await tab.locator('#canvas-host').focus(); await tab.keyboard.down('ShiftLeft'); await tab.keyboard.down('KeyW');
-        await tab.waitForTimeout(Math.min(700, Math.max(30, distance * 110)));
+        await tab.locator('#canvas-host').focus();
+        const fast = distance > 2;
+        if (fast) await tab.keyboard.down('ShiftLeft');
+        await tab.keyboard.down('KeyW');
+        await tab.waitForTimeout(Math.min(450, Math.max(30, distance * (fast ? 110 : 230))));
         await tab.keyboard.up('KeyW'); await tab.keyboard.up('ShiftLeft');
       }
     }

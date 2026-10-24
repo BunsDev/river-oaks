@@ -306,7 +306,7 @@ function initializeRenderer() {
   commonsStreamStatus.setAttribute('role', 'status');
   commonsStreamStatus.setAttribute('aria-live', 'polite');
   commonsStreamStatus.hidden = true;
-  host.append(commonsStreamStatus);
+  $('#world-status-stack').append(commonsStreamStatus);
   // Before the player panel, so G reaches the rack first and the owner's ride button only when no bike is in play.
   cyclingBoard = createCyclingLeaderboard();
   plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, getMiles: () => cyclingBoard?.mine() ?? null, reducedMotion });

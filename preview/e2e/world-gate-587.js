@@ -51,7 +51,7 @@ async page => {
       const deadline=Date.now()+150000;
       for(;;){
         const p=await pose(tab),dx=target[0]-p.position[0],dz=-target[1]-p.position[2],distance=Math.hypot(dx,dz);
-        if(distance<.4)break;
+        if(distance<.15)break;
         if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose:p})}`);
         const heading=Math.atan2(-dx,-dz),difference=Math.atan2(Math.sin(heading-p.yaw),Math.cos(heading-p.yaw));
         await tab.locator('#canvas-host').focus();
@@ -141,7 +141,21 @@ async page => {
     check(approach.every(path=>path?.length),'Walkable routes connect both arrivals to the eastern gateway');
     await Promise.all([walk(page,approach[0],'owner approach'),walk(peer,approach[1],'alice approach')]);
     observations.placeAtGateway=await page.locator('#walking-place').textContent();
-    await Promise.all([walk(page,[[edge-1,north+1],[centre,north+1]],'owner outward'),walk(peer,[[edge-1,north-1],[centre,north-1]],'alice outward')]);
+    await walk(page,[[edge-1,north+1],[edge+20,north+1]],'owner to Market notices');
+    const originalViewport=page.viewportSize();
+    for(const viewport of [originalViewport,{width:390,height:844}]){
+      await page.setViewportSize(viewport);
+      await page.locator('.spatial-stream-status:not([hidden])').waitFor();
+      await page.locator('#lantern-walk-status:not([hidden])').waitFor();
+      const separated=await page.evaluate(()=>{
+        const route=document.querySelector('.spatial-stream-status').getBoundingClientRect(),activity=document.querySelector('#lantern-walk-status').getBoundingClientRect();
+        return route.bottom<=activity.top&&route.left>=0&&route.right<=innerWidth&&activity.left>=0&&activity.right<=innerWidth;
+      });
+      check(separated,`Route and Lantern Walk notices remain separate at ${viewport.width}px`);
+      await page.screenshot({path:`${shots}/world-gate-587-notices-${viewport.width}.png`});
+    }
+    await page.setViewportSize(originalViewport);
+    await Promise.all([walk(page,[[centre,north+1]],'owner outward'),walk(peer,[[edge-1,north-1],[centre,north-1]],'alice outward')]);
     check((await self(page)).position[0]>edge+60&&(await self(peer)).position[0]>edge+60,'Both clients reached the Commons plaza by keyboard only');
     observations.placeInCommons=await page.locator('#walking-place').textContent();
     check(/Bayou Market Commons/.test(observations.placeInCommons),'The walking HUD names the Commons for keyboard and screen-reader players',observations.placeInCommons);
@@ -172,7 +186,8 @@ async page => {
     await walk(page,[[centre,north-37]],'owner to south plaza');
     const reserveHit=await push(page,Math.PI,4000);
     check([reserveHit.client,reserveHit.server].every(p=>commonsAllows(layout,p[0],p[1],.3)&&p[1]>layout.surfaces[1].rect[1]-.05),'The plaza edge keeps players out of the empty reserve',reserveHit);
-    await walk(page,[[centre,north+1]],'owner back to centre');
+    // The Market tree row lies west of centre; leave clearance for keyboard steering.
+    await walk(page,[[centre+1,north-30],[centre+1,north+1],[centre,north+1]],'owner back to centre');
 
     // Reconnect while in the Commons.
     const before=await self(page),socketCount=await page.evaluate(()=>window.__gateSockets.length),reconnectStart=Date.now();
