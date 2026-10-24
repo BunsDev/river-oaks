@@ -1,3 +1,4 @@
+import { bindPageLifecycle } from './background-lifecycle.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { attachEastGardenCommons } from './east-garden-commons-world.js';
 import { createLanternWalkClient } from './lantern-walk.js';
@@ -1239,8 +1240,10 @@ for (const type of ['pointercancel', 'lostpointercapture']) host.addEventListene
   selectionGesture.cancel(event);
 });
 host.addEventListener('blur', () => selectionGesture.cancel());
-window.addEventListener('blur', () => selectionGesture.cancel());
-document.addEventListener('visibilitychange', () => selectionGesture.cancel());
+bindPageLifecycle({ release: () => selectionGesture.cancel(), resume() {
+  clock.reset(); lastFrame = null; renderAudit?.discontinuity();
+  multiplayer?.resume({ fresh: true });
+} });
 host.addEventListener('pointerup', (event) => {
   if (!selectionGesture.end(event)) return;
   // In builder mode a click on the canvas places at the preview.

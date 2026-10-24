@@ -32,7 +32,7 @@ export function buildEastGardenCommons(layout) {
   for (const surface of baseSurfaces) {
     const [west,south,east,north]=surface.rect,positions=[],indices=[];
     const start=Math.max(west,layout.edge),end=surface===layout.surfaces[0]?(destination?layout.edge+3:layout.surfaces[1].rect[0]):east;
-    const xs=surface===layout.surfaces[0]?[...Array.from({length:21},(_,i)=>start+i*.5),end]:[start,end];
+    const xs=surface===layout.surfaces[0]?[...Array.from({length:21},(_,i)=>start+i*.5).filter(x=>x<end),end]:[start,end];
     const ys=surface===layout.surfaces[0]?Array.from({length:13},(_,i)=>south+(north-south)*i/12):[south,north];
     const columns=xs.length-1,rows=ys.length-1;
     for(let y=0;y<=rows;y++)for(let x=0;x<=columns;x++) {

@@ -9,6 +9,7 @@ async page => {
     return Object.fromEntries(await Promise.all(paths.map(async path => [path, createHash('sha256').update(await readFile(path)).digest('hex')])));
   };
   const sourceSha256 = await sourceHashes();
+  const { collectRetainedHeap } = await import('./retained-heap.js');
   let finalSourceSha256 = null;
   const { loadDistrictData } = await import('../../server/district-data.js');
   const { createResidentNavigation } = await import('../src/navigation.js');
@@ -18,8 +19,8 @@ async page => {
   const checkpointPath = `.runtime/world-streaming/journey-${new Date().toISOString().replaceAll(':', '-')}.json`;
   await mkdir('.runtime/world-streaming', { recursive: true });
   let outcome = 'running', failure = null;
-  const origin = 'http://127.0.0.1:5173', checks = [], samples = [], errors = [], crossings = [], resourceViolations = [], reconnects = [], graphicsRecoveries = [];
-  const checkpoint = () => writeFile(checkpointPath, JSON.stringify({ outcome, failure, sourceSha256, finalSourceSha256, checks, samples, crossings, resourceViolations, reconnects, graphicsRecoveries }, null, 2) + '\n');
+  const origin = 'http://127.0.0.1:5173', checks = [], samples = [], errors = [], crossings = [], resourceViolations = [], reconnects = [], graphicsRecoveries = [], retainedHeaps = [];
+  const checkpoint = () => writeFile(checkpointPath, JSON.stringify({ outcome, failure, sourceSha256, finalSourceSha256, checks, samples, crossings, resourceViolations, reconnects, graphicsRecoveries, retainedHeaps }, null, 2) + '\n');
   console.log(`Journey checkpoints: ${checkpointPath}`);
   const check = (ok, label) => { if (!ok) throw new Error(label); checks.push(label); console.log(label); };
   const peerContext = await page.context().browser().newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
@@ -251,6 +252,13 @@ async page => {
         loadedResourceBaseline = row; evictedResourceBaseline = unloaded;
         check(true, 'Two full route warm-ups establish fixed loaded and evicted GPU baselines');
       }
+      if (lap === warmupTrips - 1 || lap === totalTrips - 1) {
+        // Same evicted District content and settling interval at both endpoints.
+        // Rolling frame observations can include GC; they decide no timing gate.
+        await Promise.all(tabs.map(tab => tab.waitForTimeout(500)));
+        retainedHeaps.push({ lap: lap + 1, phase: lap === warmupTrips - 1 ? 'warmed' : 'after-twenty', method: 'HeapProfiler.collectGarbage then Runtime.getHeapUsage', clients: await Promise.all(tabs.map(collectRetainedHeap)) });
+        await checkpoint();
+      }
       const withinResourceBound = lap < warmupTrips || withinBounds(row, loadedResourceBaseline) && withinBounds(unloaded, evictedResourceBaseline);
       if (lap >= warmupTrips && withinResourceBound) check(true, `Measured trip ${lap - warmupTrips + 1}: loaded and evicted scene/GPU counts remain bounded`);
       else if (!withinResourceBound) {
@@ -280,10 +288,12 @@ async page => {
     check(continuity.every(rows => rows.length >= totalTrips * 2 && rows.every(row => row.directionDot > .9 && row.cameraStep < row.playerStep + 1.5)), 'All warm-up and measured crossings preserve camera direction and continuous position');
     check(errors.length === 0, `No page errors: ${errors.join('; ')}`);
     check(resourceViolations.length === 0, `Scene and GPU object bounds across twenty measured trips after two recorded warm-ups: ${JSON.stringify(resourceViolations)}`);
+    const heapRatios = retainedHeaps[1].clients.map((usage, i) => usage.usedSize / retainedHeaps[0].clients[i].usedSize);
+    check(heapRatios.every(ratio => ratio <= 1.10), `Post-GC retained JavaScript heap after twenty measured trips stays within 1.10 times warmed baseline: ${JSON.stringify(heapRatios)}`);
     finalSourceSha256 = await sourceHashes();
     check(JSON.stringify(finalSourceSha256) === JSON.stringify(sourceSha256), 'Runtime and harness source hashes stay unchanged throughout the journey');
     outcome = 'passed';
-    return { sourceSha256, finalSourceSha256, checks, samples, crossings, continuity, reconnects, graphicsRecoveries, failedRequests, scope: 'Two Chromium fixture clients, actual context loss/restore during pending Commons import and active presentation, two recorded route warm-ups followed by 20 measured full keyboard round trips to the Commons plaza with chunk eviction on every District return; real loopback authority. Buffer bytes are exact geometry storage, not total GPU memory. Heap and frame timing are observational; no physical-device, hosted or human accessibility acceptance.' };
+    return { sourceSha256, finalSourceSha256, checks, samples, crossings, continuity, reconnects, graphicsRecoveries, retainedHeaps, heapRatios, failedRequests, scope: 'Two Chromium fixture clients, actual context loss/restore during pending Commons import and active presentation, two recorded route warm-ups followed by 20 measured full keyboard round trips to the Commons plaza with chunk eviction on every District return; real loopback authority. Runtime.getHeapUsage usedSize is isolate-wide JavaScript heap measured at equivalent post-GC evicted states; backing storage and embedder heap are separate counters, not included in this ratio. Rolling frame observations can include GC and decide no timing gate. Buffer bytes are exact geometry storage, not total GPU memory. No physical-device, hosted or human accessibility acceptance.' };
   } catch (error) { outcome = 'failed'; failure = error.message; throw error; }
   finally {
     deferModule = false;

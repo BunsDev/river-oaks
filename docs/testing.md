@@ -145,6 +145,19 @@ See [the diagram index](diagrams.md) for the convention.
 
 </details>
 
+## Background input and bfcache
+
+`pnpm run test:experience background-input` is **local-only**. It drives blur,
+hidden visibility (with a document-state override), pagehide and persisted
+pageshow while movement, look drag and push-to-talk are held. The local voice
+fixture uses real browser microphone tracks and synthetic transport; no paid
+voice provider is contacted. It checks stopped movement/transmit, no restart on
+return and a new authorized town connection/fresh snapshot after pageshow.
+Synthetic events do not prove actual Safari/iOS bfcache eligibility, process
+termination or VoiceOver. Pair it with `pnpm run test:shared development` when
+changing the multiplayer resume boundary. Neither journey is added to a hosted
+shard by this change.
+
 ## Frame budget and HUD
 
 `preview/tests/frame-budget.test.js` checks that each skeleton uploads once per

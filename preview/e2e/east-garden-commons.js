@@ -44,6 +44,8 @@ async page => {
           const drag=Math.max(-box.width*.35,Math.min(box.width*.35,-difference/.003));
           await tab.mouse.move(x,y);await tab.mouse.down();await tab.mouse.move(x+drag,y,{steps:3});await tab.mouse.up();continue;
         }
+        // A lifecycle release clears runtime input; repeat keydown cannot resume it.
+        if(pose.speed<.05)await releaseKeys();
         await tab.locator('#canvas-host').focus();
         const fast=distance>2;
         if(fast)await tab.keyboard.down('ShiftLeft');else await tab.keyboard.up('ShiftLeft');
@@ -51,7 +53,9 @@ async page => {
         await tab.waitForTimeout(Math.min(450,Math.max(30,distance*(fast?110:230))));
         // Keep walking during browser round trips, as spatial-streets does.
         // Pulsing/releasing every sample repeatedly brakes on CPU-rendered CI.
-        // Reassert keydown each pass so a focus correction cannot lose input.
+        // Reassert while held; a stopped observation starts a fresh press above.
+        // Bound near-waypoint motion before slow observation round trips.
+        if(!fast){await releaseKeys();await tab.waitForFunction(()=>window.__riverCarriage().pose.speed<.05,null,{timeout:10000});}
         samples.push((await self(tab)).position);
       }
     }

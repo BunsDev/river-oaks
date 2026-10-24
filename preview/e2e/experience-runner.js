@@ -35,7 +35,7 @@ try {
   for (const name of names.length ? names : suite) {
     // The voice journey runs the real voice routes and reconciler over a fake LiveKit.
     const fixtureEnv={
-      'voice-shared':{RIVER_OAKS_VOICE_FIXTURE:'1'},'voice-live':{RIVER_OAKS_VOICE_FIXTURE:'live'},
+      'voice-shared':{RIVER_OAKS_VOICE_FIXTURE:'1'},'background-input':{RIVER_OAKS_VOICE_FIXTURE:'1'},'voice-live':{RIVER_OAKS_VOICE_FIXTURE:'live'},
       'character-studio-disabled':{RIVER_OAKS_CHARACTER_STUDIO:'0',VITE_CHARACTER_STUDIO:'false'},
       'character-studio-paused':{RIVER_OAKS_CHARACTER_STUDIO:'0',VITE_CHARACTER_STUDIO:'true'},
       // The Gardens campus revision (#507) with the bob fixture as the campus operator (#509).

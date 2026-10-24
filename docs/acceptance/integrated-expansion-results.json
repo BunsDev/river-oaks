@@ -1676,5 +1676,280 @@
       }
     },
     "scope": "Core only; Redis/browser/full/final hosted/physical/human acceptance separate."
+  },
+  "hostedMainContrastDiagnostic20261024": {
+    "head": "33b1bf803970ff4d1746f5af7d1ce92ad539b7cd",
+    "checkout": "5e9ca918ef7d1763d05a9237ded5b940cd05d844",
+    "base": "549f84f940677a9542f95cb3dfb8ad4a09218977",
+    "workflow": 40079056334,
+    "originalCommonsJob": 120828584420,
+    "repeatCommonsJob": 120831306004,
+    "repeatAggregateJob": 120833513193,
+    "status": "success",
+    "attempts": [
+      1,
+      2
+    ],
+    "raw": [
+      ".runtime/integration/hosted-33b1bf80-verify-attempt1-green.json",
+      ".runtime/integration/hosted-33b1bf80-verify-attempt2-green.json",
+      ".runtime/integration/hosted-33b1bf80-commons-pass-001.json"
+    ],
+    "scope": "Two complete normal hosted journeys on the same test merge; no rootcause or product-fix proof. Original c4-associated failure remains preserved."
+  },
+  "preparedOvershootCorrection20261024": {
+    "actualHead": "33b1bf803970ff4d1746f5af7d1ce92ad539b7cd",
+    "sourceManifestSha256": "3df6952e3ffa843ca2a112538c2c842b7802bb8a41f53eb014e4a49b8e70aed0",
+    "candidateApplied": false,
+    "driverInputSha256": "788d8f314b9ae7bdaba51951974e87be5403343758c779b443d50e2eca3b34fb",
+    "proposedJourneySha256": "6e9e888baf913aa43d1b13bd47a7994305cd6a6ba90fa16feb946c335ca9b8ac",
+    "testSha256": "55021d0760b09cf112fd5d801a2512156799776cb7854aa3e63260dad7904e98",
+    "controllerSha256": "1196b1f0fbe29e226f10fab6597f01ede86c43a1131b540a4ac4f698655d798b",
+    "scope": "ModeA slow-roundtrip overshoot only; no DOM/focus/server or ModeB fix claim. Candidate runtime remains frozen.",
+    "tolerance": 0.15,
+    "waypointDeadlineMs": 120000,
+    "additionalSettleDeadlineMs": 10000,
+    "review": "No blocking findings; suitable ModeA behavior regression. DOM/focus/server and ModeB acceptance remain open.",
+    "coordinationRecord": {
+      "task": "mvp-release-readiness-20261024",
+      "owner": "claude:mvp-release-readiness-70028024",
+      "coordination": "Overlaps integrated-expansion-mvp-20261023 (#623, now owner codex:goal-01a16c6e-9a25, which plans to consume this task diagnostics). Division: this task diagnoses the hosted post-chess Commons stall (diag .runtime/release-readiness/commons-diag-002/, server probe probe-stand-walk.mjs) and publishes root cause + a minimal main-targeted fix proposal in its ledger; #623 owner keeps all streaming/gate/integration source and may adopt the fix. Neither edits the other checkout. Also consumes #630 (activation), #626 (perf protocol), movement-pad-contrast (codex) as evidence only."
+    },
+    "ownerProof": {
+      "journeySha256": "15d0f7a202dacedb3458fa0c55e0532c3f698d841120b02abc13324e641454d3",
+      "reportSha256": "54f47fcb1529b384457c717e241d1b18f9a9ec30f5747c50d9a11a475df9c08f",
+      "status": "passed",
+      "seconds": 1243.557,
+      "tolerance": 0.35,
+      "scope": "Donor full normal journey on2cbc with8x CPU throttle; reconstructed immutable source exactly matches receipt. Not strict15cm integration evidence."
+    },
+    "regression": {
+      "red": "regression-red.log;3 observed waypoint deadline failures on current copied driver",
+      "green": "regression-green.log;3 passing actual-driver cases at100/150/200ms and9fps,remaining<=.15",
+      "scope": "Prepared copied source only; not adopted into frozen candidate."
+    }
+  },
+  "renderer33b1bf80Partial20261024": {
+    "graphicsJourney": ".runtime/integration/graphics-recovery-33b1bf80-001.json",
+    "graphicsJourneyStatus": "passed",
+    "checks": 27,
+    "seconds": 86.987,
+    "commonsLossCheckpoints": {
+      "head": "33b1bf803970ff4d1746f5af7d1ce92ad539b7cd",
+      "scope": "Completed pending/active context-loss checkpoints in ongoing world-streaming journey; not a terminal20-loop or overall browser pass.",
+      "checkpoint": ".runtime/world-streaming/journey-2026-10-24T09-50-50.399Z.json",
+      "outcome": "running",
+      "graphicsRecoveries": [
+        {
+          "label": "Pending Commons load",
+          "streamAtLoss": {
+            "pending": 1,
+            "residentBytes": 0,
+            "chunks": [
+              {
+                "id": "east-garden-commons",
+                "state": "loading",
+                "distance": 0,
+                "failures": 6,
+                "retryAt": 69961.19999999925
+              }
+            ]
+          },
+          "framesAtLoss": 3467,
+          "framesAfter": 3477,
+          "authoritativeDriftMetres": 0,
+          "directionDot": 1.0000000000000004
+        },
+        {
+          "label": "Active Commons presentation",
+          "streamAtLoss": {
+            "pending": 0,
+            "residentBytes": 7558034,
+            "chunks": [
+              {
+                "id": "east-garden-commons",
+                "state": "ready",
+                "distance": 0,
+                "failures": 0,
+                "retryAt": 69961.19999999925
+              }
+            ]
+          },
+          "framesAtLoss": 4987,
+          "framesAfter": 4997,
+          "authoritativeDriftMetres": 0,
+          "directionDot": 1.0000000000000002
+        }
+      ],
+      "runtimeInputs": 1822,
+      "runtimeDrift": 0
+    },
+    "scope": "Original five-cycle/photo/fallback journey complete; integration run ongoing. No GPU-byte-total, full, physical-device, human or production proof."
+  },
+  "completedBrowser33b20261024": {
+    "head": "33b1bf803970ff4d1746f5af7d1ce92ad539b7cd",
+    "manifest": "graphics-source-before-core-004.json",
+    "inputs": 1822,
+    "initialDrift": 0,
+    "finalDrift": 0,
+    "sourceProof": ".runtime/integration/graphics-commons-rendered-003-source.json",
+    "report": ".runtime/integration/graphics-commons-rendered-003.json",
+    "results": [
+      {
+        "name": "graphics-recovery",
+        "status": "passed",
+        "checks": 27,
+        "seconds": 86.987
+      },
+      {
+        "name": "world-streaming",
+        "status": "passed",
+        "checks": 285,
+        "seconds": 3439.007
+      },
+      {
+        "name": "world-gate-587",
+        "status": "passed",
+        "checks": 26,
+        "seconds": 571.396
+      },
+      {
+        "name": "walking-controls-contrast",
+        "status": "passed",
+        "checks": 76,
+        "seconds": 9.016
+      }
+    ],
+    "scope": "Two warmups plus20 measured keyboard trips, full eviction, actual pending/active context loss, original5cycle graphics recovery,26 gate checks,76 contrast checks. Coarseheap notretained-heap acceptance; counts nottotalGPUbytes."
+  },
+  "completedAuthoring33b20261024": {
+    "head": "33b1bf803970ff4d1746f5af7d1ce92ad539b7cd",
+    "report": ".runtime/integration/regeneration-goal-final-001/report.json",
+    "sourceEqualsFinal": true,
+    "generatedCandidates": 14,
+    "manualReferences": 2,
+    "routes": 1928,
+    "failures": [],
+    "categoriesPerPreset": 10,
+    "scope": "Private Studio scenes, production walking solver at 30/60 Hz, no NPC occupancy. Ground polygons and slab supports; no native/shared authority or performance claim."
+  },
+  "sourceRepair00520261024": {
+    "base": "33b1bf803970ff4d1746f5af7d1ce92ad539b7cd",
+    "manifest": ".runtime/integration/graphics-source-before-core-005.json",
+    "inputs": 1826,
+    "changedOrAdded": [
+      "preview/e2e/east-garden-commons.js",
+      "preview/e2e/retained-heap.js",
+      "preview/e2e/world-streaming.js",
+      "preview/src/east-garden-commons.js",
+      "preview/tests/commons-walk-driver.test.js",
+      "preview/tests/east-garden-commons-ramp.test.js",
+      "preview/tests/retained-heap.test.js"
+    ],
+    "focused": {
+      "command": "node --test preview/tests/retained-heap.test.js preview/tests/east-garden-commons-ramp.test.js preview/tests/commons-walk-driver.test.js preview/tests/east-garden-commons.test.js preview/tests/continuous-walk-582.test.js preview/tests/commons-stream.test.js preview/tests/landscape-disposal.test.js",
+      "passed": 38,
+      "skipped": 0,
+      "log": ".runtime/integration/seam-pulse-heap-focused-green-001.log"
+    },
+    "ramp": {
+      "correctedRed": ".runtime/integration/seam-ramp-red-002.log",
+      "observedOverhangMetres": 6.999818359374785,
+      "foldedTopTriangles": 24,
+      "sourceChange": "Clip sample grid before exact gateway endpoint, append endpoint once; legacy geometry and disposal preserved.",
+      "firstGreenTestFailure": ".runtime/integration/seam-pulse-focused-green-001.log; invalid site-boundary assertion corrected to actual market-street paving."
+    },
+    "driver": {
+      "adopted": true,
+      "tolerance": 0.15,
+      "waypointDeadlineMs": 120000,
+      "settleDeadlineMs": 10000,
+      "scope": "ModeA slow observation overshoot; no claim to resolve unexplained hosted stand-spot ModeB."
+    },
+    "heap": {
+      "status": "unit verified; browser measurement pending",
+      "protocol": "500ms after warmup/final eviction; CDP collectGarbage then Runtime.getHeapUsage, perclient usedSize ratio<=1.10; no totalGPU claim"
+    },
+    "core": "not started yet",
+    "rendered": "affected source proof required"
+  },
+  "core003FirstFailure20261024": {
+    "proof": ".runtime/integration/goal-handoff-core-003-source.json",
+    "receipt": ".runtime/integration/goal-handoff-core-003.json",
+    "manifest": "graphics-source-before-core-005.json",
+    "status": "failed",
+    "inputs": 1826,
+    "sourceDrift": 0,
+    "firstFailure": "tooling queue release notification did not wake within5s",
+    "focusedAfterFailure": {
+      "tests": 29,
+      "passed": 29,
+      "log": ".runtime/integration/core003-land-pr-focused-001.log"
+    },
+    "scope": "Later core stages notrun; focus pass doesnoterase firstfailure or establishcause."
+  },
+  "pendingMainC41Integration20261024": {
+    "head": "33b1bf803970ff4d1746f5af7d1ce92ad539b7cd",
+    "mergeHead": "c41c379a58fd8b68dd09a895b891fe32b1a51bc4",
+    "manifest": ".runtime/integration/graphics-source-before-core-006.json",
+    "inputs": 1939,
+    "changedExisting": 42,
+    "newlyCovered": 113,
+    "focused": {
+      "passed": 58,
+      "skipped": 0,
+      "log": ".runtime/integration/main-c41-seam-pulse-heap-focused-001.log"
+    },
+    "review": "pending read-only merge review; heaperrorcorrection confirmed",
+    "restoration": {
+      "stash": "514dc64bf52e6cc845abbfeefbe5acede41960f0",
+      "ownedFiles": 10,
+      "restoredDrift": 0
+    },
+    "core004": "queued next normal run",
+    "scope": "No relabelling of completed004/33b receipts; core003 failure preserved."
+  },
+  "core004Passed20261024": {
+    "manifest": "graphics-source-before-core-006.json",
+    "inputs": 1939,
+    "proof": ".runtime/integration/goal-handoff-core-004-source.json",
+    "receipt": ".runtime/integration/goal-handoff-core-004.json",
+    "status": "passed",
+    "sourceDrift": 0,
+    "counts": {
+      "tooling": 263,
+      "previewPassed": 4059,
+      "previewSkipped": 1,
+      "serverPassed": 871,
+      "serverSkipped": 219,
+      "desktopPassed": 115,
+      "desktopSkipped": 3,
+      "pythonPassed": 170,
+      "pythonWarnings": 66
+    },
+    "scope": "Pinnedmainc41 plus repairs beforefreshpresscorrection; no browser/Redis/full/native/humanacceptance."
+  },
+  "freshPressCompatibility20261024": {
+    "manifest": "graphics-source-before-core-007.json",
+    "inputs": 1939,
+    "adoption": ".runtime/integration/fresh-press-adoption-001.json",
+    "focusedPassed": 61,
+    "focusedSkipped": 0,
+    "focusedLog": ".runtime/integration/main-c41-fresh-press-focused-green-001.log",
+    "review": "No blockingfindings, boundedoneblurtest; actualDOM/repeatedfocus/twopagejourney pending",
+    "core005": "passed11stages1939inputs0drift; exactcore005 record",
+    "scope": "No claim that earlier hostedModeB has been explained."
+  },
+  "core005Passed20261024": {
+    "manifest": "graphics-source-before-core-007.json",
+    "inputs": 1939,
+    "proof": ".runtime/integration/goal-handoff-core-005-source.json",
+    "receipt": ".runtime/integration/goal-handoff-core-005.json",
+    "status": "passed",
+    "initialDrift": 0,
+    "finalDrift": 0,
+    "startedAt": "2026-10-24T11:35:26.518090+00:00",
+    "finishedAt": "2026-10-24T11:39:48.821616+00:00",
+    "scope": "Exactcombineddirtysource at33b plusstagedmainc41 withallreviewedrepairs. Signedtreeequivalence requiredforpublication. ExcludesRedis/browser/full/native/human."
   }
 }

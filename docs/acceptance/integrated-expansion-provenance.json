@@ -197,5 +197,23 @@
     "adoptedBeforeCoreStarted": true,
     "sourceManifest": "graphics-source-before-core-004.json",
     "metadata": "Explicit local eye/south versus server ground/north coordinate frames; no direct coordinate divergence inference."
+  },
+  "gatewayDriverHeapIntegration20261024": {
+    "base": "33b1bf803970ff4d1746f5af7d1ce92ad539b7cd",
+    "main": "c41c379a58fd8b68dd09a895b891fe32b1a51bc4",
+    "manifest": "graphics-source-before-core-007.json",
+    "scope": "One-linegatewaygeometryrepair, grantedModeApulse, freshpresscompatibilitywithnormallydelivered569, diagnosticpostGCheap. First failuresandoldreceipts retained.",
+    "files": {
+      "preview/src/east-garden-commons.js": "453f3cb5481786efaa5be2386c8e8088cc4a5bf73b7c37b180dc713ad47aa6d1",
+      "preview/e2e/east-garden-commons.js": "afdf92e53398ff67e0319b97f2961e686a66206923896849e359d0600472e267",
+      "preview/e2e/world-streaming.js": "f5cd5cbfc12658c825130a05f789fc02f590cc64d901d3cd0ade6b6e0483ea90",
+      "preview/e2e/retained-heap.js": "cce1b9337c6c09f6de8006b79c028b5c971743d17f66a21c711678018f2d3243",
+      "preview/tests/east-garden-commons-ramp.test.js": "5feff85f172bfadf8d4e0458a14c4d618c4cb9ddbf588307642adfb044e8bf90",
+      "preview/tests/commons-walk-driver.test.js": "f90ac12b9a84013749aed499345e89667d1cbe04519b93a11f630b53490887dc",
+      "preview/tests/retained-heap.test.js": "f03b3b8bf347cb7c773b17f98cb93e62c9ccb38cd42afff9ff065bde7eafbb80"
+    },
+    "review": "Noblockingfindingsafterreviewcorrections; actualDOM andnormaljourney/final20trip pending",
+    "preservationStash": "514dc64bf52e6cc845abbfeefbe5acede41960f0",
+    "noDroppedOwnerChanges": true
   }
 }

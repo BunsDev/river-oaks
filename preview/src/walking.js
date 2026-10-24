@@ -181,6 +181,9 @@ export function createWalkingState(environment, position = environment.spawn, ya
 // frame of a step used to carry the whole peak at once, which read as a jolt.
 // Semi-implicit Euler on the fixed 120 Hz substep keeps it frame-rate stable.
 export const WALK_RESPONSE = 16;
+export function stopWalking(state) {
+  state.velocity = [0, 0]; state.acceleration = [0, 0]; state.speed = 0;
+}
 export function trackVelocity(state, vx, vz, dt) {
   const acceleration = state.acceleration ?? (state.acceleration = [0, 0]), omega = WALK_RESPONSE;
   acceleration[0] += (-2 * omega * acceleration[0] - omega * omega * (state.velocity[0] - vx)) * dt;
