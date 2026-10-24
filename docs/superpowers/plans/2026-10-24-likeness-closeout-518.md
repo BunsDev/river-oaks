@@ -24,6 +24,7 @@ Owned files: `server/tests/character-likeness-unreachable.test.js` and this ledg
 - **`verify full`**, with a disposable Redis (random loopback port, no persistence, shut down afterwards):
   - **#631** (head `e0ff305b`): every non-browser stage passed. Dependency audit: no known vulnerabilities. Tooling 219/219. Preview 3902 passed with 1 skip. Redis server tests 1128/1128 with **0 skips**. Desktop 115 passed with 3 skips. Build, ruff and format passed. Python 156 passed. Demo passed. Secret scan and history scan found no leaks.
   - **#632** (head `c8d6f143`): ran the `server-redis-tests` stage's command (`REDIS_URL=… pnpm run test:server`): 1130/1130 with **0 skips**, the 1128 plus the two new tests. Core had already passed on this content. The lockfile and history match #631's run.
+  - **#632 full run, first attempt on `b66fc209`: failed** in `agent-tests`. `scripts/tests/land-pr.test.js:133` reported "queue release did not wake the lander": a 5 s wake under load averages of about 28–34, while another gate run was going at the same time. Rerun alone, the file passed 29/29 three times, and the same suite passed in core and in #631's full run. Receipt: `.runtime/agent/full.json`.
   - **Not run locally:** the browser stages (`security-browser`, `reflections`, `experience`, `shared`, `ipic-screening`). #631's run waited ninth in the shared local browser-lock queue, behind a run that had held the lock since 05:59Z, and I stopped it at 06:50Z. This is a skip, not a pass. Neither change touches browser code. Hosted CI ran the browser journeys on both exact heads: all 22 check runs succeeded on `e0ff305b` and on `c8d6f143`.
 
 ## Retirement
@@ -56,9 +57,23 @@ Every local tip is a strict ancestor of its merged PR head. The only commits bet
 
 ## Decisions for Val
 
-1. **Retirement path for the five branches.** (a) Authorize `project:prune --cancel-stale --branch <b> --expected-head <tip> --stale-hours 5 --apply` for each exact tip above. That needs the CLI fix, either merged or run from its worktree; the command archives the tip and the full worktree, restore-tests both, and removes them through the guard. (b) Authorize a guard change that accepts ancestry proof, plus multiple PRs per task. (c) Keep the branches.
+1. **Retirement path for the five branches.** *Decided 2026-10-24: (a) for all five; see Retirement results.* (a) Authorize `project:prune --cancel-stale --branch <b> --expected-head <tip> --stale-hours 5 --apply` for each exact tip above. That needs the CLI fix, either merged or run from its worktree; the command archives the tip and the full worktree, restore-tests both, and removes them through the guard. (b) Authorize a guard change that accepts ancestry proof, plus multiple PRs per task. (c) Keep the branches.
 2. **Issue #518:** close it, or keep it open as deferred-optional.
 3. **Merging** the closeout PR and the prune fix PR. Neither merge is authorized in this session.
+
+## Retirement results (Val authorized, 2026-10-24)
+
+Val chose "Authorize all five". The guarded path is `node scripts/project-prune.mjs --cancel-stale --branch <b> --expected-head <tip> --stale-hours 5 --apply`, run from the #631 worktree because `main` still has the exit-13 defect. I ran a fresh dry run before each apply. Each apply archived the exact tip under a local `archive/worktree-prune/*` tag. It bundled what main lacks, restored the bundle into a fresh bare repository and ran `git fsck --full`. It then snapshotted and restore-tested the full worktree, verified that the source was unchanged, and removed the worktree and ref through the guard. `project:archives` afterwards verified all three new archives with no flags, each linked to its task. Remote branches and earlier archives were not touched.
+
+| Branch | Tip | Archive manifest | Worktree files | Register |
+| --- | --- | --- | --- | --- |
+| `fix/zod-advisory-override-20261023` | `43088452` | `~/worktree-backups/river-oaks/cancel-stale-fzUHiY/manifest.json` | 18802 entries | `zod-advisory-override` → **retired** |
+| `feat/likeness-consent-audit-518-20261023` | `0c8bb198` | `…/cancel-stale-b0Ck5W/manifest.json` | 18577 entries | `likeness-consent-audit-518` → **retired** |
+| `test/likeness-gate-518-20261022` | `d9c8c427` | `…/cancel-stale-VDhZba/manifest.json` | 18736 entries | `likeness-intake-518`: this branch cancelled; task still delivered |
+
+The first apply on `test/likeness-gate` stopped, with nothing changed, at `river-oaks-retirement.lock`. That lock was held by another session's live guarded retirement of `feat/police-pursuit-598`. I waited for the lock to be released (14 s), then retried.
+
+**Still to retire:** `docs/likeness-intake-518-20261022` (`1c76017f`) and `feat/likeness-quarantine-518-20261022` (`9431752c`). Their only blocker is `touched-within-cutoff`. The tool's own register write to `likeness-intake-518`, at 07:15:07Z, counts as a touch, so the cutoff is stamped again for every remaining branch of a multi-branch task. They become eligible at 12:15:07Z under Val's 5-hour cutoff; I did not shorten it. After both are cancelled, the task will move to `retired`.
 
 ## Issue sync and PRs
 
@@ -67,4 +82,4 @@ Every local tip is a strict ancestor of its merged PR head. The only commits bet
 
 ## Next action
 
-Mark #631 and #632 ready and hand their heads to `river-oaks-a3`. Post one evidence comment on #518. Val's three decisions above remain open.
+#631 and #632 are ready and handed to `river-oaks-a3`, and the #518 evidence comment is posted. At 12:15:07Z or later, run a fresh dry run and then apply for each of the two remaining branches, then record both in the register. Rerun `verify full` on this ledger head without a concurrent gate run, and run `verify browser` on #631's head when the shared lock allows. Val chose retirement option (a). Whether to close #518 is still Val's decision.
