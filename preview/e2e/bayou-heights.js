@@ -152,8 +152,6 @@ async page => {
     const after=await self(page),drift=Math.hypot(...after.position.map((v,i)=>v-before.position[i]));
     check(after.id===before.id&&drift<.5,'Reconnect keeps identity and Heights position');
     const reconnectMs=Date.now()-reconnectStart;
-    await Promise.all([walk(page,[at([201,1.5]),at([300,1.5])],'owner nineteenth'),walk(peer,[at([209,-1.5]),at([300,-1.5])],'alice nineteenth')]);
-    await capture(page,'nineteenth-and-yale');
     // DIAGNOSTIC BRANCH ONLY: per-phase frame times (render audit) and stream states, standing and walking.
     const audit={
       start:tab=>tab.evaluate(()=>{window.__riverRenderAudit.start();window.__diagStates=[];let last='';
@@ -165,21 +163,19 @@ async page => {
         const keys=new Set(frames.flatMap(frame=>Object.keys(frame.phasesMs??{}))),q=(values,f)=>{const sorted=[...values].sort((a,b)=>a-b);return +(sorted[Math.min(sorted.length-1,Math.floor(f*sorted.length))]??0).toFixed(1);};
         const phases=Object.fromEntries([...keys].map(key=>{const values=frames.map(frame=>frame.phasesMs?.[key]??0);return [key,{mean:+(values.reduce((a,b)=>a+b,0)/Math.max(1,values.length)).toFixed(1),p50:q(values,.5),p95:q(values,.95),max:q(values,1)}];}));
         const intervals=frames.map(frame=>frame.intervalMs);
-        return {label,frames:frames.length,intervalP50:q(intervals,.5),intervalP95:q(intervals,.95),cpuP50:q(frames.map(f=>f.cpuMs),.5),phases,states:window.__diagStates.slice(0,40)};},label),
+        const h=window.__riverBayouHeights()?.stream;return {label,loads:h?.loads,unloads:h?.unloads,failures:h?.failures,lastLoadMs:h?.lastLoadMs,frames:frames.length,intervalP50:q(intervals,.5),intervalP95:q(intervals,.95),cpuP50:q(frames.map(f=>f.cpuMs),.5),phases,states:window.__diagStates.slice(0,40)};},label),
     };
     const report=row=>{const {states,...rest}=row;console.log(`PROBE ${JSON.stringify(rest)}`);for(const [t,state] of states)console.log(`PROBE-STATE ${row.label} ${t} ${state}`);};
-    await Promise.all([audit.start(page),audit.start(peer)]);await page.waitForTimeout(6000);
-    for(const [tab,label] of [[page,'owner standing east x300'],[peer,'alice standing east x300']])report(await audit.stop(tab,label));
-    await Promise.all([walk(page,[at([297,1.5])],'owner turn west'),walk(peer,[at([297,-1.5])],'alice turn west')]);
-    await Promise.all([audit.start(page),audit.start(peer)]);await page.waitForTimeout(6000);
-    for(const [tab,label] of [[page,'owner standing west x297'],[peer,'alice standing west x297']])report(await audit.stop(tab,label));
     await Promise.all([audit.start(page),audit.start(peer)]);
-    await Promise.all([walk(page,[at([287,1.5])],'owner walk west'),walk(peer,[at([287,-1.5])],'alice walk west')]);
-    for(const [tab,label] of [[page,'owner walking west 297-287'],[peer,'alice walking west 297-287']])report(await audit.stop(tab,label));
+    let legError=null;
+    try{await Promise.all([walk(page,[at([201,1.5]),at([300,1.5])],'owner nineteenth'),walk(peer,[at([209,-1.5]),at([300,-1.5])],'alice nineteenth')]);}catch(error){legError=error;}
+    for(const [tab,label] of [[page,'owner nineteenth east'],[peer,'alice nineteenth east']])report(await audit.stop(tab,label));
+    if(legError)throw legError;
     await Promise.all([audit.start(page),audit.start(peer)]);
-    await Promise.all([walk(page,[at([297,1.5])],'owner walk east'),walk(peer,[at([297,-1.5])],'alice walk east')]);
-    for(const [tab,label] of [[page,'owner walking east 287-297'],[peer,'alice walking east 287-297']])report(await audit.stop(tab,label));
-    throw new Error('diagnostic probe complete');
+    try{await Promise.all([walk(page,[at([270,1.5])],'owner west 300-270'),walk(peer,[at([270,-1.5])],'alice west 300-270')]);}catch(error){legError=error;}
+    for(const [tab,label] of [[page,'owner walking west 300-270'],[peer,'alice walking west 300-270']])report(await audit.stop(tab,label));
+    throw legError??new Error('diagnostic probe complete');
+    await capture(page,'nineteenth-and-yale');
 
     // Home: back over the footbridge and the Commons to the District.
     await Promise.all([walk(page,[at([165,1.5]),at([100,1.5]),at([-2,1.5])],'owner home'),walk(peer,[at([165,-1.5]),at([100,-1.5]),at([-2,-1.5])],'alice home')]);
