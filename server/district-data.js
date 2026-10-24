@@ -1,5 +1,7 @@
 import { COMMONS_REVISION } from '../shared/east-garden-commons-layout.js';
 import { attachEastGardenCommons } from '../preview/src/east-garden-commons-world.js';
+import { HEIGHTS_REVISION } from '../shared/bayou-heights-layout.js';
+import { attachBayouHeights } from '../preview/src/bayou-heights-world.js';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { attachDistrictGalleryPlan } from '../preview/src/district-interior-contract.js';
@@ -20,6 +22,8 @@ export async function loadDistrictData({ districtRevision } = {}) {
     throw new Error('District gallery plan digest mismatch');
   }
   const attached = attachDistrictGalleryPlan(world, plan);
-  const campus = [DISTRICT_REVISION_GARDENS,COMMONS_REVISION].includes(districtRevision) ? attachGardenCampus(attached) : attached;
-  return districtRevision === COMMONS_REVISION ? attachEastGardenCommons(campus) : campus;
+  const campus = [DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION].includes(districtRevision) ? attachGardenCampus(attached) : attached;
+  const commons = [COMMONS_REVISION,HEIGHTS_REVISION].includes(districtRevision) ? attachEastGardenCommons(campus) : campus;
+  // Bayou Heights composes across the bayou from the Commons (#586 continuation).
+  return districtRevision === HEIGHTS_REVISION ? attachBayouHeights(commons) : commons;
 }

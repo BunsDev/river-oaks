@@ -1,6 +1,6 @@
 # City kit and neighborhood assembly
 
-The city kit (#584) and the deterministic assembly pipeline (#585) build new neighborhoods out of one shared set of streets, sidewalks, intersections, building shells, storefronts, roofs, glazing, landscaping and street furniture. The first destination built with them is [Bayou Market Commons](level-design/expansion/bayou-market-commons.md) (#586). The same kit also assembles a second, deliberately different neighborhood, `nineteenth-and-yale`, which is preview-only and is not registered as playable land.
+The city kit (#584) and the deterministic assembly pipeline (#585) build new neighborhoods out of one shared set of streets, sidewalks, intersections, building shells, storefronts, roofs, glazing, landscaping and street furniture. The first destination built with them is [Bayou Market Commons](level-design/expansion/bayou-market-commons.md) (#586). The same kit also assembles a second, deliberately different neighborhood, `nineteenth-and-yale`. [Bayou Heights](level-design/expansion/bayou-heights.md) promotes it, with unchanged geometry, as the crossroads of the next connected district, alongside six new recipes.
 
 The kit extends existing systems rather than adding a city engine. Movement uses the Commons walking contract (`shared/east-garden-commons-layout.js`). Surfaces use the District PBR maps (`preview/src/materials.js`). Trees use the District's tree models and their level-of-detail and shadow batching (`buildMatureTrees`). Planters use the District planting palette (`buildPlanterPlanting`).
 
@@ -74,7 +74,7 @@ pnpm run destination preview config/destinations/bayou-market-commons.json      
 1. Copy a recipe, choose a site inside an authored manifest location, and lay out streets, plazas and blocks with the authored items that matter: landmark, gathering places and activity points.
 2. Run `destination build`, open the SVG, then open the in-engine preview at pedestrian height (`city-kit.html?recipe=…&view=street`). Try a few seeds and keep the best one.
 3. Fix art direction with overrides and additions, not by editing output. Rebuild, review, then `--lock`.
-4. Compose it into a manifest location with real walking ground (see `shared/commons-destination.js`), then add the movement and connectivity tests and a browser journey.
+4. Compose it into a manifest location with real walking ground (see `shared/commons-destination.js` and `shared/bayou-heights.js`), then add the movement and connectivity tests and a browser journey. When a recipe's ground joins a neighbouring plan, name the seam in `ENTRIES` in `scripts/destination.mjs` so its own connectivity check includes it.
 
 The second recipe showed which generator features were needed. Making a crossroads required north-running streets, east- and west-facing blocks (assembled in an x/y-swapped frame and mapped back exactly), clipped intersections and unsigned overflow shops. Those features were added for that recipe, and the Commons recipe did not change.
 

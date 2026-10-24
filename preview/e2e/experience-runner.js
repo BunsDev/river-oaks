@@ -43,6 +43,7 @@ try {
       // The Gardens campus revision (#507) for its public traversal (#508).
       'garden-campus-traversal':{RIVER_OAKS_DISTRICT_REVISION:'river-oaks-gardens-3'},
       'east-garden-commons':{RIVER_OAKS_DISTRICT_REVISION:'east-garden-commons-market-1'},
+      'bayou-heights':{RIVER_OAKS_DISTRICT_REVISION:'bayou-heights-1'},
       'garden-campus-suite':{RIVER_OAKS_DISTRICT_REVISION:'river-oaks-gardens-3',RIVER_OAKS_CAMPUS_OPERATOR_IDS:'bob'},
     }[name]??{};
     // The Computer embed journey frames a separate-origin child fixture (#486); other journeys get no Computer origin.

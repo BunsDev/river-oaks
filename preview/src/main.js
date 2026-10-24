@@ -2,6 +2,8 @@ import { bindPageLifecycle } from './background-lifecycle.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { attachEastGardenCommons } from './east-garden-commons-world.js';
 import { buildEastGardenCommons } from './east-garden-commons.js';
+import { HEIGHTS_REVISION } from '../../shared/bayou-heights-layout.js';
+import { createHeightsArrival } from './bayou-heights-arrival.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { createCharacterStudio } from './character-studio.js';
@@ -172,10 +174,11 @@ const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.sea
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 // East Garden Commons and its assembled destination, when the revision composes them.
-let commonsScene = null;
+let commonsScene = null, buildHeightsScene = null;
 const lanternWalk = createLanternWalkClient({ getLayout: () => world?.eastGardenCommons ?? null, getPose: () => walking?.getPose(), getScene: () => commonsScene,
   getSnapshot: () => multiplayer?.snapshot?.lanternWalk ?? null,
   send: message => multiplayer?.command(message) ?? Promise.resolve({ ok: false, message: 'Connect to the town to light the lanterns together.' }) });
+const heightsArrival = createHeightsArrival({ getLayout: () => world?.eastGardenCommons ?? null, getPose: () => walking?.getPose() });
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
 let currentAtmosphere = null; // the time-of-day light updateAtmosphere last applied; an office visit reads it
 let placesUI = null, landmarks = null;
@@ -765,7 +768,7 @@ function populateWorld(data) {
   worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
   worldGroup.add(sidewalks);
   worldGroup.add(furniture);
-  if(data.eastGardenCommons){commonsScene=buildEastGardenCommons(data.eastGardenCommons);worldGroup.add(commonsScene);}
+  if(data.eastGardenCommons){commonsScene=data.eastGardenCommons.heights?buildHeightsScene(data.eastGardenCommons):buildEastGardenCommons(data.eastGardenCommons);worldGroup.add(commonsScene);}
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
   plazaSalon = buildPlazaSalon(data);
   plazaStage?.setWorld(data);
@@ -935,7 +938,7 @@ async function loadWorld() {
       :await jsonResponse(`/api/world-data?world=${encodeURIComponent(worldId)}`);
     worldRegionSha256=manifest.regionSha256??null;
     const districtRevision=manifest.districtRevision??null;
-    if(districtRevision!==null && ![DISTRICT_REVISION_GARDENS,COMMONS_REVISION].includes(districtRevision))throw new Error('This district revision is not supported by this client');
+    if(districtRevision!==null && ![DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION].includes(districtRevision))throw new Error('This district revision is not supported by this client');
     let data;
     if(manifest.template==='region-v1')data=manifest.world;
     else if(manifest.template==='river-oaks') {
@@ -945,8 +948,10 @@ async function loadWorld() {
       ]);
       district.vegetation=validateVegetation(district,vegetation);
       data=attachDistrictGalleryPlan(district,approved);
-      if([DISTRICT_REVISION_GARDENS,COMMONS_REVISION].includes(districtRevision))data=attachGardenCampus(data);
-      if(districtRevision===COMMONS_REVISION)data=attachEastGardenCommons(data);
+      if([DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION].includes(districtRevision))data=attachGardenCampus(data);
+      if([COMMONS_REVISION,HEIGHTS_REVISION].includes(districtRevision))data=attachEastGardenCommons(data);
+      // Bayou Heights loads its recipes and scene only for its own revision.
+      if(districtRevision===HEIGHTS_REVISION){const heights=await import('./bayou-heights.js');buildHeightsScene=heights.buildBayouHeights;data=heights.attachBayouHeights(data);}
     } else throw new Error('This region format is not supported by this client');
     worldDistrictRevision=districtRevision;
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
@@ -1033,6 +1038,7 @@ function render(now) {
   layers.trees?.userData.update?.(camera.position);
   commonsScene?.userData.update?.(camera.position);
   lanternWalk.update();
+  heightsArrival.update();
   renderAudit?.phase('trees');
   if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition(), community?.speakingId);
   renderAudit?.phase('residents');
@@ -1392,6 +1398,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverIpicDarts = () => ipicDarts ? { ...ipicDarts.debug(), board: buildingMesh?.userData.interiors?.userData.dartboards?.[0]?.count() ?? null,
     steadyAt: release => ipicDarts.steadyAt(release), steadyOn: point => ipicDarts.steadyOn(point), open: () => ipicDarts.open() } : null;
   window.__riverLanternWalk = () => ({ ...lanternWalk.debug(), scene: commonsScene?.userData.stats?.() ?? null });
+  window.__riverBayouHeights = () => world?.eastGardenCommons?.heights ? ({ ...heightsArrival.debug(), revision: world.eastGardenCommons.revision, scene: commonsScene?.userData.stats?.() ?? null }) : null;
   window.__riverPlazaDarts = () => plazaDarts ? { ...plazaDarts.debug(), board: plazaSalon?.userData.darts?.count() ?? null,
     steadyAt: release => plazaDarts.steadyAt(release), steadyOn: point => plazaDarts.steadyOn(point), landingFor: (release, dart) => plazaDarts.landingFor(release, dart), reset: seed => plazaDarts.reset(seed),
     // Walk to the throwing line and face the board.

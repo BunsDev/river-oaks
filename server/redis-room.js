@@ -1,4 +1,5 @@
 import { recoverDistrictCommonsCheckpoint } from './district-commons-checkpoint-migration.js';
+import { recoverDistrictHeightsCheckpoint } from './district-heights-checkpoint-migration.js';
 import { characterSelectionOperation } from './character-store.js';
 import { defaultAppearanceFor } from '../preview/src/shared-appearances.js';
 import { randomUUID } from 'node:crypto';
@@ -207,7 +208,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
         // The garage/Gardens district revision switch (#512) chains the older garage recoveries itself.
-        const commons = recoverDistrictCommonsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        // Bayou Heights extends the Commons layout, so its recovery runs first.
+        const heights = recoverDistrictHeightsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const commons = heights.ok ? heights : recoverDistrictCommonsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const gardens = commons.ok ? commons : recoverDistrictGardensCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const tower = gardens.ok ? gardens : recoverDistrictTowerCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const levels = tower.ok ? tower : recoverDistrictLevelsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
@@ -219,7 +222,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
           error.checkpointReason = checkpointReason;
           throw error;
         }
-        districtMigration = commons.ok ? { kind: 'commons', from: commons.from, to: commons.to, moved: commons.moved.length }
+        districtMigration = heights.ok ? { kind: 'heights', from: heights.from, to: heights.to, moved: heights.moved.length }
+          : commons.ok ? { kind: 'commons', from: commons.from, to: commons.to, moved: commons.moved.length }
           : gardens.ok ? { kind: 'gardens', from: gardens.from, to: gardens.to, moved: gardens.moved.length }
           : tower.ok ? { kind: 'tower', from: tower.from }
           : levels.ok ? { kind: 'levels', from: levels.from }
@@ -468,7 +472,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       visitors,JSON.stringify(revisionUpdate?.sources??[]),
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'commons'
+    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'heights'
+      ? { event: 'district_heights_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'commons'
       ? { event: 'district_commons_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
       : districtMigration.kind === 'gardens'
       ? { event: 'district_gardens_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
