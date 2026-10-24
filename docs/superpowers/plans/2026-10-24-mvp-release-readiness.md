@@ -183,6 +183,39 @@ Follow-up results:
 - **Approval:** Val approved landing #639 with the server change, by answer in this session at about 16:30 UTC.
 - **Landing:** GitHub GraphQL was rate-limited, so the lander starts once the window resets (background script, log `land-639-b.log`).
 
-## Next step
+## #639 delivery and retirement
 
-Read the diagnostic trace and decide whether this is a product defect (players cannot walk after leaving a table on slow clients) or a harness defect. Then claim the owning file and fix it with a regression. Collect the full gate's browser stages, the ABBA District-parity performance runs (`.runtime/release-readiness/perf-abba.sh`) and the journey captures. Then write the acceptance checklist and decision.
+GitHub GraphQL was rate-limited until 16:37 UTC, after which #639 was marked ready and the lander took its turn. It updated the branch from main (`44e51601`, which now includes #489).
+
+Verify run 40114160932 then ran:
+
+- **Attempt 1:** `preview shared (worlds-and-creator)` failed on `creator-approved-cafe`, the #489 café flake that the sweep session moved to on-demand in #644. Commons passed, and the café stall reproduced with the elbow fix present, so this fix does not cover it.
+- **Rerun:** passed.
+
+The merge guard merged at 17:26:50 UTC as `98c7dd7427d3421dcadfb7c9ede20873ba07cbd3`, an ancestor of freshly fetched origin/main. The merge tree equals the reviewed-head tree (`d7bce7eb…`).
+
+Retirement of the fix checkout:
+
+- **Task:** moved to its own register task, `commons-journey-fix-639`, with delivery evidence, then released (owner null, retirement attestation for head `44e51601`).
+- **Evidence:** all 33 files of the fix worktree's `.runtime` and `output/playwright` evidence were copied to `.runtime/release-readiness/fix-worktree-evidence/`, with matching SHA-256 lists.
+- **Cleanup:** only regenerable caches were cleaned, with `git clean -fdX` after a dry run. No process had its CWD there.
+- **Branch:** the local branch was fast-forwarded to its own merged upstream head.
+- **Prune:** the dry run was eligible; `project:prune --apply` retired the branch and worktree. Archive: `~/worktree-backups/river-oaks/retirement-ByPL4d/` (bundle SHA-256 `c26ddbe8…`, manifest and restore command recorded). The local ref and worktree are absent afterwards; the remote branch is untouched.
+
+## Current state and next step
+
+The readiness decision stands: **NO-GO for player-facing activation; GO for opt-in internal play.** Details are in `docs/acceptance/mvp-release-readiness-20261024.md` (draft PR #643).
+
+This task owned and resolved the main CI blocker (D1, with D14) by landing #639. The remaining activation blockers belong to other owners:
+
+- **D2** (#623 streaming and gate): `integrated-expansion-mvp-20261023`.
+- **D3** (walking-control contrast): `movement-pad-contrast-20261024`.
+- **D4** (human visual and keyboard/screen-reader acceptance, target devices and budgets): Val.
+
+Val decided D5 (accept 1.12× for the MVP) and D11 (adopt #626's protocol) on 2026-10-24.
+
+Next:
+
+1. Main's Verify on `98c7dd74` (run 40116152217): Commons passed. The aggregate failed only on `creator-approved-cafe` (#489 flake, #644). Keep watching later main and PR runs for Commons reliability. If mode B recurs, read the refusals now included in the failure.
+2. When #623 lands, rerun checklist rows 2–7 and 10 on the merged head.
+3. Keep #643 as a draft until Val has reviewed it.
