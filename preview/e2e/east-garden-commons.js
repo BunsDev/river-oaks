@@ -1,4 +1,6 @@
 async page => {
+  const traceInput = process.env.CI === 'true';
+  const { installInputAuthorityTrace, captureInputAuthorityEvidence } = await import('./input-authority-trace.js');
   const { loadDistrictData } = await import('../../server/district-data.js');
   const { createResidentNavigation } = await import('../src/navigation.js');
   const revision='east-garden-commons-market-1',world=await loadDistrictData({districtRevision:revision});
@@ -12,6 +14,7 @@ async page => {
   const peer=await peerContext.newPage();peer.setDefaultTimeout(120000);peer.on('pageerror',e=>errors.push(e.message));
   const self=tab=>tab.evaluate(()=>{const town=window.__riverMultiplayer();return town.snapshot.players.find(p=>p.id===town.selfId);});
   const ready=async tab=>{
+    if(traceInput)await tab.addInitScript(installInputAuthorityTrace);
     await tab.emulateMedia({reducedMotion:'reduce'});
     await tab.addInitScript(()=>{
       const Original=window.WebSocket;window.__commonsSockets=[];
@@ -141,5 +144,13 @@ async page => {
     check((await page.evaluate(()=>performance.timeOrigin))===timeOrigins[0]&&(await peer.evaluate(()=>performance.timeOrigin))===timeOrigins[1],'Round trip preserved both documents without reload');
     check(errors.length===0,`No page errors: ${errors.join('; ')}`);
     return {checks,routes,reconnectMs,lanternWalk,views,scope:'Two rendered fixture clients, normal keyboard walking from original District arrivals; shared chess and Lantern Walk activities; no physical-device or production acceptance'};
+  }catch(error){
+    if(traceInput){
+      const failure=error instanceof Error?error:new Error(String(error));
+      failure.journeyEvidence={schemaVersion:1,scope:'CI-only normal-journey observations; no keyboard-handler acceptance inferred',
+        checks,routes,players:await captureInputAuthorityEvidence([['owner',page],['peer',peer]])};
+      throw failure;
+    }
+    throw error;
   }finally{await peerContext.close();}
 }

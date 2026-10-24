@@ -1532,5 +1532,149 @@
       },
       "scope": "Core only. Redis/browser/native/physical-device/human/production and newer main remain separate. Demo verifier exit2 is explicitly expected by its configured domain gate."
     }
+  },
+  "publishedGraphicsCheckpoint": {
+    "sha": "c4a83b6e73045922d9b28ba3c5137e4095a23875",
+    "tree": "4d5531fe7408de1765903f814b843b663c8a170d",
+    "parents": [
+      "311e8de6abd05f29f7718985723129e3a68e96a8",
+      "2cbc4dc470897bd8ee4da059ac8795885ee594c1"
+    ],
+    "localSshVerified": true,
+    "githubVerified": true,
+    "pr": 623,
+    "draft": true,
+    "scope": "Core/focused checkpoint only. Newer main and contrast staged afterward; all final goal gates remain open."
+  },
+  "hostedGraphicsCheckpoint20261024": {
+    "head": "c4a83b6e73045922d9b28ba3c5137e4095a23875",
+    "runId": 40075452543,
+    "failure": {
+      "job": 120817696715,
+      "artifact": 12553317361,
+      "artifactSha256": "eb82eb2ed0ecf2b76d2323ac2e376ea794ff036126205d0eb857e3536b1beed7",
+      "seconds": 415.509,
+      "after": "Shared chess completed; owner plaza walk did not turn/reach target within existing deadline",
+      "source": "Hosted Linux Mesa software journey on signed c4a83b6e",
+      "rootCause": "Unproven; same original focused diagnostic remains queued"
+    },
+    "rawState": ".runtime/integration/hosted-c4a83b6-state-001.json",
+    "rawLog": ".runtime/integration/hosted-c4a83b6-commons-120817696715.log",
+    "rawArtifact": ".runtime/integration/hosted-c4a83b6-commons.zip",
+    "staticProbe": {
+      "path": ".runtime/integration/hosted-postchess-static-probe.json",
+      "headingDifference": 0.7585208413230848,
+      "isFree": true,
+      "results": [
+        {
+          "delta": 0.016666666666666666,
+          "ticks": 363,
+          "initial": [
+            -2572.476078522973,
+            20.05222868285045,
+            1316.65
+          ],
+          "final": [
+            -2576.274494000322,
+            20.05222868285045,
+            1324.8667255480123
+          ],
+          "distance": 9.052219195463143,
+          "remaining": 0.14681530227721734,
+          "reached": true
+        },
+        {
+          "delta": 0.16666666666666666,
+          "ticks": 74,
+          "initial": [
+            -2572.476078522973,
+            20.05222868285045,
+            1316.65
+          ],
+          "final": [
+            -2576.311233508316,
+            20.05222868285045,
+            1324.9462549553425
+          ],
+          "distance": 9.13981728732296,
+          "remaining": 0.05920983515038613,
+          "reached": true
+        }
+      ],
+      "scope": "Static actual-controller probe from the hosted failed pose on unchanged walking inputs. Does not observe DOM input/focus, multiplayer corrections, dynamic obstacles or presentation guards; no post-chess root cause or fix claimed."
+    },
+    "aggregate": "failed",
+    "aggregateJob": 120821189717,
+    "terminalState": ".runtime/integration/hosted-c4a83b6-state-002-terminal.json",
+    "captureScope": "Intentional Linux software-acceptance normal-material override; no product colour regression inferred.",
+    "checkout": {
+      "sha": "1c25e6372f66be517a74eb5ae50118f53279d240",
+      "base": "74c0eab865d9f99154bfbeaf767cc8a2a4a52b4d",
+      "prHead": "c4a83b6e73045922d9b28ba3c5137e4095a23875",
+      "scope": "GitHub PR merge-ref checkout, confirmed by original job log lines104/180; not the isolated head tree."
+    }
+  },
+  "focusedPostChessSourceDrift20261024": {
+    "overallStatus": "source-drift",
+    "attemptOutcomes": [
+      "passed",
+      "passed",
+      "passed"
+    ],
+    "scope": "Focused existing-fixture setup only; no hosted failure reproduced and no final candidate acceptance. Only disk journey changed; prepared function loaded once. Recorded product/probe inputs stable.",
+    "copies": {
+      "post-chess-focused-001/report.json": {
+        "path": ".runtime/integration/focused-postchess-source-drift/post-chess-focused-001-report.json",
+        "sha256": "1b75f9cbf629192c3df86148c10a46b2490e9933db86ab2a540fcd7b45170085"
+      },
+      "focused-source-drift.json": {
+        "path": ".runtime/integration/focused-postchess-source-drift/focused-source-drift.json",
+        "sha256": "ca78954cc11c74f08dc179c959b5631504ae2ceab3e51a4e909a8e5f73e35509"
+      },
+      "focused-terminal-analysis.json": {
+        "path": ".runtime/integration/focused-postchess-source-drift/focused-terminal-analysis.json",
+        "sha256": "c8df10e7c67a3f182f8e1cf59823571e0d28f3f4b970371aa6e879a07db34955"
+      },
+      "focused-capture-inspection.json": {
+        "path": ".runtime/integration/focused-postchess-source-drift/focused-capture-inspection.json",
+        "sha256": "2d8526b6344bdf62ffa8148128c882964f6972dc0430b279b64c4d03da3c4800"
+      }
+    }
+  },
+  "mainContrastDiagnosticCoreCheckpoint": {
+    "status": "passed",
+    "receipt": ".runtime/integration/goal-handoff-core-002.json",
+    "receiptSha256": "7edf657439a31b2f2ad1be94ca10bc9e663a6623834b35714a0a89802c1dcbd4",
+    "sourceProof": ".runtime/integration/goal-handoff-core-002-source.json",
+    "sourceManifest": "graphics-source-before-core-004.json",
+    "inputs": 1822,
+    "startedAt": "2026-10-24T08:31:55.007Z",
+    "finishedAt": "2026-10-24T08:39:42.425Z",
+    "revision": "c4a83b6e73045922d9b28ba3c5137e4095a23875",
+    "dirty": true,
+    "sourceDrift": 0,
+    "counts": {
+      "tooling": {
+        "passed": 262,
+        "skipped": 0
+      },
+      "preview": {
+        "passed": 3997,
+        "skipped": 1
+      },
+      "server": {
+        "passed": 868,
+        "skipped": 219
+      },
+      "desktop": {
+        "passed": 115,
+        "skipped": 3
+      },
+      "python": {
+        "passed": 170,
+        "warnings": 66
+      }
+    },
+    "scope": "Core only; Redis/browser/full/final hosted/physical/human acceptance separate."
   }
 }

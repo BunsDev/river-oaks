@@ -162,5 +162,40 @@
         }
       }
     }
-  ]
+  ],
+  "contrastIntegration20261024": {
+    "adoptedAt": "2026-10-24T07:48:45.733927+00:00",
+    "base": "16eff1a0d0c86a368f07c03cf02d48054895ebcd",
+    "published": "53c01b0612a387957973ccca22db5114d016c04c",
+    "patchSha256": "30ae7dfdefeadc746a6f6e9875951e6d57c34cc39d425ad27635926157192ba2",
+    "sourceOwnerRetained": true,
+    "files": {
+      "preview/src/hud-glass.css": "cbb75a47a1ddc4d68544908901f001a6c4154ab93b8f5fc0d25315ad918f36fa",
+      "preview/e2e/walking-controls-contrast.js": "4bad0930c6d92d2d9f2261249d588959213d57771e60b9b3f9d56aca8e30cacd"
+    },
+    "adaptations": {
+      "preview/e2e/walking-controls-contrast.js": "Wait for real asset-completion badge to become hidden before notice capture; no product visibility state changed. Candidate browser proof pending."
+    },
+    "scope": "Source-only granted delta; status-stack/layout retained. Donor receipts keep donor scope."
+  },
+  "normalJourneyTraceIntegration20261024": {
+    "donorSha256": "89321a584022eddd9c3636a16abcad0d86df875dd6420231341c11a610487b64",
+    "baselineHead": "c4a83b6e73045922d9b28ba3c5137e4095a23875",
+    "currentManifest": "graphics-source-before-core-003.json",
+    "preparedOnly": false,
+    "files": {
+      "preview/e2e/input-authority-trace.js": "0ae61605f3866ae07b01b8545afe82a9555e15c81ed9ed8a91f64ddb4dde765b",
+      "preview/e2e/east-garden-commons.js": "788d8f314b9ae7bdaba51951974e87be5403343758c779b443d50e2eca3b34fb",
+      "preview/e2e/experience-runner.js": "304a45d8e8f40d50996042c59d748d62c538fce882bec1b701bffa410471c714",
+      "preview/tests/input-authority-trace.test.js": "f71c52c202877c57b619183213c560b3a9d86a8b9a325fa5254431853f521ac8"
+    },
+    "unchangedWalkDriverSha256": "76ddc6aec4b54035d4744bfee611b10348dfd128ff7426fb243d3658ee8496c8",
+    "timeoutOccurrencesUnchanged": true,
+    "noNewFixtureShortcut": true,
+    "observerRegression": "RED field acceptance assertion preserved; GREEN 1 test includes passthrough, redaction, correlation, bounded ring, cleanup and both-page capture failures",
+    "scope": "Prepared CI-only diagnostic; no candidate edits, product fix or browser acceptance.",
+    "adoptedBeforeCoreStarted": true,
+    "sourceManifest": "graphics-source-before-core-004.json",
+    "metadata": "Explicit local eye/south versus server ground/north coordinate frames; no direct coordinate divergence inference."
+  }
 }

@@ -85,7 +85,7 @@ try {
           window: [innerWidth, innerHeight, devicePixelRatio], screen: [screen.width, screen.height, screen.colorDepth],
           canvas: canvas && [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight] };
       }).catch(failure => ({ unavailable: failure.message }))));
-      results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack, pageErrors, consoleErrors: consoleErrors.slice(-20), diagnostics });
+      results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack, pageErrors, consoleErrors: consoleErrors.slice(-20), diagnostics, ...(error.journeyEvidence ? { journeyEvidence: error.journeyEvidence } : {}) });
       console.error(`Failed ${name}: ${error.message}`);
       await page.screenshot({ path: join(root, `output/playwright/experience-${name}-failure.png`) }).catch(() => {});
       process.exitCode = 1;
