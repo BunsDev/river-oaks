@@ -1,4 +1,6 @@
 async page => {
+  const traceInput = process.env.CI === 'true';
+  const { installInputAuthorityTrace, captureInputAuthorityEvidence } = await import('./input-authority-trace.js');
   const { loadDistrictData } = await import('../../server/district-data.js');
   const { createResidentNavigation } = await import('../src/navigation.js');
   const revision='east-garden-commons-market-1',world=await loadDistrictData({districtRevision:revision});
@@ -12,10 +14,14 @@ async page => {
   const peer=await peerContext.newPage();peer.setDefaultTimeout(120000);peer.on('pageerror',e=>errors.push(e.message));
   const self=tab=>tab.evaluate(()=>{const town=window.__riverMultiplayer();return town.snapshot.players.find(p=>p.id===town.selfId);});
   const ready=async tab=>{
+    if(traceInput)await tab.addInitScript(installInputAuthorityTrace);
     await tab.emulateMedia({reducedMotion:'reduce'});
     await tab.addInitScript(()=>{
-      const Original=window.WebSocket;window.__commonsSockets=[];
-      window.WebSocket=class extends Original{constructor(...args){super(...args);if(new URL(args[0],location.href).pathname==='/multiplayer')window.__commonsSockets.push(this);}};
+      const Original=window.WebSocket;window.__commonsSockets=[];window.__commonsRefusals=[];
+      window.WebSocket=class extends Original{constructor(...args){super(...args);if(new URL(args[0],location.href).pathname!=='/multiplayer')return;window.__commonsSockets.push(this);
+        // A stalled walk reports the town's latest refusals and corrections, so a CI first failure explains itself.
+        this.addEventListener('message',event=>{try{const data=JSON.parse(event.data),reply=data.result??data;if(reply?.ok!==false&&!data.correction)return;
+          window.__commonsRefusals.push({t:Math.round(performance.now()),error:reply?.error??null,at:(data.correction??reply?.correction)?.position??null});window.__commonsRefusals.splice(0,window.__commonsRefusals.length-12);}catch{/* not JSON */}});}};
     });
     await tab.goto(`${origin}/?motion-debug=1`);
     await tab.waitForFunction(revision=>window.__riverMultiplayer?.().connected
@@ -31,8 +37,9 @@ async page => {
       const deadline=Date.now()+120000;
       for(;;){
         const pose=await tab.evaluate(()=>window.__riverCarriage().pose),dx=target[0]-pose.position[0],dz=-target[1]-pose.position[2],distance=Math.hypot(dx,dz);
-        if(distance<.35){await releaseKeys();break;}
-        if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose})}`);
+        // Stay inside the planner's 0.3 m corner clearance before turning.
+        if(distance<.15){await releaseKeys();break;}
+        if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose,refusals:await tab.evaluate(()=>window.__commonsRefusals)})}`);
         const heading=Math.atan2(-dx,-dz),difference=Math.atan2(Math.sin(heading-pose.yaw),Math.cos(heading-pose.yaw));
         if(Math.abs(difference)>.035){
           await releaseKeys();
@@ -40,6 +47,8 @@ async page => {
           const drag=Math.max(-box.width*.35,Math.min(box.width*.35,-difference/.003));
           await tab.mouse.move(x,y);await tab.mouse.down();await tab.mouse.move(x+drag,y,{steps:3});await tab.mouse.up();continue;
         }
+        // A lifecycle release clears runtime input; repeat keydown cannot resume it.
+        if(pose.speed<.05)await releaseKeys();
         await tab.locator('#canvas-host').focus();
         const fast=distance>2;
         if(fast)await tab.keyboard.down('ShiftLeft');else await tab.keyboard.up('ShiftLeft');
@@ -47,13 +56,19 @@ async page => {
         await tab.waitForTimeout(Math.min(450,Math.max(30,distance*(fast?110:230))));
         // Keep walking during browser round trips, as spatial-streets does.
         // Pulsing/releasing every sample repeatedly brakes on CPU-rendered CI.
-        // Reassert keydown each pass so a focus correction cannot lose input.
+        // Reassert while held; a stopped observation starts a fresh press above.
+        // Within two metres, stop before measuring again: held across a slow
+        // round trip (about 9 fps on CPU-rendered CI) the walker overshoots by
+        // more than the arrival radius and circles the waypoint until it stalls.
+        if(!fast){await releaseKeys();await tab.waitForFunction(()=>window.__riverCarriage().pose.speed<.05,null,{timeout:10000});}
         samples.push((await self(tab)).position);
       }
     }
     }finally{await releaseKeys();}
     const target=points.at(-1);
-    await tab.waitForFunction(target=>{const town=window.__riverMultiplayer(),p=town.snapshot.players.find(p=>p.id===town.selfId);return Math.hypot(p.position[0]-target[0],p.position[1]-target[1])<.6;},target,{timeout:10000});
+    try{await tab.waitForFunction(target=>{const town=window.__riverMultiplayer(),p=town.snapshot.players.find(p=>p.id===town.selfId);return Math.hypot(p.position[0]-target[0],p.position[1]-target[1])<.6;},target,{timeout:10000});}
+    catch(error){throw new Error(`${label}: the town did not confirm arrival ${JSON.stringify(await tab.evaluate(()=>{const town=window.__riverMultiplayer();
+      return {pose:window.__riverCarriage().pose.position,town:town.snapshot.players.find(p=>p.id===town.selfId)?.position,connected:town.connected,refusals:window.__commonsRefusals};}).catch(()=>null))} (${error.message})`);}
     routes.push({label,seconds:(Date.now()-started)/1000,start:start.position,end:(await self(tab)).position,samples});console.log(`${label} reached`);
   };
   try{
@@ -139,6 +154,15 @@ async page => {
     await Promise.all([walk(page,nav.route((await self(page)).position.slice(0,2),starts[0].position.slice(0,2)),'owner home'),walk(peer,nav.route((await self(peer)).position.slice(0,2),starts[1].position.slice(0,2)),'alice home')]);
     check((await page.evaluate(()=>performance.timeOrigin))===timeOrigins[0]&&(await peer.evaluate(()=>performance.timeOrigin))===timeOrigins[1],'Round trip preserved both documents without reload');
     check(errors.length===0,`No page errors: ${errors.join('; ')}`);
-    return {checks,routes,reconnectMs,lanternWalk,views,scope:'Two rendered fixture clients, normal keyboard walking from original District arrivals; shared chess and Lantern Walk activities; no physical-device or production acceptance'};
+    const refusals={owner:await page.evaluate(()=>window.__commonsRefusals),alice:await peer.evaluate(()=>window.__commonsRefusals)};
+    return {checks,routes,reconnectMs,lanternWalk,views,refusals,scope:'Two rendered fixture clients, normal keyboard walking from original District arrivals; shared chess and Lantern Walk activities; no physical-device or production acceptance'};
+  }catch(error){
+    if(traceInput){
+      const failure=error instanceof Error?error:new Error(String(error));
+      failure.journeyEvidence={schemaVersion:1,scope:'CI-only normal-journey observations; no keyboard-handler acceptance inferred',
+        checks,routes,players:await captureInputAuthorityEvidence([['owner',page],['peer',peer]])};
+      throw failure;
+    }
+    throw error;
   }finally{await peerContext.close();}
 }

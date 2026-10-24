@@ -420,6 +420,7 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | Optional Cloudflare Turnstile on email sign-in; set both or neither |
 | `TYPESAFE_API_KEY`, `JEV_AUTO_MODEL`, `CHAUFFEUR_DAILY_LIMIT` | Hosted Jev driving: server-only key, model (default `jev-1.14.0`), and daily decision budget (default 6,000, max 10,000) |
 | `RIVER_OAKS_WORKPLACE` | Opt-in flag for the workplace test (with `VITE_WORKPLACE=true` in the client) |
+| `RIVER_OAKS_APPROVED_SPACES` | `1` lets creator regions place approved furnished spaces; unset refuses them and the editor hides **Furnished layout** ([creator regions](creator-regions.md#approved-furnished-spaces)) |
 | `RIVER_OAKS_OFFICE_LAYOUT` | Jevica's sole office is `office-penthouse-1`; unset, retired and unknown settings select the penthouse ([offices](offices.md)) |
 | `RIVER_OAKS_SCREENING_HOSTS` | IPIC screening hosts, `ipic:<userId>[@<ISO expiry>]`, comma-separated; unset means nobody can host ([screenings](screenings.md)) |
 
@@ -738,7 +739,13 @@ including every earlier writer. Commit fencing prevents
 an older writer from publishing or trimming commands. Do not roll back older
 code against version-15 checkpoints. Browser protocol 3 is required: older and
 unversioned clients must refresh
-before joining.
+before joining. A world that places an approved furnished space
+([creator regions](creator-regions.md#approved-furnished-spaces)) asks for protocol 4
+in its ticket and snapshot and refuses an older client with 426 or 4000, so that client
+sees **Refresh** there while every other world still accepts protocol 3. The browser
+asks for the protocol its ticket reports, so it offers 3 to a protocol-3 world and to a
+server that requires exactly 3. A server accepts any protocol from the world's own up to
+the newest it knows.
 This prevents older renderers from applying snapshots with unknown geometry.
 
 Placed creations and storefront benches are interactive; other built-in shop

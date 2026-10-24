@@ -50,3 +50,25 @@ test('existing District resident planner keeps its bounded grid and routes after
   assert.deepEqual(after.route(start,end),originalRoute);
   assert.equal(after.free([layout.edge+80,-1335]),false,'cross-location resident routing is not yet granted');
 });
+
+test('authority rejects invalid Commons poses: seam teleport, solid penetration and leaving the location',()=>{
+  let time=1000;
+  const fixture={...data,walkSpawn:[layout.edge-1,-1335,layout.ground]};
+  const town=createSharedWorld(fixture,{now:()=>time}),environment=createWalkingEnvironment(fixture);
+  town.join({userId:'alice',name:'Alice'});
+  const me=()=>town.snapshot().players[0].position;
+  const pose=(x,n)=>{time+=100;return town.command('alice',{type:'pose',position:[x,n,environment.groundAt(x,-n)],yaw:0,altitude:0});};
+  const walkTo=(x,n)=>{for(let i=0;i<4000;i++){const p=me(),d=Math.hypot(x-p[0],n-p[1]);if(d<.05)return {ok:true};const k=Math.min(.25,d)/d,result=pose(p[0]+(x-p[0])*k,p[1]+(n-p[1])*k);if(!result.ok)return result;}return {ok:false};};
+  const start=[...me()],jump=pose(layout.edge+29,-1335);
+  assert.equal(jump.error,'movement_too_fast');assert.deepEqual(me(),start);assert.deepEqual(jump.correction.position,start);
+  const post=layout.solids.find(solid=>solid.id.endsWith('/post-0')),[west,south,east]=post.rect,x=(west+east)/2;
+  assert.equal(walkTo(x,-1335).ok,true,'valid promenade walk is accepted');
+  const blocked=walkTo(x,(south+post.rect[3])/2);
+  assert.equal(blocked.error,'blocked');
+  assert.ok(me()[1]<=south-.45,`player stays outside the post: ${me()[1]} vs ${south}`);
+  assert.deepEqual(blocked.correction.position,me());
+  assert.equal(walkTo(x,-1335).ok,true);
+  const edgeOut=walkTo(layout.bounds[2]+5,-1335);
+  assert.equal(edgeOut.ok,false,'walking off the east edge of the location is refused');
+  assert.ok(me()[0]<layout.bounds[2],`player remains inside the location: ${me()[0]} vs ${layout.bounds[2]}`);
+});

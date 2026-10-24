@@ -22,7 +22,8 @@ function planeOutOfView(camera, room, d, bottom, top) {
 // Generated rooms currently have an open glazed frontage and opaque side/back
 // walls. Keep the district whenever any part of that frontage could be seen.
 export function canCullExterior(camera, room) {
-  if (!room?.generatedPlan || !room.contains(camera.position.x, -camera.position.z)) return false;
+  // An approved furnished space (#420) is glazed on more than its frontage: keep the street.
+  if (!room?.generatedPlan || room.approvedSpace || !room.contains(camera.position.x, -camera.position.z)) return false;
   if (camera.position.y < room.floor - 0.2 || camera.position.y > room.floor + room.height + 0.2) return false;
   return planeOutOfView(camera, room, 0, room.floor, room.floor + room.height);
 }
