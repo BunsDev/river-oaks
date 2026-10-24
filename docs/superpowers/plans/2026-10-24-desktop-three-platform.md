@@ -68,7 +68,7 @@ The frame check now measures Auto at its floor without AO in every leg, and none
 
 **Leg 5 is not explained.** The e2e had already waited for `joined`. Vite's town WebSocket proxy logged `write EPIPE` 0.8 s before the join check passed, but passing legs log the same proxy errors around each reload, so that is not evidence. The instrumented legs 11–20 (every `dialog.close()` with its stack, `close`/`cancel` events, town socket opens and closes, `data-multiplayer` changes, long tasks over 1 s, pointer-downs) did not reproduce it: in every leg the only Settings close was the e2e's own button click, the town joined once and stayed joined, and the main thread ran long tasks of 1–6 s after the reload. Candidate closers left: the access gate (`setStatus`), `dismissOnOutsideClick`, Escape and the staleness watchdog (`lost(…, 4901)` after 8 s and five quiet checks). `b3127a6b` keeps a failure-only trail in the e2e (dialog closes with their caller, town state changes) so the next occurrence names its closer. Third series at `b3127a6b` (`diag/desktop-macos-e2e-371-b-20261024`, run 40131153906, legs 21–30): **10 of 10 passed**, 124–211 frames (median 178), Auto settled after 19.9–34.6 s, every leg at `{0.6, AO off}`.
 
-**Independent review** (a fresh reviewer given only the diff): no correctness bug; `steadyWindows` is computed after every branch of `sample()` and reset where needed, and the wait cannot pass vacuously. Its risks, fixed in `d0be556f`: gitignore `preview/desktop-hmr-*.css` (the probe now exists before launch, so a launch timeout could leave it); the settle comment claims only "stopped stepping down" (a later step-up happens only on fast frames, so two windows stay); the settle wait fails with the quality state instead of a bare timeout below 4 fps; the failure trail runs only in the top frame and stops polling after 120 s. A fourth series runs at `d0be556f` (`diag/desktop-macos-e2e-371-c-20261024`).
+**Independent review** (a fresh reviewer given only the diff): no correctness bug; `steadyWindows` is computed after every branch of `sample()` and reset where needed, and the wait cannot pass vacuously. Its risks, fixed in `d0be556f`: gitignore `preview/desktop-hmr-*.css` (the probe now exists before launch, so a launch timeout could leave it); the settle comment claims only "stopped stepping down" (a later step-up happens only on fast frames, so two windows stay); the settle wait fails with the quality state instead of a bare timeout below 4 fps; the failure trail runs only in the top frame and stops polling after 120 s. Fourth series at the final head `d0be556f` (`diag/desktop-macos-e2e-371-c-20261024`, run 40132633458, legs 31–40): **10 of 10 passed**, 123–349 frames (median 191), Auto settled after 14.4–34.3 s, every leg at `{0.6, AO off}`. #651's own Desktop and Verify passed on `4756d593`, `b3127a6b` and `d0be556f`.
 
 ## Increment 2: Electron download (#371)
 
@@ -121,14 +121,19 @@ Posted 2026-10-24 ~20:40Z: [#370](https://github.com/BunsDev/river-oaks/issues/3
 
 | PR | Branch | Head | State |
 | --- | --- | --- | --- |
-| [#651](https://github.com/BunsDev/river-oaks/pull/651) | `fix/desktop-macos-e2e-371-20261024` | `d0be556f` | draft; core passed on `4756d593`; later heads change only the e2e (and `.gitignore`), `verify desktop` passed; 10 of 10 diag legs at `b3127a6b`; fourth series at `d0be556f` running |
-| [#652](https://github.com/BunsDev/river-oaks/pull/652) | `ci/desktop-electron-cache-371-20261024` | `04228bec` | draft; cache miss and hit proven; review fixes pushed; hosted on `04228bec` pending |
-| [#653](https://github.com/BunsDev/river-oaks/pull/653) | `fix/desktop-linux-crash-370-20261024` | `2a2d9d11` | draft; before/after proven (218 s → 0.15 s); review fixes pushed; hosted on `2a2d9d11` pending; proposal for Val |
+| [#651](https://github.com/BunsDev/river-oaks/pull/651) | `fix/desktop-macos-e2e-371-20261024` | `d0be556f` | draft, review-ready; Desktop and Verify green; 10 of 10 diag legs at `b3127a6b` and at `d0be556f`; independent review addressed |
+| [#652](https://github.com/BunsDev/river-oaks/pull/652) | `ci/desktop-electron-cache-371-20261024` | `04228bec` | draft, review-ready; Desktop and Verify green on first attempt; the `-zip` keys missed and were saved by the explicit save step on all three runners, macOS included; independent review addressed |
+| [#653](https://github.com/BunsDev/river-oaks/pull/653) | `fix/desktop-linux-crash-370-20261024` | `2a2d9d11` | draft, review-ready; Desktop and Verify green on first attempt; Linux leg asserted `killed` with the pipe on (gone 815 ms, playable 7.5 s); independent review addressed; core-dump trade-off is Val's decision |
 | [#654](https://github.com/BunsDev/river-oaks/pull/654) | `docs/desktop-release-packet-373-20261024` | `807691d9` | draft; docs; hosted green |
 
 ## Results
 
-Recorded per increment above as each arrives.
+- **macOS e2e (#371):** both measured causes fixed and a third harness race found and fixed; 20 consecutive green legs across the two final heads. One Settings close (leg 5, 1 of 40) is unexplained; the e2e now records its closer on failure.
+- **Windows packaging (#371):** the github.com fetch on every package run is gone (zip-only on a miss, nothing on a hit), proven on three runners in both states.
+- **Linux crash recovery (#370):** 218,431 ms to 153–815 ms on the CI runner with `systemd-coredump` active; asserted on every Linux leg from now on.
+- **Candidate and rehearsal (#373):** unsigned set from `67203a6a` verified; per-row human steps in [the rehearsal ledger](2026-10-24-desktop-release-rehearsal.md).
+- **Decisions packaged and evidence map posted:** [#370](https://github.com/BunsDev/river-oaks/issues/370#issuecomment-6389040777), [#372](https://github.com/BunsDev/river-oaks/issues/372#issuecomment-6389040987), [#373](https://github.com/BunsDev/river-oaks/issues/373#issuecomment-6389041177), [#369](https://github.com/BunsDev/river-oaks/issues/369#issuecomment-6389751828).
+- Nothing was merged, tagged, released or deployed; no environment, variable or Azure change.
 
 ## Gaps
 
@@ -138,4 +143,4 @@ Recorded per increment above as each arrives.
 
 ## Next action
 
-Read the fourth macOS series at `d0be556f`; collect hosted results on `04228bec` and `2a2d9d11`; post the #369 evidence map; hand off.
+Handed off to Val: review and, if authorized, land #651, #652 and #654; decide #653's core-dump trade-off; answer #370's four identity confirmations, #372's two decisions and the Azure setup, and #373's version. After merges, retire the four worktrees with `project:prune` (dry run, then `--apply`); the diag branches' local refs retire with them, and their remote branches stay unless Val authorizes deletion.
