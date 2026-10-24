@@ -1,0 +1,591 @@
+{
+ "startedAt": "2026-10-24T06:01:26.335Z",
+ "finishedAt": "2026-10-24T07:01:14.930Z",
+ "revision": "east-garden-commons-market-1",
+ "browser": "156.0.8078.4",
+ "status": "failed",
+ "checks": [
+  {
+   "label": "Tab reaches the 3D street view (#canvas-host)",
+   "detail": {
+    "tabs": 6
+   }
+  },
+  {
+   "label": "Every Tab stop in the first 60 has an accessible name",
+   "detail": []
+  },
+  {
+   "label": "Every Tab stop in the first 60 is visible",
+   "detail": []
+  },
+  "Player starts at the original District arrival",
+  "Resident planner connects the arrival to the eastern gateway",
+  "Z lights the tower lantern from the keyboard",
+  "Z lights the court lantern from the keyboard",
+  {
+   "label": "Exactly one live announcement per crossing (one in, one out)",
+   "detail": {
+    "entering": 1,
+    "leaving": 1
+   }
+  },
+  {
+   "label": "No page errors",
+   "detail": []
+  }
+ ],
+ "failures": [
+  {
+   "label": "HUD location text names the Commons while in it",
+   "detail": {
+    "place": "136 m walked \u00b7 public district paths"
+   }
+  }
+ ],
+ "legs": [
+  {
+   "label": "arrival to gateway",
+   "seconds": 22.245,
+   "turns": 10
+  },
+  {
+   "label": "seam to Market Street",
+   "seconds": 7.637,
+   "turns": 7
+  },
+  {
+   "label": "Market Street to the Bayou Lantern",
+   "seconds": 16.389,
+   "turns": 8
+  },
+  {
+   "label": "to the court",
+   "seconds": 23.433,
+   "turns": 12
+  },
+  {
+   "label": "back toward the seam",
+   "seconds": 10.477,
+   "turns": 5
+  },
+  {
+   "label": "seam to District",
+   "seconds": 5.62,
+   "turns": 4
+  },
+  {
+   "label": "home",
+   "seconds": 29.144,
+   "turns": 18
+  }
+ ],
+ "captures": [
+  {
+   "name": "01-district-arrival",
+   "file": "01-district-arrival.png",
+   "position": [
+    -2765.321977373157,
+    -1295.064162750871
+   ],
+   "yaw": 0,
+   "place": "0 m walked \u00b7 public district paths",
+   "title": "On foot"
+  },
+  {
+   "name": "02-gateway-looking-east",
+   "file": "02-gateway-looking-east.png",
+   "position": [
+    -2684.830342251493,
+    -1334.0673528043108
+   ],
+   "yaw": -1.593759999997913,
+   "place": "98 m walked \u00b7 public district paths",
+   "title": "On foot"
+  },
+  {
+   "name": "03-market-street",
+   "file": "03-market-street.png",
+   "position": [
+    -2646.5295036460093,
+    -1335.054628320055
+   ],
+   "yaw": -1.3563199999973172,
+   "place": "136 m walked \u00b7 public district paths",
+   "title": "On foot"
+  },
+  {
+   "name": "04-bayou-lantern",
+   "file": "04-bayou-lantern.png",
+   "position": [
+    -2559.5494421486105,
+    -1334.9136902782345
+   ],
+   "yaw": -1.8750399999946354,
+   "place": "223 m walked \u00b7 public district paths",
+   "title": "On foot"
+  },
+  {
+   "name": "05-court",
+   "file": "05-court.png",
+   "position": [
+    -2642.4145955169133,
+    -1346.9357663790615
+   ],
+   "yaw": -2.711999999995525,
+   "place": "319 m walked \u00b7 public district paths",
+   "title": "On foot"
+  },
+  {
+   "name": "06-seam-looking-west",
+   "file": "06-seam-looking-west.png",
+   "position": [
+    -2663.2405651221993,
+    -1335.043783742559
+   ],
+   "yaw": 1.5811200000047743,
+   "place": "349 m walked \u00b7 public district paths",
+   "title": "On foot"
+  },
+  {
+   "name": "07-district-return",
+   "file": "07-district-return.png",
+   "position": [
+    -2765.2610693545794,
+    -1295.1127049961233
+   ],
+   "yaw": 0.8940800000026883,
+   "place": "475 m walked \u00b7 public district paths",
+   "title": "On foot"
+  }
+ ],
+ "notices": [
+  {
+   "t": 35916,
+   "from": "#walking-notice",
+   "text": "Bayou Market Commons \u00b7 Market Street, the Bayou Green and the Bayou Lantern"
+  },
+  {
+   "t": 35916,
+   "from": "#lantern-walk-status .lantern-walk-progress",
+   "text": "Lantern Walk \u00b7 0 of 5 lit \u00b7 Light all five together"
+  },
+  {
+   "t": 57010,
+   "from": "#walking-notice",
+   "text": "Tower lantern lit \u00b7 1 of 5"
+  },
+  {
+   "t": 57025,
+   "from": "#lantern-walk-status .lantern-walk-progress",
+   "text": "Lantern Walk \u00b7 1 of 5 lit"
+  },
+  {
+   "t": 81430,
+   "from": "#walking-notice",
+   "text": "Court lantern lit \u00b7 2 of 5"
+  },
+  {
+   "t": 81444,
+   "from": "#lantern-walk-status .lantern-walk-progress",
+   "text": "Lantern Walk \u00b7 2 of 5 lit"
+  },
+  {
+   "t": 95104,
+   "from": "#walking-notice",
+   "text": "Back in River Oaks District"
+  }
+ ],
+ "focusOrder": [
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "Town chat Everyone in this world\u2303",
+   "visible": true
+  },
+  {
+   "tag": "input",
+   "id": null,
+   "role": null,
+   "name": "Message the town",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": null,
+   "role": null,
+   "name": "Send",
+   "visible": true
+  },
+  null,
+  {
+   "tag": "button",
+   "id": "panel-toggle",
+   "role": null,
+   "name": "Map",
+   "visible": true
+  },
+  {
+   "tag": "div",
+   "id": "canvas-host",
+   "role": "application",
+   "name": "Walking. WASD moves, drag looks around, arrows turn, E talks to a nearby local, ",
+   "visible": true
+  },
+  {
+   "tag": "a",
+   "id": null,
+   "role": null,
+   "name": "\u00a9 OpenStreetMap contributors \u00b7 ODbL",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": null,
+   "role": null,
+   "name": "Commands & keyboard (\u2318K or ?)",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": "people-toggle",
+   "role": null,
+   "name": "People",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": "settings-toggle",
+   "role": null,
+   "name": "Settings",
+   "visible": true
+  },
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "More actions",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": "walking-controls-toggle",
+   "role": null,
+   "name": "Show movement controls",
+   "visible": true
+  },
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "Play & rides\u2318\u21e7B",
+   "visible": true
+  },
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "Town chat Everyone in this world\u2303",
+   "visible": true
+  },
+  {
+   "tag": "input",
+   "id": null,
+   "role": null,
+   "name": "Message the town",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": null,
+   "role": null,
+   "name": "Send",
+   "visible": true
+  },
+  null,
+  {
+   "tag": "button",
+   "id": "panel-toggle",
+   "role": null,
+   "name": "Map",
+   "visible": true
+  },
+  {
+   "tag": "div",
+   "id": "canvas-host",
+   "role": "application",
+   "name": "Walking. WASD moves, drag looks around, arrows turn, E talks to a nearby local, ",
+   "visible": true
+  },
+  {
+   "tag": "a",
+   "id": null,
+   "role": null,
+   "name": "\u00a9 OpenStreetMap contributors \u00b7 ODbL",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": null,
+   "role": null,
+   "name": "Commands & keyboard (\u2318K or ?)",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": "people-toggle",
+   "role": null,
+   "name": "People",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": "settings-toggle",
+   "role": null,
+   "name": "Settings",
+   "visible": true
+  },
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "More actions",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": "walking-controls-toggle",
+   "role": null,
+   "name": "Show movement controls",
+   "visible": true
+  },
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "Play & rides\u2318\u21e7B",
+   "visible": true
+  },
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "Town chat Everyone in this world\u2303",
+   "visible": true
+  },
+  {
+   "tag": "input",
+   "id": null,
+   "role": null,
+   "name": "Message the town",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": null,
+   "role": null,
+   "name": "Send",
+   "visible": true
+  },
+  null,
+  {
+   "tag": "button",
+   "id": "panel-toggle",
+   "role": null,
+   "name": "Map",
+   "visible": true
+  },
+  {
+   "tag": "div",
+   "id": "canvas-host",
+   "role": "application",
+   "name": "Walking. WASD moves, drag looks around, arrows turn, E talks to a nearby local, ",
+   "visible": true
+  },
+  {
+   "tag": "a",
+   "id": null,
+   "role": null,
+   "name": "\u00a9 OpenStreetMap contributors \u00b7 ODbL",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": null,
+   "role": null,
+   "name": "Commands & keyboard (\u2318K or ?)",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": "people-toggle",
+   "role": null,
+   "name": "People",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": "settings-toggle",
+   "role": null,
+   "name": "Settings",
+   "visible": true
+  },
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "More actions",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": "walking-controls-toggle",
+   "role": null,
+   "name": "Show movement controls",
+   "visible": true
+  },
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "Play & rides\u2318\u21e7B",
+   "visible": true
+  },
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "Town chat Everyone in this world\u2303",
+   "visible": true
+  },
+  {
+   "tag": "input",
+   "id": null,
+   "role": null,
+   "name": "Message the town",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": null,
+   "role": null,
+   "name": "Send",
+   "visible": true
+  },
+  null,
+  {
+   "tag": "button",
+   "id": "panel-toggle",
+   "role": null,
+   "name": "Map",
+   "visible": true
+  },
+  {
+   "tag": "div",
+   "id": "canvas-host",
+   "role": "application",
+   "name": "Walking. WASD moves, drag looks around, arrows turn, E talks to a nearby local, ",
+   "visible": true
+  },
+  {
+   "tag": "a",
+   "id": null,
+   "role": null,
+   "name": "\u00a9 OpenStreetMap contributors \u00b7 ODbL",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": null,
+   "role": null,
+   "name": "Commands & keyboard (\u2318K or ?)",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": "people-toggle",
+   "role": null,
+   "name": "People",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": "settings-toggle",
+   "role": null,
+   "name": "Settings",
+   "visible": true
+  },
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "More actions",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": "walking-controls-toggle",
+   "role": null,
+   "name": "Show movement controls",
+   "visible": true
+  },
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "Play & rides\u2318\u21e7B",
+   "visible": true
+  },
+  {
+   "tag": "summary",
+   "id": null,
+   "role": null,
+   "name": "Town chat Everyone in this world\u2303",
+   "visible": true
+  },
+  {
+   "tag": "input",
+   "id": null,
+   "role": null,
+   "name": "Message the town",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": null,
+   "role": null,
+   "name": "Send",
+   "visible": true
+  },
+  null,
+  {
+   "tag": "button",
+   "id": "panel-toggle",
+   "role": null,
+   "name": "Map",
+   "visible": true
+  },
+  {
+   "tag": "div",
+   "id": "canvas-host",
+   "role": "application",
+   "name": "Walking. WASD moves, drag looks around, arrows turn, E talks to a nearby local, ",
+   "visible": true
+  },
+  {
+   "tag": "a",
+   "id": null,
+   "role": null,
+   "name": "\u00a9 OpenStreetMap contributors \u00b7 ODbL",
+   "visible": true
+  },
+  {
+   "tag": "button",
+   "id": null,
+   "role": null,
+   "name": "Commands & keyboard (\u2318K or ?)",
+   "visible": true
+  }
+ ]
+}

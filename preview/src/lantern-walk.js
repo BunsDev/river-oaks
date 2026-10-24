@@ -7,8 +7,8 @@ import './lantern-walk.css';
 const clock = seconds => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 const names = list => list.length <= 2 ? list.join(' & ') : `${list.slice(0, -1).join(', ')} & ${list.at(-1)}`;
 
-export function createLanternWalkClient({ getLayout, getPose, getSnapshot, send, getScene, now = Date.now }) {
-  let busy = false, shownKey = null, status = null, announced = null, wasInside = null;
+export function createLanternWalkClient({ getLayout, getPose, getSnapshot, send, getScene, announceArrival = true, now = Date.now }) {
+  let busy = false, shownKey = null, shownScene = null, status = null, announced = null, wasInside = null;
   const lanterns = () => getLayout()?.destination?.lanterns ?? [];
   const inCommons = pose => { const layout = getLayout(); return Boolean(layout && pose && pose.position[0] > layout.edge); };
   const onFoot = pose => pose && !pose.sitting && !pose.riding && (pose.altitude ?? 0) <= .1;
@@ -49,22 +49,22 @@ export function createLanternWalkClient({ getLayout, getPose, getSnapshot, send,
     // Only progress is announced; the running clock is visual (aria-hidden).
     status = document.createElement('p'); status.id = 'lantern-walk-status'; status.hidden = true;
     status.innerHTML = '<span role="status" aria-live="polite" class="lantern-walk-progress"></span><span aria-hidden="true" class="lantern-walk-clock"></span>';
-    (document.querySelector('#viewport') ?? document.body).append(status);
+    (document.querySelector('#world-status-stack') ?? document.querySelector('#viewport') ?? document.body).append(status);
     return status;
   }
   function update() {
     const state = getSnapshot(), scene = getScene();
-    if (!state || !scene?.userData.setLanterns) { if (status) status.hidden = true; return; }
+    if (!state || !scene?.userData.setLanterns) { shownScene = null; if (status) status.hidden = true; return; }
     const lit = new Set(state.lanterns.filter(item => item.lit).map(item => item.id)), complete = Boolean(state.round?.completedAt);
     const key = `${[...lit].join(',')}|${complete}`;
-    if (key !== shownKey) { shownKey = key; scene.userData.setLanterns(lit, complete); }
+    if (key !== shownKey || scene !== shownScene) { shownKey = key; shownScene = scene; scene.userData.setLanterns(lit, complete); }
     if (complete && announced !== state.round.completedAt) {
       announced = state.round.completedAt;
       notice(`The Bayou Lantern is lit! ${clock(state.round.seconds)} · ${names(state.round.lamplighters)}`);
     }
     const element = chip(), pose = getPose?.(), inside = inCommons(pose);
     // Crossing the promenade names the place you arrive in, both ways.
-    if (pose && inside !== wasInside) {
+    if (announceArrival && pose && inside !== wasInside) {
       if (inside) notice('Bayou Market Commons · Market Street, the Bayou Green and the Bayou Lantern');
       else if (wasInside) notice('Back in River Oaks District');
       wasInside = inside;

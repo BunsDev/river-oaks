@@ -1,3 +1,4 @@
+import { mountNeighborhoodPanel } from './neighborhood-panel.js';
 import { createSpaceAssessmentRunner } from './space-assessment-runner.js';
 import './studio.css';
 import { createSpace, spaceTemplates, spaceAssessmentContext, SPACE_PROFILE_VERSION } from './space-templates.js';
@@ -11,14 +12,14 @@ import { createStudioViewport } from './viewport.js';
 import { renderBuildingInteriorPanel } from './interior-panel.js';
 
 export function startStudio(host) {
-  host.innerHTML=`<header class="studio-header"><a class="studio-brand" href="/play" title="Return to the world">TypeSafe Place<span>World Studio</span></a><div class="studio-file-tools"><button id="studio-designer-open">World Designer</button><button id="studio-new">New region</button><button id="studio-templates">Space templates</button><label class="studio-open">Open JSON<input id="studio-import" type="file" accept=".json,application/json"></label><button id="studio-export">Export JSON</button><button id="studio-save" class="studio-primary">Save on device</button></div><a class="studio-return" href="/play">Back to world ↗</a></header>
+  host.innerHTML=`<header class="studio-header"><a class="studio-brand" href="/play" title="Return to the world">TypeSafe Place<span>World Studio</span></a><div class="studio-file-tools"><button id="studio-designer-open">World Designer</button><button id="studio-new">New region</button><button id="studio-templates">Space templates</button><button id="studio-neighborhood">Neighborhood</button><label class="studio-open">Open JSON<input id="studio-import" type="file" accept=".json,application/json"></label><button id="studio-export">Export JSON</button><button id="studio-save" class="studio-primary">Save on device</button></div><a class="studio-return" href="/play">Back to world ↗</a></header>
     <div class="studio-workspace"><aside class="studio-scene-panel" aria-label="Scene"><div class="studio-panel-title"><h1>Region</h1><span id="studio-count"></span></div><p class="studio-caption">A private draft · metres</p><div class="studio-palette" aria-label="Add to region"><button data-add="furnishing" aria-label="Add furnishing" hidden>+ Furnishing</button><button data-add="building" aria-label="Add building">▱ Building</button><button data-add="tree" aria-label="Add tree">♧ Tree</button><button data-add="place" aria-label="Add place">⌖ Place</button></div><h2>Scene objects</h2><div id="studio-items" class="studio-items"></div><div class="studio-scene-note">Roads, terrain and parcels are preserved from your region file. This view shows a blockout of your world.</div></aside>
     <section class="studio-stage" aria-label="World viewport"><div class="studio-toolbar" role="toolbar" aria-label="Viewport tools"><div><button data-tool="translate" aria-pressed="true">Move <kbd>W</kbd></button><button data-tool="rotate" aria-pressed="false">Rotate <kbd>E</kbd></button><button data-tool="scale" aria-pressed="false">Size <kbd>R</kbd></button></div><div><button id="studio-undo" aria-label="Undo" title="Undo (⌘/Ctrl Z)">↶</button><button id="studio-redo" aria-label="Redo" title="Redo (⌘/Ctrl Shift Z)">↷</button></div><button id="studio-walk" class="studio-play">Walk through</button></div><div id="studio-viewport" tabindex="0" aria-label="Interactive 3D viewport"></div><div class="studio-view-tools"><button id="studio-frame">Frame selection</button><button id="studio-region">Frame region</button><span id="studio-hint">Drag to orbit · right-drag to pan · scroll to zoom</span></div></section>
     <aside class="studio-inspector" aria-label="Object properties"><div class="studio-panel-title"><h2>Inspector</h2><span id="studio-kind">Selection</span></div><h3 id="studio-selected">Choose an object</h3><form id="studio-properties" autocomplete="off"></form><section id="studio-building-interior" class="studio-building-interior" aria-label="Generated interior" hidden></section><button id="studio-delete" class="studio-delete" hidden>Delete object</button><p class="studio-inspector-note">Moves snap to 0.5 m. Rotation snaps to 22.5°. Use the fields for precise values.</p><section id="studio-assessment" class="studio-document-note" aria-label="Required routes" hidden><label>Assessment program<select id="studio-profile"></select></label><p id="studio-assessment-status" role="status"></p><div id="studio-findings"></div></section><div class="studio-document-note"><strong>Yours to shape</strong><p>Save keeps a draft on this device. Export makes a portable Studio file. Your edits never change a live shared world.</p><button id="studio-reopen">Reopen saved draft</button></div></aside></div>
     <footer class="studio-footer"><span id="studio-dirty">New draft</span><p id="studio-status" role="status" aria-live="polite">Select an object, or add something to your region.</p><span id="studio-position">East / North · m</span></footer>`;
   const routes=createSpaceAssessmentRunner();
   const $=selector=>host.querySelector(selector),doc=createStudioDocument(undefined,{assessmentRunner:routes.assess});
-  let selected=null,interiorView=null,lastFocus=null,walking=false,disposed=false,importGeneration=0,viewport,designer,agent;
+  let selected=null,interiorView=null,lastFocus=null,walking=false,disposed=false,importGeneration=0,viewport,designer,agent,neighborhood;
   let renderedRevision = doc.revision, assessingRevision=null, assessmentError=null, editPending=0;
   const say=text=>{$('#studio-status').textContent=text;};
   try { if(doc.restore(localStorage))say('Saved draft reopened.'); } catch(error){say(`${error.message} Export or open a valid Studio file; the saved draft has not been changed.`);}
@@ -76,11 +77,12 @@ export function startStudio(host) {
     }
   }
   function renderPanels(){
-    designer?.refresh();agent?.refresh();
+    designer?.refresh();agent?.refresh();neighborhood?.refresh();
     const space=isSpaceDocument(doc.value),items=doc.items,item=items.find(value=>value.id===selected);
     $('.studio-panel-title h1').textContent=space?doc.value.name:'Region';
     $('.studio-scene-panel h2').textContent=space?'Level 0 · objects':'Scene objects';
     $('.studio-scene-note').textContent=space?'Level 0 · furnished local space. Select an element to change its finish, dimensions or position. Save or export to keep your work.':'Roads, terrain and parcels are preserved from your region file. Select a generated building to inspect its levels; walking still uses the exterior blockout.';
+    if(viewport.architecture)$('.studio-scene-note').textContent=`Fixed architectural modules in building envelopes. Private walking uses their walls and floor slabs. ${viewport.architecture.counts.fallbacks} authored objects retain solid blockouts; open Neighborhood for diagnostics. Region-only exports retain the standard shared-world blockout contract.`;
     renderAssessment(space,items);
     $('#studio-count').textContent=`${items.length} objects`;
     $('#studio-dirty').textContent=doc.dirty?'● Unsaved changes':'○ Draft unchanged';
@@ -135,7 +137,7 @@ export function startStudio(host) {
     for(const button of host.querySelectorAll('[data-add]'))button.hidden=space?button.dataset.add!=='furnishing':button.dataset.add==='furnishing';
     $('#studio-delete').hidden=!item||['arrival','environment'].includes(item.type);$('#studio-delete').disabled=walking||editPending>0;
     $('#studio-frame').disabled=!item||item.type==='environment'||walking;$('#studio-region').disabled=walking;
-    for(const button of host.querySelectorAll('[data-add],[data-tool],#studio-new,#studio-templates,#studio-reopen,#studio-import'))button.disabled=walking||editPending>0;
+    for(const button of host.querySelectorAll('[data-add],[data-tool],#studio-new,#studio-templates,#studio-neighborhood,#studio-reopen,#studio-import'))button.disabled=walking||editPending>0;
     $('#studio-walk').disabled=editPending>0;
     // A control that was disabled or rebuilt while focused hands focus back once it is usable.
     // Deferred: a field commits during Tab's blur, and restoring then would cancel the move.
@@ -149,7 +151,7 @@ export function startStudio(host) {
     if(!doc.items.some(item=>item.id===selected))selected=null;
     const building=doc.value.buildings?.find(item=>item.id===interiorView?.buildingId);
     if(!building?.interior?.generation||interiorView.levelIndex>=building.interior.generation.levels||selected!==interiorView.buildingId)interiorView=null;
-    viewport.render(doc.value,selected,interiorView);renderPanels();refreshRoutes();
+    viewport.render(doc.value,selected,interiorView,doc.neighborhood);renderPanels();refreshRoutes();
   }
   function refreshRoutes(){
     if(!walking&&!editPending&&doc.assessment.status==='pending'&&assessingRevision!==doc.revision){
@@ -162,7 +164,7 @@ export function startStudio(host) {
   }
   function setWalk(enabled){
     try {if(enabled)doc.cancelPendingAssessments();viewport.walk(enabled);walking=enabled;document.body.dataset.mode=enabled?'walk':'edit';$('#studio-walk').textContent=enabled?'Return to editor':'Walk through';
-      $('#studio-hint').textContent=enabled?'WASD / ↑↓ to move · ←→ or drag to turn · Shift to hurry · Esc to edit':'Drag to orbit · right-drag to pan · scroll to zoom';renderPanels();say(enabled?(isSpaceDocument(doc.value)?'Private space walkthrough. Walls and furniture block movement.':'Private blockout playtest. Buildings use solid collision; interiors are not furnished in this view.'):'Returned to your draft.');if(!enabled)refreshRoutes();
+      $('#studio-hint').textContent=enabled?'WASD / ↑↓ to move · ←→ or drag to turn · Shift to hurry · Esc to edit':'Drag to orbit · right-drag to pan · scroll to zoom';renderPanels();say(enabled?(isSpaceDocument(doc.value)?'Private space walkthrough. Walls and furniture block movement.':viewport.architecture?'Private neighborhood playtest. Kit doors are open; walls block movement. Unsupported authored objects retain solid blockouts.':'Private blockout playtest. Buildings use solid collision; interiors are not furnished in this view.'):'Returned to your draft.');if(!enabled)refreshRoutes();
     }catch(error){say(error.message);}
   }
   for(const button of host.querySelectorAll('[data-add]'))button.addEventListener('click',()=>run(async()=>{selected=await doc.add(button.dataset.add);render();say('Object added. Use the inspector or the handles to shape it.');}));
@@ -213,7 +215,9 @@ export function startStudio(host) {
   },{signal:events.signal});
   window.addEventListener('storage',event=>{if(event.key===STORAGE_KEY)say('The saved draft changed in another tab. Export your edits before reopening.');},{signal:events.signal});
   window.addEventListener('beforeunload',event=>{if(doc.dirty){event.preventDefault();event.returnValue='';}},{signal:events.signal});
-  window.addEventListener('pagehide',event=>{if(!event.persisted&&!disposed){disposed=true;events.abort();doc.dispose();routes.dispose();designer?.dispose();templates.dispose();agent?.dispose();viewport.dispose();}},{signal:events.signal});
+  window.addEventListener('pagehide',event=>{if(!event.persisted&&!disposed){disposed=true;events.abort();doc.dispose();routes.dispose();designer?.dispose();neighborhood?.dispose();templates.dispose();agent?.dispose();viewport.dispose();}},{signal:events.signal});
+  neighborhood = mountNeighborhoodPanel(host, {doc,selected:()=>selected,apply:()=>{importGeneration++;selected=null;render();viewport.frameRegion();},canEdit:()=>!walking&&!editPending,say});
+  $('#studio-neighborhood').addEventListener('click',event=>neighborhood.open(event.currentTarget));
   designer = mountDesignerPanel(host, { doc, selected: () => selected, apply: render, reportError, canEdit: () => !walking });
   agent = mountAgentChat($('.studio-stage'), { doc, selected: () => selected, apply: render, reportError, canEdit: () => !walking });
   $('#studio-designer-open').addEventListener('click', event => designer.open(event.currentTarget));

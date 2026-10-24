@@ -486,6 +486,7 @@ export function buildCityKit(plan, { groundAt, ground }) {
   const treeGroup = headless ? Object.assign(new THREE.Group(), { userData: { shadowProxies: [] } }) : buildMatureTrees({}, trees);
   treeGroup.name = `${plan.id} trees`; treeGroup.userData.placements = trees.length; group.add(treeGroup);
   const planting = planters.length && !headless ? buildPlanterPlanting(planters) : null; if (planting) group.add(planting);
+  group.userData.ready = Promise.all([treeGroup.userData.ready, planting?.userData.ready]);
   group.userData.plantingModules = planters.length;
   group.userData.shadowProxies = treeGroup.userData.shadowProxies;
   group.userData.lanterns = lanterns;
@@ -501,7 +502,21 @@ export function buildCityKit(plan, { groundAt, ground }) {
   let disposed = false;
   group.userData.dispose = () => {
     if (disposed) return; disposed = true;
-    treeGroup.userData.cancelLandscapeLoad?.(); planting?.userData.cancelLandscapeLoad?.();
+    // Landscape meshes own cloned buffers/materials and instance storage. Their
+    // texture maps belong to the shared template cache and must survive eviction.
+    const landscapeGeometries = new Set(), landscapeMaterials = new Set();
+    for (const landscape of [treeGroup, planting].filter(Boolean)) {
+      landscape.userData.cancelLandscapeLoad?.();
+      landscape.traverse(item => {
+        if (item.geometry) landscapeGeometries.add(item.geometry);
+        for (const material of [item.material].flat().filter(Boolean)) landscapeMaterials.add(material);
+        if (item.isInstancedMesh) item.dispose();
+      });
+      landscape.clear();
+    }
+    for (const geometry of landscapeGeometries) geometry.dispose();
+    for (const material of landscapeMaterials) material.dispose();
+    treeGroup.userData.shadowProxies.length = 0;
     for (const geometry of geometries) geometry.dispose();
     for (const lantern of lanterns.values()) lantern.userData.dispose();
     group.userData.tower?.userData.dispose();
