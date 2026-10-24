@@ -221,6 +221,33 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
     - Python 170.
 
     The first run, at a load average of about 8, failed the known load-sensitive `scripts/tests/land-pr.test.js` "queue release did not wake the lander", which stops the later stages. Alone, the file passed 29/29 at a load average of 10.5.
+- **Second diagnostic run of the `8f3c94fd` tree, run 40141990171 (adds a captures upload): failed on a too-broad journey check.**
+  - **What failed.** "Bayou Heights hides the Commons Lantern Walk status without announcing the District", just after the players crossed the footbridge.
+  - **Cause.** Replaying the owner's 250 ms input trace through the HUD's `connectedLocationAt` on the Heights world shows the owner overshot the waypoint 1 m west of the District edge by 1.14 m (x +0.14). They stepped into the Commons and walked back (x −0.06), so the HUD rightly said "Back in River Oaks District", 70 s before the footbridge.
+  - **Heights itself.** After "Entering Bayou Heights" there were no crossings. The chip was hidden in the failure capture.
+  - **Fix.** The check now reads only the notices since entering Heights, which is its intent. The return check already orders notices the same way.
+- **Hosted run on `8f3c94fd` (Verify 40141895401).** Every job passed except `preview experience (heights)`, job 121015197669, which failed with `alice nineteenth: stalled` at x 282, 18 m short of the crossroads.
+  - The trace shows the owner arrived first at x 301.4, overshot, turned back and stood at x 300.1 facing west (yaw 1.58).
+  - From then on alice walked east at 0.54–0.70 m/s, about a fifth of walking speed, until her 120 s deadline. Diagnostic run 40138801425 had stalled the same way.
+  - So one client merely standing still facing west slows the other to a crawl. Facing west, it draws the District, the Commons and Heights at once, 5.5 M triangles after the planting fix.
+  - **Fix.** The journey adds a turn-only `face()` helper, using the walk helper's own camera drag. Each player turns to face east on arriving at the crossroads, and alice faces east once home while the owner walks. Waypoints and deadlines are unchanged.
+- **Diagnostic runs of the fixed journey (heights shard only, captures uploaded).**
+  - **Run 40142521345 (scoped notice check): passed.** "Passed bayou-heights" took 11 min 24 s. Alice walked home 302 m in 185 s.
+  - **Run 40142827652 (scoped check plus `face()`; the tree committed next): passed.** "Passed bayou-heights" took 9 min 14 s.
+    - Once the owner faced east, alice finished Nineteenth Street 28 s later.
+    - Alice walked home in 152 s (about 62 % of walking speed); the owner took 84 s.
+- **Pedestrian captures, inspected.** Both runs uploaded all eight `heights-*.png`. They are CI software-profile renders: llvmpipe at render scale 0.25, with every material replaced by `MeshNormalMaterial` (`main.js:232`). So they show geometry, not appearance.
+  - **Greenway:** street trees and kit blocks on both sides.
+  - **Icehouse patio:** the two-chair game table, with "Icehouse game table" in the seat picker and a "Sit on the bench" prompt.
+  - **Green:** the open lawn with trees and blocks beyond.
+  - **Nineteenth and Yale:** a tree-lined street with buildings on both sides.
+  - Every Heights view names Bayou Heights in the HUD. None shows holes, missing blocks or floating pieces.
+  - **Black marks.** A scan for near-black clusters found:
+    - a 76×72 px square beside the owner's head in the eastward crossroads view;
+    - a few 8×8 px specks in the District arrival and the footbridge approach.
+
+    The square is the glow sprite of the owner's costume (`preview/src/jevica-costume.js:150`). Sprites carry no normals, so under the override they draw black. Heights' own groups have no sprites (checked headless). The District specks predate this branch.
+  - This is not visual approval.
 - **Local browser runs (Metal, through the shared browser lock).**
   - **Journey.** A local run of the `6f7efdfe` tree failed at its first Heights check, "The client composed Bayou Heights for the served revision". Both clients had connected to `bayou-heights-1`. The console showed two 503 responses, at a load average of about 10. `data/reports/experience.json` was restored afterwards.
   - **Explained by the diagnostic branch.** The first diagnostic dispatch (run 40137423840) failed the same check 13 s after the journey started. Its capture still showed "Building the view". The journey's `ready()` waited for the avatar (`playerReady`), which can be ready before the district is built. Hosted PR runs had passed only because the district finished first (24–43 s). `ready()` now also waits for the loading screen to close, with the same 180 s timeout.
@@ -232,7 +259,6 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
     - Nineteenth Street: 621 / 2.47 M.
 
     The District views did not record on either tree.
-- **Browser journey and captures.** Pending the westward fix.
 - **Performance.** Not started. ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e). The `#626` decision is recorded only on #643's branch (D11).
 
 ## Gaps and coordination

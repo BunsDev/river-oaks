@@ -108,7 +108,7 @@ The district epoch still fences writers.
   - every migration direction with standing, airborne and seated occupants;
   - Redis epoch fencing, which runs only with `REDIS_URL`.
 - **Browser journey.** `pnpm run test:experience bayou-heights`. Two clients walk from both District arrivals over the bridge, play at the icehouse table, reconnect in Heights and walk home. The journey checks that Heights streams in within its ceiling, with each part within its estimate, before the footbridge, and that walking home releases it.
-  - In CI both clients render on the CPU, on one four-core runner. Facing west from deep in Heights, each draws the District, the Commons and Heights at once. Together, two such views saturated the runner in some hosted runs. So the clients walk home one at a time, and the one waiting faces east. Each waypoint keeps its stall deadline.
+  - In CI both clients render on the CPU, on one four-core runner. Facing west from deep in Heights, a client draws the District, the Commons and Heights at once. Even standing still, that view slowed the other client to a fifth of walking speed in some hosted runs. So whoever waits deep in Heights turns to face east, the lighter view, and the clients walk home one at a time. Each waypoint keeps its stall deadline.
 - **Records.** Measurements, captures and results for the exact revision tested are recorded in the [task ledger](../../superpowers/plans/2026-10-24-next-district-586.md).
 
 Human visual approval, physical-device performance, hosted multiplayer, resident routing across locations, browser texture and GPU memory, and native Unreal equivalence remain separate acceptance.
