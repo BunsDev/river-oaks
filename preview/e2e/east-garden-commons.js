@@ -48,6 +48,10 @@ async page => {
         // Keep walking during browser round trips, as spatial-streets does.
         // Pulsing/releasing every sample repeatedly brakes on CPU-rendered CI.
         // Reassert keydown each pass so a focus correction cannot lose input.
+        // Within two metres, stop before measuring again: held across a slow
+        // round trip (about 9 fps on CPU-rendered CI) the walker overshoots by
+        // more than the arrival radius and circles the waypoint until it stalls.
+        if(!fast){await releaseKeys();await tab.waitForFunction(()=>window.__riverCarriage().pose.speed<.05,null,{timeout:10000});}
         samples.push((await self(tab)).position);
       }
     }
