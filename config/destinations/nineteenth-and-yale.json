@@ -1,0 +1,238 @@
+{
+  "id": "nineteenth-and-yale",
+  "title": "Nineteenth & Yale (kit reuse sketch)",
+  "kit": "city-kit-1",
+  "seed": 77,
+  "inspiration": "Patterns only: a Heights-style crossroads of one- and two-storey storefronts with awnings and sawtooth workshop roofs, a garden-court corner and a quieter cross street. Preview and authoring evidence for kit reuse; not registered as playable content.",
+  "anchor": "east-garden-reserve-north (preview only)",
+  "site": [
+    0,
+    0,
+    115,
+    128
+  ],
+  "streets": [
+    {
+      "id": "nineteenth",
+      "from": [
+        0,
+        64
+      ],
+      "to": [
+        115,
+        64
+      ],
+      "lane": 7,
+      "sidewalk": 4,
+      "trees": {
+        "offset": 5,
+        "spacing": 8
+      },
+      "lamps": {
+        "offset": 9,
+        "spacing": 14
+      }
+    },
+    {
+      "id": "yale-walk",
+      "from": [
+        57,
+        0
+      ],
+      "to": [
+        57,
+        128
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 6,
+        "spacing": 10
+      },
+      "lamps": {
+        "offset": 12,
+        "spacing": 16
+      }
+    }
+  ],
+  "plazas": [],
+  "blocks": [
+    {
+      "id": "northwest-row",
+      "style": "heights-row",
+      "rect": [
+        0,
+        71.5,
+        50.5,
+        128
+      ],
+      "front": "south",
+      "sides": [
+        "east"
+      ],
+      "depth": [
+        11,
+        16
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        4.5,
+        6
+      ],
+      "names": [
+        "Sawtooth Supply",
+        "Iron & Ivy",
+        "Two Pecans Diner",
+        "Gilded Spoke",
+        "Fig & Flint",
+        "Sunday Press"
+      ]
+    },
+    {
+      "id": "northeast-row",
+      "style": "market-row",
+      "rect": [
+        63.5,
+        71.5,
+        115,
+        128
+      ],
+      "front": "south",
+      "sides": [
+        "west"
+      ],
+      "depth": [
+        12,
+        14
+      ],
+      "storeys": [
+        2,
+        3
+      ],
+      "bays": [
+        5,
+        7
+      ],
+      "names": [
+        "Heron Hardware",
+        "Calico Tailors",
+        "Brick Oven Rosa",
+        "Juniper Vintage",
+        "Lark Optics"
+      ]
+    },
+    {
+      "id": "southwest-row",
+      "style": "heights-row",
+      "rect": [
+        0,
+        0,
+        50.5,
+        56.5
+      ],
+      "front": "north",
+      "sides": [
+        "east"
+      ],
+      "depth": [
+        12,
+        18
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        5,
+        7.5
+      ],
+      "names": [
+        "Moonflower Market",
+        "Copper Kettle",
+        "Tin Roof Records",
+        "Little Bayou Toys",
+        "Ochre Studio"
+      ]
+    },
+    {
+      "id": "southeast-court",
+      "style": "garden-court",
+      "rect": [
+        63.5,
+        0,
+        115,
+        56.5
+      ],
+      "front": "west",
+      "sides": [
+        "north"
+      ],
+      "depth": [
+        14,
+        16
+      ],
+      "storeys": [
+        2,
+        3
+      ],
+      "bays": [
+        5,
+        7
+      ],
+      "court": {
+        "at": 0.45,
+        "width": 11,
+        "depth": 9
+      },
+      "names": [
+        "Jasmine Hall",
+        "Rosewater Books",
+        "Cedar Tea Room",
+        "Mint Bicycle Co.",
+        "Laurel Ceramics"
+      ]
+    }
+  ],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "corner-bench-0",
+      "piece": "furniture/bench",
+      "at": [
+        44,
+        59.4
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "corner-bench-1",
+      "piece": "furniture/bench",
+      "at": [
+        70,
+        68.6
+      ]
+    },
+    {
+      "id": "court-cafe-0",
+      "piece": "furniture/cafe-set",
+      "at": [
+        61,
+        25
+      ]
+    }
+  ],
+  "context": [],
+  "overrides": {
+    "nineteenth-and-yale/northwest-row/parcel-0": {
+      "set": {
+        "roof": "sawtooth",
+        "sign": "Sawtooth Supply"
+      },
+      "note": "The workshop corner keeps its sawtooth roof whatever the seed."
+    }
+  },
+  "additions": []
+}

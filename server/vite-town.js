@@ -7,13 +7,16 @@ import { fileURLToPath } from 'node:url';
 // RIVER_OAKS_DEV_TOWN_PORT to isolate a second development checkout.
 const root = fileURLToPath(new URL('..', import.meta.url));
 
+// The development town always takes Studio saves; an explicit value (0 pauses) still wins.
+export const devTownEnv = env => ({ ...env, RIVER_OAKS_CHARACTER_STUDIO: env.RIVER_OAKS_CHARACTER_STUDIO || '1' });
+
 export function sharedTownDevServer({ port = 8787 } = {}) {
   let town = null;
   return {
     name: 'river-oaks-shared-town',
     apply: 'serve',
     configureServer(vite) {
-      const env = { ...loadEnv(vite.config.mode, root, ''), ...process.env };
+      const env = devTownEnv({ ...loadEnv(vite.config.mode, root, ''), ...process.env });
       // Test fixtures run their own town (RIVER_OAKS_DEV_TOWN=off).
       if (env.RIVER_OAKS_DEV_TOWN === 'off') return;
       const log = vite.config.logger;

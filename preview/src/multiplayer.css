@@ -123,7 +123,7 @@
 .multiplayer-roster > strong { font-size: 13px; font-weight: 600; letter-spacing: -.015em; }
 .multiplayer-roster .multiplayer-person { gap: 8px; margin-top: 6px; font-size: 12px; }
 .multiplayer-roster .multiplayer-person-name { color: var(--muted); }
-.multiplayer-roster > :is(.multiplayer-chat, .multiplayer-social, .multiplayer-groups, .multiplayer-gestures) {
+.multiplayer-roster > :is(.multiplayer-chat, .multiplayer-social, .multiplayer-groups, .multiplayer-gestures, .multiplayer-world-rules) {
   margin: 12px 0 0;
   padding-top: 12px;
   border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
@@ -221,3 +221,47 @@
 @media (max-width: 700px) and (min-height: 501px) { .nearby-greetings, .greeting-prompt { top: 184px; } }
 @media (max-width: 900px) { body:has(.visit-tools[open]) .greeting-prompt { visibility: hidden; } }
 body.theater-seated .greeting-prompt { visibility: hidden; }
+
+/* World rules (#596): status for everyone, restrained owner controls, one prominent stop. */
+.multiplayer-world-rules { font-size: 12px; }
+.multiplayer-world-rules p { margin: 0 0 6px; }
+.world-rules-clock { font-variant-numeric: tabular-nums; font-weight: 600; }
+.world-rules-change:empty, .world-rules-result:empty { display: none; }
+.world-rules-owner { display: grid; gap: 8px; margin-top: 8px; }
+/* The display above would otherwise override the hidden attribute: non-owners see no controls. */
+.multiplayer-world-rules[hidden], .world-rules-owner[hidden] { display: none; }
+.world-rules-owner fieldset { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 0; padding: 8px; border: 1px solid var(--line); border-radius: 8px; }
+.world-rules-owner legend { padding: 0 4px; font-weight: 600; }
+.world-rules-owner label { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; }
+.world-rules-owner input[type=time], .world-rules-owner select { padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; }
+.multiplayer-roster .world-rules-emergency { min-height: 44px; font-weight: 700; color: #fff; background: #a3242f; border: 2px solid #6e1019; border-radius: 10px; }
+/* The themed roster buttons are 36 px; the stop control keeps a full 44 px touch target. */
+:root[data-theme] .multiplayer-roster .world-rules-emergency { min-height: 44px; width: 100%; font-size: 13px; font-weight: 700; white-space: normal; color: #fff; background: #a3242f; border-color: #6e1019; }
+:root[data-theme] .multiplayer-roster .world-rules-emergency:hover:not(:disabled) { background: #861b25; border-color: #4f0b12; }
+.multiplayer-roster .world-rules-emergency:focus-visible { outline: 3px solid var(--accent, #934969); outline-offset: 2px; }
+
+/* Crime HUD (#597): compact, beside the greetings card; only the town's numbers. */
+.crime-hud {
+  position: absolute; z-index: 14; top: 76px; left: 20px; width: min(260px, calc(100% - 40px)); box-sizing: border-box;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px;
+  background: color-mix(in srgb, var(--panel) 74%, transparent); color: var(--ink); box-shadow: 0 6px 20px #0002;
+  -webkit-backdrop-filter: var(--hud-filter, none); backdrop-filter: var(--hud-filter, none);
+  font: inherit; font-size: 12px; line-height: 1.4; pointer-events: auto;
+}
+.crime-hud[hidden], .crime-hud [hidden] { display: none; }
+.crime-hud p { margin: 4px 0; }
+.crime-hud p:empty { display: none; }
+.crime-wanted { font-size: 18px; letter-spacing: 2px; color: #b8860b; }
+.crime-rival strong { display: block; font-size: 14px; }
+.crime-health { height: 8px; margin: 6px 0; border-radius: 4px; background: color-mix(in srgb, var(--ink) 14%, transparent); overflow: hidden; }
+.crime-health span { display: block; height: 100%; background: var(--accent, #934969); transition: width .25s ease; }
+.crime-attack, .crime-surrender {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 4px; padding: 8px 10px;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--accent-soft); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer;
+}
+.crime-attack:disabled, .crime-surrender:disabled { opacity: .5; cursor: not-allowed; }
+.crime-attack:focus-visible, .crime-surrender:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.crime-attack kbd { display: inline-grid; place-items: center; min-width: 24px; height: 24px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 12px; }
+@media (prefers-reduced-motion: reduce) { .crime-health span { transition: none; } }
+@media (max-width: 600px) { .crime-hud { top: 56px; left: 12px; } }
+@media (max-width: 700px) and (min-height: 501px) { .crime-hud { top: 240px; } }

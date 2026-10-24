@@ -1,3 +1,4 @@
+import { recoverDistrictCommonsCheckpoint } from './district-commons-checkpoint-migration.js';
 import { characterSelectionOperation } from './character-store.js';
 import { defaultAppearanceFor } from '../preview/src/shared-appearances.js';
 import { randomUUID } from 'node:crypto';
@@ -15,6 +16,8 @@ import { placesOf } from '../preview/src/places.js';
 import { createRideFlush } from './ride-flush.js';
 
 const LEASE_MS=5000, REPLY_MS=15000, REQUEST_MS=7000, TICK_MS=200;
+// The lease token's generation (see createRedisRoom): plain rooms write it, selection-aware rooms one more.
+export const WRITER_GENERATION=19;
 // A player whose socket left (or whose edge stopped reporting) keeps their place, seat and
 // hosting this long, so a reconnect on a slow network resumes instead of starting over.
 export const LEAVE_GRACE_MS=30_000;
@@ -139,12 +142,13 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   const rides=cyclingMiles?createRideFlush({world:()=>null,store:cyclingMiles,warn:detail=>console.warn(JSON.stringify({...detail,worldId}))}):null;
   if(!/^\{[^{}]+\}$/.test(tag))throw new Error('Room prefix must be one Redis hash tag');
   const keys={lease:`${tag}:lease`,state:`${tag}:state`,view:`${tag}:view`,queue:`${tag}:queue`,population:`${tag}:population`};
-  // Monotonic writer generation: checkpoint v13 adds garden campus leases (v12 selected character
-  // revisions, v11 office seat claims, v10 office visit layouts and levels, v9 venue screenings,
-  // v8 resident-owned workspace visits). A newer writer atomically fences an older lease;
-  // peers/future generations retain it. The generation is the checkpoint version, one more for
-  // selection-aware rooms, which additionally require durable envelope v3 intents.
-  const token=`v${characters?14:13}:${randomUUID()}`;
+  // Monotonic writer generation, not the checkpoint version. A newer writer atomically fences an
+  // older lease; peers/future generations retain it. Until checkpoint v13 (garden campus leases)
+  // the generation was the checkpoint version, one more for selection-aware rooms, which
+  // additionally require durable envelope v3 intents: so v13 and v14 writers both write v13
+  // checkpoints. Checkpoint v14 (world rules, #596) must fence both, so its writers are v15 and
+  // v16; checkpoint v15 (crime, #597) writers are v17 and v18; checkpoint v16 (police, #598) writers are v19 and v20. Raise WRITER_GENERATION by two with every checkpoint version an older writer cannot read.
+  const token=`v${characters?WRITER_GENERATION+1:WRITER_GENERATION}:${randomUUID()}`;
   // The default district's revision and the operator's switch epoch (#512): a town committed
   // at a newer epoch, or at this epoch under another revision, is never coordinated here.
   if(!Number.isSafeInteger(districtEpoch) || districtEpoch<0)throw new Error('Invalid district epoch');
@@ -200,7 +204,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
         // The garage/Gardens district revision switch (#512) chains the older garage recoveries itself.
-        const gardens = recoverDistrictGardensCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const commons = recoverDistrictCommonsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const gardens = commons.ok ? commons : recoverDistrictGardensCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const tower = gardens.ok ? gardens : recoverDistrictTowerCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const levels = tower.ok ? tower : recoverDistrictLevelsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const interior = levels.ok ? levels : recoverDistrictInteriorCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
@@ -211,7 +216,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
           error.checkpointReason = checkpointReason;
           throw error;
         }
-        districtMigration = gardens.ok ? { kind: 'gardens', from: gardens.from, to: gardens.to, moved: gardens.moved.length }
+        districtMigration = commons.ok ? { kind: 'commons', from: commons.from, to: commons.to, moved: commons.moved.length }
+          : gardens.ok ? { kind: 'gardens', from: gardens.from, to: gardens.to, moved: gardens.moved.length }
           : tower.ok ? { kind: 'tower', from: tower.from }
           : levels.ok ? { kind: 'levels', from: levels.from }
           : interior.ok ? { kind: 'interior', from: interior.from }
@@ -453,7 +459,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       visitors,
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'gardens'
+    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'commons'
+      ? { event: 'district_commons_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'gardens'
       ? { event: 'district_gardens_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
       : districtMigration.kind === 'tower'
       ? { event: 'district_tower_checkpoint_migrated', from: districtMigration.from, to: 'penthouse_tower_33m' }
