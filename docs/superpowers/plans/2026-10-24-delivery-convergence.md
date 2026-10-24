@@ -100,6 +100,8 @@ No branch was eligible for `project:prune`. The blockers fall into three groups:
 
 ## Decisions for Val
 
+This is the list as presented at 07:50Z. The next section records Val's answers and what was applied.
+
 1. **Release 14 dead-owner rows to retired and 4 to queued.** The rows are listed in the stale-claims table above. Every owner's session has ended, and each retired row's merged PR is verified through its pull ref. Approve, then run it from this worktree: `cd /Users/buns/Documents/GitHub/BunsDev/river-oaks-delivery-convergence && node .runtime/delivery-convergence/retire-owned.mjs --apply`. The script skips any row whose owner has changed. A dry run without `--apply` lists exactly what it writes.
 2. **Choose how to retire tips that are ancestors of their merged heads.** Either authorize a small `project:prune` change, or keep the 11 branches above blocked. The change would accept a local tip that is a strict ancestor of the exact merged PR head when that head and its merge are on main, keeping every other guard. A third option is to authorize fast-forwarding each local branch to its merged head, which the 10-23 consolidation round did for one branch.
 3. **Release `codex:505-followup-20261023`'s delivered tasks.** These are `campus-followup-505` and `campus-readiness-512`, so their three exact-head branches can be pruned after their ignored evidence is archived. Each prune also needs the task's `pr` set to that branch's PR, because one task records two branches. Leave `test/mvp-regression-20261023` to its live owner.
@@ -108,18 +110,72 @@ No branch was eligible for `project:prune`. The blockers fall into three groups:
    - For `email-account-transition`, `world-expansion-gate-587`, `neighborhood-584-586` and `phase2-review-582-583`: commit and open a PR, hand off, or cancel.
    - `continuous-walk-582` was modified today, so confirm its owner first.
 5. **`feat/crime-police-598-20261023`.** Its two unsigned commits are the only copy. Cancel it if #621 supersedes it, or keep it.
-6. **#630 and `bayou-luxe-polish` need an owner.** Their session (d7424aaf) stopped before the reboot, and the lease ends at 08:00Z.
-7. **Archive recovery.** Check whether a backup (for example Time Machine) still holds the missing `~/worktree-backups` trees. If not, should the 285 records be marked unrecoverable?
+6. **`bayou-luxe-polish` needs an owner.** Its session (d7424aaf) stopped before the reboot, and its lease ended at 08:00Z. Its branch is `feat/bayou-luxe-polish-20261024` at 9a81c03f (signed, core passed), in worktree `river-oaks-destination-slice`. `open-pr-sweep-20261024` took over #630 (`commons-activation-rehearsal`) at 08:47Z.
+7. **Archive recovery.** Should the 285 records be marked unrecoverable? `river-oaks-33` checked read-only at about 09:00Z: there's no Time Machine destination, and nothing in Spotlight, the Trash or `/Volumes`. The 10-22 audit (`archive-root-audit-20261022`, #576) traced the loss to the move to new hardware, so the old Mac's `~/worktree-backups` is the only likely remaining copy.
 8. **Close #508?** That would carry its physical and rendered criteria to #505, as #614's ledger recommends.
+
+## Val's answers and what was applied
+
+Val answered in this session at about 08:55Z and approved D1, D2a, D2b and D3. At about 09:15Z Val approved cancelling all four D4 checkouts and D5's branch, chose to wait on D7, and approved closing #508.
+
+- **D1:** `retire-owned.mjs --apply` wrote all 18 rows: 14 retired with pull-ref evidence and 4 queued with their facts.
+- **D3:** released `campus-followup-505` and `campus-readiness-512` from `codex:505-followup-20261023`. `fix/campus-readiness-512-20261021` (dirty, no PR) stays parked.
+- **D2a:** taken by `river-oaks-33` as a draft PR (task `prune-ancestor-tip-20261024`, branch `fix/prune-ancestor-tip-20261024`). Not merged here.
+- **D2b:** owner-null tips that were strict ancestors of their merged heads were fast-forwarded to those heads, then retired as in the next section. `river-oaks-71` is retiring `docs/likeness-intake-518-20261022` and `feat/likeness-quarantine-518-20261022` itself, under Val's #518 authorization, with `project:cancel` at their exact tips. Both were removed from this list. `test/studio-417-closeout-20261023` needed no fast-forward, because its tip is #613's merged head.
+- **D8:** #508 closed as completed ([6382364488](https://github.com/BunsDev/river-oaks/issues/508#issuecomment-6382364488)). Its three unchecked criteria are carried to #505.
+- **D7:** waiting for Val to check the old Mac. No records changed.
+- **D6:** `open-pr-sweep-20261024` took over #630 at 08:47Z. `bayou-luxe-polish` is still unowned.
+
+### Guarded retirements
+
+Each branch went through the same steps: a fresh PR, ancestry and open-PR check; a clean worktree, with no process working in it and no file modified in the last 2 h; the fast-forward where approved; archiving of ignored non-cache evidence (`.runtime`, `output/playwright`, `data/generated`, `data/raw`) as a restricted tarball under `~/worktree-backups/river-oaks/convergence-*/`, restore-tested by per-file SHA-256; removal of that evidence and of named caches only (`node_modules`, `.venv`, `dist`, `__pycache__`, `.pytest_cache`, `.ruff_cache`); a fresh retirement attestation; then the `project:prune` dry run and `--apply`. The prune step writes its own restore-tested bundle manifest.
+
+| Branch | PR | Fast-forward | Evidence archive | Prune manifest |
+| --- | --- | --- | --- | --- |
+| `docs/campus-followup-505-20261023` | #606 | no | none (no worktree) | `retirement-wXSHdD` |
+| `feat/destination-slice-584-586-20261023` | #611 | `10809935` → `8d72756c` | none (no worktree) | `retirement-tzKNgY` |
+| `perf/character-fidelity-timing-517-20261022` | #602 | `cec22d3b` → `20b490bd` | none (no worktree) | `retirement-s6eg3m` |
+| `docs/campus-followup-505-delivery-20261023` | #614 | no | 58 files, `convergence-docs-campus-followup-505-delivery-20261023-UeFMCp` | `retirement-PBKq6V` |
+| `fix/campus-readiness-socket-512-20261023` | #605 | no | 216 files, `convergence-fix-campus-readiness-socket-512-20261023-i5ahH7` | `retirement-wK19SV` |
+| `test/studio-417-closeout-20261023` | #617 | `c92edb85` → `5b5a4388` | 36 files, `convergence-test-studio-417-closeout-20261023-fJaCgC` | `retirement-8HZIk2` |
+| `test/studio-417-closeout-f4aa1670-20261023` | #617 | `1e0a49d2` → `5b5a4388` | 36 files, `convergence-test-studio-417-closeout-f4aa1670-20261023-79siPF` | `retirement-2zJL5Z` |
+| `test/studio-review-417-20261022` | #579 | `bbf642ef` → `71cca92a` | 29 files, `convergence-test-studio-review-417-20261022-6oeV35` | `retirement-KyzQTO` |
+| `feat/district-height-audit-20261023` | #620 | `4504defd` → `63daa741` | 10 files, `convergence-feat-district-height-audit-20261023-526qGL` | `retirement-VyhMXh` |
+| `feat/jevica-fast-walk-20261022` | #577 | `96fe7642` → `a4bcd72a` | 7 files, `convergence-feat-jevica-fast-walk-20261022-Moi0vp` | `retirement-90jAoV` |
+| `dependabot/uv/python-minor-and-patch-85f7fb1a01` | #553 | `49c2a422` → `ba9a9482` | 5 files, `convergence-dependabot-uv-python-minor-and-patch-85f7fb1a01-9Mr0yN` | `retirement-Pxk0VC` |
+| `docs/procedural-tools-eval-20261023` | #616 | `69228060` → `07093924` | 145 files (265 MiB, mostly `data/raw`), `convergence-docs-procedural-tools-eval-20261023-TVgvaI` | `retirement-ka620t` |
+
+All paths are under `~/worktree-backups/river-oaks/`. Every original tip that was fast-forwarded is an ancestor of origin/main, so nothing became unreachable. `test/studio-417-closeout-20261023` was first tried against #613, which the guard refused (`aggregate-tree-review-required`): #613 was merged by inclusion, and its recorded merge tree carries main's changes. It was then retired against #617, whose merge tree equals its head. Before the jevica and Python553 retirements, the session-use question the 10-23 consolidation round left open was answered with current facts: no process had its working directory in either checkout, no session had a recent register write for them, and no file had been modified in the previous 2 h.
+
+### Authorized cancellations (D4, D5)
+
+Each ran `project:cancel --branch <b> --expected-head <full sha> --stale-hours <h> --apply` from this worktree, after merging main to pick up #631's import fix. Each window is the widest one the dry run showed as satisfied. The tool archived the exact tip and the full worktree, restore-tested both, removed the checkout and ref, and released the task to queued. The task records now name the archive, and their stale worktree paths were removed.
+
+| Branch | Head | Window | Archive |
+| --- | --- | --- | --- |
+| `fix/email-account-transition-20261020` | `a35214f3` | 72 h (last touch 10-21 00:59Z) | `cancel-stale-DdrEDR` |
+| `test/world-gate-587-20261022` | `638a157f` | 18 h (last touch 10-23 14:03Z) | `cancel-stale-odtQyc` |
+| `review/phase2-582-583-20261023` | `f4aa1670` | 10 h (last touch 10-23 22:05Z) | `cancel-stale-m1CDTP` (includes the F1 ride-guard patch) |
+| `feat/crime-police-598-20261023` | `26a2f033` | 1 h (last touch: a3's record note at 07:14Z; no file activity) | `cancel-stale-ShLz2n` (keeps the alternate #598 design) |
+
+`project:archives` lists all four, and all 12 prune archives, with no problem flag. The `neighborhood-authoring` cancel waits for #623 to merge, as Val's option stated. Twenty `githubPullRefs` arrays this round wrote were rewritten as flat strings, because `project:archives` read every object-valued `archive` entry as a manifest record.
 
 ## Checks
 
-- `pnpm run --silent project:check --github`: 115 gaps at 07:24Z (exit 1); 99 gaps at 07:44Z.
-- `pnpm run project:inventory --json`: 68 branches / 57 worktrees and no retire-eligible row at 07:24Z.
+- `pnpm run --silent project:check --github`: 115 gaps at 07:24Z (exit 1); 99 at 07:44Z; 70 at 10:05Z on main 167048c3 (exit 1). Of the 70, 30 are new since baseline, mostly expired leases, pending retirements and unregistered `sweep/*` branches that belong to other live owners.
+- `pnpm run project:inventory --json`: 68 branches / 57 worktrees at 07:24Z; 57 branches / 48 worktrees afterwards. Classes afterwards: 35 active, 12 blocked, 6 detached, 4 parked, 2 zero-commit, 2 orphan-no-task, 1 retire-candidate, 1 primary.
+- Register: 24 active claims had leases expired more than 6 h at 07:24Z; 5 afterwards. Two are a3's (#569/#572), one is possibly live (`continuous-walk-582`), and two are the neighborhood tasks waiting on #623.
+- `PATH=<python 3.12>:$PATH pnpm run --silent project:archives`: the new archives verify; the remaining problems and missing records are from before this round (Decision 7).
 - `git fsck --unreachable --no-reflogs`: 363 unreachable commits, none of them from the dominoes sheet, the iOS probe or procedural GPU acceptance.
 - Every merged-PR claim above comes from the REST PR record, `git ls-remote origin refs/pull/N/head`, `git merge-base --is-ancestor` against fetched origin/main, and the check runs on the head commit.
+- Tooling tests (`node --test scripts/tests/*.test.js` with Python 3.12 on PATH). On `a4c4d487`: 225/225 passed. On the main merge `3c868982`, 225/226 passed. The failure was `land-pr.test.js` "a queued lander wakes on release without waiting for the fallback or touching GitHub early" ("queue release did not wake the lander"), at a load average of about 40. Its log is kept at `.runtime/delivery-convergence/tooling-first-failure-3c868982.log` in this worktree. That file then passed 29/29 three times in isolation. This change touches no code, and the cause of the first failure is not established.
+- `gitleaks dir` on the ledger: no leaks.
 - No browser, Redis or `verify` run: this lane changed no source.
 
 ## Next action
 
-Apply Decisions 1–3 once Val answers, then run guarded retirement for each candidate that becomes eligible: archive its ignored evidence, dry-run, then `--apply`. Recount after a3's landings finish, and retire their checkouts once each owner releases.
+- After #623 merges, cancel `feat/neighborhood-authoring-20261022` at `52379be69efd395d624fedd57eeee8e283850a62` (approved). Confirm `continuous-walk-582`'s owner before touching it.
+- `river-oaks-33` is preparing the D2a prune-guard draft PR (`prune-ancestor-tip-20261024`). It still needs review, and landing needs separate authorization.
+- After a3's landings, retire their checkouts once each owner releases: #589, #608, #622, #504, #571 and #575 are now pending local retirement.
+- Still open: `bayou-luxe-polish` needs an owner (D6), and the archive records wait on the old Mac (D7).
+- `fix/campus-readiness-512-20261021` (dirty, no PR) stays parked for review.
