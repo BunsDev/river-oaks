@@ -2,6 +2,8 @@ async page => {
   // Bayou Heights (bayou-heights-1, #586 continuation): two rendered clients walk from
   // their District arrivals over the Commons and the Lantern Footbridge into Heights,
   // play the icehouse table through the board UI, reconnect there, and walk home.
+  const traceInput = process.env.CI === 'true';
+  const { installInputAuthorityTrace, captureInputAuthorityEvidence } = await import('./input-authority-trace.js');
   const { loadDistrictData } = await import('../../server/district-data.js');
   const { createResidentNavigation } = await import('../src/navigation.js');
   const revision='bayou-heights-1',world=await loadDistrictData({districtRevision:revision}),layout=world.eastGardenCommons;
@@ -15,6 +17,7 @@ async page => {
   const peer=await peerContext.newPage();peer.setDefaultTimeout(120000);peer.on('pageerror',e=>errors.push(e.message));
   const self=tab=>tab.evaluate(()=>{const town=window.__riverMultiplayer();return town.snapshot.players.find(p=>p.id===town.selfId);});
   const ready=async tab=>{
+    if(traceInput)await tab.addInitScript(installInputAuthorityTrace);
     await tab.emulateMedia({reducedMotion:'reduce'});
     await tab.addInitScript(()=>{
       const Original=window.WebSocket;window.__heightsSockets=[];window.__heightsRefusals=[];
@@ -40,7 +43,8 @@ async page => {
       const deadline=Date.now()+120000;
       for(;;){
         const pose=await tab.evaluate(()=>window.__riverCarriage().pose),dx=target[0]-pose.position[0],dz=-target[1]-pose.position[2],distance=Math.hypot(dx,dz);
-        if(distance<.35){await releaseKeys();break;}
+        // Stay inside the planner's 0.3 m corner clearance before turning.
+        if(distance<.15){await releaseKeys();break;}
         if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose,refusals:await tab.evaluate(()=>window.__heightsRefusals)})}`);
         const heading=Math.atan2(-dx,-dz),difference=Math.atan2(Math.sin(heading-pose.yaw),Math.cos(heading-pose.yaw));
         if(Math.abs(difference)>.035){
@@ -49,6 +53,8 @@ async page => {
           const drag=Math.max(-box.width*.35,Math.min(box.width*.35,-difference/.003));
           await tab.mouse.move(x,y);await tab.mouse.down();await tab.mouse.move(x+drag,y,{steps:3});await tab.mouse.up();continue;
         }
+        // A lifecycle release clears runtime input; repeat keydown cannot resume it.
+        if(pose.speed<.05)await releaseKeys();
         await tab.locator('#canvas-host').focus();
         const fast=distance>2;
         if(fast)await tab.keyboard.down('ShiftLeft');else await tab.keyboard.up('ShiftLeft');
@@ -56,7 +62,7 @@ async page => {
         await tab.waitForTimeout(Math.min(450,Math.max(30,distance*(fast?110:230))));
         // Keep walking during browser round trips, as spatial-streets does.
         // Pulsing/releasing every sample repeatedly brakes on CPU-rendered CI.
-        // Reassert keydown each pass so a focus correction cannot lose input.
+        // Reassert while held; a stopped observation starts a fresh press above.
         // Within two metres, stop before measuring again: held across a slow
         // round trip (about 9 fps on CPU-rendered CI) the walker overshoots by
         // more than the arrival radius and circles the waypoint until it stalls.
@@ -89,9 +95,15 @@ async page => {
     await Promise.all([walk(page,[at([-1,1.5]),at([100,1.5])],'owner market street'),walk(peer,[at([-1,-1.5]),at([100,-1.5])],'alice market street')]);
     await capture(page,'footbridge-approach');
     check(await page.evaluate(()=>!document.querySelector('#lantern-walk-status').hidden),'The Lantern Walk status shows on Market Street in the Commons');
+    // Heights streams as its own location: walking Market Street brings it in before the footbridge.
+    for(const tab of [page,peer])await tab.waitForFunction(()=>window.__riverBayouHeights().ready);
+    const streamed=await page.evaluate(()=>window.__riverBayouHeights().stream);
+    console.log(`Heights resident ${streamed.residentBytes} bytes: ${JSON.stringify(streamed.measuredBytes)}`);
+    check(streamed.residentBytes>0&&streamed.residentBytes<=streamed.geometryBudgetBytes&&Object.entries(streamed.measuredBytes).every(([id,bytes])=>bytes<=streamed.estimatedBytes[id]),
+      'Bayou Heights streamed in before the footbridge, within its geometry ceiling and each part within its estimate');
     await Promise.all([walk(page,[at([133,1.5]),at([165,1.5])],'owner footbridge'),walk(peer,[at([133,-1.5]),at([165,-1.5])],'alice footbridge')]);
     check((await self(page)).position[0]>west&&(await self(peer)).position[0]>west,'Two real clients crossed the Lantern Footbridge into Bayou Heights by keyboard walking');
-    check(await page.evaluate(()=>window.__riverBayouHeights().inside===true&&window.__heightsNotices.some(text=>text.startsWith('Bayou Heights'))),'Crossing the footbridge names Bayou Heights');
+    check(await page.evaluate(()=>window.__riverBayouHeights().inside===true&&window.__heightsNotices.some(text=>text==='Entering Bayou Heights')),'Crossing the footbridge names Bayou Heights');
     check(await page.evaluate(()=>document.querySelector('#lantern-walk-status').hidden&&!window.__heightsNotices.includes('Back in River Oaks District')),'Bayou Heights hides the Commons Lantern Walk status without announcing the District');
     const peerId=(await self(peer)).id;
     await page.waitForFunction(([id,west])=>window.__riverMultiplayer().snapshot.players.some(p=>p.id===id&&p.position[0]>west),[peerId,west]);
@@ -140,10 +152,21 @@ async page => {
     // Home: back over the footbridge and the Commons to the District.
     await Promise.all([walk(page,[at([165,1.5]),at([100,1.5]),at([-2,1.5])],'owner home'),walk(peer,[at([165,-1.5]),at([100,-1.5]),at([-2,-1.5])],'alice home')]);
     check((await self(page)).position[0]<edge&&(await self(peer)).position[0]<edge,'Both players walked back to the original District');
-    check(await page.evaluate(()=>window.__heightsNotices.some(text=>text.startsWith('Bayou Market Commons'))&&window.__heightsNotices.some(text=>text==='Back in River Oaks District')),'Returning names the Commons and then the District');
+    check(await page.evaluate(()=>{const notices=window.__heightsNotices,heights=notices.indexOf('Entering Bayou Heights');
+      return heights>=0&&notices.indexOf('Entering Bayou Market Commons',heights)>heights&&notices.lastIndexOf('Back in River Oaks District')>heights;}),'Returning names the Commons and then the District');
+    for(const tab of [page,peer])await tab.waitForFunction(()=>!window.__riverBayouHeights().ready&&window.__riverBayouHeights().stream.residentBytes===0);
+    check(true,'Walking home to the District releases the Heights presentation');
     await capture(page,'district-return');
     check(errors.length===0,`No page errors: ${errors.join('; ')}`);
     const refusals={owner:await page.evaluate(()=>window.__heightsRefusals),alice:await peer.evaluate(()=>window.__heightsRefusals)};
     return {checks,routes,reconnectMs,drift,views,refusals,scope:'Two rendered fixture clients, normal keyboard walking from original District arrivals over the Commons and the Lantern Footbridge; shared icehouse table game and reconnect in Heights; no physical-device or production acceptance'};
+  }catch(error){
+    if(traceInput){
+      const failure=error instanceof Error?error:new Error(String(error));
+      failure.journeyEvidence={schemaVersion:1,scope:'CI-only normal-journey observations; no keyboard-handler acceptance inferred',
+        checks,routes,players:await captureInputAuthorityEvidence([['owner',page],['peer',peer]])};
+      throw failure;
+    }
+    throw error;
   }finally{await peerContext.close();}
 }

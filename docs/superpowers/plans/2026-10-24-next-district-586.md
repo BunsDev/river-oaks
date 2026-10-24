@@ -53,17 +53,17 @@ are original. It reproduces no real building.
   - `layout.heights` records the plans, the base Commons revision and the index
     where Heights surfaces and solids start.
   - `districtRevisionOf` reports `bayou-heights-1`.
-  - Streaming and chunk interfaces come from #623. They are not on main, and final
-    integration is coordinated with that owner.
+  - Streaming and chunk interfaces come from #623, merged to main as part of 1fd53fb9.
+    Heights integrates by merge commit (see Streaming integration under Results).
 
 ## Files owned
 
 New files:
 - Recipes and locks: `config/destinations/{bayou-greenway,yale-icehouse,yale-street-north,yale-street-south,heights-boulevard-north,heights-boulevard-south}.json`.
 - `shared/bayou-heights.js` (composition) and `shared/bayou-heights-layout.js` (constants, so revision lists stay light).
-- `preview/src/bayou-heights-world.js` (attach/detach/registration), `preview/src/bayou-heights.js` (scene, loaded dynamically) and `preview/src/bayou-heights-arrival.js` (arrival notice).
+- `preview/src/bayou-heights-world.js` (attach/detach/registration), `preview/src/bayou-heights.js` (neighborhoods and the shared landscape, loaded dynamically) and `preview/src/heights-stream.js` (streaming, loaded only for the revision). The interim `bayou-heights-arrival.js` was removed in the merge; main's location label names Heights instead.
 - `server/district-heights-checkpoint-migration.js`.
-- Tests: `preview/tests/bayou-heights.test.js` and `server/tests/bayou-heights.test.js`.
+- Tests: `preview/tests/bayou-heights.test.js`, `preview/tests/heights-stream.test.js` and `server/tests/bayou-heights.test.js`.
 - `preview/e2e/bayou-heights.js`.
 - `docs/level-design/expansion/bayou-heights.md`.
 - This ledger.
@@ -72,7 +72,10 @@ Small edits to existing files:
 - `config/destinations/nineteenth-and-yale.json`: title, anchor and inspiration only, then re-lock. The plan's pieces, surfaces, solids and stats are identical; only provenance and hash change.
 - `preview/public/data/world-manifest.json`: the partition.
 - `scripts/destination.mjs`: two `ENTRIES` seams for recipe-level connectivity.
-- `server/district-data.js`, `preview/src/main.js`, `preview/src/garden-campus-district.js`: revision selection, the scene call and the debug hook.
+- `server/district-data.js`, `preview/src/main.js`, `preview/src/garden-campus-district.js`: revision selection, the stream and the debug hook.
+- `preview/src/commons-stream.js`: an optional presented layout, and its step gate leaves ground east of the Commons to the Heights stream.
+- `preview/src/world-location-label.js`: names Bayou Heights.
+- `preview/src/city-kit/render.js`: `cityKitLandscape` (the placement rules, moved out of the build loop unchanged), `disposeLandscape` (moved), and `landscape: false`.
 - `preview/src/plaza-salon-plan.js`: the icehouse table, its seat pattern and chair title.
 - `server/redis-room.js`: Heights recovery first in the chain, and its log event.
 - `preview/e2e/experience-runner.js` and `.github/workflows/verify.yml`: the journey environment and its own CI shard.
@@ -172,12 +175,24 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
   - **Now:** Heights tree batches and their shadows draw only within the kit's 120 m block-detail distance. The landmarks merge into one mesh per material, plus the clock faces, 10 meshes in all. The shadow list follows the loaded trees.
   - **Tests:** `preview/tests/bayou-heights.test.js` gains a test with stand-in batches. It checks that far batches and their shadows don't draw, and that near ones and the Commons trees do. The preview suite passes 4,023/4,024 with 1 existing skip.
   - **Measurement:** see Performance below.
-- **Browser journey and captures.** Pending a rerun on the fixed head; see Next step.
+- **Streaming integration (merge of main 1fd53fb9).** #623 (streaming) and #643 (MVP readiness) merged while this branch was open, and the PR conflicted. Rebasing would have needed a force-push, so main is merged instead.
+  - **Design.** Heights streams as its own location in eight parts: seven neighborhoods and one shared part, under the Commons' 16 MiB ceiling, unchanged. The Commons streams separately, presented with its bayou opened for the bridge. The details are in [bayou-heights.md](../../level-design/expansion/bayou-heights.md#streaming).
+  - **Memory.** Each kit cloned the three oak levels (3.13 MiB from the GLB accessors) and the planting models. Seven neighborhoods would have held about 22 MiB of duplicate oaks. Heights now draws its 355 trees and 329 planted beds once. Measured headless, the neighborhoods own 12.95 MiB; the shared part adds about 6.2 MiB in the browser by calculation (oaks 3.13, procedural planting 2.37, planting models 0.24, instances, landmarks 0.11). That is pending the browser measurement the journey records.
+  - **Ceiling.** Heights is larger than 16 MiB in all, so deep inside it the neighborhoods the camera cannot see stream out. The stand-in test shows one or two going at Nineteenth and Yale. A larger Heights ceiling is not within this task's authority, and is listed under Decisions.
+  - **Kit parity.** `cityKitLandscape` reproduces the kit's own placements. For all seven Heights plans and the Commons destination, trees, planting modules, meshes and triangles equal main's kit.
+  - **Fingerprints.** Garage `5fc38cbe…`, Gardens `df44715b…` and Commons `d5f1179d…` equal main 1fd53fb9. Heights is still `5824c9a3…`.
+  - **Focused tests.** All pass on the merged tree:
+    - `bayou-heights.test.js`: 9/9.
+    - `heights-stream.test.js`: 6/6. It covers parts near the footbridge, release in the District with disposal, estimates, ceiling priority and turning, the gate, camera rules and status.
+    - `world-location-label.test.js`: 5/5.
+    - `lantern-walk-client.test.js`: 3/3.
+  - **Suites.** Preview 4,106/4,107 with 1 existing skip. Server 1,163/1,163 on isolated Redis.
+- **Browser journey and captures.** Pending a local run on the merged tree (queued on the browser lock) and the hosted shard.
 - **Performance.** Not started. ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e). The `#626` decision is recorded only on #643's branch (D11).
 
 ## Gaps and coordination
 
-- Streaming, unload and chunk-bounded loading depend on #623. Until it merges, the Heights scene loads with the revision, like Commons on main. Kit plans more than 300 m from the camera are not drawn.
+- **Decision for Val:** Heights holds about 19 MiB of retained geometry in all, against the Commons' 16 MiB ceiling, which it keeps. Holding all of Heights at once needs a larger ceiling for this location. Sharing the oak models with the District's trees (one copy app-wide) would save about 3 MiB more, but it changes shared disposal. Either is a separate task.
 - Residents do not route across locations. That work is support task B, river-oaks-3e, on `feat/resident-locations-20261024`. Once residents can stand in Heights, the Heights rollback must relocate them as it does players.
 - `verify full` browser stages (security-browser, reflections, experience, shared, ipic-screening) were not run here as a whole, because the shared browser lock has a long queue. The Heights journey runs on its own, and hosted CI runs the matrix, including the new `heights` shard.
 - Human visual approval, physical devices, hosted multiplayer and Unreal parity are separate acceptance.

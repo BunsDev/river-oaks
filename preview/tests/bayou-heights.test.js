@@ -6,13 +6,14 @@ import { loadDistrictData } from '../../server/district-data.js';
 import { configuredDistrictRevision, districtRevisionOf, DISTRICT_REVISION_GARDENS } from '../src/garden-campus-district.js';
 import { attachEastGardenCommons } from '../src/east-garden-commons-world.js';
 import { attachBayouHeights, detachBayouHeights, validateHeightsRegistration } from '../src/bayou-heights-world.js';
-import { buildBayouHeights, HEIGHTS_TREE_METRES, HEIGHTS_VISIBLE_METRES } from '../src/bayou-heights.js';
+import { buildHeightsLandscape, buildHeightsNeighborhood, HEIGHTS_TREE_METRES } from '../src/bayou-heights.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from '../src/walking.js';
 import { chessSeat, plazaSalonSeats } from '../src/plaza-salon-plan.js';
 import { validateWorldManifest, locationWorldBounds } from '../src/world-manifest.js';
 import { HEIGHTS_RECIPES, HEIGHTS_REVISION, HEIGHTS_TABLE, inBayouHeights } from '../../shared/bayou-heights.js';
 import { assembleNeighborhood, walkableConnectivity } from '../../shared/city-kit/assemble.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
+import { buildCityKit } from '../src/city-kit/render.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import manifest from '../public/data/world-manifest.json' with { type: 'json' };
 
@@ -132,65 +133,73 @@ test('the icehouse table seats two players in the shared seat model', () => {
   assert.equal(plazaSalonSeats(commons).some(seat => seat.buildId.includes(HEIGHTS_TABLE)), false, 'the Commons revision has no icehouse table');
 });
 
-test('the scene draws every neighborhood, culls distant ones and disposes what it owns', () => {
-  const group = buildBayouHeights(layout), materials = new Set(), geometries = new Set();
-  group.traverse(mesh => { if (mesh.isMesh) { materials.add(mesh.material); geometries.add(mesh.geometry); } });
+test('each neighborhood and the shared landscape stay within the kit budgets and dispose what they own', () => {
   const { drawCallsPerNeighborhood, materialsPerNeighborhood } = KIT_CONVENTIONS.budgets;
-  for (const plan of heights.plans) {
-    const stats = group.getObjectByName(`bayou-heights/${plan.id}`).userData.stats();
+  const parts = [...heights.plans.map(plan => buildHeightsNeighborhood(layout, plan)), buildHeightsLandscape(layout)];
+  for (const [index, plan] of heights.plans.entries()) {
+    const kit = parts[index], stats = kit.userData.stats();
+    assert.equal(kit.name, `bayou-heights/${plan.id}`);
     assert.ok(stats.meshes <= drawCallsPerNeighborhood && stats.materials <= materialsPerNeighborhood, `${plan.id}: ${JSON.stringify(stats)}`);
+    assert.equal(kit.getObjectByName(`${plan.id} trees`).children.length, 0, `${plan.id} leaves its trees to the shared landscape`);
   }
-  const landmarks = group.getObjectByName('bayou-heights/landmarks');
+  const landscape = parts.at(-1), landmarks = landscape.getObjectByName('bayou-heights/landmarks');
   for (const name of ['footbridge-deck', 'bayou-under-bridge', 'bandstand-roof', 'hall-tower', 'hall-clock-10']) assert.ok(landmarks.userData.parts.includes(`bayou-heights/${name}`), name);
   // The landmarks always draw, so they merge: one mesh per material, plus the clock faces that cast no shadow.
   assert.ok(landmarks.children.length <= 10, `${landmarks.children.length} landmark meshes`);
   assert.equal(new Set(landmarks.children.map(mesh => mesh.material)).size, landmarks.children.length - 1);
-  assert.ok(group.getObjectByName('East Garden Commons'), 'the Commons scene draws under Heights');
-  const [bridgeX, bridgeN] = frame([133, 0]);
-  group.userData.update(new THREE.Vector3(bridgeX, layout.ground + 1.7, -bridgeN));
-  assert.equal(group.userData.stats().drawn, heights.plans.length, 'all of Heights draws from the footbridge');
-  const [sx, sn] = world.walkSpawn;
-  group.userData.update(new THREE.Vector3(sx, layout.ground, -sn));
-  const fromSpawn = group.userData.stats().drawn;
-  assert.ok(fromSpawn < heights.plans.length, `${fromSpawn} neighborhoods draw from the District spawn`);
-  for (const plan of heights.plans) {
-    const [w, s, e, n] = plan.site, distance = Math.hypot(Math.max(w - sx, 0, sx - e), Math.max(s - sn, 0, sn - n));
-    assert.equal(group.getObjectByName(`bayou-heights/${plan.id}`).visible, distance < HEIGHTS_VISIBLE_METRES, plan.id);
-  }
+  // Every neighborhood's street trees and planted beds draw once, in the shared landscape.
+  const kits = heights.plans.map(plan => buildCityKit(plan, { groundAt: () => layout.ground, ground: layout.ground }));
+  assert.equal(landscape.getObjectByName('bayou-heights trees').userData.placements, kits.reduce((n, kit, i) => n + kit.getObjectByName(`${heights.plans[i].id} trees`).userData.placements, 0));
+  assert.equal(landscape.userData.plantingModules, kits.reduce((n, kit) => n + kit.userData.plantingModules, 0));
+  for (const kit of kits) kit.userData.dispose();
+  assert.equal(parts.some(part => part.getObjectByName('East Garden Commons')), false, 'the Commons streams as its own location');
+  const materials = new Set();
+  for (const part of parts) part.traverse(mesh => { if (mesh.isMesh) materials.add(mesh.material); });
   let disposedMaterials = 0;
   for (const material of materials) material.addEventListener('dispose', () => disposedMaterials++);
-  group.userData.dispose(); group.userData.dispose();
-  assert.equal(disposedMaterials, materials.size); assert.equal(group.children.length, 0);
+  for (const part of parts) { part.userData.dispose(); part.userData.dispose(); assert.equal(part.children.length, 0); }
+  assert.equal(disposedMaterials, materials.size);
 });
 
-test('Heights street trees and their shadows draw only near the camera, after they load', () => {
-  // Node builds the kit headless, so stand-in tree batches arrive the way loaded ones do:
-  // children of the plan's tree group, the shadow proxies also in the kit's live list.
-  const group = buildBayouHeights(layout), kit = group.getObjectByName('bayou-heights/bayou-greenway');
-  const trees = kit.getObjectByName('bayou-greenway trees'), commonsProxies = group.getObjectByName('East Garden Commons').userData.shadowProxies;
+test('Heights street trees, planting and their shadows draw only near the camera, with their neighborhood, after they load', () => {
+  // Node builds headless, so stand-in batches arrive the way loaded ones do: children of
+  // the shared tree group, the shadow proxies also in its live list, and planting batches.
+  const landscape = buildHeightsLandscape(layout), trees = landscape.getObjectByName('bayou-heights trees'), planting = landscape.getObjectByName('bayou-heights planting');
   const [bridgeX, bridgeN] = frame([133, 0]), camera = new THREE.Vector3(bridgeX, layout.ground + 1.7, -bridgeN);
-  const batch = (east, north, proxy) => {
+  const batch = (parent, east, north, proxy, radius = 8) => {
     const mesh = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial());
-    mesh.boundingSphere = new THREE.Sphere(new THREE.Vector3(east, layout.ground + 6, -north), 8); mesh.visible = !proxy;
-    trees.add(mesh); if (proxy) kit.userData.shadowProxies.push(mesh);
+    mesh.boundingSphere = new THREE.Sphere(new THREE.Vector3(east, layout.ground + 6, -north), radius); mesh.visible = !proxy;
+    parent.add(mesh); if (proxy) trees.userData.shadowProxies.push(mesh);
     return mesh;
   };
-  group.userData.update(camera);
-  assert.deepEqual(group.userData.shadowProxies, [], 'nothing casts tree shadows before the trees load');
-  const near = batch(...frame([150, 10]), false), far = batch(...frame([240, 160]), false);
-  const nearShadow = batch(...frame([150, 10]), true), farShadow = batch(...frame([240, 160]), true), commonsShadow = { name: 'commons tree batch' };
-  commonsProxies.push(commonsShadow);
-  group.userData.update(camera);
+  const greenway = new Set(['bayou-greenway']), both = new Set(['bayou-greenway', 'yale-street-north']);
+  landscape.userData.update(camera, greenway);
+  assert.deepEqual(landscape.userData.shadowProxies, [], 'nothing casts tree shadows before the trees load');
+  const near = batch(trees, ...frame([155, 10]), false), far = batch(trees, ...frame([240, 160]), false);
+  const nearShadow = batch(trees, ...frame([155, 10]), true), farShadow = batch(trees, ...frame([240, 160]), true);
+  const yale = batch(trees, ...frame([260, 100]), false);
+  landscape.userData.update(camera, greenway);
   assert.equal(near.visible, true, 'a batch beside the footbridge draws');
   assert.equal(far.visible, false, `a batch more than ${HEIGHTS_TREE_METRES} m away does not draw`);
-  assert.deepEqual(group.userData.shadowProxies, [commonsShadow, nearShadow], 'the Commons trees and near Heights trees cast shadows');
+  assert.deepEqual(landscape.userData.shadowProxies, [nearShadow], 'near Heights trees cast shadows');
   assert.equal(farShadow.visible, false);
-  group.userData.update(camera);
-  assert.deepEqual(group.userData.shadowProxies, [commonsShadow, nearShadow], 'each update replaces the list rather than growing it');
-  const [greenX, greenN] = frame([235, 150]);
-  near.visible = far.visible = true; group.userData.update(new THREE.Vector3(greenX, layout.ground + 1.7, -greenN));
+  landscape.userData.update(camera, greenway);
+  assert.deepEqual(landscape.userData.shadowProxies, [nearShadow], 'each update replaces the list rather than growing it');
+  const [laneX, laneN] = frame([235, 120]), lane = new THREE.Vector3(laneX, layout.ground + 1.7, -laneN);
+  near.visible = far.visible = yale.visible = true; landscape.userData.update(lane, greenway);
   assert.equal(near.visible, false, 'walking away hides the batch by the bridge');
   assert.equal(far.visible, true, 'and draws the one now near');
-  assert.deepEqual(group.userData.shadowProxies, [commonsShadow, farShadow]);
-  group.userData.dispose();
+  assert.equal(yale.visible, false, 'a near batch draws only while its neighborhood is attached');
+  assert.deepEqual(landscape.userData.shadowProxies, [farShadow]);
+  yale.visible = true; landscape.userData.update(lane, both);
+  assert.equal(yale.visible, true);
+  const bed = batch(planting, ...frame([240, 150]), false), stems = batch(planting, ...frame([270, 20]), false, 160);
+  landscape.userData.update(lane, both);
+  assert.equal(bed.visible, true, 'a planted bed draws near the camera');
+  landscape.userData.update(camera, both);
+  assert.equal(bed.visible, false, 'and not from the footbridge');
+  landscape.userData.update(lane, new Set());
+  assert.equal(bed.visible, false, 'nor once its neighborhood is gone');
+  assert.equal(stems.visible, true, 'the fine flower stems span Heights and draw with the planting');
+  landscape.userData.dispose();
 });

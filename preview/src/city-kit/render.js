@@ -395,10 +395,59 @@ function renderWaterTower(piece, m, ground, batch) {
 }
 
 /**
- * Build the plan's scene. `groundAt(east, north)` returns walking ground height;
- * `ground` is the level site height for shells and edges.
+ * The plan's street trees and lane planting, as placements for buildMatureTrees and
+ * buildPlanterPlanting. The kit draws its own; a caller that streams several
+ * neighborhoods (bayou-heights.js) draws theirs once, with `landscape: false`.
  */
-export function buildCityKit(plan, { groundAt, ground }) {
+export function cityKitLandscape(plan, { groundAt, ground }) {
+  const trees = [], planters = [];
+  for (const piece of plan.pieces) {
+    if (piece.piece === 'landscape/hedge') {
+      const [w, s, e, n] = piece.rect;
+      for (let x = w + .9; x < e - .5; x += 1.6) planters.push([x, ground - .32, -(s + n) / 2, 0]);
+    }
+    else if (piece.piece === 'landscape/planter') {
+      const [w, s, e, n] = piece.rect;
+      // Planting fills the bed in rows; a narrow planter gets one row down its middle.
+      const rows = Math.max(1, Math.floor((n - s) / 1.4));
+      for (let row = 0; row < rows; row++) for (let x = w + .7; x < e - .3; x += 1.4) planters.push([x, ground - .12, -(s + (n - s) * (row + .5) / rows), (row % 2) * Math.PI]);
+    }
+    else if (piece.piece === 'landscape/bayou') {
+      const [, s, e, n] = piece.rect;
+      for (let v = s + 3; v < n; v += 7.5) trees.push({ position: [e - 3, ground + .2, -v], height: 10 + (Math.abs(Math.sin(v)) * 3), radius: 4.2, yaw: v });
+    }
+    else if (piece.piece === 'landscape/street-tree') {
+      const [x, y] = piece.at;
+      trees.push({ position: [x, groundAt(x, y), -y], height: piece.height, radius: piece.radius, yaw: piece.yaw });
+    }
+  }
+  return { trees, planters };
+}
+
+/** Dispose tree and planting groups (buildMatureTrees, buildPlanterPlanting). */
+export function disposeLandscape(groups) {
+  // Landscape meshes own cloned buffers/materials and instance storage. Their
+  // texture maps belong to the shared template cache and must survive eviction.
+  const landscapeGeometries = new Set(), landscapeMaterials = new Set();
+  for (const landscape of groups.filter(Boolean)) {
+    landscape.userData.cancelLandscapeLoad?.();
+    landscape.traverse(item => {
+      if (item.geometry) landscapeGeometries.add(item.geometry);
+      for (const material of [item.material].flat().filter(Boolean)) landscapeMaterials.add(material);
+      if (item.isInstancedMesh) item.dispose();
+    });
+    landscape.clear();
+  }
+  for (const geometry of landscapeGeometries) geometry.dispose();
+  for (const material of landscapeMaterials) material.dispose();
+}
+
+/**
+ * Build the plan's scene. `groundAt(east, north)` returns walking ground height;
+ * `ground` is the level site height for shells and edges. With `landscape: false`
+ * the caller draws the plan's trees and planting (cityKitLandscape).
+ */
+export function buildCityKit(plan, { groundAt, ground, landscape = true }) {
   const group = new THREE.Group(); group.name = `City kit: ${plan.id}`;
   const materials = createMaterials(), m = materials.get, disposables = [];
   const blocks = new Map(), blockFor = piece => {
@@ -409,7 +458,7 @@ export function buildCityKit(plan, { groundAt, ground }) {
     block.center.add(new THREE.Vector3(x, ground, -y)); block.count.n++;
     return block;
   };
-  const flat = createBatch(), signs = [], lanterns = new Map(), trees = [], planters = [];
+  const flat = createBatch(), signs = [], lanterns = new Map(), { trees, planters } = cityKitLandscape(plan, { groundAt, ground });
   // Ground: draped paving and lawns; overlays use polygon offset instead of height.
   const overlay = name => { const material = m(name).clone(); material.polygonOffset = true; material.polygonOffsetFactor = -2; material.polygonOffsetUnits = -2; material.name = `${m(name).name}:overlay`; disposables.push(material); return material; };
   const groundPiece = { 'street/shared-lane': ['lane-brick', 0], 'street/intersection': ['lane-brick', 0], 'street/crosswalk': ['lane-brick', 0], 'street/sidewalk': ['paver-sidewalk', 0], 'street/court': ['plaza-stone', 0], 'landscape/lawn': ['lawn', 1], 'street/flush-curb': ['curb-granite', 2], 'landscape/tree-pit': ['soil', 3] };
@@ -439,14 +488,10 @@ export function buildCityKit(plan, { groundAt, ground }) {
     else if (piece.piece === 'landscape/hedge') {
       const [w, s, e, n] = piece.rect;
       flat.box(m('curb-granite'), (w + e) / 2, ground + .15, (s + n) / 2, e - w, .3, n - s);
-      for (let x = w + .9; x < e - .5; x += 1.6) planters.push([x, ground - .32, -(s + n) / 2, 0]);
     }
     else if (piece.piece === 'landscape/planter') {
       const [w, s, e, n] = piece.rect;
       flat.box(m('stucco-ivory'), (w + e) / 2, ground + .25, (s + n) / 2, e - w, .5, n - s);
-      // Planting fills the bed in rows; a narrow planter gets one row down its middle.
-      const rows = Math.max(1, Math.floor((n - s) / 1.4));
-      for (let row = 0; row < rows; row++) for (let x = w + .7; x < e - .3; x += 1.4) planters.push([x, ground - .12, -(s + (n - s) * (row + .5) / rows), (row % 2) * Math.PI]);
     }
     else if (piece.piece === 'landscape/bayou') {
       const [w, s, e, n] = piece.rect, water = new THREE.MeshPhysicalMaterial({ color: '#3e5f55', roughness: .12, metalness: .1, clearcoat: 1, envMapIntensity: 1.2 });
@@ -454,11 +499,6 @@ export function buildCityKit(plan, { groundAt, ground }) {
       flat.box(m('lawn'), w + 2.4, ground - 1.5, (s + n) / 2, 4.8, .3, n - s, 0, 0);
       flat.add(water, drape([w + 3, s, e - 6, n], () => ground - 2.6, 0, 6));
       flat.box(m('lawn'), e - 3, ground - 1.2, (s + n) / 2, 6, 2.8, n - s);
-      for (let v = s + 3; v < n; v += 7.5) trees.push({ position: [e - 3, ground + .2, -v], height: 10 + (Math.abs(Math.sin(v)) * 3), radius: 4.2, yaw: v });
-    }
-    else if (piece.piece === 'landscape/street-tree') {
-      const [x, y] = piece.at;
-      trees.push({ position: [x, groundAt(x, y), -y], height: piece.height, radius: piece.radius, yaw: piece.yaw });
     }
     else if (piece.piece === 'furniture/lantern') lanterns.set(piece.id, renderLantern(piece, m, groundAt, flat));
     else if (piece.piece === 'furniture/market-stall') renderMarketStall(piece, flat, m, groundAt, signs);
@@ -483,9 +523,11 @@ export function buildCityKit(plan, { groundAt, ground }) {
   geometries.push(...signBatch.build(group, 'shop signs', { shadows: false }));
   for (const lantern of lanterns.values()) group.add(lantern);
   // Tree and planting models stream from /assets; headless builds count placements only.
-  const treeGroup = headless ? Object.assign(new THREE.Group(), { userData: { shadowProxies: [] } }) : buildMatureTrees({}, trees);
+  const drawn = landscape && !headless;
+  const treeGroup = drawn ? buildMatureTrees({}, trees) : Object.assign(new THREE.Group(), { userData: { shadowProxies: [] } });
   treeGroup.name = `${plan.id} trees`; treeGroup.userData.placements = trees.length; group.add(treeGroup);
-  const planting = planters.length && !headless ? buildPlanterPlanting(planters) : null; if (planting) group.add(planting);
+  const planting = planters.length && drawn ? buildPlanterPlanting(planters) : null; if (planting) group.add(planting);
+  group.userData.ready = Promise.all([treeGroup.userData.ready, planting?.userData.ready]);
   group.userData.plantingModules = planters.length;
   group.userData.shadowProxies = treeGroup.userData.shadowProxies;
   group.userData.lanterns = lanterns;
@@ -501,7 +543,8 @@ export function buildCityKit(plan, { groundAt, ground }) {
   let disposed = false;
   group.userData.dispose = () => {
     if (disposed) return; disposed = true;
-    treeGroup.userData.cancelLandscapeLoad?.(); planting?.userData.cancelLandscapeLoad?.();
+    disposeLandscape([treeGroup, planting]);
+    treeGroup.userData.shadowProxies.length = 0;
     for (const geometry of geometries) geometry.dispose();
     for (const lantern of lanterns.values()) lantern.userData.dispose();
     group.userData.tower?.userData.dispose();

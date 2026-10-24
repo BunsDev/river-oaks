@@ -32,14 +32,14 @@ Coordinates use the Commons recipe frame: x is metres east of the District edge,
 | Heights Boulevard | `heights-boulevard-north`, `heights-boulevard-south` (1929) | x 364–422.5 | Two carriageways either side of an esplanade with lawn panels, oaks and benches, and frontage shops |
 | Heights Hall | authored | x 406–420.5, y −7.5 to 7.5 | A brick hall with a 26.5 m clock tower that closes the view down Nineteenth Street |
 
-The seven plans hold 1,321 pieces, 176 building shells and 521 solids, at about 783,488 authored triangles in total. Each plan stays within the kit budgets: at most 260,000 triangles, 28 materials, 160 solids and 70 draw calls per neighborhood. The client builds them in 21–62 meshes each, before trees and planting.
+The seven plans hold 1,321 pieces, 176 building shells and 521 solids, at about 783,488 authored triangles in total. Each plan stays within the kit budgets: at most 260,000 triangles, 28 materials, 160 solids and 70 draw calls per neighborhood. The client builds each in 21–62 meshes. Their 355 street trees and 329 planted beds draw once for all of Heights (see [Streaming](#streaming)).
 
 ## Gathering and activities
 
 - **Icehouse table.** A two-chair table (`chess-icehouse`) under the existing authoritative table-game rules: chess, checkers, Connect Four, reversi and morris. Sitting, invitations, moves, checkpoints and departure rules are the existing server authority.
 - **Heights Bandstand.** The landmark on the green. Its stage is solid, so it blocks bodies and low flight, as the water tower's legs do.
 - **Places to linger.** The lawn and greenway benches, the picnic grove, the market stalls, the icehouse patio, the square's café tables and the esplanade benches.
-- **Arrival.** Crossing the footbridge announces Bayou Heights in the walking notice. Crossing back announces Bayou Market Commons. The Commons Lantern Walk status chip shows only on the Commons side of the bridge.
+- **Arrival.** The location label names Bayou Heights across the footbridge, so the walking notice says "Entering Bayou Heights". Crossing back says "Entering Bayou Market Commons". The Commons Lantern Walk status chip shows only on the Commons side of the bridge.
 
 ## Movement, authority and the manifest
 
@@ -59,6 +59,26 @@ The world manifest partitions the original `east-garden-reserve` into:
 
 Their union is the original reserve exactly, so nothing grows or overlaps, and adjacency stays reciprocal. Loading checks the location's revision, bounds, identity transform and entry against the layout.
 
+## Streaming
+
+The client streams Heights as its own location (`preview/src/heights-stream.js`, built on the #623 chunk stream), only for `bayou-heights-1`. The Commons streams separately, presented with its bayou opened for the bridge.
+
+- **Parts.** Heights streams in eight parts:
+  - Each of the seven neighborhoods, bounded by its plan site.
+  - One shared part over the whole location: the footbridge, bandstand and Heights Hall, plus every street tree and planted bed. Built once, the oak models (3.13 MiB for the three detail levels) and the planting models are cloned once rather than once per neighborhood.
+- **Ceiling.** The Commons' 16 MiB retained-geometry ceiling applies unchanged.
+  - Headless, the neighborhoods own 1.29–2.49 MiB each (12.95 MiB in all).
+  - The shared part holds the oak models, about 2.4 MiB of planting, and the instances.
+  - Heights is therefore larger than one ceiling. Deep inside it, neighborhoods the camera cannot see stream out; at Nineteenth and Yale, that is one or two behind the camera.
+  - At equal distance the shared part is kept first, then the neighborhood underfoot, then those in view within 150 m. Holding all of Heights at once would need a larger ceiling for this location, which is a separate decision.
+- **Loading.** Each part loads within 85 m of the player or of a camera that sees it, and unloads beyond 110 m. Batches draw only while their neighborhood is attached: trees and planting within 120 m, the kit's block-detail distance.
+  - From the District, Heights stays unloaded, including from the gateway looking down Market Street.
+  - From the Commons plaza looking east, the shared part and the greenway load before the footbridge.
+- **Gate and notices.**
+  - Stepping east onto the footbridge, or from presented ground onto a neighborhood that is still loading, waits for its presentation. Someone restored where Heights is not presented may still retreat west.
+  - The status line explains loading, a failed load with its automatic retry, and a stall.
+  - Server authority, collision and shared occupancy are unchanged; presentation gates only the local player's own steps.
+
 ## Checkpoints and rollback
 
 `server/district-heights-checkpoint-migration.js` runs first in the Redis recovery chain.
@@ -73,17 +93,19 @@ The district epoch still fences writers.
 
 ## Evidence and remaining acceptance
 
-- **Focused tests.** `preview/tests/bayou-heights.test.js` and `server/tests/bayou-heights.test.js`. They cover:
+- **Focused tests.** `preview/tests/bayou-heights.test.js`, `preview/tests/heights-stream.test.js`, `preview/tests/world-location-label.test.js` and `server/tests/bayou-heights.test.js`. They cover:
   - composition parity and exact detach;
   - the manifest partition;
   - locks;
   - a no-island flood fill;
   - the real walking controller from the District to Heights Hall and back;
+  - streaming in parts, the ceiling, view priority, the footbridge gate and release in the District;
+  - the location label across the footbridge;
   - refusals for water, building land, the reserve and creations;
   - the icehouse game;
   - every migration direction with standing, airborne and seated occupants;
   - Redis epoch fencing, which runs only with `REDIS_URL`.
-- **Browser journey.** `pnpm run test:experience bayou-heights`. Two clients walk from both District arrivals over the bridge, play at the icehouse table, reconnect in Heights and walk home.
+- **Browser journey.** `pnpm run test:experience bayou-heights`. Two clients walk from both District arrivals over the bridge, play at the icehouse table, reconnect in Heights and walk home. The journey checks that Heights streams in within its ceiling, with each part within its estimate, before the footbridge, and that walking home releases it.
 - **Records.** Measurements, captures and results for the exact revision tested are recorded in the [task ledger](../../superpowers/plans/2026-10-24-next-district-586.md).
 
-Human visual approval, physical-device performance, hosted multiplayer, resident routing across locations, streaming and unload (#623), and native Unreal equivalence remain separate acceptance.
+Human visual approval, physical-device performance, hosted multiplayer, resident routing across locations, browser texture and GPU memory, and native Unreal equivalence remain separate acceptance.

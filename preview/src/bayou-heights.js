@@ -1,73 +1,90 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { commonsBaseLayout } from '../../shared/bayou-heights.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
 import { RETRO } from './retro-palette.js';
-import { buildCityKit } from './city-kit/render.js';
-import { buildEastGardenCommons } from './east-garden-commons.js';
+import { buildCityKit, cityKitLandscape, disposeLandscape } from './city-kit/render.js';
+import { buildMatureTrees, buildPlanterPlanting } from './landscape-models.js';
 
-export { attachBayouHeights, detachBayouHeights } from './bayou-heights-world.js';
-
-// A neighborhood beyond this distance from the camera is not drawn at all; nearer,
-// the kit's own block detail and tree levels apply. The landmarks always draw.
-export const HEIGHTS_VISIBLE_METRES = 300;
-// Heights street trees, and their sun shadows, draw only within the kit's block-detail
-// distance. Each twelve-metre tree batch is a draw call at every distance, and from the
-// District the hundreds beyond it cost CPU-rendered clients most of their frame rate.
+// Heights street trees and planting, and their sun shadows, draw only within the kit's
+// block-detail distance. Each twelve-metre batch is a draw call at every distance, and from
+// the District the hundreds beyond it cost CPU-rendered clients most of their frame rate.
 export const HEIGHTS_TREE_METRES = KIT_CONVENTIONS.lod.detailMetres;
+// Planting draws in 12 m and 24 m batches (spatial-instances.js, procedural-plants.js);
+// only the fine grass flower stems span all of Heights, and they draw with the planting.
+const BATCH_RADIUS = 30;
+const headless = typeof document === 'undefined';
 const distanceToRect = ([w, s, e, n], east, north) => Math.hypot(Math.max(w - east, 0, east - e), Math.max(s - north, 0, north - n));
 const near = (mesh, position) => position.distanceTo(mesh.boundingSphere.center) - mesh.boundingSphere.radius < HEIGHTS_TREE_METRES;
 
 /**
- * Bayou Market Commons with the footbridge opening, plus Bayou Heights: its kit
- * neighborhoods (layout.heights.plans) and the authored footbridge, bandstand and
- * Heights Hall. The scene contract matches buildEastGardenCommons.
+ * One Bayou Heights neighborhood (a plan in layout.heights.plans), streamed as its own
+ * chunk by heights-stream.js. Its street trees and planting draw in buildHeightsLandscape.
  */
-export function buildBayouHeights(layout) {
-  const group = new THREE.Group(); group.name = 'Bayou Heights';
-  const { heights, ground } = layout;
-  const commons = buildEastGardenCommons({ ...commonsBaseLayout(layout), destination: layout.destination });
-  group.add(commons);
-  const parts = heights.plans.map(plan => {
-    const kit = buildCityKit(plan, { groundAt: () => ground, ground });
-    kit.name = `bayou-heights/${plan.id}`; group.add(kit);
-    return { kit, site: plan.site, trees: kit.getObjectByName(`${plan.id} trees`), proxies: new Set() };
-  });
+export function buildHeightsNeighborhood(layout, plan) {
+  const kit = buildCityKit(plan, { groundAt: () => layout.ground, ground: layout.ground, landscape: false });
+  kit.name = `bayou-heights/${plan.id}`;
+  return kit;
+}
+
+/**
+ * What the Heights neighborhoods share, streamed as one chunk: the authored footbridge,
+ * bandstand and Heights Hall, and every street tree and planted bed. Built once, the
+ * tree and planting models are cloned once rather than in each neighborhood. A tree or
+ * planting batch draws only while its neighborhood does, and trees only near the camera.
+ */
+export function buildHeightsLandscape(layout) {
+  const group = new THREE.Group(); group.name = 'bayou-heights/landscape';
+  const { heights, ground } = layout, trees = [], planters = [];
+  for (const plan of heights.plans) {
+    const placements = cityKitLandscape(plan, { groundAt: () => ground, ground });
+    trees.push(...placements.trees); planters.push(...placements.planters);
+  }
+  // As in the kit, headless builds (Node tests) load no models and count placements only.
+  const treeGroup = headless ? Object.assign(new THREE.Group(), { userData: { shadowProxies: [] } }) : buildMatureTrees({}, trees);
+  treeGroup.name = 'bayou-heights trees'; treeGroup.userData.placements = trees.length; group.add(treeGroup);
+  const planting = planters.length && !headless ? buildPlanterPlanting(planters) : new THREE.Group();
+  planting.name = 'bayou-heights planting'; group.add(planting);
   const landmarks = buildLandmarks(layout); group.add(landmarks);
-  // main.js reads this list for every shadow pass. Tree batches, and their shadow
-  // proxies, arrive after loading, so update() rebuilds it: the Commons' proxies and
-  // the near Heights batches'.
+  group.userData.plantingModules = planters.length;
+  group.userData.ready = Promise.all([treeGroup.userData.ready, planting.userData.ready]);
+  // A batch belongs to the neighborhood whose site is nearest its centre; batches arrive after loading.
+  const owners = new Map(), ownerOf = mesh => {
+    if (!owners.has(mesh)) {
+      const { x, z } = mesh.boundingSphere.center;
+      owners.set(mesh, heights.plans.reduce((best, plan) => distanceToRect(plan.site, x, -z) < distanceToRect(best.site, x, -z) ? plan : best).id);
+    }
+    return owners.get(mesh);
+  };
+  // main.js reads this list for every shadow pass; update() rebuilds it from the near batches.
   const shadowProxies = [];
+  let proxies = new Set();
+  // `drawn` holds the ids of the neighborhoods attached now.
+  group.userData.update = (position, drawn) => {
+    shadowProxies.length = 0;
+    treeGroup.userData.update?.(position);
+    if (proxies.size !== treeGroup.userData.shadowProxies.length) proxies = new Set(treeGroup.userData.shadowProxies);
+    // The trees have just chosen each batch's level; far batches, and unattached neighborhoods', are not drawn.
+    for (const mesh of treeGroup.children) {
+      if (!mesh.boundingSphere) continue;
+      const shown = drawn.has(ownerOf(mesh)) && near(mesh, position);
+      if (proxies.has(mesh)) { if (shown) shadowProxies.push(mesh); }
+      else if (mesh.visible && !shown) mesh.visible = false;
+    }
+    for (const mesh of planting.children) if (mesh.boundingSphere?.radius < BATCH_RADIUS) mesh.visible = drawn.has(ownerOf(mesh)) && near(mesh, position);
+  };
+  group.userData.shadowProxies = shadowProxies;
   let disposed = false;
   group.userData.dispose = () => {
     if (disposed) return; disposed = true;
-    commons.userData.dispose(); for (const { kit } of parts) kit.userData.dispose(); landmarks.userData.dispose(); group.clear();
+    disposeLandscape([treeGroup, planting]);
+    treeGroup.userData.shadowProxies.length = 0; shadowProxies.length = 0; owners.clear();
+    landmarks.userData.dispose(); group.clear();
   };
-  group.userData.update = position => {
-    commons.userData.update(position);
-    shadowProxies.length = 0; shadowProxies.push(...commons.userData.shadowProxies);
-    for (const part of parts) {
-      part.kit.visible = distanceToRect(part.site, position.x, -position.z) < HEIGHTS_VISIBLE_METRES;
-      if (!part.kit.visible) continue;
-      part.kit.userData.update(position);
-      if (part.proxies.size !== part.kit.userData.shadowProxies.length) part.proxies = new Set(part.kit.userData.shadowProxies);
-      // The kit has just chosen each tree batch's level; far batches are not drawn.
-      for (const mesh of part.trees?.children ?? []) {
-        if (!mesh.boundingSphere) continue;
-        if (part.proxies.has(mesh)) { if (near(mesh, position)) shadowProxies.push(mesh); }
-        else if (mesh.visible && !near(mesh, position)) mesh.visible = false;
-      }
-    }
-  };
-  group.userData.shadowProxies = shadowProxies;
-  group.userData.setLanterns = (lit, complete) => commons.userData.setLanterns(lit, complete);
-  group.userData.lanterns = commons.userData.lanterns;
   group.userData.stats = () => {
-    const all = [commons.userData.stats(), ...parts.map(({ kit }) => kit.userData.stats())].filter(Boolean);
-    return { meshes: all.reduce((n, item) => n + item.meshes, 0), triangles: all.reduce((n, item) => n + item.triangles, 0),
-      materials: all.reduce((n, item) => n + item.materials, 0), neighborhoods: parts.length, drawn: parts.filter(({ kit }) => kit.visible).length };
+    let meshes = 0, triangles = 0;
+    group.traverse(item => { if (item.isMesh && item.visible) { meshes++; triangles += (item.geometry.index?.count ?? item.geometry.attributes.position.count) / 3 * (item.count ?? 1); } });
+    return { meshes, triangles: Math.round(triangles) };
   };
-  group.userData.layout = layout;
   return group;
 }
 

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "source_branch": "feat/neighborhood-584-586-20261022",
+  "source_head": "52379be69efd395d624fedd57eeee8e283850a62",
+  "source_state": "Uncommitted owner checkpoint; exact bytes identified below",
+  "provenance": "Original TypeSafe Place architecture; no external assets",
+  "files": [
+    {
+      "path": "shared/streetscape-kit.js",
+      "sha256": "f7d6730d114e375a4b27fcf08073388362b6ebffc5bb74b0a8116638a4c0bd6f"
+    },
+    {
+      "path": "preview/src/streetscape-kit.js",
+      "sha256": "01898619f4b50aeab7fd73328b708fe60be2777229743d34cc5c7f3f323e5b30"
+    },
+    {
+      "path": "preview/tests/streetscape-kit.test.js",
+      "sha256": "f461c1223313bc4a7bd0dbc406576d3448527b653bd0b7895115fd0441ccb248"
+    }
+  ]
+}

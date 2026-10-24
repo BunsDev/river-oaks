@@ -53,3 +53,11 @@ test('the Lantern Walk chip shows in the Commons and hides across the footbridge
   assert.equal(chip.hidden, false, 'the chip returns on the Commons side of the bridge');
   assert.equal(notice.textContent, '', 'the Commons welcome is not repeated');
 });
+
+test('the shared walking HUD can own arrival announcements without a second lantern notice', () => {
+  const {notice} = dom();
+  const client = createLanternWalkClient({announceArrival:false,
+    getLayout:()=>({edge:0,destination:{lanterns:[]}}),getPose:()=>({position:[20,0,0]}),
+    getSnapshot:()=>({lanterns:[],round:null}),getScene:()=>({userData:{setLanterns(){}}})});
+  client.update(); assert.equal(notice.textContent,'');
+});

@@ -6,6 +6,8 @@ import { registerGroundSurfaces, groundSurfaceHeight } from '../world-surface.js
 import { assertStudioBudget } from './limits.js';
 import { previewBuildingInteriorPlan } from './interior-plan.js';
 import { createInteriorLevelPreview, showInteriorPreview } from './interior-scene.js';
+import {compileNeighborhoodArchitecture} from '../../../shared/neighborhood/architecture.js';
+import {buildStreetscape} from '../streetscape-kit.js';
 
 // Viewport backdrop per resolved appearance; matches the --sage panel token.
 const CLEAR_COLORS={light:'#e8eeea',dark:'#111815'};
@@ -29,10 +31,13 @@ export function buildStudioWorld(region) {
     buildings:region.buildings.map(b=>({...b,center:[...b.center,terrainHeight(terrain,...b.center)]})),
     stores:[], walkSpawn:[...region.spawn,terrainHeight(terrain,...region.spawn)] };
 }
-export function createStudioScene(region, theme = 'light') {
+export function createStudioScene(region, theme = 'light', authoring = null) {
   if(isSpaceDocument(region))return createSpaceScene(region,theme);
   assertStudioBudget(region);
   const group = new THREE.Group(),items = new Map(), interiorViews = new Map(), world = buildStudioWorld(region);
+  const architecture = authoring && (authoring.recipe.architecture || authoring.placements.some(p=>p.architecture)) ? compileNeighborhoodArchitecture(authoring,{region}) : null;
+  const kitRoots=[];
+  if(architecture)world.collisionPolygons=architecture.collisionPolygons;
   const material = color => new THREE.MeshStandardMaterial({ color, roughness:.88 });
   const stone = material('#b9c8bf'), roof = material('#647b70'), bark = material('#887367'), leaves = material('#6f9976'), place = material('#c29a7c');
   const mesh = (geometry,mat,parent) => { const result=new THREE.Mesh(geometry,mat);result.castShadow=true;result.receiveShadow=true;parent.add(result);return result; };
@@ -55,6 +60,11 @@ export function createStudioScene(region, theme = 'light') {
   registerGroundSurfaces(world,surfaces);
   for(const b of region.buildings){
     const object=root(b.id,...b.center);object.rotation.y=b.yaw_deg*Math.PI/180;object.scale.set(b.size[0],b.size[2],b.size[1]);
+    const instance=architecture?.instances.find(item=>item.id===b.id);
+    if(instance){
+      const kit=buildStreetscape(instance.plan);kit.scale.set(1/b.size[0],1/b.size[2],1/b.size[1]);
+      object.position.y=instance.position[2];object.add(kit);kitRoots.push(kit);continue;
+    }
     // Color the top face directly; overlapping roof slabs cause shadow acne.
     const exterior=mesh(new THREE.BoxGeometry(1,1,1),[stone,stone,roof,stone,stone,stone],object);exterior.position.y=.5;
     if(b.interior?.generation){
@@ -64,6 +74,15 @@ export function createStudioScene(region, theme = 'light') {
       object.add(preview.group);interiorViews.set(b.id,{exterior,preview});
     }
   }
+  // Index only declared walking slabs. Decorative roofs and display plinths
+  // must not become ground merely because they share a material batch.
+  for(const surface of architecture?.supportSurfaces??[]){
+    const vertices=surface.ring.slice(0,-1).flatMap(([x,y])=>[x,surface.height,-y]);
+    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.setIndex([0,1,2,0,2,3]);
+    const slab=new THREE.Mesh(geometry,stone);slab.visible=false;group.add(slab);surfaces.push(slab);
+  }
+  if(architecture)registerGroundSurfaces(world,surfaces);
+  group.userData.disposeNeighborhood=()=>{for(const kit of kitRoots)kit.userData.dispose();};
   for(const t of region.trees){
     const object=root(t.id,...t.position);object.scale.set(t.crown_radius_m,t.height_m,t.crown_radius_m);
     mesh(new THREE.CylinderGeometry(.085,.12,.65,8),bark,object).position.y=.325;
@@ -95,11 +114,12 @@ export function createStudioScene(region, theme = 'light') {
     }
   }
   group.updateMatrixWorld(true);
-  return {group,items,world,setAppearance,interiorViews,
+  return {group,items,world,setAppearance,interiorViews,architecture,
     setInteriorView(view){activeInteriorView=view;applyInteriorView();},
     setWalk(enabled){walking=enabled;applyInteriorView();}};
 }
 export function disposeStudioScene(group) {
+  group.userData.disposeNeighborhood?.();
   const geometries=new Set(),materials=new Set();
   group.traverse(object=>{if(object.geometry)geometries.add(object.geometry);for(const m of [object.material].flat().filter(Boolean))materials.add(m);});
   for(const geometry of geometries)geometry.dispose();for(const material of materials)material.dispose();
