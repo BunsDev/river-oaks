@@ -1,0 +1,24 @@
+base total 30.2s idle 0.4% | main total 30.2s idle 0.4%
+-- inclusive % (main - base), app modules
+ -3.80  base 31.68 main 27.88  (anon) render-pipeline.js
+ -3.35  base 24.31 main 20.96  occlusion._renderOverride render-pipeline.js
+ -3.34  base 24.27 main 20.92  _renderOverride three_addons_postprocessing_GTAOPass__js.js
+ -3.03  base 26.36 main 23.33  render three_addons_postprocessing_GTAOPass__js.js
+ -3.02  base 76.71 main 73.68  render render-pipeline.js
+ -3.02  base 76.70 main 73.68  render three_addons_postprocessing_EffectComposer__js.js
+ -2.78  base 23.57 main 20.80  composeFrame render-pipeline.js
+ -2.09  base 15.31 main 13.22  withOcclusionSort occlusion-sort.js
+ -1.87  base  1.87 main  0.00  restRadius jevica-drape.js
+ -1.20  base 87.91 main 86.70  render main.js
+ +1.18  base  0.00 main  1.18  columnRadius jevica-drape.js
+ +0.86  base  1.95 main  2.81  update remote-players.js
+ +0.80  base  6.28 main  7.08  update player-avatar.js
+ +0.75  base  1.17 main  1.92  render Pass-BL36xUAL.js
+ +0.72  base  4.73 main  5.44  update jevica-costume.js
+ +0.71  base  4.64 main  5.35  update jevica-drape.js
+ +0.47  base  0.56 main  1.03  _renderPass three_addons_postprocessing_GTAOPass__js.js
+ -0.42  base 49.31 main 48.89  render three_addons_postprocessing_RenderPass__js.js
+ +0.42  base  0.92 main  1.35  render three_addons_postprocessing_UnrealBloomPass__js.js
+ +0.28  base  1.47 main  1.76  getVertexPosition skinned-vertex-sampler.js
+ +0.22  base  1.47 main  1.69  (anon) multiplayer-client.js
+ +0.22  base  1.40 main  1.62  receive multiplayer-client.js

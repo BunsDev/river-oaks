@@ -19,7 +19,7 @@ export function createResidentPortraits({ renderer, getHolder, size = PORTRAIT_S
   canvas.width = canvas.height = size;
   const context = canvas.getContext('2d'), image = context.createImageData(size, size);
   const head = new THREE.Vector3(), chest = new THREE.Vector3(), forward = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), quaternion = new THREE.Quaternion();
-  let pending = false, disposed = false;
+  let pending = false, disposed = false, paused = false, generation = 0;
 
   const bone = (root, pattern) => { let found = null; root.traverse(object => { if (!found && object.isBone && pattern.test(object.name)) found = object; }); return found; };
   const capture = holder => {
@@ -65,6 +65,13 @@ export function createResidentPortraits({ renderer, getHolder, size = PORTRAIT_S
     return canvas.toDataURL('image/webp', 0.9);
   };
 
+  const scheduleDrain = () => {
+    if (pending || paused || disposed || !queue.length) return;
+    pending = true;
+    const current = generation;
+    schedule(() => { if (current === generation && !paused && !disposed) drain(); });
+  };
+
   // One portrait per frame keeps the cost invisible next to the district.
   const drain = () => {
     pending = false;
@@ -76,7 +83,7 @@ export function createResidentPortraits({ renderer, getHolder, size = PORTRAIT_S
     else {
       try { job.resolve(capture(holder)); } catch (error) { console.warn('Portrait failed', job.id, error); job.resolve(null); cache.delete(job.id); }
     }
-    if (queue.length) { pending = true; schedule(drain); }
+    scheduleDrain();
   };
 
   return {
@@ -84,9 +91,15 @@ export function createResidentPortraits({ renderer, getHolder, size = PORTRAIT_S
       if (disposed || !id) return Promise.resolve(null);
       if (!cache.has(id)) {
         cache.set(id, new Promise(resolve => queue.push({ id, resolve })));
-        if (!pending) { pending = true; schedule(drain); }
+        scheduleDrain();
       }
       return cache.get(id);
+    },
+    setPaused(value) {
+      if (paused === Boolean(value) || disposed) return;
+      if (value) target.dispose();
+      paused = Boolean(value); generation++; pending = false;
+      if (!paused) scheduleDrain();
     },
     forget(id) { cache.delete(id); },
     dispose() { disposed = true; queue.splice(0).forEach(job => job.resolve(null)); cache.clear(); target.dispose(); },

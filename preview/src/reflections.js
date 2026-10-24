@@ -18,13 +18,26 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
   const lastPosition = new THREE.Vector3(Infinity, Infinity, Infinity);
   const previousMaps = materials.map(material => material.envMap);
   let active = -1, face = 0, captureVersion = 0, version = 1, publishedVersion = 0;
-  let capturing = false, lastCapture = -Infinity, disposed = false;
+  let capturing = false, lastCapture = -Infinity, disposed = false, awaitingMainFrame = false;
   const stats = { captures: 0, resolution: 256, facesPerFrame: 1, failed: false };
   return {
     stats,
     invalidate() { version++; },
+    releaseGraphics() {
+      targets.forEach(target => target.dispose());
+      filtered.forEach(target => target?.dispose()); filter.dispose();
+    },
+    resetGraphics() {
+      // None of the cached cube/PMREM pixels survive a context loss. Never
+      // publish a cube completed with faces from two different contexts.
+      capturing = false; face = 0; active = -1; publishedVersion = 0; version++;
+      stats.failed = false;
+      awaitingMainFrame = true;
+      materials.forEach((material, index) => { material.envMap = previousMaps[index]; });
+    },
+    mainFrameRendered() { awaitingMainFrame = false; },
     update(now, position) {
-      if (disposed || stats.failed) return;
+      if (disposed || stats.failed || awaitingMainFrame) return;
       if (!capturing) {
         const moved = position.distanceToSquared(lastPosition) > 16 * 16;
         if (version === publishedVersion && (!moved || now - lastCapture < 2000)) return;

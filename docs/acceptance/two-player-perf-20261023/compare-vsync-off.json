@@ -1,0 +1,159 @@
+{
+  "vsync": "off",
+  "heads": {
+    "base": [
+      "6ff47ba13762de25180b8e4b073b01662d7f9505"
+    ],
+    "candidate": [
+      "98ac7d7b3a5a8db5416d88c69905e13eb205bb84"
+    ]
+  },
+  "reports": {
+    "base": 2,
+    "candidate": 2
+  },
+  "rows": [
+    {
+      "workload": "desktop/1p",
+      "metric": "frameMeanMs",
+      "base": 10.855,
+      "candidate": 10.86,
+      "change": 0,
+      "budget": 0.1,
+      "decision": "within"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "cpuSubmissionP95Ms",
+      "base": 10.7,
+      "candidate": 10.85,
+      "change": 0.014,
+      "budget": 0.1,
+      "decision": "within"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "cpuSubmissionP50Ms",
+      "base": 8.75,
+      "candidate": 8.65,
+      "change": -0.011,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "frameP95Ms",
+      "base": 13.8,
+      "candidate": 14.85,
+      "change": 0.076,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "missedTwoRefreshes",
+      "base": 0,
+      "candidate": 0,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "drawCalls",
+      "base": 1638,
+      "candidate": 1638,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "geometries",
+      "base": 530,
+      "candidate": 530,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/1p",
+      "metric": "textures",
+      "base": 162,
+      "candidate": 162,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "frameMeanMs",
+      "base": 23.85,
+      "candidate": 25.06,
+      "change": 0.051,
+      "budget": 0.1,
+      "decision": "within"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "cpuSubmissionP95Ms",
+      "base": 38.45,
+      "candidate": 41.3,
+      "change": 0.074,
+      "budget": 0.1,
+      "decision": "within"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "cpuSubmissionP50Ms",
+      "base": 19.85,
+      "candidate": 20,
+      "change": 0.008,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "frameP95Ms",
+      "base": 45.4,
+      "candidate": 47.85,
+      "change": 0.054,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "missedTwoRefreshes",
+      "base": 0.077,
+      "candidate": 0.118,
+      "change": 0.533,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "drawCalls",
+      "base": 1707,
+      "candidate": 1700,
+      "change": -0.004,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "geometries",
+      "base": 546,
+      "candidate": 546,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/2p",
+      "metric": "textures",
+      "base": 166,
+      "candidate": 166,
+      "change": 0,
+      "decision": "informational"
+    },
+    {
+      "workload": "desktop/reconnect",
+      "metric": "reconnectMs",
+      "base": 1468.591,
+      "candidate": 1532.678,
+      "change": 0.044,
+      "budget": 0.2,
+      "decision": "within"
+    }
+  ],
+  "over": []
+}

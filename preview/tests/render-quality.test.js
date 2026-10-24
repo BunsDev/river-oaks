@@ -157,3 +157,59 @@ test('the default Settings control keeps Auto AO through moving-frame tails and 
     assert.equal(control.stats.tailShedding, false, 'receipts record that the tail rule was off');
   } finally { globalThis.document = previousDocument; }
 });
+
+// Storage is the production boundary: reconstructing the control simulates a
+// reload, and applying an explicit selection must override recovery policy.
+async function withStoredQuality(initial, run) {
+  const { createQualityControl } = await import('../src/render-quality.js');
+  const previousDocument = globalThis.document;
+  globalThis.document = { createElement: () => ({ dataset: {}, setAttribute() {}, append() {}, addEventListener() {} }) };
+  let stored = initial;
+  const storage = { getItem: () => stored, setItem: (key, value) => { assert.equal(key, 'river-oaks-graphics'); stored = value; } };
+  const create = () => createQualityControl({ storage, apply() {} });
+  try { await run(create, () => stored); } finally { globalThis.document = previousDocument; }
+}
+
+test('legacy graphics strings load and a recovery step survives reconstruction', async () => {
+  await withStoredQuality('sharp', (create, stored) => {
+    const control = create(); assert.equal(control.mode, 'sharp');
+    control.stepDown(); assert.equal(control.mode, 'auto');
+    assert.equal(JSON.parse(stored()).recoveryTier, 'auto');
+    assert.equal(create().mode, 'auto');
+  });
+});
+
+test('recovery steps stop at Smoothest and a later manual choice overrides them', async () => {
+  await withStoredQuality('auto', create => {
+    const control = create(); control.stepDown();
+    assert.equal(control.mode, 'smooth'); assert.equal(control.stats.occlusion, false);
+    control.stepDown(); assert.equal(create().mode, 'smooth');
+    control.select('sharp', true); assert.equal(control.mode, 'sharp'); assert.equal(create().mode, 'sharp');
+  });
+});
+
+test('malformed recovery storage falls back safely while valid legacy modes remain readable', async () => {
+  for (const [stored, expected] of [['smooth', 'smooth'], ['{bad', 'auto'], ['{"mode":"sharp","recoveryTier":"invalid"}', 'sharp']]) {
+    await withStoredQuality(stored, create => assert.equal(create().mode, expected));
+  }
+});
+
+test('resuming drops stale measurement windows without raising the current Auto scale', async () => {
+  await withStoredQuality('auto', create => {
+    const control = create(); feed(control, 33.3, 2);
+    const scale = control.stats.scale;
+    for (let index = 0; index < 44; index++) control.sample(33.3);
+    control.resetTime(); control.sample(33.3);
+    assert.equal(control.stats.scale, scale); assert.equal(control.stats.fps, 0);
+  });
+});
+
+test('recovery never raises a scale Auto already reduced, including across reload', async () => {
+  await withStoredQuality('auto', create => {
+    const control = create(); feed(control, 33.3, 8);
+    assert.equal(control.stats.scale, .6); assert.equal(control.stats.occlusion, false);
+    control.stepDown(); assert.equal(control.mode, 'smooth'); assert.equal(control.stats.scale, .6);
+    assert.equal(create().stats.scale, .6);
+    control.select('smooth', true); assert.equal(control.stats.scale, .75); assert.equal(create().stats.scale, .75);
+  });
+});
