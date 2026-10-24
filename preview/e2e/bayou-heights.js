@@ -31,7 +31,9 @@ async page => {
     await tab.goto(`${origin}/?motion-debug=1`);
     await tab.waitForFunction(revision=>window.__riverMultiplayer?.().connected
       && window.__riverMultiplayer().snapshot?.districtRevision===revision
-      && document.querySelector('#canvas-host')?.dataset.playerReady==='true',revision,{timeout:180000});
+      && document.querySelector('#canvas-host')?.dataset.playerReady==='true'
+      // The avatar can be ready while the district is still building; checks below read the composed world.
+      && document.querySelector('#loading')?.hidden===true,revision,{timeout:180000});
     // The walking HUD creates its notice after the world loads, so observe it once the player is ready.
     await tab.evaluate(()=>{const notice=document.querySelector('#walking-notice');if(!notice)throw new Error('The walking notice is missing');window.__heightsNotices=[];
       new MutationObserver(()=>{if(!notice.hidden&&notice.textContent)window.__heightsNotices.push(notice.textContent);}).observe(notice,{childList:true,characterData:true,subtree:true,attributes:true});});
