@@ -16,7 +16,8 @@ const env = { ...process.env };
 // ANGLE's default Direct3D 11 backend on Microsoft's software rasterizer.
 const software = process.env.RIVER_OAKS_DESKTOP_SOFTWARE === '1';
 const softwareFlags = software && process.platform === 'linux' ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : [];
-let vite;
+let vite, hmrProbe;
+const tempFiles = [];
 if (process.argv.includes('--dev')) {
   const socket=createSocket();
   await new Promise((resolve,reject)=>{socket.once('error',reject);socket.listen(0,'127.0.0.1',resolve);});
@@ -35,6 +36,11 @@ if (process.argv.includes('--dev')) {
       response.end(JSON.stringify({ error: 'Offline desktop fixture' }));
     });
   } };
+  // The hot-reload probe exists before Vite watches: a file created later is a
+  // new file to Vite, which can reload the whole page before the check imports it.
+  hmrProbe = `desktop-hmr-${process.pid}.css`;
+  tempFiles.push(join(root, 'preview', hmrProbe));
+  await writeFile(tempFiles.at(-1), ':root { --desktop-hmr-probe: before; }');
   vite = await createServer({ configFile: join(root, 'preview/vite.config.js'), plugins: [offlineBridge], server: { port: 0 } });
   await vite.listen();
   env.RIVER_OAKS_DEV_URL = `http://127.0.0.1:${vite.httpServer.address().port}/`;
@@ -58,12 +64,31 @@ const app = await electron.launch({ executablePath, args: [...(executablePath ? 
 // The main process's own lines (renderer recovery, load failures) otherwise
 // stay in Playwright's buffer and only surface on a launch failure.
 for (const stream of ['stdout', 'stderr']) app.process()[stream]?.on('data', chunk => process.stderr.write(`[electron] ${chunk}`));
-const errors = [], failedAssets = [], tempFiles = [];
+const errors = [], failedAssets = [];
 const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'hosted', software, checks: [] };
 function check(name) { report.checks.push(name); console.log(`✓ ${name}`); }
 try {
   const page = await app.firstWindow();
   console.log(`Desktop test window: ${report.mode}`);
+  // From the next load on (the reload below, crash recovery), a failure report
+  // records what closed each dialog and every town state change since that load.
+  await page.addInitScript(() => {
+    const trail = window.__desktopTrail = [];
+    const note = (type, detail) => trail.push({ t: Math.round(performance.now()), type, ...detail });
+    const close = HTMLDialogElement.prototype.close;
+    HTMLDialogElement.prototype.close = function (...args) {
+      note('dialog close', { id: this.id, from: new Error().stack.split('\n').slice(2, 6).map(line => line.trim()).join(' | ') });
+      return close.apply(this, args);
+    };
+    const watch = () => {
+      const host = document.querySelector('#canvas-host');
+      if (!host) { setTimeout(watch, 50); return; }
+      let state;
+      const changed = () => { if (host.dataset.multiplayer !== state) note('town', { state: state = host.dataset.multiplayer }); };
+      changed(); new MutationObserver(changed).observe(host, { attributes: true, attributeFilter: ['data-multiplayer'] });
+    };
+    watch();
+  });
   page.setDefaultTimeout(120000);
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => {
@@ -291,13 +316,9 @@ try {
   assert.equal(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMinimized()), false);
   check('native minimize and restore');
   if (vite) {
-    const probe = `desktop-hmr-${process.pid}.css`;
-    const file = join(root, 'preview', probe);
-    tempFiles.push(file);
-    await writeFile(file, ':root { --desktop-hmr-probe: before; }');
-    await page.evaluate(path => import(path), `/${probe}`);
+    await page.evaluate(path => import(path), `/${hmrProbe}`);
     await page.waitForFunction(() => getComputedStyle(document.documentElement).getPropertyValue('--desktop-hmr-probe').trim() === 'before');
-    await writeFile(file, ':root { --desktop-hmr-probe: after; }');
+    await writeFile(join(root, 'preview', hmrProbe), ':root { --desktop-hmr-probe: after; }');
     await page.waitForFunction(() => getComputedStyle(document.documentElement).getPropertyValue('--desktop-hmr-probe').trim() === 'after');
     check('live CSS edits hot reload in the desktop window');
   }
@@ -340,6 +361,7 @@ try {
   const failedPage=await app.firstWindow();
   report.failureUI=await failedPage.evaluate(()=>({position:document.querySelector('#walking-hud')?.dataset.position,body:document.body.className,places:document.querySelector('#explore-section')?.textContent,walking:document.querySelector('#walking-hud')?.textContent})).catch(()=>null);
   await failedPage.screenshot({path:join(root,`output/playwright/desktop-${report.mode}-failure.png`)}).catch(()=>{});
+  report.failureTrail = await failedPage.evaluate(() => ({ now: Math.round(performance.now()), events: window.__desktopTrail ?? null })).catch(() => null);
   throw error;
 } finally {
   await mkdir(join(root, 'data/reports'), { recursive: true });
