@@ -77,6 +77,9 @@ async page => {
   await ready(page, 'river-oaks');
   if (await page.locator('#panel-toggle').getAttribute('aria-expanded') === 'false') await page.locator('#panel-toggle').click();
   await openHudSpace(page, 'explore-section');
+  // Publishing is folded under its own disclosure in the Worlds panel (#608).
+  await page.locator('.world-portal-publish').waitFor({ state: 'visible' });
+  if (!await page.locator('.world-portal-publish').evaluate(node => node.open)) await page.locator('.world-portal-publish > summary').click();
   await page.locator('.world-portal-form input[name=title]').fill('Harbour Café');
   await page.locator('.world-portal-form input[name=id]').fill(worldId);
   await page.locator('.world-portal-form input[name=region]').setInputFiles({ name: 'cafe-pilot-region.json', mimeType: 'application/json', buffer: fixture });
