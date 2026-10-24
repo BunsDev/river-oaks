@@ -1,0 +1,70 @@
+{
+  "createdAt": "2026-10-18T07:18:03.246Z",
+  "status": "passed",
+  "modes": [
+    "development-publish"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "creator-approved-cafe",
+      "status": "passed",
+      "seconds": 223.214,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The editor shows the approved Corner Café revision on the restaurant building",
+          "Only reviewed revisions are offered",
+          "The server resolved the reviewed revision from its own record",
+          "The Café world asks for protocol 4",
+          "Both clients receive the identical approved plan",
+          "A guest cannot publish the Café",
+          "An older client gets Refresh, not a guessed fallback",
+          "The same older client still joins the original district",
+          "The owner walks through the Café door and both clients agree on the level",
+          "The owner reaches seating on the Café floor",
+          "The owner reaches service on the Café floor",
+          "The owner reaches preparation on the Café floor",
+          "The guest sees the owner inside the Café",
+          "The guest reconnects where they stood on the Café floor",
+          "The guest walks out of the Café to its arrival",
+          "The owner rolls back with both visitors disconnected: {\"status\":200,\"body\":{\"ok\":true,\"world\":{\"id\":\"harbour-cafe\",\"title\":\"Harbour Café\",\"description\":\"\",\"template\":\"region-v1\",\"ownerId\":\"dev-6a1921c281d4\",\"createdAt\":1792307897877,\"regionSha256\":\"a541bcc8d5648561021f29690493a5aad8470853b61a552714788ab8b22c91ef\",\"revision\":2,\"updatedAt\":1792308080875},\"disconnectedPlayers\":2,\"clearedWishes\":0}}",
+          "After rollback the region has no approved plan",
+          "Nobody is left on the replaced Café floor",
+          "No page errors: "
+        ],
+        "captures": [
+          "output/playwright/cafe-420-older-client-district.png",
+          "output/playwright/cafe-420-owner-arrival.png",
+          "output/playwright/cafe-420-owner-terrace.png",
+          "output/playwright/cafe-420-owner-seating.png",
+          "output/playwright/cafe-420-owner-service.png",
+          "output/playwright/cafe-420-owner-preparation.png",
+          "output/playwright/cafe-420-guest-sees-owner.png",
+          "output/playwright/cafe-420-guest-departed.png",
+          "output/playwright/cafe-420-owner-after-rollback.png"
+        ],
+        "plan": {
+          "approvedSha256": "5a00bb0416bec8bf2d9d4eebee79247eb10cebd8283961dec0a6d89e38da4e53",
+          "source": {
+            "id": "corner-cafe",
+            "revision": 1,
+            "name": "Corner Café",
+            "documentSha256": "ab210ecbd57ea7bfb00fb549832b3f33e05aa36d19c757b56bc88f166f6ad5ef",
+            "assetsSha256": "615f2391fdbb92199366c25bb9b2b760091d9fea0c1624cd56a200bca1349588",
+            "profile": {
+              "templateId": "cafe",
+              "profileVersion": 1
+            }
+          },
+          "door": [
+            0,
+            -12
+          ]
+        }
+      }
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+}

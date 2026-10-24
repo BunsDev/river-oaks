@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "bounds_m": [-60, -60, 60, 60],
+  "terrain": { "width": 5, "height": 5, "heights_m": [0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0] },
+  "spawn": [0, -32],
+  "roads": [
+    { "id": "harbour-street", "name": "Harbour Street", "kind": "residential", "width_m": 8.4, "points": [[-50, -24], [50, -24]] },
+    { "id": "garden-walk", "name": "Garden Walk", "kind": "footway", "width_m": 3, "points": [[-30, -20], [-30, 40]] }
+  ],
+  "buildings": [
+    { "id": "corner-cafe", "center": [0, -5], "size": [18, 14, 6], "yaw_deg": 0, "kind": "retail",
+      "interior": { "name": "Corner Café", "category": "restaurant", "entrance": "south",
+        "space": { "id": "corner-cafe", "revision": 1, "sha256": "ab210ecbd57ea7bfb00fb549832b3f33e05aa36d19c757b56bc88f166f6ad5ef" } } },
+    { "id": "gallery-hall", "center": [28, -5], "size": [16, 14, 7], "yaw_deg": 0, "kind": "retail",
+      "interior": { "name": "Harbour Gallery", "category": "art", "entrance": "south" } }
+  ],
+  "trees": [
+    { "id": "plane-tree", "position": [-14, -18], "height_m": 9, "crown_radius_m": 3.5 }
+  ],
+  "places": [
+    { "id": "harbour-steps", "name": "Harbour Steps", "position": [0, -40] },
+    { "id": "east-corner", "name": "East Corner", "position": [40, -40] },
+    { "id": "west-corner", "name": "West Corner", "position": [-40, -40] },
+    { "id": "garden-end", "name": "Garden End", "position": [-30, 44] }
+  ]
+}

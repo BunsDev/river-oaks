@@ -4,7 +4,7 @@ import { createWorldPolicyUI } from './world-policy-ui.js';
 import { createCrimeUI } from './crime-ui.js';
 import { validTownSnapshot } from './town-snapshot.js';
 import './multiplayer.css';
-import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, worldIdFromSearch } from './world-contract.js';
+import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, supportsWorldProtocol, ticketProtocol, worldIdFromSearch } from './world-contract.js';
 import { createSocialUI } from './social-ui.js';
 import { createGroupsUI } from './groups-ui.js';
 import { createWorkplaceUI } from './workplace-ui.js';
@@ -210,11 +210,13 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     if(!session.authenticated){identity=null;return 'signed-out';}
     identity=session.user;csrfToken=session.csrfToken;
     const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});if(stopped)return null;moderator=access.moderator;
-    if((access.worldId??DEFAULT_WORLD_ID)!==worldId || (access.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){
+    // Ask for the protocol this world's ticket names, so an older server or world keeps protocol 3.
+    const protocol=ticketProtocol(access.protocolVersion);
+    if((access.worldId??DEFAULT_WORLD_ID)!==worldId || protocol===null){
       const error=new Error(IMPROVED.status);error.status=426;throw error;
     }
     const url=new URL('/multiplayer',location.href);url.protocol=location.protocol==='https:'?'wss:':'ws:';url.searchParams.set('ticket',access.ticket);
-    url.searchParams.set('world',worldId);url.searchParams.set('protocol',String(WORLD_PROTOCOL_VERSION));
+    url.searchParams.set('world',worldId);url.searchParams.set('protocol',String(protocol));
     // A fresh socket for a hand-over names the connection it continues, so voice can follow.
     if(typeof continues==='string'&&continues)url.searchParams.set('continues',continues);
     return url;
@@ -271,7 +273,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   }
   function receive(ws,data,deadline){
     if(!validTownSnapshot(data,selfId)){notice.textContent='A town update could not be read.';ws.close(4002,'Invalid town snapshot');return;}
-    if((data.worldId??DEFAULT_WORLD_ID)!==worldId || (data.protocolVersion??WORLD_PROTOCOL_VERSION)!==WORLD_PROTOCOL_VERSION){ws.close(4000,'World version changed');return;}
+    if((data.worldId??DEFAULT_WORLD_ID)!==worldId || !supportsWorldProtocol(data.protocolVersion??WORLD_PROTOCOL_VERSION)){ws.close(4000,'World version changed');return;}
     if(getRegionSha256() && data.regionSha256 && data.regionSha256!==getRegionSha256()){reloadRegion();return;}
     // The default district's revision (#507): the town and this page must draw the same campus or garage.
     const loadedDistrict=getDistrictRevision();
