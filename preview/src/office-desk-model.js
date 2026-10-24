@@ -2,12 +2,12 @@ import { emptyDesk, validDeskTask, DESK_LIMITS } from './office-desk-contract.js
 /** Scoped editor state; all persistence and authority stay behind request(). */
 export function createDeskModel({request,account,scope=()=> 'private',id=()=>crypto.randomUUID(),operationId=()=>crypto.randomUUID(),onChange=()=>{}}){
  const context=()=>JSON.stringify([account(),scope()]);
- let desk=emptyDesk(),task=null,dirty=false,status='idle',error=null,epoch=0,edits=0,pending=null,outstanding=null,owner=context();
+ let desk=emptyDesk(),task=null,dirty=false,status='idle',error=null,epoch=0,edits=0,pending=null,outstanding=null,unconfirmed=false,owner=context();
  const emit=()=>onChange();
  const current=(token,user)=>token===epoch&&user===context()&&owner===user;
- function reset(){epoch++;owner=context();desk=emptyDesk();task=null;dirty=false;error=null;status='idle';pending=null;outstanding=null;edits=0;emit();}
+ function reset(){epoch++;owner=context();desk=emptyDesk();task=null;dirty=false;error=null;status='idle';pending=null;outstanding=null;unconfirmed=false;edits=0;emit();}
  const ensure=()=>{if(owner!==context())reset();};
- const state=()=>{ensure();return {desk:structuredClone(desk),task:task&&structuredClone(task),dirty,status,error,busy:Boolean(pending),retrying:Boolean(outstanding)};};
+ const state=()=>{ensure();return {desk:structuredClone(desk),task:task&&structuredClone(task),dirty,status,error,busy:Boolean(pending),retrying:Boolean(outstanding),unconfirmed:unconfirmed&&Boolean(outstanding)};};
  async function load({discard=false,preserveDraft=false}={}){
   ensure();if(pending)return false;if(dirty&&!discard&&!preserveDraft)return false;
   const token=epoch,user=owner,version=edits,priorVersion=desk.version,keep=preserveDraft&&dirty;status='loading';error=null;const marker={};pending=marker;emit();
@@ -19,14 +19,15 @@ export function createDeskModel({request,account,scope=()=> 'private',id=()=>cry
   finally{if(current(token,user)&&pending===marker){pending=null;emit();}}
  }
  async function perform(operation){
-  const token=epoch,user=owner,marker={};pending=marker;outstanding=operation;status=operation.action==='remove'?'removing':'saving';error=null;emit();
+  const token=epoch,user=owner,marker={};pending=marker;outstanding=operation;status=operation.action==='remove'?'removing':'saving';error=null;unconfirmed=false;emit();
   try{
    const r=await request(operation.action,structuredClone(operation.data));if(!current(token,user))return false;
    desk=r.desk;outstanding=null;
    if(operation.action==='remove'){task=structuredClone(desk.tasks.find(t=>t.id===desk.activeId)??null);dirty=false;}
    else if(operation.edits===edits){dirty=false;task=structuredClone(desk.tasks.find(t=>t.id===operation.data.task.id)??null);}
    status=dirty?'dirty':'saved';return !dirty;
-  }catch(e){if(current(token,user)){error=e.message;status='error';}return false;}
+  // A request that was sent but never answered may have been applied: its outcome is unknown.
+  }catch(e){if(current(token,user)){error=e.message;unconfirmed=Boolean(e.unconfirmed);status='error';}return false;}
   finally{if(current(token,user)&&pending===marker){pending=null;emit();}}
  }
  async function save(){
