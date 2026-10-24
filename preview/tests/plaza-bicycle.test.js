@@ -43,6 +43,7 @@ test('the nearest free slot in reach is offered, taken ones are skipped', () => 
 // (no ghost bike), and stepping off travels first, then hands the slot back.
 import * as THREE from 'three';
 import { createPlazaBicycle } from '../src/plaza-bicycle.js';
+import { stopHeldMovement } from '../src/held-movement.js';
 
 function harness() {
   const scene = new THREE.Group();
@@ -92,6 +93,18 @@ test('stepping off travels to a ground spot, then hands the slot back', async ()
   assert.equal(h.sent.at(-2).type, 'travel'); assert.equal(h.sent.at(-1).type, 'uncycle');
   assert.ok(h.bicycle.lastRideMeters > 2); assert.equal(h.bicycle.riding, false); assert.equal(h.bike.visible, false); assert.equal(h.bicycle.slotId, null);
   assert.equal(h.bicycle.prompt().kind, 'take-bike', 'back on foot beside the rack');
+});
+
+test('background release brakes the mounted bicycle until a fresh pedal input', async () => {
+  const h = harness(); await h.bicycle.take();
+  const ride = h.walking.mounted;
+  for (let i = 0; i < 20; i++) ride.step({ forward: 1 }, 1 / 60);
+  stopHeldMovement(null, null, ride);
+  const position = h.bike.position.toArray();
+  for (let i = 0; i < 20; i++) ride.step({}, 1 / 60);
+  assert.deepEqual(h.bike.position.toArray(), position);
+  for (let i = 0; i < 20; i++) ride.step({ forward: 1 }, 1 / 60);
+  assert.notDeepEqual(h.bike.position.toArray(), position);
 });
 
 test('G ignores typing in a field and acts only when a bike is in play', async () => {
