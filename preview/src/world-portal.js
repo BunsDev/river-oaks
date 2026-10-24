@@ -1,5 +1,6 @@
 import { DEFAULT_WORLD_ID, validateWorldId } from './world-contract.js';
 import { REGION_DRAFT_STORAGE_KEY } from './region-draft.js';
+import { approvedSpaceRefusal } from './approved-spaces.js';
 import './world-portal.css';
 
 const element=(tag,text,className)=>{const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node;};
@@ -45,7 +46,8 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
   const restoreVersion=element('button','Load version into editor');restoreVersion.type='button';restoreVersion.hidden=true;
   revisionPanel.append(revisionTitle,revisionNote,revisionStatus,saveRevision,applyRevision,discardRevision,versionLabel,restoreVersion);
   section.append(heading,intro,status,list);if(creationToolsEnabled)section.append(revisionPanel,publishBox);host.prepend(section);
-  let worlds=[],loaded=false,loading=null,lastAttempt=0,lastLoaded=0;
+  // approvedSpaces: the server's directory says its catalog can place approved furnished spaces (#420).
+  let worlds=[],approvedSpaces=false,loaded=false,loading=null,lastAttempt=0,lastLoaded=0;
   let useDraft=false,revisionTarget=null;
   let editor=null,editorLoading=null;
   const parcelOwnerChoices=async()=>{
@@ -65,8 +67,9 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
     }catch{/* The owner can still leave a parcel unassigned or assign it to herself. */}
     return choices;
   };
-  const ensureEditor=()=>editor?Promise.resolve(editor):editorLoading??=import('./region-editor.js')
-    .then(({createRegionEditor})=>editor=createRegionEditor({getOwnerChoices:parcelOwnerChoices,onChange:()=>{
+  // The directory is read first so the editor knows whether to offer furnished layouts.
+  const ensureEditor=()=>editor?Promise.resolve(editor):editorLoading??=(loaded?Promise.resolve():load()).then(()=>import('./region-editor.js'))
+    .then(({createRegionEditor})=>editor=createRegionEditor({getOwnerChoices:parcelOwnerChoices,approvedSpacesEnabled:()=>approvedSpaces,onChange:()=>{
       if(revisionTarget){revisionStatus.textContent='Changes on this device are ready to save.';applyRevision.disabled=true;}
       else if(useDraft)regionSource.textContent='Your region draft is ready to publish.';
     }}))
@@ -100,7 +103,8 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
     if(!response.ok)throw new Error(result.error==='stale'?'This world changed. Reload its published region before saving.'
       :result.error==='draft_conflict'?'A newer revision draft was saved elsewhere. Download your JSON before reloading it.'
         :result.error==='invalid_draft'?'The region draft is invalid. Check its layout.'
-          :result.error==='incompatible_region'?'This layout conflicts with existing creations. Move or remove them before applying.':result.error??'Region draft is unavailable.');
+          :result.error==='incompatible_region'?'This layout conflicts with existing creations. Move or remove them before applying.'
+            :approvedSpaceRefusal(result.error,result.detail)??result.error??'Region draft is unavailable.');
     return result;
   };
   const editRevision=async world=>{
@@ -208,7 +212,7 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
         if(!response.ok || !response.headers.get('content-type')?.includes('application/json'))throw new Error('World directory unavailable.');
         const data=await response.json();
         if(!Array.isArray(data.worlds))throw new Error('World directory unavailable.');
-        worlds=data.worlds;loaded=true;lastLoaded=Date.now();render();status.textContent=`${worlds.length} ${worlds.length===1?'world':'worlds'} to visit`;
+        worlds=data.worlds;approvedSpaces=data.approvedSpaces===true;loaded=true;lastLoaded=Date.now();render();status.textContent=`${worlds.length} ${worlds.length===1?'world':'worlds'} to visit`;
       } catch {status.textContent='World directory unavailable right now.';}
     })().finally(()=>{loading=null;});
     return loading;
@@ -228,7 +232,8 @@ export function createWorldPortal({host,getCanPublish=()=>false,creationToolsEna
       } else if(useDraft)proposal.region=editor?.getRegion();
       const response=await fetch('/api/worlds',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrfToken},body:JSON.stringify(proposal)});
       const result=await response.json();
-      if(!response.ok)throw new Error(result.error==='world_exists'?'That world ID is already in use.':result.error==='world_limit'?'The world directory is full.':result.error==='invalid_region'?'The region package is invalid. Check the sample format.':result.error??'World could not be published.');
+      if(!response.ok)throw new Error(result.error==='world_exists'?'That world ID is already in use.':result.error==='world_limit'?'The world directory is full.':result.error==='invalid_region'?'The region package is invalid. Check the sample format.'
+        :approvedSpaceRefusal(result.error,result.detail)??result.error??'World could not be published.');
       worlds=[...worlds,result.world];render();status.textContent=`${result.world.title} is published. Open it from the list.`;form.reset();useDraft=false;updateRegionSource();
     } catch(error) {status.textContent=error.message||'World could not be published.';}
     finally {publish.disabled=false;}
