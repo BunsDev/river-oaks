@@ -14,6 +14,22 @@ function fixture(options) {
   return {scene,leaf,renderer,pipeline};
 }
 
+test('context loss releases pipeline GPU owners while retaining pass configuration and CPU noise', () => {
+  const { scene, leaf, pipeline } = fixture();
+  const noise = pipeline.occlusion.gtaoNoiseTexture.image.data, released = [];
+  pipeline.setRenderScale(.75); pipeline.setOcclusion(false);
+  for (const resource of [pipeline.occlusion.gtaoNoiseTexture, pipeline.occlusion.gtaoRenderTarget, pipeline.occlusion.gtaoMaterial])
+    resource.addEventListener('dispose', () => released.push(resource));
+  const outside = new THREE.Group(), inside = new THREE.Group(); scene.add(outside, inside);
+  pipeline.setOcclusionExteriorMask(scene, inside);
+  pipeline.releaseGraphics();
+  assert.equal(released.length, 3); assert.equal(pipeline.stats.renderScale, .75); assert.equal(pipeline.stats.ao, false);
+  assert.equal(pipeline.occlusion.gtaoNoiseTexture.image.data, noise);
+  pipeline.occlusion._overrideVisibility(); assert.equal(outside.visible, false); assert.equal(inside.visible, true);
+  pipeline.occlusion._restoreVisibility(); assert.equal(outside.visible, true);
+  pipeline.dispose(); leaf.geometry.dispose(); leaf.material.dispose();
+});
+
 test('the AO geometry pass reuses current scene transforms and shadow maps',()=>{
   const {scene,leaf,renderer,pipeline}=fixture();let geometryPasses=0;
   renderer.render=subject=>{
