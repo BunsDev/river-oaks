@@ -94,10 +94,25 @@ jobs:
       - name: Desktop unit tests
         id: unit
         run: pnpm run test:desktop
+      # The Electron zip the packager unpacks, kept per runner and exact Electron
+      # version so a warm run packages without github.com. Either way the zip is
+      # checked against the installed electron's checksums.json (package-options.js).
+      - name: Electron version
+        id: electron
+        run: echo "version=$(node -p "require('./package.json').devDependencies.electron")" >> "$GITHUB_OUTPUT"
+      - name: Electron download cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/electron-cache
+          key: electron-${{ runner.os }}-${{ runner.arch }}-${{ steps.electron.outputs.version }}
       # The later stages run even when an earlier one fails, so each platform
       # still reports its packaging, fuse and e2e evidence; the job stays red.
+      # @electron/get's debug lines record whether the zip came from the cache.
       - name: Package the desktop app (unsigned, host platform and arch)
         if: ${{ !cancelled() }}
+        env:
+          electron_config_cache: ${{ runner.temp }}/electron-cache
+          DEBUG: '@electron/get:*'
         run: pnpm run desktop:package
       - name: Fuse wire and asar contents match desktop/fuses.js and desktop/package-files.js
         if: ${{ !cancelled() }}
@@ -363,7 +378,18 @@ jobs:
           node-version: '24'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Electron version
+        id: electron
+        run: echo "version=$(node -p "require('./package.json').devDependencies.electron")" >> "$GITHUB_OUTPUT"
+      - name: Electron download cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/electron-cache
+          key: electron-${{ runner.os }}-${{ runner.arch }}-${{ steps.electron.outputs.version }}
       - run: pnpm run desktop:package
+        env:
+          electron_config_cache: ${{ runner.temp }}/electron-cache
+          DEBUG: '@electron/get:*'
       - run: pnpm run desktop:package:check
       - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:

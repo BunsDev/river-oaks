@@ -3,12 +3,15 @@ import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { packagerOptions, packagedBinary, ICON_BASE, ICON_PNG_SIZES } from '../package-options.js';
+import { createServer } from 'node:net';
+import { packagerOptions, packagedBinary, isTransientNetworkError, withNetworkRetry, ICON_BASE, ICON_PNG_SIZES } from '../package-options.js';
 import { APP_NAME, APP_BUNDLE_ID, APP_USER_MODEL_ID, LINUX_EXECUTABLE } from '../identity.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const pkg = { version: '9.9.9', devDependencies: { electron: '44.0.0' } };
-const options = platform => packagerOptions({ root, stage: '/stage', pkg, platform, arch: 'x64' });
+// The Electron that pnpm installed, so its checksums.json lists this version's zips.
+const installed = JSON.parse(await readFile(join(root, 'node_modules/electron/package.json'), 'utf8')).version;
+const pkg = { version: '9.9.9', devDependencies: { electron: installed } };
+const options = (platform, env = {}) => packagerOptions({ root, stage: '/stage', pkg, platform, arch: 'x64', env });
 const pngSize = buffer => {
   assert.equal(buffer.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', 'PNG signature');
   return [buffer.readUInt32BE(16), buffer.readUInt32BE(20)];
@@ -81,7 +84,58 @@ test('every platform shares the staged app, Electron version, asar and overwrite
   for (const platform of ['darwin', 'win32', 'linux']) {
     const built = await options(platform);
     assert.equal(built.dir, '/stage'); assert.equal(built.out, join(root, 'dist/desktop'));
-    assert.equal(built.electronVersion, '44.0.0'); assert.equal(built.platform, platform); assert.equal(built.arch, 'x64');
+    assert.equal(built.electronVersion, installed); assert.equal(built.platform, platform); assert.equal(built.arch, 'x64');
     assert.deepEqual([built.asar, built.overwrite, built.prune], [true, true, false]);
   }
+});
+
+test('packaging verifies the Electron zip against the lockfile-pinned checksums, not a SHASUMS256.txt fetched from github.com', async () => {
+  const bundled = JSON.parse(await readFile(join(root, 'node_modules/electron/checksums.json'), 'utf8'));
+  for (const platform of ['darwin', 'win32', 'linux']) {
+    const { download } = await options(platform);
+    assert.deepEqual(download.checksums, bundled, 'the checksums electron\'s own install.js verifies with');
+    assert.match(download.checksums[`electron-v${installed}-${platform}-x64.zip`], /^[0-9a-f]{64}$/);
+    assert.equal(download.cacheRoot, undefined, 'the default @electron/get cache unless one is configured');
+  }
+  assert.equal((await options('linux', { electron_config_cache: '/runner/electron' })).download.cacheRoot, '/runner/electron',
+    'the cache Electron\'s install.js also reads, so CI can restore it');
+});
+
+test('a package.json Electron the installed checksums do not cover is refused before anything downloads', async () => {
+  const stale = { ...pkg, devDependencies: { electron: '44.0.0' } };
+  await assert.rejects(packagerOptions({ root, stage: '/stage', pkg: stale, platform: 'linux', arch: 'x64', env: {} }),
+    /electron-v44\.0\.0-linux-x64\.zip.*pnpm install/s);
+});
+
+test('only network failures and server errors are retried, a bounded number of times', async () => {
+  const connectTimeout = Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('Connect Timeout Error'), { code: 'UND_ERR_CONNECT_TIMEOUT' }) });
+  const serverError = Object.assign(new Error('Response code 503'), { name: 'HTTPError', response: { status: 503 } });
+  const missing = Object.assign(new Error('Response code 404'), { name: 'HTTPError', response: { status: 404 } });
+  const mismatch = new Error('Generated checksum for "electron-v44.9.1-linux-x64.zip" did not match expected checksum.');
+  for (const error of [connectTimeout, serverError]) assert.equal(isTransientNetworkError(error), true, error.message);
+  for (const error of [missing, mismatch, new Error('fetch failed')]) assert.equal(isTransientNetworkError(error), false, error.message);
+
+  const waits = [], warnings = [];
+  let calls = 0;
+  const flaky = () => { calls++; if (calls < 3) throw connectTimeout; return 'packaged'; };
+  assert.equal(await withNetworkRetry(flaky, { delays: [10, 30], sleep: async ms => waits.push(ms), warn: line => warnings.push(line) }), 'packaged');
+  assert.deepEqual([calls, waits], [3, [10, 30]]);
+  assert.match(warnings[0], /UND_ERR_CONNECT_TIMEOUT.*retrying in 0\.01 s \(1\/2\)/);
+
+  calls = 0;
+  await assert.rejects(withNetworkRetry(() => { calls++; throw connectTimeout; }, { delays: [10, 30], sleep: async () => {}, warn() {} }), /fetch failed/);
+  assert.equal(calls, 3, 'gives up after the last delay');
+  calls = 0;
+  await assert.rejects(withNetworkRetry(() => { calls++; throw mismatch; }, { delays: [10, 30], sleep: async () => {}, warn() {} }), /did not match/);
+  assert.equal(calls, 1, 'a checksum mismatch is never retried');
+});
+
+test('a real dropped connection is recognised as transient', async () => {
+  const server = createServer(socket => socket.destroy());
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const error = await fetch(`http://127.0.0.1:${server.address().port}/electron.zip`).then(() => null, failure => failure);
+    assert.ok(error, 'the request failed');
+    assert.equal(isTransientNetworkError(error), true, `${error.message} (${error.cause?.code})`);
+  } finally { await new Promise(resolve => server.close(resolve)); }
 });
