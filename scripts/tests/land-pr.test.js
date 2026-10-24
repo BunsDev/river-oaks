@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { EventEmitter } from 'node:events';
 import { createQueue, gitHubApi, land } from '../land-pr.mjs';
 
 const scratch = t => { const dir = mkdtempSync(join(tmpdir(), 'river-land-')); t.after(() => rmSync(dir, { recursive: true, force: true })); return dir; };
@@ -113,9 +114,104 @@ test('a session waits for its turn before touching the pull request', async t =>
   other.enqueue(99);
   let waited = 0;
   const sleep = async () => { waited++; assert.equal(fake.calls.pull, 0, 'no GitHub call while waiting'); other.dequeue(99); };
-  const result = await land({ pr: 7, github: fake.github, guard: fake.guard, queue: mine, sleep });
+  const result = await land({ pr: 7, github: fake.github, guard: fake.guard, queue: mine, sleep, waitForQueue: (_id, ms) => sleep(ms) });
   assert.equal(waited, 1);
   assert.equal(result.status, 'merged');
+});
+
+test('a queued lander wakes on release without waiting for the fallback or touching GitHub early', async t => {
+  const dir = scratch(t), first = queueAt(dir, 2), mine = queueAt(dir, 1), fake = fakeGitHub();
+  assert.equal(typeof mine.waitForTurn, 'function');
+  first.enqueue(99);
+  let waiting;
+  const enteredWait = new Promise(done => { waiting = done; });
+  const pending = land({ pr: 7, github: fake.github, guard: fake.guard, queue: mine, sleep: instant,
+    waitForQueue: (id, ms) => { const wait = mine.waitForTurn(id, ms); waiting(); return wait; }, poll: 30000 });
+  await enteredWait;
+  assert.equal(fake.calls.pull, 0);
+  first.dequeue(99);
+  const timeout = setTimeout(() => assert.fail('queue release did not wake the lander'), 5000);
+  t.after(() => clearTimeout(timeout));
+  assert.equal((await pending).status, 'merged');
+  clearTimeout(timeout);
+  assert.equal(fake.calls.guard, 1);
+});
+
+test('release before the queue watcher is attached is observed immediately', async t => {
+  const dir = scratch(t), first = queueAt(dir, 2), mine = queueAt(dir, 1);
+  first.enqueue(99); mine.enqueue(7); first.dequeue(99);
+  await mine.waitForTurn(7, 30000);
+  assert.equal(mine.position(7), 0);
+});
+
+test('a failed queue watcher falls back to a timer without granting an early turn', async t => {
+  const dir = scratch(t), first = queueAt(dir, 2);
+  const mine = createQueue({ file: join(dir, 'queue.json'), lock: join(dir, 'queue.lock'), pid: 1, host: 'here', alive: () => true,
+    watchDirectory: () => { throw new Error('watch unavailable'); } });
+  first.enqueue(99); mine.enqueue(7);
+  await mine.waitForTurn(7, 10);
+  assert.equal(mine.position(7), 1, 'timeout only requests a fresh queue check');
+  first.dequeue(99);
+  await mine.waitForTurn(7, 30000);
+  assert.equal(mine.position(7), 0);
+});
+
+test('losing the owned queue entry during a wait fails closed', async t => {
+  const dir = scratch(t), first = queueAt(dir, 2), mine = queueAt(dir, 1);
+  first.enqueue(99); mine.enqueue(7);
+  const pending = mine.waitForTurn(7, 30000);
+  mine.dequeue(7);
+  await assert.rejects(pending, /no longer queued/);
+});
+
+test('a lost queue entry is rejected at the fallback even when notifications are unavailable', async t => {
+  const dir = scratch(t), first = queueAt(dir, 2);
+  const mine = createQueue({ file: join(dir, 'queue.json'), lock: join(dir, 'queue.lock'), pid: 1, host: 'here', alive: () => true,
+    watchDirectory: () => { throw new Error('watch unavailable'); } });
+  first.enqueue(99); mine.enqueue(7);
+  const pending = mine.waitForTurn(7, 10);
+  mine.dequeue(7);
+  await assert.rejects(pending, /no longer queued/);
+});
+
+test('a missing entry after the timer fallback cannot reach GitHub or the merge guard', async t => {
+  const dir = scratch(t), first = queueAt(dir, 2), mine = queueAt(dir, 1), fake = fakeGitHub();
+  first.enqueue(99);
+  await assert.rejects(land({ pr: 7, github: fake.github, guard: fake.guard, queue: mine, sleep: instant,
+    waitForQueue: async () => mine.dequeue(7) }), /no longer queued/);
+  assert.equal(fake.calls.pull, 0);
+  assert.equal(fake.calls.guard, 0);
+});
+
+test('other queue changes do not grant a turn before the preceding entry leaves', async t => {
+  const dir = scratch(t), first = queueAt(dir, 2), mine = queueAt(dir, 1), third = queueAt(dir, 3);
+  first.enqueue(99); mine.enqueue(7);
+  const pending = mine.waitForTurn(7, 20);
+  third.enqueue(8); third.dequeue(8);
+  await pending;
+  assert.equal(mine.position(7), 1);
+});
+
+test('an asynchronous watcher error retains the timer and closes its watcher', async t => {
+  const dir = scratch(t), first = queueAt(dir, 2);
+  let closed = false;
+  const mine = createQueue({ file: join(dir, 'queue.json'), lock: join(dir, 'queue.lock'), pid: 1, host: 'here', alive: () => true,
+    watchDirectory: () => { const watcher = new EventEmitter(); watcher.close = () => { closed = true; }; setImmediate(() => watcher.emit('error', new Error('watch failed'))); return watcher; } });
+  first.enqueue(99); mine.enqueue(7);
+  await mine.waitForTurn(7, 20);
+  assert.equal(closed, true);
+  assert.equal(mine.position(7), 1);
+});
+
+test('the fallback detects a dead preceding process without a filesystem notification', async t => {
+  const dir = scratch(t), first = queueAt(dir, 2);
+  let firstAlive = true;
+  const mine = queueAt(dir, 1, pid => pid !== 2 || firstAlive);
+  first.enqueue(99); mine.enqueue(7);
+  const pending = mine.waitForTurn(7, 10);
+  firstAlive = false;
+  await pending;
+  assert.equal(mine.position(7), 0);
 });
 
 // Remote branch deletion is opt-in, and even then only after the merge commit

@@ -12,7 +12,7 @@
     "dev": "vite --config preview/vite.config.js",
     "dev:landing": "vite --config landing-page/vite.config.js",
     "build": "vite build --config preview/vite.config.js && node scripts/build_landing_page.js && node scripts/check-access-entry.mjs",
-    "test": "node --test preview/tests/*.test.js",
+    "test": "node --test --test-concurrency=4 preview/tests/*.test.js",
     "test:experience": "node preview/e2e/experience-runner.js",
     "test:shared": "node preview/e2e/shared-runner.js",
     "test:security:e2e": "node scripts/browser-lock.mjs 'security browser tests' -- node --test preview/e2e/email-access.test.js preview/e2e/debug-readout.test.js",
@@ -89,7 +89,9 @@
     "preproject:archives": "node scripts/enforce-pnpm.mjs",
     "preregister": "node scripts/enforce-pnpm.mjs",
     "land": "node scripts/land-pr.mjs",
-    "preland": "node scripts/enforce-pnpm.mjs"
+    "preland": "node scripts/enforce-pnpm.mjs",
+    "destination": "node scripts/destination.mjs",
+    "predestination": "node scripts/enforce-pnpm.mjs"
   },
   "dependencies": {
     "@vercel/functions": "^3.10.1",
@@ -105,7 +107,7 @@
     "@electron/fuses": "2.1.3",
     "@electron/osx-sign": "2.7.1",
     "@electron/packager": "20.3.0",
-    "electron": "44.8.0",
+    "electron": "44.9.1",
     "electron-winstaller": "5.4.4",
     "playwright": "1.64.1",
     "vite": "8.3.4"

@@ -4,7 +4,7 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (15)
+## Active and blocked (20)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
@@ -13,8 +13,12 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-18-penthouse-only](2026-10-18-penthouse-only.md)<br>Penthouse-only office implementation and evidence | `penthouse-only-20261018-cody` | active | — | 2026-10-18 |
 | [2026-10-18-ipic-screening-next](2026-10-18-ipic-screening-next.md)<br>IPIC screening, next milestone: choose a film, watch together, return to the world (#497) | `ipic-journey-approved-film-502` | active | #556 | 2026-10-19 |
 | [2026-10-18-character-studio-creation-441](2026-10-18-character-studio-creation-441.md)<br>Character Studio #441: guided creation flow | `novice-trial-441-20261018` | active | — | 2026-10-18 |
+| [2026-10-18-character-studio-441-integration](2026-10-18-character-studio-441-integration.md)<br>Character Studio #441: remaining acceptance and human integration | `character-studio-441-integration` | blocked | #531 | 2026-10-18 |
+| [2026-10-18-character-fidelity-517](2026-10-18-character-fidelity-517.md)<br>Character fidelity (#517): realistic humans in the live renderer | `character-fidelity-517-20261018` | active | #545 | 2026-10-19 |
+| [2026-10-18-character-fidelity-517-review](2026-10-18-character-fidelity-517-review.md)<br>#517 supporting review | `character-fidelity-517-review` | blocked | #536 | 2026-10-18 |
 | [2026-10-15-studio-pilot-acceptance](2026-10-15-studio-pilot-acceptance.md)<br>Garden Office pilot acceptance (#417, parent #413) | `studio-acceptance-417-refresh-20261015` | blocked | — | 2026-10-18 |
 | [2026-10-15-screening-seek-lead](2026-10-15-screening-seek-lead.md)<br>Screening player: seek freezes under heavy load (parked) | `screening-seek-lead` | queued | — | 2026-10-18 |
+| [2026-10-15-desktop-installers](2026-10-15-desktop-installers.md)<br>Desktop installers and signing (#372), 2026-10-15 | `desktop-installers` | queued | #399 | 2026-10-15 |
 | [2026-10-15-character-studio](2026-10-15-character-studio.md)<br>Character Studio #440–#444 execution ledger | `cancelled-feat-character-studio-20261013` | active | #462 | 2026-10-16 |
 | [2026-10-15-character-studio](2026-10-15-character-studio.md)<br>Character Studio #440–#444 execution ledger | `character-studio-editor-20261015` | active | #461 | 2026-10-16 |
 | [2026-10-15-character-studio-persistence](2026-10-15-character-studio-persistence.md)<br>Character Studio persistence (#443) | `character-studio-persistence-20261015` | blocked | #464 | 2026-10-18 |
@@ -23,6 +27,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-14-gallery-vertical-route](2026-10-14-gallery-vertical-route.md)<br>Gallery vertical-route visual integration | `procedural-gallery-vertical-route` | queued | — | 2026-10-14 |
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-acceptance` | queued | — | 2026-10-15 |
 | [2026-10-13-procedural-interiors-implementation](2026-10-13-procedural-interiors-implementation.md)<br>Procedural interiors implementation ledger | `procedural-interior-human-acceptance` | queued | — | 2026-10-15 |
+| [2026-10-13-ios-device-feasibility](2026-10-13-ios-device-feasibility.md)<br>iOS physical-device feasibility — #285 | `ios-device-feasibility` | active | #309 | 2026-10-13 |
 
 ## Delivered, awaiting local retirement (11)
 
@@ -262,10 +267,25 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (74)
+## Historical, not in the register (90)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-23-police-pursuit-598](2026-10-23-police-pursuit-598.md)<br>Police pursuit #598 Implementation Plan | #598, #597 |
+| [2026-10-23-destination-slice-584-586](2026-10-23-destination-slice-584-586.md)<br>Destination slice: city kit, assembly and Bayou Market Commons (#584, #585, #586) | #584, #585, #586 |
+| [2026-10-22-world-expansion](2026-10-22-world-expansion.md)<br>World expansion execution ledger | #580, #588, #581 |
+| [2026-10-22-login-flicker](2026-10-22-login-flicker.md)<br>Login flicker and Character Studio in development | — |
+| [2026-10-22-dependabot-python-audit](2026-10-22-dependabot-python-audit.md)<br>Dependabot Python audit correction | #553, #554 |
+| [2026-10-22-dependabot-553-554](2026-10-22-dependabot-553-554.md)<br>Dependabot review and delivery, 2026-10-22 | #553, #554, #570 |
+| [2026-10-22-character-tier-identity-443](2026-10-22-character-tier-identity-443.md)<br>#443 viewer-local graphics tiers keep one replicated identity | #443, #517, #545 |
+| [2026-10-22-baseline-followup-580](2026-10-22-baseline-followup-580.md)<br>Issue 580 independent follow-up audit | #594, #600 |
+| [2026-10-20-incremental-archive-bundles](2026-10-20-incremental-archive-bundles.md)<br>Archive bundles that build on the default branch | — |
+| [2026-10-20-garment-bake-provenance-554](2026-10-20-garment-bake-provenance-554.md)<br>Garment bake provenance (#554) | #554, #545, #566 |
+| [2026-10-20-flight-edge](2026-10-20-flight-edge.md)<br>Flight building-edge snag | — |
+| [2026-10-20-desktop-platform-release](2026-10-20-desktop-platform-release.md)<br>Desktop platform release process and acceptance matrix (#373) | #373, #370, #379 |
+| [2026-10-19-ipic-auditorium-rotate](2026-10-19-ipic-auditorium-rotate.md)<br>IPIC auditorium: 3× along the building, turned to face lengthwise | — |
+| [2026-10-19-ios-fit-285](2026-10-19-ios-fit-285.md)<br>iPhone fit — #285 decision on current main (takeover) | #285, #284, #289 |
+| [2026-10-18-cartier-pilot-recovery](2026-10-18-cartier-pilot-recovery.md)<br>Cartier pilot recovery — 2026-10-18 | — |
 | [2026-10-15-voice-continuity](2026-10-15-voice-continuity.md)<br>Voice survives the socket hand-over (2026-10-15) | #447 |
 | [2026-10-15-username-minimum-letters](2026-10-15-username-minimum-letters.md)<br>Usernames need at least 4 letters (2026-10-15) | #451 |
 | [2026-10-15-safari-gltf-decoder-investigation](2026-10-15-safari-gltf-decoder-investigation.md)<br>Physical Safari glTF decoder investigation | #409, #401, #309 |
@@ -340,3 +360,4 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-09-20-native-residents](2026-09-20-native-residents.md)<br>Native resident integration plan | — |
 | [2026-09-20-district-experience-polish](2026-09-20-district-experience-polish.md)<br>Browser district experience polish | — |
 | [2026-09-17-river-oaks](2026-09-17-river-oaks.md)<br>River Oaks implementation ledger | — |
+| [_template-desktop-release](_template-desktop-release.md)<br>Desktop release ledger template | — |

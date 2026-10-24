@@ -1,0 +1,83 @@
+{
+  "createdAt": "2026-10-23T08:42:30.495Z",
+  "results": [
+    {
+      "name": "studio-template-journey",
+      "status": "passed",
+      "seconds": 75.737,
+      "result": {
+        "passed": true,
+        "templateId": "boutique",
+        "checks": [
+          "Atelier Boutique opens with its required routes passing",
+          "valid edit (display-table-two finish) is accepted with routes passing",
+          "blocking the fitting room one is refused with a finding",
+          "the refused move leaves checkout-plant where it was",
+          "undo restores the original finish",
+          "redo reapplies the edit",
+          "save keeps the boutique assessment context",
+          "reload reopens the saved draft and reassesses it",
+          "a stale tab cannot overwrite the newer saved draft",
+          "the other tab's save is kept",
+          "the saved layout assesses as passing",
+          "walked to all 4 required destinations and back to the arrival",
+          "returned to the editor after the walk"
+        ],
+        "tour": [
+          {
+            "target": "boutique-1",
+            "waypoints": 2,
+            "reached": [
+              0,
+              0
+            ],
+            "home": [
+              0,
+              -8.6
+            ],
+            "seconds": 10.952
+          },
+          {
+            "target": "boutique-2",
+            "waypoints": 4,
+            "reached": [
+              -4,
+              3
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 18.461
+          },
+          {
+            "target": "boutique-3",
+            "waypoints": 6,
+            "reached": [
+              4.1,
+              4.1
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 21.343
+          },
+          {
+            "target": "boutique-4",
+            "waypoints": 6,
+            "reached": [
+              6.5,
+              4
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 22.858
+          }
+        ]
+      }
+    }
+  ]
+}
