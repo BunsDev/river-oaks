@@ -1,3 +1,4 @@
+import { bindPageLifecycle } from './background-lifecycle.js';
 import { poseFor } from './crime-poses.js';
 import { selectedCharacterFor } from './character-selection-view.js';
 import { createCharacterMaterials } from './character-studio-materials.js';
@@ -80,11 +81,11 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     const release=()=>carriage.setControls({});
     button.addEventListener('pointerdown',event=>{event.preventDefault();button.setPointerCapture(event.pointerId);carriage.setControls(directions[button.dataset.drive]);});
     button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);
-    button.addEventListener('keydown',event=>{if(['Space','Enter'].includes(event.code)){event.preventDefault();carriage.setControls(directions[button.dataset.drive]);}});
+    button.addEventListener('keydown',event=>{if(!event.repeat&&['Space','Enter'].includes(event.code)){event.preventDefault();carriage.setControls(directions[button.dataset.drive]);}});
     button.addEventListener('keyup',event=>{if(['Space','Enter'].includes(event.code))release();});button.addEventListener('blur',release);
   }
   const holdRide=()=>{carriage.setControls({});carriage.pauseTour();};
-  window.addEventListener('blur',holdRide,{signal:lifetime.signal});document.addEventListener('visibilitychange',()=>{if(document.hidden)holdRide();},{signal:lifetime.signal});
+  bindPageLifecycle({ release: holdRide, signal: lifetime.signal });
   const rideButton=panel.querySelector('#player-ride');
   rideButton.addEventListener('click',async()=>{
     if(carriage.riding)status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';
