@@ -8,6 +8,7 @@
 | Native world and contracts | `unreal/Source/RiverOaks/`, `unreal/Config/`, `unreal/Content/Python/` | native automation; [Unreal](unreal.md), [engine acceptance](engine-acceptance.md) |
 | Desktop lifecycle, packaging, IPC | `desktop/` | `desktop/tests/`, `desktop/e2e.js`; [desktop](desktop.md) |
 | Public landing page | `landing-page/`, `scripts/build_landing_page.js` | `pnpm run build`; [landing page](../landing-page/README.md) |
+| Neighborhood kit, assembly and destinations | `shared/city-kit/`, `config/destinations/`, `scripts/destination.mjs`, `preview/src/city-kit/`, `shared/commons-destination.js`, `server/lantern-walk.js` | `preview/tests/city-kit.test.js`, `preview/tests/bayou-market-commons.test.js`, `server/tests/lantern-walk.test.js`; [city kit](city-kit.md), [Bayou Market Commons](level-design/expansion/bayou-market-commons.md) |
 | Tooling, checks and agent workflow | `scripts/agent.mjs`, `config/agent-workflow.json`, `.github/workflows/verify.yml` | `pnpm run test:agent`; [workflow](agent-workflow.md) |
 | Task register and safe retirement | `docs/project-management/`, `scripts/project-status.mjs`, `project-prune.mjs`, `project-ref-guard.mjs`, `merge-task-register.mjs`, `install-project-hooks.mjs`, `plans-index.mjs`, `.githooks/`, `.gitattributes`, `.agents/skills/` | `scripts/tests/` under `pnpm run test:agent`; [project workflow](project-management/workflow.md), plans index (`docs/superpowers/plans/README.md`) |
 
