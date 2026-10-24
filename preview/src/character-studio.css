@@ -55,3 +55,15 @@
  .cs-workspace{overflow-x:hidden}.cs-controls{padding:16px}.cs-stage{position:relative}
  .cs-header,.cs-footer{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
 }
+
+/* Safari's native controls ignore minimum sizes; keep the complete hit area
+   explicit while retaining native select and range keyboard semantics. */
+:root dialog.character-studio select{appearance:none;-webkit-appearance:none;height:44px;min-height:44px;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='m1 1 5 5 5-5' fill='none' stroke='%23263f3c' stroke-width='1.5'/%3E%3C/svg%3E");background-position:right 10px center;background-repeat:no-repeat}
+.character-studio .cs-rotation input[type=range]{appearance:none;-webkit-appearance:none;height:44px;min-height:44px;background:transparent;cursor:pointer}
+.cs-rotation input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:#93a99e}
+.cs-rotation input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:24px;height:24px;margin-top:-10px;border:2px solid var(--cs-paper);border-radius:50%;background:#315c55}
+.cs-rotation input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:#93a99e}
+.cs-rotation input[type=range]::-moz-range-thumb{width:20px;height:20px;border:2px solid var(--cs-paper);border-radius:50%;background:#315c55}
+
+/* Let preview height follow the controls instead of overlapping taller native controls. */
+.cs-stage .cs-preview{position:relative;inset:auto;flex:1;min-height:0}

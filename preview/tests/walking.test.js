@@ -1,8 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { WALK_SPEED, createWalkingEnvironment, createWalkingState, fastWalkFor, stepWalking } from '../src/walking.js';
+import { WALK_SPEED, createWalkingEnvironment, createWalkingState, fastWalkFor, stepWalking, stopWalking } from '../src/walking.js';
 
 const world = { bounds_m: [-50, -50, 50, 50], buildings: [{ center: [0, 0, 0], size: [10, 10, 8], yaw_deg: 0 }] };
+test('releasing a held walk cancels spring acceleration as well as velocity', () => {
+  const environment = createWalkingEnvironment({ ...world, buildings: [] });
+  const state = createWalkingState(environment, [0, 0, 0]);
+  stepWalking(state, environment, { forward: 1 }, 1 / 60);
+  assert.notEqual(state.acceleration[1], 0);
+  const position = [...state.position];
+  stopWalking(state);
+  for (let frame = 0; frame < 20; frame++) stepWalking(state, environment, {}, 1 / 60);
+  assert.deepEqual(state.position, position); assert.deepEqual(state.velocity, [0, 0]);
+  assert.deepEqual(state.acceleration, [0, 0]); assert.equal(state.speed, 0);
+  stepWalking(state, environment, { forward: 1 }, 1 / 60); assert.notDeepEqual(state.position, position);
+});
 test('walking stays on the ground and cannot cross a storefront wall', () => {
   const environment = createWalkingEnvironment(world);
   const state = createWalkingState(environment, [0, -8, 0]);

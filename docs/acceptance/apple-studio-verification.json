@@ -1,0 +1,298 @@
+{
+  "revision": "1c9c36c15bf189a33bf3d8bf9296d79ca7393dad",
+  "scope": "Local fixtures and repository checks; excludes physical iOS, human accessibility and production acceptance.",
+  "checks": [
+    {
+      "receipt": "full-first-receipt.json",
+      "profile": "full",
+      "status": "failed",
+      "results": [
+        {
+          "id": "dependency-audit",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 498
+        },
+        {
+          "id": "agent-tests",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 38782
+        },
+        {
+          "id": "preview-tests",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 373346
+        },
+        {
+          "id": "server-redis-tests",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 54272
+        },
+        {
+          "id": "desktop-tests",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 32756
+        },
+        {
+          "id": "build",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 14586
+        },
+        {
+          "id": "python-lint",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 2806
+        },
+        {
+          "id": "python-format",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 244
+        },
+        {
+          "id": "python-tests",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 63539
+        },
+        {
+          "id": "demo",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 1904
+        },
+        {
+          "id": "demo-verify",
+          "status": "passed",
+          "exitCode": 2,
+          "durationMs": 1201
+        },
+        {
+          "id": "secrets",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 62992
+        },
+        {
+          "id": "secret-history",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 16196
+        },
+        {
+          "id": "security-browser",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 19624
+        },
+        {
+          "id": "reflections",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 8072
+        },
+        {
+          "id": "experience",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 720369
+        },
+        {
+          "id": "shared",
+          "status": "failed",
+          "exitCode": 1,
+          "durationMs": 1748270
+        },
+        {
+          "id": "ipic-screening",
+          "status": "not_run"
+        }
+      ]
+    },
+    {
+      "receipt": "core-first-receipt.json",
+      "profile": "core",
+      "status": "failed",
+      "results": [
+        {
+          "id": "agent-tests",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 74218
+        },
+        {
+          "id": "preview-tests",
+          "status": "failed",
+          "exitCode": 1,
+          "durationMs": 567039
+        },
+        {
+          "id": "server-tests",
+          "status": "not_run"
+        },
+        {
+          "id": "desktop-tests",
+          "status": "not_run"
+        },
+        {
+          "id": "build",
+          "status": "not_run"
+        },
+        {
+          "id": "python-lint",
+          "status": "not_run"
+        },
+        {
+          "id": "python-format",
+          "status": "not_run"
+        },
+        {
+          "id": "python-tests",
+          "status": "not_run"
+        },
+        {
+          "id": "demo",
+          "status": "not_run"
+        },
+        {
+          "id": "demo-verify",
+          "status": "not_run"
+        },
+        {
+          "id": "secrets",
+          "status": "not_run"
+        }
+      ]
+    },
+    {
+      "receipt": "core-bounded-receipt.json",
+      "profile": "core-bounded",
+      "status": "passed",
+      "results": [
+        {
+          "id": "agent-tests",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 45814
+        },
+        {
+          "id": "preview-tests",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 251203
+        },
+        {
+          "id": "server-tests",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 42155
+        },
+        {
+          "id": "desktop-tests",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 10948
+        },
+        {
+          "id": "build",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 3833
+        },
+        {
+          "id": "python-lint",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 168
+        },
+        {
+          "id": "python-format",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 55
+        },
+        {
+          "id": "python-tests",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 5812
+        },
+        {
+          "id": "demo",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 260
+        },
+        {
+          "id": "demo-verify",
+          "status": "passed",
+          "exitCode": 2,
+          "durationMs": 262
+        },
+        {
+          "id": "secrets",
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 11503
+        }
+      ]
+    },
+    {
+      "receipt": "exclusivity-fresh.json",
+      "status": "passed",
+      "results": [
+        {
+          "name": "multiplayer-exclusivity",
+          "status": "passed",
+          "seconds": 80.517,
+          "corrections": [],
+          "prefixes": []
+        }
+      ]
+    },
+    {
+      "receipt": "exclusivity-sequence.json",
+      "status": "passed",
+      "results": [
+        {
+          "name": "multiplayer-exclusivity",
+          "status": "passed",
+          "seconds": 190.547,
+          "corrections": [],
+          "prefixes": [
+            "multiplayer",
+            "indoor-npcs"
+          ]
+        }
+      ]
+    },
+    {
+      "receipt": "screening-metal.json",
+      "status": "passed",
+      "renderer": "ANGLE Metal",
+      "checks": [
+        "host sees Start film inside IPIC after the server reported canHost",
+        "host started ipic-original-v1 and its own video element is playing",
+        "late viewer joined at the running position with local controls only",
+        "two viewers converged within 500 ms after 3 ms and stayed there",
+        "host pause stopped both viewers on the same frame",
+        "house lights dimmed while the film played and came back up on pause",
+        "panel fits desktop, 390 px and 320 px views; captures in output/playwright/ipic",
+        "a direct transport pause from the viewer is refused by the server",
+        "a resent start applied once; stale revision, earlier epoch and reused operation id refused; both films kept playing forward together",
+        "captions on by default and the transcript opens without audio",
+        "another film (the fixture, by command) brings its own captions and transcript",
+        "leaving IPIC (to Alice + Olivia) released the viewer's film, panel and video element"
+      ],
+      "convergedAfterMs": 3,
+      "pausedSpreadMs": 0
+    }
+  ],
+  "coreFollowupDifference": "Identical core task set; preview test-file concurrency explicitly limited to 4. Earlier default core/full failures remain failures."
+}

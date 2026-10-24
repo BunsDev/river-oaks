@@ -1,3 +1,4 @@
+import { bindPageLifecycle } from './background-lifecycle.js';
 import { isGameplayKey } from './keyboard-input.js';
 import * as THREE from 'three';
 
@@ -237,7 +238,7 @@ export function createBirdCams({ scene, camera, host, getEnvironment, getInteres
   const manualKeys = { KeyW: 'throttle+', ArrowUp: 'throttle+', KeyS: 'throttle-', ArrowDown: 'throttle-', KeyA: 'turn+', ArrowLeft: 'turn+', KeyD: 'turn-', ArrowRight: 'turn-', Space: 'climb+', KeyC: 'climb-', ShiftLeft: 'climb-', ShiftRight: 'climb-' };
   const typing = event => event.target.closest?.('input, textarea, select, [contenteditable]');
   document.addEventListener('keydown', event => {
-    if (!riding || typing(event) || !isGameplayKey(event)) return;
+    if (!riding || typing(event) || !isGameplayKey(event) || event.repeat) return;
     if (event.code === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); api.land(); return; }
     if (event.code === 'KeyT' && !event.repeat) { event.preventDefault(); api.toggleControl(); return; }
     if (event.code === 'KeyN' && !event.repeat) { event.preventDefault(); api.next(); return; }
@@ -248,7 +249,7 @@ export function createBirdCams({ scene, camera, host, getEnvironment, getInteres
     }
   }, true);
   document.addEventListener('keyup', event => keys.delete(event.code), true);
-  window.addEventListener('blur', () => keys.clear());
+  const releaseBackground = bindPageLifecycle({ release() { keys.clear(); drag = null; } });
   // Drag looks around from the bird without changing its course.
   let drag = null;
   host.addEventListener('pointerdown', event => { if (riding) drag = [event.clientX, event.clientY]; }, true);
@@ -314,7 +315,7 @@ export function createBirdCams({ scene, camera, host, getEnvironment, getInteres
       camera.position.lerpVectors(from.position, eye, ease); camera.quaternion.slerpQuaternions(from.quaternion, target, ease);
       return true;
     },
-    dispose() { for (const model of models) model.removeFromParent(); flock.length = 0; models.length = 0; listeners.clear(); },
+    dispose() { releaseBackground(); for (const model of models) model.removeFromParent(); flock.length = 0; models.length = 0; listeners.clear(); },
   };
   return api;
 }

@@ -127,6 +127,25 @@ test('the halls and café travel like doors: enter lands inside, leave lands out
   assert.equal(old.command('dana', { type: 'travel', storeId: 'campus:T1-F1-hall', mode: 'enter' }).error, 'invalid_destination');
 });
 
+test('a ground walker crosses all three former garage entry seams in both directions', () => {
+  const paths = [
+    ['E1 south', [[31, 58], [31, 4], [33.5, 0], [33.5, -2]]],
+    ['E2 west', [[31, 58], [31, 76.8], [16, 76.8], [0, 76.8], [-2, 76.8]]],
+    ['E3 north', [[31, 58], [31, 175], [29, 180], [29, 183]]],
+  ];
+  for (const [label, path] of paths) {
+    const t = town();
+    t.world.join({ userId: 'entry-walker', name: 'Entry walker' });
+    assert.equal(t.command('entry-walker', { type: 'travel', storeId: 'campus:T1-F1-hall', mode: 'arrive' }).ok, true);
+    t.advance(1000);
+    assert.deepEqual(t.walk('entry-walker', path), { ok: true }, `${label}: outward sweep`);
+    assert.deepEqual(t.walk('entry-walker', [...path].reverse()), { ok: true }, `${label}: inward sweep`);
+    const player = t.player('entry-walker');
+    assert.deepEqual([player.buildingId, player.levelId, player.altitude], [null, null, 0]);
+    assert.equal(player.position[2], BASE);
+  }
+});
+
 for (const distributed of [false, true]) {
   const backend = distributed ? 'distributed' : 'standalone';
   test(`${backend} world data names the served district revision for the default world only`, async t => {
