@@ -6,9 +6,10 @@
 // world's renderer are untouched.
 import { fitVideoToScreen } from './ipic-screening.js';
 
-// Outside the film's own [0, 1] texture square the screen is black: no film, no lighting.
+// The film emits its own pixels without added surface lighting. Outside its [0, 1]
+// texture square the screen is black; global tone mapping and postprocessing still apply.
 const MATTE = `#ifdef USE_EMISSIVEMAP
-  outgoingLight *= step(0.0, vEmissiveMapUv.x) * step(vEmissiveMapUv.x, 1.0) * step(0.0, vEmissiveMapUv.y) * step(vEmissiveMapUv.y, 1.0);
+  outgoingLight = totalEmissiveRadiance * step(0.0, vEmissiveMapUv.x) * step(vEmissiveMapUv.x, 1.0) * step(0.0, vEmissiveMapUv.y) * step(vEmissiveMapUv.y, 1.0);
 #endif
 #include <opaque_fragment>`;
 const BORROWED = ['map', 'emissiveMap', 'emissiveIntensity', 'onBeforeCompile', 'customProgramCacheKey'];
@@ -30,7 +31,7 @@ export function createScreenBinding({ THREE }) {
     Object.assign(material, {
       map: texture, emissiveMap: texture, emissiveIntensity: 1,
       onBeforeCompile(shader, renderer) { compile.call(this, shader, renderer); shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', MATTE); },
-      customProgramCacheKey() { return `${cacheKey.call(this)}|ipic-screen-matte`; },
+      customProgramCacheKey() { return `${cacheKey.call(this)}|ipic-screen-emissive-matte`; },
     });
     material.color.set('#ffffff'); material.emissive.set('#ffffff'); material.needsUpdate = true;
     bound = { material, saved, texture, key, aspect: screen.aspect, width: video.videoWidth, height: video.videoHeight, fit, frameAt: null };

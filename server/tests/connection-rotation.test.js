@@ -85,6 +85,9 @@ for (const mode of ['memory', 'redis']) {
     await until(() => fresh.snapshots.length > before, 5000).catch(() => null);
     assert.ok(fresh.snapshots.length > before, 'the fresh socket keeps receiving the town');
     // bob saw alice the whole time.
+    // The observer and replacement sockets receive broadcasts independently.
+    // Wait for bob's post-handover frame too; the fresh frame does not order it.
+    await until(() => bob.snapshots.some(frame => frame.at > alice.closed.at), 5000).catch(() => null);
     assert.ok(bob.snapshots.some(frame => frame.at > alice.closed.at), `bob received the town after the hand-over (${bob.snapshots.length} frames)`);
     assert.ok(bob.snapshots.every(frame => frame.value.players.some(player => player.id === 'alice')), 'alice never left the town');
     assert.equal(fresh.closed, null);

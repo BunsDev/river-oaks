@@ -139,11 +139,13 @@ second interior or renderer is built.
   error, and **Stop watching** releases the film locally.
 - **Switching and recovery (#498).**
   - **Generations.** Every element load is a new generation: a new film, a fallback encoding, Retry or a shared
-    Stop. A play() or frame callback from an earlier one changes nothing.
+    Stop. A new screening id or epoch also reloads the same film when snapshots omit the intervening Stop.
+    A play() or frame callback from an earlier generation changes nothing; a terminal failure invalidates
+    pending work and pauses locally. Explicit Retry begins a fresh generation.
   - **Encodings.** Each encoding the browser may decode is tried once per attempt, WebM then MP4. Retry starts a
     new attempt.
   - **Failure reasons.** The status says why: autoplay (Play film), decode, network (the other encoding is not
-    tried), stalled (no progress for 30 s while loading or buffering), or playback. An aborted load is the
+    tried), stalled (no progress for 30 s while loading or buffering, or while a play request is unanswered), or playback. An aborted load is the
     player's own doing and is not a failure. A shared Stop releases the decoder.
   - **Diagnostics.** `window.__riverScreening()` reports the source that decoded, every attempt, the drift
     measured before correction (`measuredDriftMs`), and the last presented frame from requestVideoFrameCallback
@@ -155,7 +157,8 @@ second interior or renderer is built.
   choice and plays only inside the auditorium; the lounge and the street stay silent.
   Captions are on by default: the panel shows the active cue, because the film reaches
   the screen only as texture frames and a browser draws cues only on a visible video
-  element (the caption track is kept in `hidden` mode to track them). **Captions off**
+  element (the caption track is kept in `hidden` mode to track them). Loading, seeking and failed
+  playback hide active cues so a prior frame's caption cannot stand in for the replacement. **Captions off**
   hides the line. The transcript opens in the panel. No microphone is involved.
 - **Host controls.** **Start**, **Pause**, **Resume** and **Stop** appear only when the
   server's `sync` reply says this viewer may host. Each sends one operation id and retries
@@ -182,6 +185,7 @@ second interior or renderer is built.
   fitted at the film's aspect.
   - **Mattes.** The screen's own shader draws black mattes outside the film, so a film needs no baked border
     and its edge pixels never smear.
+  - **Lighting.** While a film is bound, its masked emissive signal replaces surface diffuse/specular lighting, so scene lights do not illuminate the film a second time. Global tone mapping, exposure, fog and postprocessing remain in effect; rendered pixels are not expected to equal direct-video RGB values. The actual-screen runner compares a fixed paused frame under low/high direct and environment lighting at constant exposure. `node preview/e2e/ipic-screen-colour-runner.mjs` captures paired direct/world samples through normal full-world rendering at noon, dusk and dawn; human color approval remains #502.
   - **What shows.** The film appears only once the current source has a decoded frame. While a replacement
     loads, after a Stop and after a failure, the screen is its idle self.
   - **Restore.** Every borrowed material property is restored exactly, and one film texture is resident at
