@@ -424,6 +424,15 @@ export function cityKitLandscape(plan, { groundAt, ground }) {
   return { trees, planters };
 }
 
+// Planting draws in 12 m and 24 m batches (spatial-instances.js, procedural-plants.js); only
+// the fine grass flower stems span a whole plan, and they stay drawn with the planting.
+const PLANTING_BATCH_RADIUS = 30;
+/** Hides planting batches (buildPlanterPlanting) farther than `metres`, and any `shown` rejects. */
+export function cullPlanting(planting, position, metres, shown = () => true) {
+  for (const mesh of planting.children) if (mesh.boundingSphere?.radius < PLANTING_BATCH_RADIUS)
+    mesh.visible = shown(mesh) && position.distanceTo(mesh.boundingSphere.center) - mesh.boundingSphere.radius < metres;
+}
+
 /** Dispose tree and planting groups (buildMatureTrees, buildPlanterPlanting). */
 export function disposeLandscape(groups) {
   // Landscape meshes own cloned buffers/materials and instance storage. Their
@@ -445,9 +454,10 @@ export function disposeLandscape(groups) {
 /**
  * Build the plan's scene. `groundAt(east, north)` returns walking ground height;
  * `ground` is the level site height for shells and edges. With `landscape: false`
- * the caller draws the plan's trees and planting (cityKitLandscape).
+ * the caller draws the plan's trees and planting (cityKitLandscape). Planting draws at
+ * every distance unless `plantingMetres` limits it.
  */
-export function buildCityKit(plan, { groundAt, ground, landscape = true }) {
+export function buildCityKit(plan, { groundAt, ground, landscape = true, plantingMetres = Infinity }) {
   const group = new THREE.Group(); group.name = `City kit: ${plan.id}`;
   const materials = createMaterials(), m = materials.get, disposables = [];
   const blocks = new Map(), blockFor = piece => {
@@ -532,9 +542,11 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true }) {
   group.userData.shadowProxies = treeGroup.userData.shadowProxies;
   group.userData.lanterns = lanterns;
   group.userData.stats = () => { let meshes = 0, triangles = 0; group.traverse(item => { if (item.isMesh && item.visible) { meshes++; triangles += (item.geometry.index?.count ?? item.geometry.attributes.position.count) / 3 * (item.count ?? 1); } }); return { meshes, triangles: Math.round(triangles), materials: materials.made.size + disposables.length }; };
+  group.userData.plantingMetres = plantingMetres;
   group.userData.update = position => {
     treeGroup.userData.update?.(position);
     for (const level of levels) level.detail.visible = position.distanceTo(level.center) < KIT_CONVENTIONS.lod.detailMetres;
+    if (planting && plantingMetres < Infinity) cullPlanting(planting, position, plantingMetres);
   };
   group.userData.setLanterns = (lit, complete) => {
     for (const [id, lantern] of lanterns) lantern.userData.setLit(lit.has(id));

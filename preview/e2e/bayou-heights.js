@@ -29,7 +29,9 @@ async page => {
     await tab.goto(`${origin}/?motion-debug=1`);
     await tab.waitForFunction(revision=>window.__riverMultiplayer?.().connected
       && window.__riverMultiplayer().snapshot?.districtRevision===revision
-      && document.querySelector('#canvas-host')?.dataset.playerReady==='true',revision,{timeout:180000});
+      && document.querySelector('#canvas-host')?.dataset.playerReady==='true'
+      // The avatar can be ready while the district is still building; checks below read the composed world.
+      && document.querySelector('#loading')?.hidden===true,revision,{timeout:180000});
     // The walking HUD creates its notice after the world loads, so observe it once the player is ready.
     await tab.evaluate(()=>{const notice=document.querySelector('#walking-notice');if(!notice)throw new Error('The walking notice is missing');window.__heightsNotices=[];
       new MutationObserver(()=>{if(!notice.hidden&&notice.textContent)window.__heightsNotices.push(notice.textContent);}).observe(notice,{childList:true,characterData:true,subtree:true,attributes:true});});
@@ -149,8 +151,15 @@ async page => {
     await Promise.all([walk(page,[at([201,1.5]),at([300,1.5])],'owner nineteenth'),walk(peer,[at([209,-1.5]),at([300,-1.5])],'alice nineteenth')]);
     await capture(page,'nineteenth-and-yale');
 
-    // Home: back over the footbridge and the Commons to the District.
-    await Promise.all([walk(page,[at([165,1.5]),at([100,1.5]),at([-2,1.5])],'owner home'),walk(peer,[at([165,-1.5]),at([100,-1.5]),at([-2,-1.5])],'alice home')]);
+    // Home: back over the footbridge and the Commons to the District, one player at a time.
+    // Facing west from here a client draws the District, the Commons and Heights at once. Two
+    // CPU-rendered clients doing so together saturate the four-core CI runner: the hosted shard
+    // walked at 11-14 % of walking speed in one run and about 50 % in another (see the ledger,
+    // docs/superpowers/plans/2026-10-24-next-district-586.md). So the one who waits faces east, the lighter view.
+    await walk(page,[at([301,1.5])],'owner faces east');
+    await walk(peer,[at([165,-1.5]),at([100,-1.5]),at([-2,-1.5])],'alice home');
+    await walk(peer,[at([-1,-1.5])],'alice faces east');
+    await walk(page,[at([165,1.5]),at([100,1.5]),at([-2,1.5])],'owner home');
     check((await self(page)).position[0]<edge&&(await self(peer)).position[0]<edge,'Both players walked back to the original District');
     check(await page.evaluate(()=>{const notices=window.__heightsNotices,heights=notices.indexOf('Entering Bayou Heights');
       return heights>=0&&notices.indexOf('Entering Bayou Market Commons',heights)>heights&&notices.lastIndexOf('Back in River Oaks District')>heights;}),'Returning names the Commons and then the District');
