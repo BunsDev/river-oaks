@@ -1,0 +1,175 @@
+# Garden campus #510: truthful outcomes and honest public spaces
+
+Task `garden-campus-510-20261024`, owner `claude:river-oaks-a8 (e333fcb6)`, branch
+`feat/garden-campus-510-20261024`, worktree `../river-oaks-campus-510`, from
+`origin/main` `f33c914b`.
+
+## Objective
+
+Make the Gardens rental campus truthful and useful end to end (#510, parent #505):
+
+1. **Truthful outcomes.** The suites dialog tells an account what happened to its own
+   leases and requests: every end reason and closed-request reason in plain words,
+   bounded and never another account's. A guest learns that their access ended.
+2. **Honest public spaces.** Every public seat, table, bench, counter, prompt and
+   button in the halls, café and pergola does what its label says. No dead controls,
+   no new games.
+3. **Remaining automatable #510 boxes.** An account change at a workstation resets
+   the desk, a stale reply after revocation never reads as success, and repeated entry
+   keeps privacy and honest state.
+4. **Proof.** Draft PRs with exact evidence, the hosted campus shards green, a #510
+   evidence comment, and a short human checklist for Val.
+
+## Files owned
+
+- `preview/src/garden-campus-ui.js`, `preview/src/garden-campus-model.js`,
+  `preview/src/garden-campus.css`
+- `preview/tests/garden-campus-dialog.test.js`, `preview/tests/garden-campus-model.test.js`
+- `preview/e2e/garden-campus-suite.js`, `preview/e2e/garden-campus-office.js`
+- `shared/garden-campus-fitout.js` (hall titles and labels only)
+- `docs/garden-campus.md`, `docs/garden-campus-leases.md`, this ledger
+
+Not touched (other owners): `garden-campus-district.js` flight volumes,
+`garden-campus-finish.js` and repeated-visit resource stability (codex
+`campus-flight-511-20261024`); `office-ui.js` (#623 integration); touch input in
+`walking-ui.js` (river-oaks-f1, #288); `next-district-586-20261024`'s small edit in
+`garden-campus-district.js`.
+
+## Baseline (main f33c914b, 2026-10-24 19:04Z)
+
+- `server/campus-leases.js` `list` returns the caller's own leases, ended ones
+  included with `endedAt`/`endedReason` (tenant view), and the caller's own requests,
+  closed ones with `status` set to the closed reason. Up to 128 ended leases and 128
+  closed requests are kept campus-wide.
+- `preview/src/garden-campus-model.js` and `garden-campus-ui.js` drop both: only
+  live leases and pending requests are rendered. A tenant whose lease expired or was
+  revoked sees only the suite back in the directory. A tenant with only ended leases
+  sees an empty "Your suites" heading.
+- When a lease ends, the server clears its guests, so a former guest's `list` no
+  longer mentions it. `world.campusAccessEnded` walks an occupant out of the suite
+  but sends no notice.
+- `preview/tests/garden-campus-dialog.test.js` has 2 tests.
+
+## Increments
+
+### 1. Truthful outcomes
+
+Done on the branch:
+- `campusDirectory` returns `outcomes`: the account's own ended leases (tenant view) and
+  closed requests, newest first, last 30 days, at most 5, with a plain sentence for each
+  end reason (`expired`, `revoked`, `released`, `declined`, `withdrawn`, `superseded`,
+  `offer_expired`, `retired`) and closed-request reason (`cancelled`, `declined`,
+  `expired`, `retired`). A request closed as `offered` is left out; its offer row continues
+  it. Unknown future reasons fall back to "ended on <date>".
+- The dialog shows them under **Ended recently** in "Your suites". An account whose only
+  records have ended no longer gets an empty heading.
+- **Guest decision:** the server clears guests when a lease ends and keeps no record of
+  them, so the page compares its own lists (`campusLostGuestAccess`). Guest access it last
+  saw and no longer sees reads "Your guest access ended: <tenant> removed you, or the lease
+  ended." Leaving on purpose is not reported. This lasts only while the page is open
+  (Decision 1).
+- **Walk-out:** while the page holds suite access, a change in the public `leased` set
+  lists once in the background (one at a time, fenced against late answers) and announces
+  lost access: dialog status when open, otherwise the campus panel status and the walking
+  notice (`notify`, wired in `main.js`). A page on the suite floors that never listed lists
+  once to learn its access.
+- **Stale success:** a replayed retry answers with the record as it is now. If an accepted,
+  requested, granted, renewed or issued record has ended since, the dialog says "<action>
+  earlier, but since then: <what happened>" (`campusReplayChange`).
+
+### 2. Honest public spaces
+
+Inventory (main f33c914b):
+
+| Place | Controls and seats | What they do |
+| --- | --- | --- |
+| Play panel | Go to the Grove Offices hall; Suites and leases | Travel to T1 hall; the dialog |
+| T1 Grove hall | 2 tables × 4 chairs; reception counter | Each chair opens the sitter's own private desk; the counter is furniture only (no prompt) |
+| T2 The Commons hall | 2 tables × 4 chairs; workbench × 3 stools | Same: the sitter's own private desk |
+| T3 Atelier hall | 2 tables × 4 chairs; workbench × 3 stools | Same |
+| Garden café | 4 tables × 2 chairs; counter | Same; counter is furniture only |
+| Social pergola | no seats or controls | Walkable shade |
+
+Every public seat is a workstation and opens only the sitter's private desk (existing
+fitout test). No dead button or prompt was found. Labels that over-promised:
+- seat titles "Collaboration and project review table" (T2), "Atelier workbenches table"
+  and stools titled "Atelier workbenches". **Fixed:** "Shared project table", "Shared
+  project workbench", "Atelier work table", "Atelier workbench", with a test that every
+  public seat title names its furniture and promises no review, demo, presentation,
+  booking, meeting or creator activity.
+- The T2 room name "The Commons · Shared collaboration and project demo space" and T3's
+  "Atelier and creator workspace" come from the approved layout contract
+  (`shared/garden-campus-layout.js` `groundUse`, generated into
+  `docs/design/garden-campus/layout-contract.json` and the view packet). Left unchanged:
+  Decision 2.
+
+### 3. Remaining automatable boxes
+
+- Account change at a workstation resets the desk; standing suspends it; an open desk
+  offers no second desk; dispose releases it: dialog test with an injected desk
+  (`createDesk`). This behavior already existed; the test now guards it.
+- Stale reply after revocation: see increment 1 (replay change).
+- Repeated entry privacy: covered by the existing office journey (neighbour sees only
+  their own desk) and desk model tests. Resource stability on repeated visits belongs to
+  `campus-flight-511-20261024`.
+
+## Commands and results
+
+At 2026-10-24 ~19:15Z, source before commit:
+- `node --test preview/tests/garden-campus-dialog.test.js preview/tests/garden-campus-model.test.js`:
+  29 pass (22 dialog, 7 model), 0 fail. The 15 new dialog behavior tests failed first on
+  main's source.
+- `node --test preview/tests/garden-campus-fitout.test.js`: 7 pass after the title fix; the
+  title test failed first.
+- Campus and world-manifest tests: preview 141/141; server 56 pass, 8 skipped (Redis).
+- `pnpm test`: 4034 pass, 0 fail, 1 skipped (pre-existing). `pnpm run build`: passed.
+  (Ran before the seat-title and replay edits; rerun at the commit.)
+
+## Gaps
+
+- A guest removed by the tenant doesn't change the public `leased` set, so their page
+  learns at its next list, not at the moment of removal.
+- A former guest's notice is page-local (Decision 1).
+- No human, device or screen-reader check has run (checklist below).
+
+## Decisions for Val
+
+1. **Former-guest notices across reloads.** Keeping them needs the server to record
+   former guests on an ended lease (or a removal), which is a campus checkpoint version
+   change. Proposed: not now; the page-local notice covers the live case.
+2. **T2/T3 room names.** "Shared collaboration and project demo space" and "Atelier and
+   creator workspace" promise activities the halls do not run (every seat is a private
+   desk). Either approve relabelling the layout contract (for example "Shared project
+   tables" and "Atelier workbenches", regenerating the design packet with
+   `node scripts/garden-campus-views.mjs`), or approve a real shared activity for T2
+   (a new activity type, which this lane does not add).
+3. **Paid offers** stay unconfigured (see `docs/garden-campus-leases.md`). Computer stays
+   with #486/#487.
+
+## Human checklist for Val (≤10 min)
+
+Two accounts (one operator from `RIVER_OAKS_CAMPUS_OPERATOR_IDS`), the Gardens revision.
+Mark each step pass or fail, with a note.
+
+1. **Keyboard only, desktop (3 min).** Tab to Play → The Gardens offices → Suites and
+   leases. Every button reachable with Tab; focus starts on the heading; Escape closes the
+   dialog and returns focus to the world; walking keys do nothing while it is open. Ask
+   for a suite, then withdraw: the row moves to **Ended recently** with "You withdrew your
+   request…".
+2. **Ending while away (2 min).** Operator offers, resident accepts and walks into the
+   suite. Operator ends the lease with the resident's dialog closed. Resident: walked out,
+   a notice reads "Suite T1-…: The lease ended on …: the campus operator ended it.", and
+   the dialog lists it under Ended recently. Is the wording clear?
+3. **Nested Escape (1 min).** Sit at a hall table, Use this desk, open the suites dialog
+   from Play if reachable; Escape closes only the top layer each time; no held movement
+   after closing.
+4. **VoiceOver, Mac Safari (2 min).** The status line is announced after each action and
+   after the walk-out notice; Ended recently reads as a list with its label.
+5. **Phone touch (2 min).** Phone-width dialog: no horizontal scroll, every button tappable,
+   the date and length pickers usable; reduced motion on: nothing animates.
+
+Not covered here: paid mode (not built), Computer (#486/#487), physical-GPU budgets (#511).
+
+## Next action
+
+Core verify, campus journeys at the commit, signed commit, draft PR.

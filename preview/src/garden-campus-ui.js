@@ -5,16 +5,22 @@
 // Nothing here decides access: every list and action is a world command the server checks,
 // and the desk opens only while the server says this player sits at a workstation. Leases
 // never charge; the dialog shows the server's label and offers no payment step.
+//
+// Endings: the dialog lists the account's own recently ended leases and closed requests with
+// the server's reason. The server keeps no record of a former guest, so the page reports
+// guest access that vanished between two of its own lists. While the page holds suite access,
+// a change in the town's leased suites lists again once, so someone walked out of a suite by
+// an expiry, revocation or removal is told why.
 import { createOfficeDeskUI } from './office-desk-ui.js';
-import { campusDefaultTerm, campusDirectory, createCampusCommands } from './garden-campus-model.js';
+import { CAMPUS_OUTCOMES_SHOWN, campusDefaultTerm, campusDirectory, campusLostGuestAccess, campusReplayChange, createCampusCommands } from './garden-campus-model.js';
 import './garden-campus.css';
-import { setCampusSuiteGate } from './garden-campus-levels.js';
+import { isCampusLevelId, setCampusSuiteGate } from './garden-campus-levels.js';
 
 const DAY = 86_400_000;
 const el = (tag, text, className) => { const n = document.createElement(tag);if (text) n.textContent = text;if (className) n.className = className;return n; };
 const STATES = { available: 'Available', leased: 'Leased', requested: 'You asked', offered: 'Offered to you', yours: 'Your suite', guest: 'You are a guest' };
 
-export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer }) {
+export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer, notify = () => {}, createDesk = createOfficeDeskUI }) {
   const lifetime = new AbortController(), signal = lifetime.signal, mp = () => getMultiplayer();
   const button = (text, fn, className) => { const b = el('button', text, className);b.type = 'button';b.addEventListener('click', fn, { signal });return b; };
   // Play section.
@@ -37,6 +43,10 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
   dialog.addEventListener('close', () => host.focus({ preventScroll: true }), { signal });
 
   let commands = null, worldId = null, last = null, serverNow = Date.now(), listedAt = Date.now(), busy = false, lastAnswer = null, sent = [];
+  // Suites this page may enter, guest leases it left on purpose, endings only it knows, and
+  // a fence so an older list never renders over a newer one.
+  let entitled = new Set(), notices = [], listSeq = 0, listing = null, learned = false;
+  const left = new Set();
   // The server's clock now, from its last answer: dates the dialog proposes stay valid however long it stays open.
   const serverClock = () => serverNow + (Date.now() - listedAt);
   const ensureCommands = () => {
@@ -45,28 +55,50 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
     return commands;
   };
   const residents = () => (mp()?.snapshot?.players ?? []).filter(player => player.id !== mp()?.identity?.id).map(player => ({ id: player.id, name: player.name }));
-  async function refresh() {
+  async function refresh({ announce = false } = {}) {
+    const seq = ++listSeq;
     const answer = await ensureCommands().list().catch(error => ({ ok: false, message: error.message }));
+    if (seq !== listSeq) return true; // a newer list answers for this one
     if (!answer?.ok) { status.textContent = answer?.message ?? 'The campus directory is unavailable.';return false; }
-    serverNow = answer.serverTimeMs ?? Date.now();listedAt = Date.now();lastAnswer = answer.campus;render(campusDirectory(answer.campus, { now: serverNow }));
+    const before = lastAnswer, had = entitled;
+    serverNow = answer.serverTimeMs ?? Date.now();listedAt = Date.now();lastAnswer = answer.campus;
+    const lost = campusLostGuestAccess(before, answer.campus, { left, at: serverNow });
+    for (const id of left) if (!answer.campus.leases?.some(lease => lease.id === id)) left.delete(id);
+    notices = [...lost, ...notices.filter(item => !lost.some(fresh => fresh.id === item.id))].slice(0, CAMPUS_OUTCOMES_SHOWN);
+    const view = campusDirectory(answer.campus, { now: serverNow, notices });render(view);
     // The page predicts suite doors from this resident's own access; the server still decides every step (#508).
-    const entitled = new Set((answer.campus.access ?? []).map(entry => entry.unitId));setCampusSuiteGate(unitId => entitled.has(unitId));
+    entitled = new Set((answer.campus.access ?? []).map(entry => entry.unitId));setCampusSuiteGate(unitId => entitled.has(unitId));
+    if (announce) {
+      // Access this page held and lost since its last list: the guest notice, or the lease's own ending.
+      const gone = [...had].filter(unitId => !entitled.has(unitId) && !lost.some(item => item.unitId === unitId));
+      const lines = [...lost, ...gone.map(unitId => view.outcomes.find(item => item.unitId === unitId && item.kind === 'lease')
+        ?? { number: answer.campus.units?.find(unit => unit.unitId === unitId)?.number ?? unitId, text: 'Your access to this suite ended.' })].map(item => `Suite ${item.number}: ${item.text}`);
+      if (lines.length) {
+        const text = lines.join(' ');
+        if (dialog.open) status.textContent = text;else { say.textContent = text;notify(text); }
+      }
+    }
     return true;
   }
-  async function act(fn, done) {
+  // One background list at a time, announcing what changed.
+  const relist = () => { if (!listing && !busy) listing = refresh({ announce: true }).finally(() => { listing = null; }); };
+  const holdsAccess = () => entitled.size > 0 || (lastAnswer?.leases ?? []).some(lease => lease.status === 'active');
+  async function act(fn, done, action = null) {
     if (busy) return;busy = true;retry.hidden = true;status.textContent = 'Sending…';
     try {
       const result = await fn();
-      if (result.retry) { last = { fn, done };retry.hidden = false;status.textContent = `${result.message} Your request is kept; Try again sends the same one.`; }
+      if (result.retry) { last = { fn, done, action };retry.hidden = false;status.textContent = `${result.message} Your request is kept; Try again sends the same one.`; }
       else {
         // List again before saying how it went, so the answer never sits beside a row that
-        // still offers the old state; a directory that fails to list says so after it.
-        last = null;const said = result.ok ? (result.replayed ? `${done} (already done).` : `${done}.`) : result.message;
+        // still offers the old state; a directory that fails to list says so after it. A
+        // replayed retry whose record has changed since says what changed, not plain success.
+        const changed = result.ok ? campusReplayChange(action, result) : null;
+        last = null;const said = !result.ok ? result.message : changed ? `${done} earlier, but since then: ${changed}` : result.replayed ? `${done} (already done).` : `${done}.`;
         status.textContent = await refresh() ? said : `${said} ${status.textContent}`;
       }
     } finally { busy = false; }
   }
-  const retryLast = () => last && act(last.fn, last.done);
+  const retryLast = () => last && act(last.fn, last.done, last.action);
   async function openDialog() {
     if (!mp()?.connected) { say.textContent = 'Join the town to see the suites.';return; }
     dialog.showModal();status.textContent = 'Opening the directory…';await refresh();heading.focus?.();
@@ -93,26 +125,35 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
     label.textContent = view.leasing === 'closed' ? `${view.label}. Leasing is closed: nobody manages the campus right now.` : `${view.label}. Leases are offered by the campus operator; nothing is ever charged.`;
     if (status.textContent === 'Opening the directory…' || status.textContent === 'Sending…') status.textContent = '';
     body.replaceChildren();
-    if (view.leases.length || view.requests.some(item => item.status === 'pending')) {
+    const live = view.leases.filter(item => item.status !== 'ended'), waiting = view.requests.filter(item => item.status === 'pending');
+    if (live.length || waiting.length || view.outcomes.length) {
       const mine = el('section', null, 'campus-section');mine.append(el('h3', 'Your suites'));
-      for (const lease of view.leases.filter(item => item.status !== 'ended')) {
+      for (const lease of live) {
         const row = el('div', null, 'campus-row');
         row.append(el('strong', `Suite ${lease.number}`), el('span', `${lease.status === 'offered' ? 'Offered' : lease.role === 'guest' ? `Guest of ${lease.tenantName}` : 'Active'} · ${lease.term} · ${lease.label}`));
-        if (lease.actions.includes('accept')) row.append(button('Accept', () => act(() => commands.accept(lease), 'Lease accepted')), button('Decline', () => act(() => commands.release(lease), 'Offer declined'), 'campus-secondary'));
+        if (lease.actions.includes('accept')) row.append(button('Accept', () => act(() => commands.accept(lease), 'Lease accepted', 'accept')), button('Decline', () => act(() => commands.release(lease), 'Offer declined'), 'campus-secondary'));
         if (lease.actions.includes('release')) row.append(button('Give up this suite', () => act(() => commands.release(lease), 'Lease released'), 'campus-secondary'));
-        if (lease.actions.includes('leave')) row.append(button('Leave as guest', () => act(() => commands.leave(lease, mp()?.identity?.id), 'You left this suite'), 'campus-secondary'));
+        if (lease.actions.includes('leave')) row.append(button('Leave as guest', () => act(async () => {
+          // Leaving on purpose is this action's answer, not lost access to report later.
+          const result = await commands.leave(lease, mp()?.identity?.id);if (result.ok) left.add(lease.id);return result;
+        }, 'You left this suite'), 'campus-secondary'));
         if (lease.actions.includes('grant')) {
           const { select, empty } = residentPicker('Resident to invite');
-          if (!empty) row.append(select, button('Invite as guest', () => act(() => commands.grant(lease, select.value), 'Guest invited')));
+          if (!empty) row.append(select, button('Invite as guest', () => act(() => commands.grant(lease, select.value), 'Guest invited', 'grant')));
           for (const guest of lease.guests ?? []) row.append(button(`Remove ${guest.name}`, () => act(() => commands.ungrant(lease, guest.userId), 'Guest removed'), 'campus-secondary'));
         }
         const directions = view.towers.flatMap(tower => tower.floors.flatMap(floor => floor.units)).find(unit => unit.unitId === lease.unitId)?.directions;
         if (lease.status === 'active' && directions) row.append(el('p', directions, 'campus-hint'));
         mine.append(row);
       }
-      for (const request of view.requests.filter(item => item.status === 'pending')) {
+      for (const request of waiting) {
         const row = el('div', null, 'campus-row');row.append(el('strong', `Suite ${request.number}`), el('span', `Asked · ${request.term} · waiting for the operator`));
         row.append(button('Withdraw', () => act(() => commands.cancel(request), 'Request withdrawn'), 'campus-secondary'));mine.append(row);
+      }
+      if (view.outcomes.length) {
+        const endings = el('ul', null, 'campus-endings');endings.setAttribute('aria-label', 'Ended recently');
+        for (const item of view.outcomes) endings.append(el('li', `Suite ${item.number}: ${item.text}`, 'campus-ending'));
+        mine.append(el('h4', 'Ended recently'), endings);
       }
       body.append(mine);
     }
@@ -120,13 +161,13 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
       const manage = el('section', null, 'campus-section');manage.append(el('h3', 'Manage the campus'));
       for (const request of view.manage.requests) {
         const row = el('div', null, 'campus-row');row.append(el('strong', `Suite ${request.number}`), el('span', `${request.name} asked · ${request.term}`));
-        row.append(button('Offer these dates', () => act(() => commands.issue({ unitId: request.unitId, tenantId: request.userId, startsAt: Math.max(request.startsAt, serverClock()), endsAt: request.endsAt, requestId: request.id }), 'Offer sent')),
+        row.append(button('Offer these dates', () => act(() => commands.issue({ unitId: request.unitId, tenantId: request.userId, startsAt: Math.max(request.startsAt, serverClock()), endsAt: request.endsAt, requestId: request.id }), 'Offer sent', 'issue')),
           button('Decline', () => act(() => commands.decline(request), 'Request declined'), 'campus-secondary'));
         manage.append(row);
       }
       for (const lease of view.manage.leases) {
         const row = el('div', null, 'campus-row');row.append(el('strong', `Suite ${lease.number}`), el('span', `${lease.tenantName} · ${lease.status} · ${lease.term}`));
-        if (lease.actions.includes('renew')) row.append(button('Extend 30 days', () => act(() => commands.renew(lease, lease.endsAt + 30 * DAY), 'Lease extended')));
+        if (lease.actions.includes('renew')) row.append(button('Extend 30 days', () => act(() => commands.renew(lease, lease.endsAt + 30 * DAY), 'Lease extended', 'renew')));
         row.append(button(lease.status === 'offered' ? 'Withdraw offer' : 'End this lease', () => act(() => commands.revoke(lease), lease.status === 'offered' ? 'Offer withdrawn' : 'Lease ended'), 'campus-secondary'));
         manage.append(row);
       }
@@ -137,7 +178,7 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
         const unit = el('select');unit.setAttribute('aria-label', 'Suite');
         for (const item of available) { const option = el('option', `${item.number} · ${item.netArea} m²`);option.value = item.unitId;unit.append(option); }
         const term = termPicker(), row = el('div', null, 'campus-row');
-        row.append(el('strong', 'Offer a suite'), unit, tenant, term.wrap, button('Send offer', () => act(() => commands.issue({ unitId: unit.value, tenantId: tenant.value, ...term.read() }), 'Offer sent')));
+        row.append(el('strong', 'Offer a suite'), unit, tenant, term.wrap, button('Send offer', () => act(() => commands.issue({ unitId: unit.value, tenantId: tenant.value, ...term.read() }), 'Offer sent', 'issue')));
         manage.append(row);
       }
       body.append(manage);
@@ -151,7 +192,7 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
           const item = el('li'), chip = el('span', STATES[unit.state], `campus-chip campus-${unit.state}`);
           item.append(el('strong', unit.number), el('span', `Floor ${floor.floor} · ${unit.netArea} m²`), chip);
           if (unit.canRequest) {
-            const term = termPicker();item.append(term.wrap, button('Ask for this suite', () => act(() => commands.request(unit.unitId, term.read()), `Asked for suite ${unit.number}`)));
+            const term = termPicker();item.append(term.wrap, button('Ask for this suite', () => act(() => commands.request(unit.unitId, term.read()), `Asked for suite ${unit.number}`, 'request')));
           }
           list.append(item);
         }
@@ -166,7 +207,7 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
   let desk = null, deskAccount = null, seated = false, lastLeased = null;
   const openDesk = () => {
     if (!seated) return;
-    desk ??= createOfficeDeskUI({ getMultiplayer: mp, onClose: () => host.focus({ preventScroll: true }) });
+    desk ??= createDesk({ getMultiplayer: mp, onClose: () => host.focus({ preventScroll: true }) });
     deskAccount = mp()?.identity?.id;void desk.open();
   };
   // Browser journeys read what the dialog last listed and sent (development only).
@@ -177,9 +218,13 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
     setWorld(world) { panel.hidden = !world?.gardenCampus;if (!world?.gardenCampus && dialog.open) dialog.close(); },
     onSnapshot(snapshot) {
       // Another resident's lease changes what is available: an open directory lists again.
+      // So does any change while this page holds suite access: an expiry or revocation shows here.
       const leased = JSON.stringify(snapshot?.campus?.leased ?? null);
-      if (leased !== lastLeased) { lastLeased = leased;if (dialog.open && !busy) void refresh(); }
+      if (leased !== lastLeased) { const first = lastLeased === null;lastLeased = leased;if (dialog.open || (!first && holdsAccess())) relist(); }
       const self = snapshot?.players?.find(player => player.id === mp()?.identity?.id);
+      // A page that reaches the suite floors without having listed (a reload upstairs) lists
+      // once to learn its own access; nothing is announced until that access changes.
+      if (!lastAnswer && !learned && isCampusLevelId(self?.levelId) && self.levelId !== 'garden-campus/l0' && mp()?.connected) { learned = true;relist(); }
       const was = seated;seated = self?.campusWorkstation === true;
       // Standing up, or losing the seat, puts the desk away; the draft stays in this page.
       if (was && !seated && desk?.active) desk.suspend();

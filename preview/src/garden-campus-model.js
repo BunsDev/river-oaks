@@ -25,8 +25,70 @@ export function campusSuiteDirections(unitId) {
 export const campusErrorMessage = (code, fallback) => CAMPUS_LEASE_ERRORS[code] ?? fallback ?? 'The campus could not complete that. Try again.';
 const day = ms => new Date(ms).toISOString().slice(0, 10);
 
-/** The directory, the caller's own records and (for operators) the management queues. */
-export function campusDirectory(campus, { now = Date.now() } = {}) {
+// Endings (#510). The server keeps each account's ended leases and closed requests with a
+// reason (#509); the directory says what happened to the newest few from the last month.
+// A request answered with an offer is left out: the offer's own row continues its story.
+export const CAMPUS_OUTCOMES_SHOWN = 5, CAMPUS_OUTCOME_WINDOW_DAYS = 30;
+const LEASE_ENDINGS = {
+  expired: d => `The lease ended on ${d}: its term ran out.`,
+  revoked: d => `The lease ended on ${d}: the campus operator ended it.`,
+  released: d => `The lease ended on ${d}: you gave the suite up.`,
+  declined: d => `You declined this offer on ${d}.`,
+  withdrawn: d => `The campus operator withdrew this offer on ${d}.`,
+  superseded: d => `This offer closed on ${d}: another offer for the suite was accepted first.`,
+  offer_expired: d => `This offer lapsed unanswered on ${d}.`,
+  retired: d => `This lease ended on ${d}: the campus no longer offers this suite.`,
+};
+const REQUEST_ENDINGS = {
+  cancelled: d => `You withdrew your request on ${d}.`,
+  declined: d => `The campus operator declined your request on ${d}.`,
+  expired: d => `Your request lapsed unanswered on ${d}.`,
+  retired: d => `Your request closed on ${d}: the campus no longer offers this suite.`,
+};
+function campusOutcomes(campus, now, notices) {
+  const since = now - CAMPUS_OUTCOME_WINDOW_DAYS * DAY;
+  const leases = (campus.leases ?? []).filter(lease => lease.status === 'ended' && lease.role !== 'guest')
+    .map(lease => ({ kind: 'lease', id: lease.id, unitId: lease.unitId, number: lease.number, at: lease.endedAt, reason: lease.endedReason,
+      text: (LEASE_ENDINGS[lease.endedReason] ?? (d => `This lease ended on ${d}.`))(day(lease.endedAt)) }));
+  const requests = (campus.requests ?? []).filter(item => item.status !== 'pending' && item.status !== 'offered')
+    .map(item => ({ kind: 'request', id: item.id, unitId: item.unitId, number: item.number, at: item.closedAt, reason: item.status,
+      text: (REQUEST_ENDINGS[item.status] ?? (d => `Your request closed on ${d}.`))(day(item.closedAt)) }));
+  return [...leases, ...requests, ...notices].filter(item => Number.isFinite(item.at) && item.at >= since)
+    .sort((a, b) => b.at - a.at).slice(0, CAMPUS_OUTCOMES_SHOWN);
+}
+
+/**
+ * A retry the server replays answers with the record as it is now (#509 receipts). When that
+ * record no longer shows what the action did (an accepted lease since ended, an asked suite
+ * since declined), say what happened instead of plain success. Ending actions always hold.
+ */
+const STILL = { request: item => ['pending', 'offered'].includes(item.status), accept: item => item.status === 'active', grant: item => item.status === 'active',
+  renew: item => item.status === 'active', issue: item => ['offered', 'active'].includes(item.status) };
+export function campusReplayChange(action, result) {
+  const holds = STILL[action], item = result?.lease ?? result?.request;
+  if (!result?.replayed || !holds || !item || holds(item)) return null;
+  if (result.lease) return (LEASE_ENDINGS[item.endedReason] ?? (d => `This lease ended on ${d}.`))(day(item.endedAt));
+  return (REQUEST_ENDINGS[item.status] ?? (d => `Your request closed on ${d}.`))(day(item.closedAt));
+}
+
+/**
+ * Guest access the page saw in its previous list and no longer sees. The server clears a
+ * lease's guests when it ends and keeps no record of them, so a former guest's own list is
+ * silent; only the page that listed both answers can tell them. `left` holds the leases
+ * this page left on purpose.
+ */
+export function campusLostGuestAccess(before, after, { left = new Set(), at = Date.now() } = {}) {
+  const still = new Set((after?.leases ?? []).map(lease => lease.id));
+  return (before?.leases ?? []).filter(lease => lease.role === 'guest' && lease.status === 'active' && !still.has(lease.id) && !left.has(lease.id))
+    .map(lease => ({ kind: 'guest', id: lease.id, unitId: lease.unitId, number: lease.number, at, reason: 'guest_access_ended',
+      text: `Your guest access ended: ${lease.tenantName ?? 'the tenant'} removed you, or the lease ended.` }));
+}
+
+/**
+ * The directory, the caller's own records and (for operators) the management queues.
+ * `notices` are endings only this page knows (lost guest access), merged into `outcomes`.
+ */
+export function campusDirectory(campus, { now = Date.now(), notices = [] } = {}) {
   if (!campus) return null;
   const mine = new Map((campus.leases ?? []).filter(lease => lease.status !== 'ended').map(lease => [lease.unitId, lease]));
   const requested = new Map((campus.requests ?? []).filter(item => item.status === 'pending').map(item => [item.unitId, item]));
@@ -47,6 +109,7 @@ export function campusDirectory(campus, { now = Date.now() } = {}) {
     label: campus.label ?? CAMPUS_LEASE_LABEL, leasing: campus.leasing, operator: Boolean(campus.operator), towers,
     leases: (campus.leases ?? []).map(lease => ({ ...lease, term: `${day(lease.startsAt)} to ${day(lease.endsAt)}`, actions: leaseActions(lease, campus, now) })),
     requests: (campus.requests ?? []).map(item => ({ ...item, term: `${day(item.startsAt)} to ${day(item.endsAt)}`, actions: item.status === 'pending' && !campus.operator ? ['cancel'] : [] })),
+    outcomes: campusOutcomes(campus, now, notices),
     manage: campus.operator ? {
       requests: (campus.manage?.requests ?? []).filter(item => item.status === 'pending').map(item => ({ ...item, term: `${day(item.startsAt)} to ${day(item.endsAt)}`, actions: ['issue', 'decline'] })),
       leases: (campus.manage?.leases ?? []).filter(lease => ['offered', 'active'].includes(lease.status))
