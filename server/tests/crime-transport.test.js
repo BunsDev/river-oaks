@@ -113,3 +113,31 @@ for (const mode of ['memory', 'redis']) test(`${mode}: one hit is seen by every 
   const ownerAgain = await join(third, 'owner');
   assert.deepEqual([rivalIn(ownerAgain.snapshot).health, starsIn(ownerAgain.snapshot, 'alice')], [75, 1], 'health and stars survive writer replacement');
 });
+
+for (const mode of ['memory', 'redis']) test(`${mode}: police, authenticated surrender and one arrest agree across clients and writer replacement`, { skip: mode === 'redis' && !process.env.REDIS_URL, timeout: 120_000 }, async t => {
+  const { gateway, join, sockets, apps } = await harness(t, mode);
+  const first = await gateway(), second = await gateway();
+  const owner = await join(first, 'owner'), alice = await join(first, 'alice'), bob = await join(second, 'bob');
+  assert.equal((await alice.send({ type:'travel', position:[RX + 1.2, RN] })).ok,true);
+  assert.equal((await owner.send({ type:'worldPolicy',action:'update',expectedRevision:0,changes:{violence:{mode:'forced',zones:['westcreek-lane']}} })).ok,true);
+  assert.equal((await alice.send({ type:'attack',targetId:RIVAL.id,attackKind:'melee',attackId:'police-transport-hit' })).ok,true);
+  const observed = await bob.until(frame => frame.police.units.some(unit => unit.targetId === 'alice'));
+  assert.equal(observed.police.units.length,1);
+  assert.equal((await bob.send({ type:'surrender',userId:'alice' })).error,'invalid_surrender');
+  assert.equal((await alice.send({ type:'surrender' })).ok,true);
+  await bob.until(frame => frame.police.units.some(unit => unit.state === 'arrest'));
+  let observer = bob, subject = alice;
+  if (mode === 'redis') {
+    for (const ws of sockets) ws.terminate();
+    for (const app of apps.splice(0)) await app.close();
+    const replacement = await gateway();
+    subject = await join(replacement,'alice'); observer = await join(replacement,'bob');
+  }
+  const after = await observer.until(frame => starsIn(frame,'alice') === 0);
+  assert.ok(after.police.units.every(unit => unit.targetId !== 'alice'));
+  const arrival = after.players.find(player => player.id === 'alice');
+  assert.ok(Math.hypot(arrival.position[0]-RX,arrival.position[1]-RN)>10);
+  assert.equal((await subject.send({type:'surrender'})).error,'not_wanted');
+  const final = await subject.until(frame => starsIn(frame,'alice') === 0);
+  assert.equal(rivalIn(final).health,75,'arrest does not replay the attack or heal the rival');
+});

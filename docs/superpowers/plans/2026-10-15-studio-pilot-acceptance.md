@@ -919,3 +919,190 @@ checklist flow in a detached checkout of `f850abfa`:
   desktop 115 (3 skipped), build, Python, secrets. This shell's `python3` is macOS 3.9, so the run
   put the locked `.venv/bin` first on PATH; #576 makes the runner do that itself.
 - Not run: isolated Redis/full, physical devices, VoiceOver. None of these results is human review.
+
+## Closeout run on main `1cb79549` (2026-10-23)
+
+Task `studio-417-closeout-20261023`, branch `test/studio-417-closeout-20261023`, from origin/main
+`1cb79549`. Goal: re-run #417's scenarios and #359's office journeys on one main, refresh Val's review
+packet, and propose a register reconciliation. No app code changes.
+
+### Does the checklist's candidate still equal main?
+
+No. The checklist (issuecomment-6248646285) names `0d1e69a2`, app code = main `dd9b61ee`. Since #493
+(`153471bc`), main changed three files Studio loads:
+
+| File | Change | Effect on Studio |
+| --- | --- | --- |
+| `preview/src/studio/main.js` | #579 (`52379be6`): focus kept on the control in use; refusals announced with nearby furnishings | Intended; the review should exercise it |
+| `preview/src/walking.js` | East Garden Commons bounds (#580/#581), campus flight volumes, Jevica's fast-walk speed | None by source: `commonsAllows` is true without a commons layout, flight is unused in Studio, normal/fast speeds unchanged (1.65/3.2 m/s) |
+| `desktop/main.js` | Windows Squirrel install events (#372) | None on macOS dev Electron; exits only for a Squirrel argument |
+
+So the review candidate is now main `1cb79549`. The runs below are on it.
+
+### Results (`1cb79549`, clean app code; MacBook Pro M3 Max, Chromium ANGLE Metal, 1440 × 1000)
+
+Run under one browser-lock hold, 08:36–08:46Z, load 8–14.
+
+| Scenario | Result | Receipt (`data/reports/`) |
+| --- | --- | --- |
+| `studio-pilot-journey` | passed, 15 checks: refusal announced with "Nearby: Waiting Sofa, …", repair, undo/redo, save/reload, stale tab, four destinations and back, exit | `studio-417-1cb79549-pilot.json` |
+| `studio-pilot-assets` (office) | passed: limestone meeting floor 186 normal → 200 missing/loading → 186 loaded (8.3 s) and replaced; 3/3 and 6/6 requests, none pending | same |
+| `studio-pilot-soak` (1 + 10) | passed: every post-warm-up office cycle 688 calls, 53,076 triangles, 35 geometries, 27 materials, 159 listeners, 0 live workers, 0 pending timeouts/loads; heap 15.4–16.0 MiB; Metal 70–83 MiB | same |
+| `studio-pilot-a11y` | passed, 25 checks, including #579's focus checks; 33 Tab stops show focus; 320/390 px no overflow | same |
+| `studio-template-journey` office / house / boutique / café | passed, 13 checks each | `studio-417-1cb79549-template-{office,house,boutique,cafe}.json` |
+| `node desktop/studio-e2e.js` (development Electron, after the #372 `desktop/main.js` change) | passed, 11/11, 12:40Z, same app code | `studio-417-1cb79549-desktop.json` |
+
+### #359 non-regression (same main)
+
+| Scenario | Result | Receipt |
+| --- | --- | --- |
+| `office-visit` | passed, 12 checks | `studio-417-1cb79549-office359.json` |
+| `office-desk` | passed, 18 checks | same |
+| `office-computer-embed` | passed, 61 checks | same |
+| `office-ipic-journey-runner.mjs` | passed, 30 checks, 109 s (ported harness, below): refusal, invitation, arrival, private My tasks, one chair for two clients, floors/library/terrace, late IPIC join within 500 ms, both back in town | `studio-417-1cb79549-ipic.json` |
+
+The first IPIC run failed at its first step: it waits for "Request a visit"
+(`#office-request-send`). On 2026-10-18, `2b5062b6` ("restrict offices to Jevica") replaced visit requests with
+Jevica's invitation and updated `office-visit.js`, but not this journey. The journey has been stale since then;
+the product behaved as designed (the resident's dialog says "An invitation from Jevica is required to enter."). This
+branch ports the journey the same way `office-visit.js` was ported: A picks bob in the Offices panel's guest list
+and clicks Invite resident. A second run failed because that control sits in the play dock's Office pane, which
+was not selected (the same tab change `ec9f99ac` handled in the other office journeys); the journey now selects
+`#play-tab-office` first. The third run passed. The IPIC journey runs only locally (it is not in CI), which is why
+the drift went unnoticed: `2026-10-18-play-rail-menu.md` already recorded it failing on `153471bc`. No app code
+changes.
+
+### Gates
+
+- `pnpm run verify` (core), revision `1cb79549`, 08:48–08:51Z: passed. Agent 201/201; preview 3,827 passed,
+  1 skipped, including the penthouse idle-slice test; server 757 passed, 215 skipped (Redis and other env-gated
+  tests); desktop 115, 3 skipped; build, Python (149) and secrets. The tree was dirty only with this branch's
+  e2e harness, ledger and receipts. An earlier run at 08:37Z, load ~26, stopped on that idle-slice wall-clock test
+  (longest slice 67.8 ms); it passed alone right after, and the clean rerun above is the gate of record.
+- Not run: isolated Redis/full, physical devices, VoiceOver, packaged Electron. None of this is human review.
+
+### Decisions for Val
+
+1. **Refresh-task record**: authorize, or decline, the record-only change below.
+2. **Café phone and other-GPU review** (added from #420): run it, or record it as outside the desktop-only
+   profile accepted on 2026-10-17, as was done for packaged builds.
+3. **Café placed in a creator region**: it exists only on draft #489 (conflicting with main). Review it from that
+   branch, defer it until #489 lands, or drop it from #417.
+4. **Touch walking**: an accepted limit or a follow-up (unchanged).
+
+#### Register: `studio-acceptance-417-refresh-20261015` (proposal for Val)
+
+Facts checked on 2026-10-23 from the primary checkout:
+- Status `blocked`, owner `codex:root-studio-acceptance-417-refresh-20261015`, lease expired 2026-10-16T07:40Z.
+- Its worktree `river-oaks-studio-acceptance-refresh` is not on disk. Branch `test/studio-acceptance-417-refresh-20261015`
+  exists neither locally nor on `origin`, there are no archive tags for it, and no `manifest.json` under
+  `~/worktree-backups/river-oaks/` names it. Its uncommitted diff and untracked receipts are gone from this machine.
+- Its content is superseded: #493 (`153471bc`) delivered the revised scenario/viewport changes, and its
+  `materials.js` change was disproved on unmodified main (ledger, "Finding: the delayed-photograph defect does not reproduce").
+
+`project:cancel` can't act on it: it archives and removes an existing branch or detached checkout, and
+there is neither. What remains is a record-only change, which discards the record of unfinished work and so
+needs your authorization. Proposed patch (not applied):
+
+```sh
+pnpm run register patch studio-acceptance-417-refresh-20261015 --unset leaseUntil --json '{
+  "owner": null,
+  "branches": [],
+  "cancelledBranches": ["test/studio-acceptance-417-refresh-20261015"],
+  "nextAction": "Cancelled by Val <date>: worktree, branch and receipts were already absent from disk (no archive); content superseded by #493 (153471bc); materials.js change disproved. Nothing to restore."
+}'
+```
+
+It stays `blocked` (the register has no `cancelled` status, and `retired` needs delivery evidence and an
+archive this work never had), matching other cancelled records such as `cartier-pilot`. The alternative is to
+leave the record as it is; `project:check` will keep reporting it as an orphan.
+
+## Closeout refresh on main `f4aa1670` (2026-10-23)
+
+Task `studio-417-closeout-f4aa1670-20261023`, owner `claude:river-oaks-bc (003d8d)`, branch
+`test/studio-417-closeout-f4aa1670-20261023` in `river-oaks-studio-417-closeout-f4aa1670`, from origin/main
+`f4aa1670` (111 commits after `1cb79549`). The previous closeout task `studio-417-closeout-20261023` (draft #613,
+owner `459dc8`) was left untouched: its lease ended 18:00Z and its session was no longer running, which is not a
+handoff. This branch merges #613's head `c92edb85` explicitly, in its own commit, for the IPIC harness port and
+the section above, so the two PRs can land in either order. No app code changes.
+
+### Does the candidate still equal main?
+
+The checklist (issuecomment-6248646285) names `0d1e69a2`; the 1cb79549 packet (issuecomment-6366480224) moved
+the candidate to main `1cb79549`. Between `1cb79549` and `f4aa1670`, `preview/src/studio/` and `desktop/` are
+unchanged. Of the 48 modules in Studio's import graph (`preview/src/studio/entry.js`, followed through relative
+imports), one changed: `preview/src/walking.js` (a9026592/0313e266) now also returns
+`buildBounds: world.eastGardenCommons?.districtBounds`. Studio's worlds have no `eastGardenCommons`, so the field
+is `undefined` there and nothing in Studio reads it. The other 18 changed client files (login flicker, Character
+Studio, crime, world policy, campus, Commons) are outside Studio's graph. **Studio behavior is the same as on
+`1cb79549`; the review candidate is main `f4aa1670` or later.**
+
+### Results (`f4aa1670`, clean app code; MacBook Pro M3 Max, Chromium ANGLE Metal, 1440 × 1000)
+
+One browser-lock hold, 18:43–18:55Z, load 6.5–22.6 (other sessions' runs queued around it).
+
+| Scenario | Result | Receipt (`data/reports/`) |
+| --- | --- | --- |
+| `studio-pilot-journey` | passed, 15 checks: refusal announced with "Nearby: Waiting Sofa, Meeting Chair 1, Meeting Divider South.", repair, undo/redo, save/reload, stale tab, four destinations and back, exit | `studio-417-f4aa1670-pilot.json` |
+| `studio-pilot-assets` (office) | passed: limestone meeting floor 186 normal → 200 missing/loading → 186 loaded and 186 replaced; 3/3 and 6/6 requests, none pending | same |
+| `studio-pilot-soak` (1 + 10) | passed: every post-warm-up office cycle 688 calls, 53,076 triangles, 35 geometries, 27 materials, 159 listeners, 0 live workers, 0 pending timeouts/loads (identical to `1cb79549`); heap 15.2–16.9 MiB; Metal 71–83 MiB | same |
+| `studio-pilot-a11y` | passed, 25 checks; 320/390 px no overflow, all five primary controls reachable | same |
+| `studio-template-journey` office / house / boutique / café | passed, 13 checks each | `studio-417-f4aa1670-template-{office,house,boutique,cafe}.json` |
+| `node desktop/studio-e2e.js` (development Electron; `desktop/` unchanged since `1cb79549`) | passed, 11/11, 20:38Z, same app code | `studio-417-f4aa1670-desktop.json` |
+
+### #359 non-regression (same main)
+
+| Scenario | Result | Receipt |
+| --- | --- | --- |
+| `office-visit` | passed, 12 checks | `studio-417-f4aa1670-office359.json` |
+| `office-desk` | passed, 18 checks | same |
+| `office-computer-embed` | passed, 61 checks | same |
+| `office-ipic-journey-runner.mjs`, main's harness | failed at its first step, as on `1cb79549`: waits 60 s for "Request a visit" (`#office-request-send`), which `2b5062b6` replaced with Jevica's invitation | `studio-417-f4aa1670-ipic-main-harness.json` |
+| `office-ipic-journey-runner.mjs`, #613's ported harness (HEAD `825f13ef`, app code = `f4aa1670`) | passed, 30 checks, 132 s, 20:36Z: refusal, invitation, arrival, private My tasks, one chair for two clients, floors/library/terrace, late IPIC join (10.2 s, viewers within 4 ms of each other), both back in town, no page errors. Load 48–202 from other sessions' runs | `studio-417-f4aa1670-ipic.json` |
+
+The stale-harness failure is a test defect, not a product regression; it is fixed only by #613's harness port,
+which this branch carries. Until #613 or this branch lands, main's IPIC journey keeps failing at that step.
+
+### Gates
+
+- `pnpm run verify` (core), clean tree at `e1c458d2` (this branch before this ledger edit; app code = `f4aa1670`),
+  22:04–22:14Z, under the browser lock: passed. Agent 204/204; preview 3,877 passed, 1 skipped; server 824 passed,
+  218 skipped (Redis and other env-gated tests); desktop 115, 3 skipped; build, Python (149), demo and secrets.
+  Receipt `.runtime/agent/core.json` (revision `e1c458d2`, `dirty: false`).
+- The first run at 21:47Z failed 4 of 204 agent-tooling tests (`project-worktree-snapshot.py archive`:
+  `extractall() got an unexpected keyword argument 'filter'`). This session's `python3` was macOS's
+  `/usr/bin/python3` 3.9.6; the repository needs Python ≥ 3.11. With uv's CPython 3.13 first on `PATH` the
+  same tree passed. No check was changed. `pnpm run agent:doctor` reports the Python environment as passing in
+  that state, because it checks uv's environment rather than the `python3` the tooling tests run: a doctor gap,
+  not fixed here.
+- **Main moved to `98ac7d7b` while #617 was in CI** (#619: zod override 4.6.7 for GHSA-mrhx-c7xc-m3w5, Electron
+  44.8.0 → 44.9.1, verify-runner tooling; no `preview/src` or `desktop/` source change). #617's first hosted run
+  failed only `pnpm audit` (that advisory) and `preview experience (commons)` (a 10 s `waitForFunction` timeout in
+  `east-garden-commons`, which passed on its one rerun). Main was merged into this branch (`3686f2b3`); on that clean
+  tree, 23:53–00:00Z: `node desktop/studio-e2e.js` on Electron 44.9.1 passed 11/11 (`studio-417-98ac7d7b-desktop.json`),
+  and `pnpm run verify` (core) passed: agent 207/207, preview 3,877 (1 skipped), server 824 (218 skipped), desktop
+  115 (3 skipped), build, Python, secrets. The browser Studio and office results above stand: nothing they load changed.
+- Not run: isolated Redis/full, physical devices, VoiceOver, packaged Electron. None of this is human review.
+
+### Decisions for Val
+
+1. **Which PR carries the closeout?** This branch contains #613 (merged at `c92edb85`, unchanged) plus the
+   `f4aa1670` run. Land this one and close #613, or land #613 first; this branch then merges cleanly. Either
+   way, only a merge puts the IPIC harness port on main.
+2. **Refresh-task record**: authorize, or decline, the record-only change in "Register: `studio-acceptance-417-refresh-20261015`" above. Rechecked 2026-10-23 19:05Z: still no worktree, no local or `origin` branch, no
+   `archive/*` tag and no `manifest.json` under `~/worktree-backups/river-oaks/` naming it (that directory
+   now exists on this machine, unlike on 2026-10-22).
+3. **Café phone and other-GPU review**, **Café in a creator region** (#489 still draft, mergeability unknown,
+   last updated 2026-10-19) and **touch walking**: unchanged from the `1cb79549` decisions 2–4.
+4. **#413's "#359 not regressed" box** is yours to tick or leave, based on the table above.
+
+#### Other #417 register records (observations; owners' or Val's to change)
+
+- `studio-review-417-20261022` is `active` with a lease that ended 2026-10-23T00:45Z, but its PR #579 merged as
+  `52379be6`. Its owner (or Val) should mark it delivered with that evidence; its worktree is clean.
+- `studio-417-closeout-20261023` (#613) is `active` with a lease that ended 18:00Z. If this branch carries the
+  closeout, it becomes superseded; nothing in its worktree is uncommitted.
+- `unowned-recovery-refs-20261022` still holds `wip/studio-review-417-baseline-20261022` (6 dirty paths); it
+  stays with that task.
+
+None of this is human review. #417 stays open for Val's checklist.

@@ -151,7 +151,7 @@ testRedis('coordinators: a v13 town committed by an older writer is fenced, rest
   assert.deepEqual(view.chat.map(entry => entry.text), ['before the rules'], 'unrelated town state survives');
   assert.equal((await join(next, OWNER)).ok, true);
   assert.equal((await send(next, OWNER, { type: 'worldPolicy', action: 'update', expectedRevision: 0, changes: { violence: { mode: 'forced', zones: ['westcreek-lane'] } } })).ok, true);
-  assert.equal((await state()).checkpoint.version, 15);
+  assert.equal((await state()).checkpoint.version, 16);
   // An older writer can no longer take this town; a v14 lease would be fenced again.
   await next.close();
   clock.time += 60_000;

@@ -28,6 +28,8 @@ export function recoverDistrictCommonsCheckpoint({worldData,checkpoint,worldId=D
         && !source.command(player.id,{type:'stand'}).ok)return rejected();
     }
     const {checksum:_checksum,...envelope}=source.checkpoint();
+    // The Lantern Walk exists only in the Commons; rolling back leaves it behind.
+    if(!forward)delete envelope.payload.lanternWalk;
     const moved=[];
     if(!forward){
       const environment=createWalkingEnvironment(worldData,envelope.payload.builds.map(objectCollider).filter(Boolean));

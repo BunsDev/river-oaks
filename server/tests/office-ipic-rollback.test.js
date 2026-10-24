@@ -49,7 +49,7 @@ test('retired layout keeps seated penthouse visits while removed host grants pau
   assert.equal(live.send(owner, { type: 'screening', action: 'start', venueId: 'ipic', epoch: before.epoch, expectedRevision: before.revision, operationId: 'rollback-start-01', mediaId: FILM.id }).ok, true);
   live.clock.time += 4000; live.world.step(0.05);
   const saved = live.world.checkpoint(), playing = live.screening();
-  assert.equal(saved.version, 15);
+  assert.equal(saved.version, 16);
   assert.equal(playing.status, 'playing');
   assert.deepEqual(live.visit('guest').seat, { id: chair.id });
 
@@ -57,7 +57,7 @@ test('retired layout keeps seated penthouse visits while removed host grants pau
   const back = town({ officeLayout: OFFICE_LAYOUT_LEGACY, hosts: [], restore: saved, at: live.clock.time + 500 });
   assert.deepEqual(back.visit('guest'), live.visit('guest'), 'penthouse visit and seat survive retired configuration');
   const restored = back.world.checkpoint();
-  assert.equal(restored.version, 15, 'the compatible writer is kept');
+  assert.equal(restored.version, 16, 'the compatible writer is kept');
   assert.deepEqual(restored.payload.offices.grants, saved.payload.offices.grants, 'grants stay');
   assert.deepEqual(restored.payload.offices.requests, [], 'retired requests are not restored');
   back.clock.time += 1000; back.world.step(0.05);
