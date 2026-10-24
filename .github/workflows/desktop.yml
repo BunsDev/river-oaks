@@ -147,15 +147,10 @@ jobs:
       - name: Window manager for the Xvfb session
         if: ${{ !cancelled() && runner.os == 'Linux' }}
         run: sudo apt-get update -q && sudo apt-get install -y --no-install-recommends openbox
-      # The runner image pipes core dumps to systemd-coredump. The e2e crashes the
-      # game renderer on purpose, and the kernel keeps that renderer, with its IPC
-      # channel, alive until the collector has read the whole core: about five
-      # minutes here (#371), so Electron reports render-process-gone only then.
-      # With the kernel's own core handling, the job's `ulimit -c 0` applies, no
-      # core is written and the renderer exits at once.
-      - name: Kernel core handling for the deliberate renderer crash
-        if: ${{ !cancelled() && runner.os == 'Linux' }}
-        run: sudo sysctl -w kernel.core_pattern=core
+      # The runner image pipes core dumps to systemd-coredump, as Ubuntu desktops
+      # with it installed do. The e2e's deliberate renderer crash goes through
+      # that pipe, so its unchanged 60 s recovery check covers the main process
+      # ending a renderer that is still writing its core (core-dump-watch.js, #370).
       - name: Development desktop end-to-end (loopback acceptance fixture)
         if: ${{ !cancelled() }}
         id: e2e
@@ -170,7 +165,6 @@ jobs:
           if [ "$RUNNER_OS" = Linux ]; then
             # Mesa under Xvfb with the browser jobs' Chromium GL flags (verify.yml).
             export RIVER_OAKS_DESKTOP_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2
-            ulimit -c 0
             xvfb-run -a bash -c 'openbox --sm-disable & sleep 1; exec pnpm run test:desktop:e2e --dev'
           elif [ "$RUNNER_OS" = Windows ]; then
             # No GPU: Chromium draws through Direct3D 11 on Microsoft's software
