@@ -106,7 +106,11 @@ async page => {
     await Promise.all([walk(page,[at([133,1.5]),at([165,1.5])],'owner footbridge'),walk(peer,[at([133,-1.5]),at([165,-1.5])],'alice footbridge')]);
     check((await self(page)).position[0]>west&&(await self(peer)).position[0]>west,'Two real clients crossed the Lantern Footbridge into Bayou Heights by keyboard walking');
     check(await page.evaluate(()=>window.__riverBayouHeights().inside===true&&window.__heightsNotices.some(text=>text==='Entering Bayou Heights')),'Crossing the footbridge names Bayou Heights');
-    check(await page.evaluate(()=>document.querySelector('#lantern-walk-status').hidden&&!window.__heightsNotices.includes('Back in River Oaks District')),'Bayou Heights hides the Commons Lantern Walk status without announcing the District');
+    // Only notices since entering Heights: a walker that overshoots the waypoint just short of
+    // the District edge steps into the Commons and back, and is rightly told so on the way.
+    check(await page.evaluate(()=>{const notices=window.__heightsNotices;
+      return document.querySelector('#lantern-walk-status').hidden&&!notices.slice(notices.indexOf('Entering Bayou Heights')).includes('Back in River Oaks District');}),
+      'Bayou Heights hides the Commons Lantern Walk status without announcing the District');
     const peerId=(await self(peer)).id;
     await page.waitForFunction(([id,west])=>window.__riverMultiplayer().snapshot.players.some(p=>p.id===id&&p.position[0]>west),[peerId,west]);
     await capture(page,'greenway');
