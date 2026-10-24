@@ -70,8 +70,9 @@ The client streams Heights as its own location (`preview/src/heights-stream.js`,
   - Headless, the neighborhoods own 1.29–2.49 MiB each (12.95 MiB in all).
   - The shared part holds the oak models, about 2.4 MiB of planting, and the instances.
   - Heights is therefore larger than one ceiling. Deep inside it, neighborhoods the camera cannot see stream out; at Nineteenth and Yale, that is one or two behind the camera.
-  - At equal distance the shared part is kept first, then the neighborhood underfoot, then those in view within 150 m. Holding all of Heights at once would need a larger ceiling for this location, which is a separate decision.
-- **Loading.** Each part loads within 85 m of the player or of a camera that sees it, and unloads beyond 110 m. Batches draw only while their neighborhood is attached: trees and planting within 120 m, the kit's block-detail distance.
+  - At equal distance the shared part is kept first, then the neighborhood underfoot, then those in view within 150 m. A neighborhood in view keeps that place for 5 s after the camera turns away, and one already loaded outranks one that isn't, so the small turns of walking do not rebuild neighborhoods.
+  - Holding all of Heights at once would need a larger ceiling for this location, which is a separate decision.
+- **Loading.** Each part loads within 85 m of the player or of a camera that sees it, and unloads beyond 110 m. Batches draw only while their neighborhood is attached: trees within 120 m, the kit's block-detail distance, and planting within 60 m, the trees' middle level. Beyond that the beds are a few pixels, yet across all 329 of them they are over a million triangles in each pass.
   - From the District, Heights stays unloaded, including from the gateway looking down Market Street.
   - From the Commons plaza looking east, the shared part and the greenway load before the footbridge.
 - **Gate and notices.**

@@ -187,7 +187,13 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
     - `world-location-label.test.js`: 5/5.
     - `lantern-walk-client.test.js`: 3/3.
   - **Suites.** Preview 4,106/4,107 with 1 existing skip. Server 1,163/1,163 on isolated Redis.
-- **Browser journey and captures.** Pending a local run on the merged tree (queued on the browser lock) and the hosted shard.
+- **Hosted run on `5ea9171f` (Verify 40132921105).** Every job passed except `preview experience (heights)`, job 120988297785.
+  - **The District regression is fixed.** Both players crossed the District and the Commons and were over the footbridge by 21:18Z, about 5 minutes after start. On `b1ded7ab`, neither had left the District after 300 s.
+  - **Streaming.** Heights streamed in before the footbridge, within the ceiling and with each part within its estimate. The shared part measured 6,570,294 bytes (6.27 MiB, against a 6.5 MiB estimate), the greenway 1,666,368 and the icehouse 2,128,128. The footbridge crossing, the "Entering Bayou Heights" notice, the Lantern Walk chip check and the icehouse table game passed.
+  - **First failure.** `alice nineteenth: stalled` at x 275 of the Commons frame, heading for x 300, still moving east at 3.2 m/s with no refusals. The input trace shows about 1.5 m/s to x 228, then about 0.4 m/s from x 231, where the crossroads neighborhoods stream in. At the failure the client drew 1,975 calls and 7.73 M triangles at 3 fps under llvmpipe (quality scale 0.6). The lane is collision-free.
+  - **Cause, by calculation.** At x 275 the landscape draws about 2.2 M tree triangles within 120 m in all directions, plus 1.25 M of planting, which also casts shadows. The ceiling also binds there, and the walk helper's small camera corrections flip neighborhoods at the edge of the view in and out. Each flip can cancel a load or rebuild a neighborhood.
+  - **Fix.** Planting draws within 60 m, the trees' middle detail level, which brings it to about 0.01 M triangles at x 275. A neighborhood in view keeps its priority for 5 s, and loaded ones outrank unloaded ones, so a glance does not rebuild anything. Tests cover both. The harness's timeouts are unchanged.
+- **Browser journey and captures.** Pending the hosted shard on the fix and a local run (queued on the browser lock).
 - **Performance.** Not started. ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e). The `#626` decision is recorded only on #643's branch (D11).
 
 ## Gaps and coordination

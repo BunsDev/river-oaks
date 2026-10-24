@@ -15,6 +15,9 @@ export const heightsCommonsLayout = layout => ({ ...commonsBaseLayout(layout), d
 // from the Commons and the footbridge, looking over the bayou. From the District it stays
 // unloaded, so the District keeps its own frame budget.
 export const HEIGHTS_VIEW_METRES = 150;
+// A neighborhood keeps that place for a while after the camera turns from it, so the small
+// turns of walking do not rebuild a neighborhood each time it crosses the edge of the view.
+export const HEIGHTS_VIEW_HOLD_MS = 5000;
 const MiB = 1024 * 1024;
 // The Commons' retained-geometry ceiling (commons-stream.js), unchanged for Heights. Heights
 // holds more than this in all, so deep inside it the neighborhoods the camera cannot see stream out.
@@ -41,7 +44,7 @@ function geometryBytes(group) {
  * landmarks, trees and planting the neighborhoods share, and each neighborhood. The scene
  * passed to onScene holds whichever are attached.
  */
-export function createHeightsStream({ world, parent, onStatus = () => {}, onScene = () => {}, now,
+export function createHeightsStream({ world, parent, onStatus = () => {}, onScene = () => {}, now = () => performance.now(),
   loadModule = () => import('./bayou-heights.js') }) {
   const layout = validateHeightsRegistration(manifest, world.eastGardenCommons), { plans } = layout.heights;
   const location = manifest.locations.find(item => item.id === layout.heights.id);
@@ -53,7 +56,7 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
   const chunks = [{ id: SHARED, bounds, estimatedBytes: HEIGHTS_CHUNK_BYTES[SHARED] },
     ...plans.map(plan => ({ id: idOf(plan), plan, bounds: plan.site, estimatedBytes: HEIGHTS_CHUNK_BYTES[plan.id] ?? 3 * MiB }))];
   const boxes = plans.map(plan => { const [w, s, e, n] = plan.site; return [plan, new Box3(new Vector3(w, layout.ground - 4, -n), new Vector3(e, layout.ground + 30, -s))]; });
-  const frustum = new Frustum(), viewMatrix = new Matrix4(), measured = {};
+  const frustum = new Frustum(), viewMatrix = new Matrix4(), measured = {}, seen = new Map();
   const scene = new Group(), neighborhoods = new Map(), drawn = new Set();
   let shared = null, status = '';
   scene.name = 'Bayou Heights'; scene.userData.shadowProxies = [];
@@ -105,14 +108,17 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
       if (camera) {
         camera.updateMatrixWorld();
         frustum.setFromProjectionMatrix(viewMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
-        const eye = [camera.position.x, -camera.position.z];
+        const eye = [camera.position.x, -camera.position.z], time = now();
         for (const [plan, box] of boxes) {
           const [w, s, e, n] = plan.site, edge = [Math.min(Math.max(eye[0], w), e), Math.min(Math.max(eye[1], s), n)];
           const distance = Math.hypot(eye[0] - edge[0], eye[1] - edge[1]);
-          if (distance >= HEIGHTS_VIEW_METRES || !frustum.intersectsBox(box)) continue;
-          // A visible neighborhood streams as if someone stood a metre short of it, so the
-          // neighborhood a player stands in, nearer still, keeps its place under the ceiling.
-          const step = Math.min(1, distance) / (distance || 1);
+          if (distance >= HEIGHTS_VIEW_METRES) continue;
+          if (frustum.intersectsBox(box)) seen.set(plan.id, time);
+          if (!(time - (seen.get(plan.id) ?? -Infinity) < HEIGHTS_VIEW_HOLD_MS)) continue;
+          // A visible neighborhood streams as if someone stood just short of it, so the one a
+          // player stands in keeps its place under the ceiling: half a metre when it is already
+          // here, a metre when not, so a glance does not evict one in view for another.
+          const step = Math.min(stream.ready(idOf(plan)) ? .5 : 1, distance) / (distance || 1);
           wanted.push([edge[0] + (eye[0] - edge[0]) * step, edge[1] + (eye[1] - edge[1]) * step]);
         }
       }

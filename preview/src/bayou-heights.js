@@ -5,16 +5,19 @@ import { RETRO } from './retro-palette.js';
 import { buildCityKit, cityKitLandscape, disposeLandscape } from './city-kit/render.js';
 import { buildMatureTrees, buildPlanterPlanting } from './landscape-models.js';
 
-// Heights street trees and planting, and their sun shadows, draw only within the kit's
-// block-detail distance. Each twelve-metre batch is a draw call at every distance, and from
-// the District the hundreds beyond it cost CPU-rendered clients most of their frame rate.
+// Heights street trees, and their sun shadows, draw only within the kit's block-detail
+// distance. Each twelve-metre batch is a draw call at every distance, and from the
+// District the hundreds beyond it cost CPU-rendered clients most of their frame rate.
 export const HEIGHTS_TREE_METRES = KIT_CONVENTIONS.lod.detailMetres;
+// Planted beds stand under a metre tall. Beyond the trees' middle detail level they are a
+// few pixels, yet across Heights' 329 beds they are over a million triangles in each pass.
+export const HEIGHTS_PLANTING_METRES = KIT_CONVENTIONS.lod.treeMetres[1];
 // Planting draws in 12 m and 24 m batches (spatial-instances.js, procedural-plants.js);
 // only the fine grass flower stems span all of Heights, and they draw with the planting.
 const BATCH_RADIUS = 30;
 const headless = typeof document === 'undefined';
 const distanceToRect = ([w, s, e, n], east, north) => Math.hypot(Math.max(w - east, 0, east - e), Math.max(s - north, 0, north - n));
-const near = (mesh, position) => position.distanceTo(mesh.boundingSphere.center) - mesh.boundingSphere.radius < HEIGHTS_TREE_METRES;
+const near = (mesh, position, metres = HEIGHTS_TREE_METRES) => position.distanceTo(mesh.boundingSphere.center) - mesh.boundingSphere.radius < metres;
 
 /**
  * One Bayou Heights neighborhood (a plan in layout.heights.plans), streamed as its own
@@ -30,7 +33,7 @@ export function buildHeightsNeighborhood(layout, plan) {
  * What the Heights neighborhoods share, streamed as one chunk: the authored footbridge,
  * bandstand and Heights Hall, and every street tree and planted bed. Built once, the
  * tree and planting models are cloned once rather than in each neighborhood. A tree or
- * planting batch draws only while its neighborhood does, and trees only near the camera.
+ * planting batch draws only while its neighborhood does, and only near the camera.
  */
 export function buildHeightsLandscape(layout) {
   const group = new THREE.Group(); group.name = 'bayou-heights/landscape';
@@ -70,7 +73,7 @@ export function buildHeightsLandscape(layout) {
       if (proxies.has(mesh)) { if (shown) shadowProxies.push(mesh); }
       else if (mesh.visible && !shown) mesh.visible = false;
     }
-    for (const mesh of planting.children) if (mesh.boundingSphere?.radius < BATCH_RADIUS) mesh.visible = drawn.has(ownerOf(mesh)) && near(mesh, position);
+    for (const mesh of planting.children) if (mesh.boundingSphere?.radius < BATCH_RADIUS) mesh.visible = drawn.has(ownerOf(mesh)) && near(mesh, position, HEIGHTS_PLANTING_METRES);
   };
   group.userData.shadowProxies = shadowProxies;
   let disposed = false;

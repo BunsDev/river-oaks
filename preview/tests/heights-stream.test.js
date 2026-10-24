@@ -5,7 +5,7 @@ import { loadDistrictData } from '../../server/district-data.js';
 import { createWalkingEnvironment, createWalkingState, guardedStepEnvironment, stepWalking } from '../src/walking.js';
 import { createCommonsStream } from '../src/commons-stream.js';
 import { buildHeightsNeighborhood } from '../src/bayou-heights.js';
-import { createHeightsStream, heightsCommonsLayout, HEIGHTS_CHUNK_BYTES, HEIGHTS_MAX_BYTES, HEIGHTS_VIEW_METRES } from '../src/heights-stream.js';
+import { createHeightsStream, heightsCommonsLayout, HEIGHTS_CHUNK_BYTES, HEIGHTS_MAX_BYTES, HEIGHTS_VIEW_HOLD_MS, HEIGHTS_VIEW_METRES } from '../src/heights-stream.js';
 const world = await loadDistrictData({ districtRevision: 'bayou-heights-1' });
 const layout = world.eastGardenCommons, edge = layout.edge, west = layout.heights.bounds[0], MiB = 1024 * 1024;
 const at = ([x, y]) => [edge + x, -1335 + y];
@@ -76,7 +76,9 @@ test('chunk estimates err high: each neighborhood owns no more geometry than its
 });
 
 test('under the ceiling the shared part, the neighborhood underfoot and those in view stay; turning brings the one behind back', async () => {
-  const stream = createHeightsStream({ world, parent: new THREE.Group(), now: () => 0, loadModule: standIns() });
+  let time = 0, builds = 0; const load = standIns();
+  const stream = createHeightsStream({ world, parent: new THREE.Group(), now: () => time,
+    loadModule: async () => { const module = await load(); return { ...module, buildHeightsNeighborhood: (...args) => { builds++; return module.buildHeightsNeighborhood(...args); } }; } });
   const crossroads = at([300, -8]), points = [crossroads];
   assert.ok(Object.values(HEIGHTS_CHUNK_BYTES).reduce((n, bytes) => n + bytes * .9, 0) > HEIGHTS_MAX_BYTES, 'Heights is larger than one ceiling');
   await settle(stream, points, camera(crossroads, at([300, 100])));
@@ -84,7 +86,11 @@ test('under the ceiling the shared part, the neighborhood underfoot and those in
   for (const id of ['shared', 'nineteenth-and-yale', 'yale-street-north']) assert.ok(kept.includes(id), `${id} in ${kept}`);
   assert.equal(kept.includes('yale-street-south'), false, 'the neighborhood behind the camera streams out');
   assert.ok(stream.debug().residentBytes <= HEIGHTS_MAX_BYTES);
-  await settle(stream, points, camera(crossroads, at([300, -100])));
+  // A glance south is not a turn: what was just in view keeps its place and nothing is rebuilt.
+  const before = builds;
+  time += HEIGHTS_VIEW_HOLD_MS / 2; await settle(stream, points, camera(crossroads, at([300, -100])));
+  assert.ok(resident(stream).includes('yale-street-north')); assert.equal(builds, before);
+  time += HEIGHTS_VIEW_HOLD_MS; await settle(stream, points, camera(crossroads, at([300, -100])));
   kept = resident(stream);
   for (const id of ['shared', 'nineteenth-and-yale', 'yale-street-south']) assert.ok(kept.includes(id), `${id} in ${kept}`);
   assert.equal(kept.includes('yale-street-north'), false);
