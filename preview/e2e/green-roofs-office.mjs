@@ -6,20 +6,29 @@ import { chromium } from 'playwright';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { startBrowserFixture } from './fixture-server.js';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
+// Explicit candidate selection keeps the historical garage inspection available.
+// node preview/e2e/green-roofs-office.mjs [garage|gardens]
+const revision = process.argv[2] ?? 'garage';
+assert.ok(['garage', 'gardens'].includes(revision), 'choose garage or gardens');
 const release = await holdBrowserLock('Green roofs actual office and terrace');
 let fixture, browser;
-const output = 'output/playwright/green-roofs-office-v10-current-main';
+const output = `output/playwright/green-roofs-office-${revision}-challenge`;
 await mkdir(output, { recursive: true });
 const sourceNames=['office-skyline.js','office-world-scene.js','office-world-presentation.js','office-layouts.js','office-penthouse-graybox.js','office-contract.js','office-arrival-model.js','district.js','reference-facades.js','main.js','green-roofs.js','roof-grasses.js','roof-field-mesh.js','roof-field-boundaries.js','hermes-roof-surface.js'];
+sourceNames.push('garden-campus.js', 'garden-campus-district.js', '../../shared/garden-campus-layout.js');
 const sourceHashes=async()=>Object.fromEntries(await Promise.all(sourceNames.map(async name=>[name,createHash('sha256').update(await readFile('preview/src/'+name)).digest('hex')])));
 const sources=await sourceHashes();
 try {
-  fixture = await startBrowserFixture({ env: { RIVER_OAKS_OFFICE_LAYOUT: 'office-penthouse-1', VITE_SHARED_SOFTWARE_RENDERING: '0' } });
+  fixture = await startBrowserFixture({ env: { RIVER_OAKS_OFFICE_LAYOUT: 'office-penthouse-1', VITE_SHARED_SOFTWARE_RENDERING: '0', RIVER_OAKS_DISTRICT_REVISION: revision === 'gardens' ? 'river-oaks-gardens-3' : 'river-oaks-garage-1' } });
   browser = await chromium.launch({ headless: true, args: process.platform === 'darwin' ? ['--use-angle=metal'] : [] });
   const context = await browser.newContext({ viewport: { width: 800, height: 600 } });
   await context.addCookies([{ name: 'fixture_session', value: 'owner', url: fixture.origin }]);
   await context.addInitScript(() => localStorage.setItem('river-oaks-graphics','smooth'));
   const page = await context.newPage(); page.setDefaultTimeout(180000);
+  let manifest = null;
+  page.on('response', async response => {
+    if (response.url().includes('/api/world-data?world=river-oaks')) manifest = await response.json().catch(() => null);
+  });
   const network = [];
   page.on('websocket', socket => {
     for (const event of ['framesent','framereceived']) socket.on(event, frame => {
@@ -79,6 +88,20 @@ try {
       const duskCost = await measure();
       await dialog.focus(); await page.keyboard.press('Escape');
       check(await page.locator('#office-view').inputValue() === '', 'Escape restores walking without leaving office');
+      await page.locator('#sun-hour').evaluate(input => {input.value='15';input.dispatchEvent(new Event('input',{bubbles:true}));});
+      await page.evaluate(async () => {for(let i=0;i<8;i++)await new Promise(requestAnimationFrame);});
+      const beforeAim = await page.evaluate(() => window.__riverOffice().camera);
+      const [qx,qy,qz,qw] = beforeAim.quaternion;
+      const currentYaw = Math.atan2(2*(qw*qy+qx*qz),1-2*(qy*qy+qx*qx));
+      const desiredYaw = Math.atan2(-(-2704.9663550867344-beforeAim.position[0]),-(1267.8129431163761-beforeAim.position[2]));
+      const difference = Math.atan2(Math.sin(desiredYaw-currentYaw),Math.cos(desiredYaw-currentYaw));
+      await drag(-difference/.004);
+      await page.evaluate(async () => {for(let i=0;i<8;i++)await new Promise(requestAnimationFrame);});
+      const aimedCamera = await page.evaluate(() => window.__riverOffice().camera);
+      check(JSON.stringify(await position()) === JSON.stringify(terracePosition), 'aiming preserves actual terrace position');
+      await page.screenshot({path:'${output}/campus-aimed-'+cycle+'.png'});
+      await page.screenshot({path:'${output}/campus-aimed-clean-'+cycle+'.png',style:'#office-visit {visibility:hidden !important;}'});
+      captures.push({phase:'campus-aimed',beforeAim,aimedCamera,terracePosition});
       const later = await page.evaluate(() => window.__riverOffice().skyline);
       check(later.state === 'live' && later.frames > captured.frames && later.bytes === 0, 'normal live draws advance without cubemap capture');
       const diagnostics = await page.evaluate(async () => {
@@ -99,8 +122,10 @@ try {
   try {
     console.log('Office fixture ready; starting authenticated arrival');
     const result = await eval(`(${journey})`)(page);
+    assert.ok(manifest, 'observed the served district manifest');
+    assert.equal(manifest.districtRevision ?? null, revision === 'gardens' ? 'river-oaks-gardens-3' : null, 'actual office exterior uses the selected district revision');
     assert.deepEqual(await sourceHashes(), sources, 'scene sources stayed fixed during the run');
-    await writeFile(`${output}/result.json`, JSON.stringify({ status: 'passed', sources, network, settings: {viewport:[800,600],graphics:'smooth',skyline:'enabled'}, ...result }, null, 2));
+    await writeFile(`${output}/result.json`, JSON.stringify({ status: 'passed', revision, sources, network, settings: {viewport:[800,600],graphics:'smooth',skyline:'enabled'}, ...result }, null, 2));
     console.log(JSON.stringify(result));
   } catch (error) {
     const diagnostics = await page.evaluate(() => { const m = window.__riverMultiplayer?.(); return { connected: m?.connected, self: m?.snapshot?.players.find(p => p.id === m.selfId)?.office ?? null, status: document.querySelector('.office-panel [role=status]')?.textContent, enterDisabled: document.querySelector('#office-enter')?.disabled, quality: document.querySelector('#canvas-host')?.dataset.quality, selfPosition: m?.snapshot?.players.find(p => p.id === m.selfId)?.position }; }).catch(() => null);

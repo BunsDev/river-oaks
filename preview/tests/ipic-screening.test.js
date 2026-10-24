@@ -16,7 +16,7 @@ function fakeMedia({ canPlay = type => type.startsWith('video/webm') ? 'probably
     canPlayType: canPlay,
     // As in browsers, pause() while play() is pending aborts that play() and stays paused.
     play() { calls.play++; const attempt = { aborted: false }; media.attempt = attempt;
-      return play().then(() => { if (attempt.aborted) throw Object.assign(new Error('aborted'), { name: 'AbortError' }); media.paused = false; media.emit('playing'); }); },
+      return play().then(() => { if (attempt.aborted) throw Object.assign(new Error('aborted'), { name: 'AbortError' }); media.paused = false; media.readyState = 4; media.emit('playing'); }); },
     pause() { calls.pause++; if (media.attempt) media.attempt.aborted = true; media.paused = true; },
     // load() resets the element: a pending play() is aborted, and the old resource's error clears.
     load() { calls.load++; calls.loaded.push(media.src); if (media.attempt) media.attempt.aborted = true; media.paused = true; media.error = null; media.readyState = 0; },
@@ -194,6 +194,8 @@ test('captions come from the active cues of a tracked track, because the video i
   // element, so the panel must render them. 'hidden' keeps the cues tracked without drawing them.
   const media = fakeMedia(), track = media.textTracks[0];
   const { player } = setup({ media });
+  player.apply(view({ status: 'paused', positionMs: 0 }));
+  media.readyState = 4; media.emit('canplay');
   player.setCaptions(true);
   assert.equal(track.mode, 'hidden');
   track.activeCues = [{ text: 'Fixture clip: a test pattern' }, { text: 'for shared playback.' }];
@@ -381,4 +383,138 @@ test('joining a paused film that never loads is reported stalled too, not shown 
   assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['error', 'stalled']);
   f.player.retry(); f.media.readyState = 4; f.media.emit('canplay'); f.player.tick();
   assert.deepEqual([f.player.stats().state, f.media.paused], ['paused', true], 'once a frame decodes, it shows the paused frame');
+});
+
+test('a same-film start without an observed Stop fences the previous pending play', async () => {
+  let resolve;
+  const f = setup({ media: fakeMedia({ play: () => new Promise(r => { resolve = r; }) }), offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick();
+  resolve(); await null;
+  f.player.apply(filmView(ORIGINAL, { screeningId: 'ipic-e1-3', revision: 3, anchorServerTimeMs: 101_000 }));
+  await tick();
+  assert.equal(f.player.stats().state, 'loading', 'the previous screening cannot complete the new load');
+  assert.equal(f.media.calls.load, 2, 'snapshots may skip the intervening Stop');
+  f.media.readyState = 4; f.media.emit('canplay'); f.player.tick(); resolve(); await tick();
+  assert.equal(f.media.currentTime, 0);
+  const loads = f.media.calls.load;
+  f.player.apply(filmView(ORIGINAL, { screeningId: 'ipic-e1-3', revision: 4, status: 'paused' }));
+  assert.equal(f.media.calls.load, loads, 'a pause in the same screening does not reload');
+});
+
+test('a late play resolution after the stall deadline cannot revive playback', async () => {
+  let resolve;
+  const f = setup({ media: fakeMedia({ play: () => new Promise(r => { resolve = r; }) }), offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick();
+  f.local.now += 30_001; f.player.tick();
+  assert.equal(f.player.stats().failure, 'stalled');
+  resolve(); await tick();
+  assert.deepEqual([f.player.stats().state, f.media.paused], ['error', true]);
+});
+
+test('ready media with an unresolved play is still bounded by the stall deadline', () => {
+  const f = setup({ media: fakeMedia({ play: () => new Promise(() => {}) }), offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL));
+  f.media.readyState = 4; f.media.emit('canplay'); f.player.tick();
+  f.local.now += 30_001; f.player.tick();
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['error', 'stalled']);
+});
+
+test('a stale frame callback cannot start a second callback chain after replacement', () => {
+  const callbacks = new Map(); let ids = 0;
+  const media = Object.assign(fakeMedia(), { requestVideoFrameCallback: fn => { callbacks.set(++ids, fn); return ids; }, cancelVideoFrameCallback: id => callbacks.delete(id) });
+  const f = setup({ media });
+  f.player.apply(filmView(ORIGINAL));
+  const stale = [...callbacks.values()][0];
+  f.player.retry();
+  stale(1000, { mediaTime: 1, presentedFrames: 1 });
+  assert.equal(callbacks.size, 1, 'only the replacement owns a callback');
+  f.player.dispose();
+  assert.equal(callbacks.size, 0, 'teardown cancels every owned callback');
+});
+
+test('queued old media events cannot mark an empty replacement ready or fail its encoding', () => {
+  const f = setup();
+  f.player.apply(filmView(ORIGINAL));
+  f.player.apply(filmView(FILM, { screeningId: 'ipic-e1-2', revision: 3 }));
+  // load() has cleared error/readyState. Events carry no resource identity: inspect the element.
+  f.media.emit('error');
+  assert.equal(f.media.calls.load, 2, 'an error event without a current MediaError cannot consume a source');
+  f.media.emit('canplay'); f.media.emit('playing');
+  assert.equal(f.player.stats().state, 'loading', 'an empty paused element has not decoded or started');
+  assert.equal(f.player.stats().attempts[0].result, 'loading');
+});
+
+test('gesture recovery after policy denial resumes presented-frame observation', async () => {
+  let denied = true, nextId = 0;
+  const callbacks = new Map();
+  const media = Object.assign(fakeMedia({ play: () => denied ? Promise.reject(Object.assign(new Error('policy'), { name: 'NotAllowedError' })) : Promise.resolve() }), {
+    requestVideoFrameCallback: fn => { callbacks.set(++nextId, fn); return nextId; }, cancelVideoFrameCallback: id => callbacks.delete(id),
+  });
+  const f = setup({ media, offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick(); await tick();
+  denied = false; await f.player.unlock();
+  assert.equal(callbacks.size, 1);
+  const frame = [...callbacks.values()][0]; callbacks.clear(); frame(1000, { mediaTime: 1, presentedFrames: 1 });
+  assert.equal(f.player.stats().presented.mediaTimeMs, 1000);
+  assert.equal(f.player.stats().attempts[0].result, 'decoded', 'gesture recovery reports the encoding that actually decoded');
+  f.player.dispose();
+});
+
+test('a same-film replacement hides the previous cue until its own frame is ready', async () => {
+  const f = setup({ offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick(); await tick();
+  f.player.setCaptions(true); f.media.textTracks[0].activeCues = [{ text: 'Previous scene' }];
+  assert.equal(f.player.captionText(), 'Previous scene');
+  f.player.apply(filmView(ORIGINAL, { screeningId: 'ipic-e1-2', revision: 3 }));
+  assert.equal(f.player.captionText(), '', 'the old cue must not accompany a loading replacement');
+  f.media.textTracks[0].activeCues = [{ text: 'Current scene' }];
+  f.media.readyState = 4; f.media.emit('canplay');
+  assert.equal(f.player.captionText(), 'Current scene');
+});
+
+test('a decoder failure after policy denial may fall back but still requires a gesture', async () => {
+  let denied = true;
+  const media = fakeMedia({ play: () => denied ? Promise.reject(Object.assign(new Error('policy'), { name: 'NotAllowedError' })) : Promise.resolve() });
+  const f = setup({ media, offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick(); await tick();
+  media.fail(4);
+  assert.equal(f.player.stats().source.src, ORIGINAL.sources[1].src, 'a real source error tries the alternate encoding');
+  media.readyState = 4; media.emit('canplay'); f.player.tick(); await tick();
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure, media.calls.play], ['blocked', 'autoplay', 1], 'changing codecs does not answer policy denial');
+  denied = false; await f.player.unlock();
+  assert.equal(f.player.stats().state, 'playing');
+});
+
+test('a resume keeps the paused film on the screen while its play() is pending', async () => {
+  let resolve;
+  const f = setup({ media: fakeMedia({ play: () => new Promise(r => { resolve = r; }) }), offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL, { status: 'paused', positionMs: 1000 }));
+  f.media.readyState = 4; f.media.emit('canplay'); f.player.tick();
+  assert.equal(f.player.stats().state, 'paused');
+  f.player.apply(filmView(ORIGINAL, { status: 'playing', revision: 2, anchorServerTimeMs: 101_000 }));
+  f.player.tick(); f.local.now += 200; f.player.tick();
+  assert.equal(f.media.calls.play, 1);
+  assert.equal(f.player.stats().state, 'paused', 'a pending resume must not unbind the film from the screen');
+  resolve(); await tick();
+  assert.equal(f.player.stats().state, 'playing');
+});
+
+test('a slow first load that keeps progressing is not called stalled because its play() is pending', async () => {
+  const { SCREENING_LOAD } = await import('../src/ipic-screening.js');
+  const f = setup({ media: fakeMedia({ play: () => new Promise(() => {}) }), offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.media.readyState = 0; f.player.tick();
+  for (let i = 0; i < 4; i++) { f.local.now += SCREENING_LOAD.stallMs / 2; f.media.emit('progress'); f.player.tick(); }
+  assert.equal(f.player.stats().state, 'loading');
+  f.local.now += SCREENING_LOAD.stallMs + 1; f.player.tick();
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['error', 'stalled']);
+});
+
+test('a hung resume of decoded paused media reaches the same finite recovery deadline', () => {
+  const f = setup({ media: fakeMedia({ play: () => new Promise(() => {}) }), offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL, { status: 'paused', positionMs: 1000 }));
+  f.media.readyState = 4; f.media.emit('canplay'); f.player.tick();
+  assert.equal(f.player.stats().state, 'paused');
+  f.player.apply(filmView(ORIGINAL, { status: 'playing', revision: 2, anchorServerTimeMs: 101_000 }));
+  f.player.tick(); f.local.now += 30_001; f.player.tick();
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['error', 'stalled']);
 });
