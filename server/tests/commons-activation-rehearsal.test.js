@@ -41,12 +41,14 @@ for (const from of ['river-oaks-gardens-3', 'river-oaks-garage-1']) test(`activa
   const namespace = `river-oaks:activation-rehearsal:${randomUUID()}`, redis = new Redis(process.env.REDIS_URL), security = createRedisSecurity({ redis, prefix: `{${namespace}}` });
   const stateKey = `${roomPrefixFor(namespace)}:state`, sockets = new Set(), logs = [], receipt = { from, to: COMMONS_REVISION, namespace, phases: [], checks: [] };
   const info = console.info, warn = console.warn; console.info = (...args) => { logs.push(args.join(' ')); }; console.warn = (...args) => { logs.push(args.join(' ')); };
-  let app = null;
+  // Every gateway this test boots, so cleanup closes any a phase left listening.
+  const gateways = new Set();
   t.after(async () => {
     console.info = info; console.warn = warn;
     if (process.env.RIVER_OAKS_REHEARSAL_DEBUG) info(logs.filter(line => line.includes('event')).join('\n'));
     for (const ws of sockets) ws.terminate();
-    await app?.close(); security.close();
+    for (const gateway of gateways) await gateway.close();
+    security.close();
     const keys = await redis.keys(`*${namespace}*`); if (keys.length) await redis.del(...keys); await redis.quit();
   });
   const data = {}, worldFor = async revision => data[revision] ??= await loadDistrictData({ districtRevision: revision });
@@ -55,6 +57,9 @@ for (const from of ['river-oaks-gardens-3', 'river-oaks-garage-1']) test(`activa
 
   async function boot(revision, epoch) {
     const gateway = createWorldGateway({ redis, namespace, worldData: await worldFor(revision), auth, security, waitlist: approvedWaitlist, origin, districtEpoch: epoch, isAdmin: id => id === 'alice' });
+    // Phases close their own gateways; cleanup closes the rest, each at most once.
+    const close = gateway.close.bind(gateway); let closing = null; gateway.close = () => closing ??= close();
+    gateways.add(gateway);
     await new Promise(resolve => gateway.server.listen(0, '127.0.0.1', resolve));
     return { gateway, base: `http://127.0.0.1:${gateway.server.address().port}`, revision, epoch };
   }
