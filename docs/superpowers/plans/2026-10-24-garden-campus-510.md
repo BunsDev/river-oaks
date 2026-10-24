@@ -125,6 +125,66 @@ At 2026-10-24 ~19:15Z, source before commit:
 - `pnpm test`: 4034 pass, 0 fail, 1 skipped (pre-existing). `pnpm run build`: passed.
   (Ran before the seat-title and replay edits; rerun at the commit.)
 
+At signed commit `098eb42f` (draft PR #647):
+- `pnpm run verify` (core): passed before commit on the identical tree (receipt
+  `.runtime/agent/core.json`, `dirty: true`).
+- Hosted checks: 29/29 complete, 24 success, 5 skipped, 0 failed, including the aggregate
+  `preview`, `preview experience (campus)` (garden-campus-office, garden-campus-suite with
+  the new "told why" check) and `preview experience (campus-traversal)`.
+- A standalone local campus journey run was queued behind other sessions' browser runs for
+  about 75 minutes and never started; I stopped it because `verify full` runs the same
+  journeys. Not counted as evidence.
+- `pnpm run verify full` with an isolated Redis (127.0.0.1:6411, no persistence), run 1
+  (19:28–20:14Z, clean tree at 098eb42f): every non-browser stage passed, including Redis
+  server tests, the dependency audit, Python 156, desktop 115 and the secret-history scan,
+  and `security-browser` passed 2/2. Then the run was killed by a signal (exit 144):
+  `reflections` shows `ABORT_ERR` with 0 ms run time after 75 s in the browser queue, and
+  `experience`, `shared` and `ipic-screening` were never run. No test failed, but the run
+  is incomplete, not a pass. Receipt preserved as `full-1-receipt.json` in the session
+  scratchpad.
+- Run 2 (20:15:12–20:15:43Z, same clean revision): failed in `agent-tests` (236/237).
+  The failure was `scripts/tests/land-pr.test.js:122` "a queued lander wakes on release
+  without waiting for the fallback…" (`queue release did not wake the lander`, 5 s budget),
+  and every later stage was skipped. The suite imports only `scripts/land-pr.mjs`; this
+  branch changes nothing under `scripts/`. Run alone three times right after, it passed
+  29/29 each time. This matches the known host-load timing flake on that test (seen on
+  #636 the same day); the cause is not established here. Receipt `full-2-receipt.json`.
+- Run 3 (from about 20:20Z, same clean revision): every non-browser stage passed this time,
+  `agent-tests` included (237/237); `security-browser`, `reflections` and `experience`
+  passed, the last with all 17 journeys, among them garden-campus-office,
+  garden-campus-traversal and garden-campus-suite ("The resident is told the operator ended
+  the lease (Suite T1-201: The lease ended on 2026-10-24: the campus operator ended it.)").
+  At 23:50Z it was still waiting in the shared browser queue for `shared` and
+  `ipic-screening`, so it is not yet a full pass. The final result goes in the #510 comment.
+
+### Review (2026-10-24, about 23:40Z)
+
+An independent review of the #647 diff found four defects, all fixed in `7418b41a` with a
+failing test first:
+1. **Account switch (privacy).** Another account signing in on the same page kept the former
+   account's lists: it could see the former account's guest suites and hear false "access
+   ended" notices. The page now keeps its lists for the account and world that asked; a
+   change drops them, closes an open dialog, clears the door prediction, and ignores answers
+   for an account that has left.
+2. **Overtaken announcement.** A background list overtaken by a newer list (the dialog
+   opened meanwhile) lost its announcement. The newer list now makes it.
+3. **Operator wording.** A replayed offer or extension told the operator "you gave the suite
+   up". Operator actions now get operator wording ("the tenant gave the suite up").
+4. **Unrealistic test.** The guest test changed the town's leased suites while its list still
+   showed them. It now matches what the server sends; a new test pins that a guest the tenant
+   removes learns it at the next list (already listed under Gaps).
+
+At signed commit `7418b41a`:
+- Focused: `node --test preview/tests/garden-campus-dialog.test.js
+  preview/tests/garden-campus-model.test.js preview/tests/garden-campus-fitout.test.js`:
+  40 pass, 0 fail. The account-switch, overtaken-list and operator-wording tests failed first.
+- `pnpm run verify` (core), clean tree: passed. agent 237/0/0, preview 4043 (0 fail,
+  1 skipped), server 1111 (0 fail, 223 skipped: Redis and browser), desktop 118 (0 fail,
+  3 skipped), build, Python lint/format/tests (156), demo, secrets.
+- Local campus journeys at this commit were queued behind other sessions' browser runs when
+  this ledger was written; the result goes in the #510 comment. Hosted shards at the pushed
+  head are the browser evidence for it.
+
 ## Gaps
 
 - A guest removed by the tenant doesn't change the public `leased` set, so their page
@@ -151,7 +211,7 @@ At 2026-10-24 ~19:15Z, source before commit:
 Two accounts (one operator from `RIVER_OAKS_CAMPUS_OPERATOR_IDS`), the Gardens revision.
 Mark each step pass or fail, with a note.
 
-1. **Keyboard only, desktop (3 min).** Tab to Play → The Gardens offices → Suites and
+1. **Keyboard only, desktop (2 min).** Tab to Play → The Gardens offices → Suites and
    leases. Every button reachable with Tab; focus starts on the heading; Escape closes the
    dialog and returns focus to the world; walking keys do nothing while it is open. Ask
    for a suite, then withdraw: the row moves to **Ended recently** with "You withdrew your
@@ -163,13 +223,17 @@ Mark each step pass or fail, with a note.
 3. **Nested Escape (1 min).** Sit at a hall table, Use this desk, open the suites dialog
    from Play if reachable; Escape closes only the top layer each time; no held movement
    after closing.
-4. **VoiceOver, Mac Safari (2 min).** The status line is announced after each action and
+4. **Held keys (1 min).** Hold W (or an arrow key), open Suites and leases, release the
+   key while the dialog is open, then close it: the avatar must not keep walking. Repeat
+   with the desk open, and with a key held while switching apps (Cmd-Tab) and back.
+5. **VoiceOver, Mac Safari (2 min).** The status line is announced after each action and
    after the walk-out notice; Ended recently reads as a list with its label.
-5. **Phone touch (2 min).** Phone-width dialog: no horizontal scroll, every button tappable,
+6. **Phone touch (2 min).** Phone-width dialog: no horizontal scroll, every button tappable,
    the date and length pickers usable; reduced motion on: nothing animates.
 
 Not covered here: paid mode (not built), Computer (#486/#487), physical-GPU budgets (#511).
 
 ## Next action
 
-Core verify, campus journeys at the commit, signed commit, draft PR.
+Push, hosted checks at the new head, #510 evidence comment, then hand #647 to the landing
+train (river-oaks-71). Merging is theirs under Val's landing authorization.
