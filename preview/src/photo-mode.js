@@ -123,7 +123,7 @@ export function createPhotoMode({ camera, canvas, host, canOpen = () => true, on
   const observer = new ResizeObserver(layout); observer.observe(host);
   window.addEventListener('resize', layout);
   return {
-    panel, open, get active() { return dialog.open; },
+    panel, open, get active() { return dialog.open; }, get hasPhoto() { return Boolean(file); },
     update() { trigger.disabled = !canOpen(); if (dialog.open && !canOpen()) close(); framing.update(); },
     // Photo details change with size, format (both through layout) and graphics quality.
     qualityChanged() { metadata(); },
