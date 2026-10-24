@@ -28,7 +28,7 @@ async page => {
     });
     // DIAGNOSTIC BRANCH ONLY: three.js announces each Scene to its devtools hook.
     await tab.addInitScript(()=>{window.__diagScenes=[];window.__THREE_DEVTOOLS__=new EventTarget();window.__THREE_DEVTOOLS__.addEventListener('observe',event=>{if(event.detail?.isScene)window.__diagScenes.push(event.detail);});});
-    await tab.goto(`${origin}/?motion-debug=1`);
+    await tab.goto(`${origin}/?motion-debug=1&render-audit=1`);
     await tab.waitForFunction(revision=>window.__riverMultiplayer?.().connected
       && window.__riverMultiplayer().snapshot?.districtRevision===revision
       && document.querySelector('#canvas-host')?.dataset.playerReady==='true'
@@ -154,34 +154,31 @@ async page => {
     const reconnectMs=Date.now()-reconnectStart;
     await Promise.all([walk(page,[at([201,1.5]),at([300,1.5])],'owner nineteenth'),walk(peer,[at([209,-1.5]),at([300,-1.5])],'alice nineteenth')]);
     await capture(page,'nineteenth-and-yale');
-    // DIAGNOSTIC BRANCH ONLY: loop rate and draw stats with each top-level group hidden in turn.
-    const probe=async(tab,label)=>{
-      const rows=await tab.evaluate(async()=>{
-        const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),host=document.querySelector('#canvas-host');
-        let frames=0;const tick=()=>{frames++;requestAnimationFrame(tick);};requestAnimationFrame(tick);
-        const root=window.__diagScenes.find(scene=>scene.getObjectByName('Bayou Heights')),heights=root.getObjectByName('Bayou Heights'),world=heights.parent;
-        const tris=group=>{let total=0;group.traverseVisible(mesh=>{if(mesh.isMesh){const g=mesh.geometry;total+=(g.index?.count??g.attributes.position?.count??0)/3*(mesh.isInstancedMesh?mesh.count:1);}});return Math.round(total);};
-        const measure=async()=>{await sleep(1500);const f0=frames,t0=performance.now(),p0=window.__riverCarriage().pose.position;await sleep(5000);
-          const stats=JSON.parse(host.dataset.renderStats||'{}'),p1=window.__riverCarriage().pose.position;
-          return {loopHz:+((frames-f0)/((performance.now()-t0)/1000)).toFixed(2),calls:stats.calls,triangles:stats.triangles,moved:+Math.hypot(p1[0]-p0[0],p1[2]-p0[2]).toFixed(2)};};
-        const landscape=heights.children.find(part=>part.name==='bayou-heights/landscape');
-        const groups=[...root.children.filter(child=>child!==world).map(child=>['root',child]),...world.children.map(child=>['world',child]),
-          ...heights.children.map(child=>['heights',child]),...(landscape?landscape.children.map(child=>['landscape',child]):[])];
-        const out=[{label:'all',quality:host.dataset.quality,...await measure()}];
-        for(const [where,group] of groups){
-          const name=`${where}:${group.name||group.type}#${group.children.length}`,count=tris(group);
-          if(!group.visible||count<40000){out.push({label:name,visible:group.visible,tris:count,skipped:true});continue;}
-          group.visible=false;
-          try{const row=await measure();out.push({label:name,tris:count,...row,heldHidden:!group.visible});}finally{group.visible=true;}
-        }
-        return out;
-      });
-      for(const row of rows)console.log(`PROBE ${label} ${JSON.stringify(row)}`);
+    // DIAGNOSTIC BRANCH ONLY: per-phase frame times (render audit) and stream states, standing and walking.
+    const audit={
+      start:tab=>tab.evaluate(()=>{window.__riverRenderAudit.start();window.__diagStates=[];let last='';
+        const commons=window.__diagScenes.find(scene=>scene.getObjectByName('East Garden Commons'))?.getObjectByName('East Garden Commons');
+        window.__diagTimer=setInterval(()=>{const h=window.__riverBayouHeights()?.stream;
+          const now=JSON.stringify({h:h?.chunks?.map(chunk=>`${chunk.id.split('/')[1]??'shared'}:${chunk.state}`),hp:h?.pending,commons:commons?.children.map(child=>child.name)});
+          if(now!==last){window.__diagStates.push([Math.round(performance.now()),now]);last=now;}},250);}),
+      stop:(tab,label)=>tab.evaluate(label=>{clearInterval(window.__diagTimer);const {frames}=window.__riverRenderAudit.stop();
+        const keys=new Set(frames.flatMap(frame=>Object.keys(frame.phasesMs??{}))),q=(values,f)=>{const sorted=[...values].sort((a,b)=>a-b);return +(sorted[Math.min(sorted.length-1,Math.floor(f*sorted.length))]??0).toFixed(1);};
+        const phases=Object.fromEntries([...keys].map(key=>{const values=frames.map(frame=>frame.phasesMs?.[key]??0);return [key,{mean:+(values.reduce((a,b)=>a+b,0)/Math.max(1,values.length)).toFixed(1),p50:q(values,.5),p95:q(values,.95),max:q(values,1)}];}));
+        const intervals=frames.map(frame=>frame.intervalMs);
+        return {label,frames:frames.length,intervalP50:q(intervals,.5),intervalP95:q(intervals,.95),cpuP50:q(frames.map(f=>f.cpuMs),.5),phases,states:window.__diagStates.slice(0,40)};},label),
     };
-    await probe(page,'owner east x300');
+    const report=row=>{const {states,...rest}=row;console.log(`PROBE ${JSON.stringify(rest)}`);for(const [t,state] of states)console.log(`PROBE-STATE ${row.label} ${t} ${state}`);};
+    await Promise.all([audit.start(page),audit.start(peer)]);await page.waitForTimeout(6000);
+    for(const [tab,label] of [[page,'owner standing east x300'],[peer,'alice standing east x300']])report(await audit.stop(tab,label));
     await Promise.all([walk(page,[at([297,1.5])],'owner turn west'),walk(peer,[at([297,-1.5])],'alice turn west')]);
-    await probe(page,'owner west x297');
-    await probe(peer,'alice west x297');
+    await Promise.all([audit.start(page),audit.start(peer)]);await page.waitForTimeout(6000);
+    for(const [tab,label] of [[page,'owner standing west x297'],[peer,'alice standing west x297']])report(await audit.stop(tab,label));
+    await Promise.all([audit.start(page),audit.start(peer)]);
+    await Promise.all([walk(page,[at([287,1.5])],'owner walk west'),walk(peer,[at([287,-1.5])],'alice walk west')]);
+    for(const [tab,label] of [[page,'owner walking west 297-287'],[peer,'alice walking west 297-287']])report(await audit.stop(tab,label));
+    await Promise.all([audit.start(page),audit.start(peer)]);
+    await Promise.all([walk(page,[at([297,1.5])],'owner walk east'),walk(peer,[at([297,-1.5])],'alice walk east')]);
+    for(const [tab,label] of [[page,'owner walking east 287-297'],[peer,'alice walking east 287-297']])report(await audit.stop(tab,label));
     throw new Error('diagnostic probe complete');
 
     // Home: back over the footbridge and the Commons to the District.
