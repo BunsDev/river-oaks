@@ -11,29 +11,38 @@ import { chromium } from 'playwright';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 import { startBrowserFixture } from '../e2e/fixture-server.js';
 import { distribution } from './metrics.js';
+import { baselineOptions, frameSummary, phaseSummary } from './baseline-options.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
+const options = baselineOptions(process.argv.slice(2));
 // Capture provenance only after the queue wait, when the measured source is loaded.
 const release = await holdBrowserLock('world expansion baseline');
-const output = join(root, '.runtime/world-expansion', `baseline-${new Date().toISOString().replaceAll(':', '-')}`);
+const output = join(root, '.runtime/world-expansion', `baseline-${options.label ? `${options.label}-` : ''}${new Date().toISOString().replaceAll(':', '-')}`);
 const files = ['preview/public/data/district.json', 'preview/public/data/world-manifest.json',
   'preview/src/world-manifest.js', 'preview/src/district-interior-contract.js', 'preview/src/garden-campus-district.js',
   'preview/src/main.js', 'preview/src/render-audit.js', 'preview/src/walking.js', 'preview/src/world-surface.js',
   'server/district-data.js', 'server/world.js', 'shared/east-garden-commons-layout.js',
-  'preview/audit/world-expansion-baseline.js', 'pnpm-lock.yaml'];
+  'preview/audit/world-expansion-baseline.js', 'preview/audit/baseline-options.js', 'pnpm-lock.yaml'];
 const report = {
   status: 'running', startedAt: new Date().toISOString(),
   head: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
-  sourceSha256: Object.fromEntries(await Promise.all(files.map(async file => [file, createHash('sha256').update(await readFile(join(root, file))).digest('hex')]))),
+  // An older revision may predate a hashed file; record it as absent rather than failing.
+  sourceSha256: Object.fromEntries(await Promise.all(files.map(async file => [file, await readFile(join(root, file)).then(data => createHash('sha256').update(data).digest('hex'), error => {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  })]))),
   machine: { platform: platform(), arch: arch(), cpu: cpus()[0]?.model, logicalCpus: cpus().length, loadAverage: loadavg() },
   scope: 'Local Chromium development build, Gardens revision, fixture accounts and in-memory loopback authority. Phone-sized viewport uses the same desktop GPU, not physical mobile hardware. Resource bytes include Vite development modules, not a production initial-download budget. Two-player samples render two full browser clients concurrently on this host. GPU memory bytes, live auth, hosted performance and human accessibility are not measured.',
-  quality: 'sharp', reducedMotion: 'reduce', sampleDurationMs: 30000, samplesPerWorkload: 3, warmupMs: 5000, profiles: [],
+  quality: 'sharp', reducedMotion: 'reduce', sampleDurationMs: options.seconds * 1000, samplesPerWorkload: options.samples, warmupMs: 5000,
+  vsync: options.vsync, options, profiles: [],
 };
 let browser, fixture;
 await mkdir(output, { recursive: true });
 const flush = () => writeFile(join(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
 try {
-  browser = await chromium.launch({ headless: true, args: process.platform === 'darwin' ? ['--use-angle=metal'] : [] });
+  browser = await chromium.launch({ headless: true, args: [...process.platform === 'darwin' ? ['--use-angle=metal'] : [],
+    // vsync=off measures frame cost instead of snapping intervals to display refresh multiples.
+    ...options.vsync === 'off' ? ['--disable-gpu-vsync', '--disable-frame-rate-limit'] : []] });
   report.browser = browser.version();
   const district = JSON.parse(await readFile(join(root, 'preview/public/data/district.json')));
   const [x, north, height] = district.walkSpawn;
@@ -41,7 +50,7 @@ try {
   for (const profile of [
     { name: 'desktop', viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 },
     { name: 'phone-viewport', viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 },
-  ]) {
+  ].filter(profile => options.profiles.includes(profile.name))) {
     const row = { ...profile, status: 'running', samples: [], errors: [] };
     report.profiles.push(row); await flush();
     fixture = await startBrowserFixture({ env: { RIVER_OAKS_DISTRICT_REVISION: 'river-oaks-gardens-3' } });
@@ -86,12 +95,15 @@ try {
         const entries = performance.getEntriesByType('resource');
         return { count: entries.length, transferBytes: entries.reduce((n, e) => n + e.transferSize, 0), decodedBodyBytes: entries.reduce((n, e) => n + e.decodedBodySize, 0) };
       });
+      let peer = null;
       const sample = async (count, iteration) => {
         await owner.page.waitForTimeout(report.warmupMs);
         const before = await owner.page.evaluate(() => window.__riverRenderAudit.graphics());
         assert.ok(!/SwiftShader|llvmpipe|Software|Microsoft Basic Render/i.test(before.renderer), `Software renderer: ${before.renderer}`);
-        await owner.page.evaluate(() => window.__riverRenderAudit.start());
+        // The peer is timed over the same window so both renderers' costs are visible.
+        await Promise.all([owner, ...count === 2 ? [peer] : []].map(player => player.page.evaluate(() => window.__riverRenderAudit.start())));
         await owner.page.waitForTimeout(report.sampleDurationMs);
+        const peerTiming = count === 2 ? await peer.page.evaluate(() => window.__riverRenderAudit.stop()) : null;
         const data = await owner.page.evaluate(() => ({ timing: window.__riverRenderAudit.stop(), graphics: window.__riverRenderAudit.graphics(),
           players: window.__riverMultiplayer().snapshot.players.length, heap: performance.memory ? { usedJSHeapSize: performance.memory.usedJSHeapSize, totalJSHeapSize: performance.memory.totalJSHeapSize } : null }));
         assert.equal(data.timing.overflow, false); assert.equal(data.timing.discontinuities ?? 0, 0);
@@ -100,18 +112,31 @@ try {
         await owner.page.screenshot({ path: join(output, screenshot) });
         row.samples.push({ players: count, iteration, before, after: data.graphics, heap: data.heap,
           frame: distribution(data.timing.frames.map(frame => frame.intervalMs)), cpuSubmission: distribution(data.timing.frames.map(frame => frame.cpuMs)),
-          screenshot, loadAverage: loadavg() });
+          screenshot, loadAverage: loadavg(), frameSummary: frameSummary(data.timing.frames), phasesMs: phaseSummary(data.timing.frames),
+          ...peerTiming ? { peer: { frameSummary: frameSummary(peerTiming.frames), cpuSubmission: distribution(peerTiming.frames.map(frame => frame.cpuMs)), phasesMs: phaseSummary(peerTiming.frames) } } : {},
+          });
         await flush();
       };
       for (let iteration = 1; iteration <= report.samplesPerWorkload; iteration++) await sample(1, iteration);
-      const peer = await joinPlayer('alice'); row.peerJoinReadyMs = peer.joinReadyMs;
+      peer = await joinPlayer('alice'); row.peerJoinReadyMs = peer.joinReadyMs;
       await owner.page.waitForFunction(() => window.__riverMultiplayer().snapshot.players.length === 2);
       await peer.page.waitForFunction(() => window.__riverMultiplayer().snapshot.players.length === 2);
       for (let iteration = 1; iteration <= report.samplesPerWorkload; iteration++) await sample(2, iteration);
+      if (options.cpuProfile === 'on') {
+        // A separate unmeasured window: sampling overhead must not skew the timed samples.
+        const cdp = await owner.page.context().newCDPSession(owner.page);
+        await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 200 }); await cdp.send('Profiler.start');
+        await owner.page.waitForTimeout(report.sampleDurationMs);
+        const { profile: trace } = await cdp.send('Profiler.stop'); await cdp.detach();
+        row.cpuProfile = `${row.name}-2-players.cpuprofile`;
+        await writeFile(join(output, row.cpuProfile), JSON.stringify(trace));
+      }
       row.medians = [1, 2].map(players => {
         const samples = row.samples.filter(sample => sample.players === players);
         return { players, frameP95Ms: distribution(samples.map(sample => sample.frame.p95Ms)).p50Ms,
-          cpuSubmissionP95Ms: distribution(samples.map(sample => sample.cpuSubmission.p95Ms)).p50Ms };
+          cpuSubmissionP95Ms: distribution(samples.map(sample => sample.cpuSubmission.p95Ms)).p50Ms,
+          frameMeanMs: distribution(samples.map(sample => sample.frameSummary.meanMs)).p50Ms,
+          cpuSubmissionP50Ms: distribution(samples.map(sample => sample.cpuSubmission.p50Ms)).p50Ms };
       });
       const before = await owner.page.evaluate(() => {
         const town = window.__riverMultiplayer();
