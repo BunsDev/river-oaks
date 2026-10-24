@@ -20,7 +20,9 @@ export function createTownChatDock(section) {
     if (dock.open) {
       if (matchMedia('(max-width:900px)').matches) {
         document.querySelectorAll('.hud-space:not([hidden]) .hud-space-header button').forEach(button => button.click());
-        document.querySelector('#community-close')?.click();
+        // Closing a conversation returns focus to the scene, so only an open one is closed:
+        // the Town chat command has just focused the chat field.
+        if (document.querySelector('#community-dialogue')?.hidden === false) document.querySelector('#community-close')?.click();
       }
     }
   });
