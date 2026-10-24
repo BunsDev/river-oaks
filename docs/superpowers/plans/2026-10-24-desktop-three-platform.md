@@ -54,19 +54,21 @@ Local: `node --test preview/tests/render-quality.test.js` 21/21 (3 new tests fai
 
 ### Ten-run diagnostic at the fix head
 
-`diag/desktop-macos-e2e-371-20261024` at `a74baa04` (fix + a ten-job macOS workflow, three at a time), run 40127265022. First eight legs:
+Two series of ten macOS legs, three at a time: run 40127265022 on `diag/desktop-macos-e2e-371-20261024` at `a74baa04` (the fix plus the diag workflow, legs 1–10), then run 40128720845 at `af776bab` (plus diag-only instrumentation, legs 11–20). 18 of 20 passed.
 
-| Leg | Result | Frames | Median | Auto settled after | Auto at measurement |
-| ---: | --- | ---: | ---: | ---: | --- |
-| 1 | pass | 125 | 81 ms | 34.7 s | 0.6, AO off |
-| 2 | pass | 118 | 82 ms | 40.3 s | 0.6, AO off |
-| 3 | pass | 165 | 65 ms | 23.6 s | 0.6, AO off |
-| 4 | pass | 230 | 48 ms | 21.7 s | 0.6, AO off |
+| Legs | Result | Frames | Median | Auto settled after | Auto at measurement |
+| --- | --- | --- | --- | --- | --- |
+| 1–4, 6–16, 18–20 | pass | 118–425 (median 165) | 17–82 ms | 10.6–40.3 s | 0.6, AO off, every leg |
 | 5 | **fail** | — | — | — | click on `[data-quality=auto]` timed out: Settings closed again after the Graphics tab opened |
-| 6 | pass | 167 | 52 ms | 24.9 s | 0.6, AO off |
-| 7, 8 | pass | | | | |
+| 17 | **fail** | 177 (frame check passed) | 52 ms | 33.7 s | later: "Execution context was destroyed" in the hot-reload check |
 
-The frame check now measures Auto at its floor without AO, but on the slowest runners that is only about 12 fps (118–125 frames), so its margin over the unchanged 100-frame line is thin. Leg 5 shows the close-settings signature is not fully explained: the e2e had already waited for `joined`. Vite's town WebSocket proxy logged `write EPIPE` 0.8 s before the join check passed, but passing legs log the same proxy errors around each reload, so that is not evidence. The other closers are the access gate (`setStatus`), `dismissOnOutsideClick`, Escape and the staleness watchdog (`lost(…, 4901)` after 8 s and five quiet checks). A diag-only commit (`af776bab`) records `data-multiplayer` changes, every `dialog.close()` with its stack, `close` and `cancel` events, town socket opens and closes, long tasks over 1 s and pointer-downs into each receipt; its ten-leg run waits for the first run to finish so no more than three diagnostic macOS jobs run at once.
+The frame check now measures Auto at its floor without AO in every leg, and none of the 19 legs that reached it came near failing it, but on the slowest runners Auto's floor is only about 12 fps (118–125 frames), so the margin over the unchanged 100-frame line is about 20%.
+
+**Leg 17, a third harness race.** Vite logged `page reload desktop-hmr-5476.css`: the hot-reload check created its probe file and then imported it, and on this slow runner Vite's watcher reported the new file first and reloaded the whole page during `page.evaluate`. Fixed at the origin in `b3127a6b`: the probe file exists before Vite starts, so the check only edits a file Vite already serves.
+
+**Leg 5 is not explained.** The e2e had already waited for `joined`. Vite's town WebSocket proxy logged `write EPIPE` 0.8 s before the join check passed, but passing legs log the same proxy errors around each reload, so that is not evidence. The instrumented legs 11–20 (every `dialog.close()` with its stack, `close`/`cancel` events, town socket opens and closes, `data-multiplayer` changes, long tasks over 1 s, pointer-downs) did not reproduce it: in every leg the only Settings close was the e2e's own button click, the town joined once and stayed joined, and the main thread ran long tasks of 1–6 s after the reload. Candidate closers left: the access gate (`setStatus`), `dismissOnOutsideClick`, Escape and the staleness watchdog (`lost(…, 4901)` after 8 s and five quiet checks). `b3127a6b` keeps a failure-only trail in the e2e (dialog closes with their caller, town state changes) so the next occurrence names its closer. Third series at `b3127a6b` (`diag/desktop-macos-e2e-371-b-20261024`, run 40131153906, legs 21–30): **10 of 10 passed**, 124–211 frames (median 178), Auto settled after 19.9–34.6 s, every leg at `{0.6, AO off}`.
+
+**Independent review** (a fresh reviewer given only the diff): no correctness bug; `steadyWindows` is computed after every branch of `sample()` and reset where needed, and the wait cannot pass vacuously. Its risks, fixed in `d0be556f`: gitignore `preview/desktop-hmr-*.css` (the probe now exists before launch, so a launch timeout could leave it); the settle comment claims only "stopped stepping down" (a later step-up happens only on fast frames, so two windows stay); the settle wait fails with the quality state instead of a bare timeout below 4 fps; the failure trail runs only in the top frame and stops polling after 120 s. A fourth series runs at `d0be556f` (`diag/desktop-macos-e2e-371-c-20261024`).
 
 ## Increment 2: Electron download (#371)
 
@@ -82,6 +84,8 @@ Local demonstration (warm cache copied from `~/Library/Caches/electron`): `downl
 
 Local: `node --test desktop/tests/package-options.test.js` 10/10 (new tests failed first on the missing exports); `pnpm run test:desktop` 119 passed, 3 skipped; `verify desktop-package` passed; core passed (tooling 237, preview 4,013 + 1, server 888 + 225, desktop 119 + 3, Python 156). Signed `20344eca`, draft [#652](https://github.com/BunsDev/river-oaks/pull/652).
 
+Hosted: PR run 40127767202 (`20344eca`) missed the new cache on all three runners, downloaded each zip once, logged `artifact validated` and never fetched `SHASUMS256.txt`. A dispatch on the branch (40129100222) missed too (a branch cannot read PR-scoped caches) and saved on Linux and Windows but not macOS, because `actions/cache` saves only when the whole job succeeds and that leg's e2e hit the old render-loop flake (96 frames at `{0.61, AO, 10 fps}`, pre-#651 code). `eff2fbbc` splits the step into `actions/cache/restore` before packaging and `actions/cache/save` right after a successful package on a miss (both jobs). PR run 40130144121 at `eff2fbbc`: "Cache restored from key: electron-<OS>-<arch>-44.9.1" and `@electron/get` `Cache hit` on all three runners, no download at all, whole run green. Independent review: the packager passes `download` through, cached zips are re-validated, a partial download never enters the cache, and the retry is bounded and transient-only. Fixed in `04228bec`: a failed unit-test step skipped the unconditioned version and restore steps while packaging still ran, and the save wrote an unversioned key (both steps now run on `!cancelled()`, and the save needs a version); `sign-windows`, which holds `id-token: write` and the signing environment, no longer restores or saves a cache; keys end in `-zip` so a prefix match cannot cross versions; a behavioural test runs the packager's own `@electron/get` against a local mirror (one zip request, no `SHASUMS256.txt`, warm cache with no network, tampered zip replaced, mismatch refused and not retried); without `checksums` the same call requests `/v44.9.1/SHASUMS256.txt`. Local on `04228bec`: package-options 11/11, `verify desktop` 120 + 3 skipped, `verify tooling` 237/237. `eff2fbbc`'s Verify failed once in `preview experience (campus-traversal)` ("One resident on B12 stands over the other on the street"), a Garden campus journey this PR cannot reach; first log kept in the session scratchpad; the one rerun passed.
+
 ## Increment 3: Linux crash recovery (#370)
 
 **Kernel probe** (`diag/desktop-linux-crash-370-20261024`, run 40127339568, ubuntu-24.04, systemd 255, kernel 6.17, `core_pattern` `|/usr/lib/systemd/systemd-coredump …`, `suid_dumpable` 2): a child holding 1.2 GB of incompressible memory called `process.abort()`. Left alone, `/proc/<pid>/status` read `CoreDumping: 1` at 302 ms and the process was gone at 19,157 ms (SIGABRT; `coredumpctl` lists a 1.1 G core). With `SIGKILL` on first sight of `CoreDumping: 1` (222 ms) it was gone at 225 ms, and no second core was listed.
@@ -90,7 +94,16 @@ Local: `node --test desktop/tests/package-options.test.js` 10/10 (new tests fail
 
 First failure kept: an earlier version failed 2 of 12 parallel runs of its test file with `[77855, 77855]` (the renderer ended twice while it still read as dumping). A once-only rule, with a deterministic test written first, fixed it; 24 parallel runs then passed. Local: watch tests 5 passed, 1 skipped (needs `/proc`); `test:desktop` 120 passed, 4 skipped; `verify desktop-package` passed; core passed (tooling 237, preview 4,013 + 1, server 888 + 225, desktop 120 + 4, Python 156).
 
-Pending: #653's Desktop Linux leg and the e2e diagnostic `diag/desktop-linux-crash-370-e2e-20261024` (`29c46136`): "before" restores `main`'s `main.js` and widens only the crash wait to 420 s on that branch; "after" is the fix head.
+**Before and after on the real e2e** (`diag/desktop-linux-crash-370-e2e-20261024`, `29c46136`, run 40128884470, `ubuntu-latest`, `systemd-coredump` active):
+
+| Variant | Renderer reported gone | Reload finished | Playable | `coredumpctl` |
+| --- | ---: | ---: | ---: | --- |
+| before: `main`'s `main.js`, crash wait widened to 420 s on that branch only | 218,431 ms (`crashed`) | 218,705 ms | 224,588 ms | SIGTRAP, truncated, 97.3 M |
+| after: the fix | 153 ms (`killed`) | 430 ms | 6,249 ms | interrupted, 7.5 K |
+
+The after log reads `Game renderer 3548 is writing a core dump; ending it so the game can recover`. #653's own Desktop run on `b0a70d14` (40128917674): Linux leg passed under `systemd-coredump` with the unchanged 60 s check (gone 231 ms, playable 6,363 ms); macOS passed; Windows' e2e passed but its unit tests failed `null !== 'SIGKILL'` (Windows reports an exit code, not a signal). `a690592a` makes that test check the process ended on every platform and SIGKILL off Windows; `verify desktop` 120 passed, 4 skipped; 16 parallel runs passed. Hosted on `a690592a`: macOS first failed with the old render-loop flake (90 frames at `{0.61, AO, 10 fps}`, pre-#651) and passed on its one rerun; Linux passed under `systemd-coredump` (gone 244 ms, playable 5,052 ms); Windows passed.
+
+**Independent review**: no blocking bug (`getOSProcessId()` never returns the GPU or browser process; ordering with the recovery is sound; no leak; no sandbox, fuse or origin change). Fixed in `2a2d9d11`: the PID is checked again after the status read and a read finishing after `stop()` kills nothing (PID reuse); an unreadable status other than a gone process is reported once (`hidepid`); on Linux with a piped `core_pattern` the e2e asserts `reason === 'killed'`; the SIGKILL test no longer asserts inside the swallowed reader and its wait is bounded; the real `/proc` reader runs through the watch on Linux; docs say the CI renderer is unsandboxed. Accepted: other crashes during the CI e2e now also go through `systemd-coredump`. Local on `2a2d9d11`: watch tests 7 + 2 skipped, 16 parallel runs passed, `verify desktop` 122 + 5 skipped, `verify desktop-package` passed, `verify tooling` 237/237. Core `verify` failed twice in its first stage on `scripts/tests/land-pr.test.js` "a queued lander wakes on release…" (once niced, once not, load about 13); this branch changes nothing in `scripts/`, the suite passed 29/29 three times in isolation, and core stops at its first failure, so its other stages did not run on this head; logs kept in the session scratchpad.
 
 ## Increment 4: candidate and rehearsal (#373, #372)
 
@@ -102,15 +115,16 @@ Docs: `docs/desktop.md` now says which pull requests get all three runners and t
 
 ## Increment 5: decisions (#370, #372, #373)
 
-Drafted for one comment each. Correction to the goal prompt: #372 has two open decisions, not three. Windows-only cookie encryption was settled when 0.2.1 turned `EnableCookieEncryption` on for every platform (`docs/security-review.md`; installers ledger 2026-10-15); the 10-22 status still listed it.
+Posted 2026-10-24 ~20:40Z: [#370](https://github.com/BunsDev/river-oaks/issues/370#issuecomment-6389040777) (four identity confirmations, with #653 for the crash finding), [#372](https://github.com/BunsDev/river-oaks/issues/372#issuecomment-6389040987) (Azure setup steps by variable name, `.deb` Maintainer, desktop shortcut) and [#373](https://github.com/BunsDev/river-oaks/issues/373#issuecomment-6389041177) (candidate, version, machines, blockers). Correction to the goal prompt: #372 has two open decisions, not three. Windows-only cookie encryption was settled when 0.2.1 turned `EnableCookieEncryption` on for every platform (`docs/security-review.md`; installers ledger 2026-10-15); the 10-22 status still listed it.
 
 ## Pull requests
 
 | PR | Branch | Head | State |
 | --- | --- | --- | --- |
-| [#651](https://github.com/BunsDev/river-oaks/pull/651) | `fix/desktop-macos-e2e-371-20261024` | `4756d593` | draft; core passed locally; diagnostic series found a remaining close-settings failure (leg 5); not ready |
-| [#652](https://github.com/BunsDev/river-oaks/pull/652) | `ci/desktop-electron-cache-371-20261024` | `20344eca` | draft; core passed locally; hosted pending |
-| [#653](https://github.com/BunsDev/river-oaks/pull/653) | `fix/desktop-linux-crash-370-20261024` | `b0a70d14` | draft; core passed locally; hosted and diag pending; proposal for Val |
+| [#651](https://github.com/BunsDev/river-oaks/pull/651) | `fix/desktop-macos-e2e-371-20261024` | `d0be556f` | draft; core passed on `4756d593`; later heads change only the e2e (and `.gitignore`), `verify desktop` passed; 10 of 10 diag legs at `b3127a6b`; fourth series at `d0be556f` running |
+| [#652](https://github.com/BunsDev/river-oaks/pull/652) | `ci/desktop-electron-cache-371-20261024` | `04228bec` | draft; cache miss and hit proven; review fixes pushed; hosted on `04228bec` pending |
+| [#653](https://github.com/BunsDev/river-oaks/pull/653) | `fix/desktop-linux-crash-370-20261024` | `2a2d9d11` | draft; before/after proven (218 s → 0.15 s); review fixes pushed; hosted on `2a2d9d11` pending; proposal for Val |
+| [#654](https://github.com/BunsDev/river-oaks/pull/654) | `docs/desktop-release-packet-373-20261024` | `807691d9` | draft; docs; hosted green |
 
 ## Results
 
@@ -124,4 +138,4 @@ Recorded per increment above as each arrives.
 
 ## Next action
 
-Read the instrumented macOS run's timelines and fix the close-settings closer at its seam; collect #652's cache miss and hit; collect the Linux before/after timings; then post the decision comments.
+Read the fourth macOS series at `d0be556f`; collect hosted results on `04228bec` and `2a2d9d11`; post the #369 evidence map; hand off.
