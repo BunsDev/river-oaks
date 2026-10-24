@@ -176,6 +176,26 @@ chip. `render-budget.js` pins Sharpest, since it measures the full-quality
 budget. Frame times on a shared GPU vary with load, so compare against an
 unmodified checkout in interleaved runs before claiming a change.
 
+`pnpm run test:experience graphics-recovery` is a **local-only Chromium journey**
+(not in a hosted shard). It uses `WEBGL_lose_context` on the real game canvas,
+checks the non-fatal status, retained session/position/settings, resumed frames
+and walking, the three-loss limit and 15-second timeout, persistent quality,
+and five cycles of renderer memory and DOM/Three disposal-listener counts.
+It also closes/reopens a modal during loss and checks the explicit reload fallback
+with an unavailable restore extension: identity, pose after walking away from a
+shared link, Settings and unsent chat. It refuses a reload while Photo mode or a
+retained photo would lose state, and checks the camera and downloadable image.
+Other open sheets must be finished or closed before fallback reload. The extension remains available only to the test to cause real loss.
+It uses fixture-response instrumentation and Chromium's read-only listener API;
+it does not establish Safari/iOS memory-pressure or human VoiceOver acceptance.
+Run with `RIVER_OAKS_E2E_REPORT=graphics-recovery-local.json` and do not commit
+that generated report. Focused units cover state-machine deadlines (visible time
+only; background losses outside the loop limit and step-down), the guarded
+reload offered once a retry also times out, late callbacks,
+visibility composition, retained HDR regeneration, reflections, fallback office
+lighting, portrait queues,
+quality persistence and reload-state handoff.
+
 `pnpm install` installs the secret hook once in the shared Git directory, so it applies to every worktree of the clone. CI scans the worktree and complete fetched history. The `main` ruleset requires the aggregate `preview` check (see below). Scanners cannot detect every secret format, and local hooks can be bypassed. Tests verify the configured guard's behavior rather than claiming absolute prevention.
 
 ## Manual Jev key override
