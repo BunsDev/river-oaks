@@ -18,8 +18,10 @@ const manifest = await fetch('./screening/manifest.json').then(r => r.json());
 const catalog = { ...SCREENING_MEDIA };
 for (const film of manifest.films) catalog[film.id] = Object.freeze({ id: film.id, venues: ['ipic'], durationMs: film.files[0].durationMs, label: film.id, fixture: true, sources: film.files.map(({ src, type }) => ({ src, type })), transcript: [] });
 catalog['test-fallback'] = Object.freeze({ ...catalog['test-edge-4x3'], id: 'test-fallback', sources: [{ src: manifest.broken.src, type: manifest.broken.type }, ...catalog['test-edge-4x3'].sources] });
-// Neither encoding is on the server: a download failure while online, not a decoder's.
-catalog['test-missing'] = Object.freeze({ ...catalog['test-edge-4x3'], id: 'test-missing', sources: catalog['test-edge-4x3'].sources.map(({ src, type }) => ({ src: src.replace(/[^/]+$/, 'missing-film$&'), type })) });
+// Neither of two encodings is on the server: a download failure while online, not a decoder's.
+const mp4 = catalog['test-edge-4x3'].sources[0];
+catalog['test-missing'] = Object.freeze({ ...catalog['test-edge-4x3'], id: 'test-missing',
+  sources: [{ src: mp4.src.replace(/[^/]+$/, 'missing-film.webm'), type: 'video/webm; codecs="vp9"' }, { src: mp4.src.replace(/[^/]+$/, 'missing-film.mp4'), type: mp4.type }] });
 
 const data = await fetch('/data/district.json').then(r => r.json());
 const room = planStoreRooms(data).find(r => r.interior);
