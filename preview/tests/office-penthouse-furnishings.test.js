@@ -198,13 +198,18 @@ test('asset collision proxies are the pieces\' own footprints: chair cylinders, 
 });
 
 test('surfaces are drawn in short idle slices, never one long block, and swap in when complete', async () => {
-  // A fresh module instance with a stub canvas: rows of noise land in slices of a few ms each.
+  // A fresh module instance with a stub canvas. The clock is fake and always past each slice's
+  // deadline, so every slice may draw only its minimum rows; one that ignored the deadline would
+  // draw a whole surface in one long block. Counting slices, not milliseconds, keeps this exact
+  // on a loaded machine.
   const saved = { document: globalThis.document, setTimeout: globalThis.setTimeout };
   const puts = [];
   const context = { createImageData: (w, h) => ({ width: w, height: h, data: new Uint8ClampedArray(w * h * 4) }), putImageData: image => puts.push(image), fillRect() {}, set fillStyle(v) {} };
   globalThis.document = { createElement: () => ({ width: 0, height: 0, getContext: () => context }) };
   const slices = [];
-  globalThis.setTimeout = (callback, ms) => saved.setTimeout(() => { const start = performance.now(); callback(); slices.push(performance.now() - start); }, ms);
+  let clock = 0;
+  Object.defineProperty(performance, 'now', { configurable: true, value: () => (clock += 100) });
+  globalThis.setTimeout = (callback, ms) => saved.setTimeout(() => { slices.push(ms); callback(); }, 0);
   try {
     const fresh = await import(`../src/office-penthouse-furnishings.js?slices=${Date.now()}`);
     const finishes = fresh.createPenthouseFinishes();
@@ -214,10 +219,14 @@ test('surfaces are drawn in short idle slices, never one long block, and swap in
     for (let i = 0; i < 2000 && maps.some(map => map.image.width !== 512); i++) await new Promise(done => saved.setTimeout(done, 1));
     assert.ok(maps.every(map => map.image.width === 512), 'every surface swaps in');
     assert.equal(puts.length, 3, 'each surface is put once, complete');
-    assert.ok(slices.length > 6, `drawn over ${slices.length} slices`);
-    assert.ok(Math.max(...slices) < 40, `the longest slice took ${Math.max(...slices).toFixed(1)} ms`);
+    // Three 512-row surfaces at the 8-row minimum per spent deadline.
+    assert.ok(slices.length >= (3 * 512) / 8, `drawn over ${slices.length} slices, so some slice ran past its deadline`);
+    assert.ok(slices.every(ms => ms > 0), 'each slice waits for the next idle turn');
     finishes.dispose();
-  } finally { globalThis.document = saved.document; globalThis.setTimeout = saved.setTimeout; }
+  } finally {
+    globalThis.document = saved.document; globalThis.setTimeout = saved.setTimeout;
+    delete performance.now; // the own property shadowed the prototype's clock
+  }
 });
 
 test('graybox stone takes metric UVs: a 2.4 m slab repeats a 1.2 m stone twice', () => {

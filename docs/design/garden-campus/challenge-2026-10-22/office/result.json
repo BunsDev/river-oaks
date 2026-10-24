@@ -1,0 +1,2578 @@
+{
+  "status": "passed",
+  "revision": "gardens",
+  "sources": {
+    "office-skyline.js": "343aec50e64bc1eb9e203aca577b7b47a14c77626684ba8418800bb1a646ae9e",
+    "office-world-scene.js": "b955b66bc18d25f09671c1ea65ed4a45937764e624b99f97376eb861edbe8ea0",
+    "office-world-presentation.js": "22d16cbd5b89b3fc4caf6d49ccf518d84c740110e02d3ba8e06440d15c9fb609",
+    "office-layouts.js": "2f97178d452f776da7923334ed3ee089d7cb902ecd55c31ccb022b81cda7e6df",
+    "office-penthouse-graybox.js": "12ab50d3098edbc8c2ca8bbcd9e40d8f4475a5b88c2a6d1ee4631c50512d6029",
+    "office-contract.js": "3842636cca8f466119cb5cd7d3836abaeca1a1e66e8874431b1ae832fb65784d",
+    "office-arrival-model.js": "d729b91064812da30631a919cdc76b1a5fb34629136eb78f6f026db64fea3a1f",
+    "district.js": "f8973e7164d57019f9b7c05919529bd310b743ae40f0f28118636e3fff4fbe95",
+    "reference-facades.js": "0c3b797bc18fca9f659f22b798abb2e8074468c9e55566ec327fa3ac88d9189e",
+    "main.js": "927b703036842ad5c964a63ab41016c9ea7bbf5e6d4b2f07d63927061a83ba22",
+    "green-roofs.js": "6831473233caefc7a1276df1809925d70d2ab0ba28e850053b4951f2cc55b528",
+    "roof-grasses.js": "5410c12782e91f9a8948b42ccbf2ce0b0d5823eb17a37e77a33b754235f6e156",
+    "roof-field-mesh.js": "9ae222d3b14318f0435ef6b75ebec942a19a89c647cb78a73a784b36cfd8b70b",
+    "roof-field-boundaries.js": "54144b1bf36d11c79e355967861beb06e1d81dcd6aa8f388cbea010be90f7899",
+    "hermes-roof-surface.js": "bd8b59fef496aa624e1d3c60bdb636723c7a631d88c604632f74b7fc41f8c543",
+    "garden-campus.js": "1dd6872fa6a399cf3c323a4048026b8b687b5e3959f4c274e7fa7a1e090248ce",
+    "garden-campus-district.js": "eccf8b4376a102d9604d9dc93e6e389b995b959835571a7dc91d8ae034c87fbf",
+    "../../shared/garden-campus-layout.js": "21717145b78380c55448b2f28b2f73fd49cf70825133c96d015d95dfeff93dc3"
+  },
+  "network": [
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "141"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "141",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "142"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "142",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "143"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "143",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "144"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "144",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "145"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "145",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "146"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "146",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "147"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "147",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "148"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "148",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "149"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "149",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "150"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "150",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "151"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "151",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "152"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "152",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "153"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "153",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "154"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "154",
+      "ok": true
+    },
+    {
+      "event": "framesent",
+      "type": "office",
+      "requestId": "155"
+    },
+    {
+      "event": "framereceived",
+      "type": "result",
+      "requestId": "155",
+      "ok": true
+    }
+  ],
+  "settings": {
+    "viewport": [
+      800,
+      600
+    ],
+    "graphics": "smooth",
+    "skyline": "enabled"
+  },
+  "checks": [
+    "the server admitted the penthouse main floor: {\"id\":\"jevica-office\",\"layout\":\"office-penthouse-1\",\"levelId\":\"jevica-office/l0\",\"elevation\":0,\"position\":[0,1.5],\"yaw\":0}",
+    "live exterior allocates no cubemap targets",
+    "walked to arrival aisle: [0,1.5]",
+    "walked to west aisle: [-11.676824981856214,2.37576189034877]",
+    "walked to terrace portal approach: [-11.936204835918069,4.4819706610797665]",
+    "walked to through the terrace portal: [-17.20230307867177,4.931852839828548]",
+    "walked to terrace outlook: [-17.9447902782973,7.787650330132527]",
+    "roof outlook leaves the visitor on the terrace",
+    "Escape restores walking without leaving office",
+    "aiming preserves actual terrace position",
+    "normal live draws advance without cubemap capture",
+    "leaving disposes the office view",
+    "live exterior allocates no cubemap targets",
+    "walked to arrival aisle: [0,1.5]",
+    "walked to west aisle: [-11.708456143931594,2.3781342275496895]",
+    "walked to terrace portal approach: [-11.942840531875651,4.485962833315653]",
+    "walked to through the terrace portal: [-17.204268209604148,4.932470737629525]",
+    "walked to terrace outlook: [-17.944594511360116,7.7864117893908045]",
+    "roof outlook leaves the visitor on the terrace",
+    "Escape restores walking without leaving office",
+    "aiming preserves actual terrace position",
+    "normal live draws advance without cubemap capture",
+    "leaving disposes the office view",
+    ""
+  ],
+  "errors": [],
+  "captures": [
+    {
+      "phase": "campus-aimed",
+      "beforeAim": {
+        "position": [
+          -2723.95061887577,
+          44.40881556406345,
+          1400.5999401084828
+        ],
+        "quaternion": [
+          0,
+          0.9925131612228586,
+          0,
+          -0.12213772881222283
+        ],
+        "verticalFov": 62
+      },
+      "aimedCamera": {
+        "position": [
+          -2723.95061887577,
+          44.40881556406345,
+          1400.5999401084828
+        ],
+        "quaternion": [
+          0,
+          0.07094307139647478,
+          0,
+          -0.9974803660327529
+        ],
+        "verticalFov": 62
+      },
+      "terracePosition": [
+        -17.9447902782973,
+        7.787650330132527
+      ]
+    },
+    {
+      "cycle": 0,
+      "daylightHour": 15,
+      "duskHour": 18.5,
+      "captured": {
+        "mode": "live",
+        "frames": 28,
+        "state": "live",
+        "size": 0,
+        "bytes": 0,
+        "peakBytes": 0,
+        "traverseMs": 6.9,
+        "submitMs": null,
+        "ms": null,
+        "newPrograms": null,
+        "hiddenInstances": 177,
+        "hiddenMeshes": 3,
+        "lastRenderMs": 3.5
+      },
+      "later": {
+        "mode": "live",
+        "frames": 940,
+        "state": "live",
+        "size": 0,
+        "bytes": 0,
+        "peakBytes": 0,
+        "traverseMs": 6.9,
+        "submitMs": null,
+        "ms": null,
+        "newPrograms": null,
+        "hiddenInstances": 177,
+        "hiddenMeshes": 3,
+        "lastRenderMs": 6.5
+      },
+      "outlook": {
+        "position": [
+          -2719.831282234695,
+          44.52881556406345,
+          1393.8510151178907
+        ],
+        "quaternion": [
+          0.20336258019930206,
+          -0.22018115202985195,
+          -0.04699145014834112,
+          -0.9528671076695038
+        ],
+        "verticalFov": 62
+      },
+      "daylightCost": {
+        "frames": {
+          "frames": [
+            {
+              "intervalMs": 16.700000000000728,
+              "cpuMs": 9.800000011920929,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0.09999999403953552,
+                "interactions": 0.30000001192092896,
+                "players": 2,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.299999982118607,
+                "tail": 0.10000002384185791
+              }
+            },
+            {
+              "intervalMs": 16.600000000002183,
+              "cpuMs": 9.900000005960464,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0.19999998807907104,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.5,
+                "players": 2.2000000178813934,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 11.299999982118607,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.29999998211860657,
+                "players": 2.100000023841858,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 8.899999976158142,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.600000000002183,
+              "cpuMs": 13.300000011920929,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.30000001192092896,
+                "players": 2.2999999821186066,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 10.600000023841858,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000000728,
+              "cpuMs": 9.800000011920929,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0.10000002384185791,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.29999998211860657,
+                "players": 2.0999999940395355,
+                "reflections": 0.10000002384185791,
+                "debug": 0,
+                "pipeline": 7.199999988079071,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 10.099999994039536,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0.09999999403953552,
+                "interactions": 0.30000001192092896,
+                "players": 2.0999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.5999999940395355,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000000728,
+              "cpuMs": 13.699999988079071,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.29999998211860657,
+                "players": 2.100000023841858,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 11.199999988079071,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000000728,
+              "cpuMs": 9.900000005960464,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.29999998211860657,
+                "players": 2.100000023841858,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.5,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 13.099999994039536,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.29999998211860657,
+                "players": 2.800000011920929,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.900000005960464,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000000728,
+              "cpuMs": 9.900000005960464,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0.09999999403953552,
+                "interactions": 0.20000001788139343,
+                "players": 2.199999988079071,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.4000000059604645,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.600000000002183,
+              "cpuMs": 10.400000005960464,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0.30000001192092896,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.5,
+                "players": 2.0999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.5,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 9.699999988079071,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.30000001192092896,
+                "players": 2,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.399999976158142,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000000728,
+              "cpuMs": 10,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0.09999999403953552,
+                "residents": 0,
+                "interactions": 0.20000001788139343,
+                "players": 2.2999999821186066,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.4000000059604645,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000000728,
+              "cpuMs": 10.5,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0.10000002384185791,
+                "residents": 0,
+                "interactions": 0.19999998807907104,
+                "players": 2.800000011920929,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.399999976158142,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 10.400000005960464,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.29999998211860657,
+                "players": 2.600000023841858,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.5,
+                "tail": 0
+              }
+            }
+          ],
+          "overflow": false
+        },
+        "graphics": {
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+          "viewport": [
+            800,
+            600
+          ],
+          "buffer": [
+            800,
+            600
+          ],
+          "quality": {
+            "mode": "smooth",
+            "scale": 0.75,
+            "occlusion": false,
+            "fps": 57,
+            "tailShedding": false
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": false,
+            "bloom": true,
+            "renderScale": 0.75,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "render": {
+            "frame": 13595,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 631,
+            "textures": 161
+          }
+        },
+        "submissions": [
+          {
+            "frame": 13370,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13385,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13400,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13415,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13430,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13445,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13460,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13475,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13490,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13505,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13520,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13535,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13550,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13565,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13580,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13595,
+            "calls": 1478,
+            "triangles": 4574450,
+            "points": 124,
+            "lines": 0
+          }
+        ]
+      },
+      "duskCost": {
+        "frames": {
+          "frames": [
+            {
+              "intervalMs": 16.700000000000728,
+              "cpuMs": 11.699999988079071,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0.09999999403953552,
+                "interactions": 0.4000000059604645,
+                "players": 1.5999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.599999994039536,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.600000000002183,
+              "cpuMs": 13.099999994039536,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.4000000059604645,
+                "players": 1.7999999821186066,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 10.900000005960464,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 12,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.4000000059604645,
+                "players": 1.699999988079071,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.900000005960464,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.600000000002183,
+              "cpuMs": 12.599999994039536,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.4000000059604645,
+                "players": 1.5999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 10.5,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000000728,
+              "cpuMs": 13.5,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.3999999761581421,
+                "players": 1.600000023841858,
+                "reflections": 0.09999999403953552,
+                "debug": 0,
+                "pipeline": 11.400000005960464,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 12.5,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0.09999999403953552,
+                "interactions": 0.4000000059604645,
+                "players": 1.5999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 10.400000005960464,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.600000000002183,
+              "cpuMs": 11.5,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.30000001192092896,
+                "players": 1.7999999821186066,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.300000011920929,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 33.39999999999782,
+              "cpuMs": 14.5,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0.29999998211860657,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.5,
+                "players": 2.5999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 11.100000023841858,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.600000000002183,
+              "cpuMs": 13.699999988079071,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.5,
+                "players": 1.699999988079071,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 11.5,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 11.799999982118607,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.19999998807907104,
+                "players": 1.7000000178813934,
+                "reflections": 0.09999999403953552,
+                "debug": 0,
+                "pipeline": 9.699999988079071,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000000728,
+              "cpuMs": 12.699999988079071,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.30000001192092896,
+                "players": 1.899999976158142,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 10.5,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000000728,
+              "cpuMs": 11.5,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0.10000002384185791,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.29999998211860657,
+                "players": 1.800000011920929,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.299999982118607,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000000728,
+              "cpuMs": 11,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.30000001192092896,
+                "players": 1.7999999821186066,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 8.900000005960464,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 11.799999982118607,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.4000000059604645,
+                "players": 1.699999988079071,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.699999988079071,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.799999999999272,
+              "cpuMs": 11.199999988079071,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 1.5999999940395355,
+                "players": 1.4000000059604645,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 8.199999988079071,
+                "tail": 0
+              }
+            }
+          ],
+          "overflow": false
+        },
+        "graphics": {
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+          "viewport": [
+            800,
+            600
+          ],
+          "buffer": [
+            800,
+            600
+          ],
+          "quality": {
+            "mode": "smooth",
+            "scale": 0.75,
+            "occlusion": false,
+            "fps": 59,
+            "tailShedding": false
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": false,
+            "bloom": true,
+            "renderScale": 0.75,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "render": {
+            "frame": 14207,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 631,
+            "textures": 161
+          }
+        },
+        "submissions": [
+          {
+            "frame": 13982,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 13997,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14012,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14027,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14042,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14057,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14072,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14087,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14102,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14117,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14132,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14147,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14162,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14177,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14192,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 14207,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          }
+        ]
+      },
+      "diagnostics": {
+        "camera": {
+          "position": [
+            -2723.95061887577,
+            44.40881556406345,
+            1400.5999401084828
+          ],
+          "quaternion": [
+            0,
+            0.07094307139647478,
+            0,
+            -0.9974803660327529
+          ],
+          "verticalFov": 62
+        },
+        "samples": [
+          {
+            "intervalMs": 13,
+            "cpuMs": 5.1,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 18.599999994039536,
+            "cpuMs": 7.2,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 17.400000005960464,
+            "cpuMs": 7.5,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 17.19999998807907,
+            "cpuMs": 7.8,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.400000005960464,
+            "cpuMs": 8,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.099999994039536,
+            "cpuMs": 7.9,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.600000023841858,
+            "cpuMs": 7.4,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 18.5,
+            "cpuMs": 7.5,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 15.199999988079071,
+            "cpuMs": 7.8,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16,
+            "cpuMs": 7.4,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.099999994039536,
+            "cpuMs": 7.2,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.80000001192093,
+            "cpuMs": 7,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.69999998807907,
+            "cpuMs": 7,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 17.5,
+            "cpuMs": 7,
+            "render": {
+              "calls": 373,
+              "triangles": 1660474,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 19.599999994039536,
+            "cpuMs": 7.9,
+            "render": {
+              "calls": 1119,
+              "triangles": 3229925,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 60,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 18.200000017881393,
+            "cpuMs": 7.1,
+            "render": {
+              "calls": 1119,
+              "triangles": 3229925,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 60,
+              "tailShedding": false
+            }
+          }
+        ]
+      },
+      "position": [
+        -17.9447902782973,
+        7.787650330132527
+      ]
+    },
+    {
+      "phase": "campus-aimed",
+      "beforeAim": {
+        "position": [
+          -2723.9508028994874,
+          44.40881556406345,
+          1400.5986997685561
+        ],
+        "quaternion": [
+          0,
+          0.9925467656800695,
+          0,
+          -0.12186434235670959
+        ],
+        "verticalFov": 62
+      },
+      "aimedCamera": {
+        "position": [
+          -2723.9508028994874,
+          44.40881556406345,
+          1400.5986997685561
+        ],
+        "quaternion": [
+          0,
+          0.07094440317638015,
+          0,
+          -0.9974802713126447
+        ],
+        "verticalFov": 62
+      },
+      "terracePosition": [
+        -17.944594511360116,
+        7.7864117893908045
+      ]
+    },
+    {
+      "cycle": 1,
+      "daylightHour": 15,
+      "duskHour": 18.5,
+      "captured": {
+        "mode": "live",
+        "frames": 17,
+        "state": "live",
+        "size": 0,
+        "bytes": 0,
+        "peakBytes": 0,
+        "traverseMs": 3.4,
+        "submitMs": null,
+        "ms": null,
+        "newPrograms": null,
+        "hiddenInstances": 177,
+        "hiddenMeshes": 3,
+        "lastRenderMs": 3
+      },
+      "later": {
+        "mode": "live",
+        "frames": 895,
+        "state": "live",
+        "size": 0,
+        "bytes": 0,
+        "peakBytes": 0,
+        "traverseMs": 3.4,
+        "submitMs": null,
+        "ms": null,
+        "newPrograms": null,
+        "hiddenInstances": 177,
+        "hiddenMeshes": 3,
+        "lastRenderMs": 5.6
+      },
+      "outlook": {
+        "position": [
+          -2719.831282234695,
+          44.52881556406345,
+          1393.8510151178907
+        ],
+        "quaternion": [
+          0.20336258019930206,
+          -0.22018115202985195,
+          -0.04699145014834112,
+          -0.9528671076695038
+        ],
+        "verticalFov": 62
+      },
+      "daylightCost": {
+        "frames": {
+          "frames": [
+            {
+              "intervalMs": 16.60000000000582,
+              "cpuMs": 13.800000011920929,
+              "phasesMs": {
+                "setup": 0.10000002384185791,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.29999998211860657,
+                "players": 2.4000000059604645,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 10.900000005960464,
+                "tail": 0.09999999403953552
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 10.199999988079071,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.5,
+                "players": 2.0999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.5999999940395355,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 10.100000023841858,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.4000000059604645,
+                "players": 2.2000000178813934,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.5,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.60000000000582,
+              "cpuMs": 10.400000005960464,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.19999998807907104,
+                "players": 2.300000011920929,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.9000000059604645,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 14.5,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.4000000059604645,
+                "players": 2.7999999821186066,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 11.300000011920929,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 12.099999994039536,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.4000000059604645,
+                "players": 2.7000000178813934,
+                "reflections": 0.09999999403953552,
+                "debug": 0,
+                "pipeline": 8.699999988079071,
+                "tail": 0.09999999403953552
+              }
+            },
+            {
+              "intervalMs": 16.700000000004366,
+              "cpuMs": 13.299999982118607,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0.19999998807907104,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.5,
+                "players": 2.800000011920929,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.699999988079071,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 10.099999994039536,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.30000001192092896,
+                "players": 2.0999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.5999999940395355,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 9.900000005960464,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.4000000059604645,
+                "players": 2.0999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.4000000059604645,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000004366,
+              "cpuMs": 10.5,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0,
+                "trees": 0,
+                "residents": 0.10000002384185791,
+                "interactions": 0.29999998211860657,
+                "players": 2.2000000178813934,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.799999982118607,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 10.099999994039536,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.4000000059604645,
+                "players": 2.0999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.5999999940395355,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 13.099999994039536,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0.09999999403953552,
+                "residents": 0.09999999403953552,
+                "interactions": 1.600000023841858,
+                "players": 2.199999988079071,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.099999994039536,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 10.299999982118607,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0.09999999403953552,
+                "residents": 0,
+                "interactions": 0.30000001192092896,
+                "players": 2.199999988079071,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.699999988079071,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.80000000000291,
+              "cpuMs": 12.299999982118607,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.4000000059604645,
+                "players": 2.7999999821186066,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.099999994039536,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 10.5,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0.09999999403953552,
+                "interactions": 0.30000001192092896,
+                "players": 2.199999988079071,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.9000000059604645,
+                "tail": 0
+              }
+            }
+          ],
+          "overflow": false
+        },
+        "graphics": {
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+          "viewport": [
+            800,
+            600
+          ],
+          "buffer": [
+            800,
+            600
+          ],
+          "quality": {
+            "mode": "smooth",
+            "scale": 0.75,
+            "occlusion": false,
+            "fps": 60,
+            "tailShedding": false
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": false,
+            "bloom": true,
+            "renderScale": 0.75,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "render": {
+            "frame": 27953,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 631,
+            "textures": 162
+          }
+        },
+        "submissions": [
+          {
+            "frame": 27728,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27743,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27758,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27773,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27788,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27803,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27818,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27833,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27848,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27863,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27878,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27893,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27908,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27923,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27938,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 27953,
+            "calls": 1487,
+            "triangles": 4575964,
+            "points": 124,
+            "lines": 0
+          }
+        ]
+      },
+      "duskCost": {
+        "frames": {
+          "frames": [
+            {
+              "intervalMs": 16.700000000004366,
+              "cpuMs": 10.5,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.19999998807907104,
+                "players": 1.800000011920929,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 8.5,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 12.099999994039536,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0.30000001192092896,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.699999988079071,
+                "players": 1.5999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.5,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 9.800000011920929,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.20000001788139343,
+                "players": 1.7999999821186066,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.800000011920929,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000004366,
+              "cpuMs": 9.900000005960464,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.30000001192092896,
+                "players": 1.699999988079071,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 7.800000011920929,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 10.599999994039536,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.4000000059604645,
+                "players": 1.5999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 8.5,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 11.5,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0.10000002384185791,
+                "residents": 0,
+                "interactions": 0.29999998211860657,
+                "players": 1.7000000178813934,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.399999976158142,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000004366,
+              "cpuMs": 11,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.5,
+                "players": 1.5999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 8.900000005960464,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 11.300000011920929,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0.09999999403953552,
+                "residents": 0,
+                "interactions": 0.20000001788139343,
+                "players": 1.5,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.5,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 10.199999988079071,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.29999998211860657,
+                "players": 1.2000000178813934,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 8.699999988079071,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000004366,
+              "cpuMs": 10.700000017881393,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0.09999999403953552,
+                "interactions": 0.30000001192092896,
+                "players": 1.5999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 8.700000017881393,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 12.400000005960464,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0.19999998807907104,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.7000000178813934,
+                "players": 1.5999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.900000005960464,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.700000000004366,
+              "cpuMs": 10.900000005960464,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.4000000059604645,
+                "players": 1.5999999940395355,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 8.900000005960464,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 11.799999982118607,
+              "phasesMs": {
+                "setup": 0.09999999403953552,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.29999998211860657,
+                "players": 1.5,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9.900000005960464,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.69999999999709,
+              "cpuMs": 10.699999988079071,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.29999998211860657,
+                "players": 1.4000000059604645,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 9,
+                "tail": 0
+              }
+            },
+            {
+              "intervalMs": 16.599999999998545,
+              "cpuMs": 10.600000023841858,
+              "phasesMs": {
+                "setup": 0,
+                "community": 0,
+                "trees": 0,
+                "residents": 0,
+                "interactions": 0.30000001192092896,
+                "players": 1.5,
+                "reflections": 0,
+                "debug": 0,
+                "pipeline": 8.800000011920929,
+                "tail": 0
+              }
+            }
+          ],
+          "overflow": false
+        },
+        "graphics": {
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+          "viewport": [
+            800,
+            600
+          ],
+          "buffer": [
+            800,
+            600
+          ],
+          "quality": {
+            "mode": "smooth",
+            "scale": 0.75,
+            "occlusion": false,
+            "fps": 60,
+            "tailShedding": false
+          },
+          "pipeline": {
+            "samples": 4,
+            "ao": false,
+            "bloom": true,
+            "renderScale": 0.75,
+            "aoScale": 1,
+            "transmissionScale": 1
+          },
+          "render": {
+            "frame": 28610,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          "memory": {
+            "geometries": 631,
+            "textures": 162
+          }
+        },
+        "submissions": [
+          {
+            "frame": 28385,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28400,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28415,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28430,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28445,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28460,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28475,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28490,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28505,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28520,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28535,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28550,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28565,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28580,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28595,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          },
+          {
+            "frame": 28610,
+            "calls": 1494,
+            "triangles": 4601327,
+            "points": 124,
+            "lines": 0
+          }
+        ]
+      },
+      "diagnostics": {
+        "camera": {
+          "position": [
+            -2723.9508028994874,
+            44.40881556406345,
+            1400.5986997685561
+          ],
+          "quaternion": [
+            0,
+            0.07094440317638015,
+            0,
+            -0.9974802713126447
+          ],
+          "verticalFov": 62
+        },
+        "samples": [
+          {
+            "intervalMs": 12.099999994039536,
+            "cpuMs": 7.7,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.299999982118607,
+            "cpuMs": 7.1,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 19.100000023841858,
+            "cpuMs": 7.6,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 12.599999994039536,
+            "cpuMs": 5.5,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 15.699999988079071,
+            "cpuMs": 5.2,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.099999994039536,
+            "cpuMs": 4.8,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.80000001192093,
+            "cpuMs": 4.8,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.900000005960464,
+            "cpuMs": 5.1,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.69999998807907,
+            "cpuMs": 5.1,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 17.900000005960464,
+            "cpuMs": 6.3,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 15.400000005960464,
+            "cpuMs": 5.2,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 17,
+            "cpuMs": 5.1,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 17.5,
+            "cpuMs": 5.1,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 15.799999982118607,
+            "cpuMs": 5.2,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.900000005960464,
+            "cpuMs": 5.4,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          },
+          {
+            "intervalMs": 16.400000005960464,
+            "cpuMs": 5.1,
+            "render": {
+              "calls": 1128,
+              "triangles": 3231439,
+              "geometries": 631,
+              "textures": 162
+            },
+            "quality": {
+              "mode": "smooth",
+              "scale": 0.75,
+              "occlusion": false,
+              "fps": 59,
+              "tailShedding": false
+            }
+          }
+        ]
+      },
+      "position": [
+        -17.944594511360116,
+        7.7864117893908045
+      ]
+    }
+  ],
+  "reloads": [],
+  "limits": "Local identity and browser rendering. Live district, ordinary single-view pipeline; CPU diagnostics are not GPU timings. Local fixture identity only."
+}

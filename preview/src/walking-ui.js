@@ -1,3 +1,4 @@
+import { bindPageLifecycle } from './background-lifecycle.js';
 import { personPosition, personEyeHeight, personDistance } from './person-position.js';
 import { createFlightState, beginFlight, stepFlight, recordFlightPose, acknowledgeFlightPose } from './flight.js';
 import { thirdPersonPose, createCameraBoom, pitchAfterSeatChange, seatedEyeView } from './third-person.js';
@@ -6,6 +7,8 @@ import { createPointerGesture } from './pointer-gesture.js';
 import { withinTalkingReach } from './people-picking.js';
 import { nearbyPeople } from './nearby-people.js';
 import { WALK_SPEED, createWalkingEnvironment, createWalkingState, stepWalking } from './walking.js';
+import { stopHeldMovement } from './held-movement.js';
+import { bindHeldButton } from './held-button.js';
 import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounterPosition } from './encounter.js';
 import { sharedRoomSummary } from './shared-population.js';
 import { isGameplayKey } from './keyboard-input.js';
@@ -77,6 +80,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   hud.querySelector('#walking-movement').append(sprintButton);
   $('#viewport').append(hud);
   const keys = new Set();
+  const releaseButtons = [];
   // Push-to-talk rides the held-keys set, so blur, Escape and an open dialogue
   // release the microphone exactly as they release movement.
   let voiceHeld = false;
@@ -88,7 +92,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   let active = false, environment, walkingWorld = null, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths';
   const drag = createPointerGesture();
   const cameraBoom=createCameraBoom();
-  const clear = () => { keys.clear(); drag.cancel(); document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); if (state) state.velocity = [0, 0]; };
+  const clear = () => { keys.clear(); releaseButtons.forEach(release => release()); drag.cancel(); voiceHeld = false; getVoice()?.setTransmit(false); document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); stopHeldMovement(state, flight, transport); };
   const notify = (text, ms = 3200) => {
     const notice = $('#walking-notice');
     clearTimeout(notice._timer); notice.textContent = text; notice.hidden = false;
@@ -213,7 +217,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   $('#walking-meet-nearby').addEventListener('click', () => { clear(); onMeetNearby(); });
   $('#walking-talk').addEventListener('click', talk);
   host.addEventListener('keydown', event => {
-    if (!active || dialogueOpen() || !isGameplayKey(event)) return;
+    if (!active || dialogueOpen() || !isGameplayKey(event) || event.repeat) return;
     if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyE', 'KeyF', 'KeyZ', 'Escape'].includes(event.code)) {
 
       // Cancel the chauffeur even when a quick tap ends before the next frame.
@@ -235,8 +239,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   });
   document.addEventListener('keyup', event => keys.delete(event.code));
   host.addEventListener('blur', clear);
-  window.addEventListener('blur', clear);
-  document.addEventListener('visibilitychange', clear);
+  bindPageLifecycle({ release: clear });
   host.addEventListener('pointerdown', event => {
     if (!active || dialogueOpen() || !drag.begin(event,{captureTarget:host})) return;
 
@@ -258,7 +261,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       event.preventDefault(); button.setPointerCapture(event.pointerId); keys.add(button.dataset.walkKey); button.classList.add('held');
     });
     for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(type, release);
-    button.addEventListener('click', event => { if (event.detail === 0 && active && !dialogueOpen()) {  transport?.takeOver?.(); keys.add(button.dataset.walkKey); setTimeout(release, 180); } });
+    releaseButtons.push(bindHeldButton(button, { release, press() {
+      if (!active || dialogueOpen()) return;
+      transport?.takeOver?.(); keys.add(button.dataset.walkKey); button.classList.add('held');
+    } }));
   });
   return {
     setTraversal({canFly=false,kind=null,fastWalk=WALK_SPEED.fast}={}) {
@@ -288,7 +294,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     },
     get thirdPerson() { return thirdPerson; },
     get cameraView() { return thirdPerson && !seatedEyeView(sitting) ? 'third-person' : 'eye'; },
-    halt() { clear(); if (state) { state.velocity = [0, 0]; state.speed = 0; } },
+    halt() { clear(); },
     applyServerPose(player) {
       transport?.stop();transport=null;
       if (!active || !state || !player) return;

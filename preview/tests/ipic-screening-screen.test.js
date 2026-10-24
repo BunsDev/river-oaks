@@ -98,3 +98,19 @@ test('a paused film’s frame reaches the screen: uploaded on binding and after 
   binding.sync({ screen: s, video: v, key: 'g1:1280x720', show: true });
   assert.equal(texture.version, playing, 'while playing, frame callbacks upload frames');
 });
+
+test('releasing a film restores borrowed maps and hooks without disposing shared resources', () => {
+  const s = screen(), originalMap = new THREE.Texture(), emission = new THREE.Texture();
+  s.material.map = originalMap; s.material.emissiveMap = emission;
+  s.material.onBeforeCompile = shader => { shader.fragmentShader += '\n// existing hook'; };
+  s.material.customProgramCacheKey = () => 'shared-screen-hook';
+  const mapDisposed = disposed(originalMap), emissionDisposed = disposed(emission), materialDisposed = disposed(s.material);
+  const before = snapshot(s.material);
+  const binding = createScreenBinding({ THREE });
+  binding.sync({ screen: s, video: video(640, 480), key: 'first', show: true });
+  const movieDisposed = disposed(s.material.map);
+  binding.release();
+  assert.deepEqual(snapshot(s.material), before);
+  assert.equal(movieDisposed.value, true);
+  assert.deepEqual([mapDisposed.value, emissionDisposed.value, materialDisposed.value], [false, false, false]);
+});
