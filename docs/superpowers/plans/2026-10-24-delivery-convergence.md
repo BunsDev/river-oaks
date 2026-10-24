@@ -120,7 +120,13 @@ Val answered in this session at about 08:55Z and approved D1, D2a, D2b and D3. A
 
 - **D1:** `retire-owned.mjs --apply` wrote all 18 rows: 14 retired with pull-ref evidence and 4 queued with their facts.
 - **D3:** released `campus-followup-505` and `campus-readiness-512` from `codex:505-followup-20261023`. `fix/campus-readiness-512-20261021` (dirty, no PR) stays parked.
-- **D2a:** taken by `river-oaks-33` as a draft PR (task `prune-ancestor-tip-20261024`, branch `fix/prune-ancestor-tip-20261024`). Not merged here.
+- **D2a:** `river-oaks-33` opened draft #636 (task `prune-ancestor-tip-20261024`, signed head `d277322a`). It changes only `planRetirement`, the prune tests, `workflow.md` and its ledger. A local tip that differs from the merged head is accepted only when all of these hold:
+  - it is a strict ancestor of the merged head;
+  - the PR's head ref has the same name as the local branch;
+  - the merged head is on main;
+  - the tip is not an ancestor of the merge's first parent.
+
+  Merge and tree checks run against the merged head, and the release must still name the local tip. Its author reports `verify tooling` 230/230 and prune 23/23. Not merged; landing is Val's decision.
 - **D2b:** owner-null tips that were strict ancestors of their merged heads were fast-forwarded to those heads, then retired as in the next section. `river-oaks-71` is retiring `docs/likeness-intake-518-20261022` and `feat/likeness-quarantine-518-20261022` itself, under Val's #518 authorization, with `project:cancel` at their exact tips. Both were removed from this list. `test/studio-417-closeout-20261023` needed no fast-forward, because its tip is #613's merged head.
 - **D8:** #508 closed as completed ([6382364488](https://github.com/BunsDev/river-oaks/issues/508#issuecomment-6382364488)). Its three unchecked criteria are carried to #505.
 - **D7:** waiting for Val to check the old Mac. No records changed.
@@ -175,7 +181,7 @@ Each ran `project:cancel --branch <b> --expected-head <full sha> --stale-hours <
 ## Next action
 
 - After #623 merges, cancel `feat/neighborhood-authoring-20261022` at `52379be69efd395d624fedd57eeee8e283850a62` (approved). Confirm `continuous-walk-582`'s owner before touching it.
-- `river-oaks-33` is preparing the D2a prune-guard draft PR (`prune-ancestor-tip-20261024`). It still needs review, and landing needs separate authorization.
+- The D2a prune-guard change is draft #636 (`river-oaks-33`). It needs review, and landing needs separate authorization. Once it lands, future cases of a tip behind its merged head can retire without a fast-forward.
 - After a3's landings, retire their checkouts once each owner releases: #589, #608, #622, #504, #571 and #575 are now pending local retirement.
 - Still open: `bayou-luxe-polish` needs an owner (D6), and the archive records wait on the old Mac (D7).
 - `fix/campus-readiness-512-20261021` (dirty, no PR) stays parked for review.
