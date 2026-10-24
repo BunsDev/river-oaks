@@ -1,9 +1,10 @@
 import { bindPageLifecycle } from './background-lifecycle.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { attachEastGardenCommons } from './east-garden-commons-world.js';
-import { buildEastGardenCommons } from './east-garden-commons.js';
-import { rivalFigures, policeFigures } from './crime-ui.js';
 import { createLanternWalkClient } from './lantern-walk.js';
+import { rivalFigures, policeFigures } from './crime-ui.js';
+import { createCommonsStream } from './commons-stream.js';
+import './spatial-stream.css';
 import { createCharacterStudio } from './character-studio.js';
 import { characterStudioShown } from './character-studio-state.js';
 import { createOfficeUI } from './office-ui.js';
@@ -27,6 +28,13 @@ import { AO_OUTPUT, createRenderPipeline } from './render-pipeline.js';
 import { warnIfSoftwareRendering } from './hardware-acceleration.js';
 import './hardware-acceleration.css';
 import { bindRenderVisibility } from './render-lifecycle.js';
+import { createGraphicsRecovery } from './graphics-recovery.js';
+import { bindGraphicsRecovery } from './graphics-lifecycle.js';
+import { createGraphicsRecoveryUI } from './graphics-recovery-ui.js';
+import { createGraphicsReloadState, graphicsReloadBlocker } from './graphics-reload-state.js';
+import { releaseSceneGraphics } from './graphics-resources.js';
+import { createGraphicsCycleLog } from './debug-report.js';
+import './graphics-recovery.css';
 import { createRenderAudit } from './render-audit.js';
 import { createDrawCensus } from './draw-census.js';
 import { localToScene, terrainHeight } from './geometry.js';
@@ -166,13 +174,14 @@ let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 // East Garden Commons and its assembled destination, when the revision composes them.
 let commonsScene = null;
-const lanternWalk = createLanternWalkClient({ getLayout: () => world?.eastGardenCommons ?? null, getPose: () => walking?.getPose(), getScene: () => commonsScene,
+const lanternWalk = createLanternWalkClient({ announceArrival: false, getLayout: () => world?.eastGardenCommons ?? null, getPose: () => walking?.getPose(), getScene: () => commonsScene,
   getSnapshot: () => multiplayer?.snapshot?.lanternWalk ?? null,
   send: message => multiplayer?.command(message) ?? Promise.resolve({ ok: false, message: 'Connect to the town to light the lanterns together.' }) });
 let districtUI, environmentAssets = null, storefrontReflections = null, roomGroundClip = null;
 let currentAtmosphere = null; // the time-of-day light updateAtmosphere last applied; an office visit reads it
 let placesUI = null, landmarks = null;
 let pendingSharedPlace = null, sharedPlaceInFlight = false;
+let commonsStream = null, commonsStreamStatus = null;
 let worldPortal = null;
 let worldRegionSha256 = null;
 // The default district's revision once loaded (#507): null is the garage; undefined while loading.
@@ -202,6 +211,12 @@ let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, a
 let lastSoftwareDraw = -Infinity;
 // A problem report's picture: the next drawn frame is handed over while it is still on the canvas.
 let pendingCapture = null;
+let graphicsRecovery, graphicsBinding, renderLifecycle, portraits, environmentLoading;
+let renderedFrames = 0;
+const graphicsCycles = createGraphicsCycleLog();
+const graphicsReload = createGraphicsReloadState({ scope: `${location.pathname}|${new URLSearchParams(location.search).get('world') ?? ''}` });
+let restoredGraphicsUI = graphicsReload.take();
+const recoveredGraphicsPage = Boolean(restoredGraphicsUI);
 
 const scene = new THREE.Scene();
 // Keep geometry, skinning and simulation intact without compiling every PBR
@@ -259,13 +274,53 @@ function initializeRenderer() {
   }, tailShedding: aoTailShedding });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = AO_OUTPUT.Denoise;
-  if (!softwareAcceptance) loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
+  if (!softwareAcceptance) environmentLoading = loadEnvironment(renderer, scene, { canBuild: () => graphicsBinding?.generation === 0 && graphicsRecovery?.state === 'ok' }).then(assets => {
+    environmentAssets = assets;
+    if (graphicsRecovery?.state === 'ok') updateAtmosphere();
+  }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
   host.appendChild(renderer.domElement);
-  renderer.domElement.addEventListener('webglcontextlost', (event) => {
-    event.preventDefault();
-    showError('The browser lost its graphics context. Reload this page to rebuild the scene.');
+  const recoveryUI = createGraphicsRecoveryUI({ viewport: $('#viewport'), focusTarget: host, retry: () => {
+    graphicsBinding.retry(() => {
+      const blocked = graphicsReloadBlocker({ photoActive: photoMode?.active, photoRetained: photoMode?.hasPhoto, dialogs: [...document.querySelectorAll('dialog[open]')].map(dialog => dialog.id) });
+      if (blocked) { recoveryUI.update('failed', blocked); return; }
+      const saved = graphicsReload.save({ settings: Boolean($('#settings-dialog')?.open), settingsTab: $('#settings-dialog [role=tab][aria-selected=true]')?.id,
+        chatDraft: $('.multiplayer-chat-form input')?.value ?? '' });
+      if (saved) location.reload();
+      else recoveryUI.update('failed', 'storage');
+    });
+  } });
+  graphicsRecovery = createGraphicsRecovery({ onChange({ state, reason, stepDown }) {
+    renderLifecycle?.setPaused('graphics', state !== 'ok');
+    portraits?.setPaused(state !== 'ok');
+    if (stepDown) quality.stepDown();
+    recoveryUI.update(state, reason);
+    host.dataset.graphicsState = state;
+    if (state === 'ok') graphicsCycles.outcome('restored');
+    else if (state === 'failed') graphicsCycles.outcome(reason);
+  } });
+  host.dataset.graphicsState = 'ok';
+  graphicsBinding = bindGraphicsRecovery({ canvas: renderer.domElement, recovery: graphicsRecovery, getContext: () => renderer.getContext(),
+    onRestored() { graphicsCycles.restored(performance.now()); },
+    onLost() {
+      graphicsCycles.lost(performance.now());
+      // A capture requested against the previous context is no longer valid.
+      pendingCapture = null;
+      releaseSceneGraphics(scene);
+      buildLayer?.releaseGraphics();
+      pipeline.releaseGraphics();
+      environmentAssets?.releaseGraphics();
+      storefrontReflections?.releaseGraphics();
+      officeUI?.releaseGraphics();
+    },
+    async rebuild(isCurrent) {
+      await environmentLoading;
+      if (!isCurrent()) return;
+      environmentAssets?.restore();
+      storefrontReflections?.resetGraphics();
+      updateAtmosphere();
+    },
   });
-  const portraits = createResidentPortraits({ renderer, getHolder: id => (String(id).startsWith('player-look:') ? playerAvatar?.portraitSubject(id.slice(12)) : null)
+  portraits = createResidentPortraits({ renderer, getHolder: id => (String(id).startsWith('player-look:') ? playerAvatar?.portraitSubject(id.slice(12)) : null)
     ?? [playerAvatar?.carriage.driver].find(person => person?.userData.localId === id && person.userData.avatar)
     ?? storePeople?.userData.figures?.find(figure => figure.id === id)?.holder });
   community = createCommunityPanel({ host: $('.panel-scroll'), getPortrait: id => portraits.portrait(id),
@@ -298,6 +353,14 @@ function initializeRenderer() {
     onHalt: () => walking.halt(), onResume: () => walking.update(0, performance.now()),
   });
   walking.addObstacle({contains:(...args)=>buildLayer?.colliders.some(collider=>collider.contains(...args))??false});
+  // Presentation readiness gates only this player's own steps, never shared occupancy queries.
+  walking.addStepGuard((from, to) => commonsStream?.allowsStep(from, to) ?? true);
+  commonsStreamStatus = document.createElement('p');
+  commonsStreamStatus.className = 'spatial-stream-status';
+  commonsStreamStatus.setAttribute('role', 'status');
+  commonsStreamStatus.setAttribute('aria-live', 'polite');
+  commonsStreamStatus.hidden = true;
+  $('#world-status-stack').append(commonsStreamStatus);
   // Before the player panel, so G reaches the rack first and the owner's ride button only when no bike is in play.
   cyclingBoard = createCyclingLeaderboard();
   plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, getMiles: () => cyclingBoard?.mine() ?? null, reducedMotion });
@@ -524,12 +587,15 @@ function initializeRenderer() {
     camera.updateProjectionMatrix();
   }).observe(host);
   updateAtmosphere();
-  bindRenderVisibility({ document, setLoop: callback => renderer.setAnimationLoop(callback), render,
-    resetTime: () => { clock.reset(); lastFrame = null; renderAudit?.discontinuity(); } });
+  renderLifecycle = bindRenderVisibility({ document, setLoop: callback => renderer.setAnimationLoop(callback ? graphicsBinding.frame(callback) : null), render,
+    resetTime: () => { clock.reset(); lastFrame = null; quality.resetTime(); renderAudit?.discontinuity(); } });
+  renderLifecycle.setPaused('graphics', graphicsRecovery.state !== 'ok');
+  registerDiagnosticSource('graphicsRecovery', () => ({ state: graphicsRecovery.state, cycles: graphicsCycles.cycles }));
   registerDiagnosticSource('renderer', () => describeRenderer(renderer, { quality: quality?.stats ?? null, pipeline: pipeline?.stats ?? null, reflections: storefrontReflections?.stats ?? null, softwareAcceptance }));
   registerDiagnosticSource('scene', () => describeScene(scene));
   registerDiagnosticSource('game', gameDiagnostics);
   setScreenshotCapture(capture => { pendingCapture = capture; });
+
 }
 $('.loading-report').addEventListener('click', () => window.dispatchEvent(new CustomEvent('river-oaks:report-problem')));
 
@@ -645,6 +711,7 @@ function populateWorld(data) {
   officeUI?.reset();
   storeIntros?.reset();
   walking?.exit();
+  commonsStream?.dispose(); commonsStream = null;
   generatedInteriors?.dispose(); generatedInteriors = null;
   storefrontReflections?.dispose(); storefrontReflections = null;
   if (worldGroup) {
@@ -654,7 +721,6 @@ function populateWorld(data) {
     worldGroup.remove(interiorsLayer);
     ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     plazaSalon?.userData.rack?.dispose();
-    if(commonsScene){commonsScene.removeFromParent();commonsScene.userData.dispose();commonsScene=null;}
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
@@ -706,7 +772,8 @@ function populateWorld(data) {
   worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
   worldGroup.add(sidewalks);
   worldGroup.add(furniture);
-  if(data.eastGardenCommons){commonsScene=buildEastGardenCommons(data.eastGardenCommons);worldGroup.add(commonsScene);}
+  if (data.eastGardenCommons) commonsStream = createCommonsStream({ world: data, parent: worldGroup, onScene: scene => { commonsScene = scene; },
+    onStatus(text) { commonsStreamStatus.textContent = text; commonsStreamStatus.hidden = !text; } });
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
   plazaSalon = buildPlazaSalon(data);
   plazaStage?.setWorld(data);
@@ -868,6 +935,7 @@ async function loadWorld() {
   $('#reload').disabled = true;
   $('#loading').hidden = false;
   $('#loading').classList.remove('error');
+  $('.loading-retry').hidden = true;
   $('#loading h2').textContent = 'Building the view';
   $('#loading p').textContent = 'Opening the boutiques and gardens…';
   try {
@@ -913,13 +981,16 @@ async function loadWorld() {
     placesUI?.setWorld(data);
     placesUI?.setPlayers(multiplayer?.snapshot?.players??[],multiplayer?.identity?.id);
     // A shared link (?place=… or ?at=…) lands its visitor there after arrival.
-    const linked = destinationFromSearch(location.search, places, data.bounds_m);
+    const linked = recoveredGraphicsPage ? null : destinationFromSearch(location.search, places, data.bounds_m);
     if (linked) {
       pendingSharedPlace=linked;
       void arriveAtSharedLink();
-    } else if(new URLSearchParams(location.search).has('place')) placesUI?.say('That shared place is no longer available in this world.','error');
+    } else if(!recoveredGraphicsPage && new URLSearchParams(location.search).has('place')) placesUI?.say('That shared place is no longer available in this world.','error');
   } catch (error) {
     showError(`${error.message}. Use reload to try loading the district again.`);
+    // The panel reload is hidden while walking, so the error offers its own.
+    $('.loading-retry').hidden = false;
+    $('.loading-retry').focus({ preventScroll: true });
   } finally {
     loading = false;
     $('#reload').disabled = false;
@@ -957,6 +1028,7 @@ function followSunShadow() {
 }
 
 function render(now) {
+  if (document.hidden || graphicsRecovery.state !== 'ok') return;
   renderAudit?.beginFrame();
   noteFrame(now);
   const drawCensus = pendingDrawCensus; pendingDrawCensus = null; drawCensus?.census.begin();
@@ -968,6 +1040,8 @@ function render(now) {
   renderAudit?.phase('setup');
   community?.update(delta, now);
   renderAudit?.phase('community');
+  const streamPosition = walking?.getPosition() ?? self?.position;
+  commonsStream?.update([...(streamPosition ? [streamPosition] : []), [camera.position.x, -camera.position.z]], camera);
   generatedInteriors?.update(camera.position, now, self?.levelId);
   renderAudit?.phase('setup'); // phases accumulate: interior streaming counts as setup
   layers.trees?.userData.update?.(camera.position);
@@ -1006,6 +1080,11 @@ function render(now) {
     camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target);
     if (auditCamera.fov && camera.fov !== auditCamera.fov) { camera.fov = auditCamera.fov; camera.updateProjectionMatrix(); }
     camera.updateMatrixWorld();
+  }
+  if (restoredGraphicsUI && !loading && multiplayer?.connected && host.dataset.playerReady === 'true') {
+    const draft = $('.multiplayer-chat-form input'); if (draft) draft.value = restoredGraphicsUI.chatDraft;
+    if (restoredGraphicsUI.settings) { sidebarSections.select(2); document.getElementById(restoredGraphicsUI.settingsTab)?.click(); }
+    restoredGraphicsUI = null;
   }
   photoMode?.update();
   characterStudio?.update();
@@ -1058,11 +1137,13 @@ function render(now) {
       } else pipeline.render(delta);
     }
     renderAudit?.phase('pipeline');
+    renderedFrames++;
+    storefrontReflections?.mainFrameRendered();
     photoMode?.afterRender();
     if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }
   }
   if (now-lastRenderStats>1000) {
-    host.dataset.renderStats=JSON.stringify({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});
+    host.dataset.renderStats=JSON.stringify({frames:renderedFrames,calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});
     host.dataset.reflections = JSON.stringify(storefrontReflections?.stats ?? null);
     host.dataset.pipeline = JSON.stringify(pipeline.stats);
     host.dataset.quality = JSON.stringify(quality.stats);
@@ -1081,6 +1162,7 @@ $('#sun-hour').addEventListener('input', updateAtmosphere);
 $('#weather').addEventListener('change', updateAtmosphere);
 document.addEventListener('appearancechange', updateAtmosphere);
 $('#reload').addEventListener('click', loadWorld);
+$('.loading-retry').addEventListener('click', loadWorld);
 function visibleInScene(object) {
   for (let ancestor = object; ancestor; ancestor = ancestor.parent) if (!ancestor.visible) return false;
   return true;
@@ -1197,6 +1279,27 @@ document.addEventListener('keydown', event => {
 });
 window.addEventListener('river-oaks:debug', event => void openDebugTools(event.detail?.open));
 window.__riverDebug = () => debugTools;
+if (import.meta.env.DEV) window.__riverTravelView = () => ({ camera: camera.position.toArray(), direction: camera.getWorldDirection(new THREE.Vector3()).toArray() });
+if (import.meta.env.DEV) window.__riverSpatialStream = () => {
+  let objects = 0; worldGroup?.traverse(() => objects++);
+  const inventory = object => {
+    let objects = 0, meshes = 0;
+    const geometries = new Set(), textures = new Set(), buffers = new Set();
+    object.traverse(item => {
+      objects++; if (item.isMesh) meshes++;
+      if (item.geometry) {
+        geometries.add(item.geometry);
+        for (const attribute of [...Object.values(item.geometry.attributes), item.geometry.index].filter(Boolean)) buffers.add(attribute.array.buffer);
+      }
+      for (const material of [item.material].flat().filter(Boolean)) for (const value of Object.values(material)) if (value?.isTexture) textures.add(value);
+    });
+    return { name: object.name || object.type, id: object.uuid, objects, meshes, geometries: geometries.size, textures: textures.size,
+      geometryBytes: [...buffers].reduce((sum, buffer) => sum + buffer.byteLength, 0) };
+  };
+  return { ...commonsStream?.debug(), objects, inventory: { district: (worldGroup?.children ?? []).map(inventory), other: scene.children.filter(item => item !== worldGroup).map(inventory) }, district: { world: worldGroup?.uuid, ground: layers.ground?.uuid, buildings: buildingMesh?.uuid }, camera: camera.position.toArray(),
+    direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
+    renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls };
+};
 if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
 if (import.meta.env.DEV) window.__riverExteriorCull = () => {
   const self = multiplayer?.snapshot?.players.find(player => player.id === multiplayer.identity?.id);

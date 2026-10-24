@@ -118,3 +118,18 @@ test('transmissive props cannot allocate camera-specific refraction targets duri
   assert.equal(crystal.visible, true, 'Main view must retain the crystal');
   probe.dispose(); crystal.geometry.dispose(); crystal.material.dispose();
 });
+
+test('context recovery discards partial faces and invalid maps before a complete recapture', () => {
+  const { probe, material, renderer } = fixture(); const position = new THREE.Vector3();
+  for (let frame = 0; frame < 6; frame++) probe.update(frame * 17, position);
+  assert.ok(material.envMap);
+  probe.invalidate(); probe.update(200, position); probe.update(217, position);
+  probe.resetGraphics(); assert.equal(material.envMap, null);
+  const before = renderer.calls;
+  probe.update(250, position); assert.equal(renderer.calls, before, 'restored shadows need one main-view render before a probe face');
+  probe.mainFrameRendered();
+  for (let frame = 0; frame < 5; frame++) probe.update(300 + frame * 17, position);
+  assert.equal(material.envMap, null);
+  probe.update(400, position); assert.ok(material.envMap); assert.equal(renderer.calls - before, 6);
+  probe.dispose();
+});

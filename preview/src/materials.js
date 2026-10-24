@@ -112,16 +112,32 @@ export function physicalSurface(name, { tileSize = 4, instanced = false, variati
   return material;
 }
 
-export async function loadEnvironment(renderer, scene) {
-  const hdr = await new HDRLoader().loadAsync('/assets/materials/sky.hdr');
+// Keep the HDR's CPU pixels; only the generated PMREM needs to be redrawn.
+export function createEnvironmentAssets({ scene, hdr, createGenerator }) {
   hdr.mapping = THREE.EquirectangularReflectionMapping;
-  const generator = new THREE.PMREMGenerator(renderer);
-  const environment = generator.fromEquirectangular(hdr);
-  generator.dispose();
-  scene.environment = environment.texture;
-  scene.environmentIntensity = 0.7;
+  let environment = null;
   scene.background = hdr;
   scene.backgroundIntensity = 0.7;
   scene.backgroundBlurriness = 0;
-  return { hdr, environment, dispose() { hdr.dispose(); environment.dispose(); } };
+  return {
+    hdr,
+    get environment() { return environment; },
+    releaseGraphics() { hdr.dispose(); environment?.dispose(); environment = null; },
+    restore() {
+      const generator = createGenerator();
+      let next;
+      try { next = generator.fromEquirectangular(hdr); } finally { generator.dispose(); }
+      environment?.dispose(); environment = next;
+      scene.environment = environment.texture;
+      scene.environmentIntensity = 0.7;
+    },
+    dispose() { hdr.dispose(); environment?.dispose(); },
+  };
+}
+
+export async function loadEnvironment(renderer, scene, { canBuild = () => true } = {}) {
+  const hdr = await new HDRLoader().loadAsync('/assets/materials/sky.hdr');
+  const assets = createEnvironmentAssets({ scene, hdr, createGenerator: () => new THREE.PMREMGenerator(renderer) });
+  if (canBuild() && !renderer.getContext().isContextLost()) assets.restore();
+  return assets;
 }

@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "id": "garden-market",
+  "title": "Garden Market",
+  "seed": "market-1",
+  "spawn": [-70, -60],
+  "frame": {
+    "crs": "LOCAL:METRES",
+    "origin": [
+      0,
+      0
+    ],
+    "source": "Authored synthetic layout; not surveyed Houston geography"
+  },
+  "bounds_m": [
+    -96,
+    -96,
+    96,
+    96
+  ],
+  "streets": [
+    {
+      "id": "west",
+      "axis": "north",
+      "at_m": -76,
+      "width_m": 8.4
+    },
+    {
+      "id": "middle",
+      "axis": "north",
+      "at_m": 0,
+      "width_m": 8.4
+    },
+    {
+      "id": "east",
+      "axis": "north",
+      "at_m": 76,
+      "width_m": 8.4
+    },
+    {
+      "id": "south",
+      "axis": "east",
+      "at_m": -76,
+      "width_m": 8.4
+    },
+    {
+      "id": "cross",
+      "axis": "east",
+      "at_m": 0,
+      "width_m": 8.4
+    },
+    {
+      "id": "north",
+      "axis": "east",
+      "at_m": 76,
+      "width_m": 8.4
+    }
+  ],
+  "constraints": {
+    "frontage_m": 24,
+    "setback_m": 3,
+    "max_coverage": 0.55,
+    "max_height_m": 8
+  },
+  "templates": [
+    {
+      "id": "market-row",
+      "kind": "retail",
+      "size": [
+        16,
+        12,
+        8
+      ]
+    },
+    {
+      "id": "small-row",
+      "kind": "retail",
+      "size": [
+        12,
+        12,
+        8
+      ]
+    }
+  ],
+  "reserved": [],
+  "architecture": {
+    "schema_version": 1,
+    "bindings": [
+      {
+        "templateId": "market-row",
+        "assembly": "shop-row",
+        "palette": "market"
+      },
+      {
+        "templateId": "small-row",
+        "assembly": "shop-row",
+        "palette": "market"
+      }
+    ]
+  }
+}
