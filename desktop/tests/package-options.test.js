@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, stat } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { createServer } from 'node:net';
+import { createServer as createHttpServer } from 'node:http';
 import { packagerOptions, packagedBinary, isTransientNetworkError, withNetworkRetry, ICON_BASE, ICON_PNG_SIZES } from '../package-options.js';
 import { APP_NAME, APP_BUNDLE_ID, APP_USER_MODEL_ID, LINUX_EXECUTABLE } from '../identity.js';
 
@@ -99,6 +103,40 @@ test('packaging verifies the Electron zip against the lockfile-pinned checksums,
   }
   assert.equal((await options('linux', { electron_config_cache: '/runner/electron' })).download.cacheRoot, '/runner/electron',
     'the cache Electron\'s install.js also reads, so CI can restore it');
+});
+
+test('the packager\'s @electron/get, given these options, downloads the zip once with no checksum file, reuses the cache, and refuses a tampered zip', async () => {
+  // The same @electron/get the packager calls, resolved from @electron/packager.
+  const get = createRequire(import.meta.resolve('@electron/packager')).resolve('@electron/get');
+  const { downloadArtifact } = await import(pathToFileURL(get));
+  // A local mirror serves a stand-in zip; its checksum joins the installed list.
+  const zip = Buffer.from('stand-in Electron zip'), name = `electron-v${installed}-linux-x64.zip`;
+  const requests = [];
+  const mirror = createHttpServer((request, response) => { requests.push(request.url); response.end(zip); });
+  await new Promise(resolve => mirror.listen(0, '127.0.0.1', resolve));
+  const cache = await mkdtemp(join(tmpdir(), 'river-oaks-electron-cache-'));
+  try {
+    const { download } = await options('linux', { electron_config_cache: cache });
+    const details = { ...download, checksums: { ...download.checksums, [name]: createHash('sha256').update(zip).digest('hex') },
+      version: installed, artifactName: 'electron', platform: 'linux', arch: 'x64', downloadOptions: { quiet: true },
+      mirrorOptions: { mirror: `http://127.0.0.1:${mirror.address().port}/` } };
+    const cached = await downloadArtifact(details);
+    assert.ok(cached.startsWith(cache), 'the zip lands in electron_config_cache');
+    assert.deepEqual(requests, [`/v${installed}/${name}`], 'one request, for the zip; no SHASUMS256.txt');
+    requests.length = 0;
+    assert.equal(await downloadArtifact(details), cached);
+    assert.deepEqual(requests, [], 'a warm cache needs no network');
+    await writeFile(cached, 'tampered');
+    assert.deepEqual(await readFile(await downloadArtifact(details)), zip, 'a tampered cached zip is replaced');
+    assert.deepEqual(requests, [`/v${installed}/${name}`]);
+    const wrong = { ...details, cacheRoot: join(cache, 'other'), checksums: { ...details.checksums, [name]: 'f'.repeat(64) } };
+    const mismatch = await downloadArtifact(wrong).then(() => null, error => error);
+    assert.match(mismatch?.message ?? '', /checksum/i, 'a zip that matches no checksum is refused');
+    assert.equal(isTransientNetworkError(mismatch), false, 'and never retried');
+  } finally {
+    await new Promise(resolve => mirror.close(resolve));
+    await rm(cache, { recursive: true, force: true });
+  }
 });
 
 test('a package.json Electron the installed checksums do not cover is refused before anything downloads', async () => {

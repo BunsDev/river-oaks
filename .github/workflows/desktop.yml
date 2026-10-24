@@ -98,14 +98,17 @@ jobs:
       # version so a warm run packages without github.com. Either way the zip is
       # checked against the installed electron's checksums.json (package-options.js).
       - name: Electron version
+        if: ${{ !cancelled() }}
         id: electron
         run: echo "version=$(node -p "require('./package.json').devDependencies.electron")" >> "$GITHUB_OUTPUT"
+      # The -zip suffix ends the key, so a prefix match cannot restore another version.
       - name: Electron download cache
+        if: ${{ !cancelled() }}
         id: electron-cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/electron-cache
-          key: electron-${{ runner.os }}-${{ runner.arch }}-${{ steps.electron.outputs.version }}
+          key: electron-${{ runner.os }}-${{ runner.arch }}-${{ steps.electron.outputs.version }}-zip
       # The later stages run even when an earlier one fails, so each platform
       # still reports its packaging, fuse and e2e evidence; the job stays red.
       # @electron/get's debug lines record whether the zip came from the cache.
@@ -119,11 +122,11 @@ jobs:
       # Saved as soon as packaging has verified the zip, so a later e2e failure
       # does not leave the next run on this runner without it.
       - name: Save the Electron download cache
-        if: ${{ !cancelled() && steps.package.outcome == 'success' && steps.electron-cache.outputs.cache-hit != 'true' }}
+        if: ${{ !cancelled() && steps.package.outcome == 'success' && steps.electron.outputs.version != '' && steps.electron-cache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/electron-cache
-          key: electron-${{ runner.os }}-${{ runner.arch }}-${{ steps.electron.outputs.version }}
+          key: electron-${{ runner.os }}-${{ runner.arch }}-${{ steps.electron.outputs.version }}-zip
       - name: Fuse wire and asar contents match desktop/fuses.js and desktop/package-files.js
         if: ${{ !cancelled() }}
         id: check
@@ -388,25 +391,12 @@ jobs:
           node-version: '24'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Electron version
-        id: electron
-        run: echo "version=$(node -p "require('./package.json').devDependencies.electron")" >> "$GITHUB_OUTPUT"
-      - name: Electron download cache
-        id: electron-cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/electron-cache
-          key: electron-${{ runner.os }}-${{ runner.arch }}-${{ steps.electron.outputs.version }}
+      # The signing job restores no cache: it holds id-token: write and the
+      # desktop-signing environment. It downloads Electron itself, checked
+      # against the installed electron's checksums.json (package-options.js).
       - run: pnpm run desktop:package
         env:
-          electron_config_cache: ${{ runner.temp }}/electron-cache
           DEBUG: '@electron/get:*'
-      - name: Save the Electron download cache
-        if: ${{ steps.electron-cache.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/electron-cache
-          key: electron-${{ runner.os }}-${{ runner.arch }}-${{ steps.electron.outputs.version }}
       - run: pnpm run desktop:package:check
       - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
