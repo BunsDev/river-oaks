@@ -21,7 +21,10 @@ Owned files: `server/tests/character-likeness-unreachable.test.js` and this ledg
 
 - **Focused:** `node --test server/tests/character-likeness-*.test.js`: 54 passed (52 existing plus 2 new), 0 failed, 0 skipped.
 - **Core:** `pnpm run verify` (Python 3.13 first on PATH) on 2cbc4dc4, with the new test present as an untracked file. **Passed**, 2026-10-24T06:04:55Z to 06:10:54Z, receipt `.runtime/agent/core.json`. Counts: tooling 218/218; preview 3902 passed with 1 skip; server 869 passed with 219 skips; desktop 115 passed with 3 skips; Python 156 passed; secret scan found no leaks. The server skips are Redis and live-gateway suites, which core excludes, so they are not evidence. The new test passed inside the server stage.
-- **`verify full`:** pending (isolated Redis on a random loopback port, no persistence).
+- **`verify full`**, with a disposable Redis (random loopback port, no persistence, shut down afterwards):
+  - **#631** (head `e0ff305b`): every non-browser stage passed. Dependency audit: no known vulnerabilities. Tooling 219/219. Preview 3902 passed with 1 skip. Redis server tests 1128/1128 with **0 skips**. Desktop 115 passed with 3 skips. Build, ruff and format passed. Python 156 passed. Demo passed. Secret scan and history scan found no leaks.
+  - **#632** (head `c8d6f143`): ran the `server-redis-tests` stage's command (`REDIS_URL=… pnpm run test:server`): 1130/1130 with **0 skips**, the 1128 plus the two new tests. Core had already passed on this content. The lockfile and history match #631's run.
+  - **Not run locally:** the browser stages (`security-browser`, `reflections`, `experience`, `shared`, `ipic-screening`). #631's run waited ninth in the shared local browser-lock queue, behind a run that had held the lock since 05:59Z, and I stopped it at 06:50Z. This is a skip, not a pass. Neither change touches browser code. Hosted CI ran the browser journeys on both exact heads: all 22 check runs succeeded on `e0ff305b` and on `c8d6f143`.
 
 ## Retirement
 
@@ -57,6 +60,11 @@ Every local tip is a strict ancestor of its merged PR head. The only commits bet
 2. **Issue #518:** close it, or keep it open as deferred-optional.
 3. **Merging** the closeout PR and the prune fix PR. Neither merge is authorized in this session.
 
+## Issue sync and PRs
+
+- 2026-10-24T06:15Z: ticked the four #518 acceptance boxes. Each box links its PR and merge SHA; the rollout box links Val's NO-GO ruling. A note says that real-user intake stays NO-GO and the pilot-evidence rows stay unmet. Before ticking, I checked each box's attribution against git history, for example that the decision package was added in #590 and the Rollout gate ruling in #615. The issue is still open.
+- Draft PRs: #631 (`fix/prune-cancel-cli-cycle-20261024`) and #632 (this branch). The open-PR sweep session `river-oaks-a3` (task `open-pr-sweep-20261024`) reports that Val asked it to land open PRs. I handed both PRs to it; this session is not authorized to merge.
+
 ## Next action
 
-Record the `verify full` results for both heads, tick the #518 acceptance boxes, open both PRs, and post one evidence comment on #518.
+Mark #631 and #632 ready and hand their heads to `river-oaks-a3`. Post one evidence comment on #518. Val's three decisions above remain open.
