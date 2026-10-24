@@ -86,6 +86,15 @@ pnpm run land --status                # who is queued
 The queue only orders sessions that use it. Landing still needs the same merge
 authorization as any other merge.
 
+**Waiting on GitHub.** Every session on this machine shares one account's API
+quota, and it ran out several times on 2026-10-23, stalling landing and signing. Do
+not poll with `gh pr view`/`gh pr checks` loops or `gh pr checks --watch`: they
+spend GraphQL points on every turn (`gh pr checks` costs 2). Use
+`pnpm run pr:wait <pr>` (until merged) or `pnpm run pr:wait <pr> --until checks`
+(until every check on the current head finishes; exit 1 if one failed). It polls
+REST with the previous ETag, so an unchanged answer is a free 304, and it waits for
+the quota reset when fewer than 200 requests remain. The lander polls the same way.
+
 ### Delivery cadence
 
 Reduce idle time around the existing checks before adding more orchestration. The [eight-PR timing audit](../superpowers/plans/2026-10-23-delivery-lifecycle.md#timing-baseline) found a median 25.3-minute Verify span, including reruns, and 32 seconds from its last job completing to merge. Shortening the lander's 30-second polling interval cannot remove that CI work. These measurements describe their recorded revisions, not a permanent performance guarantee.
