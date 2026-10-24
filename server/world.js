@@ -643,19 +643,38 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     player.poseAt = time;
     player.moveBudget = Math.min(1,player.moveBudget+dt);
     player.liftBudget = Math.min(1,player.liftBudget+dt);
-    const cost = distance(position,player.position) / (message.vehicle ? VEHICLES[message.vehicle].maxSpeed : Math.max(player.altitude,altitude)>0.1 ? FLIGHT_SPEED.fast+.2 : fastWalkFor(player.id)+.2);
+    const speed = message.vehicle ? VEHICLES[message.vehicle].maxSpeed : Math.max(player.altitude,altitude)>0.1 ? FLIGHT_SPEED.fast+.2 : fastWalkFor(player.id)+.2;
+    let cost = distance(position,player.position) / speed;
     const liftCost = Math.abs(altitude-player.altitude)/3.2;
     if (cost>player.moveBudget+1e-8 || liftCost>player.liftBudget+1e-8) return correction('movement_too_fast');
-    const steps = Math.max(1,Math.ceil(distance(position,player.position)/0.15),Math.ceil(Math.abs(altitude-player.altitude)/0.15));
-    for (let i=1;i<=steps;i++) {
-      const t=i/steps, x=player.position[0]+(position[0]-player.position[0])*t, north=player.position[1]+(position[1]-player.position[1])*t;
-      const height=player.altitude+(altitude-player.altitude)*t;
-      const privateRoom=height<=0.1 && restrictedRoomAt(x,north);
-      if (privateRoom && !canEnterHome(player.id,privateRoom.storeId)) return correction('private_home');
-      if (height>0.1 ? !movementEnvironment.canFly(x,movementEnvironment.groundAt(x,-north)+height,-north) : !movementEnvironment.isFree(x,-north)) return correction('blocked');
-      const suite=campusLevel && movementEnvironment.roomAt(x,-north)?.supportAt?.(x,north);
-      if (suite?.access==='private-suite' && !admits(player.id,suite.surfaceId)) return correction('private_suite');
+    // Every 0.15 m of a path, each point as [east, north, altitude], must be open to this player.
+    const refusal = points => {
+      for (let leg=1;leg<points.length;leg++) {
+        const from=points[leg-1],to=points[leg],steps=Math.max(1,Math.ceil(distance(to,from)/0.15),Math.ceil(Math.abs(to[2]-from[2])/0.15));
+        for (let i=1;i<=steps;i++) {
+          const t=i/steps, x=from[0]+(to[0]-from[0])*t, north=from[1]+(to[1]-from[1])*t, height=from[2]+(to[2]-from[2])*t;
+          const privateRoom=height<=0.1 && restrictedRoomAt(x,north);
+          if (privateRoom && !canEnterHome(player.id,privateRoom.storeId)) return 'private_home';
+          if (height>0.1 ? !movementEnvironment.canFly(x,movementEnvironment.groundAt(x,-north)+height,-north) : !movementEnvironment.isFree(x,-north)) return 'blocked';
+          const suite=campusLevel && movementEnvironment.roomAt(x,-north)?.supportAt?.(x,north);
+          if (suite?.access==='private-suite' && !admits(player.id,suite.surfaceId)) return 'private_suite';
+        }
+      }
+      return null;
+    };
+    const start=[player.position[0],player.position[1],player.altitude],end=[position[0],position[1],altitude];
+    let refused=refusal([start,end]);
+    // A walker slides along a wall one axis at a time, so its path round a convex corner is
+    // an elbow, and the chord between two poses can clip the corner it walked round. On foot,
+    // accept a clear elbow instead and charge for its length; solids and access still refuse.
+    if (refused==='blocked' && !message.vehicle && Math.max(player.altitude,altitude)<=0.1) {
+      for (const corner of [[position[0],player.position[1],0],[player.position[0],position[1],0]]) {
+        if (refusal([start,corner,end])) continue;
+        cost=(distance(corner,player.position)+distance(position,corner))/speed;refused=null;break;
+      }
+      if (!refused && cost>player.moveBudget+1e-8) return correction('movement_too_fast');
     }
+    if (refused) return correction(refused);
     if(distance(position,player.position)>.015 || altitude>.1 || message.vehicle)interactions.cancel(player.id);
     player.moveBudget -= cost;
     player.liftBudget -= liftCost;
