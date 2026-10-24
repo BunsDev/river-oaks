@@ -76,10 +76,13 @@ try {
   // The first window can still hold the document before the game's. An absent
   // #loading counts as hidden, and a predicate that throws ends its wait, so wait
   // for the game's own element and read the rest without assuming it exists.
-  await page.locator('#canvas-host').waitFor({ state: 'attached' });
-  await page.locator('#loading').waitFor({ state: 'hidden' });
-  await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true');
-  await page.waitForFunction(() => JSON.parse(document.querySelector('#viewport')?.dataset.assetProgress || '{}').done === true);
+  const gameReady = async () => {
+    await page.locator('#canvas-host').waitFor({ state: 'attached' });
+    await page.locator('#loading').waitFor({ state: 'hidden' });
+    await page.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true');
+    await page.waitForFunction(() => JSON.parse(document.querySelector('#viewport')?.dataset.assetProgress || '{}').done === true);
+  };
+  await gameReady();
   report.readyMs = Math.round(performance.now() - started);
   report.assets = await page.locator('#viewport').evaluate(el => JSON.parse(el.dataset.assetProgress));
   assert.equal(report.assets.failed, 0);
@@ -218,13 +221,24 @@ try {
   await page.locator('[data-quality=smooth]').click();
   await page.waitForFunction(() => JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}').mode === 'smooth');
   await page.reload();
-  await page.locator('#loading').waitFor({ state: 'hidden' });
+  await gameReady();
+  // Connecting to the town locks the access gate, and the gate closes an open
+  // Settings dialog (multiplayer-client.js setStatus). Open it once joined.
+  if (sharedTown) await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.multiplayer === 'joined');
   assert.equal(await page.locator('[data-quality=smooth]').getAttribute('aria-pressed'), 'true');
   check('graphics preference survives reload');
   await openHudSpace(page, 'settings-section', 'Graphics');
   await page.locator('[data-quality=auto]').click();
   await page.locator('#settings-dialog .settings-header button').click();
-  await page.waitForTimeout(5000);
+  // Selecting Auto restarts it at full resolution with AO, and it decides once
+  // per 45 frames: on a 10 fps runner it needs about 27 s to reach its floor and
+  // drop AO. Measure the loop at the setting Auto chose, not during that descent.
+  const settling = performance.now();
+  await page.waitForFunction(() => {
+    const quality = JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}');
+    return quality.mode === 'auto' && quality.steadyWindows >= 2;
+  });
+  const settledMs = Math.round(performance.now() - settling);
   report.performance = await page.evaluate(async () => {
     const intervals = [];
     let last;
@@ -238,6 +252,7 @@ try {
     const canvas = host.querySelector('canvas');
     return { samples: intervals.length, medianMs: intervals[Math.floor(intervals.length * 0.5)], p95Ms: intervals[Math.floor(intervals.length * 0.95)], meanFps: 1000 * intervals.length / intervals.reduce((a, b) => a + b, 0), canvas: [canvas.width, canvas.height], quality: JSON.parse(host.dataset.quality), renderer: JSON.parse(host.dataset.renderStats) };
   });
+  report.performance.autoSettledMs = settledMs;
   assert.ok(report.performance.samples > 100, 'render loop keeps advancing');
   for (const fullScreen of [true, false]) {
     const transition = await app.evaluate(async ({ BrowserWindow }, fullScreen) => {
