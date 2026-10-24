@@ -1,0 +1,108 @@
+{
+  "candidate": "6ab4260de51ed51ec59b6a39d79978aad78a2b6a",
+  "revision": "river-oaks-gardens-3",
+  "layout": "3.2",
+  "officeSourcesRevalidated": [
+    {
+      "path": "preview/src/office-skyline.js",
+      "sha256": "343aec50e64bc1eb9e203aca577b7b47a14c77626684ba8418800bb1a646ae9e"
+    },
+    {
+      "path": "preview/src/office-world-scene.js",
+      "sha256": "b955b66bc18d25f09671c1ea65ed4a45937764e624b99f97376eb861edbe8ea0"
+    },
+    {
+      "path": "preview/src/office-world-presentation.js",
+      "sha256": "22d16cbd5b89b3fc4caf6d49ccf518d84c740110e02d3ba8e06440d15c9fb609"
+    },
+    {
+      "path": "preview/src/office-layouts.js",
+      "sha256": "2f97178d452f776da7923334ed3ee089d7cb902ecd55c31ccb022b81cda7e6df"
+    },
+    {
+      "path": "preview/src/office-penthouse-graybox.js",
+      "sha256": "12ab50d3098edbc8c2ca8bbcd9e40d8f4475a5b88c2a6d1ee4631c50512d6029"
+    },
+    {
+      "path": "preview/src/office-contract.js",
+      "sha256": "3842636cca8f466119cb5cd7d3836abaeca1a1e66e8874431b1ae832fb65784d"
+    },
+    {
+      "path": "preview/src/office-arrival-model.js",
+      "sha256": "d729b91064812da30631a919cdc76b1a5fb34629136eb78f6f026db64fea3a1f"
+    },
+    {
+      "path": "preview/src/district.js",
+      "sha256": "f8973e7164d57019f9b7c05919529bd310b743ae40f0f28118636e3fff4fbe95"
+    },
+    {
+      "path": "preview/src/reference-facades.js",
+      "sha256": "0c3b797bc18fca9f659f22b798abb2e8074468c9e55566ec327fa3ac88d9189e"
+    },
+    {
+      "path": "preview/src/main.js",
+      "sha256": "927b703036842ad5c964a63ab41016c9ea7bbf5e6d4b2f07d63927061a83ba22"
+    },
+    {
+      "path": "preview/src/green-roofs.js",
+      "sha256": "6831473233caefc7a1276df1809925d70d2ab0ba28e850053b4951f2cc55b528"
+    },
+    {
+      "path": "preview/src/roof-grasses.js",
+      "sha256": "5410c12782e91f9a8948b42ccbf2ce0b0d5823eb17a37e77a33b754235f6e156"
+    },
+    {
+      "path": "preview/src/roof-field-mesh.js",
+      "sha256": "9ae222d3b14318f0435ef6b75ebec942a19a89c647cb78a73a784b36cfd8b70b"
+    },
+    {
+      "path": "preview/src/roof-field-boundaries.js",
+      "sha256": "54144b1bf36d11c79e355967861beb06e1d81dcd6aa8f388cbea010be90f7899"
+    },
+    {
+      "path": "preview/src/hermes-roof-surface.js",
+      "sha256": "bd8b59fef496aa624e1d3c60bdb636723c7a631d88c604632f74b7fc41f8c543"
+    },
+    {
+      "path": "preview/src/garden-campus.js",
+      "sha256": "1dd6872fa6a399cf3c323a4048026b8b687b5e3959f4c274e7fa7a1e090248ce"
+    },
+    {
+      "path": "preview/src/garden-campus-district.js",
+      "sha256": "eccf8b4376a102d9604d9dc93e6e389b995b959835571a7dc91d8ae034c87fbf"
+    },
+    {
+      "path": "preview/src/../../shared/garden-campus-layout.js",
+      "sha256": "21717145b78380c55448b2f28b2f73fd49cf70825133c96d015d95dfeff93dc3"
+    }
+  ],
+  "matchedCaptureBoundary": "Retained prior matched run at a35214f3 plus audit harness changes, reused per ledger applicability review. Original result has camera metadata but no source hashes; current hashes are applicability checks, not retroactive capture-time provenance.",
+  "files": {
+    "site-plan.svg": "470eb7856434f2937eb1be975c50f33aa05a0c87cd9b9e4d3b69d7c0b78e7540",
+    "README.md": "a099523d32f27c34a66b0478d73f32aa2250383c1070257ae942a91774fb0630",
+    "capture-inputs.json": "3366fc8810371b7a23a5e4f6c266e4a5933aa9f6d2299e0ece9cb913fdad1d62",
+    "resources-paired.json": "a4d6caca803be1682d214df921be85a7c6d06e925c5a6ca1dd83a93adb02258a",
+    "resources-original.json": "9589579897b6f09460ca4f010b879bb38253473b44c353050eb4a2b6de84635e",
+    "office/result.json": "f827e0a905dba1b651f5355d32e11ce718717e94397899a53dfaeb094a567fc5",
+    "office/campus-aimed-clean-1.png": "ba02ff891105108de7cb44de99842834599419dc24e010cd2e9219fb22c49bef",
+    "office/campus-aimed-clean-0.png": "e2a9c82505f7081ef01e7858c4fbe5b2e14c35d6b301ae13e4680abe81d07d0b",
+    "office/campus-aimed-1.png": "db9a8230ab798266f440652d3098e2f8f5d5a40d03bdc4fcf5fd7dc47ecdf78c",
+    "office/campus-aimed-0.png": "3c5d55c9fe1fa69f2d4e64f8a44eaee76c6c418f6c41b75edabc934aa2491134",
+    "aerial/result.json": "80a8312de5c00f16f353559daf61608a1d964ceb37c19ca3e63c37b86d1c5523",
+    "aerial/sheet-day.jpg": "34e0ec59bbd25286c54b18a9d1c688d7635bfc167313c4e58f6b8ce54653d973",
+    "aerial/gardens-day-01-southeast-aerial.png": "89c356a3ce534c4b226a65a1dda683b6b572ab30b4fade0a4610b6d8a7948940",
+    "aerial/garage-day-01-southeast-aerial.png": "8f56c2b6cafd989e32725235a61e39c2b99577e0a247ba8ccb002b5b6fd823c3",
+    "matched/result.json": "c806b628d4b8cdc7c939ffdc330f6019c437b667903b6d7d6970947a13d4a940",
+    "matched/gardens-day-12-west-long-side.png": "4760f81c650b6c92d5db43015ec62710e5cdc40216e2fceae8bb3afeedfa38a1",
+    "matched/gardens-day-11-east-long-side.png": "2b6db8fc3c6e5f05e988dccdb25bf4b9ac5aa6b2060efa7a7d5abdadb5bc3978",
+    "matched/sheet-day.jpg": "b009834007cb840d7289fbd875e1019b0d3ec167f3061e0d2da00da003b33a47",
+    "matched/gardens-day-02-street-under-b12.png": "7006524df6f33bfb061d41919a4d3605599491fbfdac41b8d6ba7cdd1f8729e3",
+    "matched/garage-day-02-street-under-b12.png": "62578f3ec6309c312f48b08745c697f3c542d841b99186dc7eadce753dfd93b0",
+    "matched/gardens-day-14-street-under-b23.png": "b776a991beccd4e6b00553c358e458a373d94c29fe2710adf0bc1d87ed41842c",
+    "matched/garage-day-12-west-long-side.png": "93bf014146343c21141be100888d7cd69e58d590229c55d986251a88374ebf25",
+    "matched/garage-day-05-office-terrace-outlook.png": "d10d58f73d7cfdcf1f88afc765f284bfc5443b7e0aa670a1ce9390c665b972e4",
+    "matched/garage-day-11-east-long-side.png": "6a937b3a7d60d58bb5f1ab54013aa8b686e1d0e1a4e8e32f8f8f8159f8548d94",
+    "matched/garage-day-14-street-under-b23.png": "3c67c34f0e8a097d5217112009279b449c0e768c04f06222ffef877be195e012",
+    "matched/gardens-day-05-office-terrace-outlook.png": "98f64db3218d846fc0f21485458bc7479ba126fc19c172e15485ec1561e76491"
+  }
+}

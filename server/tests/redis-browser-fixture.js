@@ -69,7 +69,7 @@ gateway.on('upgrade', (req, socket, head) => {
   upstream.on('error', () => socket.destroy()); upstream.end();
 });
 await new Promise(resolve => gateway.listen(8790, '127.0.0.1', resolve));
-const vite = await createViteServer({ configFile: 'preview/vite.config.js', server: { host: '127.0.0.1', port: 5180, strictPort: true,
+const vite = await createViteServer({ configFile: 'preview/vite.config.js', envDir: false, server: { host: '127.0.0.1', port: 5180, strictPort: true,
   proxy: { '/auth': 'http://127.0.0.1:8790', '/api/multiplayer': 'http://127.0.0.1:8790', '/api/landmarks': 'http://127.0.0.1:8790', '/api/social': 'http://127.0.0.1:8790', '/api/waitlist': 'http://127.0.0.1:8790', '/api/moderation': 'http://127.0.0.1:8790', '/multiplayer': { target: 'ws://127.0.0.1:8790', ws: true } } } });
 await vite.listen();
 console.log('Redis browser fixture ready: Alice and Bob use separate backends, private test namespace.');
