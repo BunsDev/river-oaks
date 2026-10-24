@@ -1,0 +1,62 @@
+.graphics-recovery {
+  position: fixed;
+  inset: auto max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) auto;
+  z-index: 1100;
+  max-width: min(24rem, calc(100vw - 2rem));
+  padding: 1rem 1.2rem;
+  color: var(--hud-muted);
+  background: var(--hud-glass);
+  backdrop-filter: var(--hud-filter);
+  border: 1px solid var(--hud-hairline);
+  border-radius: var(--hud-sheet-radius);
+  box-shadow: var(--hud-shadow);
+}
+.graphics-recovery[hidden] { display: none; }
+.graphics-recovery p { margin: 0 0 .7rem; }
+.graphics-recovery button { min-height: 44px; padding: .55rem .9rem; }
+.graphics-recovery button:focus-visible { outline: 3px solid var(--hud-focus); outline-offset: 3px; }
+
+/* Photo controls are normally absolute. During recovery, reserve real space
+   for the notice so saving/discarding a retained photo remains reachable. */
+.photo-mode[open]:has(> .graphics-recovery:not([hidden])) {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: auto;
+}
+.photo-mode[open]:has(> .graphics-recovery:not([hidden])) > :not(.photo-frame) { z-index: 1; }
+.photo-mode[open]:has(> .graphics-recovery:not([hidden])) .photo-header {
+  position: static;
+  flex: none;
+}
+.photo-mode[open]:has(> .graphics-recovery:not([hidden])) .photo-controls {
+  position: static;
+  order: 2;
+  flex: none;
+  align-self: center;
+  margin-top: auto;
+  transform: none;
+  width: min(560px, 100%);
+  max-height: none;
+}
+.photo-mode[open]:has(> .graphics-recovery:not([hidden])) .photo-result {
+  position: static;
+  order: 2;
+  flex: 1 0 12rem;
+  min-height: 12rem;
+}
+.photo-mode[open]:has(> .graphics-recovery:not([hidden])) .photo-status {
+  position: static;
+  order: 3;
+  flex: none;
+}
+.photo-mode[open] > .graphics-recovery {
+  position: static;
+  order: 1;
+  flex: none;
+  align-self: flex-end;
+  max-width: min(24rem, 100%);
+  box-sizing: border-box;
+}

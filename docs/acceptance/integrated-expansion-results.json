@@ -626,5 +626,911 @@
         "totalTransferBytes": 46044644
       }
     ]
+  },
+  "handoffAudit20261024": {
+    "scope": "Read-only retained-receipt audit plus fresh focused review; final source verification incomplete. Published and pending-main-merge evidence are kept distinct.",
+    "candidate": "311e8de6abd05f29f7718985723129e3a68e96a8",
+    "pendingMain": "2cbc4dc470897bd8ee4da059ac8795885ee594c1",
+    "renderedLoops": {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-expansion-mvp/.runtime/integration/rendered-loops-002.json",
+      "sha256": "c3ef2a3c1118a2f78e60bf4df1c6331e5844936323b8a9ea7227203015890aa5",
+      "status": "passed",
+      "createdAt": "2026-10-24T03:38:29.433Z",
+      "seconds": 3419.475,
+      "checks": 275,
+      "warmupTrips": 2,
+      "measuredTrips": 20,
+      "renderedClients": 2,
+      "manifest": {
+        "files": 1124,
+        "entryExitMismatches": [],
+        "candidateMismatches": [],
+        "currentWorktreeMismatches": [
+          "package.json",
+          "preview/e2e/crime-shared.js",
+          "preview/e2e/office-ipic-journey.js",
+          "preview/src/crime-ui.js",
+          "preview/src/main.js",
+          "preview/src/multiplayer.css",
+          "preview/src/town-snapshot.js",
+          "server/avatar-preferences.js",
+          "server/character-likeness-quarantine.js",
+          "server/crime.js",
+          "server/redis-room.js",
+          "server/tests/avatar-preferences.test.js",
+          "server/tests/campus-leases-transport.test.js",
+          "server/tests/campus-leases.test.js",
+          "server/tests/character-likeness-adversarial.test.js",
+          "server/tests/character-likeness-quarantine.test.js",
+          "server/tests/character-world.test.js",
+          "server/tests/creator-objects.test.js",
+          "server/tests/crime-transport.test.js",
+          "server/tests/crime.test.js",
+          "server/tests/interactions.test.js",
+          "server/tests/office-ipic-rollback.test.js",
+          "server/tests/offices.test.js",
+          "server/tests/penthouse-office.test.js",
+          "server/tests/penthouse-seats-redis.test.js",
+          "server/tests/penthouse-seats.test.js",
+          "server/tests/redis-room.test.js",
+          "server/tests/seating.test.js",
+          "server/tests/world-policy-transport.test.js",
+          "server/tests/world-policy.test.js",
+          "server/world.js"
+        ],
+        "manifestSha256": "4638e0f33dce43bc2546124337b4137eaeb710a6db2f18a2493f4f29989d9cfe"
+      },
+      "failedRequests": 6,
+      "continuitySamples": [
+        44,
+        46
+      ],
+      "reconnects": [
+        {
+          "client": 0,
+          "durationMs": 707.5727499999921,
+          "driftMetres": 0
+        }
+      ],
+      "maximumResidentGeometryBytes": 7558034,
+      "evictedResidentGeometryBytes": [
+        0
+      ],
+      "evictedPendingLoads": [
+        0
+      ],
+      "renderedResourceBounds": [
+        {
+          "player": 0,
+          "state": "loaded",
+          "maximumGrowth": {
+            "objects": 0,
+            "geometries": 0,
+            "textures": 0
+          },
+          "withinRecordedBound": true
+        },
+        {
+          "player": 0,
+          "state": "evicted",
+          "maximumGrowth": {
+            "objects": 0,
+            "geometries": 0,
+            "textures": 0
+          },
+          "withinRecordedBound": true
+        },
+        {
+          "player": 1,
+          "state": "loaded",
+          "maximumGrowth": {
+            "objects": 0,
+            "geometries": 0,
+            "textures": 0
+          },
+          "withinRecordedBound": true
+        },
+        {
+          "player": 1,
+          "state": "evicted",
+          "maximumGrowth": {
+            "objects": 0,
+            "geometries": 0,
+            "textures": 0
+          },
+          "withinRecordedBound": true
+        }
+      ],
+      "scope": "Two Chromium fixture clients, two recorded route warm-ups followed by 20 measured full keyboard round trips to the Commons plaza with chunk eviction on every District return; real loopback authority. Buffer bytes are exact geometry storage, not total GPU memory. Heap and frame timing are observational; no physical-device, hosted or human accessibility acceptance."
+    },
+    "matchedPerformance": {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-expansion-mvp/.runtime/world-streaming/matched-2026-10-24T03-47-46.069Z/report.json",
+      "sha256": "888825f65bf5634c6c7126bc6246a1ed2b8597c65b642f92dffcda7c63e59264",
+      "status": "passed",
+      "head": "311e8de6abd05f29f7718985723129e3a68e96a8",
+      "manifest": {
+        "files": 17,
+        "entryExitMismatches": [],
+        "candidateMismatches": [],
+        "currentWorktreeMismatches": [
+          "preview/src/main.js"
+        ],
+        "manifestSha256": "c5972f034e10d9e44e3cda4af357013f99dcc91b82b427acc5ba4d63d3e520b3"
+      },
+      "scope": "Local Chromium development build, Gardens and Commons revisions in the same current source, fixture accounts and in-memory loopback authority. Phone-sized viewport uses the same desktop GPU, not physical mobile hardware. Resource bytes include Vite development modules, not a production initial-download budget. Two-player samples render two full browser clients concurrently on this host. GPU memory bytes, live auth, hosted performance and human accessibility are not measured.",
+      "sampleDurationMs": 30000,
+      "warmupMs": 5000,
+      "windows": 24,
+      "comparisons": [
+        {
+          "profile": "desktop",
+          "players": 1,
+          "metric": "frame",
+          "gardensMs": 16.7,
+          "marketMs": 16.7,
+          "ratio": 1.0,
+          "provisionalMaximumRatio": 1.1,
+          "withinProvisionalBudget": true
+        },
+        {
+          "profile": "desktop",
+          "players": 1,
+          "metric": "cpuSubmission",
+          "gardensMs": 10.5,
+          "marketMs": 11.4,
+          "ratio": 1.0857142857142859,
+          "provisionalMaximumRatio": 1.1,
+          "withinProvisionalBudget": true
+        },
+        {
+          "profile": "desktop",
+          "players": 2,
+          "metric": "frame",
+          "gardensMs": 50,
+          "marketMs": 33.4,
+          "ratio": 0.6679999999999999,
+          "provisionalMaximumRatio": 1.1,
+          "withinProvisionalBudget": true
+        },
+        {
+          "profile": "desktop",
+          "players": 2,
+          "metric": "cpuSubmission",
+          "gardensMs": 12.1,
+          "marketMs": 13.4,
+          "ratio": 1.1074380165289257,
+          "provisionalMaximumRatio": 1.1,
+          "withinProvisionalBudget": false
+        },
+        {
+          "profile": "desktop",
+          "metric": "reconnect",
+          "gardensMs": 1034.3140830000048,
+          "marketMs": 1126.5978339999565,
+          "ratio": 1.0892221739186658,
+          "provisionalMaximumRatio": 1.2,
+          "withinProvisionalBudget": true
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 1,
+          "metric": "frame",
+          "gardensMs": 16.8,
+          "marketMs": 16.8,
+          "ratio": 1.0,
+          "provisionalMaximumRatio": 1.1,
+          "withinProvisionalBudget": true
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 1,
+          "metric": "cpuSubmission",
+          "gardensMs": 8.7,
+          "marketMs": 8.8,
+          "ratio": 1.0114942528735633,
+          "provisionalMaximumRatio": 1.1,
+          "withinProvisionalBudget": true
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 2,
+          "metric": "frame",
+          "gardensMs": 33.4,
+          "marketMs": 33.4,
+          "ratio": 1.0,
+          "provisionalMaximumRatio": 1.1,
+          "withinProvisionalBudget": true
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 2,
+          "metric": "cpuSubmission",
+          "gardensMs": 9.9,
+          "marketMs": 9.9,
+          "ratio": 1.0,
+          "provisionalMaximumRatio": 1.1,
+          "withinProvisionalBudget": true
+        },
+        {
+          "profile": "phone-viewport",
+          "metric": "reconnect",
+          "gardensMs": 958.7221250000875,
+          "marketMs": 1067.1183329999913,
+          "ratio": 1.113063217352884,
+          "provisionalMaximumRatio": 1.2,
+          "withinProvisionalBudget": true
+        }
+      ],
+      "cpuPhaseComparisons": [
+        {
+          "profile": "desktop",
+          "players": 1,
+          "phase": "setup",
+          "gardensMs": 0.1,
+          "marketMs": 0.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "desktop",
+          "players": 1,
+          "phase": "community",
+          "gardensMs": 0.2,
+          "marketMs": 0.2,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "desktop",
+          "players": 1,
+          "phase": "trees",
+          "gardensMs": 0.1,
+          "marketMs": 0.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "desktop",
+          "players": 1,
+          "phase": "residents",
+          "gardensMs": 0.1,
+          "marketMs": 0.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "desktop",
+          "players": 1,
+          "phase": "interactions",
+          "gardensMs": 0.6,
+          "marketMs": 0.7,
+          "deltaMs": 0.09999999999999998
+        },
+        {
+          "profile": "desktop",
+          "players": 1,
+          "phase": "players",
+          "gardensMs": 3.1,
+          "marketMs": 3.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "desktop",
+          "players": 1,
+          "phase": "reflections",
+          "gardensMs": 0,
+          "marketMs": 0,
+          "deltaMs": 0
+        },
+        {
+          "profile": "desktop",
+          "players": 1,
+          "phase": "debug",
+          "gardensMs": 0,
+          "marketMs": 0,
+          "deltaMs": 0
+        },
+        {
+          "profile": "desktop",
+          "players": 1,
+          "phase": "pipeline",
+          "gardensMs": 7.5,
+          "marketMs": 8.2,
+          "deltaMs": 0.6999999999999993
+        },
+        {
+          "profile": "desktop",
+          "players": 1,
+          "phase": "tail",
+          "gardensMs": 0,
+          "marketMs": 0,
+          "deltaMs": 0
+        },
+        {
+          "profile": "desktop",
+          "players": 2,
+          "phase": "setup",
+          "gardensMs": 0.1,
+          "marketMs": 0.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "desktop",
+          "players": 2,
+          "phase": "community",
+          "gardensMs": 0.3,
+          "marketMs": 0.3,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "desktop",
+          "players": 2,
+          "phase": "trees",
+          "gardensMs": 0.1,
+          "marketMs": 0.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "desktop",
+          "players": 2,
+          "phase": "residents",
+          "gardensMs": 0.1,
+          "marketMs": 0.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "desktop",
+          "players": 2,
+          "phase": "interactions",
+          "gardensMs": 0.7,
+          "marketMs": 0.8,
+          "deltaMs": 0.10000000000000009
+        },
+        {
+          "profile": "desktop",
+          "players": 2,
+          "phase": "players",
+          "gardensMs": 3.2,
+          "marketMs": 3.4,
+          "deltaMs": 0.19999999999999973
+        },
+        {
+          "profile": "desktop",
+          "players": 2,
+          "phase": "reflections",
+          "gardensMs": 0,
+          "marketMs": 0,
+          "deltaMs": 0
+        },
+        {
+          "profile": "desktop",
+          "players": 2,
+          "phase": "debug",
+          "gardensMs": 0,
+          "marketMs": 0,
+          "deltaMs": 0
+        },
+        {
+          "profile": "desktop",
+          "players": 2,
+          "phase": "pipeline",
+          "gardensMs": 8.9,
+          "marketMs": 9.7,
+          "deltaMs": 0.7999999999999989
+        },
+        {
+          "profile": "desktop",
+          "players": 2,
+          "phase": "tail",
+          "gardensMs": 0,
+          "marketMs": 0,
+          "deltaMs": 0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 1,
+          "phase": "setup",
+          "gardensMs": 0.1,
+          "marketMs": 0.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 1,
+          "phase": "community",
+          "gardensMs": 0.2,
+          "marketMs": 0.2,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 1,
+          "phase": "trees",
+          "gardensMs": 0.1,
+          "marketMs": 0.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 1,
+          "phase": "residents",
+          "gardensMs": 0.1,
+          "marketMs": 0.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 1,
+          "phase": "interactions",
+          "gardensMs": 0.6,
+          "marketMs": 0.7,
+          "deltaMs": 0.09999999999999998
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 1,
+          "phase": "players",
+          "gardensMs": 2.5,
+          "marketMs": 2.5,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 1,
+          "phase": "reflections",
+          "gardensMs": 0,
+          "marketMs": 0,
+          "deltaMs": 0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 1,
+          "phase": "debug",
+          "gardensMs": 0,
+          "marketMs": 0,
+          "deltaMs": 0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 1,
+          "phase": "pipeline",
+          "gardensMs": 6.3,
+          "marketMs": 6.2,
+          "deltaMs": -0.09999999999999964
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 1,
+          "phase": "tail",
+          "gardensMs": 0,
+          "marketMs": 0,
+          "deltaMs": 0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 2,
+          "phase": "setup",
+          "gardensMs": 0.1,
+          "marketMs": 0.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 2,
+          "phase": "community",
+          "gardensMs": 0.3,
+          "marketMs": 0.3,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 2,
+          "phase": "trees",
+          "gardensMs": 0.1,
+          "marketMs": 0.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 2,
+          "phase": "residents",
+          "gardensMs": 0.1,
+          "marketMs": 0.1,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 2,
+          "phase": "interactions",
+          "gardensMs": 0.7,
+          "marketMs": 0.8,
+          "deltaMs": 0.10000000000000009
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 2,
+          "phase": "players",
+          "gardensMs": 2.7,
+          "marketMs": 2.7,
+          "deltaMs": 0.0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 2,
+          "phase": "reflections",
+          "gardensMs": 0,
+          "marketMs": 0,
+          "deltaMs": 0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 2,
+          "phase": "debug",
+          "gardensMs": 0,
+          "marketMs": 0,
+          "deltaMs": 0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 2,
+          "phase": "pipeline",
+          "gardensMs": 7,
+          "marketMs": 7,
+          "deltaMs": 0
+        },
+        {
+          "profile": "phone-viewport",
+          "players": 2,
+          "phase": "tail",
+          "gardensMs": 0,
+          "marketMs": 0,
+          "deltaMs": 0
+        }
+      ]
+    },
+    "fullSourceLimit": {
+      "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-expansion-mvp/.runtime/integration/final-full-003-passed.json",
+      "sha256": "33077de9e9dff8fe1635b3bab55e628a1bcac716b70aba4187f0b1197a0a0f23",
+      "status": "passed",
+      "revision": "f3ebaf8981b0636a5b3763bf5eef344381f58489",
+      "dirty": false,
+      "startedAt": "2026-10-23T23:50:50.113Z",
+      "finishedAt": "2026-10-24T04:05:40.020Z",
+      "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+      "phases": [
+        {
+          "id": "dependency-audit",
+          "command": [
+            "pnpm",
+            "audit",
+            "--audit-level=moderate"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 778
+        },
+        {
+          "id": "agent-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:agent"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 93267
+        },
+        {
+          "id": "preview-tests",
+          "command": [
+            "pnpm",
+            "test"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 227455
+        },
+        {
+          "id": "server-redis-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:server"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 88569
+        },
+        {
+          "id": "desktop-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:desktop"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 9585
+        },
+        {
+          "id": "build",
+          "command": [
+            "pnpm",
+            "run",
+            "build"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 1825
+        },
+        {
+          "id": "python-lint",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "ruff",
+            "check",
+            "."
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 154
+        },
+        {
+          "id": "python-format",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "ruff",
+            "format",
+            "--check",
+            "."
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 40
+        },
+        {
+          "id": "python-tests",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "pytest",
+            "-q"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 7425
+        },
+        {
+          "id": "demo",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "river-oaks",
+            "demo"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 308
+        },
+        {
+          "id": "demo-verify",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "river-oaks",
+            "verify",
+            "--config",
+            "data/generated/demo/config.json",
+            "--raw",
+            "data/generated/demo",
+            "--world",
+            "data/generated/demo/world.json",
+            "--output",
+            "data/generated/demo/report.json"
+          ],
+          "status": "passed",
+          "exitCode": 2,
+          "durationMs": 282
+        },
+        {
+          "id": "secrets",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "python",
+            "scripts/check_secrets.py",
+            "--all"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 9984
+        },
+        {
+          "id": "secret-history",
+          "command": [
+            "gitleaks",
+            "git",
+            "--log-opts=--all",
+            "--redact",
+            "--no-banner",
+            "--ignore-gitleaks-allow"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 4651
+        },
+        {
+          "id": "security-browser",
+          "command": [
+            "pnpm",
+            "run",
+            "test:security:e2e"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 20722
+        },
+        {
+          "id": "reflections",
+          "command": [
+            "pnpm",
+            "run",
+            "test:reflections:webgl"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 2238
+        },
+        {
+          "id": "experience",
+          "command": [
+            "pnpm",
+            "run",
+            "test:experience",
+            "player-lifecycle",
+            "multiplayer-lifecycle",
+            "contextual-first-visit",
+            "store-intro",
+            "photo-mode",
+            "rail-navigation",
+            "places-guide",
+            "world-studio",
+            "spatial-circulation",
+            "spatial-streets",
+            "office-desk",
+            "office-visit",
+            "office-computer-embed",
+            "garden-campus-office",
+            "garden-campus-traversal",
+            "garden-campus-suite",
+            "east-garden-commons"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 1151938
+        },
+        {
+          "id": "shared",
+          "command": [
+            "pnpm",
+            "run",
+            "test:shared"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 851314
+        },
+        {
+          "id": "ipic-screening",
+          "command": [
+            "node",
+            "preview/e2e/ipic-screening-runner.mjs"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "durationMs": 103984
+        }
+      ],
+      "changedPathsSinceRecordedRevision": [
+        "docs/acceptance/integrated-expansion-results.json",
+        "docs/superpowers/plans/2026-10-23-integrated-expansion-mvp.md",
+        "preview/audit/world-streaming-matched.js",
+        "preview/e2e/east-garden-commons.js",
+        "preview/e2e/world-gate-587.js",
+        "preview/e2e/world-streaming.js",
+        "preview/index.html",
+        "preview/src/lantern-walk.js",
+        "preview/src/main.js",
+        "preview/src/spatial-stream.css",
+        "preview/tests/continuous-walk-582.test.js"
+      ],
+      "sourceLimit": "Full runner records start revision/dirty state, not a per-file entry/exit manifest. Source changed after the run started; this is not a final-candidate full pass."
+    },
+    "coreStatus": "Queued session10869; no pass claimed",
+    "review": {
+      "scope": "Current main merge static source and focused checks only",
+      "findings": [],
+      "parentFocused": {
+        "passed": 38,
+        "skipped": 0,
+        "log": ".runtime/integration/goal-handoff-focused-001.log"
+      },
+      "independentFocused": {
+        "clientStudio": 30,
+        "authoringCli": 36,
+        "skipped": 0,
+        "receipt": "review_623_merge tool transcript"
+      }
+    }
+  },
+  "graphicsIntegration": {
+    "sourceBase": "a35214f38795ced1ee6867aad5c3c2723a7ceaae",
+    "sourceProduct": "d0d881efff2e3892d03846fe8cce7c8d0940a6c0",
+    "publishedSource": "f65de07ec4abcf2fef676c10f43cd9d44dcdc66c",
+    "sourceHandoffSha256": "7fd8c5725087869c36b80f1869ae86028d5240e62cd50f8ba7355808f72fe9f3",
+    "adoptedPaths": 37,
+    "scope": "Adopted37-file immutable source handoff with main/render-quality composition;152graphics and38Commons-focused checks pass. No integrated browser/context-loss or final full/hosted acceptance claimed.",
+    "redRegression": ".runtime/integration/graphics-render-lifecycle-red.log",
+    "graphicsFocused": {
+      "passed": 152,
+      "skipped": 0,
+      "log": ".runtime/integration/graphics-focused-001.log"
+    },
+    "commonsFocused": {
+      "passed": 38,
+      "skipped": 0,
+      "log": ".runtime/integration/graphics-streaming-focused-001.log"
+    },
+    "retainedBuildCacheFix": {
+      "redLog": ".runtime/integration/graphics-build-cache-red.log",
+      "greenLog": ".runtime/integration/graphics-build-cache-green.log",
+      "passed": 17,
+      "skipped": 0,
+      "review": "review_623_graphics follow-up: fixed; attached owners also bounded; no further actionable findings"
+    },
+    "renderedCoverage": "Pending actual context-loss during pending Commons load and active Commons presentation, original five-cycle graphics J1, and unchanged twenty measured streaming trips.",
+    "sourceManifest": ".runtime/integration/graphics-source-before-core-002.json",
+    "coreHandle": 10869,
+    "coreStatus": "queued",
+    "coreCheckpoint": {
+      "status": "passed",
+      "command": "PATH=/opt/homebrew/opt/python@3.12/libexec/bin:$PATH pnpm run verify",
+      "startedAt": "2026-10-24T07:35:15.723Z",
+      "finishedAt": "2026-10-24T07:44:44.723Z",
+      "revision": "311e8de6abd05f29f7718985723129e3a68e96a8",
+      "dirty": true,
+      "sourceManifest": ".runtime/integration/graphics-source-before-core-002.json",
+      "sourceInputs": 1697,
+      "sourceDrift": 0,
+      "receipt": ".runtime/integration/goal-handoff-core-001.json",
+      "receiptSha256": "b5ab70754391f5568a665d4b90a755450a82f3acda222bab840bb5ae136b4ccf",
+      "counts": {
+        "tooling": {
+          "passed": 255,
+          "skipped": 0
+        },
+        "preview": {
+          "passed": 3994,
+          "skipped": 1
+        },
+        "server": {
+          "passed": 868,
+          "skipped": 219
+        },
+        "desktop": {
+          "passed": 115,
+          "skipped": 3
+        },
+        "python": {
+          "passed": 170,
+          "warnings": 66
+        }
+      },
+      "scope": "Core only. Redis/browser/native/physical-device/human/production and newer main remain separate. Demo verifier exit2 is explicitly expected by its configured domain gate."
+    }
   }
 }

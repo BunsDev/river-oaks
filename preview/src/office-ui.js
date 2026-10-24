@@ -197,6 +197,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     get pose(){const floor=view?elevation():0;return view?{position:[position[0],(seatId?OFFICE_SEATED_EYE_HEIGHT:OFFICE_EYE_HEIGHT)+floor,-position[1]],ground:floor,altitude:0,yaw,office:true}:null;},
     get active(){return Boolean(view);},get entering(){return busy;},
     prepare(now){view?.prepare?.(now);},
+    releaseGraphics(){view?.releaseGraphics?.();},
     reset(){if(entryAttempt)cancelEntry();if(view)close();},
     sync(players,selfId){
       if(desk&&deskAccount!==mp()?.identity?.id){desk.reset();deskAccount=mp()?.identity?.id;}

@@ -18,8 +18,8 @@ async page => {
   const checkpointPath = `.runtime/world-streaming/journey-${new Date().toISOString().replaceAll(':', '-')}.json`;
   await mkdir('.runtime/world-streaming', { recursive: true });
   let outcome = 'running', failure = null;
-  const origin = 'http://127.0.0.1:5173', checks = [], samples = [], errors = [], crossings = [], resourceViolations = [], reconnects = [];
-  const checkpoint = () => writeFile(checkpointPath, JSON.stringify({ outcome, failure, sourceSha256, finalSourceSha256, checks, samples, crossings, resourceViolations, reconnects }, null, 2) + '\n');
+  const origin = 'http://127.0.0.1:5173', checks = [], samples = [], errors = [], crossings = [], resourceViolations = [], reconnects = [], graphicsRecoveries = [];
+  const checkpoint = () => writeFile(checkpointPath, JSON.stringify({ outcome, failure, sourceSha256, finalSourceSha256, checks, samples, crossings, resourceViolations, reconnects, graphicsRecoveries }, null, 2) + '\n');
   console.log(`Journey checkpoints: ${checkpointPath}`);
   const check = (ok, label) => { if (!ok) throw new Error(label); checks.push(label); console.log(label); };
   const peerContext = await page.context().browser().newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
@@ -28,10 +28,22 @@ async page => {
   const tabs = [page, peer];
   const self = tab => tab.evaluate(() => { const town = window.__riverMultiplayer(); return town.snapshot.players.find(p => p.id === town.selfId); });
   const point = tab => tab.evaluate(() => window.__riverCarriage().pose);
-  let failLoads = true, failedRequests = 0;
-  await page.route('**/src/east-garden-commons.js*', route => { if (failLoads) { failedRequests++; return route.abort('failed'); } return route.continue(); });
+  let failLoads = true, failedRequests = 0, deferModule = true, pendingModuleRequested;
+  const moduleRequested = new Promise(resolve => { pendingModuleRequested = resolve; }), pendingModules = [];
+  await page.route('**/src/east-garden-commons.js*', route => {
+    if (failLoads) { failedRequests++; return route.abort('failed'); }
+    if (deferModule) return new Promise(resolve => {
+      pendingModules.push(async () => { await route.continue(); resolve(); }); pendingModuleRequested();
+    });
+    return route.continue();
+  });
   const ready = async tab => {
     tab.setDefaultTimeout(120000); tab.on('pageerror', error => errors.push(error.message));
+    // Read actual completed frames and reflection captures without adding a production hook.
+    await tab.route(/\/src\/main\.js(?:\?.*)?$/, async route => {
+      const response = await route.fetch();
+      await route.fulfill({ response, body: await response.text() + '\nwindow.__streamGraphicsProbe = () => ({frames:renderedFrames,reflections:{...storefrontReflections?.stats}});' });
+    });
     await tab.emulateMedia({ reducedMotion: 'reduce' });
     await tab.addInitScript(edge => {
       window.__streamProbe = { sockets: [], received: 0, sent: 0, frames: [], crossings: [], notices: [], timeOrigin: performance.timeOrigin };
@@ -129,6 +141,35 @@ async page => {
     }, players);
     return players;
   };
+  const recoverGraphics = async (tab, label, resumePending = async () => {}) => {
+    const before = { player: await self(tab), view: await tab.evaluate(() => window.__riverTravelView()), timeOrigin: await tab.evaluate(() => performance.timeOrigin) };
+    const streamAtLoss = await tab.evaluate(() => window.__riverSpatialStream());
+    await tab.evaluate(() => new Promise(resolve => {
+      const canvas = document.querySelector('#canvas-host canvas');
+      const extension = canvas.getContext('webgl2').getExtension('WEBGL_lose_context');
+      if (!extension) throw new Error('WEBGL_lose_context unavailable');
+      window.__streamGraphicsExtension = extension;
+      canvas.addEventListener('webglcontextlost', () => queueMicrotask(resolve), { once: true });
+      extension.loseContext();
+    }));
+    check(await tab.evaluate(() => ['lost', 'restoring'].includes(document.querySelector('#canvas-host').dataset.graphicsState)), `${label}: actual context loss pauses graphics recovery`);
+    const paused = await tab.evaluate(() => window.__streamGraphicsProbe());
+    check(Number.isFinite(paused.reflections.captures), `${label}: completed reflection capture counters are available`);
+    await tab.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve)))));
+    check((await tab.evaluate(() => window.__streamGraphicsProbe())).frames === paused.frames, `${label}: completed game frames stop while the context is lost`);
+    await resumePending();
+    await tab.evaluate(() => window.__streamGraphicsExtension.restoreContext());
+    await tab.waitForFunction(frames => document.querySelector('#canvas-host').dataset.graphicsState === 'ok' && window.__streamGraphicsProbe().frames > frames, paused.frames);
+    await tab.waitForFunction(captures => window.__streamGraphicsProbe().reflections.captures > captures, paused.reflections.captures);
+    const after = { player: await self(tab), view: await tab.evaluate(() => window.__riverTravelView()), timeOrigin: await tab.evaluate(() => performance.timeOrigin) };
+    const drift = Math.hypot(...after.player.position.map((v, i) => v - before.player.position[i]));
+    const directionDot = before.view.direction.reduce((sum, v, i) => sum + v * after.view.direction[i], 0);
+    check(after.timeOrigin === before.timeOrigin && after.player.id === before.player.id && after.player.appearance === before.player.appearance && drift < .8 && directionDot > .99,
+      `${label}: restoration retains the document, identity, avatar, authority pose and camera direction`);
+    graphicsRecoveries.push({ label, streamAtLoss: { pending: streamAtLoss.pending, residentBytes: streamAtLoss.residentBytes, chunks: streamAtLoss.chunks }, framesAtLoss: paused.frames,
+      framesAfter: (await tab.evaluate(() => window.__streamGraphicsProbe())).frames, authoritativeDriftMetres: drift, directionDot });
+    await checkpoint();
+  };
   try {
     await Promise.all(tabs.map(ready));
     const initial = await mutuallyVisible(); await measure('District arrival baseline');
@@ -142,6 +183,13 @@ async page => {
     check(failedRequests > 0 && (await self(page)).position[0] < edge, 'Failed module load keeps player safely in District');
     await page.screenshot({ path: 'output/playwright/world-streaming-load-recovery.png' });
     failLoads = false;
+    let pendingTimer;
+    try { await Promise.race([moduleRequested, new Promise((_, reject) => { pendingTimer = setTimeout(() => reject(new Error('Commons retry never reached the pending module response')), 45000); })]); }
+    finally { clearTimeout(pendingTimer); }
+    check((await page.evaluate(() => window.__riverSpatialStream())).pending === 1, 'Commons import is pending before the graphics-loss probe');
+    await recoverGraphics(page, 'Pending Commons load', async () => {
+      deferModule = false; await Promise.all(pendingModules.splice(0).map(release => release()));
+    });
     await page.waitForFunction(() => window.__riverSpatialStream().chunks[0].state === 'ready', null, { timeout: 45000 });
     check(true, 'Failed asset recovers automatically without reloading');
     const baseline = await measure('Loaded gateway baseline');
@@ -163,6 +211,8 @@ async page => {
       check(true, `Lap ${lap + 1}: both remote avatars are rendered on screen`);
       if (lap === 0) {
         await page.screenshot({ path: 'output/playwright/world-streaming-commons.png' });
+        check((await page.evaluate(() => window.__riverSpatialStream())).residentBytes > 0, 'Commons presentation is resident before the active graphics-loss probe');
+        await recoverGraphics(page, 'Active Commons presentation');
         const before = await self(page), count = await page.evaluate(() => window.__streamProbe.sockets.length);
         const reconnectStarted = performance.now();
         await page.evaluate(() => window.__streamProbe.sockets.at(-1).close());
@@ -233,7 +283,11 @@ async page => {
     finalSourceSha256 = await sourceHashes();
     check(JSON.stringify(finalSourceSha256) === JSON.stringify(sourceSha256), 'Runtime and harness source hashes stay unchanged throughout the journey');
     outcome = 'passed';
-    return { sourceSha256, finalSourceSha256, checks, samples, crossings, continuity, reconnects, failedRequests, scope: 'Two Chromium fixture clients, two recorded route warm-ups followed by 20 measured full keyboard round trips to the Commons plaza with chunk eviction on every District return; real loopback authority. Buffer bytes are exact geometry storage, not total GPU memory. Heap and frame timing are observational; no physical-device, hosted or human accessibility acceptance.' };
+    return { sourceSha256, finalSourceSha256, checks, samples, crossings, continuity, reconnects, graphicsRecoveries, failedRequests, scope: 'Two Chromium fixture clients, actual context loss/restore during pending Commons import and active presentation, two recorded route warm-ups followed by 20 measured full keyboard round trips to the Commons plaza with chunk eviction on every District return; real loopback authority. Buffer bytes are exact geometry storage, not total GPU memory. Heap and frame timing are observational; no physical-device, hosted or human accessibility acceptance.' };
   } catch (error) { outcome = 'failed'; failure = error.message; throw error; }
-  finally { await checkpoint(); await peerContext.close(); }
+  finally {
+    deferModule = false;
+    await Promise.allSettled(pendingModules.splice(0).map(release => release()));
+    await checkpoint(); await peerContext.close();
+  }
 }

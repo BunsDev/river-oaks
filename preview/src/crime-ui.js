@@ -1,3 +1,5 @@
+import { throwSounds } from './throw-sounds.js';
+import { customizedCharacterDefinition } from './character-customization.js';
 import { riskAt, validateWorldPolicy } from './world-policy.js';
 import { describeRisk } from './world-policy-ui.js';
 
@@ -24,6 +26,23 @@ export const rivalFigures = crime => (crime?.targets ?? []).map(rival => ({
   interaction: null, gesture: rival.incapacitated ? 'down' : rival.staggered ? 'stagger' : null,
 }));
 
+/** Existing human rig and authored midnight palette, never a new asset download. */
+export const policeFigures = police => (police?.units ?? []).map(unit => ({
+  id: unit.id, name: `Police · ${unit.state}`, appearance: 'sable-human',
+  character: customizedCharacterDefinition(unit.id,'sable-human',{palette:'midnight',revision:1}),
+  // The director stores body heading; peer rendering adds pi to camera-style yaw.
+  position: unit.position, yaw: unit.yaw - Math.PI, altitude: 0, vehicle: null, sitting: null,
+  movement: 'upright', performing: false, interaction: null, gesture: null,
+}));
+export function policeStatus(police, userId) {
+  const assigned = police?.units?.filter(unit => unit.targetId === userId) ?? [];
+  if (assigned.some(unit => unit.state === 'arrest')) return 'Arrest in progress. You will return safely to the arrival point.';
+  if (police?.surrendered?.includes(userId)) return 'You have surrendered. Stay still while an officer approaches.';
+  if (assigned.some(unit => unit.state === 'pursue')) return 'Police are approaching. Surrender to return safely to the arrival point.';
+  if (assigned.some(unit => unit.state === 'search')) return 'Police are searching your last seen location.';
+  return '';
+}
+
 /** The nearest rival within a few metres of the town's record of this player, and whether it is in reach. */
 export function nearestRival(self, crime) {
   if (!self || !Array.isArray(self.position)) return null;
@@ -43,7 +62,7 @@ export function describeHit(hit, rivalName) {
 
 const attackId = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`).replace(/[^A-Za-z0-9]/g, '').slice(0, 32);
 
-export function createCrimeUI({ host, getTown, getEnvironment = () => null, request, keys = globalThis.window }) {
+export function createCrimeUI({ host, getTown, getEnvironment = () => null, request, getSounds = throwSounds, keys = globalThis.window }) {
   const hud = node('section', null, 'crime-hud'); hud.setAttribute('aria-label', 'Danger and wanted level'); hud.hidden = true;
   const wanted = node('p', null, 'crime-wanted'); wanted.setAttribute('role', 'img');
   const card = node('div', null, 'crime-rival');
@@ -55,9 +74,11 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
   const shoveLabel = node('span'), shoveKey = node('kbd', 'T'); shove.append(shoveLabel, shoveKey);
   const result = node('p', null, 'crime-result'); result.setAttribute('role', 'status'); result.setAttribute('aria-live', 'polite');
   card.append(name, meter, state, risk, shove);
-  hud.append(wanted, card, result);
+  const policeState = node('p', null, 'crime-police-state'); policeState.setAttribute('role','status');
+  const surrender = node('button', 'Surrender', 'crime-surrender'); surrender.type = 'button';
+  hud.append(wanted, policeState, surrender, card, result);
   host?.append(hud);
-  let busy = false, target = null, disposed = false, lastPaint = -Infinity;
+  let busy = false, target = null, disposed = false, lastPaint = -Infinity, wasHeld = false, surrenderCue = null;
 
   async function attack() {
     if (busy || !target || shove.hidden || disposed) return;
@@ -74,6 +95,23 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
     finally { busy = false; if (!disposed) paint(); }
   }
   shove.addEventListener('click', () => void attack());
+  surrender.addEventListener('click', async () => {
+    if (busy || disposed) return;
+    const town = getTown(), offered = town.snapshot?.police?.surrendered?.includes(town.selfId);
+    const userId = town.selfId, revision = town.snapshot?.revision;
+    const sounds = getSounds(); sounds.unlock();
+    busy = true; paint();
+    try {
+      const reply = await request({ type:'surrender', action:offered?'resume':'offer' });
+      const current = getTown(), police = current.snapshot?.police;
+      if(disposed || current.selfId!==userId || current.connected===false)return;
+      const held = Boolean(police?.surrendered?.includes(userId) || police?.units?.some(unit=>unit.targetId===userId && unit.state==='arrest'));
+      if(reply.ok && Number.isFinite(revision) && current.snapshot?.revision>revision && held!==reply.surrendered)return;
+      if (reply.ok) { surrenderCue?.stop(); surrenderCue = sounds.play('tap'); }
+      if (!disposed) setText(result, reply.ok ? (reply.surrendered ? 'Surrender accepted. Stay still.' : 'You may move again.') : reply.message ?? 'Surrender unavailable.');
+    } catch (error) { if (!disposed) setText(result,error.message); }
+    finally { busy = false; if (!disposed) paint(); }
+  });
   const onKey = event => {
     if (event.code !== ATTACK_KEY || event.repeat || event.metaKey || event.ctrlKey || event.altKey || disposed) return;
     if (typing(event.target) || hud.hidden || shove.hidden || shove.disabled) return;
@@ -85,6 +123,15 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
     const town = getTown(), snapshot = town.snapshot, crime = snapshot?.crime;
     const self = snapshot?.players?.find(player => player.id === town.selfId);
     const stars = starsOf(crime, town.selfId), near = nearestRival(self, crime);
+    const police = snapshot?.police, offered = police?.surrendered?.includes(town.selfId);
+    const arresting = police?.units?.some(unit => unit.targetId === town.selfId && unit.state === 'arrest');
+    if(wasHeld && !offered && !arresting)setText(result,stars?'Surrender ended. You may move again.':'You are no longer wanted. You may move again.');
+    wasHeld = Boolean(offered || arresting);
+    setText(policeState,policeStatus(police,town.selfId)); policeState.hidden = !policeState.textContent;
+    surrender.hidden = !self || town.connected===false || !stars || (!offered && !police?.eligible?.includes(town.selfId));
+    surrender.disabled = busy || arresting;
+    setText(surrender,offered?'Resume moving':'Surrender');
+    if(document.activeElement===surrender && (surrender.hidden || arresting)){result.tabIndex=-1;result.focus({preventScroll:true});}
     hud.hidden = !self || (!stars && !near && !result.textContent);
     wanted.hidden = !stars;
     setText(wanted, starsText(stars)); wanted.setAttribute('aria-label', starsLabel(stars));
@@ -104,12 +151,12 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
     setText(risk, level === 'danger' ? (near.inReach ? 'Danger zone. You are within reach.' : 'Danger zone. Step closer to reach them.')
       : policy ? describeRisk(riskAt(worldId, policy, place), policy).replace('Peaceful here.', 'Peaceful here. Nobody can be harmed.') : 'Peaceful here. Nobody can be harmed.');
     shove.hidden = level !== 'danger' || rival.incapacitated;
-    shove.disabled = busy || !near.inReach;
+    shove.disabled = busy || !near.inReach || offered || arresting;
     setText(shoveLabel, `Shove ${rival.name}`);
   }
   return {
     update(now) { if (disposed || now - lastPaint < 150) return; lastPaint = now; paint(); },
     sync() { if (!disposed) paint(); },
-    dispose() { disposed = true; keys?.removeEventListener('keydown', onKey, true); hud.remove(); },
+    dispose() { disposed = true; surrenderCue?.stop(); keys?.removeEventListener('keydown', onKey, true); hud.remove(); },
   };
 }

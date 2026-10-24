@@ -94,6 +94,73 @@
         "preview/tests/world-location-label.test.js": "6b22451144c085e0b666167337593f2396c38896bb71f3a9bbb80cdb76a536bd"
       },
       "lane": "gate"
+    },
+    {
+      "lane": "graphics-recovery",
+      "head": "d0d881efff2e3892d03846fe8cce7c8d0940a6c0",
+      "base": "a35214f38795ced1ee6867aad5c3c2723a7ceaae",
+      "publishedHead": "f65de07ec4abcf2fef676c10f43cd9d44dcdc66c",
+      "handoffSha256": "7fd8c5725087869c36b80f1869ae86028d5240e62cd50f8ba7355808f72fe9f3",
+      "deltaSha256": "dcbcbb84e99dddd7cd33a308ca99b3d249f13463a752867c6eb8bc47e1575fdc",
+      "scope": "Source-only37-file handoff into623; no569, source task/checkout/PR/ownership preserved. Input hashes below are immutable donor bytes; composed outputs are separate.",
+      "files": {
+        "docs/debug-reports.md": "e0d5d3c565161955d520237141511be030d607f12ccc321d3a496df0f1d1b9bb",
+        "docs/design/garden-office/asset-manifest.json": "8143878b8b6ac6efcedf7ff75726e7944ddbcd8223ac4976e956df0ba1f76274",
+        "docs/desktop.md": "28ada38c9ade817f5a8c0799ced20fd4ae1a2b8ebba0102888270dc5ec48bec8",
+        "docs/superpowers/plans/2026-10-20-resilient-client-290.md": "448ad06cff198d35e7e8ab5f1ed81a226d8dd4edf386bff3759ecdfe928040ab",
+        "docs/testing.md": "4e739cf3fd3f1ece8427a353b5c65b4a36a7eea541678ecfe8b09f8ef5da1207",
+        "preview/e2e/graphics-recovery.js": "ad65a127f788bf8df745e0ca503f7bf22fd07508cb189aa385322e4249b8583b",
+        "preview/src/debug-report.js": "c62bf1ff00b50e56eba5e0f75c4129327ef399e37b8563c57e9822b41a8c25cb",
+        "preview/src/graphics-lifecycle.js": "bf1e788a385a69431bf3ef09ab05e53cb3e301a23d6779fa679a4ed7a3bb25da",
+        "preview/src/graphics-recovery-ui.js": "7e9d258060eccd568cbe90af63835555d684169d385a9cdf42a3a84fa9f9fbf0",
+        "preview/src/graphics-recovery.css": "5e0e560777d97707a8a683951c49e3988207a1420c00ac0527c06bc172843e63",
+        "preview/src/graphics-recovery.js": "6d5f73e0dbe614079b9a4556a1ed18eec1acab2a20350be58f5ed6f8a053dc39",
+        "preview/src/graphics-reload-state.js": "1fe985d860297bf1e5cbe657b6ac57c01182c94c5c3abe6fbd063f2fbb8287d0",
+        "preview/src/graphics-resources.js": "f85ad85a1c8d851e90e1d257519b745c95080a238b13c018788c449e83c7bae4",
+        "preview/src/main.js": "3f1bfd09ba4ccff64f4b2cc7a7e6f207049a84fb81a7f6113934950636dc5ff3",
+        "preview/src/materials.js": "46789ec1dd4b86b1552c4f9fa2004f53e797813a5c59476f3e2d71a02be029d0",
+        "preview/src/office-skyline.js": "0dbbeae25b6a91c4318d0dc382a371080297c64f9d238e3f7f5d4d9d7973d19d",
+        "preview/src/office-ui.js": "55a0d81efc4401e7c4ff2d3c8f8a1e326098355dff31bb8e3ce63c023d0b79c0",
+        "preview/src/office-world-scene.js": "1f1fda4038dc0a37e5bb938a67d8c7662f3e3ad312a25ebbe1555d60d3420a3a",
+        "preview/src/photo-mode.js": "3e9847f095c088355d9c3b58a81b4c3a5c230d7b651c92701ee62922ceff95f6",
+        "preview/src/reflections.js": "691e0828b5376b231e70309fb605407688477d154881ca00658274b0aa811091",
+        "preview/src/render-lifecycle.js": "4465f512c36a1fb25aae4dea5e821f19c4cc23f2a907e46c027ca6a9a784c271",
+        "preview/src/render-pipeline.js": "13bd251102db6ca2217064d5f92b57feddb170a6893bad003d79a3cd28044b40",
+        "preview/src/render-quality.js": "76952c66e1812119a84c3740a92be732b1d2bff000bdb786c06a578ccb5a31cd",
+        "preview/src/resident-portraits.js": "86a5f67996f5ace8f47b971891cc9b8c8412b29850135eeff40fcca0008e8dc7",
+        "preview/tests/debug-report.test.js": "204688255658b3d46114b6a9b077c3d472181d47beaf623592f63918e38942e2",
+        "preview/tests/environment-recovery.test.js": "bc12274411d0959f6f17df61bc9ce5254fa2815a26dc5c140042c45aafea7ae7",
+        "preview/tests/graphics-lifecycle.test.js": "d09c31f64ecf484253384e76c8c312e9e05e62f2562d8a5c86ec9aa61b83d425",
+        "preview/tests/graphics-recovery-ui.test.js": "b55a03f07eaa5f8c8cf116efbfc809e406d80e625214477c7551ea9ded0bf7fc",
+        "preview/tests/graphics-recovery.test.js": "176e7288e1c8c1bee37469227da9d717c3f7a196314daa0e06fb7a4708742b77",
+        "preview/tests/graphics-reload-state.test.js": "39fa7c3c52adf0d1eaa64b1317730474a27b2f994573adce3183dd59bfc22608",
+        "preview/tests/graphics-resources.test.js": "9e42c457daac363864cbb53b1e131750396d80a3e79cfc40661218dd9f1b2e65",
+        "preview/tests/office-skyline.test.js": "c4b4b79451c923fb651ed6773d8e713d6372b9d9888a3517fa9b35d267cd0cfb",
+        "preview/tests/reflections.test.js": "edfc81afdd43aca09e985adf568b54175cad374938ad73136a4ec3e4038a322e",
+        "preview/tests/render-lifecycle.test.js": "273a10c28a5a7bf541a02d936165cdb6f369b062be35ab0765e0394304fbe53c",
+        "preview/tests/render-pipeline.test.js": "9fb7b816ef4a16d721331c580a4011e5ac431ce4a9108edbdf410246484f3d8f",
+        "preview/tests/render-quality.test.js": "8adeccc82182f790e1fdbdfc8e28a3d9b4646c953a4282006f1b4321f26d4536",
+        "preview/tests/resident-portraits.test.js": "6a808469224ee560ec5b906f2663983a0f4813bd714e6114fdef0c4237670fde"
+      },
+      "composedOutputs": {
+        "docs/testing.md": "063339fb73c2d552ecd272f4e3ac299dec9ddb68249a45cf9e870c2e6f412b87",
+        "preview/src/main.js": "5e67caa10c3ac180b22cde9ab402045eb6e13d3ad3983ebc79449467f76f7163",
+        "preview/src/render-quality.js": "2792ce6260e9c42b14ab2c119a95f12afe74729cb6500d0db4c7c3f028faa9d8"
+      },
+      "postCompositionAdaptations": {
+        "preview/src/main.js": {
+          "sha256": "3345e5778b96812e493dff8362bc6c0d5500f246f3b6a238fb20b82f3cd5312a",
+          "reason": "Release retained build-cache GPU owners across context generations, with real Three registration regression"
+        },
+        "preview/src/shared-build-layer.js": {
+          "sha256": "75da73195bf33689f8e696bee94f790149fa63900b3556cd1b778d45fad4327e",
+          "reason": "Release retained build-cache GPU owners across context generations, with real Three registration regression"
+        },
+        "preview/tests/shared-build-layer.test.js": {
+          "sha256": "ccddca2da4987ffbac5582a9f42ebfdabc338203acabf21529eb8b135a3880c4",
+          "reason": "Release retained build-cache GPU owners across context generations, with real Three registration regression"
+        }
+      }
     }
   ]
 }

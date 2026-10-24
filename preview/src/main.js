@@ -1,7 +1,7 @@
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { attachEastGardenCommons } from './east-garden-commons-world.js';
 import { createLanternWalkClient } from './lantern-walk.js';
-import { rivalFigures } from './crime-ui.js';
+import { rivalFigures, policeFigures } from './crime-ui.js';
 import { createCommonsStream } from './commons-stream.js';
 import './spatial-stream.css';
 import { createCharacterStudio } from './character-studio.js';
@@ -27,6 +27,13 @@ import { AO_OUTPUT, createRenderPipeline } from './render-pipeline.js';
 import { warnIfSoftwareRendering } from './hardware-acceleration.js';
 import './hardware-acceleration.css';
 import { bindRenderVisibility } from './render-lifecycle.js';
+import { createGraphicsRecovery } from './graphics-recovery.js';
+import { bindGraphicsRecovery } from './graphics-lifecycle.js';
+import { createGraphicsRecoveryUI } from './graphics-recovery-ui.js';
+import { createGraphicsReloadState, graphicsReloadBlocker } from './graphics-reload-state.js';
+import { releaseSceneGraphics } from './graphics-resources.js';
+import { createGraphicsCycleLog } from './debug-report.js';
+import './graphics-recovery.css';
 import { createRenderAudit } from './render-audit.js';
 import { createDrawCensus } from './draw-census.js';
 import { localToScene, terrainHeight } from './geometry.js';
@@ -203,6 +210,12 @@ let lastRenderStats = 0, treeShadows = null, quality = null, lastFrame = null, a
 let lastSoftwareDraw = -Infinity;
 // A problem report's picture: the next drawn frame is handed over while it is still on the canvas.
 let pendingCapture = null;
+let graphicsRecovery, graphicsBinding, renderLifecycle, portraits, environmentLoading;
+let renderedFrames = 0;
+const graphicsCycles = createGraphicsCycleLog();
+const graphicsReload = createGraphicsReloadState({ scope: `${location.pathname}|${new URLSearchParams(location.search).get('world') ?? ''}` });
+let restoredGraphicsUI = graphicsReload.take();
+const recoveredGraphicsPage = Boolean(restoredGraphicsUI);
 
 const scene = new THREE.Scene();
 // Keep geometry, skinning and simulation intact without compiling every PBR
@@ -260,13 +273,53 @@ function initializeRenderer() {
   }, tailShedding: aoTailShedding });
   if (debugOcclusion === 'off') pipeline.setOcclusion(false);
   else if (debugOcclusion === 'only') pipeline.occlusion.output = AO_OUTPUT.Denoise;
-  if (!softwareAcceptance) loadEnvironment(renderer, scene).then((assets) => { environmentAssets = assets; updateAtmosphere(); }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
+  if (!softwareAcceptance) environmentLoading = loadEnvironment(renderer, scene, { canBuild: () => graphicsBinding?.generation === 0 && graphicsRecovery?.state === 'ok' }).then(assets => {
+    environmentAssets = assets;
+    if (graphicsRecovery?.state === 'ok') updateAtmosphere();
+  }).catch(() => { $('#connection').textContent = 'Sky lighting unavailable · base lighting active'; });
   host.appendChild(renderer.domElement);
-  renderer.domElement.addEventListener('webglcontextlost', (event) => {
-    event.preventDefault();
-    showError('The browser lost its graphics context. Reload this page to rebuild the scene.');
+  const recoveryUI = createGraphicsRecoveryUI({ viewport: $('#viewport'), focusTarget: host, retry: () => {
+    graphicsBinding.retry(() => {
+      const blocked = graphicsReloadBlocker({ photoActive: photoMode?.active, photoRetained: photoMode?.hasPhoto, dialogs: [...document.querySelectorAll('dialog[open]')].map(dialog => dialog.id) });
+      if (blocked) { recoveryUI.update('failed', blocked); return; }
+      const saved = graphicsReload.save({ settings: Boolean($('#settings-dialog')?.open), settingsTab: $('#settings-dialog [role=tab][aria-selected=true]')?.id,
+        chatDraft: $('.multiplayer-chat-form input')?.value ?? '' });
+      if (saved) location.reload();
+      else recoveryUI.update('failed', 'storage');
+    });
+  } });
+  graphicsRecovery = createGraphicsRecovery({ onChange({ state, reason, stepDown }) {
+    renderLifecycle?.setPaused('graphics', state !== 'ok');
+    portraits?.setPaused(state !== 'ok');
+    if (stepDown) quality.stepDown();
+    recoveryUI.update(state, reason);
+    host.dataset.graphicsState = state;
+    if (state === 'ok') graphicsCycles.outcome('restored');
+    else if (state === 'failed') graphicsCycles.outcome(reason);
+  } });
+  host.dataset.graphicsState = 'ok';
+  graphicsBinding = bindGraphicsRecovery({ canvas: renderer.domElement, recovery: graphicsRecovery, getContext: () => renderer.getContext(),
+    onRestored() { graphicsCycles.restored(performance.now()); },
+    onLost() {
+      graphicsCycles.lost(performance.now());
+      // A capture requested against the previous context is no longer valid.
+      pendingCapture = null;
+      releaseSceneGraphics(scene);
+      buildLayer?.releaseGraphics();
+      pipeline.releaseGraphics();
+      environmentAssets?.releaseGraphics();
+      storefrontReflections?.releaseGraphics();
+      officeUI?.releaseGraphics();
+    },
+    async rebuild(isCurrent) {
+      await environmentLoading;
+      if (!isCurrent()) return;
+      environmentAssets?.restore();
+      storefrontReflections?.resetGraphics();
+      updateAtmosphere();
+    },
   });
-  const portraits = createResidentPortraits({ renderer, getHolder: id => (String(id).startsWith('player-look:') ? playerAvatar?.portraitSubject(id.slice(12)) : null)
+  portraits = createResidentPortraits({ renderer, getHolder: id => (String(id).startsWith('player-look:') ? playerAvatar?.portraitSubject(id.slice(12)) : null)
     ?? [playerAvatar?.carriage.driver].find(person => person?.userData.localId === id && person.userData.avatar)
     ?? storePeople?.userData.figures?.find(figure => figure.id === id)?.holder });
   community = createCommunityPanel({ host: $('.panel-scroll'), getPortrait: id => portraits.portrait(id),
@@ -533,12 +586,15 @@ function initializeRenderer() {
     camera.updateProjectionMatrix();
   }).observe(host);
   updateAtmosphere();
-  bindRenderVisibility({ document, setLoop: callback => renderer.setAnimationLoop(callback), render,
-    resetTime: () => { clock.reset(); lastFrame = null; renderAudit?.discontinuity(); } });
+  renderLifecycle = bindRenderVisibility({ document, setLoop: callback => renderer.setAnimationLoop(callback ? graphicsBinding.frame(callback) : null), render,
+    resetTime: () => { clock.reset(); lastFrame = null; quality.resetTime(); renderAudit?.discontinuity(); } });
+  renderLifecycle.setPaused('graphics', graphicsRecovery.state !== 'ok');
+  registerDiagnosticSource('graphicsRecovery', () => ({ state: graphicsRecovery.state, cycles: graphicsCycles.cycles }));
   registerDiagnosticSource('renderer', () => describeRenderer(renderer, { quality: quality?.stats ?? null, pipeline: pipeline?.stats ?? null, reflections: storefrontReflections?.stats ?? null, softwareAcceptance }));
   registerDiagnosticSource('scene', () => describeScene(scene));
   registerDiagnosticSource('game', gameDiagnostics);
   setScreenshotCapture(capture => { pendingCapture = capture; });
+
 }
 $('.loading-report').addEventListener('click', () => window.dispatchEvent(new CustomEvent('river-oaks:report-problem')));
 
@@ -583,7 +639,7 @@ function startMultiplayer() {
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
       // Authored rivals (#597) draw like players, from the town's crime state only.
-      remotePlayers.sync([...players.filter(p=>!p.office),...(players.length?rivalFigures(multiplayer?.snapshot?.crime):[])], selfId);
+      remotePlayers.sync([...players.filter(p=>!p.office),...(players.length?[...rivalFigures(multiplayer?.snapshot?.crime),...policeFigures(multiplayer?.snapshot?.police)]:[])], selfId);
       officeUI?.sync(players,selfId);
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
@@ -924,11 +980,11 @@ async function loadWorld() {
     placesUI?.setWorld(data);
     placesUI?.setPlayers(multiplayer?.snapshot?.players??[],multiplayer?.identity?.id);
     // A shared link (?place=… or ?at=…) lands its visitor there after arrival.
-    const linked = destinationFromSearch(location.search, places, data.bounds_m);
+    const linked = recoveredGraphicsPage ? null : destinationFromSearch(location.search, places, data.bounds_m);
     if (linked) {
       pendingSharedPlace=linked;
       void arriveAtSharedLink();
-    } else if(new URLSearchParams(location.search).has('place')) placesUI?.say('That shared place is no longer available in this world.','error');
+    } else if(!recoveredGraphicsPage && new URLSearchParams(location.search).has('place')) placesUI?.say('That shared place is no longer available in this world.','error');
   } catch (error) {
     showError(`${error.message}. Use reload to try loading the district again.`);
     // The panel reload is hidden while walking, so the error offers its own.
@@ -971,6 +1027,7 @@ function followSunShadow() {
 }
 
 function render(now) {
+  if (document.hidden || graphicsRecovery.state !== 'ok') return;
   renderAudit?.beginFrame();
   noteFrame(now);
   const drawCensus = pendingDrawCensus; pendingDrawCensus = null; drawCensus?.census.begin();
@@ -1023,6 +1080,11 @@ function render(now) {
     if (auditCamera.fov && camera.fov !== auditCamera.fov) { camera.fov = auditCamera.fov; camera.updateProjectionMatrix(); }
     camera.updateMatrixWorld();
   }
+  if (restoredGraphicsUI && !loading && multiplayer?.connected && host.dataset.playerReady === 'true') {
+    const draft = $('.multiplayer-chat-form input'); if (draft) draft.value = restoredGraphicsUI.chatDraft;
+    if (restoredGraphicsUI.settings) { sidebarSections.select(2); document.getElementById(restoredGraphicsUI.settingsTab)?.click(); }
+    restoredGraphicsUI = null;
+  }
   photoMode?.update();
   characterStudio?.update();
   storeIntros?.update(now);
@@ -1074,11 +1136,13 @@ function render(now) {
       } else pipeline.render(delta);
     }
     renderAudit?.phase('pipeline');
+    renderedFrames++;
+    storefrontReflections?.mainFrameRendered();
     photoMode?.afterRender();
     if (pendingCapture) { const capture = pendingCapture; pendingCapture = null; capture(renderer.domElement); }
   }
   if (now-lastRenderStats>1000) {
-    host.dataset.renderStats=JSON.stringify({calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});
+    host.dataset.renderStats=JSON.stringify({frames:renderedFrames,calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures});
     host.dataset.reflections = JSON.stringify(storefrontReflections?.stats ?? null);
     host.dataset.pipeline = JSON.stringify(pipeline.stats);
     host.dataset.quality = JSON.stringify(quality.stats);
@@ -1434,7 +1498,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       }
       return { ok: false };
     },
-    face(x, north) { walking?.lookAt([x, north, groundSurfaceHeight(world, x, -north)], 0.9); },
+    face(x, north, eyeHeight=0.9) { walking?.lookAt([x, north, groundSurfaceHeight(world, x, -north)], eyeHeight); },
     goTo(x, north) { return goToPlace({ kind: 'landmark', name: 'Spot', position: [x, north] }); },
   } : null;
   window.__riverVoice = () => multiplayer?.voice.debug() ?? null;
@@ -1457,7 +1521,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose,face:station?.face.pose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
   window.__riverCreatorObjects=()=>({resources:buildLayer?.stats(),rendered:(buildLayer?.object.children??[]).filter(entry=>entry.userData.build).map(entry=>({id:entry.userData.build.id,parts:entry.children.filter(child=>child.isMesh).map(child=>({color:child.material.color.getHexString(),transmission:child.material.transmission??0,position:child.position.toArray(),size:child.scale.toArray()}))}))});
-  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray()},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray(),verticalFovDegrees:camera.fov,aspect:camera.aspect,near:camera.near,far:camera.far},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&(community.state?.locals ?? []).some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);
