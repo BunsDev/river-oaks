@@ -148,10 +148,14 @@ test('the Studewood Park table seats two players in the shared seat model', () =
 });
 
 test('Studewood neighborhoods build within the kit budgets, leave their trees to the shared landscape and dispose', () => {
-  const { drawCallsPerNeighborhood, materialsPerNeighborhood } = KIT_CONVENTIONS.budgets;
+  const { drawCallsPerNeighborhood, materialsPerNeighborhood, trianglesPerNeighborhood, solidsPerNeighborhood } = KIT_CONVENTIONS.budgets;
   for (const plan of studewood.plans) {
     const kit = buildHeightsNeighborhood(layout, plan), stats = kit.userData.stats();
-    assert.ok(stats.meshes <= drawCallsPerNeighborhood && stats.materials <= materialsPerNeighborhood, `${plan.id}: ${JSON.stringify(stats)}`);
+    // As for Heights: the kit budgets an assembled plan's materials, triangles and solids,
+    // and a drawn plan's meshes (city-kit.test.js, scripts/destination.mjs).
+    assert.ok(plan.stats.materials <= materialsPerNeighborhood && plan.stats.triangles <= trianglesPerNeighborhood
+      && plan.stats.solids <= solidsPerNeighborhood, `${plan.id}: ${JSON.stringify(plan.stats)}`);
+    assert.ok(stats.meshes <= drawCallsPerNeighborhood, `${plan.id}: ${JSON.stringify(stats)}`);
     assert.equal(kit.getObjectByName(`${plan.id} trees`).children.length, 0);
     kit.userData.dispose(); assert.equal(kit.children.length, 0);
   }

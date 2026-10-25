@@ -152,12 +152,12 @@ test('legacy default-world migration reads envelope3 and still rejects a differe
   room.worldId='foreign';await assert.rejects(legacyDefaultAppearance(redis,'{test}:state','alice'),/Invalid legacy/);
 });
 
-test('legacy account migration accepts the police checkpoint version and rejects an unsupported future writer', async () => {
+test('legacy account migration accepts the timed-melee checkpoint version and rejects an unsupported future writer', async () => {
   const world=createSharedWorld(data);world.join({userId:'alice',name:'Alice'});
-  const checkpoint=world.checkpoint();assert.equal(checkpoint.version,16);
+  const checkpoint=world.checkpoint();assert.equal(checkpoint.version,17);
   const read=checkpoint=>({getBuffer:async()=>deflateSync(Buffer.from(JSON.stringify({version:2,worldId:'river-oaks',checkpoint})))});
   assert.equal((await legacyDefaultAppearance(read(checkpoint),'state','alice')).appearance,'sable-human');
-  const future=structuredClone(checkpoint);future.version=17;
+  const future=structuredClone(checkpoint);future.version=18;
   const {checksum,...envelope}=future;future.checksum=createHash('sha256').update(JSON.stringify(envelope)).digest('hex');
   await assert.rejects(legacyDefaultAppearance(read(future),'state','alice'),/Invalid legacy account appearance checkpoint/);
 });

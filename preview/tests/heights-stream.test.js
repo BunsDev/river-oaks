@@ -84,8 +84,13 @@ test('under the ceiling the shared part, the neighborhood underfoot and those in
   await settle(stream, points, camera(crossroads, at([300, 100])));
   let kept = resident(stream);
   for (const id of ['shared', 'nineteenth-and-yale', 'yale-street-north']) assert.ok(kept.includes(id), `${id} in ${kept}`);
-  assert.equal(kept.includes('yale-street-south'), false, 'the neighborhood behind the camera streams out');
-  assert.ok(stream.debug().residentBytes <= HEIGHTS_MAX_BYTES);
+  // More of Heights is in view than the ceiling holds. The neighborhood behind the camera may use
+  // room left over, never room that one still absent could take in its place.
+  const { residentBytes, measuredBytes, estimatedBytes, chunks } = stream.debug(), behind = 'bayou-heights/yale-street-south';
+  assert.ok(chunks.some(chunk => chunk.state === 'absent'), 'some of Heights waits for room');
+  if (kept.includes('yale-street-south')) for (const { id } of chunks.filter(chunk => chunk.state === 'absent'))
+    assert.ok(residentBytes - measuredBytes[behind] + estimatedBytes[id] > HEIGHTS_MAX_BYTES, `${id} would fit in place of the neighborhood behind`);
+  assert.ok(residentBytes <= HEIGHTS_MAX_BYTES);
   // A glance south is not a turn: what was just in view keeps its place and nothing is rebuilt.
   const before = builds;
   time += HEIGHTS_VIEW_HOLD_MS / 2; await settle(stream, points, camera(crossroads, at([300, -100])));

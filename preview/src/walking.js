@@ -20,6 +20,25 @@ function distanceToSegment(x, z, a, b) {
   return Math.hypot(x - a[0] - t * dx, z - a[1] - t * dz);
 }
 
+// Boxes bucketed on a 16 m grid, so a point query reads only the boxes in its cell. Each box
+// is listed in every cell it touches, so any box containing a point is in that point's cell
+// and the exact tests that follow give the answers a full scan does. Bayou Heights adds
+// hundreds of solids; scanned whole, they slowed every walking and camera query in the District.
+const BUCKET_M = 16, cellKey = (i, j) => i * 65536 + j;
+function bucketBoxes(items, boxOf) {
+  const buckets = new Map(), none = [];
+  for (const item of items) {
+    const [minX, minY, maxX, maxY] = boxOf(item);
+    for (let i = Math.floor(minX / BUCKET_M); i <= Math.floor(maxX / BUCKET_M); i++)
+      for (let j = Math.floor(minY / BUCKET_M); j <= Math.floor(maxY / BUCKET_M); j++) {
+        const key = cellKey(i, j);
+        if (!buckets.has(key)) buckets.set(key, []);
+        buckets.get(key).push(item);
+      }
+  }
+  return (x, y) => buckets.get(cellKey(Math.floor(x / BUCKET_M), Math.floor(y / BUCKET_M))) ?? none;
+}
+
 function overlaps(x, z, ring, radius = RADIUS) {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -39,24 +58,15 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     polygons.push([[-w, -d], [w, -d], [w, d], [-w, d]].map(([x, y]) => [building.center[0] + x * c - y * s, -(building.center[1] + x * s + y * c)]));
   }
   const obstacles = polygons.map((ring) => ({ ring, minX: Math.min(...ring.map(p => p[0])) - RADIUS, maxX: Math.max(...ring.map(p => p[0])) + RADIUS, minZ: Math.min(...ring.map(p => p[1])) - RADIUS, maxZ: Math.max(...ring.map(p => p[1])) + RADIUS }));
+  const obstaclesAt = bucketBoxes(obstacles, o => [o.minX, o.minZ, o.maxX, o.maxZ]);
   // Boutique interiors are free pockets inside footprints, entered through the mapped door.
   const rooms = levelId === null ? storeRoomsFor(world) : interiorLevelRoomsFor(world, levelId);
   if (levelId !== null && rooms.length !== 1) throw new Error('Unknown or ambiguous interior level');
-  const roomBuckets = new Map(), roomBucketSize = 16;
-  for (const room of rooms) {
-    const [minX, minY, maxX, maxY] = room.lookupBounds;
-    for (let x = Math.floor(minX / roomBucketSize); x <= Math.floor(maxX / roomBucketSize); x++)
-      for (let y = Math.floor(minY / roomBucketSize); y <= Math.floor(maxY / roomBucketSize); y++) {
-        const key = `${x},${y}`;
-        if (!roomBuckets.has(key)) roomBuckets.set(key, []);
-        roomBuckets.get(key).push(room);
-      }
-  }
+  const roomsAt = bucketBoxes(rooms, room => room.lookupBounds);
   const roomFor = (x, z, shrink) => {
     if (!rooms.length) return null;
     if (shrink < 0) return roomAt(rooms, x, -z, shrink);
-    const key = `${Math.floor(x / roomBucketSize)},${Math.floor(-z / roomBucketSize)}`;
-    return roomAt(roomBuckets.get(key) ?? [], x, -z, shrink);
+    return roomAt(roomsAt(x, -z), x, -z, shrink);
   };
   const groundAt = (x, z) => {
     const room = roomFor(x, z, 0);
@@ -90,7 +100,7 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     const room = roomFor(x, z, RADIUS);
     if (levelId !== null) return Boolean(room && !roomBlocked(room, x, -z, RADIUS));
     if (room) return !roomBlocked(room, x, -z, RADIUS);
-    return !obstacles.some(o => x > o.minX && x < o.maxX && z > o.minZ && z < o.maxZ && overlaps(x, z, o.ring));
+    return !obstaclesAt(x, z).some(o => x > o.minX && x < o.maxX && z > o.minZ && z < o.maxZ && overlaps(x, z, o.ring));
   };
   // Full conservative footprint clearance for creator placement. Unlike point
   // samples, disk/polygon intersection also catches obstacles inside the disk.
@@ -114,9 +124,10 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   };
   const commons=world.eastGardenCommons;
   const commonsFlight=commons?[...commons.solids,{rect:commons.pavilion.rect,height:commons.pavilion.clearHeight+commons.pavilion.roofThickness}]:[];
+  const commonsFlightAt=bucketBoxes(commonsFlight,({rect:[w,s,e,n]})=>[w-flightRadius,s-flightRadius,e+flightRadius,n+flightRadius]);
   const canFly = (x, altitude, z) => {
     if(!commonsAllows(commons,x,-z,flightRadius))return false;
-    if(commonsFlight.some(solid=>insideRect(solid.rect,x,-z,-flightRadius)&&altitude<=commons.ground+solid.height+3.1))return false;
+    if(commonsFlightAt(x,-z).some(solid=>insideRect(solid.rect,x,-z,-flightRadius)&&altitude<=commons.ground+solid.height+3.1))return false;
     if(levelId!==null)return false;
     if(x<west+flightRadius || x>east-flightRadius || z<-north+flightRadius || z>-south-flightRadius) return false;
     if(propAt(x,altitude,z,flightRadius) || placedObjects.some(object=>object.contains(x,altitude,z,flightRadius)))return false;
