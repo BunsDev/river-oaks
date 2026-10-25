@@ -33,8 +33,8 @@ async function fixture(t) {
     await redis.quit();
   });
   // Gateways sync every 100 ms unless a test asks for the production default.
-  const start = async ({ blockSyncMs = 100 } = {}) => {
-    const security = createRedisSecurity({ redis, prefix });
+  const start = async ({ blockSyncMs = 100, now } = {}) => {
+    const security = createRedisSecurity({ redis, prefix, ...(now ? { now } : {}) });
     const auth = { authenticate: async req => sessions.get(req.headers.cookie?.match(/test_session=(\w+)/)?.[1]) ?? null, handle: async () => false };
     const room = createRedisRoom({ redis, prefix, worldId: 'river-oaks', worldData: data, isAdmin: id => id === 'alice',
       authorize: async identity => sessions.get(identity.userId)?.sessionId === identity.sessionId });
@@ -116,7 +116,10 @@ test('a resident’s block ends Jevica’s office invitation and refuses new one
 
 test('blocking keeps its own write limit', live, async t => {
   const { start, post, connect } = await fixture(t);
-  const node = await start();
+  // The limit counts per clock minute. A fixed time inside one minute keeps all 13 writes
+  // in the same window, however long they take.
+  const minute = Math.floor(Date.now() / 60_000) * 60_000;
+  const node = await start({ now: () => minute + 1_000 });
   await connect(node, 'bob');await connect(node, 'carol');
   const statuses = [];
   for (let i = 0; i < 13; i++) statuses.push((await post(node, 'bob', `/api/blocks/${i % 2 ? 'remove' : 'add'}`, { peerId: 'carol' })).status);
