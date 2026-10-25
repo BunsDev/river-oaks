@@ -615,6 +615,22 @@ Suppose Studewood and the north and south strips beside the Commons are authored
 
 The 5× target is far beyond any of these: about 148,000 m² more bounds at District density.
 
+## Process slip and a frequent local flake
+
+- **Slip (about 19:20Z).** Ledger commit `7f6fe51e` (docs only) was committed and pushed before its `pnpm run verify tooling` passed: the command chain used `;`, not `&&`.
+  - Attempts 1–3 on that tree failed only `land-pr.test.js` "a queued lander wakes on release" (273/274).
+  - The test passed alone, and its file passed 29/29.
+  - Attempt 4 passed 274/274 on the same tree.
+  - Later commits chain the verification with `&&`.
+- **The flake.** That test now fails often in the full tooling stage on this host, even at load 3–4. Today:
+  - the release candidate's verify full attempt 1;
+  - #662's core attempt 1;
+  - Woodland core runs 1–2 and review-fix runs 1–2;
+  - #674's core attempt 1;
+  - the ledger tooling attempts 1–3 above.
+
+  It always passes alone. It's worth an owner looking at the watch-latency assumption (`scripts/tests/land-pr.test.js:122`) rather than rerunning past it.
+
 ## Recurring hosted flake: `crime-shared` timed evade
 
 `preview shared (development)` → `crime-shared` failed "A timed evade (U) beats the rival's telegraphed counter" twice today, both on heads whose change could not reach it:
