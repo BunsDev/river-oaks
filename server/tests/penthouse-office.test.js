@@ -146,7 +146,7 @@ test('checkpoints keep the floor; retired visits end without restoring the legac
   f.walk(owner, anchor('stairs-bottom'));
   f.send(owner, 'transition', { portalId: portal(L0, 'stairs'), layout: OFFICE_LAYOUT_PENTHOUSE });
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 16);
+  assert.equal(saved.version, 17);
   const restored = setup({ restore: saved });
   assert.deepEqual([restored.visit(owner).levelId, restored.visit(owner).elevation], [L1, 3.8]);
 
