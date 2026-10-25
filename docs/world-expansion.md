@@ -12,13 +12,13 @@ The District retains its exact existing bounds and identity transform. Entity ID
 
 ## Candidate destination and measurement boundary
 
-The original east-side reservation now contains the authored `east-garden-commons` and `bayou-heights` locations and three remaining empty rectangles: `east-garden-reserve` (east of Bayou Heights), `east-garden-reserve-north` and `east-garden-reserve-south`. They partition the original envelope without overlap or total-area growth. The Commons registration bounds include its promenade and plaza envelope; only the shared movement contract grants access to actual surfaces within it. The remaining locations are `reserved`, with no entries or playable content. This authored fictional expansion is not a claim about actual Houston land use or approval to alter mapped District geometry.
+The original east-side reservation now contains the authored `east-garden-commons`, `bayou-heights` and `studewood` locations and two remaining empty rectangles: `east-garden-reserve-north` and `east-garden-reserve-south`. They partition the original envelope without overlap or total-area growth. The Commons registration bounds include its promenade and plaza envelope; only the shared movement contract grants access to actual surfaces within it. The remaining locations are `reserved`, with no entries or playable content. This authored fictional expansion is not a claim about actual Houston land use or approval to alter mapped District geometry.
 
 The District bounds span 253.944040393926 metres east/west and 290.4306195230893 metres north/south: 73,753.12497580437 m². The original east reservation adds twice that rectangular area; its authored and reserved partitions retain that total. Combined bounds total three times the original bounds area. Buildings, restricted surfaces and disconnected geometry mean these values cannot establish playable area. The 3–5× expansion target applies to measured reachable playable area and remains unverified.
 
 ## Existing implementation seams
 
-The browser `loadWorld` in `preview/src/main.js` selects the default District or a separate `region-v1` world, then attaches vegetation, the approved gallery and the server-selected Gardens revision. `server/district-data.js` constructs the server District. `server/world.js` enforces the current bounds and movement environment. Both paths now support the opt-in `east-garden-commons-market-1` revision (which superseded `east-garden-commons-blockout-1`), which composes Commons and its [Bayou Market Commons](level-design/expansion/bayou-market-commons.md) destination after Gardens and announces it through existing HTTP/socket revision synchronization. The opt-in `bayou-heights-1` revision composes [Bayou Heights](level-design/expansion/bayou-heights.md) after the Commons; the browser loads its recipes and scene only for that revision. Default revisions are preserved. Existing separate creator worlds are not seamless neighboring locations.
+The browser `loadWorld` in `preview/src/main.js` selects the default District or a separate `region-v1` world, then attaches vegetation, the approved gallery and the server-selected Gardens revision. `server/district-data.js` constructs the server District. `server/world.js` enforces the current bounds and movement environment. Both paths now support the opt-in `east-garden-commons-market-1` revision (which superseded `east-garden-commons-blockout-1`), which composes Commons and its [Bayou Market Commons](level-design/expansion/bayou-market-commons.md) destination after Gardens and announces it through existing HTTP/socket revision synchronization. The opt-in `bayou-heights-1` revision composes [Bayou Heights](level-design/expansion/bayou-heights.md) after the Commons; the browser loads its recipes and scene only for that revision and the next. The opt-in `heights-studewood-1` revision composes [Studewood](level-design/expansion/studewood.md) after Heights, and Heights streams its two neighborhoods. Default revisions are preserved. Existing separate creator worlds are not seamless neighboring locations.
 
 ## Acceptance still required
 
@@ -91,7 +91,18 @@ The `bayou-heights-1` revision is sampled from the same District spawn and reach
 | 1 m | 46,549 m² | 52,130 m² | 93,906 m² | 41,776 m² | 2.0174× |
 | 0.5 m | 46,477.75 m² | 52,030.75 m² | 93,509.75 m² | 41,479 m² | 2.0119× |
 
-The Gardens baseline reproduces exactly. The fresh Commons sample differs from the historical table above by about 0.13%. That table remains the record of its own revision. Reserved land, upper floors, flight, travel and islands contribute nothing. Bayou Heights reaches the 2× step of the expansion target; the 3–5× range remains open. `expansionCapacity` now projects from the Heights total.
+The Gardens baseline reproduces exactly. The fresh Commons sample differs from the historical table above by about 0.13%. That table remains the record of its own revision. Reserved land, upper floors, flight, travel and islands contribute nothing. Bayou Heights reaches the 2× step of the expansion target; the 3–5× range remains open.
+
+### Studewood
+
+The `heights-studewood-1` revision is sampled from the same District spawn and reached on foot along Twentieth or Eighteenth Street from Heights Boulevard. Measured with `node preview/audit/world-expansion-footprint.js --reachable` at the branch revision recorded in the [convergence ledger](superpowers/plans/2026-10-24-convergence-3x.md):
+
+| Grid spacing | Gardens | Bayou Heights | Studewood | Added by Studewood | Studewood ÷ Gardens |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 m | 46,549 m² | 93,904 m² | 114,793 m² | 20,889 m² | 2.4661× |
+| 0.5 m | 46,477.75 m² | 93,508 m² | 114,323.75 m² | 20,815.75 m² | 2.4598× |
+
+`expansionCapacity` now projects from the Studewood total. At the District's walkable density the two remaining strips beside the Commons (24,199.5 m² of bounds) project to about 2.79×. The 3× floor therefore needs about 15,600 m² of further bounds at that density, or the strips authored well above it. Choosing more land is a decision for Val, not part of this revision.
 
 ## First playable destination
 

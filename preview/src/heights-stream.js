@@ -3,18 +3,21 @@ import manifest from '../public/data/world-manifest.json' with { type: 'json' };
 import { locationWorldBounds } from './world-manifest.js';
 import { validateHeightsRegistration } from './bayou-heights-world.js';
 import { commonsBaseLayout } from '../../shared/bayou-heights.js';
+import { heightsBaseLayout } from '../../shared/studewood.js';
+import { validateStudewoodRegistration } from './studewood-world.js';
 import { createSpatialChunkStream } from './spatial-chunk-stream.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
 
-// Loaded only for bayou-heights-1 (main.js), with the composition it needs.
+// Loaded only for bayou-heights-1 and heights-studewood-1 (main.js), with the composition they need.
 export { attachBayouHeights } from './bayou-heights-world.js';
+export { attachStudewood } from './studewood-world.js';
 
 /**
  * The Commons as Heights presents it: the restored Commons layout, bayou opened for the
  * footbridge. Its planted beds draw within 60 m, as Heights' own do (HEIGHTS_PLANTING_METRES):
  * seen across the bayou, the Commons' beds at every distance are about a million triangles.
  */
-export const heightsCommonsLayout = layout => ({ ...commonsBaseLayout(layout), destination: layout.destination,
+export const heightsCommonsLayout = layout => ({ ...commonsBaseLayout(layout.studewood ? heightsBaseLayout(layout) : layout), destination: layout.destination,
   plantingMetres: KIT_CONVENTIONS.lod.treeMetres[1] });
 
 // A camera within this distance of a Heights neighborhood that can see it streams it in:
@@ -33,6 +36,8 @@ export const HEIGHTS_MAX_BYTES = 16 * MiB;
 export const HEIGHTS_CHUNK_BYTES = {
   'bayou-heights': 6.5 * MiB, 'bayou-greenway': 1.75 * MiB, 'yale-icehouse': 2.25 * MiB, 'nineteenth-and-yale': 2.75 * MiB,
   'yale-street-north': 2.45 * MiB, 'yale-street-south': 1.65 * MiB, 'heights-boulevard-north': 2.1 * MiB, 'heights-boulevard-south': 1.45 * MiB,
+  // Studewood (heights-studewood-1), measured headless at 1.77 and 1.57 MiB.
+  'studewood-north': 1.85 * MiB, 'studewood-south': 1.65 * MiB,
 };
 const outside = ([w, s, e, n], [x, y]) => Math.hypot(Math.max(w - x, 0, x - e), Math.max(s - y, 0, y - n));
 
@@ -54,7 +59,9 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
   loadModule = () => import('./bayou-heights.js') }) {
   const layout = validateHeightsRegistration(manifest, world.eastGardenCommons), { plans } = layout.heights;
   const location = manifest.locations.find(item => item.id === layout.heights.id);
-  const bounds = locationWorldBounds(location), [west, south, east, north] = bounds;
+  // Studewood (heights-studewood-1) streams as two more Heights neighborhoods, east to its own edge.
+  if (layout.studewood) validateStudewoodRegistration(manifest, layout);
+  const own = locationWorldBounds(location), bounds = layout.studewood ? [own[0], own[1], layout.studewood.bounds[2], own[3]] : own, [west, south, east, north] = bounds;
   const entry = [west + 1, location.entries.find(item => item.id === 'market-footbridge').position_m[1]];
   // The location's id sorts before its neighborhoods', so at equal distance the shared part is kept first.
   const SHARED = location.id, idOf = plan => `${location.id}/${plan.id}`;

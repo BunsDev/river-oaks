@@ -1,0 +1,498 @@
+{
+  "id": "studewood-north",
+  "title": "Bayou Heights East: Studewood Street north and Studewood Park",
+  "kit": "city-kit-1",
+  "seed": 1931,
+  "inspiration": "Patterns only, no copied buildings: the east side of a Houston Heights-style neighborhood beyond the boulevard, with a working street of small shops, a neighborhood park with a water tower and a night market, and a playground and courts. All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    406,
+    0,
+    507.5,
+    167.5
+  ],
+  "streets": [
+    {
+      "id": "studewood-north",
+      "from": [
+        429.5,
+        -8
+      ],
+      "to": [
+        429.5,
+        163
+      ],
+      "lane": 7,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 9,
+        "spacing": 18
+      },
+      "lamps": {
+        "offset": 15,
+        "spacing": 30
+      }
+    },
+    {
+      "id": "twentieth-studewood",
+      "from": [
+        406,
+        111
+      ],
+      "to": [
+        507.5,
+        111
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 30,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 36,
+        "spacing": 18
+      }
+    }
+  ],
+  "plazas": [
+    {
+      "id": "studewood-park",
+      "rect": [
+        435.5,
+        4,
+        507.5,
+        105.5
+      ],
+      "lawns": [
+        [
+          446,
+          16,
+          500,
+          50
+        ],
+        [
+          446,
+          66,
+          500,
+          96
+        ]
+      ],
+      "hedges": [
+        [
+          506.3,
+          4,
+          507.5,
+          105.5
+        ]
+      ],
+      "treeRows": [
+        {
+          "y": 10,
+          "from": 444,
+          "to": 502,
+          "spacing": 11.6
+        },
+        {
+          "y": 58,
+          "from": 444,
+          "to": 470,
+          "spacing": 13
+        },
+        {
+          "y": 100.5,
+          "from": 444,
+          "to": 502,
+          "spacing": 11.6
+        }
+      ]
+    },
+    {
+      "id": "studewood-court",
+      "rect": [
+        452.5,
+        116.5,
+        507.5,
+        163
+      ],
+      "lawns": [
+        [
+          460,
+          124,
+          500,
+          156
+        ]
+      ],
+      "hedges": [
+        [
+          452.5,
+          161.8,
+          507.5,
+          163
+        ],
+        [
+          506.3,
+          116.5,
+          507.5,
+          161.8
+        ]
+      ],
+      "treeRows": [
+        {
+          "y": 120.5,
+          "from": 458,
+          "to": 502,
+          "spacing": 11
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "id": "studewood-row-north",
+      "style": "heights-row",
+      "rect": [
+        436.5,
+        117.5,
+        452.5,
+        163
+      ],
+      "front": "west",
+      "sides": [
+        "south"
+      ],
+      "depth": [
+        12,
+        16
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        4.5,
+        6.5
+      ],
+      "names": [
+        "Waxwing Records",
+        "Blue Norther Barber",
+        "Sweetgum Toys",
+        "Okra & Oak Deli",
+        "Paper Kite Press"
+      ]
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "studewood-water-tower",
+      "piece": "landmark/water-tower",
+      "at": [
+        489,
+        58
+      ],
+      "name": "Studewood water tower",
+      "lettering": "STUDEWOOD"
+    }
+  ],
+  "furniture": [
+    {
+      "id": "park-bench-s-452",
+      "piece": "furniture/bench",
+      "at": [
+        452,
+        13.3
+      ],
+      "yaw": 0.0
+    },
+    {
+      "id": "park-bench-s-466",
+      "piece": "furniture/bench",
+      "at": [
+        466,
+        13.3
+      ],
+      "yaw": 0.0
+    },
+    {
+      "id": "park-bench-s-480",
+      "piece": "furniture/bench",
+      "at": [
+        480,
+        13.3
+      ],
+      "yaw": 0.0
+    },
+    {
+      "id": "park-bench-s-494",
+      "piece": "furniture/bench",
+      "at": [
+        494,
+        13.3
+      ],
+      "yaw": 0.0
+    },
+    {
+      "id": "park-bench-n-452",
+      "piece": "furniture/bench",
+      "at": [
+        452,
+        97.7
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "park-bench-n-466",
+      "piece": "furniture/bench",
+      "at": [
+        466,
+        97.7
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "park-bench-n-480",
+      "piece": "furniture/bench",
+      "at": [
+        480,
+        97.7
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "park-bench-n-494",
+      "piece": "furniture/bench",
+      "at": [
+        494,
+        97.7
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "park-bench-w-28",
+      "piece": "furniture/bench",
+      "at": [
+        441.2,
+        28
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "park-bench-w-40",
+      "piece": "furniture/bench",
+      "at": [
+        441.2,
+        40
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "park-bench-w-76",
+      "piece": "furniture/bench",
+      "at": [
+        441.2,
+        76
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "park-bench-w-88",
+      "piece": "furniture/bench",
+      "at": [
+        441.2,
+        88
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "night-market-0",
+      "piece": "furniture/market-stall",
+      "at": [
+        452,
+        58
+      ],
+      "sign": "Studewood Pho",
+      "awning": "canvas-teal"
+    },
+    {
+      "id": "night-market-1",
+      "piece": "furniture/market-stall",
+      "at": [
+        464,
+        58
+      ],
+      "sign": "Night Owl Churros",
+      "awning": "canvas-rose"
+    },
+    {
+      "id": "night-market-2",
+      "piece": "furniture/market-stall",
+      "at": [
+        476,
+        58
+      ],
+      "sign": "Bayou Boil",
+      "awning": "canvas-apricot"
+    },
+    {
+      "id": "market-cafe-0",
+      "piece": "furniture/cafe-set",
+      "at": [
+        455,
+        63.5
+      ]
+    },
+    {
+      "id": "market-cafe-1",
+      "piece": "furniture/cafe-set",
+      "at": [
+        467,
+        63.5
+      ]
+    },
+    {
+      "id": "market-cafe-2",
+      "piece": "furniture/cafe-set",
+      "at": [
+        479,
+        63.5
+      ]
+    },
+    {
+      "id": "market-cafe-3",
+      "piece": "furniture/cafe-set",
+      "at": [
+        455,
+        52.5
+      ]
+    },
+    {
+      "id": "market-cafe-4",
+      "piece": "furniture/cafe-set",
+      "at": [
+        467,
+        52.5
+      ]
+    },
+    {
+      "id": "market-cafe-5",
+      "piece": "furniture/cafe-set",
+      "at": [
+        479,
+        52.5
+      ]
+    },
+    {
+      "id": "park-lamp-0",
+      "piece": "furniture/lamp",
+      "at": [
+        444,
+        22
+      ]
+    },
+    {
+      "id": "park-lamp-1",
+      "piece": "furniture/lamp",
+      "at": [
+        444,
+        44
+      ]
+    },
+    {
+      "id": "park-lamp-2",
+      "piece": "furniture/lamp",
+      "at": [
+        444,
+        72
+      ]
+    },
+    {
+      "id": "park-lamp-3",
+      "piece": "furniture/lamp",
+      "at": [
+        444,
+        92
+      ]
+    },
+    {
+      "id": "park-lamp-4",
+      "piece": "furniture/lamp",
+      "at": [
+        503,
+        22
+      ]
+    },
+    {
+      "id": "park-lamp-5",
+      "piece": "furniture/lamp",
+      "at": [
+        503,
+        44
+      ]
+    },
+    {
+      "id": "park-lamp-6",
+      "piece": "furniture/lamp",
+      "at": [
+        503,
+        72
+      ]
+    },
+    {
+      "id": "park-lamp-7",
+      "piece": "furniture/lamp",
+      "at": [
+        503,
+        92
+      ]
+    },
+    {
+      "id": "court-bench-466",
+      "piece": "furniture/bench",
+      "at": [
+        466,
+        159.3
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "court-bench-480",
+      "piece": "furniture/bench",
+      "at": [
+        480,
+        159.3
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "court-bench-494",
+      "piece": "furniture/bench",
+      "at": [
+        494,
+        159.3
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "court-bike-rack",
+      "piece": "furniture/bike-rack",
+      "at": [
+        456,
+        140
+      ],
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "studewood-north-end-street",
+      "piece": "landscape/hedge",
+      "rect": [
+        422.9,
+        161.8,
+        436.1,
+        163
+      ]
+    }
+  ],
+  "context": [],
+  "overrides": {},
+  "additions": []
+}

@@ -2,6 +2,7 @@ import { bindPageLifecycle } from './background-lifecycle.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { attachEastGardenCommons } from './east-garden-commons-world.js';
 import { HEIGHTS_REVISION, inBayouHeights } from '../../shared/bayou-heights-layout.js';
+import { STUDEWOOD_REVISION } from '../../shared/studewood-layout.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
 import { createCommonsStream } from './commons-stream.js';
@@ -174,7 +175,7 @@ const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.sea
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 // East Garden Commons and its assembled destination, when the revision composes them.
-// Bayou Heights (bayou-heights-1) streams as a second location; heights-stream.js loads with that revision.
+// Bayou Heights (bayou-heights-1, and heights-studewood-1 with Studewood) streams as a second location; heights-stream.js loads with those revisions.
 let commonsScene = null, heightsScene = null, heightsStreams = null;
 const lanternWalk = createLanternWalkClient({ announceArrival: false, getLayout: () => world?.eastGardenCommons ?? null, getPose: () => walking?.getPose(), getScene: () => commonsScene,
   getSnapshot: () => multiplayer?.snapshot?.lanternWalk ?? null,
@@ -960,7 +961,7 @@ async function loadWorld() {
       :await jsonResponse(`/api/world-data?world=${encodeURIComponent(worldId)}`);
     worldRegionSha256=manifest.regionSha256??null;
     const districtRevision=manifest.districtRevision??null;
-    if(districtRevision!==null && ![DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION].includes(districtRevision))throw new Error('This district revision is not supported by this client');
+    if(districtRevision!==null && ![DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION].includes(districtRevision))throw new Error('This district revision is not supported by this client');
     let data;
     if(manifest.template==='region-v1')data=manifest.world;
     else if(manifest.template==='river-oaks') {
@@ -970,10 +971,12 @@ async function loadWorld() {
       ]);
       district.vegetation=validateVegetation(district,vegetation);
       data=attachDistrictGalleryPlan(district,approved);
-      if([DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION].includes(districtRevision))data=attachGardenCampus(data);
-      if([COMMONS_REVISION,HEIGHTS_REVISION].includes(districtRevision))data=attachEastGardenCommons(data);
+      if([DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION].includes(districtRevision))data=attachGardenCampus(data);
+      if([COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION].includes(districtRevision))data=attachEastGardenCommons(data);
       // Bayou Heights loads its recipes and stream only for its own revision; the stream loads its scene.
-      if(districtRevision===HEIGHTS_REVISION){heightsStreams=await import('./heights-stream.js');data=heightsStreams.attachBayouHeights(data);}
+      if([HEIGHTS_REVISION,STUDEWOOD_REVISION].includes(districtRevision)){heightsStreams=await import('./heights-stream.js');data=heightsStreams.attachBayouHeights(data);}
+      // Studewood continues Heights east; Heights streams its two neighborhoods with its own.
+      if(districtRevision===STUDEWOOD_REVISION)data=heightsStreams.attachStudewood(data);
     } else throw new Error('This region format is not supported by this client');
     worldDistrictRevision=districtRevision;
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');

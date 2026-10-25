@@ -99,14 +99,14 @@
       ],
       "adjacent": [
         "east-garden-commons",
-        "east-garden-reserve",
+        "studewood",
         "east-garden-reserve-north",
         "east-garden-reserve-south"
       ]
     },
     {
-      "id": "east-garden-reserve",
-      "status": "reserved",
+      "id": "studewood",
+      "status": "authored",
       "bounds_m": [
         -2243.836078522973,
         -1457.6085898216527,
@@ -118,8 +118,17 @@
         0,
         0
       ],
-      "content_revision": "empty-v3",
-      "entries": [],
+      "content_revision": "heights-studewood-1",
+      "entries": [
+        {
+          "id": "twentieth-street",
+          "position_m": [
+            -2243.836078522973,
+            -1224,
+            18.37222868285045
+          ]
+        }
+      ],
       "adjacent": [
         "bayou-heights"
       ]
