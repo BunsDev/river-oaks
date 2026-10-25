@@ -454,6 +454,17 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
     | Phone | reconnect | 894 ms | 907 ms | +1.5 % |
 
   - Every arm passed with 0 m drift, no page errors and no failed assets. The `interactions` phase measured 0.31–0.35 ms on B against 0.38–0.44 ms on A.
+- **Adversarial browser probe on `525856e2`: no defect found** (river-oaks-3e; scratch Playwright with the repo's fixture, through the browser lock, Metal headless, committed nowhere). Most cases move players with the server `travel` command, so they do not test the on-foot connection; the journey and the keyboard route do.
+  - **Graphics context loss on Heights Green: 6/6.** Rendering pauses while lost and resumes after restore. It is the same player, still connected, with 0 m drift. The stream is ready with 0 failures, and the restored capture draws the bandstand and tree rows.
+  - **Unload and reload loops between District arrival and the green.**
+    - 20 loops: 79 loads, 78 unloads, 0 failures. Every loop releases Heights at home (resident 0) and presents it again at the green.
+    - Diagnostic run (`heights-ab-diag.json` 805a4ac5d835eb54, checked here): three rounds of context loss followed by 5 loops. Each round went from 4 to 24 loads and 0 to 20 unloads, with 0 failures and loads of 24–76 ms. Every arrival was ready within 1 s.
+    - Geometries at home rise once and then stay flat: the District arrival's own content arriving, as in a District-only control. Heights' resident bytes return to 0 every loop. The Commons scene stays at home only after a Commons visit.
+  - **First failure, kept and explained.** In run 1, the first loop after the context-loss case timed out waiting for Heights. The fixture town keeps a player's position between pages, so the probe's "home", read from a fresh page, was Heights Green itself. The player never left Heights: ready true, 0 failures, 60 fps. With home fixed to the District arrival, all three rounds pass. The failing receipts are kept in river-oaks-3e's scratchpad (`heights-adversarial-525856e2-run1/`, `heights-ab-diag-525856e2-v1/`).
+  - **Smooth quality with reduced motion at Nineteenth and Yale: 5/5.** The capture shows the brick street, storefronts and street trees. Neighborhoods in view waited for room under the ceiling (9.9–14.9 MB resident), the case recorded under Decisions for Val.
+  - **Two players at the footbridge's west end: passed.** One player's socket closes mid-walk and reconnects with its identity kept. The other crosses into Heights, seen within 1.5 m of the town's position. Both stand on authoritative free ground, and there were no page errors.
+  - **Keyboard-only route from arrival: 3/3.** Tab reaches the 3D view, and arrow keys and W (Shift over 3 m) walk the journey's route over the footbridge into Heights: 281 m in 57 s. The capture shows the Heights boulevard.
+  - **Not run:** a client/server revision mismatch in the browser (the server side is in the rehearsal) and the unload loops on foot.
 - **Pedestrian captures, inspected.** Both runs uploaded all eight `heights-*.png`. They are CI software-profile renders: llvmpipe at render scale 0.25, with every material replaced by `MeshNormalMaterial` (`main.js:232`). So they show geometry, not appearance.
   - **Greenway:** street trees and kit blocks on both sides.
   - **Icehouse patio:** the two-chair game table, with "Icehouse game table" in the seat picker and a "Sit on the bench" prompt.
@@ -503,7 +514,7 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
    - **Also met on `0cc09391`** against main `0b9a97c4` (round 3 rerun): one-client CPU p95 0.0 % and −2.0 %, and cold transfer +0.13 %. Round 3's first attempt is invalid, not a reading: the host slept through most of it. Its receipts are kept as the first failure.
    - **Also met on `3cd60702`** against main `a437cbbf`: the second ABBA (one-client CPU p95 −0.6 % and −2.0 %) and cold transfer +0.13 %.
    - **Also done:**
-     - streaming and unload checks (focused tests, and the journey's release on the way home);
+     - streaming and unload checks: focused tests, the journey's release on the way home, and river-oaks-3e's browser probe. The probe ran 20 unload/reload loops and 3 rounds of context loss followed by 5 loops, with 0 failures and no per-loop growth (Results);
      - reconnect identity and drift within 0.5 m in Heights (journey);
      - the pedestrian captures, inspected (CI software profile only).
    - **The first ABBA, on `6e5abdff`, failed** one-client CPU p95: +24.0 % on desktop and +18.1 % on phone. Its cause is fixed in `dd682a7b`, which rounds 2–4 measured.
