@@ -409,6 +409,51 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
 
     - Every arm passed with 0 m drift, no page errors and no failed assets.
     - The `interactions` phase measured 0.31–0.36 ms on B against 0.39–0.44 ms on A, as in round 2. `players` was 1.44–1.85 ms on both.
+- **Hosted run on `4c3fddc3` (Verify 40184892076; the ledger recording round 3): every job passed, 16/16.** The heights job took 17 min 31 s of its 20 min timeout.
+- **Merge of main `e8207b2b` (`525856e2`).** Main brought #658: touch-layout and touch-hold journeys, pointer gestures, push-to-talk tied to its finger, and town chat and voice UI. It merged without force or conflicts.
+  - Outside this ledger, its diff from `0cc09391` is byte-identical to main's `0b9a97c4..e8207b2b` patch. River-oaks-3e confirmed this with `git patch-id --stable`. Heights code is unchanged.
+  - **Core verify on `525856e2`: passed in one run** with a clean tree: agent 274/274; preview 4,180 passed, 1 skipped; server 920 passed, 227 Redis-only skips; desktop 120 passed, 3 skipped; Python 170; build, demo and secrets passed.
+  - **Other checks.**
+    - Redis-backed server suites: 119/119, 0 skipped, on an isolated scratch Redis.
+    - `destination check`: 8/8.
+    - Reachable ground and every composed-world hash are identical to `0cc09391`.
+  - **Hosted run on `525856e2` (Verify 40204254404).**
+    - **Attempt 1 failed one job:** `preview shared (development)`, at #646's `crime-shared` check "A timed evade (U) beats the rival's telegraphed counter".
+    - **The failure is main's, not this branch's.** In the same window, `docs/landing-steward-20261024`, which changes only two docs files, failed the same check on main `e8207b2b` (run 40203728289). Main's own push run passed it.
+    - **The check is timing-dependent.** It has three attempts to press U while 80–330 ms of the counter remain, on llvmpipe. The failure capture shows the default Westcreek Lane, with no page errors.
+    - **Attempt 2,** rerunning only the failed jobs, passed 16/16. The heights job took 12 min 29 s. The first failure's log and artifact are kept in the session scratchpad.
+  - **Docs commit `3fdfaa05`.** In three `verify tooling` runs and one direct concurrent run, at load 3–5, one agent test failed: `scripts/tests/land-pr.test.js`, "a queued lander wakes on release…", which timed out at 30 s.
+    - The scripts are byte-identical to `4c3fddc3`, where the profile passed.
+    - The file passes alone (29/29), and the suite passes one file at a time (`node --test --test-concurrency=1`, 274/274).
+    - Core verify on `525856e2` then passed it.
+- **Round 4: the landing pair, main `e8207b2b` against `525856e2`** (support task D, river-oaks-3e). **Every gated metric is within its limit.**
+  - **Cold transfer: within the limit.** Clean detached production builds of both SHAs were made at 14:45Z; the round 3 build directories were reused at the new SHAs, checked here. Visit JS+CSS, gzipped: 1,732.2 → 1,734.4 KiB (+0.13 %). Play-page initial JS: +0.90 %. The Heights markers appear only in the lazy `heights-stream` chunk.
+  - **ABBA conditions.** It used the round 3 rerun's protocol: one held browser lock, `caffeinate` scoped to the run, from 15:01:18Z to 15:31:28Z.
+    - Each arm took 7 min 32–33 s and passed the load gate (12 or less) with no wait. Per-sample one-minute load was 2.50–6.41.
+    - `pmset -g log` has no Sleep, Wake or DarkWake event after 09:45 local (14:45Z).
+  - **Receipts** (sha256, first 16 hex):
+    - `compare.json` 1edf62d5349c9f6f;
+    - `h-a1.json` 78f9a7cafb0f8fd8;
+    - `h-b1.json` 355f5c0d3ceb1dc3;
+    - `h-b2.json` bcf2918996222391;
+    - `h-a2.json` 1a0b30faa48f30a6.
+
+    An independent read (`scratchpad/heights/abba-check.mjs`) reproduces every row, the heads and the hashes.
+
+    | Workload | Metric | A | B | Change |
+    | --- | --- | ---: | ---: | ---: |
+    | Desktop, 1 client | frame mean | 16.67 ms | 16.67 ms | 0.0 % |
+    | Desktop, 1 client | CPU p95 | 8.40 ms | 8.20 ms | −2.4 % |
+    | Desktop, 2 clients | frame mean | 24.26 ms | 24.20 ms | −0.2 % |
+    | Desktop, 2 clients | CPU p95 | 9.55 ms | 9.55 ms | 0.0 % |
+    | Desktop | reconnect | 807 ms | 785 ms | −2.7 % |
+    | Phone, 1 client | frame mean | 16.67 ms | 16.67 ms | 0.0 % |
+    | Phone, 1 client | CPU p95 | 7.25 ms | 7.05 ms | −2.8 % |
+    | Phone, 2 clients | frame mean | 21.24 ms | 21.07 ms | −0.8 % |
+    | Phone, 2 clients | CPU p95 | 8.05 ms | 7.85 ms | −2.5 % |
+    | Phone | reconnect | 894 ms | 907 ms | +1.5 % |
+
+  - Every arm passed with 0 m drift, no page errors and no failed assets. The `interactions` phase measured 0.31–0.35 ms on B against 0.38–0.44 ms on A.
 - **Pedestrian captures, inspected.** Both runs uploaded all eight `heights-*.png`. They are CI software-profile renders: llvmpipe at render scale 0.25, with every material replaced by `MeshNormalMaterial` (`main.js:232`). So they show geometry, not appearance.
   - **Greenway:** street trees and kit blocks on both sides.
   - **Icehouse patio:** the two-chair game table, with "Icehouse game table" in the seat picker and a "Sit on the bench" prompt.
@@ -432,11 +477,11 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
     - Nineteenth Street: 621 / 2.47 M.
 
     The District views did not record on either tree.
-- **Performance.** ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e). Its three rounds are above: `6e5abdff` failed, `3cd60702` passed, and the landing pair `0cc09391` passed on the rerun. The `#626` decision is recorded only on #643's branch (D11).
+- **Performance.** ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e). Its four rounds are above: `6e5abdff` failed, and `3cd60702` passed. `0cc09391` passed on the rerun. The current landing pair, `525856e2`, passed in round 4. The `#626` decision is recorded only on #643's branch (D11).
 
-## Status at handoff (product head `0cc09391`, draft PR #649)
+## Status at handoff (product head `525856e2`, draft PR #649)
 
-**Overall: the finish line is met on `0cc09391`; delivery is blocked on Val's merge authorization.** Items 1–6 are complete. The landing pair, main `0b9a97c4` against `0cc09391`, meets the District gate (round 3 rerun and cold transfer). Merge, auto-merge and activation stay with Val. Heights is not activated anywhere; production activation is not authorized. If the product head moves before merge, item 5 has to be re-measured for the new pair.
+**Overall: the finish line is met on `525856e2`; delivery is blocked on Val's merge authorization.** Items 1–6 are complete. The landing pair, main `e8207b2b` against `525856e2`, meets the District gate (round 4 and its cold transfer). Merge, auto-merge and activation stay with Val. Heights is not activated anywhere; production activation is not authorized. If the product head moves before merge, item 5 has to be re-measured for the new pair.
 
 1. **Ledger before source: complete.** The objective, design, files-owned and checks sections were written before any source edit. They were committed with the first source in `b1ded7ab`, so git history alone does not show the order.
 2. **Authoritative ground and connection: complete.**
@@ -450,21 +495,21 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
    - Its landmarks are Heights Hall's clock tower, the bandstand and the footbridge.
    - It has street trees and planted beds, pedestrian streets, seating, and the icehouse table game for two.
    - `pnpm run destination check` reproduces every lock, and the authored overrides are preserved.
-4. **Measured gain: complete.** Reachable ground on `0cc09391` is 2.0119× at 0.5 m (93,508 m²) and 2.0173× at 1 m (93,904 m²), with pinned composed-world hashes; the merge did not change it. The figures first recorded here (93,509.75 and 93,906 m²) do not reproduce at any committed head and are corrected. Reserved land, upper floors, flight, travel and islands are excluded.
+4. **Measured gain: complete.** Reachable ground on `525856e2` is 2.0119× at 0.5 m (93,508 m²) and 2.0173× at 1 m (93,904 m²), with pinned composed-world hashes. Neither merge of main changed it. The figures first recorded here (93,509.75 and 93,906 m²) do not reproduce at any committed head and are corrected. Reserved land, upper floors, flight, travel and islands are excluded.
 5. **No District regression: complete on the landing pair**, with limits unamended.
-   - **Met on `0cc09391`** against main `0b9a97c4` (round 3):
-     - the ABBA rerun, every gated metric within its limit. One-client CPU p95 was 0.0 % on desktop and −2.0 % on phone; two-client was +1.0 % and −2.3 %; reconnect was −4.8 % and −4.0 %; drift was 0 m.
+   - **Met on `525856e2`** against main `e8207b2b` (round 4):
+     - the ABBA, with every gated metric within its limit. One-client CPU p95 was −2.4 % on desktop and −2.8 % on phone; two-client was 0.0 % and −2.5 %; reconnect was −2.7 % and +1.5 %; drift was 0 m.
      - cold transfer +0.13 %.
-   - **Round 3's first attempt is invalid**, not a reading: the host slept through most of it. Its receipts are kept as the first failure.
+   - **Also met on `0cc09391`** against main `0b9a97c4` (round 3 rerun): one-client CPU p95 0.0 % and −2.0 %, and cold transfer +0.13 %. Round 3's first attempt is invalid, not a reading: the host slept through most of it. Its receipts are kept as the first failure.
    - **Also met on `3cd60702`** against main `a437cbbf`: the second ABBA (one-client CPU p95 −0.6 % and −2.0 %) and cold transfer +0.13 %.
    - **Also done:**
      - streaming and unload checks (focused tests, and the journey's release on the way home);
      - reconnect identity and drift within 0.5 m in Heights (journey);
      - the pedestrian captures, inspected (CI software profile only).
-   - **The first ABBA, on `6e5abdff`, failed** one-client CPU p95: +24.0 % on desktop and +18.1 % on phone. Its cause is fixed in `dd682a7b`, which rounds 2 and 3 measured.
+   - **The first ABBA, on `6e5abdff`, failed** one-client CPU p95: +24.0 % on desktop and +18.1 % on phone. Its cause is fixed in `dd682a7b`, which rounds 2–4 measured.
 6. **Signed, verified commits in draft PRs: complete.** Every commit on #649 is SSH-signed.
-   - Core verify passed on `0cc09391` in one run, with a clean tree (receipt `.runtime/agent/core.json`): agent 274/274; preview 4,176 passed, 1 skipped; server 920 passed, 227 Redis-only skips; desktop 120 passed, 3 skipped; Python 170; build, demo and secrets passed.
-   - Hosted Verify passed 16/16 on `6e5abdff`, `c6d42f43`, `8fa26714` and `7cde602c` (the docs head above `0cc09391`). The run on this ledger's own commit is recorded in the PR body.
+   - Core verify passed on `525856e2` in one run, with a clean tree (receipt `.runtime/agent/core.json`): agent 274/274; preview 4,180 passed, 1 skipped; server 920 passed, 227 Redis-only skips; desktop 120 passed, 3 skipped; Python 170; build, demo and secrets passed. Redis-backed suites passed 119/119.
+   - Hosted Verify passed 16/16 on `6e5abdff`, `c6d42f43`, `8fa26714`, `7cde602c`, `4c3fddc3` and `525856e2`. On `525856e2` that was the rerun of failed jobs; attempt 1's one failure is main's `crime-shared` timing check (Results). The run on this ledger's own commit is recorded in the PR body.
    - Nothing is merged, enqueued or deployed.
 
 ## Gaps and coordination
@@ -482,12 +527,17 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
     - B adds `movedResidents` to the migration log, and a log-line check to `heights-activation-rehearsal.test.js`. #649 stays unchanged for it.
   - River-oaks-3e reports, and it is not re-run here, that merging #670 with `4c3fddc3` first made the Heights rehearsal time out. Placing Heights resident stops cost about 1.3 s on every world build. #670's `59617b59` places them once per world. On their scratch merge with the wiring, the rehearsal passes 31/31 in 17.1 s.
   - River-oaks-3e also reports that the resident planner could not plan from the bandstand back to the footbridge within its 15,000-cell search limit, though the reverse route works. #670 searches such legs from the far end. Player walking and the police planner are not affected.
+- **Timing checks owned elsewhere.** These belong to other owners, and this branch changes neither.
+  - Main's `crime-shared` evade check (#646) fails intermittently in hosted CI.
+  - The `land-pr` queue-wake test fails in concurrent agent-test runs on this Mac.
+
+  Both are recorded in Results with their evidence.
 - `verify full` browser stages (security-browser, reflections, experience, shared, ipic-screening) were not run here as a whole, because the shared browser lock has a long queue. The Heights journey runs on its own, and hosted CI runs the matrix, including the `heights` shard.
 - Human visual approval, physical devices, hosted multiplayer and Unreal parity are separate acceptance.
 - **Retirement check at handoff (`pnpm run project:inventory`).**
   - This task's branch and worktree are active, with a draft PR, so they are not eligible.
   - `diag/heights-west-draw-20261024` exists only on the remote. It is mine, cited here as evidence, and never for merge. Delete it once #649 closes.
-  - The only retire candidate listed, `test/mvp-regression-20261023`, belongs to another owner, so it is untouched (re-checked at `0cc09391`).
+  - The only retire candidate listed, `test/mvp-regression-20261023`, belongs to another owner, so it is untouched (re-checked at `4c3fddc3`).
 
 ## Next step
 
@@ -501,8 +551,8 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
 
 > Continue task `next-district-586-20261024` (#586, #638 lane 3) in `../river-oaks-next-district-586`, on branch `feat/next-district-586-20261024`, draft PR #649. Read `docs/superpowers/plans/2026-10-24-next-district-586.md` first, especially "Status at handoff" and "Results".
 >
-> All six finish-line items are complete on product head `0cc09391` (main `0b9a97c4` merged). The landing pair met the District gate in round 3's rerun: one-client CPU p95 0.0 % on desktop and −2.0 % on phone, reconnect −4.8 % and −4.0 %, drift 0 m, cold transfer +0.13 %. Delivery waits on Val's merge authorization.
+> All six finish-line items are complete on product head `525856e2` (main `e8207b2b` merged). The landing pair met the District gate in round 4: one-client CPU p95 −2.4 % on desktop and −2.8 % on phone, reconnect −2.7 % and +1.5 %, drift 0 m, cold transfer +0.13 %. Delivery waits on Val's merge authorization.
 >
-> First check whether `main` has moved past `0b9a97c4`. If it has, merge it without force and re-run core verify and hosted Verify (the `heights` shard and the aggregate `preview`). Then ask support task D (river-oaks-3e) for a new ABBA and cold transfer for the new pair. Use the #626 protocol with limits unchanged (mean frame and CPU p95 +10 %, reconnect +20 %, drift 0.5 m), under `caffeinate`, with a per-arm load gate. Check its receipts independently. The heights job took 17 min 45 s of its 20 min timeout on `8fa26714`. Post one evidence comment each on #586 and #638 per increment.
+> First check whether `main` has moved past `e8207b2b`. If it has, merge it without force and re-run core verify and hosted Verify (the `heights` shard and the aggregate `preview`). Then ask support task D (river-oaks-3e) for a new ABBA and cold transfer for the new pair. Use the #626 protocol with limits unchanged (mean frame and CPU p95 +10 %, reconnect +20 %, drift 0.5 m), under `caffeinate`, with a per-arm load gate. Check its receipts independently. The heights job took 17 min 45 s of its 20 min timeout on `8fa26714`. If hosted `crime-shared` fails its evade check, look for the same failure on a docs-only branch before calling it this branch's. Rerun only the failed jobs, once, and keep the first failure. Post one evidence comment each on #586 and #638 per increment.
 >
 > Do not merge, enable auto-merge, activate `bayou-heights-1`, change budgets or the area metric, or edit other owners' branches. The diagnostic branch `diag/heights-west-draw-20261024` is evidence only, never for merge.
