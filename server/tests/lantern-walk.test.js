@@ -108,3 +108,22 @@ test('two players complete the Lantern Walk in the authoritative Commons world, 
   assert.equal(back.snapshot().lanternWalk, undefined);
   assert.equal(back.command('alice', { type: 'lanterns', action: 'light', lanternId: lanterns[0].id }).error, 'invalid_command');
 });
+
+test('erasing a lamplighter keeps the walk restorable, mid-round and after a finished round', () => {
+  let time = 1000;
+  const walk = createLanternWalk({ lanterns: LANTERNS, now: () => time });
+  const light = (id, lanternId, at) => { time += 1000; return walk.command(player(id, at), { type: 'lanterns', action: 'light', lanternId }); };
+  assert.equal(light('erin', 'a', [0, 0]).ok, true);assert.equal(light('pat', 'b', [10, 0]).ok, true);
+  walk.forget('erin');
+  assert.deepEqual(walk.checkpoint().round.lit.map(item => item.by), ['pat']);
+  assert.doesNotThrow(() => walk.validate(JSON.parse(JSON.stringify(walk.checkpoint()))));
+  walk.forget('nobody');
+  assert.equal(walk.checkpoint().round.lit.length, 1);
+  // A complete round, still celebrating, that the account helped light.
+  assert.equal(light('erin', 'a', [0, 0]).ok, true);assert.equal(light('erin', 'c', [20, 0]).completed, true);
+  assert.notEqual(walk.checkpoint().round.completedAt, null);
+  walk.forget('erin');
+  const saved = JSON.parse(JSON.stringify(walk.checkpoint()));
+  assert.equal(saved.round, null);assert.equal(saved.rounds, 1);
+  assert.doesNotThrow(() => walk.validate(saved));
+});

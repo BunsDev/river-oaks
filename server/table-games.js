@@ -140,7 +140,13 @@ export function createTableGames({ players, tableIds = [], changed = () => {} })
   }
   const load = list => { tables = new Map(list.map(table => [table.id, table])); };
   const clear = () => { if (tables.size) { tables.clear(); changed(); } };
+  // Account erasure: a table the account played at, or was invited to, is cleared.
+  const forget = userId => {
+    let touched = false;
+    for (const table of [...tables.values()]) if (table.seats.includes(userId) || table.invite?.from === userId || table.invite?.to === userId || table.result?.left === userId) { tables.delete(table.id); touched = true; }
+    if (touched) changed();
+  };
   const snapshot = () => [...tables.values()].filter(table => table.kind || table.invite).map(view);
 
-  return { command, prune, snapshot, checkpoint, validate, load, clear };
+  return { command, prune, forget, snapshot, checkpoint, validate, load, clear };
 }

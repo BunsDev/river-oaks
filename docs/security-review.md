@@ -7,6 +7,19 @@ possible attacks have been eliminated or a deployed penetration test.
 
 ## Changes
 
+- Account erasure (#292, 2026-10-24). The signed WorkOS `user.deleted` webhook now
+  runs `server/account-erasure.js` in both backends. It sets the character tombstone
+  first, so the account cannot start a new session, then revokes every session and
+  closes every socket. It then erases each per-user store and makes every world in
+  the catalog forget the account. On Redis this goes through the room's one writer,
+  as a new `forget` room operation that takes only a user id. If any step fails, the
+  webhook answers 503 and WorkOS retries; nothing is reported as done early. The
+  failure log names the failed steps, never the account or a store's error text.
+  Concurrent runs for one account share one run. No new route or input is exposed.
+  The webhook keeps its signature, size, time and pending-delivery limits.
+  `docs/privacy-data-inventory.md` lists what is kept, and why: the hashed character
+  tombstone, the moderation and security audit, and room replies that lapse within
+  15 s.
 - Both server backends now protect published region data with authenticated,
   approved, non-banned access, matching the existing static district-data gate.
   Normal authenticated GET requests require no new token or extra interaction.

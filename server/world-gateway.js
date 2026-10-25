@@ -103,7 +103,29 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   const admit=req=>{const ip=rateLimitKey(routerAddress(req));return localGate(ip)&&security.allow('access',ip,1000,60_000);};
   const router=createWorldRouter({worldFor,configuredWorldId,handleRequest,admit});
   const metrics=characterMetrics??createCharacterMetrics({enabled:characterMetricsEnabled});
-  return {server:router.server,catalog,worldFor,async disconnectUser(userId,sessionId) {
+  // Account erasure (#292): what this gateway keeps for an account, one named step per
+  // store. Every world in the catalog is reached, loaded here or not.
+  const worldIds=async()=>[...new Set([configuredWorldId,...(await catalog.list()).map(entry=>entry.id)])];
+  // Account erasure (#292). Only a world loaded here or with a durable checkpoint can
+  // hold the account; one that cannot load fails the step, so the run is retried.
+  const storedWorld=async id=>await redis.exists(`${roomPrefixFor(namespace,id)}:state`)===1;
+  const accountSteps={
+    worlds:async userId=>{
+      for(const id of await worldIds()) {
+        if(!worlds.has(id)&&!await storedWorld(id))continue;
+        const world=await worldFor(id);if(!world)throw new Error('World unavailable');
+        await world.game.forgetAccount(userId);
+      }
+    },
+    landmarks:async userId=>{for(const id of await worldIds())await landmarkStoreFor(id).eraseUser(userId);},
+    social:userId=>social.eraseUser(userId),groups:userId=>groups.eraseUser(userId),profiles:userId=>profiles.eraseUser(userId),
+    events:userId=>events.eraseUser(userId),presence:userId=>presence.eraseUser(userId),debugReports:userId=>debugReports.eraseUser(userId),
+    officeDesk:userId=>officeDesk.eraseUser(userId),designLibrary:userId=>designLibrary.eraseUser(userId),
+    workplace:async userId=>{if(workplace&&(await workplace.erase({userId}))?.ok===false)throw new Error('Workplace erasure busy');},
+  };
+  // A world can still bank ride metres or store a look while it forgets the account.
+  const accountAfterSteps={cyclingMiles:userId=>cyclingMiles.eraseUser(userId),avatarPreferences:userId=>storedAppearance.eraseUser(userId)};
+  return {server:router.server,catalog,worldFor,accountSteps,accountAfterSteps,async disconnectUser(userId,sessionId) {
     const results=await Promise.all([...worlds.values()].map(({game})=>game.disconnectUser(userId,sessionId)));
     if(results.some(result=>result?.ok!==true))throw new Error('Account disconnect incomplete');
   },async close() {
