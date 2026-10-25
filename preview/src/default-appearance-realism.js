@@ -1,17 +1,19 @@
-// #517 default-appearance trial (Val's #638 handoff). The guest default (Sable,
-// on Jevica's rig) keeps her authored face, eyes, hair style, outfit and palette.
-// She takes only the realism parts listed here, at the strength the viewer's
-// quality tier sets. Cornea shells, iris recolor, the skin-wrap shader and sheen
-// are never applied. The trial also left out pore normals (uniform pores pebble
-// the lips and neck), card coverage (it more than doubles the brow and lash
-// footprint) and strand recolor (it turns Sable's beige hair cream-green).
-// The owner default (Jevica) was in the trial too, but her roughness went past
-// the +10% CPU bar for her crowds in two of three timing runs, so she keeps her
-// imported materials; listing `jevica: ['roughness']` puts her back. See
+// #517 default-appearance trial (Val's #638 handoff). Switched on, the guest
+// default (Sable, on Jevica's rig) keeps her authored face, eyes, hair style,
+// outfit and palette and takes only the realism parts listed here, at the
+// strength the viewer's quality tier sets. Cornea shells, iris recolor, the
+// skin-wrap shader and sheen are never applied. The trial also left out pore
+// normals (uniform pores pebble the lips and neck), card coverage (it more than
+// doubles the brow and lash footprint) and strand recolor (it turns Sable's beige
+// hair cream-green). Roughness passed the visual review, but it ships switched
+// off: Jevica's ×8 crowd (timing-6) and then Sable's ×24 crowd (timing-7) went
+// past the +10% CPU bar on the shared test host, so Jevica was stopped and then
+// the whole trial. Setting `enabled` to true turns Sable's roughness on once a
+// quiet host or device measures it within the bar. See
 // docs/acceptance/default-appearance-517.md. Every other look keeps its imported
-// materials. Set `enabled` to false to roll the trial back.
+// materials.
 export const DEFAULT_APPEARANCE_REALISM = Object.freeze({
-  enabled: true,
+  enabled: false,
   appearances: Object.freeze({
     'sable-human': Object.freeze(['roughness']),
   }),

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { customizedCharacterDefinition } from '../src/character-customization.js';
 import { createCharacterHero } from '../src/character-hero.js';
-import { defaultAppearanceRealism } from '../src/default-appearance-realism.js';
+import { DEFAULT_APPEARANCE_REALISM, defaultAppearanceRealism } from '../src/default-appearance-realism.js';
 
 const definition=()=>customizedCharacterDefinition('fixture','sable-human',{palette:'rose',hair:'espresso'});
 test('hero loads the canonical identity and uses a fixed camera, pose and lighting',async()=>{
@@ -53,12 +53,17 @@ test('hero preserves material fallback when optional roughness loading fails',as
  assert.equal(hero.realismReport.tier,'standard');assert.equal(hero.realismReport.fallback,'roughness_unavailable');hero.dispose();
 });
 
-test('named defaults follow quality with only their trial components, and a caller can choose others',async()=>{
+test('a named default hero stays off while the trial is switched off, takes only its trial components when on, and a caller can choose others',async()=>{
  const scene=()=>{const original=new THREE.MeshPhysicalMaterial({name:'young_asian_female',roughness:.62}),material=original.clone(),model=new THREE.Group();model.add(new THREE.Mesh(new THREE.BoxGeometry(),material));return {model,material,rig:{model,materials:new Map([[original,material]])}};};
  const textures=async()=>({roughness:new THREE.Texture()});
  let figure=scene();
- const hero=await createCharacterHero({definition:definition(),ownerId:'fixture',loadRealismTextures:textures,load:async()=>({object:figure.model,rig:figure.rig,update(){},dispose(){}})});
- assert.equal(hero.realismReport.tier,'high');assert.deepEqual(hero.realismReport.components,defaultAppearanceRealism('sable-human'));
+ const shipped=await createCharacterHero({definition:definition(),ownerId:'fixture',loadRealismTextures:textures,load:async()=>({object:figure.model,rig:figure.rig,update(){},dispose(){}})});
+ assert.equal(shipped.realismReport.tier,'off');assert.equal(figure.material.roughnessMap,null);shipped.dispose();
+ figure=scene();
+ // Switched on, the hero passes the policy's components, as this caller does.
+ const trial=defaultAppearanceRealism('sable-human',{...DEFAULT_APPEARANCE_REALISM,enabled:true});
+ const hero=await createCharacterHero({definition:definition(),ownerId:'fixture',components:trial,loadRealismTextures:textures,load:async()=>({object:figure.model,rig:figure.rig,update(){},dispose(){}})});
+ assert.equal(hero.realismReport.tier,'high');assert.deepEqual(hero.realismReport.components,['roughness']);
  assert.ok(figure.material.roughnessMap);assert.equal(figure.material.sheen,0,'sheen is not part of the trial');hero.dispose();
  figure=scene();
  const chosen=await createCharacterHero({definition:definition(),ownerId:'fixture',realism:'standard',components:['coverage'],loadRealismTextures:textures,load:async()=>({object:figure.model,rig:figure.rig,update(){},dispose(){}})});

@@ -70,7 +70,7 @@ async page => {
   const ownerView=await remoteOf(page,aliceId),aliceView=await remoteOf(peer,ownerId);
   check(ownerView.character?.appearanceId==='sable-human'&&aliceView.character?.appearanceId==='jevica','Each viewer holds the other’s canonical definition');
   await frame(page,aliceId);await page.screenshot({path:'output/playwright/default-appearance-sable-high-owner.png'});
-  await frame(peer,ownerId);await peer.screenshot({path:'output/playwright/default-appearance-jevica-standard-peer.png'});
+  await frame(peer,ownerId);await peer.screenshot({path:`output/playwright/default-appearance-jevica-${at('jevica','standard')}-peer.png`});
 
   // Re-tiering changes only the viewer's own rendering, and sends nothing.
   const before=outbound.alice.length,definitions={owner:JSON.stringify(aliceView.character),alice:JSON.stringify(ownerView.character)};
@@ -84,27 +84,32 @@ async page => {
   check(leaked('owner').length===0&&leaked('alice').length===0,'No client message carries graphics quality or realism state');
   check(JSON.stringify((await remoteOf(page,aliceId)).character)===definitions.alice&&(await selfOf(page)).tier===at('jevica','high'),'The owner’s own tier and view of alice are unaffected');
 
-  // Missing roughness map: alice reloads without it. Each listed look she draws
-  // falls back to the standard tier without the map, and says so.
-  await peerContext.route('**/assets/characters/realism/skin-roughness.webp',route=>route.abort());
-  await peer.reload();await ready(peer);
-  await peer.waitForFunction(id=>window.__riverMultiplayer().remotes.some(p=>p.id===id&&p.ready&&p.appearance==='jevica'),ownerId);
+  // Missing roughness map: both viewers reload without it. Each listed look, own
+  // or remote, falls back to the standard tier without the map, and says so.
+  const map='**/assets/characters/realism/skin-roughness.webp',contexts=[page.context(),peerContext];
+  const rejoined=async()=>{
+   await peer.waitForFunction(id=>window.__riverMultiplayer().remotes.some(p=>p.id===id&&p.ready&&p.appearance==='jevica'),ownerId);
+   await page.waitForFunction(id=>window.__riverMultiplayer().remotes.some(p=>p.id===id&&p.ready&&p.appearance==='sable-human'),aliceId);
+  };
+  for(const context of contexts)await context.route(map,route=>route.abort());
+  await peer.reload();await ready(peer);await page.reload();await ready(page);await rejoined();
   await selfTier(peer,at('sable-human','standard'));await tierOf(peer,ownerId,at('jevica','standard'));
-  measurements.fallback={self:await selfOf(peer),jevica:(await remoteOf(peer,ownerId)).realism};
-  for(const [report,id] of [[measurements.fallback.self,'sable-human'],[measurements.fallback.jevica,'jevica']]){
-   if(listed(id))check(report.fallback==='roughness_unavailable'&&report.cornea===0&&JSON.stringify(report.components)===JSON.stringify(expected.appearances[id])&&report.unsupported.some(item=>item.startsWith('roughness:')),`${named(id)}: a missing roughness map is reported and keeps the trial components`);
-   else check(report?.tier==='off'&&!report.fallback,`${named(id)}: keeps imported materials without the map`);
+  await selfTier(page,at('jevica','standard'));await tierOf(page,aliceId,at('sable-human','standard'));
+  measurements.fallback={self:await selfOf(peer),jevica:(await remoteOf(peer,ownerId)).realism,ownerSelf:await selfOf(page),sableOnOwner:(await remoteOf(page,aliceId)).realism};
+  for(const [report,id,whose] of [[measurements.fallback.self,'sable-human','Alice’s own'],[measurements.fallback.jevica,'jevica','Alice’s view of'],[measurements.fallback.ownerSelf,'jevica','The owner’s own'],[measurements.fallback.sableOnOwner,'sable-human','The owner’s view of']]){
+   if(listed(id))check(report.fallback==='roughness_unavailable'&&report.cornea===0&&JSON.stringify(report.components)===JSON.stringify(expected.appearances[id])&&report.unsupported.some(item=>item.startsWith('roughness:')),`${whose} ${named(id)}: a missing roughness map is reported and keeps the trial components`);
+   else check(report?.tier==='off'&&!report.fallback,`${whose} ${named(id)}: keeps imported materials without the map`);
   }
   check(await peer.locator('#canvas-host').getAttribute('data-player-appearance')==='sable-human','The fallback keeps Sable’s identity');
 
-  // Reconnect with the map available again: the same look returns on both sides.
-  await peerContext.unroute('**/assets/characters/realism/skin-roughness.webp');
-  await peer.reload();await ready(peer);
-  await peer.waitForFunction(id=>window.__riverMultiplayer().remotes.some(p=>p.id===id&&p.ready&&p.appearance==='jevica'),ownerId);
-  await page.waitForFunction(id=>window.__riverMultiplayer().remotes.some(p=>p.id===id&&p.ready&&p.appearance==='sable-human'),aliceId);
+  // Reconnect with the map available again: the same look returns on both sides,
+  // each at its viewer's remembered tier.
+  for(const context of contexts)await context.unroute(map);
+  await peer.reload();await ready(peer);await page.reload();await ready(page);await rejoined();
   await selfTier(peer,at('sable-human','standard'));await tierOf(page,aliceId,at('sable-human','high'));
-  measurements.reconnect={sableSelf:await selfOf(peer),sableOnOwner:(await remoteOf(page,aliceId)).realism,jevicaOnAlice:(await remoteOf(peer,ownerId)).realism};
-  check(trial(measurements.reconnect.sableSelf,'sable-human')&&trial(measurements.reconnect.sableOnOwner,'sable-human')&&trial(measurements.reconnect.jevicaOnAlice,'jevica'),'After reconnect both looks return as before, with no fallback');
+  await selfTier(page,at('jevica','high'));await tierOf(peer,ownerId,at('jevica','standard'));
+  measurements.reconnect={sableSelf:await selfOf(peer),sableOnOwner:(await remoteOf(page,aliceId)).realism,jevicaOnAlice:(await remoteOf(peer,ownerId)).realism,jevicaSelf:await selfOf(page)};
+  check(['sableSelf','sableOnOwner'].every(key=>trial(measurements.reconnect[key],'sable-human'))&&['jevicaOnAlice','jevicaSelf'].every(key=>trial(measurements.reconnect[key],'jevica')),'After reconnect both looks return as before, own and remote, with no fallback');
   check(JSON.stringify((await remoteOf(page,aliceId)).character)===definitions.alice,'Alice’s definition is unchanged across reconnect');
   check(errors.length===0,`No runtime errors: ${errors.join('; ')}`);
   return {passed:true,checks,measurements,scope:'Real two-account HTTP/WebSocket/browser flow on desktop Chromium: #517 named-default trial components at high and standard, and a default the policy leaves out stays imported; low is reached only by Auto under sustained load and is covered by unit tests. Physical devices, WebKit and human visual acceptance are not covered.'};

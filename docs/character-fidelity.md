@@ -84,18 +84,24 @@ targets after each camera, including failed readback.
 
 ### Named defaults (#517 trial)
 
-The owner's Jevica and the guest's Sable keep their authored face, eyes, hair
-style, outfit and palette. `preview/src/default-appearance-realism.js` lists the
-parts of the material layer each one takes, and `loadResidentAvatar` and
-`createCharacterHero` apply only those parts at the viewer's quality tier. Both
-take the regional skin roughness map at every tier. They never take a corneal
-shell, iris recolor, skin-wrap or sheen. The trial left out the other parts too:
+`preview/src/default-appearance-realism.js` lists the parts of the material layer
+each named default takes when its `enabled` switch is on. `loadResidentAvatar` and
+`createCharacterHero` then apply only those parts at the viewer's quality tier. It
+lists the guest's Sable with the regional skin roughness map and nothing else: no
+corneal shell, iris recolor, skin-wrap or sheen. Her authored face, eyes, hair
+style, outfit and palette are kept. The trial left out the other parts too:
 uniform pore normals pebbled the lips and made the neck look like stucco, card
 coverage more than doubled the brow and lash footprint, and strand recolor turned
-Sable's beige hair cream-green. See the [trial evidence](acceptance/default-appearance-517.md).
-Other looks on the same rig keep their imported materials. Set
-`DEFAULT_APPEARANCE_REALISM.enabled` to `false` to return both to imported
-materials; nothing reaches the server or the saved character.
+Sable's beige hair cream-green.
+
+The switch ships off. Roughness passed the visual review, but on the shared test
+host it went past the +10% CPU bar, first for Jevica's ×8 crowd and then for
+Sable's ×24 crowd. Jevica was taken off the list, and the switch was turned off.
+As shipped, both defaults draw their imported materials, as on `main`. Turn the
+switch on once a quiet host or a physical device measures Sable within the bar.
+See the [trial evidence](acceptance/default-appearance-517.md). Other looks on the
+same rig keep their imported materials either way, and nothing reaches the server
+or the saved character.
 
 `applyCharacterRealism(rig, {components})` and `createCharacterFidelity(rig,
 {components})` accept any subset of `REALISM_COMPONENTS`. Omitting `roughness`
@@ -136,8 +142,8 @@ only) under daylight, dusk and interior light, plus a no-MSAA pair. It compares
 each case with realism off under the same light: whole-image error, and per
 region (hair, brows and lashes, skin) the covered area, its overlap with off and
 the CIE76 shift of its mean colour. Regions are found by rendering again without
-their meshes. `--quality-cycles` also accepts Jevica and Sable while their trial
-is enabled; it runs ten Sharpest → Smoothest → Auto cycles.
+their meshes. `--quality-cycles` also accepts a named default that the policy
+switches on; it runs ten Sharpest → Smoothest → Auto cycles.
 
 The [measured resource ceilings](../data/reports/character-fidelity-resource-budgets-517.json)
 are exact scene-census references for these pinned asset versions. They do not

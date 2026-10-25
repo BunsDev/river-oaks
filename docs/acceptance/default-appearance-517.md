@@ -1,14 +1,30 @@
 # Default-appearance realism trial (#517)
 
-The owner's default Jevica and the guest's default Sable (on Jevica's rig) now
-take one part of the existing realism layer: the regional skin roughness map. Their
-face, eyes, hair, brows, outfit, palette and skin tone stay as authored.
-This is the bounded continuation approved on #517 on 2026-10-24 under #638. It
-does not establish AAA quality, a device budget or human acceptance.
+The trial gave the owner's default Jevica and the guest's default Sable (on
+Jevica's rig) one part of the existing realism layer, the regional skin roughness
+map, and judged it in pixels and in cost. Their face, eyes, hair, brows, outfit,
+palette and skin tone stayed as authored. This is the bounded continuation
+approved on #517 on 2026-10-24 under #638. It does not establish AAA quality, a
+device budget or human acceptance.
+
+**Outcome: the trial ships switched off.** Roughness passed both independent
+visual reviews for both looks, but each look went over the +10% CPU bar in a
+deciding timing run whose rule was written down before it ran:
+
+| Look | Visual verdict | Cost | Shipped |
+| --- | --- | --- | --- |
+| Jevica | accept | over in timing-3 (×1, +10.5%) and timing-6 (×8, +10.2%) | no: stopped, kept off the policy |
+| Sable | accept | within in timing-3, timing-5 and timing-6; over in timing-7 (×24, +11.7%) | no: the trial is switched off |
+
+As shipped, the world, the Studio hero and every peer draw both defaults with
+imported materials, exactly as on `main`, so the shipped cost is `main`'s.
 
 Policy and rollback: [`default-appearance-realism.js`](../../preview/src/default-appearance-realism.js).
-Set `enabled: false` to return both defaults to imported materials. Nothing about
-it reaches the server, the saved character or other players' selections.
+It lists `sable-human: ['roughness']` with `enabled: false`. Setting `enabled` to
+`true` is the one switch that turns Sable's roughness on, once a quiet host or a
+physical device measures it within the bar. The layer, the tests and the
+two-account journey cover both settings. Nothing about it reaches the server, the
+saved character or other players' selections.
 
 ## How the trial was judged
 
@@ -79,9 +95,10 @@ Crops (from run-3, daylight unless noted; magenta lines separate panels):
 - [Sable's hair: off, strand recolor](default-appearance-517/sable-hair-off-haircolor.png),
   daylight and interior.
 
-## Final set
+## Final set (as evaluated, switched on)
 
-From trial run-3 (`3e7ff114` patch on `f33c914b`, input manifest
+This is what the trial drew with the switch on, for both looks. As shipped, it
+is not drawn. From trial run-3 (`3e7ff114` patch on `f33c914b`, input manifest
 `9fb7504ef04b…`, 20:33–22:08Z, load 6–10 at the end, Chromium 156.0.8078.4 on
 ANGLE Metal, Apple M5 Max). Ranges cover both looks, all three lights and both views.
 
@@ -204,28 +221,50 @@ In timing-6, all three ×8 trial samples for Jevica (16.6–17.5 ms CPU) were
 slower than all three off samples (15.2–15.3 ms), even though the trial samples
 ran at lower load.
 
-The three measurement runs side by side, as each run's median-of-three trial vs
-off, then all nine adjacent trial/off sample pairs pooled:
+The measurement runs side by side, as each run's median-of-three trial vs off,
+then the adjacent trial/off sample pairs pooled (nine for Jevica, twelve for
+Sable):
 
-| Look, crowd | CPU p95: timing-3, timing-5, timing-6 | Paired CPU ratio, median (range) |
+| Look, crowd | CPU p95: timing-3, timing-5, timing-6, timing-7 | Paired CPU ratio, median (range) |
 | --- | --- | --- |
-| Jevica ×1 | +10.5%, +9.1%, −4.7% | +2.4% (−6.9 to +17.4%) |
-| Jevica ×8 | +7.5%, −4.2%, +10.2% | +8.5% (−7.7 to +19.3%) |
-| Jevica ×24 | −5.7%, +0.1%, −4.4% | −2.0% (−13.0 to +26.4%) |
-| Sable ×1 | +0.8%, −3.6%, +3.3% | 0.0% (−3.6 to +5.4%) |
-| Sable ×8 | −0.4%, −2.7%, −0.2% | +0.2% (−4.1 to +24.5%) |
-| Sable ×24 | −10.2%, +6.0%, +5.1% | +2.0% (−21.2 to +19.1%) |
+| Jevica ×1 | +10.5%, +9.1%, −4.7%, not run | +2.4% (−6.9 to +17.4%) |
+| Jevica ×8 | +7.5%, −4.2%, +10.2%, not run | +8.5% (−7.7 to +19.3%) |
+| Jevica ×24 | −5.7%, +0.1%, −4.4%, not run | −2.0% (−13.0 to +26.4%) |
+| Sable ×1 | +0.8%, −3.6%, +3.3%, −1.4% | −0.2% (−3.6 to +5.8%) |
+| Sable ×8 | −0.4%, −2.7%, −0.2%, −0.5% | +0.0% (−4.8 to +24.5%) |
+| Sable ×24 | −10.2%, +6.0%, +5.1%, +11.7% | +4.3% (−21.2 to +19.1%) |
 
 Frame p95 follows CPU, except for Jevica ×8 in timing-3, whose frame p95 was
 bimodal at 16 or 33 ms.
 
-**Verdict on cost: not established on this host.**
-- Under the rule set beforehand, timing-6 decides: Jevica ×8 is over the bar,
-  so cost is not met.
-- Two of the three measurement runs have one case 0.2–0.5 points over the bar,
-  a different case each time (Jevica ×1 in timing-3, Jevica ×8 in timing-6).
-  timing-5 is within the bar everywhere.
-- Sable shows no cost: the paired medians are 0–2%.
+timing-7 ran after Jevica was stopped, on the final code (`e8b30b8b`, clean
+detached snapshot, input manifest `8e7a249ae13e…`, Sable only, finished 15:42Z,
+load 7.8–18.1 across all 18 samples), so it is a measurement. Before it ran, the
+ledger recorded the rule: any case over the bar stops Sable's roughness too, and
+the trial ships switched off.
+
+| Look, crowd | frame p95 | CPU p95 |
+| --- | --- | --- |
+| Sable ×1 | 2.90 → 2.84 ms (−1.9%) | 2.81 → 2.77 (−1.4%) |
+| Sable ×8 | 3.03 → 2.99 (−1.3%) | 2.95 → 2.94 (−0.5%) |
+| Sable ×24 | 4.21 → 4.71 (**+12.0%**) | 4.12 → 4.60 (**+11.7%**) |
+
+All three ×24 pairs had the trial slower (CPU +6.2%, +11.7%, +4.3%), while the
+three off samples alone spread from 4.05 to 4.77 ms (17%). Over the twelve paired
+samples of timing-3, timing-5, timing-6 and timing-7, Sable's CPU medians are
+−0.2% (×1), +0.0% (×8) and +4.3% (×24, range −21.2 to +19.1%).
+
+**Verdict on cost: no component met the bar on this host, so the trial ships
+switched off.**
+- Under the rule set beforehand, timing-6 decided for Jevica: her ×8 crowd was
+  over the bar, so her roughness was stopped (the goal's stop rule for a
+  component that breaks a budget).
+- Under the rule set before timing-7, Sable's ×24 crowd was over the bar, so her
+  roughness was stopped too.
+- Three of the four measurement runs have one case 0.2–2 points over the bar,
+  a different case each time (Jevica ×1 in timing-3, Jevica ×8 in timing-6,
+  Sable ×24 in timing-7). timing-5 is within the bar everywhere.
+- Sable's paired medians are 0–4%; her ×24 crowd is the one to profile.
 - Jevica ×8 CPU is the case nearest the bar. Its pooled paired median is +8.5%,
   and timing-6's pairs agree, so it may be a real cost rather than noise.
 - Nothing structural explains a CPU cost. At every crowd size the census has the
@@ -233,9 +272,10 @@ bimodal at 16 or 33 ms.
   costume edit runs once at load, not every frame.
   - Jevica's crowd is already about five times Sable's in CPU and texture memory
     with realism off. That predates this trial.
-- On this shared host the same code moves by up to ±12% between runs. Settling it
-  needs a quiet host or a physical device, and profiling Jevica ×8 (Decision for
-  Val).
+- On this shared host the same code moves by up to ±12% between runs, and one
+  run's off samples by up to 17%, so the host can't resolve a 10% difference.
+  Turning the trial on needs a quiet host or a physical device, and profiling
+  Sable ×24 and Jevica ×8 (Decision for Val).
 
 Jevica's crowd CPU time (about 16 ms at ×8 and 50 ms at ×24, against Sable's
 2.5 and 5 ms) is the same with realism off. It predates this trial and was not
@@ -251,39 +291,56 @@ Sharpest → Smoothest → Auto (high → standard → low), 30 transitions in a
 - Geometries, textures and programs were the same after the ten cycles as before
   (Jevica 9/16/22, Sable 21/15/23).
 - Run on `2065b5ef` plus the fixture patch, input manifest `b43d139e1713…`,
-  finished 03:21Z.
+  finished 03:21Z. Sable's cycles passed again on the final code with the switch
+  on (`e8b30b8b`, finished 15:43Z, 21/15/23 before and after, rendered re-tier
+  maximum 0).
 
 ## Identity, fallback and reconnect
 
 The `default-appearance-tiers` shared journey plays a real two-account session.
 The owner wears Jevica at Sharpest and alice wears Sable at Smoothest, each
-viewing the other. It checks:
-- each look carries only its trial components, own and remote, with no cornea
-  shell, and each viewer holds the other's canonical definition;
+viewing the other. It reads the policy and checks what it says.
+
+With the switch off, as shipped, both defaults stay at realism off at both tiers,
+own and remote. With the switch on, it checks:
+- each listed look carries only its trial components, own and remote, with no
+  cornea shell. A look the policy leaves out (Jevica, after her stop) reports
+  `off` for its owner and every peer, and each viewer holds the other's canonical
+  definition;
 - a peer's `realism` report matches its tier;
 - re-tiering sends no selection command, and no client message carries graphics
   quality or realism state;
-- a missing roughness map is reported as `roughness_unavailable` and keeps the
-  identity and components;
-- after a reconnect both looks return with their trial components, the same
-  definitions and no fallback;
-- with `enabled: false`, both defaults stay at realism off at both tiers, own and
-  remote (a separate run of the same journey).
+- both viewers reload without the roughness map. Each listed look, own and remote,
+  is reported as `roughness_unavailable` and keeps its identity and components;
+  a look left out stays `off` with no fallback;
+- after both reconnect, each look returns as before, own and remote, with the
+  same definitions and no fallback.
 
 The report describes what is drawn because the material layer builds it from its
 own edits to the rig: it counts a skin material only after giving it the map
 (`character-realism.js`, `upgradeSkin`). `default-appearance-realism.test.js`
-checks this on the shipped rig through `loadResidentAvatar`, the loader that
-builds peers. For both looks, the report lists only `roughness`, with one or more
-skin materials and no cornea shells. The rig's own materials match it:
+checks this on the shipped rig:
+- as shipped, `loadResidentAvatar` (the loader that builds peers) draws Jevica and
+  Sable at `off`, with no roughness map on the skin;
+- switched on, the same layer on Sable's rig reports only `roughness`, with one
+  or more skin materials and no cornea shells.
+
+In the switched-on case the rig's own materials match the report:
 - the skin material carries `realism-skin-roughness` and no pore normals;
 - no cornea mesh exists;
 - brows and lashes keep their alpha settings.
 
-The journey then reads that report for each peer at each viewer's tier. In the
-18/18 run on clean `2065b5ef`, each view of Jevica and Sable (own and remote, at
-high and standard) reports `components: ["roughness"]`, `skin: 1`, `cornea: 0`,
-and zero hair, brows and lashes.
+The journey then reads that report for each peer at each viewer's tier:
+- In the 18/18 run on clean `2065b5ef`, with both looks listed, each view of
+  Jevica and Sable (own and remote, at high and standard) reports
+  `components: ["roughness"]`, `skin: 1`, `cornea: 0`, and zero hair, brows and
+  lashes.
+- In the 20/20 run on `e8b30b8b` plus the review fixes, with only Sable listed
+  ([receipt](../../data/reports/default-appearance-tiers-sable-only-517.json)):
+  - each view of Sable reports the same;
+  - each view of Jevica reports `{"tier": "off"}`;
+  - without the map, alice's own Sable and the owner's view of her report
+    `fallback: "roughness_unavailable"` at standard.
 
 Results:
 - Hosted Linux CI on `2065b5ef`, job 121026515790: default-appearance-tiers,
@@ -313,10 +370,12 @@ Results:
 
 ## Hero reference
 
-The Studio hero applies the same policy, so Sable's reviewed hero reference
-(`preview/e2e/goldens/character-hero/sable-human.png`, recorded at `d9dca2e5` on
-2026-10-16 on an M3 Max) no longer describes her look. Nothing in the reference
-directory was changed.
+The Studio hero applies the same policy. With the switch on, Sable's reviewed
+hero reference (`preview/e2e/goldens/character-hero/sable-human.png`, recorded at
+`d9dca2e5` on 2026-10-16 on an M3 Max) would no longer describe her look. As
+shipped, the hero draws her with imported materials again, as the reference does,
+so the trial asks nothing of it. The candidate below was recorded with the switch
+on, before the stops. Nothing in the reference directory was changed.
 
 - The check, `node scripts/character-hero-goldens.mjs --check preview/e2e/goldens/character-hero`,
   exited 2 (incompatible) on `82b51d89`: "Reference environment mismatch:
@@ -362,17 +421,30 @@ Committed receipts, under `data/reports/`:
   - timing-4 used `--appearances jevica --quiet load=10,browsers=0 --quiet-timeout 300`.
   - timing-5 and timing-6 ran under `caffeinate -i`, from the clean PR-head
     worktree.
+  - [timing-7](../../data/reports/default-appearance-timing-7-517.json) used
+    `--appearances sable-human` under `caffeinate -i`, from a clean detached
+    snapshot of `e8b30b8b`. With Jevica out of the policy, the fixture would time
+    her whole preset at `high`, so she has no timing-7 case. Each timing receipt
+    records the components it drew (`realismReport.components`).
 - Hero: `node scripts/character-hero-goldens.mjs --check preview/e2e/goldens/character-hero`
   (exit 2), then `--record .runtime/character-studio/hero-candidate-517-82b51d89`
   (exit 0). The candidate stays under `.runtime/` on the trial host.
 - [Quality-tier cycles](../../data/reports/default-appearance-quality-cycles-517.json):
-  the same script with `--appearances jevica,sable-human --realism off --quality-cycles --repeats 0`.
+  the same script with `--appearances jevica,sable-human --realism off --quality-cycles --repeats 0`;
+  [Sable again on `e8b30b8b`](../../data/reports/default-appearance-quality-cycles-7-517.json)
+  with `--appearances sable-human`. The fixture refuses a look the policy doesn't
+  switch on.
 - [Experience journeys](../../data/reports/default-appearance-experience-517.json):
   `node preview/e2e/experience-runner.js character-fidelity character-studio`.
 - [Rollback journey](../../data/reports/default-appearance-rollback-517.json):
   with `enabled: false`, `RIVER_OAKS_SHARED_JOURNEY=default-appearance-tiers node preview/e2e/shared-runner.js required`.
+  The [Sable-only run](../../data/reports/default-appearance-tiers-sable-only-517.json)
+  used the same command with Sable listed and the switch on.
 
-The trial reports from `node scripts/default-appearance-trial.mjs` are 2–10 MB
+`scripts/default-appearance-trial.mjs` skips the policy-decided `trial-*`
+variants for a default the policy doesn't switch on, and lists them under
+`skipped`. Otherwise it would save that look's whole preset under the trial's
+name. The trial reports are 2–10 MB
 each, plus native 4K PNGs (144 in run-3). They are not committed; they were kept on
 the trial host under `.runtime/default-appearance-517/`. Each is identified by its
 input manifest and report digest:
@@ -393,13 +465,15 @@ The crops linked above come from run-3.
   weakens on the neck and body needs a new region mask, outside this trial.
 - The reviewed `sable-human` hero golden (`preview/e2e/goldens/character-hero`)
   was recorded with imported materials on an M3 Max, before `main`'s outfit
-  changes. Its check is incompatible on this host, and a candidate recorded here
-  also carries bodice tiles that the trial doesn't cause. They come from
-  `main`'s outfit code or this GPU. The reference was not replaced.
+  changes. Its check is incompatible on this host. A candidate recorded here with
+  the switch on also carries bodice tiles that the trial doesn't cause; they come
+  from `main`'s outfit code or this GPU. The reference was not replaced. As
+  shipped, the hero draws imported materials, as the reference does.
 - Morgan and Imani are unchanged; their tiers pass no component list.
-- The +10% cost bar is not established. Two of three measurement runs have one
-  case 0.2–0.5 points over (Jevica ×1, then Jevica ×8), and Jevica ×8 CPU's pooled
-  paired median is +8.5%. Run-to-run noise on this shared host is about the size
-  of the bar, and no physical device was measured.
+- No component met the +10% cost bar here, so the trial ships switched off.
+  Three of four measurement runs have one case over (Jevica ×1, Jevica ×8,
+  Sable ×24). The paired medians nearest the bar are Jevica ×8 at +8.5% and
+  Sable ×24 at +4.3%. Run-to-run noise on this shared host is about the size of
+  the bar, and no physical device was measured.
 - No human has signed off on the look; the verdicts rest on this session's reading
   and an independent agent's. #517 stays open for its AAA and all-device criteria.

@@ -32,7 +32,8 @@ evidence only and do not ship in the named-default path.
 - new `preview/e2e/default-appearance-tiers.js`, registered in `preview/e2e/shared-runner.js`
 - `scripts/character-fidelity-baseline.mjs` (`--seconds`, server-side isolation), new
   `server/tests/isolated-fixture.js` and its test, the `browser-fixture.js` plugin line, new
-  `scripts/default-appearance-trial.mjs`, `scripts/lib/appearance-regions.mjs` and its test
+  `scripts/default-appearance-trial.mjs`, `scripts/lib/appearance-regions.mjs` and
+  `scripts/lib/default-appearance-variants.mjs`, each with its test
 - `docs/character-fidelity.md`, new `docs/acceptance/default-appearance-517.md`, this ledger
 
 Not owned: `player-avatar.js`, `remote-players.js` and `locomotion-handoff.js`,
@@ -60,9 +61,9 @@ and run all five `node scripts/bake-*.mjs --check` before and after any edit the
 | --- | --- | --- |
 | 1 | Baseline capture and inspection, no source change | done (captures complete; exit 1 on HMR console errors only) |
 | 2 | Component-selective layer and tests | done; focused 54/54 |
-| 3 | Per-component trial and verdicts | done: run-1 and run-3, independent visual review; roughness accept, pores revise (not shipped), coverage and hairColor reject |
-| 4 | Cost, lifecycle and identity | lifecycle done; identity done (local and hosted journeys, rollback journey); cost not established: timing-5 within the bar, timing-6 (deciding run, rule set beforehand) +10.2% CPU at Jevica ×8, timing-3 +10.5% at Jevica ×1; Sable shows no cost; Jevica ×8 pooled paired CPU +8.5% (Decision 3) |
-| 5 | Hero and Studio decision, golden candidate | hero uses the same policy; `--check` exit 2 (incompatible: osRelease, osVersion, gpu); candidate recorded and inspected (`e5597125…`); it also carries bodice tiles, which the trial doesn't cause (from `main`'s code or the M5 GPU); a second independent review says don't promote it; golden left for Val (Decision 1) |
+| 3 | Per-component trial and verdicts | done: run-1 and run-3, two independent visual reviews; roughness accept, pores revise (not shipped), coverage and hairColor reject |
+| 4 | Cost, lifecycle and identity | lifecycle done; identity done (local and hosted journeys, switch-on and switch-off); cost: no component met the bar, so both were stopped under rules set beforehand. Jevica after timing-6 (×8 +10.2% CPU), Sable after timing-7 (×24 +11.7% CPU). The trial ships switched off (`enabled: false`), so the shipped cost is `main`'s (Decision 3: when to turn it on) |
+| 5 | Hero and Studio decision, golden candidate | hero uses the same policy; `--check` exit 2 (incompatible: osRelease, osVersion, gpu); candidate recorded with the switch on and inspected (`e5597125…`); it also carries bodice tiles, which the trial doesn't cause (from `main`'s code or the M5 GPU); the second review says don't promote it. As shipped, the hero draws imported materials, as the reference does (Decision 1) |
 | 6 | Costume order fix (independent code review) | done: `b0cdeeeb`, mutation-checked regression |
 | 7 | Delivery | draft PR #656 (final head and hosted checks recorded in the PR); landing waits for Val's acceptance |
 
@@ -278,6 +279,36 @@ and run all five `node scripts/bake-*.mjs --check` before and after any edit the
     that becomes the result.
   - Any sample above load 20: the run is an observation. It is repeated once at lower load and doesn't count
     either way.
+- 15:42Z timing-7 finished on clean `e8b30b8b` (snapshot, dirty false, inputs `8e7a249ae13e…`, load 7.8–18.1, all
+  18 samples ≤20). Median of three, trial vs off:
+  - ×1: frame p95 −1.9%, CPU p95 −1.4%;
+  - ×8: frame p95 −1.3%, CPU p95 −0.5%;
+  - **×24: frame p95 4.21 → 4.71 ms (+12.0%), CPU p95 4.12 → 4.60 ms (+11.7%), over the bar.**
+
+  All three ×24 pairs had the trial slower (+6.2%, +11.7%, +4.3% CPU). The off samples alone spread 4.05–4.77 ms
+  (17%). Under the rule set beforehand, Sable's roughness stops too, and the trial ships nothing: the policy keeps
+  `sable-human: ['roughness']` with `enabled: false`. Receipt `data/reports/default-appearance-timing-7-517.json`.
+- 15:43Z quality-tier cycles for Sable on `e8b30b8b` with the switch on passed: ten Sharpest → Smoothest → Auto
+  cycles, geometries/textures/programs 21/15/23 before and after, rendered re-tier at high and standard equal to a
+  fresh rig (max channel 0). Receipt `data/reports/default-appearance-quality-cycles-7-517.json`.
+- 15:39–15:43Z (after timing-7 released the lock) `default-appearance-tiers` on `e8b30b8b` plus the reviewer fixes
+  passed (log `.runtime/default-appearance-517/shared-stop-default-appearance-tiers.log`). The fixes:
+  - the remote fallback is back: both viewers reload without the map;
+  - the screenshot is named for the tier drawn;
+  - checks are labelled by viewer;
+  - the trial script skips policy-decided variants for a default the policy leaves out
+    (`scripts/lib/default-appearance-variants.mjs`, test red first).
+- 15:45–15:50Z the trial switched off under timing-7's rule: `enabled: false`, still listing
+  `sable-human: ['roughness']`. The tests pin the shipped state and cover the switched-on layer:
+  - On the switched-on policy, the new shipped-state tests fail 2 of 11. `character-hero.test.js` expects the
+    Sable hero at `off`, and `default-appearance-realism.test.js` expects both defaults on the shipped rig with
+    no roughness map.
+  - Switched off, the character suites pass 40/40 (logs `.runtime/default-appearance-517/switch-off-{red,green}.log`).
+  - Sable's switched-on layer is still covered: on the shipped rig through `createCharacterFidelity`, and in the
+    hero through explicit components.
+  - Tooling tests 5/5; all five bake `--check` exit 0.
+  - `default-appearance-tiers` takes its rollback branch as shipped. Its switched-on branch passed 20/20 on the
+    same journey code (receipt `data/reports/default-appearance-tiers-sable-only-517.json`).
 
 ## Verdicts (trial run-1, 20:17Z)
 
@@ -290,7 +321,8 @@ Ranges over daylight/dusk/interior and full/close-up views, each vs realism off.
 | coverage | brows+lashes area ×1.73–2.6, IoU 0.40–0.54; no MSAA ×1.82–2.89 | same, brow ΔE up to 12.3 | reject: thicker, reshaped brows |
 | hairColor | no change (keeps source map) | hair turns cream with mint streaks; hairline seam | reject |
 
-Policy: roughness only for both. The independent reviewer (subagent given the
+Policy: roughness only for both, later stopped on cost (Jevica 15:30Z, then
+Sable 15:45Z on 2026-10-25; the trial ships switched off). The independent reviewer (subagent given the
 captures and contract, not these verdicts) agreed on roughness, coverage and
 hairColor, and judged pores "revise": mask the lips, weaken on eyelids, neck and
 body, cap near standard. A mask is new data, so pores is not shipped (20:35Z).
@@ -303,12 +335,12 @@ names; hair is matched by material `long01`), fixed for run-2.
 - No physical device. Captures come from this host's Chromium only.
 - Hero goldens were recorded on an M3 Max; this host is an M5 Max.
 - The reviewed `sable-human` hero golden is captured through `createCharacterHero`
-  with no realism argument. With the trial on, that path takes Sable's trial
-  components, so the pinned check is expected to fail until Val promotes a candidate
-  or pins the golden to `off`. The reference is not changed here. It also predates
-  `main`'s outfit changes. The candidate recorded here carries bodice tiles, from
-  that code or from the M5 GPU, so promoting it as it stands would make those tiles
-  part of the reference.
+  with no realism argument. As shipped (switch off), that path draws imported
+  materials, as the reference does. With the switch on, it would take Sable's
+  roughness, and the golden would need a new reviewed reference. The reference is
+  not changed here. It predates `main`'s outfit changes. The candidate recorded with
+  the switch on carries bodice tiles, from that code or from the M5 GPU, so promoting
+  it as it stands would make those tiles part of the reference.
 - Jevica and Sable have no frame-time or census ceilings. Cost is judged against
   realism off at the same revision (at most +10% frame and CPU p95, median of three
   warmed 30 s samples); no budget is added. The host was never quiet (other agents'
@@ -317,11 +349,13 @@ names; hair is matched by material `long01`), fixed for run-2.
   - timing-6 on the PR head: Jevica ×8 +10.5% frame, +10.2% CPU;
   - timing-3 on the pre-merge tree: Jevica ×1 +10.4/+10.5%.
 
-  Cost is not established. Jevica ×8 CPU (pooled paired +8.5%) may be a real cost. It needs a quiet host or a
-  physical device, and profiling (Decision for Val).
+  - timing-7 on the final code: Sable ×24 +12.0% frame, +11.7% CPU.
+
+  No component met the bar, so the trial ships switched off. Jevica ×8 (pooled paired +8.5%) and Sable ×24
+  (+4.3%) need a quiet host or a physical device, and profiling, before the switch is turned on (Decision for Val).
 - Pores need a lip/eyelid/neck mask before they can ship (Decision 2).
-- Fixtures that load a rig without an explicit appearance (carriage, vehicles, motion,
-  foot-support cost) now take Jevica's roughness map, as the player does.
+- With the switch off, fixtures that load a rig without an explicit appearance (carriage, vehicles, motion,
+  foot-support cost) draw imported materials, as on `main`.
 - Handoff: the parked `river-oaks-human-studio-504` worktree has uncommitted edits to
   `avatars.js` and `character-hero.js`; e9 branches also touch `shared-runner.js`.
   Whoever lands second rebakes the five garment receipts if `avatars.js` changes.
@@ -329,8 +363,9 @@ names; hair is matched by material `long01`), fixed for run-2.
 ## Next action
 
 Val reviews the per-component table and the five-minute checklist on #656 and answers
-the Decisions there: the hero golden (including the bodice tiles), a pore mask
-follow-up, and cost, which is not established here: whether to profile Jevica ×8 and run on a quiet host or a
-device before landing, or limit the trial to Sable, which shows no cost. Landing is
-not this session's to do. The lander (river-oaks-71) lands only after that, with hosted
-checks green on the final head. Nothing is left running in this session's queue.
+the Decisions there. As shipped, the trial changes nothing anyone sees: the policy,
+the selective layer, the tests and the journey land switched off. The decisions are
+whether to land it that way, how to measure Sable ×24 (and, if Jevica is wanted back,
+her ×8 crowd) on a quiet host or a device before turning it on, and the pore mask.
+Landing is not this session's to do. The lander (river-oaks-71) lands only after Val
+decides, with hosted checks green on the final head.

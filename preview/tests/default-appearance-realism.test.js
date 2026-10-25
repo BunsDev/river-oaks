@@ -4,21 +4,24 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { loadCharacterRig } from './helpers/character-rig.js';
 import { loadResidentAvatar } from '../src/avatars.js';
+import { createCharacterFidelity } from '../src/character-fidelity-runtime.js';
 import { createPlayerCostume } from '../src/player-costume.js';
 import { REALISM_COMPONENTS } from '../src/character-realism.js';
 import { DEFAULT_APPEARANCE_REALISM, defaultAppearanceRealism } from '../src/default-appearance-realism.js';
 import { DEFAULT_GUEST_APPEARANCE, DEFAULT_SHARED_APPEARANCE, SHARED_APPEARANCES } from '../src/shared-appearances.js';
 
 const DEFAULTS = [DEFAULT_SHARED_APPEARANCE, DEFAULT_GUEST_APPEARANCE];
-// Jevica's roughness went past the +10% CPU bar for her crowds (timing-3 at ×1,
-// timing-6 at ×8), so only Sable takes the trial; see the #517 acceptance doc.
+// Jevica's roughness went past the +10% CPU bar for her ×8 crowd (timing-6), and
+// then Sable's for her ×24 crowd (timing-7), so the trial lists only Sable and
+// ships switched off; see the #517 acceptance doc.
 const TRIAL = [DEFAULT_GUEST_APPEARANCE];
+const on = {...DEFAULT_APPEARANCE_REALISM, enabled: true};
 
-test('only the guest default takes the trial, and never the eyes, cards or the whole preset', () => {
-  assert.deepEqual(Object.keys(DEFAULT_APPEARANCE_REALISM.appearances).sort(), [...TRIAL].sort());
-  assert.equal(defaultAppearanceRealism(DEFAULT_SHARED_APPEARANCE), null, 'Jevica keeps imported materials');
+test('switched on, the trial lists only the guest default, and never the eyes, cards or the whole preset', () => {
+  assert.deepEqual(Object.keys(on.appearances).sort(), [...TRIAL].sort());
+  assert.equal(defaultAppearanceRealism(DEFAULT_SHARED_APPEARANCE, on), null, 'Jevica keeps imported materials');
   for (const {id} of SHARED_APPEARANCES) {
-    const components = defaultAppearanceRealism(id);
+    const components = defaultAppearanceRealism(id, on);
     if (!TRIAL.includes(id)) { assert.equal(components, null, `${id} keeps imported materials`); continue; }
     assert.ok(components.length > 0, id);
     assert.ok(components.every(component => REALISM_COMPONENTS.includes(component)), id);
@@ -26,7 +29,7 @@ test('only the guest default takes the trial, and never the eyes, cards or the w
     // strand recolor changes Sable's palette.
     for (const excluded of ['cornea', 'scatter', 'sheen', 'pores', 'coverage', 'hairColor']) assert.ok(!components.includes(excluded), `${id} omits ${excluded}`);
   }
-  assert.equal(defaultAppearanceRealism(undefined), null);
+  assert.equal(defaultAppearanceRealism(undefined, on), null);
 });
 
 test('the rollback switch returns both named defaults to imported materials', () => {
@@ -57,30 +60,10 @@ async function shippedRig(t) {
   });
 }
 
-test('the shipped rig loads Sable with only her trial components and Jevica as imported', async t => {
+test('the shipped build draws both named defaults with imported materials', async t => {
   await shippedRig(t);
-  for (const appearanceId of TRIAL) {
-    const avatar = await loadResidentAvatar(4, `remote-trial-${appearanceId}`, 'jevica', {folk: false, appearanceId, faceRecipe: {}});
-    try {
-      const report = avatar.realismReport;
-      assert.notEqual(report.tier, 'off', appearanceId);
-      assert.deepEqual(report.components, defaultAppearanceRealism(appearanceId), appearanceId);
-      assert.equal(report.cornea, 0, `${appearanceId} has no cornea shell`);
-      assert.ok(report.skin > 0 && !report.fallback && report.unsupported.length === 0, `${appearanceId} upgrades skin: ${JSON.stringify(report)}`);
-      assert.equal(report.hair + report.brows + report.lashes, 0, `${appearanceId} keeps its hair, brow and lash cards`);
-      avatar.object.traverse(object => {
-        if (object.isMesh && /eyebrow|eyelashes/i.test(object.name)) assert.equal(object.material.alphaToCoverage, false, object.name);
-        if (object.isMesh && object.material.name === 'young_asian_female') {
-          assert.equal(object.material.roughnessMap?.name, 'realism-skin-roughness', 'skin takes the roughness map');
-          assert.notEqual(object.material.normalMap?.name, 'realism-pores', 'skin has no pore normals');
-        }
-      });
-      let shells = 0; avatar.object.traverse(object => { if (/cornea$/.test(object.name)) shells++; });
-      assert.equal(shells, 0);
-    } finally { avatar.dispose(); }
-  }
-  // Jevica, another look on the same rig, and an explicit off keep imported materials.
-  for (const [appearanceId, realism] of [[DEFAULT_SHARED_APPEARANCE, undefined], ['woman-tailored', undefined], [DEFAULT_GUEST_APPEARANCE, 'off']]) {
+  // Jevica, Sable, another look on the same rig, and an explicit off.
+  for (const [appearanceId, realism] of [[DEFAULT_SHARED_APPEARANCE, undefined], [DEFAULT_GUEST_APPEARANCE, undefined], ['woman-tailored', undefined], [DEFAULT_GUEST_APPEARANCE, 'off']]) {
     const avatar = await loadResidentAvatar(4, `remote-trial-${appearanceId}`, 'jevica', {folk: false, appearanceId, faceRecipe: {}, realism});
     try {
       assert.equal(avatar.realismReport.tier, 'off', `${appearanceId} ${realism}`);
@@ -91,8 +74,34 @@ test('the shipped rig loads Sable with only her trial components and Jevica as i
   }
 });
 
+test('switched on, Sable on the shipped rig takes only her trial components', async t => {
+  await shippedRig(t);
+  const appearanceId = DEFAULT_GUEST_APPEARANCE;
+  const avatar = await loadResidentAvatar(4, `remote-trial-${appearanceId}`, 'jevica', {folk: false, appearanceId, faceRecipe: {}});
+  // loadResidentAvatar builds this same layer on the rig when the switch is on.
+  const fidelity = createCharacterFidelity(avatar.rig, {components: defaultAppearanceRealism(appearanceId, on)});
+  try {
+    const report = await fidelity.setTier('high');
+    assert.equal(report.tier, 'high');
+    assert.deepEqual(report.components, defaultAppearanceRealism(appearanceId, on));
+    assert.equal(report.cornea, 0, 'no cornea shell');
+    assert.ok(report.skin > 0 && !report.fallback && report.unsupported.length === 0, `upgrades skin: ${JSON.stringify(report)}`);
+    assert.equal(report.hair + report.brows + report.lashes, 0, 'keeps its hair, brow and lash cards');
+    let shells = 0;
+    avatar.object.traverse(object => {
+      if (/cornea$/.test(object.name)) shells++;
+      if (object.isMesh && /eyebrow|eyelashes/i.test(object.name)) assert.equal(object.material.alphaToCoverage, false, object.name);
+      if (object.isMesh && object.material.name === 'young_asian_female') {
+        assert.equal(object.material.roughnessMap?.name, 'realism-skin-roughness', 'skin takes the roughness map');
+        assert.notEqual(object.material.normalMap?.name, 'realism-pores', 'skin has no pore normals');
+      }
+    });
+    assert.equal(shells, 0);
+  } finally { fidelity.dispose(); avatar.dispose(); }
+});
+
 // While Jevica is out of the trial her costume applies straight to imported
-// materials. If she is listed again, the costume must stay beneath every re-tier.
+// materials. If she is listed and switched on, the costume must stay beneath every re-tier.
 test('Jevica keeps her costume through the realism policy', async t => {
   await shippedRig(t);
   const avatar = await loadResidentAvatar(4, 'remote-trial-costume', 'jevica', {folk: false, appearanceId: DEFAULT_SHARED_APPEARANCE, faceRecipe: {}});

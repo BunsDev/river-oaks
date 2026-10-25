@@ -9,6 +9,7 @@ import {chromium} from 'playwright';
 import {startBrowserFixture} from '../preview/e2e/fixture-server.js';
 import {holdBrowserLock} from './browser-lock.mjs';
 import {regionChange} from './lib/appearance-regions.mjs';
+import {untrialedVariant} from './lib/default-appearance-variants.mjs';
 
 // #517 default-appearance trial: matched native 4K captures of the named
 // defaults with each realism component alone, the trial set at every tier and
@@ -57,7 +58,7 @@ const report = {version: 1, kind: 'default-appearance-trial', status: 'running',
   options: {appearances, lightings, variants, cycles: cycleCount, definitions: Object.fromEntries(variants.map(name => [name, VARIANTS[name]]))},
   machine: {platform: platform(), osRelease: release(), architecture: arch(), cpus: cpus().length, cpuModel: cpus()[0]?.model},
   method: 'Chromium headless (--use-angle=metal on macOS), the character-fidelity fixture and createCharacterHero, reduced motion. Native 3840x2160 through character-portrait.js at MSAA 4 unless a variant sets samples 0. Regions are found by re-rendering without their meshes; pixel means are sRGB 8-bit and ΔE is CIE76 of those means.',
-  results: {}, errors: []};
+  results: {}, skipped: [], errors: []};
 report.dirty = report.provenance.dirty;
 let fixture, browser;
 const unlock = await holdBrowserLock('Default appearance trial');
@@ -79,6 +80,7 @@ try {
 
   for (const appearanceId of appearances) for (const lighting of lightings) for (const name of variants) {
     const variant = VARIANTS[name], key = `${appearanceId}.${lighting}.${name}`;
+    if (untrialedVariant(appearanceId, variant)) { report.skipped.push(key); console.log(`${key}: skipped, not in the trial policy`); continue; }
     const capture = await tab.evaluate(([id, options]) => window.fidelityFixture.capture(id, options),
       [appearanceId, {realism: variant.realism, components: variant.components, lighting, regions: true, samples: variant.samples ?? 4}]);
     const views = {};
@@ -114,7 +116,7 @@ try {
   report.lifecycle = {};
   for (const appearanceId of appearances) for (const name of variants) {
     const variant = VARIANTS[name];
-    if (variant.samples === 0) continue;
+    if (variant.samples === 0 || untrialedVariant(appearanceId, variant)) continue;
     const viewport = await tab.evaluate(([id, count, options]) => window.fidelityFixture.cycles(id, count, options), [appearanceId, cycleCount, {realism: variant.realism, components: variant.components}]);
     const portrait = await tab.evaluate(([id, count, options]) => window.fidelityFixture.cycles(id, count, options), [appearanceId, cycleCount, {portrait: true, realism: variant.realism, components: variant.components}]);
     assertLifecycle(viewport); assertLifecycle(portrait);
