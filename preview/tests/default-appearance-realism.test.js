@@ -10,12 +10,16 @@ import { DEFAULT_APPEARANCE_REALISM, defaultAppearanceRealism } from '../src/def
 import { DEFAULT_GUEST_APPEARANCE, DEFAULT_SHARED_APPEARANCE, SHARED_APPEARANCES } from '../src/shared-appearances.js';
 
 const DEFAULTS = [DEFAULT_SHARED_APPEARANCE, DEFAULT_GUEST_APPEARANCE];
+// Jevica's roughness went past the +10% CPU bar for her crowds (timing-3 at ×1,
+// timing-6 at ×8), so only Sable takes the trial; see the #517 acceptance doc.
+const TRIAL = [DEFAULT_GUEST_APPEARANCE];
 
-test('only the owner and guest defaults take the trial, and never the eyes, cards or the whole preset', () => {
-  assert.deepEqual(Object.keys(DEFAULT_APPEARANCE_REALISM.appearances).sort(), [...DEFAULTS].sort());
+test('only the guest default takes the trial, and never the eyes, cards or the whole preset', () => {
+  assert.deepEqual(Object.keys(DEFAULT_APPEARANCE_REALISM.appearances).sort(), [...TRIAL].sort());
+  assert.equal(defaultAppearanceRealism(DEFAULT_SHARED_APPEARANCE), null, 'Jevica keeps imported materials');
   for (const {id} of SHARED_APPEARANCES) {
     const components = defaultAppearanceRealism(id);
-    if (!DEFAULTS.includes(id)) { assert.equal(components, null, `${id} keeps imported materials`); continue; }
+    if (!TRIAL.includes(id)) { assert.equal(components, null, `${id} keeps imported materials`); continue; }
     assert.ok(components.length > 0, id);
     assert.ok(components.every(component => REALISM_COMPONENTS.includes(component)), id);
     // Uniform pores pebble the lips, coverage reshapes the brows and lashes, and
@@ -53,9 +57,9 @@ async function shippedRig(t) {
   });
 }
 
-test('the shipped rig loads Jevica and Sable with only their trial components', async t => {
+test('the shipped rig loads Sable with only her trial components and Jevica as imported', async t => {
   await shippedRig(t);
-  for (const appearanceId of DEFAULTS) {
+  for (const appearanceId of TRIAL) {
     const avatar = await loadResidentAvatar(4, `remote-trial-${appearanceId}`, 'jevica', {folk: false, appearanceId, faceRecipe: {}});
     try {
       const report = avatar.realismReport;
@@ -75,14 +79,21 @@ test('the shipped rig loads Jevica and Sable with only their trial components', 
       assert.equal(shells, 0);
     } finally { avatar.dispose(); }
   }
-  // Another look on the same rig, and an explicit off, keep imported materials.
-  for (const [appearanceId, realism] of [['woman-tailored', undefined], [DEFAULT_SHARED_APPEARANCE, 'off']]) {
+  // Jevica, another look on the same rig, and an explicit off keep imported materials.
+  for (const [appearanceId, realism] of [[DEFAULT_SHARED_APPEARANCE, undefined], ['woman-tailored', undefined], [DEFAULT_GUEST_APPEARANCE, 'off']]) {
     const avatar = await loadResidentAvatar(4, `remote-trial-${appearanceId}`, 'jevica', {folk: false, appearanceId, faceRecipe: {}, realism});
-    try { assert.equal(avatar.realismReport.tier, 'off', `${appearanceId} ${realism}`); } finally { avatar.dispose(); }
+    try {
+      assert.equal(avatar.realismReport.tier, 'off', `${appearanceId} ${realism}`);
+      avatar.object.traverse(object => {
+        if (object.isMesh && object.material.name === 'young_asian_female') assert.equal(object.material.roughnessMap, null, `${appearanceId} skin has no roughness map`);
+      });
+    } finally { avatar.dispose(); }
   }
 });
 
-test('Jevica keeps her costume beneath the trial through every re-tier', async t => {
+// While Jevica is out of the trial her costume applies straight to imported
+// materials. If she is listed again, the costume must stay beneath every re-tier.
+test('Jevica keeps her costume through the realism policy', async t => {
   await shippedRig(t);
   const avatar = await loadResidentAvatar(4, 'remote-trial-costume', 'jevica', {folk: false, appearanceId: DEFAULT_SHARED_APPEARANCE, faceRecipe: {}});
   // The world applies the costume after loading, as player and remote avatars do.
@@ -96,6 +107,13 @@ test('Jevica keeps her costume beneath the trial through every re-tier', async t
     assert.equal(brows.alphaTest, .4);
   };
   try {
+    if (!defaultAppearanceRealism(DEFAULT_SHARED_APPEARANCE)) {
+      assert.equal(avatar.realismReport.tier, 'off');
+      costumed();
+      assert.equal(skin.roughnessMap, null);
+      assert.equal(skin.roughness, .58, 'the costume skin is unchanged');
+      return;
+    }
     // The trial sits on top of the costume, as in the hero and the trial captures.
     for (const tier of [undefined, 'standard', 'low', 'high']) {
       if (tier) await avatar.setRealismTier(tier);

@@ -1,9 +1,10 @@
 async page => {
- // #517 default-appearance trial: the owner's Jevica and alice's default Sable
- // take only their trial realism components at each viewer's own graphics tier.
- // Neither gains a cornea shell, and nothing about identity or quality reaches
- // the server. A missing roughness map falls back visibly, and a reconnect
- // restores the same look.
+ // #517 default-appearance trial: of the owner's Jevica and alice's default Sable,
+ // each look the policy lists takes only its trial realism components at each
+ // viewer's own graphics tier, and a look it leaves out keeps imported materials
+ // for every viewer. Neither gains a cornea shell, and nothing about identity or
+ // quality reaches the server. A missing roughness map falls back visibly, and a
+ // reconnect restores the same look.
  const origin='http://127.0.0.1:5180',checks=[],errors=[],measurements={};
  const check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);};
  const ready=p=>p.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host').dataset.playerReady==='true',null,{timeout:60000});
@@ -52,16 +53,20 @@ async page => {
   }
 
   // Viewer-local tiers: the owner chooses Sharpest (high), alice Smoothest (standard).
+  // A look the policy leaves out stays off at every tier.
+  const listed=id=>Object.hasOwn(expected.appearances,id),at=(id,tier)=>listed(id)?tier:'off';
+  const named=id=>id==='jevica'?'Jevica':'Sable';
   await tier(page,'sharp');await tier(peer,'smooth');
-  await selfTier(page,'high');await selfTier(peer,'standard');await tierOf(peer,ownerId,'standard');await tierOf(page,aliceId,'high');
+  await selfTier(page,at('jevica','high'));await selfTier(peer,at('sable-human','standard'));await tierOf(peer,ownerId,at('jevica','standard'));await tierOf(page,aliceId,at('sable-human','high'));
   // Hair, brow and lash cards change only if the policy lists coverage or strand recolor.
   const cards=id=>expected.appearances[id].some(component=>component==='coverage'||component==='hairColor');
-  const trial=(report,id)=>report&&JSON.stringify(report.components)===JSON.stringify(expected.appearances[id])&&report.cornea===0&&report.skin>0&&(cards(id)?report.hair>0:report.hair+report.brows+report.lashes===0)&&!report.fallback;
+  const trial=(report,id)=>!listed(id)?report?.tier==='off':report&&JSON.stringify(report.components)===JSON.stringify(expected.appearances[id])&&report.cornea===0&&report.skin>0&&(cards(id)?report.hair>0:report.hair+report.brows+report.lashes===0)&&!report.fallback;
+  const looks=id=>listed(id)?`${named(id)} has only its trial components, own and remote, with no cornea shell`:`${named(id)} keeps imported materials, own and remote`;
   measurements.tiers={jevicaSelf:await selfOf(page),sableSelf:await selfOf(peer),jevicaOnAlice:(await remoteOf(peer,ownerId)).realism,sableOnOwner:(await remoteOf(page,aliceId)).realism};
-  check(trial(measurements.tiers.jevicaSelf,'jevica')&&trial(measurements.tiers.jevicaOnAlice,'jevica'),'Jevica has only her trial components, own and remote, with no cornea shell');
-  check(trial(measurements.tiers.sableSelf,'sable-human')&&trial(measurements.tiers.sableOnOwner,'sable-human'),'Sable has only her trial components, own and remote, with no cornea shell');
-  check(measurements.tiers.jevicaSelf.tier==='high'&&measurements.tiers.jevicaOnAlice.tier==='standard','The owner renders her own Jevica at high while alice renders the same look at standard');
-  check(measurements.tiers.sableSelf.tier==='standard'&&measurements.tiers.sableOnOwner.tier==='high','Alice renders her own Sable at standard while the owner renders it at high');
+  check(trial(measurements.tiers.jevicaSelf,'jevica')&&trial(measurements.tiers.jevicaOnAlice,'jevica'),looks('jevica'));
+  check(trial(measurements.tiers.sableSelf,'sable-human')&&trial(measurements.tiers.sableOnOwner,'sable-human'),looks('sable-human'));
+  check(measurements.tiers.jevicaSelf.tier===at('jevica','high')&&measurements.tiers.jevicaOnAlice.tier===at('jevica','standard'),listed('jevica')?'The owner renders her own Jevica at high while alice renders the same look at standard':'Jevica stays off for the owner at high and for alice at standard');
+  check(measurements.tiers.sableSelf.tier===at('sable-human','standard')&&measurements.tiers.sableOnOwner.tier===at('sable-human','high'),listed('sable-human')?'Alice renders her own Sable at standard while the owner renders it at high':'Sable stays off for alice at standard and for the owner at high');
   const ownerView=await remoteOf(page,aliceId),aliceView=await remoteOf(peer,ownerId);
   check(ownerView.character?.appearanceId==='sable-human'&&aliceView.character?.appearanceId==='jevica','Each viewer holds the other’s canonical definition');
   await frame(page,aliceId);await page.screenshot({path:'output/playwright/default-appearance-sable-high-owner.png'});
@@ -71,23 +76,25 @@ async page => {
   const before=outbound.alice.length,definitions={owner:JSON.stringify(aliceView.character),alice:JSON.stringify(ownerView.character)};
   measurements.cycle=[];
   for(const [mode,expectedTier] of [['sharp','high'],['smooth','standard']]){
-   await tier(peer,mode);await tierOf(peer,ownerId,expectedTier);await selfTier(peer,expectedTier);
+   await tier(peer,mode);await tierOf(peer,ownerId,at('jevica',expectedTier));await selfTier(peer,at('sable-human',expectedTier));
    const remote=await remoteOf(peer,ownerId);measurements.cycle.push({mode,remote:remote.realism,self:await selfOf(peer)});
-   check(trial(remote.realism,'jevica')&&JSON.stringify(remote.character)===definitions.owner&&remote.appearance==='jevica',`${mode}: alice re-tiers Jevica to ${expectedTier} with the same definition`);
+   check(trial(remote.realism,'jevica')&&trial(measurements.cycle.at(-1).self,'sable-human')&&JSON.stringify(remote.character)===definitions.owner&&remote.appearance==='jevica',`${mode}: alice re-tiers to ${expectedTier}; Jevica is ${at('jevica',expectedTier)} with the same definition`);
   }
   check(commands('alice',before).length===0,'Re-tiering sends no selection command');
   check(leaked('owner').length===0&&leaked('alice').length===0,'No client message carries graphics quality or realism state');
-  check(JSON.stringify((await remoteOf(page,aliceId)).character)===definitions.alice&&(await selfOf(page)).tier==='high','The owner’s own tier and view of alice are unaffected');
+  check(JSON.stringify((await remoteOf(page,aliceId)).character)===definitions.alice&&(await selfOf(page)).tier===at('jevica','high'),'The owner’s own tier and view of alice are unaffected');
 
-  // Missing roughness map: alice reloads without it. Her Sable and her view of
-  // Jevica fall back to the standard tier without the map, and say so.
+  // Missing roughness map: alice reloads without it. Each listed look she draws
+  // falls back to the standard tier without the map, and says so.
   await peerContext.route('**/assets/characters/realism/skin-roughness.webp',route=>route.abort());
   await peer.reload();await ready(peer);
   await peer.waitForFunction(id=>window.__riverMultiplayer().remotes.some(p=>p.id===id&&p.ready&&p.appearance==='jevica'),ownerId);
-  await selfTier(peer,'standard');await tierOf(peer,ownerId,'standard');
+  await selfTier(peer,at('sable-human','standard'));await tierOf(peer,ownerId,at('jevica','standard'));
   measurements.fallback={self:await selfOf(peer),jevica:(await remoteOf(peer,ownerId)).realism};
-  for(const [label,report,id] of [['Sable',measurements.fallback.self,'sable-human'],['Jevica',measurements.fallback.jevica,'jevica']])
-   check(report.fallback==='roughness_unavailable'&&report.cornea===0&&JSON.stringify(report.components)===JSON.stringify(expected.appearances[id])&&report.unsupported.some(item=>item.startsWith('roughness:')),`${label}: a missing roughness map is reported and keeps the trial components`);
+  for(const [report,id] of [[measurements.fallback.self,'sable-human'],[measurements.fallback.jevica,'jevica']]){
+   if(listed(id))check(report.fallback==='roughness_unavailable'&&report.cornea===0&&JSON.stringify(report.components)===JSON.stringify(expected.appearances[id])&&report.unsupported.some(item=>item.startsWith('roughness:')),`${named(id)}: a missing roughness map is reported and keeps the trial components`);
+   else check(report?.tier==='off'&&!report.fallback,`${named(id)}: keeps imported materials without the map`);
+  }
   check(await peer.locator('#canvas-host').getAttribute('data-player-appearance')==='sable-human','The fallback keeps Sable’s identity');
 
   // Reconnect with the map available again: the same look returns on both sides.
@@ -95,11 +102,11 @@ async page => {
   await peer.reload();await ready(peer);
   await peer.waitForFunction(id=>window.__riverMultiplayer().remotes.some(p=>p.id===id&&p.ready&&p.appearance==='jevica'),ownerId);
   await page.waitForFunction(id=>window.__riverMultiplayer().remotes.some(p=>p.id===id&&p.ready&&p.appearance==='sable-human'),aliceId);
-  await selfTier(peer,'standard');await tierOf(page,aliceId,'high');
+  await selfTier(peer,at('sable-human','standard'));await tierOf(page,aliceId,at('sable-human','high'));
   measurements.reconnect={sableSelf:await selfOf(peer),sableOnOwner:(await remoteOf(page,aliceId)).realism,jevicaOnAlice:(await remoteOf(peer,ownerId)).realism};
-  check(trial(measurements.reconnect.sableSelf,'sable-human')&&trial(measurements.reconnect.sableOnOwner,'sable-human')&&trial(measurements.reconnect.jevicaOnAlice,'jevica'),'After reconnect both looks return with their trial components and no fallback');
+  check(trial(measurements.reconnect.sableSelf,'sable-human')&&trial(measurements.reconnect.sableOnOwner,'sable-human')&&trial(measurements.reconnect.jevicaOnAlice,'jevica'),'After reconnect both looks return as before, with no fallback');
   check(JSON.stringify((await remoteOf(page,aliceId)).character)===definitions.alice,'Alice’s definition is unchanged across reconnect');
   check(errors.length===0,`No runtime errors: ${errors.join('; ')}`);
-  return {passed:true,checks,measurements,scope:'Real two-account HTTP/WebSocket/browser flow on desktop Chromium: #517 named-default trial components at high and standard; low is reached only by Auto under sustained load and is covered by unit tests. Physical devices, WebKit and human visual acceptance are not covered.'};
+  return {passed:true,checks,measurements,scope:'Real two-account HTTP/WebSocket/browser flow on desktop Chromium: #517 named-default trial components at high and standard, and a default the policy leaves out stays imported; low is reached only by Auto under sustained load and is covered by unit tests. Physical devices, WebKit and human visual acceptance are not covered.'};
  }finally{await peerContext.close();}
 }

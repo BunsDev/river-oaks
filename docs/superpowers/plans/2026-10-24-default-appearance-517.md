@@ -255,6 +255,29 @@ and run all five `node scripts/bake-*.mjs --check` before and after any edit the
   - build, ruff check and format, pytest 170, demo, demo-verify (exit 2, as expected) and secrets.
 
   Logs: `.runtime/default-appearance-517/core-evidence-3*.log` and `core-rest-3.log`.
+- 15:10Z hosted CI on `026fbcdc`: all 22 checks passed (Verify run 40205009032). The `preview shared (required)`
+  job 121203969554 passed default-appearance-tiers, character-studio-tiers and character-studio-shared. The tooling
+  suite run serially (`node --test --test-concurrency=1 scripts/tests/*.test.js`) passed 277/277 on that tree.
+- 15:30Z stop rule applied ("stop a component and record it, then move on, if it breaks a budget"). Jevica's
+  roughness broke the +10% CPU bar in the deciding run (timing-6, ×8) and in timing-3 (×1), so it is stopped for
+  her. The policy now lists only `sable-human: ['roughness']`. Jevica keeps her imported materials, as on `main`;
+  listing her again is a one-line change. Sable's roughness stayed within the bar at every crowd size in
+  timing-3, timing-5 and timing-6.
+  - Regressions first: on the old policy, `default-appearance-realism.test.js` fails 2 of 4 (the policy list, and
+    Jevica on the shipped rig keeping no fidelity and no roughness map). On the new policy, the character suites
+    pass 39/39 (log `.runtime/default-appearance-517/jevica-stop-{red,green}.log`).
+  - `default-appearance-tiers` now follows the policy: a listed look must report only its trial components, and a
+    look left out must report `off` for its owner and every peer, with no fallback.
+  - All five bake `--check` exit 0.
+- Rule for timing-7, set before it runs. It runs on the final head from a clean, detached snapshot under
+  `caffeinate -i`: `node scripts/character-fidelity-baseline.mjs --appearances sable-human --realism off,high
+  --crowd 1,8,24 --repeats 3 --seconds 30`. Jevica has no timing case, because the fixture applies the full
+  preset to a look the policy leaves out; her world path builds no realism layer at all. Outcomes:
+  - Every Sable frame and CPU p95 within +10% of off, and no sample's one-minute load above 20: cost is met.
+  - Any case over the bar: Sable's roughness stops too. The trial then ships nothing (`enabled: false`), and
+    that becomes the result.
+  - Any sample above load 20: the run is an observation. It is repeated once at lower load and doesn't count
+    either way.
 
 ## Verdicts (trial run-1, 20:17Z)
 
