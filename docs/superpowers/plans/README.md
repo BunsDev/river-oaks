@@ -269,14 +269,19 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (118)
+## Historical, not in the register (124)
 
 | Plan | PRs mentioned |
 | --- | --- |
+| [2026-10-25-landing-steward](2026-10-25-landing-steward.md)<br>Landing steward: 2026-10-24 draft wave | #641, #645, #659 |
 | [2026-10-24-prune-ancestor-tip](2026-10-24-prune-ancestor-tip.md)<br>Retire a local tip behind its merged head | #631 |
+| [2026-10-24-mvp-release-readiness](2026-10-24-mvp-release-readiness.md)<br>MVP release readiness (#587) | #587, #623, #630 |
 | [2026-10-24-movement-pad-contrast](2026-10-24-movement-pad-contrast.md)<br>Walking movement control contrast | — |
 | [2026-10-24-likeness-closeout-518](2026-10-24-likeness-closeout-518.md)<br>Likeness closeout #518 ledger | #518, #590, #591 |
 | [2026-10-24-delivery-convergence](2026-10-24-delivery-convergence.md)<br>Delivery convergence: 2026-10-24 | #394, #410, #459 |
+| [2026-10-24-commons-final-rehearsal](2026-10-24-commons-final-rehearsal.md)<br>Bayou Market Commons: final-source activation rehearsal and go/no-go | #623, #630, #580 |
+| [2026-10-24-commons-activation-rehearsal](2026-10-24-commons-activation-rehearsal.md)<br>Commons activation rehearsal and runbook | #623 |
+| [2026-10-24-campus-readiness-ledger-512](2026-10-24-campus-readiness-ledger-512.md)<br>Campus readiness #512: publish the remaining ledger (#510 close-out) | #512, #510, #545 |
 | [2026-10-23-two-player-perf-budget](2026-10-23-two-player-perf-budget.md)<br>Two-player performance budget | #583, #582, #584 |
 | [2026-10-23-procedural-tools-evaluation](2026-10-23-procedural-tools-evaluation.md)<br>External procedural tools evaluation (#588) | #588, #616 |
 | [2026-10-23-police-pursuit-598](2026-10-23-police-pursuit-598.md)<br>Police pursuit #598 Implementation Plan | #598, #597, #616 |
@@ -306,6 +311,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-22-campus-evidence-508](2026-10-22-campus-evidence-508.md)<br>Campus #508 acceptance evidence plan | #508, #510, #505 |
 | [2026-10-22-branch-worktree-consolidation](2026-10-22-branch-worktree-consolidation.md)<br>Branch and worktree consolidation | #549, #503, #589 |
 | [2026-10-22-baseline-followup-580](2026-10-22-baseline-followup-580.md)<br>Issue 580 independent follow-up audit | #594, #600 |
+| [2026-10-21-campus-readiness-512](2026-10-21-campus-readiness-512.md)<br>Campus readiness #512 execution ledger | #512, #605, #545 |
 | [2026-10-21-campus-challenge-507](2026-10-21-campus-challenge-507.md)<br>Campus #507 challenge and finish | #507, #551, #506 |
 | [2026-10-20-resilient-client-290](2026-10-20-resilient-client-290.md)<br>#290 web recovery, slice 1 | #290, #567, #309 |
 | [2026-10-20-incremental-archive-bundles](2026-10-20-incremental-archive-bundles.md)<br>Archive bundles that build on the default branch | — |
