@@ -41,7 +41,7 @@ Until then, nothing here changes behaviour on main: Heights code paths run only 
 | New tests on #655's source (red) | 2/2 failed: strip split, `relocateResidents` |
 | Focused and related suites, isolated Redis | 95/95 passed: resident locations, rollback and life; navigation, community, companion, creator and auto-navigation; Commons server and migration; Commons activation rehearsal; police world |
 | `nice -n 19 pnpm run verify` (core), Python 3.12 | **Passed** on the final source tree (04:55–04:59Z): agent 274/274; preview 4,096 passed, 1 skipped; server 892 passed, 225 Redis-only skips; desktop 115 passed, 3 skipped; build; Python lint, format and 170 tests; demo; secrets. The first attempt (04:52Z) failed only the known load-sensitive `land-pr` queued-lander timing test, which passed 29/29 alone; that log is kept. |
-| Scratch merge with #649 head `0cc09391` (not pushed): Heights probe | See Results |
+| Scratch merge with #649 head `0cc09391` (not pushed): Heights probe and server-world simulation | See Results |
 
 ## Results
 
@@ -60,20 +60,32 @@ Until then, nothing here changes behaviour on main: Heights code paths run only 
   | Commons | 52,130 | 52,030.75 | 52,130 | 52,030.75 |
   | Bayou Heights | 93,904 (2.0173×) | 93,508 (2.0119×) | 93,904 (2.0173×) | 93,508 (2.0119×) |
 
-  Composed-world sha256 on `0cc09391`: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19161d41…`. These match river-oaks-91's figures for `b1ded7ab` to within 2 m².
+  Composed-world sha256 on `0cc09391`: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19161d41…`. #649's ledger now carries these figures. Its earlier 93,906 and 93,509.75 m² did not reproduce at any committed head, `b1ded7ab` included.
+
+- **Server-world simulation** (`server/world.js` shared world, `bayou-heights-1`, 98 residents, stepped as the server does: 0.25 s calls of 5 × 0.05 s resident steps, 30 simulated minutes):
+
+  | | #649 `0cc09391` alone | with #655 and this branch |
+  | --- | ---: | ---: |
+  | Residents who went east of the District edge | 0 | 4 (all 4 came back) |
+  | Residents who entered Heights | 0 | 2 (both came back) |
+  | 20 m cells visited | 51 | 100 |
+  | Median farthest distance from start | 45 m | 150 m |
+  | Step call p50 / p95 / p99 / max | 1.5 / 3.0 / 5.4 / 134 ms | 1.8 / 5.0 / 15.4 / 313 ms |
+  | Calls over 50 ms | 2, both in the first 10 minutes | 11, all in the first 10 minutes |
+  | After warm-up: p99, max | 3.8–5.1 ms, 8.8 ms | 12.7–13.7 ms, 41 ms |
+
+  The first 10 minutes carry route-cache warm-up in both columns. For comparison, #655 alone on the Commons revision had 1–6 calls over 50 ms per 10 minutes after warm-up (host load was then 17–28; here it was about 7).
 
 ## Gaps
 
 - The reverse-search regression can only be shown on Heights: the Commons band (9,396 cells) never reaches the search limit. The test lands with the Heights rehearsal once #649 is on main.
 - The Heights rollback's resident handling is not wired yet; it waits for #649 (see Landing order).
-- No server-world simulation on Heights yet; the client simulation above uses 24 locals, not the server's 98.
 - No browser journey; Val's visual review of residents in Heights is open.
 
 ## Next step
 
 After #649 lands:
-1. Rebase onto main.
+1. Merge main into the branch (a rebase would need a force-push).
 2. Wire `relocateResidents` into the Heights rollback, and extend the Heights rehearsal.
-3. Run the server-world simulation on `bayou-heights-1`.
-4. Run `verify full` with an isolated Redis.
-5. Mark the PR ready.
+3. Run `verify full` with an isolated Redis.
+4. Mark the PR ready.
