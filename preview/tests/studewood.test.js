@@ -194,6 +194,15 @@ test('Heights streams Studewood as two more neighborhoods, within the ceiling, a
   const resident = stream => stream.debug().chunks.filter(chunk => chunk.state === 'ready').map(chunk => chunk.id.replace(/^bayou-heights\/?/, '') || 'shared').sort();
   const stream = createHeightsStream({ world, parent: new THREE.Group(), now: () => 0, loadModule: standIns() });
   assert.deepEqual(stream.debug().chunks.map(chunk => chunk.id).filter(id => id.includes('studewood')), ['bayou-heights/studewood-north', 'bayou-heights/studewood-south']);
+  // Studewood's trees and planted beds draw in the shared part, so its estimate grows by their allowances; Heights' own is unchanged.
+  const { HEIGHTS_SHARED_PLACEMENT_BYTES } = await import('../src/heights-stream.js'), { cityKitLandscape } = await import('../src/city-kit/render.js');
+  const added = studewood.plans.map(plan => cityKitLandscape(plan, { groundAt: () => layout.ground, ground: layout.ground }))
+    .reduce((bytes, { trees, planters }) => bytes + trees.length * HEIGHTS_SHARED_PLACEMENT_BYTES.tree + planters.length * HEIGHTS_SHARED_PLACEMENT_BYTES.planter, 0);
+  assert.ok(added > 0);
+  assert.equal(stream.debug().estimatedBytes['bayou-heights'], HEIGHTS_CHUNK_BYTES['bayou-heights'] + added);
+  const plain = createHeightsStream({ world: heightsWorld, parent: new THREE.Group(), now: () => 0, loadModule: standIns() });
+  assert.equal(plain.debug().estimatedBytes['bayou-heights'], HEIGHTS_CHUNK_BYTES['bayou-heights']);
+  plain.dispose();
   await settle(stream, [frame([472, 40])]);
   const kept = resident(stream);
   for (const id of ['shared', 'studewood-north']) assert.ok(kept.includes(id), `${id} in ${kept}`);

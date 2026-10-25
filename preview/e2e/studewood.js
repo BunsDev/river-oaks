@@ -92,6 +92,7 @@ async page => {
     check(await page.evaluate(()=>window.__heightsNotices.includes('Entering Studewood')),'Crossing Heights Boulevard names Studewood');
     for(const tab of [page,peer])await tab.waitForFunction(()=>window.__riverBayouHeights().stream.chunks.find(chunk=>chunk.id==='bayou-heights/studewood-north').state==='ready');
     const streamed=await page.evaluate(()=>window.__riverBayouHeights().stream);
+    console.log(`Heights resident ${streamed.residentBytes} of ${streamed.geometryBudgetBytes} bytes: measured ${JSON.stringify(streamed.measuredBytes)} estimated ${JSON.stringify(streamed.estimatedBytes)}`);
     check(streamed.residentBytes<=streamed.geometryBudgetBytes&&Object.entries(streamed.measuredBytes).every(([id,bytes])=>bytes<=streamed.estimatedBytes[id]),
       'Studewood streams within the Heights geometry ceiling and each part within its estimate');
     await capture(page,'studewood-street');
