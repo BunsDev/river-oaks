@@ -10,7 +10,7 @@ export function createDeskModel({request,account,scope=()=> 'private',id=()=>cry
  const state=()=>{ensure();return {desk:structuredClone(desk),task:task&&structuredClone(task),dirty,status,error,busy:Boolean(pending),retrying:Boolean(outstanding),unconfirmed:unconfirmed&&Boolean(outstanding)};};
  async function load({discard=false,preserveDraft=false}={}){
   ensure();if(pending)return false;if(dirty&&!discard&&!preserveDraft)return false;
-  const token=epoch,user=owner,version=edits,priorVersion=desk.version,keep=preserveDraft&&dirty;status='loading';error=null;const marker={};pending=marker;emit();
+  const token=epoch,user=owner,version=edits,priorVersion=desk.version,keep=preserveDraft&&dirty;status='loading';error=null;unconfirmed=false;const marker={};pending=marker;emit();
   try{
    const r=await request('read',{});if(!current(token,user))return false;desk=r.desk;
    if(keep||edits!==version){dirty=true;error=desk.version!==priorVersion?'desk_conflict':null;status=error?'error':'dirty';}
