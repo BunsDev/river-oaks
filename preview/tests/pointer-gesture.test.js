@@ -90,3 +90,19 @@ test('pending capture release also prevents camera deltas and cannot be revived 
   assert.equal(gesture.move(pointer({clientX:160})),null);
   assert.equal(gesture.end(pointer({buttons:0})),false);
 });
+
+test('a look drag may take a later finger while the primary contact holds a walk button (#288)', () => {
+  const thumb=pointer({pointerType:'touch'}),finger=pointer({pointerId:2,isPrimary:false,pointerType:'touch',clientX:300});
+  const look=createPointerGesture();
+  assert.equal(look.begin(finger),false,'picking still needs the primary contact');
+  assert.equal(look.begin(finger,{anyFinger:true}),true);
+  assert.deepEqual(look.move({...finger,clientX:330}),[30,0]);
+  assert.equal(look.move({...thumb,clientX:180}),null,'the walking thumb cannot steer the look');
+  assert.equal(look.begin(thumb,{anyFinger:true}),false,'one finger owns the look at a time');
+  look.cancel(thumb);
+  assert.deepEqual(look.move({...finger,clientX:340}),[10,0],'the thumb lifting leaves the look drag alone');
+  assert.equal(look.end({...finger,clientX:340,buttons:0}),false);
+  for(const other of [{pointerType:'mouse'},{pointerType:'pen'},{pointerType:'touch',button:1}]) {
+    assert.equal(createPointerGesture().begin({...finger,...other},{anyFinger:true}),false,`${JSON.stringify(other)} keeps the primary-only rule`);
+  }
+});
