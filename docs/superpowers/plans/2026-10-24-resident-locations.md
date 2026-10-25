@@ -32,7 +32,10 @@ Task `next-district-586-support-20261024`, owner `claude:river-oaks-3e (4e851f0b
 | New tests on main's source (red) | 6/6 failed |
 | `preview/tests/resident-locations.test.js`, `server/tests/resident-locations-rollback.test.js`, `preview/tests/resident-life.test.js` | 33/33 passed |
 | Related suites (navigation, companion, creator, auto-navigation, Commons client/server/migration/games/transport, Gardens migration, world migration, police, corner elbow, Lantern Walk) | 109 tests: 106 passed, 3 skipped (Redis), 0 failed. This ran before the wandering change. |
-| `pnpm run verify` (core), Python 3.12 on PATH | Passed at 19:48Z, but `navigation.js` changed during the run (19:47:33Z). Rerun required on the final tree. |
+| `pnpm run verify` (core), Python 3.12 on PATH | Passed at 19:48Z, but `navigation.js` changed during the run (19:47:33Z), so it was superseded by `verify full` below. |
+| `REDIS_URL=redis://127.0.0.1:6461 pnpm run verify full`, isolated loopback Redis, Python 3.12 | **Passed, 18/18 stages** (2026-10-24 20:20Z to 2026-10-25 03:21Z). Ran on the final source tree: every source and test file predates the start and equals `1f971206`. See Results |
+| Hosted Verify on `22679471` | 22/22 green |
+| Scratch merge with main `0b9a97c4` (not pushed), related suites with Redis | 172/172 passed |
 | Offline 60-min server simulation, Commons revision | See Results |
 | Dev town on 5481/8881, fixture sign-in, Commons revision | See Results |
 
@@ -56,7 +59,35 @@ All on main `09bd7a83` plus this branch's uncommitted tree unless noted. Host: A
 
   Residents walk more, so each step does more work. The first 10 minutes carry the cache warm-up in both.
 - **Stall hunt:** 40 simulated minutes on the final code: no resident within 20 m of the seam stood still for two minutes. On the pre-lane code, the first such stall came at minute 4.8.
-- **Dev town:** `RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8881 RIVER_OAKS_DISTRICT_REVISION=east-garden-commons-market-1 pnpm run dev --port 5481`, watched over the real WebSocket. Before lanes: 3 residents entered the Commons in 15 minutes, and 2 of them stalled at the seam. After lanes: see the final watch below.
+- **Dev town:** `RIVER_OAKS_ACCEPTANCE_FIXTURE=1 RIVER_OAKS_DEV_TOWN_PORT=8881 RIVER_OAKS_DISTRICT_REVISION=east-garden-commons-market-1 pnpm run dev --port 5481`, watched over the real WebSocket for 15 minutes each time.
+  - Before lanes: 3 residents entered the Commons, and 2 of them stalled at the seam.
+  - After lanes (20:20–20:35Z): 4 distinct residents entered the Commons, up to 2 at once. Positions were sampled every 30 seconds, and no resident stood still near the seam. Two residents walked in together and were heading back toward the District when the watch ended.
+- **`verify full`** (receipt `.runtime/agent/full.json`, status `passed`):
+  - dependency audit;
+  - agent 274/274;
+  - preview 4,095 passed, 1 skipped;
+  - server with Redis 1,158/1,158;
+  - desktop 115 passed, 3 skipped;
+  - build;
+  - Python lint, format and 170 tests;
+  - demo and demo-verify;
+  - secrets and secret history;
+  - security-browser;
+  - reflections;
+  - experience 17/17 journeys;
+  - shared 27/27;
+  - IPIC screening.
+
+  The generated `data/reports` files were restored, not committed.
+- **Compatibility with later main:** a scratch merge of `22679471` into main `0b9a97c4` was clean; it took in #641, #645, #646 (checkpoint v17, crime and police in `server/world.js`), #647, #651 and #652. These suites passed on it with Redis, 172/172 and 0 skipped:
+  - resident locations, rollback and life;
+  - navigation, companion, creator and auto-navigation;
+  - community;
+  - Commons client, server, games, transport and migration;
+  - Gardens, District and world migrations;
+  - police and crime;
+  - the Commons activation rehearsal;
+  - Redis room.
 
 ## Gaps
 
@@ -66,4 +97,8 @@ All on main `09bd7a83` plus this branch's uncommitted tree unless noted. Host: A
 
 ## Next step
 
-Rerun focused tests and `verify full` with isolated Redis on the final tree, restart the dev server on it, then commit, push and open a draft PR.
+Draft PR #655 waits for Val's review in the dev town and for Val's go to land. Merging and landing are not authorized for this task. With that go:
+1. Merge current main into the branch.
+2. Rerun the focused suites and `verify full` with an isolated Redis.
+3. Wait for hosted Verify on the merged head.
+4. Land through `pnpm run land` by whoever holds landing authority.
