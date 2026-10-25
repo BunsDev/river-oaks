@@ -1,0 +1,86 @@
+{
+ "A1-gardens-spawn-desktop-1-players-1.jpg": {
+  "source": ".runtime/world-expansion/baseline-2026-10-24T05-59-12.219Z/desktop-1-players-1.png",
+  "sha256": "76c44b3edda950d7be7f98e79d766e69888498c5107f8bc6df73d6e32accd33b",
+  "sourceSha256": "76c44b3edda950d7be7f98e79d766e69888498c5107f8bc6df73d6e32accd33b",
+  "jpegSha256": "be44ea341d253701bb6c3da2d9d12f7a28ed9b5a026a267624635c8764252c34",
+  "conversion": "sips jpeg quality 82"
+ },
+ "A1-gardens-spawn-phone-viewport-1-players-1.jpg": {
+  "source": ".runtime/world-expansion/baseline-2026-10-24T05-59-12.219Z/phone-viewport-1-players-1.png",
+  "sha256": "e47ad10ed8b9f37903ab76e892e9e01707db1d16b18ede76de5de56a5f787e22",
+  "sourceSha256": "e47ad10ed8b9f37903ab76e892e9e01707db1d16b18ede76de5de56a5f787e22",
+  "jpegSha256": "c07b275eab3130352854d27d9b04326d7ef4cd707093e8c8bd3c2ac5d41c7193",
+  "conversion": "sips jpeg quality 82"
+ },
+ "B1-market-spawn-desktop-1-players-1.jpg": {
+  "source": ".runtime/world-expansion/baseline-east-garden-commons-market-1-spawn-2026-10-24T06-07-07.988Z/desktop-1-players-1.png",
+  "sha256": "1769c57da0f285b5333b06e759c33da56d13bff59fb836dbadcd7d799f146b2e",
+  "sourceSha256": "1769c57da0f285b5333b06e759c33da56d13bff59fb836dbadcd7d799f146b2e",
+  "jpegSha256": "498e1002d52dc82ddb66509c858e669ca0472c28249b97d904f55cadf532811b",
+  "conversion": "sips jpeg quality 82"
+ },
+ "B1-market-spawn-phone-viewport-1-players-1.jpg": {
+  "source": ".runtime/world-expansion/baseline-east-garden-commons-market-1-spawn-2026-10-24T06-07-07.988Z/phone-viewport-1-players-1.png",
+  "sha256": "84937694faeefc90b7b30868095cd663b31d1196354f37d53fab91933f0907d3",
+  "sourceSha256": "84937694faeefc90b7b30868095cd663b31d1196354f37d53fab91933f0907d3",
+  "jpegSha256": "695c56fe3c4fb68da04bcb1bb8cdf11a169612fe40960db447a6de96a20d4519",
+  "conversion": "sips jpeg quality 82"
+ },
+ "C1-market-street-desktop-1-players-1.jpg": {
+  "source": ".runtime/world-expansion/baseline-east-garden-commons-market-1-market-street-2026-10-24T06-31-19.811Z/desktop-1-players-1.png",
+  "sha256": "559fa2ee510ed85b8ba7b8aeb53384110e7afb6c0ce60af351b0e63d22c16650",
+  "sourceSha256": "559fa2ee510ed85b8ba7b8aeb53384110e7afb6c0ce60af351b0e63d22c16650",
+  "jpegSha256": "5213b972bc91c98df05feb0d9618a1a60d998fcb6abd90d945ff74084192cc5f",
+  "conversion": "sips jpeg quality 82"
+ },
+ "C1-market-street-phone-viewport-1-players-1.jpg": {
+  "source": ".runtime/world-expansion/baseline-east-garden-commons-market-1-market-street-2026-10-24T06-31-19.811Z/phone-viewport-1-players-1.png",
+  "sha256": "ad1feae5fc40bb179863d1fc5e0a126abf9fda63287ae0c06ca1654335ad4c0a",
+  "sourceSha256": "ad1feae5fc40bb179863d1fc5e0a126abf9fda63287ae0c06ca1654335ad4c0a",
+  "jpegSha256": "b8464ebedd4f1520b0aed6f095e9081fef638532c26abc346fbd8a1d45f001ce",
+  "conversion": "sips jpeg quality 82"
+ },
+ "keyboard-02-gateway-looking-east.jpg": {
+  "source": ".runtime/release-readiness/keyboard-hands-on-001/02-gateway-looking-east.png",
+  "sourceSha256": "fca4e5e997f56568a960ef337603dc9053e5fbcb112dda08705f90c10eeab555",
+  "jpegSha256": "8f005ad26b5467fefd6a7445e9af7771e84c65d49d788f4af5fcbac204dea27a",
+  "conversion": "sips jpeg quality 82"
+ },
+ "keyboard-02-seam-crop.jpg": {
+  "source": ".runtime/release-readiness/keyboard-hands-on-001/02-seam-crop.png",
+  "sourceSha256": "6e06e06d310d17a6a63c5c3421a2f915abde54c90f754df0c3780eb5db6618c1",
+  "jpegSha256": "6c91576b9e025922501dac0a539ad23c65eb8a308dc56f32e836f2f0a76fcb3e",
+  "conversion": "sips jpeg quality 82 (crop 700x120 at 370,330, scaled to 1400 wide)"
+ },
+ "keyboard-03-market-street.jpg": {
+  "source": ".runtime/release-readiness/keyboard-hands-on-001/03-market-street.png",
+  "sourceSha256": "9edf192b6a6421df75398364cfc88b28ec1876fa1cef16fc0372d4714557a6b5",
+  "jpegSha256": "d2fc1687b2d5e23a0f4fff7f05e5e86983d6ca880947dcfdda90a121312dde56",
+  "conversion": "sips jpeg quality 82"
+ },
+ "keyboard-04-bayou-lantern.jpg": {
+  "source": ".runtime/release-readiness/keyboard-hands-on-001/04-bayou-lantern.png",
+  "sourceSha256": "6b75ec45c78ad1b96de42e2fdafcdde200d681fe699b05c50e278bf83be3a20e",
+  "jpegSha256": "813724944d5e68439374b35e929aa01c2362c5d0ab3a39b5ea5176df5e1eda69",
+  "conversion": "sips jpeg quality 82"
+ },
+ "keyboard-05-court.jpg": {
+  "source": ".runtime/release-readiness/keyboard-hands-on-001/05-court.png",
+  "sourceSha256": "ce7fab89f0f389654d0682456a90b80dd6de0993fb8f2720151311e2aa251530",
+  "jpegSha256": "ce0199516bf908a69158c856913a4fd7e2fe135c3d0616ba656416715b1e0981",
+  "conversion": "sips jpeg quality 82"
+ },
+ "keyboard-06-seam-looking-west.jpg": {
+  "source": ".runtime/release-readiness/keyboard-hands-on-001/06-seam-looking-west.png",
+  "sourceSha256": "284ebd15c830607cb9b0e68c265e4b7149438a36a793c2dcdb31a125105406bd",
+  "jpegSha256": "e203c34463692e76775dd97e1d204073a960c021ec3231dffd1143ade12a59ba",
+  "conversion": "sips jpeg quality 82"
+ },
+ "keyboard-07-district-return.jpg": {
+  "source": ".runtime/release-readiness/keyboard-hands-on-001/07-district-return.png",
+  "sourceSha256": "a536e43533bf7c5fa1628c3b49b0bfb27be6fffcfc0205e742217f306f56db95",
+  "jpegSha256": "f08cb9ac03f86ad47ad0ca5023016f111e879f1374ead274a835d4ce90935450",
+  "conversion": "sips jpeg quality 82"
+ }
+}

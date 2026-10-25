@@ -1,0 +1,69 @@
+// Actual journey-driver/production-controller behavior under deterministic latency.
+// Pointer input is accepted and authority mirrors local state; no DOM/authority acceptance.
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {readFile} from 'node:fs/promises';
+import {isGameplayKey} from '../src/keyboard-input.js';
+import {bindPageLifecycle} from '../src/background-lifecycle.js';
+import {stopHeldMovement} from '../src/held-movement.js';
+import {loadDistrictData} from '../../server/district-data.js';
+import {createWalkingEnvironment,createWalkingState,stepWalking} from '../../preview/src/walking.js';
+const source=await readFile(new URL('../e2e/east-garden-commons.js',import.meta.url),'utf8');
+const begin=source.indexOf('  const walk=');
+const end=source.indexOf('  try{\n    await Promise.all([ready(page),ready(peer)])',begin);
+assert.ok(begin>=0&&end>begin);
+const original=source.slice(begin,end).trim().replace(/^const walk=/,'').replace(/;$/,'');
+const world=await loadDistrictData({districtRevision:'east-garden-commons-market-1'}),env=createWalkingEnvironment(world);
+const target=[world.eastGardenCommons.edge-1,-1336];
+const inputSource=await readFile(new URL('../src/walking-ui.js',import.meta.url),'utf8');
+const inputStart=inputSource.indexOf("  host.addEventListener('keydown', event => {");
+const inputEnd=inputSource.indexOf("  host.addEventListener('blur', clear);",inputStart);
+assert.ok(inputStart>=0&&inputEnd>inputStart);
+const installInput=new Function('host','document','keys','isGameplayKey','transport','dialogueOpen','getVoice',`const active=true; ${inputSource.slice(inputStart,inputEnd)}`);
+const savedWindow=globalThis.window;
+const run=async(expression,latencyMs,fps,releaseDuringFast=false)=>{
+  let clock=1000,frameClock=0,mouseX=0,mouseDown=false;
+  const start=[target[0]+(releaseDuringFast?8:.8),target[1]],yaw=Math.PI/2,keys=new Set(),physicalKeys=new Set();
+  const host=new EventTarget(),doc=new EventTarget(),win=new EventTarget();
+  installInput(host,doc,keys,isGameplayKey,{takeOver(){}},()=>false,()=>null);
+  const keyEvent=(type,code,repeat=false)=>{const event=new Event(type,{cancelable:true});Object.defineProperties(event,{code:{value:code},repeat:{value:repeat}});return event;};
+  let releaseInjections=0;
+  assert.ok(env.isFree(start[0],-start[1]));
+  const state=createWalkingState(env,start,yaw);
+  const unbind=bindPageLifecycle({window:win,document:doc,release:()=>{keys.clear();stopHeldMovement(state);}});
+  assert.ok(Math.hypot(state.position[0]-start[0],state.position[2]+start[1])<1e-9);
+  const advance=ms=>{clock+=ms;frameClock+=ms;while(frameClock>=1000/fps){stepWalking(state,env,{forward:keys.has('KeyW')?1:0,fast:keys.has('ShiftLeft')},1/fps);frameClock-=1000/fps;}};
+  const snapshot=()=>({id:'fixture',position:[state.position[0],-state.position[2],env.groundAt(state.position[0],state.position[2])],yaw:state.yaw});
+  globalThis.window={__riverCarriage:()=>({pose:state}),__riverMultiplayer:()=>({selfId:'fixture',snapshot:{players:[snapshot()]}})};
+  const tab={
+    keyboard:{down:async code=>{const repeat=physicalKeys.has(code);physicalKeys.add(code);host.dispatchEvent(keyEvent('keydown',code,repeat));advance(latencyMs);},up:async code=>{physicalKeys.delete(code);doc.dispatchEvent(keyEvent('keyup',code));advance(latencyMs);}},
+    mouse:{move:async x=>{if(mouseDown)state.yaw-=(x-mouseX)*.003;mouseX=x;advance(latencyMs);},down:async()=>{mouseDown=true;advance(latencyMs);},up:async()=>{mouseDown=false;advance(latencyMs);}},
+    locator:()=>({focus:async()=>advance(latencyMs),boundingBox:async()=>{advance(latencyMs);return{x:0,y:0,width:1280,height:900};}}),
+    evaluate:async fn=>{const result=structuredClone(fn());advance(latencyMs);return result;},
+    waitForTimeout:async ms=>{advance(ms);if(releaseDuringFast&&!releaseInjections&&physicalKeys.has('KeyW')){win.dispatchEvent(new Event('blur'));releaseInjections++;}},
+    waitForFunction:async(fn,arg,options)=>{const deadline=clock+(options?.timeout??10000);while(!fn(arg)){advance(1000/fps);if(clock>deadline)throw new Error('predicate timeout');}advance(latencyMs);},
+  };
+  const routes=[];
+  const walk=new Function('self','routes','Date','console',`return (${expression});`)(async()=>{const result=snapshot();advance(latencyMs);return result;},routes,{now:()=>clock},{log(){}});
+  let status='passed',error=null;
+  try{await walk(tab,[target],'controlled slow observation');}catch(e){status='failed';error=e.message;}
+  unbind();
+  return{status,error,latencyMs,fps,releaseInjections,simulatedMs:clock-1000,remaining:Math.hypot(state.position[0]-target[0],state.position[2]+target[1]),position:state.position,routes:routes.length};
+};
+for(const latencyMs of [100,150,200])test(`near waypoint reaches15cm with9fps and${latencyMs}ms observation latency`,async()=>{
+  try{
+    const result=await run(original,latencyMs,9);
+    assert.equal(result.status,'passed',result.error??'waypoint failed');
+    assert.ok(result.remaining<=.15,`arrival beyond15cm: ${result.remaining}`);
+    assert.equal(result.routes,1);
+    assert.ok(result.simulatedMs<120000,'keep the existing waypoint deadline');
+  }finally{globalThis.window=savedWindow;}
+});
+
+for(const latencyMs of [100,150,200])test(`fast route resumes with a fresh press after lifecycle release at ${latencyMs}ms latency`,async()=>{
+  try{
+    const result=await run(original,latencyMs,9,true);
+    assert.equal(result.releaseInjections,1);assert.equal(result.status,'passed',result.error??'waypoint failed');
+    assert.ok(result.remaining<=.15);assert.equal(result.routes,1);assert.ok(result.simulatedMs<120000);
+  }finally{globalThis.window=savedWindow;}
+});
