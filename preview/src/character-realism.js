@@ -241,7 +241,7 @@ function coverageCards(material, original, tier, hair, owned) {
 // tier (all by default). Returns what was upgraded and a dispose that removes
 // per-instance additions.
 export function applyCharacterRealism(rig, {tier: name = 'high', textures = null, alphaAt, components = REALISM_COMPONENTS} = {}) {
-  const selected = new Set(components);
+  const selected = new Set(components ?? REALISM_COMPONENTS);
   for (const component of selected) if (!REALISM_COMPONENTS.includes(component)) throw new TypeError(`Unknown realism component ${component}`);
   const preset = REALISM_TIERS[name], use = component => selected.has(component);
   const tier = preset && {pores: use('pores') ? preset.pores : 0, scatter: use('scatter') ? preset.scatter : [0, 0, 0], sheen: use('sheen') ? preset.sheen : null,

@@ -37,12 +37,19 @@ async page => {
   await page.goto(origin+'/?motion-debug=1&render-audit=1');await ready(page);
   await peer.goto(origin+'/?motion-debug=1&render-audit=1');await ready(peer);
   const expected=await page.evaluate(()=>import('/src/default-appearance-realism.js').then(m=>JSON.parse(JSON.stringify(m.DEFAULT_APPEARANCE_REALISM))));
-  check(expected.enabled===true,'The trial is enabled in this build');
   const ownerId=await page.evaluate(()=>window.__riverMultiplayer().selfId),aliceId=await peer.evaluate(()=>window.__riverMultiplayer().selfId);
   check(await page.locator('#canvas-host').getAttribute('data-player-appearance')==='jevica','The owner account wears its default Jevica');
   check(await peer.locator('#canvas-host').getAttribute('data-player-appearance')==='sable-human','A resident account wears the default Sable');
   await peer.waitForFunction(id=>window.__riverMultiplayer().remotes.some(p=>p.id===id&&p.ready&&p.appearance==='jevica'),ownerId);
   await page.waitForFunction(id=>window.__riverMultiplayer().remotes.some(p=>p.id===id&&p.ready&&p.appearance==='sable-human'),aliceId);
+  if(!expected.enabled){
+   // Rolled back with the one switch: both defaults keep imported materials at any tier.
+   await tier(page,'sharp');await tier(peer,'smooth');
+   measurements.rollback={jevicaSelf:await selfOf(page),sableSelf:await selfOf(peer),jevicaOnAlice:(await remoteOf(peer,ownerId)).realism,sableOnOwner:(await remoteOf(page,aliceId)).realism};
+   check(Object.values(measurements.rollback).every(report=>report?.tier==='off'),'With the trial rolled back, both defaults keep imported materials, own and remote');
+   check(errors.length===0,`No runtime errors: ${errors.join('; ')}`);
+   return {passed:true,checks,measurements,scope:'Rolled-back build (DEFAULT_APPEARANCE_REALISM.enabled is false): real two-account flow on desktop Chromium; identities load and neither default takes realism at Sharpest or Smoothest.'};
+  }
 
   // Viewer-local tiers: the owner chooses Sharpest (high), alice Smoothest (standard).
   await tier(page,'sharp');await tier(peer,'smooth');

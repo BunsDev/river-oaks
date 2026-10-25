@@ -11,7 +11,7 @@ export function fidelityTierForQuality({mode = 'auto', scale = 1, occlusion = tr
 // cannot change a disposed instance or overtake a newer quality request.
 // `components` limits every tier to those parts (see REALISM_COMPONENTS).
 export function createCharacterFidelity(rig, {loadTextures = loadCharacterRealismTextures, components} = {}) {
-  let generation = 0, disposed = false, effect = null, report = {tier:'off', requestedTier:'off'};
+  let generation = 0, disposed = false, effect = null, applied = null, report = {tier:'off', requestedTier:'off'};
   const needsMaps = !components || components.includes('roughness');
   async function setTier(tier) {
     if (!Object.hasOwn(REALISM_TIERS, tier)) throw new TypeError('Unknown realism tier');
@@ -26,7 +26,8 @@ export function createCharacterFidelity(rig, {loadTextures = loadCharacterRealis
     }
     if (disposed || request !== generation) return report;
     effect?.dispose();
-    effect = applyCharacterRealism(rig, {tier:selected, textures, components});
+    applied = {tier:selected, textures, components};
+    effect = applyCharacterRealism(rig, applied);
     report = {...effect.report, requestedTier:tier, ...(fallback ? {fallback} : {})};
     return report;
   }
@@ -34,6 +35,14 @@ export function createCharacterFidelity(rig, {loadTextures = loadCharacterRealis
     get report() { return structuredClone(report); },
     setTier,
     setQuality: quality => setTier(fidelityTierForQuality(quality)),
+    // Material edits made after load (the Jevica costume) run with the tier
+    // removed and it re-applied on top, so later re-tiers keep them.
+    underneath(edit) {
+      if (!effect) return edit();
+      effect.dispose();
+      try { return edit(); }
+      finally { effect = applyCharacterRealism(rig, applied); report = {...report, ...effect.report}; }
+    },
     dispose() { if (disposed) return; disposed = true; generation++; effect?.dispose(); effect = null; },
   };
 }

@@ -75,3 +75,16 @@ test('a component list reaches every tier and skips the roughness load when roug
  assert.equal(loads,0);assert.ok(avatar.model.children.length===1);
  control.dispose();assert.equal(avatar.material.normalMap,null);
 });
+test('edits made underneath the applied tier survive re-tiers and keep the report',async()=>{
+ const avatar=rig(),roughness=new THREE.Texture();
+ const control=runtime.createCharacterFidelity(avatar,{loadTextures:async()=>({roughness}),components:['roughness']});
+ assert.equal(control.underneath(()=>'before any tier'),'before any tier');
+ await control.setTier('high');
+ control.underneath(()=>{assert.equal(avatar.material.roughnessMap,null,'the edit sees base materials');avatar.material.roughness=.58;});
+ assert.equal(avatar.material.roughnessMap,roughness);assert.equal(avatar.material.roughness,1);assert.equal(control.report.requestedTier,'high');
+ await control.setTier('standard');assert.equal(avatar.material.roughness,1);
+ await control.setTier('off');assert.equal(avatar.material.roughnessMap,null);assert.equal(avatar.material.roughness,.58,'off keeps the edit');
+ const missing=runtime.createCharacterFidelity(rig(),{loadTextures:async()=>{throw new Error('missing');},components:['roughness']});
+ await missing.setTier('high');missing.underneath(()=>{});assert.equal(missing.report.fallback,'roughness_unavailable');assert.equal(missing.report.requestedTier,'high');
+ control.dispose();missing.dispose();assert.equal(control.underneath(()=>'after dispose'),'after dispose');
+});

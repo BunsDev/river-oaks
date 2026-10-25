@@ -185,6 +185,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
     get realismReport(){return fidelity?.report??{tier:'off'};},
     setExpression:(name,weight)=>expressions.set(name,weight),
     setRealismTier:tier=>fidelity?.setTier(tier),
+    beneathRealism:edit=>fidelity?fidelity.underneath(edit):edit(),
     // The visibility owner explicitly suspends the clock, even for brief culls.
     suspend() {previousTime=null;gestures.suspend();},
     get carrying() {return kit.visible;},

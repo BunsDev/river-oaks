@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { loadCharacterRig } from './helpers/character-rig.js';
 import { loadResidentAvatar } from '../src/avatars.js';
+import { createPlayerCostume } from '../src/player-costume.js';
 import { REALISM_COMPONENTS } from '../src/character-realism.js';
 import { DEFAULT_APPEARANCE_REALISM, defaultAppearanceRealism } from '../src/default-appearance-realism.js';
 import { DEFAULT_GUEST_APPEARANCE, DEFAULT_SHARED_APPEARANCE, SHARED_APPEARANCES } from '../src/shared-appearances.js';
@@ -29,7 +30,9 @@ test('the rollback switch returns both named defaults to imported materials', ()
   for (const id of DEFAULTS) assert.equal(defaultAppearanceRealism(id, off), null, id);
 });
 
-test('the shipped rig loads Jevica and Sable with only their trial components', async t => {
+// Loads the shipped Jevica rig the way the world does, with the roughness map
+// served, so the trial's map actually attaches.
+async function shippedRig(t) {
   const previousWindow = globalThis.window, previousDocument = globalThis.document;
   globalThis.window = {matchMedia: () => ({matches: false})};
   globalThis.document = {createElement: () => ({getContext: () => new Proxy({}, {get: () => () => {}})})};
@@ -44,6 +47,14 @@ test('the shipped rig loads Jevica and Sable with only their trial components', 
     if (url.endsWith('/jevica.glb')) return source;
     throw new Error(`unexpected load ${url}`);
   });
+  t.mock.method(THREE.TextureLoader.prototype, 'loadAsync', async url => {
+    if (url.endsWith('/skin-roughness.webp')) return new THREE.Texture();
+    throw new Error(`unexpected texture ${url}`);
+  });
+}
+
+test('the shipped rig loads Jevica and Sable with only their trial components', async t => {
+  await shippedRig(t);
   for (const appearanceId of DEFAULTS) {
     const avatar = await loadResidentAvatar(4, `remote-trial-${appearanceId}`, 'jevica', {folk: false, appearanceId, faceRecipe: {}});
     try {
@@ -51,11 +62,14 @@ test('the shipped rig loads Jevica and Sable with only their trial components', 
       assert.notEqual(report.tier, 'off', appearanceId);
       assert.deepEqual(report.components, defaultAppearanceRealism(appearanceId), appearanceId);
       assert.equal(report.cornea, 0, `${appearanceId} has no cornea shell`);
-      assert.ok(report.skin > 0, `${appearanceId} upgrades skin: ${JSON.stringify(report)}`);
+      assert.ok(report.skin > 0 && !report.fallback && report.unsupported.length === 0, `${appearanceId} upgrades skin: ${JSON.stringify(report)}`);
       assert.equal(report.hair + report.brows + report.lashes, 0, `${appearanceId} keeps its hair, brow and lash cards`);
       avatar.object.traverse(object => {
         if (object.isMesh && /eyebrow|eyelashes/i.test(object.name)) assert.equal(object.material.alphaToCoverage, false, object.name);
-        if (object.isMesh && object.material.name === 'young_asian_female') assert.notEqual(object.material.normalMap?.name, 'realism-pores', 'skin has no pore normals');
+        if (object.isMesh && object.material.name === 'young_asian_female') {
+          assert.equal(object.material.roughnessMap?.name, 'realism-skin-roughness', 'skin takes the roughness map');
+          assert.notEqual(object.material.normalMap?.name, 'realism-pores', 'skin has no pore normals');
+        }
       });
       let shells = 0; avatar.object.traverse(object => { if (/cornea$/.test(object.name)) shells++; });
       assert.equal(shells, 0);
@@ -66,4 +80,32 @@ test('the shipped rig loads Jevica and Sable with only their trial components', 
     const avatar = await loadResidentAvatar(4, `remote-trial-${appearanceId}`, 'jevica', {folk: false, appearanceId, faceRecipe: {}, realism});
     try { assert.equal(avatar.realismReport.tier, 'off', `${appearanceId} ${realism}`); } finally { avatar.dispose(); }
   }
+});
+
+test('Jevica keeps her costume beneath the trial through every re-tier', async t => {
+  await shippedRig(t);
+  const avatar = await loadResidentAvatar(4, 'remote-trial-costume', 'jevica', {folk: false, appearanceId: DEFAULT_SHARED_APPEARANCE, faceRecipe: {}});
+  // The world applies the costume after loading, as player and remote avatars do.
+  const costume = createPlayerCostume(avatar, 'jevica');
+  const material = pattern => [...avatar.rig.materials].find(([original]) => pattern.test(original.name))[1];
+  const skin = material(/^young_/), hair = material(/^long01$/), brows = material(/^jevica_brows$/);
+  const costumed = () => {
+    assert.equal(hair.customProgramCacheKey(), 'jevica-rose-gold-hair-v2');
+    assert.equal(hair.alphaTest, .35);
+    assert.equal(brows.customProgramCacheKey(), 'jevica-soft-brows-v1');
+    assert.equal(brows.alphaTest, .4);
+  };
+  try {
+    // The trial sits on top of the costume, as in the hero and the trial captures.
+    for (const tier of [undefined, 'standard', 'low', 'high']) {
+      if (tier) await avatar.setRealismTier(tier);
+      costumed();
+      assert.equal(skin.roughnessMap?.name, 'realism-skin-roughness', `${tier} map`);
+      assert.equal(skin.roughness, 1, `${tier} map is not scaled by the costume`);
+    }
+    await avatar.setRealismTier('off');
+    costumed();
+    assert.equal(skin.roughnessMap, null);
+    assert.equal(skin.roughness, .58, 'off returns the costume skin');
+  } finally { costume.dispose(); avatar.dispose(); }
 });
