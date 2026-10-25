@@ -99,6 +99,16 @@ After the merge, f1 clarified that its own goal excluded merging, and that "fina
   - **Hero golden:** `--check` exits 2 (incompatible osRelease, osVersion and gpu). The Sable candidate was recorded and inspected. Its bodice tiles come from main's outfit changes, not this trial. The reference is not replaced.
   - **Core** passed on `7757f387`; hosted CI is running.
   - The branch is behind main by the #288 work only, which merges cleanly. Still held for Val.
+  - **Hosted on `7757f387`:** 22/22 (Verify run 40199631214), including the shared job with default-appearance-tiers, character-studio-tiers and character-studio-shared. Evidence comment on #517 (issuecomment-6398721190). river-oaks-32's session work is done. #656 stays held for Val on Decisions 1–4.
+- **Correction, head `026fbcdc` (about 15:15Z, river-oaks-32): cost is not established.** Hosted CI passed 22/22 (Verify run 40205009032), on a commit of docs and receipts only.
+  - **The numbers.** timing-6, a confirmation run on the head with its rule recorded beforehand, put Jevica ×8 at +10.5% frame and +10.2% CPU p95. Sable shows no cost. Pooled over the three measurement runs, Jevica ×8 CPU is +8.5%.
+  - **Decision 3 for Val:**
+    - profile Jevica ×8 and measure on a quiet host or a device;
+    - ship to Sable only;
+    - or accept on the pooled numbers.
+  - **Second independent visual review:** accepts roughness; says not to promote the hero candidate.
+  - **Correction:** the bodice tiles come from main's code or the M5 GPU, and this host can't tell which.
+  - #517 correction: issuecomment-6399455259. Still held for Val.
 
 ### #655 held after an independent review (about 03:55Z)
 
@@ -227,6 +237,13 @@ The reviewer confirmed that other callers' routes are unchanged (60 pairs) and t
     - **Cause in source: the client's own random backoff.** After a socket closes, the client waits `retryDelay(0)` before reconnecting: uniform 500–1,000 ms from `Math.random` (`preview/src/connection-policy.js:7`, scheduled at `multiplayer-client.js:204`). `attempt` resets to 0 on every successful join (`:288`).
       - `world-expansion-baseline.js:158–165` times close-to-rejoin once per profile per arm, so each sample is that random wait plus about 250 ms of connection and snapshot. The observed 726–1,174 ms fit that range.
       - With two samples per side, the row can't resolve a 20% change. The phone pattern across two ABBAs (4 against 4 draws, about a 1-in-70 ordering under no effect) is weak evidence once desktop's opposite pattern is counted.
+    - **Independent read-only check** (river-oaks-e9, ledger #668 Decision 10 @ `d8641190`):
+      - both arms are head `0b9a97c4`;
+      - phone and desktop move in opposite directions in the same run;
+      - the 500 ms span of `retryDelay(0)` alone covers the 331 ms phone difference at one sample per arm;
+      - `connection-policy.js` and `multiplayer-client.js` are unchanged between `15334aad` and `0b9a97c4`.
+
+      That fits the noise explanation without proving it. A seeded random or several samples per arm would settle it.
     - **Reading.** As written, the row is over its budget. The likely explanation is harness noise from deliberate jitter, not a Commons cost. Making the row deterministic (seed or stub `Math.random` in the harness, or subtract the scheduled delay) or taking more samples is a protocol change for its owner or Val. It isn't made here, and the budget isn't amended.
   - **Pixel parity** (`pixel-parity.mjs`: pixels whose largest channel difference is over 24, 12 captures per pair):
     - g1–g2: 0.04–0.70%;
@@ -237,7 +254,19 @@ The reviewer confirmed that other callers' routes are unchanged (60 pairs) and t
     So the Gardens-to-Commons difference in the District captures is within the same-revision spread. Receipt `rc-out2-0b9a97c4/pixel-parity.json`.
 - **Row 2 (`pnpm run verify full`).**
   - **Attempt 1 (13:04–13:06Z): failed in the tooling stage, 273/274.** The failure was `land-pr.test.js:122` "a queued lander wakes on release": the known watch-latency flake, which passed alone straight afterwards. The failed receipt is kept: `rc-out2-0b9a97c4/full-attempt1-failed.json` and `verify-full-attempt1.log`.
-  - **Attempt 2** started at 13:07Z with a fresh isolated Redis; result below.
+  - **Attempt 2 (13:07–15:33Z, fresh isolated Redis): passed all 18 stages.**
+    - **Non-browser stages:**
+      - dependency audit;
+      - tooling 274/274;
+      - preview 4,156 + 1 skip;
+      - server with Redis 1,182/1,182, none skipped;
+      - desktop 120 + 3 skips;
+      - build, Python lint, format and tests;
+      - demo and demo-verify;
+      - secrets and secret history.
+    - **Browser stages:** security-browser, reflections, experience, shared and ipic-screening, with 44 journeys passed and none failed.
+    - **Receipt:** `rc-out2-0b9a97c4/full-attempt2.json` (sha256 `3f3615248cbc6333`), revision `0b9a97c4`.
+    - **Its `dirty: true`** comes only from journey reports: `data/reports/experience.json` and `shared-experience.json` rewritten, plus three untracked report files from this task's journey runs. No source file differs.
 
 ### Commons go/no-go for `0b9a97c4` (runbook `docs/world-expansion-activation.md`)
 
@@ -246,7 +275,7 @@ The reviewer confirmed that other callers' routes are unchanged (60 pairs) and t
 | # | Condition | `0b9a97c4` (this task) | #657 on `09bd7a83` |
 | --- | --- | --- | --- |
 | 1 | Build merged through the guard; hosted Verify green on the release commit | **Met.** #641 merged through the merge guard; Verify run 40160333490, Desktop and push all succeeded | Met |
-| 2 | #587 gate: traversal; frame time within the District baseline on desktop and phone; walked-away assets released; accessibility; two-player journey locally and hosted | **Not met.** Traversal passed (world-gate-587, east-garden-commons) and frame/CPU are within budget. But **phone-viewport reconnect is +44.5%** against the 20% budget (likely the client's random 500–1,000 ms reconnect backoff, sampled once per arm). **world-streaming's GPU bound fails** (textures +13 against +10, introduced by #641, likely late first-render). Accessibility and browser stages wait on verify full attempt 2 | Met (phone reconnect +19.1%, close to the limit) |
+| 2 | #587 gate: traversal; frame time within the District baseline on desktop and phone; walked-away assets released; accessibility; two-player journey locally and hosted | **Not met.** Traversal passed (world-gate-587, east-garden-commons), frame/CPU are within budget, and verify full passed with every browser stage. But **phone-viewport reconnect is +44.5%** against the 20% budget (likely the client's random 500–1,000 ms reconnect backoff, sampled once per arm). **world-streaming's GPU bound fails** (textures +13 against +10, introduced by #641, likely late first-render). | Met (phone reconnect +19.1%, close to the limit) |
 | 3 | Rehearsal on the release commit, from both revisions, isolated Redis | **Met.** 26/26 (Gardens) and 28/28 (garage), twice | Met |
 | 4 | Val's human visual approval and physical-device results | **Open.** Val's to give; never simulated | Open |
 | 5 | Production revision and epoch confirmed; a rollback watcher | **Open.** Operator's step; production reads aren't authorized here | Open |
@@ -254,7 +283,6 @@ The reviewer confirmed that other callers' routes are unchanged (60 pairs) and t
 **To reach go on a later commit:**
 - #641's owner fixes or justifies the texture bound;
 - the reconnect row is made deterministic, or resampled with enough runs to resolve 20%, and measured within budget (a protocol change for its owner or Val);
-- verify full passes;
 - Val gives condition 4 and the operator condition 5.
 
 Main has since moved to `e8207b2b` (#658, touch/voice UI only). These rows were measured on `0b9a97c4`, not on `e8207b2b`.
@@ -458,6 +486,10 @@ Seams: Twentieth (y 111) and Eighteenth (y −71) cross Heights' 2 m reserve mar
   - **Studewood `7c9fab86`:** 19/19 passed, 5 skipped.
     - Attempt 1 failed `preview shared (development)` → `crime-shared`, "A timed evade (U) beats the rival's telegraphed counter". The same job passed on `1af6b511`, and the only change is the Studewood journey file. It's a timing flake from #646's journey.
     - It passed on `rerun-failed-jobs`, run 40198014512 attempt 2. The first failure's log is kept at `.runtime/convergence/662-7c9fab86-shared-development-attempt1.log`.
+- **Merged onto #649's `525856e2`** (river-oaks-91's merge of main `e8207b2b`, #658's touch and voice UI). The merges were clean, and the heavy checks waited until 3e's round-4 ABBA had left the browser queue.
+  - **Studewood `d61bdea4`:** Studewood and Heights tests 22/22; recipe locks reproduce. Core attempt 1 failed only the `land-pr` wake-on-release flake (273/274); that log is kept, and the test passed alone. Attempt 2 passed: tooling 274/274; preview 4,191 + 1 skip; server 925 + 228 Redis skips; desktop 120 + 3 skips.
+  - **Terraces `6bbf3090`:** 42/42 focused. Core passed: tooling 274/274; preview 4,202 + 1 skip; server 931 + 229 Redis skips; desktop 120 + 3 skips.
+  - **Hosted CI.** Studewood `d61bdea4`: 19/19, 5 skipped. Terraces `6bbf3090`: 20/20, 5 skipped. Terraces passed after one `rerun-failed-jobs` for the `crime-shared` timed-evade flake (run 40208285831; see below).
 - **Local Metal journeys on `b5016d29` (13:57–14:05Z, one browser-lock turn): both passed.** Hosted runs upload no captures, so these were run for visual inspection in the luxury kit.
   - studewood: 11 checks in 125.0 s;
   - bayou-terraces: 11 checks in 103.7 s.
@@ -492,6 +524,49 @@ Suppose Studewood and the north and south strips beside the Commons are authored
 
 The 5× target is far beyond any of these: about 148,000 m² more bounds at District density.
 
-## Next step
+## Recurring hosted flake: `crime-shared` timed evade
 
-Watch the #657 and #648 landers, then queue #650.
+`preview shared (development)` → `crime-shared` failed "A timed evade (U) beats the rival's telegraphed counter" twice today, both on heads whose change could not reach it:
+- #662 `7c9fab86`, run 40198014512, after a journey-only change; the job passed on `1af6b511` just before;
+- #663 `6bbf3090`, run 40208285831, after a clean merge of #658's touch UI.
+
+Both passed on `rerun-failed-jobs`. The first-attempt logs are kept in `.runtime/convergence/`.
+
+The journey (`preview/e2e/crime-shared.js:78–90`, from #646/#640) reads the counter's `remainingMs` from a town snapshot sent every 200 ms. It accepts 80–330 ms, presses U, and needs the press inside a 350 ms window, with three attempts. On a slow hosted runner, snapshot age plus input latency can miss all three. A fix belongs to the #640 owner: for example, time the press from a fresher signal, or widen the attempts.
+
+## Handoff (about 16:15Z)
+
+**Delivered by this task:**
+- **Ten merges** through `pnpm run land` and the merge guard (Phase 1 table above).
+- **The Commons go/no-go for `0b9a97c4`**: no-go, with evidence on #587 (issuecomment-6399590750) and status on #638 (issuecomment-6399591964).
+- **Two 3× increments ready to follow #649:**
+
+  | PR | Head | Reachable ground |
+  | --- | --- | --- |
+  | #662 Studewood | `d61bdea4` | 2.4598× |
+  | #663 Bayou Terraces | `6bbf3090` | 2.8244× |
+
+  Both are signed, with core passed and hosted CI green (see the Phase 3 sections). Both are stacked on #649's `525856e2`.
+
+**Waiting on Val:**
+1. **#649:** merge authorization. Its owner keeps it blocked on Val; the round-4 ABBA result is river-oaks-3e's to report. Once it lands:
+   - merge main into #662 and retarget it to `main`;
+   - run core and hosted checks, then land;
+   - then do the same for #663.
+
+   Landing them then needs merge authorization at that time.
+2. **3× needs 8,163.75 m² more reachable ground,** which means land beyond the reserve. Proposal A′ is on #586 (issuecomment-6391681517).
+3. **#656** Decisions 1–4.
+4. **#659**'s security commit `66134f27`.
+5. **#653 and #654.**
+6. **The Commons release:**
+   - the texture bound (#641's owner);
+   - the reconnect row protocol (make it deterministic, or take more samples);
+   - condition 4 (Val's sign-off) and condition 5 (production state).
+
+**Preserved, not retirable now:**
+- **Branches with open PRs:** `docs/convergence-3x-20261024` (#664), `feat/studewood-3x-20261024` (#662) and `feat/bayou-terraces-3x-20261025` (#663).
+- **`perf/walking-obstacle-buckets-20261025`** (worktree `river-oaks-walking-buckets`, PR #669 closed as superseded). It needs explicit cancellation authority (`project:cancel`, dry-run first).
+- **Six detached scratch snapshots holding receipts**, listed in the register (`convergence-3x-20261024`, `observed.localEvidence`).
+
+**Host.** `caffeinate` PID 71428 ended at about 15:07Z. PID 56722 holds the host awake until about 18:36Z; `kill 56722` stops it.
