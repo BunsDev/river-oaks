@@ -134,9 +134,27 @@ to off. The one addition is a 512² roughness texture, 1.33 MiB uncompressed:
 Jevica 52.1 → 53.4 MiB, Sable 25.6 → 26.9 MiB. Hair, brow and lash materials are
 untouched, so hair-card overdraw is unchanged.
 
-**Timing** (observation; the host was never quiet). Two runs on the same inputs
-(`9fb7504ef04b…`), cross-origin isolated, timer resolution 0.005 ms. Trial vs off,
-median of three:
+**Timing.** No script fails on timing, so the +10% bar is judged here, not
+enforced. A run counts as a measurement when no sample's one-minute load
+exceeds about 20, and as an observation otherwise. All runs are cross-origin
+isolated with timer resolution 0.005 ms. The tables show trial vs off, median
+of three.
+
+timing-5 is on the PR head `82b51d89`: clean tree, input manifest
+`956cf7d8cec9…`, finished 13:24Z, load 2.9–17.2 across all 36 samples. It is a
+measurement.
+
+| Look, crowd | frame p95 | CPU p95 | GPU p50 |
+| --- | --- | --- | --- |
+| Jevica ×1 | 2.00 → 2.17 ms (+8.5%) | 1.92 → 2.10 (+9.1%) | +2.6% |
+| Jevica ×8 | 16.0 → 15.4 (−3.8%) | 16.0 → 15.3 (−4.2%) | −1.6% |
+| Jevica ×24 | 47.0 → 47.3 (+0.6%) | 45.3 → 45.4 (+0.1%) | +9.0% |
+| Sable ×1 | 2.90 → 2.78 (−4.0%) | 2.81 → 2.71 (−3.6%) | +3.4% |
+| Sable ×8 | 3.05 → 3.00 (−1.6%) | 2.99 → 2.91 (−2.7%) | −4.2% |
+| Sable ×24 | 3.77 → 3.99 (+6.0%) | 3.69 → 3.91 (+6.0%) | −1.2% |
+
+Two earlier runs on the pre-merge tree (`f33c914b` plus the trial patch, input
+manifest `9fb7504ef04b…`):
 
 | Look, crowd | timing-3 frame p95 | timing-3 CPU p95 | timing-4 frame p95 | timing-4 CPU p95 |
 | --- | --- | --- | --- | --- |
@@ -147,23 +165,28 @@ median of three:
 | Sable ×8 | 2.54 → 2.54 (0%) | 2.43 → 2.42 (−0.4%) | | |
 | Sable ×24 | 5.42 → 4.87 (−10%) | 5.28 → 4.74 (−10%) | | |
 
-GPU p50 stayed within −1% to +8% of off in every case.
+In timing-3 and timing-4, GPU p50 stayed within −1% to +8% of off in every case.
 
-- timing-3: 22:08–22:34Z, both looks, load 5–14.
-- timing-4: Jevica only, 23:36–02:28Z, load 5–24.
+- timing-3: 22:08–22:34Z, both looks, load 5.1–14.4. It is a measurement.
+- timing-4: Jevica only, 23:36–02:28Z, load 5.4–23.8, with 2 of 18 samples
+  above 20. It is an observation.
   - It waited up to 300 s before each sample for one-minute load ≤10.
-  - That never held: 0 of 36 samples were quiet.
+  - That never held: none of its samples were quiet.
 
-**Verdict on cost: not established on this host.**
-- Sable is within the bar.
-- Jevica is within it in timing-4 (worst +9.0%) and over it in timing-3.
-- The run-to-run noise is larger than the bar. The same code at the same tier
-  moves by up to ±12% between the two runs, and the ×8 frame p95 by 46%.
+**Verdict on cost: met on the PR head, with a thin margin.**
+- On `82b51d89`, every frame and CPU p95 is within +10% for both looks at all
+  three crowd sizes. The worst case is Jevica ×1 at +9.1% CPU.
+- In timing-3, on the pre-merge tree, Jevica ×1 was 0.4–0.5 points over the bar.
+  Over the three runs that case moved between +3.6% and +10.5%.
+- Sable was within the bar in both runs that measured her.
+- On this shared host, run-to-run noise is about the size of the bar. The same
+  code at the same tier moves by up to ±12% between runs, and Jevica's ×8 frame
+  p95 by 46%.
   - At ×8 Jevica's CPU time sits near 16 ms, so frame intervals fall at 16 or
     33 ms and the p95 flips between them.
-- Nothing structural changes per frame: same draws, programs and geometry, plus
-  one extra texture fetch in the skin shader.
-- A quiet-host or device rerun would settle it (Decision for Val).
+- Nothing structural changes per frame: the draws, programs and geometry are the
+  same, plus one extra texture fetch in the skin shader.
+- A physical-device run is still open (Decision for Val).
 
 Jevica's crowd CPU time (about 16 ms at ×8 and 50 ms at ×24, against Sable's
 2.5 and 5 ms) is the same with realism off. It predates this trial and was not
@@ -212,18 +235,62 @@ Results:
   - shared stage: all 28 required journeys passed (597 checks), including
     default-appearance-tiers 18/18, character-studio-tiers 64/64 and
     character-studio-shared 81/81.
+  - verify full's `ipic-screening` stage timed out after 926 s without running.
+    It was still waiting for the shared browser lock while the host was in idle
+    sleep from 05:03Z. The standalone `node preview/e2e/ipic-screening-runner.mjs`
+    on the same clean tree, with the host awake, passed 19/19 checks at 09:53Z.
 - A separate character-studio-tiers run failed at its first page-ready wait. The
   host had gone into idle sleep at 05:03Z, and the run spanned it. The same journey
-  passed on that head in verify full's shared stage and on hosted CI; a rerun with
-  the host awake was queued.
+  passed on that head in verify full's shared stage and on hosted CI. A rerun on the
+  same clean tree, with the host awake, passed 64/64 checks at 11:37Z.
+- Hosted CI on the PR head `82b51d89` (run 40179234053): all 22 checks passed.
+  Job 121126491272 ran default-appearance-tiers, character-studio-tiers and
+  character-studio-shared.
+
+## Hero reference
+
+The Studio hero applies the same policy, so Sable's reviewed hero reference
+(`preview/e2e/goldens/character-hero/sable-human.png`, recorded at `d9dca2e5` on
+2026-10-16 on an M3 Max) no longer describes her look. Nothing in the reference
+directory was changed.
+
+- The check, `node scripts/character-hero-goldens.mjs --check preview/e2e/goldens/character-hero`,
+  exited 2 (incompatible) on `82b51d89`: "Reference environment mismatch:
+  osRelease, osVersion, gpu". This host is an M5 Max on Darwin 27.0.0; the
+  reference was recorded on Darwin 25.6.0. The check stops before rendering, so it
+  says nothing about pixels.
+- `--record .runtime/character-studio/hero-candidate-517-82b51d89` passed. It made
+  three native 4K captures with zero changed pixels between them: `sable-human.png`
+  sha256 `e5597125fc15…`, a `candidate` manifest with sha256 `e55076da431f…`.
+- Against the reference, 3.5% of pixels changed, mean channel error was
+  0.042/255 and the maximum 186/255. The check allows 0.1%, 0.01 and 2.
+  - The face, eyes, iris colour, brows, hair, palette, pose, bag and shoes match.
+  - The skin carries the roughness highlights on the nose, forehead, cheekbone and
+    lower lip.
+  - The largest differences are on the dress: the candidate's bodice shows
+    rectangular shading tiles, and its side edges have moved.
+- The tiles do not come from the trial. Timing-5's off and trial captures of Sable
+  on the same head show the same tiles on her white dress, and the two are
+  identical there. Since the reference was recorded, `main` has changed 42 of its
+  hashed sources, including outfit code: the new `character-bodice-fit.js`,
+  `romance-look.js`, `player-costume.js` and `avatars.js` (commits `1c9c36c1` and
+  `2b5062b6`). The reference therefore no longer matches `main` with realism off
+  either, though this host can't run that check.
+- Crops: [face and bodice, reference vs candidate](default-appearance-517/sable-hero-reference-vs-candidate.png),
+  and [bodice off vs trial, contrast raised](default-appearance-517/sable-bodice-off-vs-trial-contrast.png).
 
 ## Receipts and commands
 
 Committed receipts, under `data/reports/`:
-- Timing: [timing-3](../../data/reports/default-appearance-timing-3-517.json) and
-  [timing-4](../../data/reports/default-appearance-timing-4-517.json).
+- Timing: [timing-3](../../data/reports/default-appearance-timing-3-517.json),
+  [timing-4](../../data/reports/default-appearance-timing-4-517.json) and
+  [timing-5](../../data/reports/default-appearance-timing-5-517.json).
   - Command: `node scripts/character-fidelity-baseline.mjs --appearances jevica,sable-human --realism off,high --crowd 1,8,24 --repeats 3 --seconds 30`.
   - timing-4 used `--appearances jevica --quiet load=10,browsers=0 --quiet-timeout 300`.
+  - timing-5 ran under `caffeinate -i`, from the clean PR-head worktree.
+- Hero: `node scripts/character-hero-goldens.mjs --check preview/e2e/goldens/character-hero`
+  (exit 2), then `--record .runtime/character-studio/hero-candidate-517-82b51d89`
+  (exit 0). The candidate stays under `.runtime/` on the trial host.
 - [Quality-tier cycles](../../data/reports/default-appearance-quality-cycles-517.json):
   the same script with `--appearances jevica,sable-human --realism off --quality-cycles --repeats 0`.
 - [Experience journeys](../../data/reports/default-appearance-experience-517.json):
@@ -251,11 +318,13 @@ The crops linked above come from run-3.
 - Pore normals were not shipped. A version that spares the lips and eyelids and
   weakens on the neck and body needs a new region mask, outside this trial.
 - The reviewed `sable-human` hero golden (`preview/e2e/goldens/character-hero`)
-  was recorded with imported materials on an M3 Max. With this change its pinned
-  check is expected to fail until a new reference is reviewed; it was not
-  replaced here.
+  was recorded with imported materials on an M3 Max, before `main`'s outfit
+  changes. Its check is incompatible on this host, and a candidate recorded here
+  also carries `main`'s bodice tiles. The reference was not replaced.
 - Morgan and Imani are unchanged; their tiers pass no component list.
-- The +10% cost bar is not established here: run-to-run noise on this shared host
-  is about the size of the bar. A quiet-host or physical-device rerun is open.
+- The +10% cost bar is met on the PR head (timing-5, worst +9.1%). An earlier
+  run on the pre-merge tree exceeded it by 0.5 points at Jevica ×1. Run-to-run
+  noise on this shared host is about the size of the bar, and no physical device
+  was measured.
 - No human has signed off on the look; the verdicts rest on this session's reading
   and an independent agent's. #517 stays open for its AAA and all-device criteria.

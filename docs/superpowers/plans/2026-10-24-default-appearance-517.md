@@ -61,8 +61,8 @@ and run all five `node scripts/bake-*.mjs --check` before and after any edit the
 | 1 | Baseline capture and inspection, no source change | done (captures complete; exit 1 on HMR console errors only) |
 | 2 | Component-selective layer and tests | done; focused 54/54 |
 | 3 | Per-component trial and verdicts | done: run-1 and run-3, independent visual review; roughness accept, pores revise (not shipped), coverage and hairColor reject |
-| 4 | Cost, lifecycle and identity | lifecycle done; identity done (local and hosted journeys, rollback journey); cost not established on this host (timing-4 within +10%, timing-3 over; run-to-run noise ≈ the bar) |
-| 5 | Hero and Studio decision, golden candidate | hero uses the same policy; golden left for Val (Decision 1) |
+| 4 | Cost, lifecycle and identity | lifecycle done; identity done (local and hosted journeys, rollback journey); cost met on the PR head (timing-5 on 82b51d89, worst +9.1%); timing-3 on the pre-merge tree was 0.5 points over at Jevica ×1 |
+| 5 | Hero and Studio decision, golden candidate | hero uses the same policy; `--check` exit 2 (incompatible: osRelease, osVersion, gpu); candidate recorded and inspected (`e5597125…`); it also carries `main`'s bodice tiles, which the trial doesn't cause; golden left for Val (Decision 1) |
 | 6 | Costume order fix (independent code review) | done: `b0cdeeeb`, mutation-checked regression |
 | 7 | Delivery | draft PR #656 (final head and hosted checks recorded in the PR); landing waits for Val's acceptance |
 
@@ -211,6 +211,19 @@ and run all five `node scripts/bake-*.mjs --check` before and after any edit the
   Receipt kept as `.runtime/default-appearance-517/full-2065b5ef.json`; generated
   `data/reports/experience.json` and `shared-experience.json` restored with `git checkout`.
 - The disposable Redis was stopped after verify full.
+- Hosted CI on `82b51d89` (merge of origin/main `0b9a97c4`): all 22 checks passed, run 40179234053.
+  On the clean tree: core verify passed, all five bake `--check` runs passed, focused 88/88.
+- 09:53Z on the clean 2065b5ef snapshot, with the host awake:
+  `node preview/e2e/ipic-screening-runner.mjs` passed 19/19. This is the stage verify full could not reach.
+- 11:37Z on the same snapshot: the character-studio-tiers rerun passed 64/64 checks and 9 measurements.
+- 13:24Z timing-5 on the clean PR head `82b51d89` (inputs `956cf7d8…`, `caffeinate -i`, load 2.9–17.2,
+  36 samples, all ≤20): every frame and CPU p95 is within +10% for both looks at ×1, ×8 and ×24. The worst
+  case is Jevica ×1 at +8.5% frame and +9.1% CPU. Receipt `data/reports/default-appearance-timing-5-517.json`.
+- 13:25Z hero `--check` on 82b51d89 exited 2: "Reference environment mismatch: osRelease, osVersion, gpu".
+- 13:44Z hero `--record .runtime/character-studio/hero-candidate-517-82b51d89` passed: 3 identical captures,
+  `sable-human.png` `e5597125…`. Inspected against the reference: identity, eyes, brows, hair and palette match;
+  skin carries the roughness highlights. The bodice shows rectangular shading tiles. The same tiles appear in
+  timing-5's off capture, so they come from `main`'s outfit changes since `d9dca2e5`, not the trial.
 
 ## Verdicts (trial run-1, 20:17Z)
 
@@ -238,11 +251,17 @@ names; hair is matched by material `long01`), fixed for run-2.
 - The reviewed `sable-human` hero golden is captured through `createCharacterHero`
   with no realism argument. With the trial on, that path takes Sable's trial
   components, so the pinned check is expected to fail until Val promotes a candidate
-  or pins the golden to `off`. The reference is not changed here.
+  or pins the golden to `off`. The reference is not changed here. It also predates
+  `main`'s outfit changes: the candidate recorded here carries `main`'s bodice
+  tiles, so promoting it as it stands would make those tiles part of the reference.
 - Jevica and Sable have no frame-time or census ceilings. Cost is judged against
   realism off at the same revision (at most +10% frame and CPU p95, median of three
   warmed 30 s samples); no budget is added. The host was never quiet (other agents'
-  browsers and GPU work), so every timing sample is uncontrolled. Two runs on the same inputs disagree (timing-3 Jevica ×1 +10.4/+10.5%, timing-4 worst +9.0%), and the same code moves by up to ±12% between runs, so cost needs a quiet-host or device rerun (Decision for Val).
+  browsers and GPU work). The measurement runs (load ≤20) disagree near the bar:
+  - timing-5 on the PR head: worst +9.1%;
+  - timing-3 on the pre-merge tree: Jevica ×1 +10.4/+10.5%.
+
+  The same code moves by up to ±12% between runs. A physical-device run is open (Decision for Val).
 - Pores need a lip/eyelid/neck mask before they can ship (Decision 2).
 - Fixtures that load a rig without an explicit appearance (carriage, vehicles, motion,
   foot-support cost) now take Jevica's roughness map, as the player does.
@@ -253,9 +272,7 @@ names; hair is matched by material `long01`), fixed for run-2.
 ## Next action
 
 Val reviews the per-component table and the five-minute checklist on #656 and answers
-the Decisions there: the hero golden, a pore mask follow-up, and whether cost needs a
-quiet-host or device rerun before landing. Landing is not this session's to do. The
-lander (river-oaks-71) lands only after that, with hosted checks green on the final head.
-
-Still open in this session's queue at handoff: the `ipic-screening` stage and a
-character-studio-tiers rerun with the host awake. Their results go on #656.
+the Decisions there: the hero golden (including `main`'s bodice tiles), a pore mask
+follow-up, and whether timing-5's margin is enough without a device run. Landing is
+not this session's to do. The lander (river-oaks-71) lands only after that, with hosted
+checks green on the final head. Nothing is left running in this session's queue.
