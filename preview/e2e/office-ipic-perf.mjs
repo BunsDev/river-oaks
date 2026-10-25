@@ -67,7 +67,7 @@ async function measure(page, label, { drift = false } = {}) {
       let ticks = 0;
       await new Promise(resolve => {
         const tick = () => {
-          if (drift && ticks % 10 === 0) { const s = window.__riverScreening?.(); if (s?.state === 'playing') drifts.push(s.driftMs); }
+          if (drift && ticks % 10 === 0) { const s = window.__riverScreening?.(); if (s?.state === 'playing' && !s.seeking) drifts.push(s.measuredDriftMs); }
           if (++ticks > frames || performance.now() - started > 10000) resolve(); else requestAnimationFrame(tick);
         };
         requestAnimationFrame(tick);
@@ -82,7 +82,7 @@ async function measure(page, label, { drift = false } = {}) {
     frames: frames.length,
     intervalMs: { p50: percentile(frames.map(f => f.intervalMs), 0.5), p95: percentile(frames.map(f => f.intervalMs), 0.95), max: +Math.max(...frames.map(f => f.intervalMs)).toFixed(2) },
     cpuMs: { p50: percentile(frames.map(f => f.cpuMs), 0.5), p95: percentile(frames.map(f => f.cpuMs), 0.95) },
-    ...(drift ? { driftMs: { samples: drifts.length, p50: percentile(drifts.map(Math.abs), 0.5), p95: percentile(drifts.map(Math.abs), 0.95), max: drifts.length ? Math.max(...drifts.map(Math.abs)) : null } } : {}),
+    ...(drift ? { measuredDriftMs: { samples: drifts.length, p50: percentile(drifts.map(Math.abs), 0.5), p95: percentile(drifts.map(Math.abs), 0.95), max: drifts.length ? Math.max(...drifts.map(Math.abs)) : null } } : {}),
   }));
   const last = windows.at(-1).graphics;
   const result = {
