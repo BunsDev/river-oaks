@@ -13,6 +13,8 @@ function fixture(data=district) {
   const target = world.snapshot().crime.targets[0];
   world.players.get('a').position = [target.position[0] + 1.2, target.position[1], target.position[2]];
   assert.equal(world.command('a', { type: 'attack', targetId: target.id, attackKind: 'melee' }).ok, true);
+  // #640: the strike lands (and the star is earned) at contact, after its windup.
+  time += 300; world.step(.05);
   return { world, options, tick(ms = 100) { time += ms; world.step(ms / 1000); } };
 }
 test('actual town pursues, accepts surrender, arrests once at safe arrival and restores mid-arrest', () => {
