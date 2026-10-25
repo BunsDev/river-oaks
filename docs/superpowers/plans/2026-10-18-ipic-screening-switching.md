@@ -531,3 +531,96 @@ The final post-fix `pnpm run test:screening` receipt reports passed with 19 chec
 All fresh local receipts above describe `210cfbbc` plus the reviewed source patch, whose hashes are recorded in core/full-world evidence. Current main additionally contains character-fidelity #545 and Python dependencies #553. Publish this verified patch, integrate current main, and establish exact-final-head hosted checks before ready status. No merge/deploy/issue closure is authorized.
 
 Remaining #502 rows for Val and the acceptance reviewers: physical macOS Safari/iPhone core journey, codec/fallback/autoplay and foreground recovery; presented-frame timing on additional declared GPUs; screen color/black-level approval; actual listening, local lip-sync and correction audibility; touch, screen reader, keyboard/focus and reduced-motion human review; physical-device warm-up plus ten resource cycles, serving/performance and compatible release/rollback smoke. Existing local fixtures, width emulation and decoded audio are scoped engineering evidence only.
+
+## S1 post-merge pass — 2026-10-24 (Claude Code, task `ipic-screening-s1-postmerge-498`)
+
+### Baseline
+
+#571 merged as `167048c3` from reviewed head `ce2d56b3` (hosted Verify green via `pnpm run land`). That head also carries `31b7edf0`, which this ledger never recorded: a resume's pending `play()` no longer drops the paused film into `loading`. Before that fix, every host Resume and every foreground recovery unbound the texture, flashed "Loading the film…" and blanked captions until `play()` answered. Main `f33c914b` was then reviewed independently and read-only against the S1 requirements.
+
+### Findings and dispositions (PR #650, branch `test/screening-s1-postmerge-498-20261024`)
+
+- **Fixed: missing file while online reported as a decoder failure.** Chromium reports a 404 or HTML fallback as MediaError 4, the same code as an unreadable file. Each encoding is still tried once and the failure is immediate (`decode`, Retry). Then one generation-fenced HEAD per code-4 source corrects the reason to `network` when the server did not send the file.
+- **Fixed: stale diagnostics across sources.** `driftMs`, `measuredDriftMs` and `rate` reset with each source. `measuredDriftMs` is not sampled while `element.seeking`, so a seek request is not reported as convergence.
+- **Fixed: replayed host reply could move the panel back to an older film.** One `adopt()` revision/epoch guard now covers snapshots, sync replies and host replies.
+- **Fixed: a drift seek unbound the screen and recreated the texture.** Chromium drops `readyState` to 1 while seeking. The UI now holds the binding for the same generation and size.
+- **Fixed: a file a few ms short of the shared duration restarted from frame 0.** An ended element is not replayed.
+- **Unchanged, unreachable: old-epoch view after reset.** The server rejects a wrong epoch, and replay keys include the epoch.
+- **Fixed (second review of this diff):**
+  - Play film before any decoded frame claimed `ready`; it now stays `loading` under the stall deadline.
+  - Play film during a seek.
+  - A probe test race.
+  - A seek flicker.
+
+  A recheck confirmed all four.
+
+### Evidence
+
+- **Unit, red then green.**
+  - Main's player and UI: 7 of 8 new player tests and 2 of 3 new lifecycle tests fail.
+  - Focused screening suites at `b612ac51`: 95/95, 0 skipped.
+- **Core.** `pnpm run verify` passed on clean `b612ac51` (load 16.8), receipt `.runtime/s1-postmerge/core-final.json`:
+
+  | Suite | Result |
+  | --- | --- |
+  | Tooling | 237/237 |
+  | Preview | 4024 passed, 1 existing skip |
+  | Server | 888 passed, 223 Redis skips |
+  | Desktop | 115 passed, 3 Windows skips |
+  | Python | 156 passed |
+
+  An earlier attempt failed only the known load-sensitive `land-pr` timing test. That test passed 29/29 alone, and its log is kept.
+- **Hosted CI.** `b612ac51`: 22/22 success.
+  - `ed1b6c29` changes only the e2e fixture page, giving `test-missing` a WebM and an MP4 source.
+- **Actual screen, red.** Main `f33c914b` plus only the new checks, on Chromium 156.0.8078.4 with ANGLE Metal on Apple M5 Max:
+  - The drift seek left 1 of 40 frames unbound and created a new texture.
+  - The missing file reported `decode` with code 4.
+- **Actual screen, green.** `node preview/e2e/ipic-screen-runner.mjs` with the receipt's `sourceRevision` at `ed1b6c29` and a clean tree: 12/12 checks passed, no errors.
+  - Seek: 40/40 frames bound, 0 textures created. The lowest `readyState` was 1, on 1 seeking frame.
+  - Missing files: WebM and MP4 each tried once, both code 4, both `network`, screen unbound.
+  - Presented frames advanced 8 → 51.
+  - Stop restored the material exactly and disposed all 13 textures.
+  - Autoplay with sound was allowed, so the refusal path is unit-tested only.
+  - Inspected the 4:3 capture (all four red edges whole, black pillarbox mattes, no stretch) and the seated short capture (full frame, upright).
+- **Two-browser journey, green.** `node preview/e2e/ipic-screening-runner.mjs` on the same clean `ed1b6c29` tree: 19/19 checks passed, no errors.
+  - Presented-frame spread: median 17 ms and max 33 ms over 16 samples; converged after 4 ms; paused spread 0 ms.
+  - The fixture replacement had no stale frame in 74 rendered frames.
+  - The second approved film decoded 42392 audio bytes.
+  - Emulated background return: first presented frame 1 ms from the room, 33 ms after showing.
+  - Host loss paused at 10.08 s without promotion.
+  - The profile is headless SwiftShader on one machine, so this is not a GPU timing claim.
+- **Artifacts.** Receipts, captures and `artifacts-sha256.txt` (15 files) are in `.runtime/s1-postmerge/`. `green-head.txt` there shows `b612ac51` only because it was written at queue time; the receipts are authoritative.
+
+### Interfaces for S2/S3/S5
+
+- `stats()` adds `seeking` and `presented.shownAt`.
+- `attempts[]` items may carry `code`.
+- `network` also covers files missing while online. The reason may be refined from `decode` to `network` after one probe round-trip, signalled by `onChange`.
+- `createScreeningPlayer` takes an optional `probe`. Public methods are unchanged.
+- No server, catalog, media, timeline, permission or cancelled-seek change.
+
+### Retirement
+
+- Old worktree `river-oaks-screening-498-resume` (`fix/screening-lifecycle-498-20261020` at `984a5759`, in main) is blocked: `ownership-not-released`, `session-release-missing-or-stale`, `ignored-data`. Owner `codex:S1-closure-20261022` must release it.
+- Orphan `sweep/pr571` belongs to the PR sweep session.
+
+Neither was touched.
+
+### Still open (#502, Val and acceptance reviewers)
+
+- Physical macOS Safari and iPhone journeys: codec fallback, autoplay refusal and foreground recovery.
+- Presented-frame timing on further declared GPUs.
+- Human color and black-level approval.
+- Listening and lip-sync.
+- Touch, screen-reader, keyboard/focus and reduced-motion review.
+- Physical-device resource cycles.
+
+### Next
+
+Merge current main into the branch, then:
+
+1. Run the focused suites.
+2. Push and pass hosted checks on the final head.
+3. Mark #650 ready for review.
+
+Merge, deployment and issue closure need Val's authorization. Rollback: revert #650; it has no persisted, media-id or server effect.
