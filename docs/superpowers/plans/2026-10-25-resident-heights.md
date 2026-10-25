@@ -26,7 +26,7 @@ Until then, nothing here changes behaviour on main: Heights code paths run only 
 - **Strips, not a bigger grid.** A composed location larger than the cap is cut into the fewest equal east/west strips that fit, each its own grid. Heights becomes `bayou-heights#1` and `bayou-heights#2`, each 154 × 291 = 44,814 cells. Strip edges are seams like the District/Commons edge, found by the same open-ground scan with keep-right lanes. A test splits the Commons with a small cap: every walking answer is unchanged, and routes still cross.
 - **Found seams on Heights.** One footbridge crossing from the Commons into Heights at north −1335, and four crossings between the two strips (north −1406, −1335, −1252 and −1225.5).
 - **Reverse search for location legs.** A grid search stops after 15,000 cells. From the bandstand on Heights Green, every way out faces away from the footbridge, so the search toward the footbridge ran out while the search from the footbridge found the bandstand at once: residents could walk to the green and not plan a way back. A location leg that fails is now searched from the other end and reversed, since every leg is walkable both ways. District legs keep the District grid's own answers, so police, carriages, audits and District routes are unchanged.
-- **Heights stops.** The footbridge landing, the bandstand, the icehouse patio and Heights Hall, taken from #649's layout fields (`footbridge.landing`, `bandstand.rect`, `icehouse.at`, `hall.rect`). Each is the clear spot beside the landmark nearest the landing from which a resident can walk to and from the landing.
+- **Heights stops.** The footbridge landing, the bandstand, the icehouse patio and Heights Hall, taken from #649's layout fields (`footbridge.landing`, `bandstand.rect`, `icehouse.at`, `hall.rect`). Each is the clear spot beside the landmark nearest the landing from which a resident can walk to and from the landing. Proving that takes about 1.3 s of route searches on Heights, so a world's stops are placed once per world object, and each resident life gets its own copy.
 - **`relocateResidents({ fromData, toData, checkpoint, inside, toward })`** returns `{ checkpoint, moved }`, or null when someone has nowhere to go. It is extracted from the Commons → Gardens rollback, which now calls it.
   - It clones the envelope.
   - It moves residents on dropped land, or in a source seam corridor the target cannot reach, to clear ground the target's planner reaches.
@@ -77,16 +77,59 @@ Until then, nothing here changes behaviour on main: Heights code paths run only 
 
   The first 10 minutes carry route-cache warm-up in both columns. For comparison, #655 alone on the Commons revision had 1–6 calls over 50 ms per 10 minutes after warm-up (host load was then 17–28; here it was about 7).
 
+## Finding: Heights activation slowed by stop placement (fixed in `59617b59`)
+
+A scratch merge of #649's head `4c3fddc3` with this branch (not pushed) failed #649's Heights activation rehearsal. The test timed out at "alice snapshot on bayou-heights-1@2", its 8 s wait for the first snapshot after activation.
+
+- **Cause.** Placing the Heights stops runs route searches: the bandstand's forward search to the landing ran out at 609 ms before the reverse search succeeded, and the hall's took 474 + 126 ms. Every server world build repeated them, and a checkpoint migration builds the world several times. `createSharedWorld` on `bayou-heights-1` took about 60 ms on #649 alone and 1.35–1.44 s with this branch; resident life alone went from 11 ms to 1,286 ms.
+- **Where.** The rehearsal at load about 5:
+
+  | Tree | Rehearsal |
+  | --- | --- |
+  | #649 alone (`0cc09391`) | passed, 12.2 s |
+  | #649 + #655 (`03381365`) | passed, 12.4 s |
+  | #649 + this branch before the fix | failed at the Heights@2 snapshot, with or without the rollback wiring |
+  | #649 + this branch with the fix and the rollback wiring | passed, 31/31 checks, 17.1 s |
+
+- **Fix (`59617b59`).** A world's stops are placed once per world object, in a `WeakMap`, and copied for each resident life. Repeat builds took 69–77 ms; the first still pays the placement, about 1.3 s, once per world object. A new test checks that two lives on one world get equal, independent stops, and that a cloned world gets the same stops. That test also passes without the cache: only the rehearsal with #649 shows the regression, which is why that is the red and green evidence here.
+- **After the fix:** related suites on an isolated Redis 196/196, 0 skipped. Core verify (`nice -n 10`, Python 3.12) passed on the first attempt: agent 274/274; preview 4,164 passed, 1 skipped; server 918 passed, 225 Redis-only skips; desktop 120 passed, 3 skipped; build; Python; demo; secrets.
+
+## Heights rollback wiring, prepared for after #649 (not on this branch)
+
+Rehearsed on the same scratch merge, kept as a patch in the session scratchpad:
+
+- `server/district-heights-checkpoint-migration.js`, Heights → Commons:
+  - Players are placed first, so residents keep 0.9 m from the players' new spots, the same order as the Commons → Gardens rollback.
+  - Then `relocateResidents` runs with `inside` = the Heights bounds and `toward` = the Commons-side end of the footbridge deck (east −2551.34, north −1335).
+  - The result gains `movedResidents`. The forward path returns an empty list, and the chained rollback to Gardens merges both lists.
+- `server/redis-room.js`: the `district_heights_checkpoint_migrated` log line gains a `movedResidents` count.
+- `server/tests/resident-heights-rollback.test.js` (new), 4/4 passing:
+  - Heights → Commons moves a resident on Heights Green and one at the footbridge landing to Commons ground the planner reaches.
+  - A chained rollback to Gardens brings both residents back to the District.
+  - Activation moves no residents.
+  - A resident on Heights Green plans a walk back to the footbridge and the District.
+- Red checks:
+  - Without the wiring, the Heights → Commons and activation tests failed.
+  - The chained test still passed, because the Commons → Gardens rollback already catches residents east of the District.
+  - Without the reverse search, all four failed.
+- `server/tests/heights-activation-rehearsal.test.js` gains a check that the rollback log counts residents. The receipt's logs:
+  - `{"event":"district_heights_checkpoint_migrated","from":"heights","to":"commons","moved":3,"movedResidents":0}`
+  - `{"event":"district_heights_checkpoint_migrated","from":"heights","to":"gardens","moved":3,"movedResidents":0}`
+
+  No resident stood in Heights during that run, so 0 is expected there.
+- **Deviation to confirm with river-oaks-91:** they asked for the resident relocation before players move. Running it after the players are placed keeps residents clear of the new player positions.
+
 ## Gaps
 
 - The reverse-search regression can only be shown on Heights: the Commons band (9,396 cells) never reaches the search limit. The test lands with the Heights rehearsal once #649 is on main.
 - The Heights rollback's resident handling is not wired yet; it waits for #649 (see Landing order).
 - No browser journey; Val's visual review of residents in Heights is open.
+- The first Heights world build in a process still pays about 1.3 s for stop placement, and a resident's first plan from the bandstand pays the forward search, about 0.6 s. The server simulation's warm-up maximum of 313 ms is consistent with that cost; I didn't attribute it call by call. A cheaper failing search in the shared grid planner would remove it, but would change District routes for police and carriages too, so it is out of scope here.
 
 ## Next step
 
 After #649 lands:
 1. Merge main into the branch (a rebase would need a force-push).
-2. Wire `relocateResidents` into the Heights rollback, and extend the Heights rehearsal.
+2. Apply the prepared Heights rollback wiring and its tests (see above), and rerun the Heights rehearsal.
 3. Run `verify full` with an isolated Redis.
 4. Mark the PR ready.
