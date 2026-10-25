@@ -317,7 +317,7 @@ function composeLocations(world,district,{allowRoads,placedObjects,geography}) {
         const middle=run[run.length>>1],south=run[Math.floor(run.length/4)],north=run[Math.min(run.length-1,Math.floor(run.length*3/4))];
         const xs=run.flatMap(item=>[item.from[0],item.to[0]]);
         portals.push({west,east,from:middle.from,to:middle.to,eastbound:[south.from,south.to],westbound:[north.to,north.from],
-          rect:[Math.min(...xs),run[0].from[1]-0.25,Math.max(...xs),run.at(-1).from[1]+0.25]});
+          crossings:run.map(item=>[item.from,item.to]),rect:[Math.min(...xs),run[0].from[1]-0.25,Math.max(...xs),run.at(-1).from[1]+0.25]});
       }
       run=[];
     };
@@ -379,6 +379,15 @@ function composeLocations(world,district,{allowRoads,placedObjects,geography}) {
     for(const [side,end] of ends) if(canWalk(point,end)) return {region:side,lead:[[...end]],at:end};
     return null;
   };
+  // Corridors are found before anything is built. A placed object can block a
+  // keep-right lane later: cross on the clear row of the run nearest to it.
+  const lane=(portal,eastward)=>{
+    const preferred=eastward ? portal.eastbound : portal.westbound;
+    if(canWalk(...preferred)) return preferred;
+    return portal.crossings.map(([west,east])=>eastward ? [west,east] : [east,west])
+      .sort((a,b)=>Math.abs(a[0][1]-preferred[0][1])-Math.abs(b[0][1]-preferred[0][1]))
+      .find(([near,far])=>canWalk(near,far)) ?? null;
+  };
   const route=(start,end)=>{
     if(!finite(start) || !finite(end)) return null;
     const from=settle(start,end),to=settle(end,start);
@@ -389,11 +398,13 @@ function composeLocations(world,district,{allowRoads,placedObjects,geography}) {
     const path=[...from.lead];let current=origin;
     for(let i=0;i<chain.length-1;i++) {
       const choices=portals.filter(portal=>portal.west===chain[i] && portal.east===chain[i+1] || portal.east===chain[i] && portal.west===chain[i+1])
-        .map(portal=>portal.west===chain[i] ? portal.eastbound : portal.westbound)
-        .sort((a,b)=>distance(current,a[0])+distance(a[1],goal)-distance(current,b[0])-distance(b[1],goal)).slice(0,3);
+        .map(portal=>({portal,eastward:portal.west===chain[i],ends:portal.west===chain[i] ? portal.eastbound : portal.westbound}))
+        .sort(({ends:a},{ends:b})=>distance(current,a[0])+distance(a[1],goal)-distance(current,b[0])-distance(b[1],goal)).slice(0,3);
       let crossed=false;
-      for(const [near,far] of choices) {
-        const leg=distance(current,near)<1e-9 ? [] : chain[i].nav.route(current,near);
+      for(const choice of choices) {
+        const crossing=lane(choice.portal,choice.eastward);
+        if(!crossing) continue;
+        const [near,far]=crossing,leg=distance(current,near)<1e-9 ? [] : chain[i].nav.route(current,near);
         if(!leg) continue;
         path.push(...leg,[...far]);current=far;crossed=true;break;
       }

@@ -14,6 +14,7 @@ Task `next-district-586-support-20261024`, owner `claude:river-oaks-3e (4e851f0b
 - `preview/src/resident-life.js`: Commons stops and wandering.
 - `server/district-commons-checkpoint-migration.js`: Commons → Gardens rollback walks residents home.
 - `preview/tests/resident-locations.test.js`, `server/tests/resident-locations-rollback.test.js`, this ledger.
+- `preview/tests/fixtures/district-routes-main.json`: main's District routes (added by the review fixes).
 
 ## Design
 
@@ -89,6 +90,33 @@ All on main `09bd7a83` plus this branch's uncommitted tree unless noted. Host: A
   - police and crime;
   - the Commons activation rehearsal;
   - Redis room.
+
+## Review fixes
+
+An independent review of `22679471` (the same product code as `fea24bed`) confirmed three defects and some tests that did not test what they claimed. They are fixed on `fix/resident-locations-review-20261025`, which starts at `fea24bed`.
+
+1. **Rollback froze residents walking toward the Commons (high).**
+   - **Cause:** Commons → Gardens reset only residents standing in removed land. A resident still on District ground kept its route into the Commons. In Gardens it stopped at the old corridor entrance, and `recoverRoute` keeps the old route whenever a re-plan fails. The probe resident waited at (−2681.05, −1334.00) for 20 simulated minutes.
+   - **Fix:** the rollback also clears the route and destination of any resident whose route enters removed land, or who is heading for a Commons lantern. It reports them as `reroutedResidents` and requeues their errands, as it does for moved residents.
+   - **Corridor rectangles:** it now finds them as the live planner does, before any build. With builds included, a planter on a lane hid the corridor, and residents standing in it were left outside the site ring.
+2. **An object on a seam lane left residents pacing (medium).**
+   - **Cause:** lanes are found once, without objects, and `route()` appended a lane's far end unchecked. A planter at edge − 12 m on the eastbound lane, which the build check accepts, kept an eastbound resident pacing between edge − 15 and edge − 12.5. It took the route-search slot about once a second.
+   - **Fix:** each corridor keeps its crossing rows. A route uses its keep-right lane when that lane is walkable past current objects, and otherwise the nearest clear row. This adds walkability checks only, no grid search, and still at most three leg searches per hop.
+   - **Result:** with the planter, the resident crosses on row −1333. A probe of 16 staggered opposite meetings, run without a test, all resolved within 90 s.
+3. **A lantern home stop survived rollback (low).** A resident anchored at a Commons lantern gets its Gardens home stop back, `persona.anchorName` included.
+4. **Tests that now test what they claim.**
+   - **District routes:** `preview/tests/fixtures/district-routes-main.json` holds 60 routes from main's own planner: residents and police, on both revisions. They come from `e8207b2b`'s `navigation.js` (blob `27584465`), run with this tree's unchanged dependencies. It also stores each revision's world-data fingerprint, so a geography change asks for a recapture rather than looking like a planner regression. The old test only compared this planner with and without `locations`; a 1.03 → 1.05 change to District path smoothing passes it but fails the new one.
+   - **Wandering:** the test now walks, at most 1.4 m/s per step and on walkable ground, from the far west into the Commons in about 6 simulated minutes. Each outing is held as a stroll toward the tower.
+   - **Rollback:** a resident now sits on a District bench and stays seated. A planter narrows the corridor. New tests cover findings 1 and 3. The finding 1 test uses a real volunteer visit and steps Gardens until both residents re-plan.
+
+| Review-fix check | Result |
+| --- | --- |
+| Reviewer probes `stale-route.mjs`, `object-in-lane.mjs` on `fea24bed` | Both reproduce: walker waiting at (−2681.05, −1334.00) through t = 1200 s; eastbound resident pacing between edge − 15 and edge − 12.5 for 10 min |
+| Same probes after the fixes | Walker re-plans to District stops and keeps walking; resident crosses on row −1333 and reaches the tower by t = 120 s |
+| Reviewer's route-parity probe (main vs this planner) | 60 pairs, 0 differences |
+| New tests on `fea24bed`'s product code | Object-in-lane test fails with the old `navigation.js` (eastbound still at edge − 12.6 m after 90 s). Finding 1 and 3 tests fail with the old migration; finding 1 still fails on behaviour alone ("waiting for space at −2681.1, −1334.0"). Restoring the old with-builds corridor line fails the planter assertion. |
+| Related suites with an isolated Redis (resident, navigation, police, creator, Commons, migrations, world, Redis room) | 246/246 passed, 0 skipped |
+| `pnpm run verify` (core), Python 3.12 on PATH, on the review-fix tree | **Attempt 1 (18:51Z) failed** at agent-tests: 273/274; the one failure was the known `land-pr` timing test "a queued lander wakes on release", which timed out at 30 s. That test file then passed 29/29 alone. **Attempt 2 (18:53–18:57Z) passed**: agent 274/274; preview 4,163 passed, 1 skipped; server 919 passed, 225 skipped (Redis cases; core runs without Redis); desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo, demo-verify; secrets. Only this row was added after it. |
 
 ## Gaps
 
