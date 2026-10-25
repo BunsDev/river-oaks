@@ -55,6 +55,8 @@ async page => {
     }
     console.log(`${label} reached`);
   };
+  // Each waypoint has 120 s, as in the Commons journey, whose longest leg is 73.5 m. Long straight
+  // legs here are split to that length, so the stall deadline asks the same pace of a CPU-rendered walker.
   const walk=async(tab,points,label)=>{
     const started=Date.now(),start=await self(tab),samples=[];
     const releaseKeys=async()=>{await tab.keyboard.up('KeyW');await tab.keyboard.up('ShiftLeft');};
@@ -106,7 +108,7 @@ async page => {
     check(approach.every(path=>path?.length),'Existing walking routes connect both arrivals to the eastern gateway');
     await Promise.all([walk(page,approach[0],'owner approach'),walk(peer,approach[1],'alice approach')]);
     // Market Street, past the Bayou Lantern on either side, and over the footbridge.
-    await Promise.all([walk(page,[at([-1,1.5]),at([100,1.5])],'owner market street'),walk(peer,[at([-1,-1.5]),at([100,-1.5])],'alice market street')]);
+    await Promise.all([walk(page,[at([-1,1.5]),at([50,1.5]),at([100,1.5])],'owner market street'),walk(peer,[at([-1,-1.5]),at([50,-1.5]),at([100,-1.5])],'alice market street')]);
     await capture(page,'footbridge-approach');
     check(await page.evaluate(()=>!document.querySelector('#lantern-walk-status').hidden),'The Lantern Walk status shows on Market Street in the Commons');
     // Heights streams as its own location: walking Market Street brings it in before the footbridge.
@@ -156,7 +158,7 @@ async page => {
 
     // Heights Green and its bandstand, then Nineteenth & Yale toward Heights Hall.
     // Clear lanes between the market stalls and the lawn's tree rows lead north to the bandstand.
-    await Promise.all([walk(page,[at([203,-9]),at([201,1.5]),at([201,96])],'owner green'),walk(peer,[at([199,-9]),at([209,-1.5]),at([209,96])],'alice green')]);
+    await Promise.all([walk(page,[at([203,-9]),at([201,1.5]),at([201,50]),at([201,96])],'owner green'),walk(peer,[at([199,-9]),at([209,-1.5]),at([209,50]),at([209,96])],'alice green')]);
     await capture(page,'green-bandstand');
     const before=await self(page),socketCount=await page.evaluate(()=>window.__heightsSockets.length),reconnectStart=Date.now();
     await page.evaluate(()=>window.__heightsSockets.at(-1).close());
@@ -169,14 +171,14 @@ async page => {
     // four-core runner, and one such view held still slows the other client's walk to a fifth of
     // walking speed (see the ledger, docs/superpowers/plans/2026-10-24-next-district-586.md).
     // A walker that overshoots its waypoint turns back west, so whoever waits faces east, the lighter view.
-    await Promise.all([walk(page,[at([201,1.5]),at([300,1.5])],'owner nineteenth').then(()=>face(page,EAST,'owner faces east')),
-      walk(peer,[at([209,-1.5]),at([300,-1.5])],'alice nineteenth').then(()=>face(peer,EAST,'alice faces east'))]);
+    await Promise.all([walk(page,[at([201,50]),at([201,1.5]),at([250,1.5]),at([300,1.5])],'owner nineteenth').then(()=>face(page,EAST,'owner faces east')),
+      walk(peer,[at([209,50]),at([209,-1.5]),at([255,-1.5]),at([300,-1.5])],'alice nineteenth').then(()=>face(peer,EAST,'alice faces east'))]);
     await capture(page,'nineteenth-and-yale');
 
     // Home: back over the footbridge and the Commons to the District, one player at a time, for the same reason.
-    await walk(peer,[at([165,-1.5]),at([100,-1.5]),at([-2,-1.5])],'alice home');
+    await walk(peer,[at([235,-1.5]),at([165,-1.5]),at([100,-1.5]),at([50,-1.5]),at([-2,-1.5])],'alice home');
     await face(peer,EAST,'alice faces east at home');
-    await walk(page,[at([165,1.5]),at([100,1.5]),at([-2,1.5])],'owner home');
+    await walk(page,[at([235,1.5]),at([165,1.5]),at([100,1.5]),at([50,1.5]),at([-2,1.5])],'owner home');
     check((await self(page)).position[0]<edge&&(await self(peer)).position[0]<edge,'Both players walked back to the original District');
     check(await page.evaluate(()=>{const notices=window.__heightsNotices,heights=notices.indexOf('Entering Bayou Heights');
       return heights>=0&&notices.indexOf('Entering Bayou Market Commons',heights)>heights&&notices.lastIndexOf('Back in River Oaks District')>heights;}),'Returning names the Commons and then the District');

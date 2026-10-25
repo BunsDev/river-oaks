@@ -236,6 +236,20 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
   - **Run 40142827652 (scoped check plus `face()`; the tree committed next): passed.** "Passed bayou-heights" took 9 min 14 s.
     - Once the owner faced east, alice finished Nineteenth Street 28 s later.
     - Alice walked home in 152 s (about 62 % of walking speed); the owner took 84 s.
+- **Hosted run on `7291b566` (Verify 40143775558).** Every job passed except `preview experience (heights)`, job 121020743869, which failed with `alice home: stalled` 0.34 m short of x 165.
+  - The facing fix held: the owner faced east throughout, and alice reached the crossroads 23 s after the owner.
+  - Alice was not stuck. Alone facing west, she walked steadily at about 1.2 m/s, 37 % of walking speed. The 135 m leg from x 300 to x 165 ran out its 120 s deadline on the final approach.
+  - In the diagnostic runs, the same walk went at about 62 %. The PR runs, with all sixteen jobs starting together, were about 1.5× slower at every leg, which suggests shared-host contention.
+- **Leg lengths.**
+  - The 120 s per-waypoint stall deadline is the shared convention: the Commons and `baseline-580` journeys use it too. The Commons journey's longest single leg is 73.5 m (`east-garden-commons.js:146`).
+  - Heights had legs of 94.5–135 m. Its implied pace floor, up to 1.13 m/s, was stricter than the Commons journey's 0.61 m/s.
+  - The journey now adds waypoints on the straight lines both players already walk: Market Street at x 50, the green lane at y 50, Nineteenth Street at x 250 and 255, and the walk home at x 235 and x 50. No leg exceeds 70 m.
+  - **Tradeoff.** The deadline itself is unchanged, but the pace floor on the longest leg drops to 0.58 m/s (70 m in 120 s), close to the Commons journey's 0.61 m/s.
+    - So a crawl like `8f3c94fd`'s (0.54–0.70 m/s) would no longer reliably fail on its own. The face-east change removes that cause, and a true stall still fails.
+    - The heights job keeps its 20 min timeout, which bounds the whole journey.
+  - **Diagnostic run 40144799151 (this journey): passed, slowly.** Every leg ran slower than in earlier runs. The journey took 16 min 53 s, and alice walked home in 284 s (about 33 % of walking speed). The job took 18 min 20 s under the diagnostic workflow's 45 min limit.
+    - The PR workflow allows 20 min, so on a runner that slow this shard would be near its limit. That is a recorded risk, not a measured failure.
+    - The earlier diagnostic jobs took 10.5–12.6 min.
 - **Pedestrian captures, inspected.** Both runs uploaded all eight `heights-*.png`. They are CI software-profile renders: llvmpipe at render scale 0.25, with every material replaced by `MeshNormalMaterial` (`main.js:232`). So they show geometry, not appearance.
   - **Greenway:** street trees and kit blocks on both sides.
   - **Icehouse patio:** the two-chair game table, with "Icehouse game table" in the seat picker and a "Sit on the bench" prompt.
@@ -261,17 +275,59 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
     The District views did not record on either tree.
 - **Performance.** Not started. ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e). The `#626` decision is recorded only on #643's branch (D11).
 
+## Status at handoff (head `7291b566`, draft PR #649)
+
+**Overall: blocked.** Items 1–4 and 6 are complete. Item 5, the District performance gate, has not been run on the final head. It is support task D (river-oaks-3e) under the #626 protocol, and the gate's limits are unchanged. Heights is not activated anywhere; production activation is not authorized.
+
+1. **Ledger before source: complete.** The objective, design, files-owned and checks sections were written before any source edit. They were committed with the first source in `b1ded7ab`, so git history alone does not show the order.
+2. **Authoritative ground and connection: complete.**
+   - Manifest registration partitions the reserve without enlarging it.
+   - Server walking, collision, refusals and checkpoints cover Heights.
+   - The Lantern Footbridge is an accessible, level street connection.
+   - Two real clients walk the round trip in the hosted heights shard.
+   - Focused tests cover the new ground, entries and refusals.
+3. **A real place: complete.**
+   - It has seven locked kit recipes, including the promoted crossroads with its geometry unchanged.
+   - Its landmarks are Heights Hall's clock tower, the bandstand and the footbridge.
+   - It has street trees and planted beds, pedestrian streets, seating, and the icehouse table game for two.
+   - `pnpm run destination check` reproduces every lock, and the authored overrides are preserved.
+4. **Measured gain: complete.** Reachable ground is 2.0119× at 0.5 m (93,509.75 m²) and 2.0174× at 1 m, with pinned composed-world hashes. Reserved land, upper floors, flight, travel and islands are excluded.
+5. **No District regression: blocked (not started on the final head).**
+   - **Done:**
+     - streaming and unload checks (focused tests, and the journey's release on the way home);
+     - reconnect identity and drift within 0.5 m in Heights (journey);
+     - the pedestrian captures, inspected (CI software profile only).
+   - **Not done:**
+     - the matched ABBA District comparison: frame and CPU p95 within +10%, reconnect within +20%, drift within 0.5 m;
+     - District-only cold transfer on the final head. It was +0.15% on `b1ded7ab`, and has to be re-measured because Heights now loads lazily through its stream.
+6. **Signed, verified commits in draft PRs: complete.** Every commit on #649 is SSH-signed. Core verify passed on each pushed head. Hosted Verify results are recorded per head under Results. Nothing is merged, enqueued or deployed.
+
 ## Gaps and coordination
 
 - **Decision for Val:** Heights holds about 19 MiB of retained geometry in all, against the Commons' 16 MiB ceiling, which it keeps. Holding all of Heights at once needs a larger ceiling for this location. Sharing the oak models with the District's trees (one copy app-wide) would save about 3 MiB more, but it changes shared disposal. Either is a separate task.
 - Residents do not route across locations. That work is support task B, river-oaks-3e, on `feat/resident-locations-20261024`. Once residents can stand in Heights, the Heights rollback must relocate them as it does players.
 - `verify full` browser stages (security-browser, reflections, experience, shared, ipic-screening) were not run here as a whole, because the shared browser lock has a long queue. The Heights journey runs on its own, and hosted CI runs the matrix, including the new `heights` shard.
 - Human visual approval, physical devices, hosted multiplayer and Unreal parity are separate acceptance.
+- **Retirement check at handoff (`pnpm run project:inventory`).**
+  - This task's branch and worktree are active, with a draft PR, so they are not eligible.
+  - `diag/heights-west-draw-20261024` exists only on the remote. It is mine, cited here as evidence, and never for merge. Delete it once #649 closes.
+  - The only retire candidate listed, `test/mvp-regression-20261023`, belongs to another owner, so it is untouched.
 
 ## Next step
 
-1. Get the local `pnpm run test:experience bayou-heights` result and inspect its pedestrian captures in `output/playwright/heights-*.png`.
-2. Get the hosted checks on #649.
-3. Get the ABBA performance results (D) and the review and rehearsal (C) from river-oaks-3e.
-4. Post one evidence comment each on #586 and #638.
-5. Fix any review findings and re-verify.
+1. Read hosted Verify for #649's head. Every job, including `preview experience (heights)` and the aggregate `preview`, has to pass on a branch up to date with `main`.
+2. Get the ABBA performance and cold-transfer results (support task D, river-oaks-3e) for that head, with the limits unchanged. Record them here and on #586.
+3. Fix any review findings and re-verify. Merge, auto-merge and activation stay with Val.
+4. Decisions for Val, not taken here:
+   - a larger retained-geometry ceiling for Heights;
+   - sharing the oak models with the District's trees.
+
+### Next-session prompt
+
+> Continue task `next-district-586-20261024` (#586, #638 lane 3) in `../river-oaks-next-district-586`, on branch `feat/next-district-586-20261024`, draft PR #649. Read `docs/superpowers/plans/2026-10-24-next-district-586.md` first, especially "Status at handoff" and "Results".
+>
+> Items 1–4 and 6 are complete. Item 5, the District performance gate, is blocked on the matched ABBA run and District-only cold transfer for the current head (#626 protocol, limits unchanged: frame and CPU p95 +10%, cold transfer +10%, reconnect +20%, drift 0.5 m).
+>
+> Check hosted Verify on the head (the `heights` shard and the aggregate `preview`), and merge `main` without force if it has moved. Collect D's results from river-oaks-3e or run them under the protocol. Post one evidence comment each on #586 and #638.
+>
+> Do not merge, enable auto-merge, activate `bayou-heights-1`, change budgets or the area metric, or edit other owners' branches. The diagnostic branch `diag/heights-west-draw-20261024` is evidence only, never for merge.
