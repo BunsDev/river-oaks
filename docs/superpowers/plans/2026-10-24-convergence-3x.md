@@ -56,10 +56,58 @@ Order: #648 → #650 → #651 → #652 → #645 → #646, then each held PR as i
 | #657 | Val authorized earlier, in river-oaks-33's session | river-oaks-33's lander | Merged `c3eae4f5` at about 23:49Z (Verify passed on `942711f5`) |
 | #648 | Docs-only; hosted 22/22; core passed at `85d66e97` | 71, queued 23:37Z | Merged `26d63a06` at about 00:05Z, reviewed head `bbd68da9` (update-branch), Verify passed; on fetched main |
 | #651 | Owner 7c agreed; Desktop and Verify green; 10/10 diagnostic legs; independent review addressed | 71, queued 23:39Z | Merged `4122fe07` at about 00:40Z, reviewed head `12ae37ac`, Verify passed; on fetched main |
+| #641 | Val approved in river-oaks-33's session | river-oaks-33's lander (through a copy of the wrapper, after an "unstable" refusal) | Merged `0b9a97c4` at 04:01Z, reviewed head `e5202092`. This is the release-candidate commit |
+| #658 | Owner f1 final head `4d870774`; reviews addressed; hosted 22/22; journeys on the exact and adjacent tree | 71 through the wrapper | Merged `e8207b2b` at about 12:20Z, reviewed head `48f8f511`; 22/22 checks complete; on fetched main. After the release candidate; touch controls only |
+| #646 | Hosted 22/22 (crime-shared and world-rules-shared run in the hosted development shard); verify full on 83a1c4f6; two reviews addressed (owner session gone) | 71; attempt 3 through the wrapper | Merged `15334aad` at about 03:50Z, reviewed head `de9e325f`; 22/22 checks complete; on fetched main; owner task marked delivered. Rollback: checkpoint v17 / writer v21–22 needs build and Redis rolled back together |
 | #645 | Hosted 22/22; every verify full stage passed across two runs on 7e267038; two reviews addressed (owner session gone) | 71; attempt 1 refused "unstable" (CodeQL swift queued); attempt 2 through the wrapper | Merged `a437cbbf` at about 03:10Z, reviewed head `e4d0413`; 22/22 checks complete; on fetched main; owner task marked delivered. Human gameplay-feel review (#637/#599) open |
 | #647 | Owner a8 confirmed final head 2586c39a; review's four defects fixed failing-first; hosted 29/29; core on identical source | 71; attempt 2 through the check-waiting wrapper | Merged `2c2f2eec` at about 02:58Z, reviewed head `0918a012`; all 29 checks complete, including CodeQL Swift; on fetched main |
 | #652 | Owner 7c agreed; Desktop and Verify green; cache miss and hit proven on three runners; review addressed | 71; attempt 1 refused "unstable" (Desktop installers running); attempt 3 through the check-waiting wrapper | Merged `7ad9ffc6` at about 01:55Z, reviewed head `65aef4ac`; all 31 checks complete; on fetched main |
 | #650 | Two independent reviews addressed; hosted 22/22; core `b612ac51`; actual-screen 12/12; two-browser 19/19 (owner river-oaks-56, gone) | 71, queued 23:39Z | Merged `2da76e1f` at about 00:17Z, reviewed head `b7b9e5d0`, Verify passed; on fetched main; owner task marked delivered |
+
+### #658 confirmed by its owner and queued (about 11:55Z)
+
+river-oaks-f1 confirmed `4d870774` as final:
+- **On the exact tree:** touch-layout passed in WebKit and Chromium (31 checks; 2 known landscape-overlap cases; 8 not run in each); core passed.
+- **At `b939f1e6`, which differs only in touch-layout and docs:** touch-hold passed in Chromium (33) and WebKit (21, plus 4 multi-finger cases not run); background-input, contextual-first-visit and voice-shared passed.
+- **Same as main:** touch-people and carriage-mobile fail the same way there.
+- **Review and hosted:** the independent review and the Copilot review are addressed; hosted 22/22 on `4d870774`.
+
+This task marked it ready and queued it through the check-waiting wrapper, telling f1 before the update-branch.
+
+After the merge, f1 clarified that its own goal excluded merging, and that "final from my side" meant only that it had stopped pushing. f1 would have flagged that landing needed Val's go-ahead. This task landed #658 on Val's goal in this session, as recorded under "Authorization and default decisions", with the owner's confirmation the plan required. f1 is reporting this to Val as it stands. If Val wants it undone, a revert is an ordinary PR.
+
+### #656 held for Val's decisions (reported by river-oaks-32 at about 09:15Z)
+
+- **Head:** `82b51d89b15eb744cae6aca258f72407eedbd224`.
+- **Hosted:** 22/22 (run 40179234053), including the required shared job with character-studio-shared, character-studio-tiers and default-appearance-tiers.
+- **Local core on clean `82b51d89`:** passed. Tooling 277/277; preview 4,166 plus 1 skip; server 917 plus 225 Redis skips; desktop 120 plus 3 skips.
+- **Other checks:** bakes 5/5; focused 88/88. Verify full on `2065b5ef` passed every stage except ipic-screening, which timed out during the host sleep; a standalone rerun is queued.
+- **Reviews:** independent visual and code reviews done, findings fixed.
+- **Held for Val:**
+  - the hero golden's pinned check is expected to fail;
+  - the pores follow-up;
+  - cost: Jevica ×1 frame/CPU p95 at +10.4% in one run, within +10% in the other.
+
+  A budget call isn't this task's to make.
+- **Reruns at about 11:40Z, host awake.**
+  - ipic-screening, standalone on clean `2065b5ef`: 19/19.
+  - character-studio-tiers: 64/64.
+  - The head is still `82b51d89`, up to date with main, hosted 22/22.
+  - river-oaks-32's session work is done. #656 is held only for Val's three decisions.
+- **New head `7757f387` (about 13:50Z, river-oaks-32):** one signed docs-and-receipts commit on `82b51d89`.
+  - **timing-5:** on the exact head, with a clean tree and load 2.9–17.2: frame and CPU p95 within +10% for both looks at ×1, ×8 and ×24. The worst was Jevica ×1 CPU at +9.1%. timing-3's +10.5% stays recorded.
+  - **Hero golden:** `--check` exits 2 (incompatible osRelease, osVersion and gpu). The Sable candidate was recorded and inspected. Its bodice tiles come from main's outfit changes, not this trial. The reference is not replaced.
+  - **Core** passed on `7757f387`; hosted CI is running.
+  - The branch is behind main by the #288 work only, which merges cleanly. Still held for Val.
+
+### #655 held after an independent review (about 03:55Z)
+
+river-oaks-3e reported #655 ready (verify full 18/18, hosted 22/22, "awaiting Val"), but its record showed no independent code review, so this task commissioned one (fresh context, read-only) at `22679471`. Findings:
+1. **HIGH, CONFIRMED.** A Commons→Gardens rollback freezes residents who were walking toward the Commons at the seam: the migration resets only residents already in removed land, and `recoverRoute` restores the stale route. Probe: stuck for 20 simulated minutes.
+2. **MEDIUM, CONFIRMED.** A placed object on a seam lane leaves residents pacing without crossing, because the lanes are computed once. Probe: 10 minutes pacing.
+3. **LOW.** Lantern home-stop names survive a rollback.
+
+The reviewer confirmed that other callers' routes are unchanged (60 pairs) and that Heights is safely excluded for now. The findings are posted on #655 and relayed through e9, because 71's messages to 3e are held. #655 stays out of the train; its owner's fix is needed.
 
 ### Landing incidents (kept as found)
 
@@ -80,9 +128,144 @@ Order: #648 → #650 → #651 → #652 → #645 → #646, then each held PR as i
 
 - **02:45Z, pace.** Each landing turn begins with an update-branch, and GitHub's default CodeQL setup then reruns `Analyze (swift)` on `macos-latest`. With macOS runners contended, those runs take 60–95 minutes: #645's ran from 01:07Z to 02:42Z, and #647's has been queued since 01:56Z. The merge guard requires every workflow to be complete, so the train lands about one PR per 60–95 minutes. That is outside this task's control, and no guard or check was bypassed.
 
+### #649's District CPU regression and a candidate fix (task `walking-obstacle-buckets-20261025`)
+
+- **03:18Z, D part 1 not met.** river-oaks-3e's ABBA for #649 (`2da76e1f` Commons against `6e5abdff` Heights) didn't meet the budget: one-client CPU p95 +24.0% desktop and +18.1% phone, with the "interactions" render phase about 2× in every Heights sample. 3e queued CPU profiles for attribution.
+- **Likely cause.** `createWalkingEnvironment`'s point query `baseIsFree` scans every collision ring linearly.
+  - Composition appends each destination solid as a ring: 104 in the Commons revision, 626 with Heights, 753 with Studewood, 920 with the terraces. So `isFree` costs 3–6× more even at the District spawn.
+  - Measured in Node: 2,000 `isFree` calls took 1.35 ms in the Commons revision and 6.47 ms in Heights.
+  - The interactions phase holds `walking.update`, seating and table-game updates.
+- **Candidate fix.** Branch `perf/walking-obstacle-buckets-20261025`, worktree `river-oaks-walking-buckets`, from main `a437cbbf`.
+  - **Change:** 8 m buckets over each ring's bounds; the point query checks only its own bucket, with the predicate unchanged. `isAreaFree` stays linear.
+  - **Equivalence:** against main's own `walking.js` as an oracle, zero mismatches over 434,730 samples in six worlds (garage, Gardens, Commons, Heights, Studewood, terraces), uniform plus dense near every ring.
+  - **Speed:** garage at parity (12.7 against 12.3 ms); Heights 24.5 against 122.0 ms; terraces 22.2 against 129.0 ms.
+  - **Regression test:** `preview/tests/walking-obstacle-buckets.test.js` places rings across bucket edges on both sides of zero. A deliberate `Math.trunc` mutation makes it fail.
+  - **Superseded and closed, about 03:40Z.** #649's own branch already carried `dd682a7b` (river-oaks-91). It puts obstacles, the Commons flight solids and rooms on one 16 m grid, so it also covers `canFly`, which the camera boom calls about 42 times a frame. It is digest-verified over about 3.8 million queries, and river-oaks-3e queued the round-2 ABBA on it (Heights `3cd60702`). #669 was closed unmerged with a note, and its branch awaits guarded retirement.
+  - **Lesson.** Check the owner's local branch refs, not only the pushed PR head, before starting a fix in a lane with active owners.
+  - **Results:** walking suites 27/27.
+- **Independent review** (fresh context): no correctness defect. Its own equivalence probes over about 330,000 points per world, plus degenerate rings and bucket-line floating-point values, found 0 differences. Two findings, both fixed:
+  - Bucket construction was unbounded for a huge or infinite ring. Ranges are now clamped to the world bounds, which is exact because queries outside them are refused first. Tested.
+  - The test missed the walking-radius padding across a bucket line. Added; a radius-less mutation fails it.
+  - After the fixes: the oracle still finds 0 mismatches over 434,730 samples, and walking suites pass 29/29.
+- **Delivered as draft PR #669** (signed `ae967600` on main `a437cbbf`). `buckets-core-002` passed: tooling 274/274; preview 4,153 plus 1 skip; server 889 plus 225 skips; desktop 120 plus 3 skips. It is cross-referenced on #649 for 91 and 3e. Whether it closes the browser CPU gap needs their ABBA rerun with #669 merged in.
+
 ## Phase 2: release candidate (after the train)
 
-Not started.
+- **Release-candidate commit:** main `0b9a97c4f308f2fe15373708227176157aacaed3`, after #641 merged at 04:01Z. It contains all nine merges of the night: #657, #648, #650, #651, #652, #647, #645, #646, #641.
+- **Not landed, so not in it:**
+  - #649 (Heights): its round-2 ABBA is pending with 3e.
+  - #655: review defects.
+  - #656 and #658: owners' evidence pending.
+  - #659, #653 and #654: Val.
+  - #662 and #663: stacked on #649.
+
+  Heights rows are therefore not part of this candidate.
+- **Setup:** a clean detached snapshot `scratchpad/rc-0b9a97c4`, prepared with `pnpm install --frozen-lockfile`, the Electron postinstall and `uv sync --locked`. `agent:doctor full` passed.
+- **Runner:** `scratchpad/rc-run.sh`, started 04:02Z. It owns a disposable Redis and runs, in order:
+  1. the activation rehearsal (row 11);
+  2. world-gate-587, world-streaming and east-garden-commons (rows 5, 10, 4);
+  3. ABBA Gardens/Commons/Commons/Gardens with pixel parity, under one browser-lock turn (rows 6, 7);
+  4. `pnpm run verify full` (row 2).
+- **Row 3:** hosted Verify on `0b9a97c4`, run 40160333490: **success**. Desktop and the main push run also succeeded.
+- **Row 11 (activation rehearsal, owned non-persistent Redis), 04:02Z: passed.** 26/26 from `river-oaks-gardens-3` and 28/28 from `river-oaks-garage-1`, 5 phases each, matching #657's counts on `09bd7a83`. Receipts `rc-out-0b9a97c4/rehearsal-commons-0b9a97c4-{river-oaks-gardens-3,river-oaks-garage-1}.json`.
+- **Rows 4, 5 and 10 (journeys, 04:40–05:45Z, local Metal, one lock turn): all three failed.** First failures kept in `rc-out-0b9a97c4/rc-journeys-0b9a97c4.json`, with diagnostics.
+  - **world-gate-587 (1,424 s against #657's 620 s).** Every walk passed: the failed-load self-heal and reload, Market notices, collisions, reconnect, five seam loops, and the return with announcements and sync. It failed in the 20-rebuild loop: after a reload, `assetProgress` showed 114/114 loaded and 0 failed but `done:false` for 120 s, at 4 fps on Sharp.
+  - **world-streaming.** It stalled on its first walk, "Player 1 reaches gateway", in the District 49 m west of the edge, with speed 3.19 m/s and no progress.
+  - **east-garden-commons.** Alice stalled on her outward walk inside the Commons, 2.8 m short of the plaza centre, showing 3.2 m/s with no progress and an empty refusal list. The owner had reached it.
+  - **Context.** All three runs logged 503 and connection-reset console errors from the local fixture. Hosted Verify passed `preview experience (commons)` on the same commit, using CPU software rendering. #641 is the only Commons render change since `09bd7a83`, where #657 passed all three.
+- **Cause found: the host slept.** `pmset -g log` shows the display off at 05:02Z and idle sleep at 05:03Z, then maintenance sleeps with dark wakes about every 15 minutes until 09:05Z.
+  - **The journeys.** world-gate-587's rebuild loop failed as sleep began. world-streaming (05:19–05:35Z) and east-garden-commons (05:35–05:45Z) ran inside the sleep window.
+  - **The verdict.** These are environmental failures, not product evidence. They are kept, but they don't count against `0b9a97c4` or #641.
+  - **The rest of the machine.** Every session's landers, CI polling and browser runs stalled too, including river-oaks-3e's round-3 ABBA for #649, which has held the lock since 04:41Z. A note is posted on #649.
+  - **Mitigation, 09:08Z.** `caffeinate -ims -t 21600` (PID 71428, ends by about 15:07Z) prevents idle and system sleep on AC. It is bounded, makes no settings change, and `kill 71428` stops it.
+  - **Sessions told:** e9, 33, 32 and f1.
+- **Bisect (queued at about 05:55Z; it now confirms the release candidate on a host that stays awake).** The runner was stopped before its ABBA turn started, with SIGTERM to its own PIDs; no lock was held and its Redis was stopped. In one browser-lock turn, east-garden-commons runs on `15334aad` (just before #641) and on `0b9a97c4`, twice each, interleaved: `scratchpad/bisect-out/`. The ABBA (rows 6 and 7) and verify full (row 2) follow once the cause is known. river-oaks-33 has been told, unconfirmed.
+- **Bisect result (09:36–09:52Z, host awake, load 5–6): no regression from #641.** east-garden-commons passed 10/10 in all four runs: `15334aad` twice (237.7 s and 236.6 s) and `0b9a97c4` twice (235.6 s and 236.8 s). Receipts are in `scratchpad/bisect-out/bisect-{pre,rc}-{1,2}.json`.
+- **Phase 2 rerun started at about 09:53Z** on the same clean `0b9a97c4` snapshot into `scratchpad/rc-out2-0b9a97c4/`: rehearsal, journeys, ABBA with pixel parity, then verify full. `caffeinate` holds the host awake until about 15:07Z.
+- **Rerun with the host awake:**
+  - rehearsal passed;
+  - **world-gate-587 passed**;
+  - **world-streaming failed** its "Scene and GPU object bounds across twenty measured trips" check.
+- **That bounds failure is not a growing leak.** Across all 14 reported laps, client 0 sits at a fixed offset from its warm-up baseline: geometries 737 → 749 (+12) and textures 227 → 240 (+13); evicted, 627 → 639 and 224 → 233–237. Scene objects stay equal (9,152). Client 1 is equal apart from a flicker of up to 4 textures. So something is allocated once after the warm-up snapshot and then held. #657's run on `09bd7a83` passed the check.
+- **Pinning the change.** world-streaming was queued on `15334aad` (just before #641) at about 11:30Z (`scratchpad/bisect-out/streaming-pre.log`).
+- **Bisect result for row 10.** On `15334aad`, world-streaming **passed 286/286** (11:33–12:34Z, load about 6), with every measured trip within the scene and GPU bounds. So **#641 introduces the fixed post-warm-up offset** on `0b9a97c4`: client 0 holds +12 geometries and +13 textures from lap 3 on. It doesn't grow; it's held through eviction.
+  - **Row 10 is therefore failed for this release candidate.** The gate (`withinBounds`, `world-streaming.js:204`) allows +20 objects, +20 geometries and +10 textures over the warmed baseline.
+    - Client 0 exceeds only textures, by 3 (+13 when loaded on every measured lap).
+    - Its +12 geometries are within the tolerance. Evicted textures are +9 on most laps and +13 on laps 3 and 8.
+    - **Likely mechanism, not proven: late first-render, not a leak.** The renderer counts a texture on first rendered use, and materials.js keeps shared PBR textures cached across eviction by design. #641 adds several new surface materials, so a few can be first rendered after the warm-ups and then stay resident.
+  - river-oaks-33 (#641's owner) was told, with receipts, and asked for a follow-up fix.
+  - Receipts: `scratchpad/bisect-out/bisect-streaming-pre.json` and `rc-out2-0b9a97c4/rc-journeys-0b9a97c4.json`.
+- **Rerun journey times (host awake, one lock turn ending 11:36Z):**
+  - world-gate-587 passed 26 checks in 571.5 s (#657: 620 s);
+  - world-streaming failed only its bounds check, in 3,437.7 s;
+  - **row 4, east-garden-commons, passed** 10 checks in 232.9 s.
+
+  The journeys step exited 1 only for world-streaming. Receipt `rc-out2-0b9a97c4/rc-journeys-0b9a97c4.json` (sha256 `d9be195903e497b1`).
+- **Rows 6 and 7: ABBA Gardens/Commons/Commons/Gardens on `0b9a97c4`** (12:34–13:04Z, one browser-lock turn, host awake under `caffeinate`).
+  - **Method.** The same protocol and settings as #657: `world-expansion-baseline.js --label=rc-<arm>`, with `RIVER_OAKS_BASELINE_REVISION` set per arm.
+  - **Arms.** Each took 7 min 33 s and passed. Median per-sample one-minute load was 3.2 and 3.6 (Gardens) and 4.6 and 4.1 (Commons); the maximum was 5.7. Drift was 0 m in every arm.
+  - **Receipts.** `rc-0b9a97c4/.runtime/world-expansion/baseline-rc-{g1,c1,c2,g2}-*/report.json`; `rc-out2-0b9a97c4/compare-rc-gardens-vs-commons.json` (sha256 `ad9aa6c90379bc04`).
+
+  | Workload | Metric | Gardens | Commons | Change | Decision | #657 on `09bd7a83` |
+  | --- | --- | ---: | ---: | ---: | --- | ---: |
+  | Desktop, 1 client | frame mean | 16.67 ms | 16.67 ms | 0.0% | within | 0.0% |
+  | Desktop, 1 client | CPU submission p95 | 8.25 ms | 8.30 ms | +0.6% | within | +3.0% |
+  | Desktop, 2 clients | frame mean | 24.11 ms | 24.36 ms | +1.1% | within | −1.2% |
+  | Desktop, 2 clients | CPU submission p95 | 9.55 ms | 9.80 ms | +2.6% | within | −0.4% |
+  | Desktop | reconnect | 1,153 ms | 938 ms | −18.7% | within | −6.9% |
+  | Phone viewport, 1 client | frame mean | 16.67 ms | 16.67 ms | 0.0% | within | 0.0% |
+  | Phone viewport, 1 client | CPU submission p95 | 7.20 ms | 7.20 ms | 0.0% | within | −5.9% |
+  | Phone viewport, 2 clients | frame mean | 21.19 ms | 21.36 ms | +0.8% | within | −0.8% |
+  | Phone viewport, 2 clients | CPU submission p95 | 8.00 ms | 8.10 ms | +1.2% | within | −6.6% |
+  | **Phone viewport** | **reconnect** | **742 ms** | **1,073 ms** | **+44.5%** | **over (limit 20%)** | +19.1% |
+
+  - **Frame p95** (informational) is 16.7–16.75 ms for one client and 33.4 ms for two in every arm.
+  - **Reconnect varies widely**, from 726 to 1,174 ms.
+    - Per arm, desktop and then phone: g1 1,133 / 758; c1 1,098 / 1,068; c2 777 / 1,077; g2 1,174 / 726.
+    - Every Commons phone arm fell in the slow mode, in this run and in #657's (1,042 / 938 against 823 / 841). Every Gardens phone arm fell in the fast mode.
+    - Desktop goes the other way.
+    - **Cause in source: the client's own random backoff.** After a socket closes, the client waits `retryDelay(0)` before reconnecting: uniform 500–1,000 ms from `Math.random` (`preview/src/connection-policy.js:7`, scheduled at `multiplayer-client.js:204`). `attempt` resets to 0 on every successful join (`:288`).
+      - `world-expansion-baseline.js:158–165` times close-to-rejoin once per profile per arm, so each sample is that random wait plus about 250 ms of connection and snapshot. The observed 726–1,174 ms fit that range.
+      - With two samples per side, the row can't resolve a 20% change. The phone pattern across two ABBAs (4 against 4 draws, about a 1-in-70 ordering under no effect) is weak evidence once desktop's opposite pattern is counted.
+    - **Reading.** As written, the row is over its budget. The likely explanation is harness noise from deliberate jitter, not a Commons cost. Making the row deterministic (seed or stub `Math.random` in the harness, or subtract the scheduled delay) or taking more samples is a protocol change for its owner or Val. It isn't made here, and the budget isn't amended.
+  - **Pixel parity** (`pixel-parity.mjs`: pixels whose largest channel difference is over 24, 12 captures per pair):
+    - g1–g2: 0.04–0.70%;
+    - g1–c1: 0.03–0.44%;
+    - g2–c2: 0.03–0.37%;
+    - c1–c2: 0.04–0.35%.
+
+    So the Gardens-to-Commons difference in the District captures is within the same-revision spread. Receipt `rc-out2-0b9a97c4/pixel-parity.json`.
+- **Row 2 (`pnpm run verify full`).**
+  - **Attempt 1 (13:04–13:06Z): failed in the tooling stage, 273/274.** The failure was `land-pr.test.js:122` "a queued lander wakes on release": the known watch-latency flake, which passed alone straight afterwards. The failed receipt is kept: `rc-out2-0b9a97c4/full-attempt1-failed.json` and `verify-full-attempt1.log`.
+  - **Attempt 2** started at 13:07Z with a fresh isolated Redis; result below.
+
+### Commons go/no-go for `0b9a97c4` (runbook `docs/world-expansion-activation.md`)
+
+**Verdict: no-go.** Condition 2 fails on two measured rows, and conditions 4 and 5 are not this task's to satisfy.
+
+| # | Condition | `0b9a97c4` (this task) | #657 on `09bd7a83` |
+| --- | --- | --- | --- |
+| 1 | Build merged through the guard; hosted Verify green on the release commit | **Met.** #641 merged through the merge guard; Verify run 40160333490, Desktop and push all succeeded | Met |
+| 2 | #587 gate: traversal; frame time within the District baseline on desktop and phone; walked-away assets released; accessibility; two-player journey locally and hosted | **Not met.** Traversal passed (world-gate-587, east-garden-commons) and frame/CPU are within budget. But **phone-viewport reconnect is +44.5%** against the 20% budget (likely the client's random 500–1,000 ms reconnect backoff, sampled once per arm). **world-streaming's GPU bound fails** (textures +13 against +10, introduced by #641, likely late first-render). Accessibility and browser stages wait on verify full attempt 2 | Met (phone reconnect +19.1%, close to the limit) |
+| 3 | Rehearsal on the release commit, from both revisions, isolated Redis | **Met.** 26/26 (Gardens) and 28/28 (garage), twice | Met |
+| 4 | Val's human visual approval and physical-device results | **Open.** Val's to give; never simulated | Open |
+| 5 | Production revision and epoch confirmed; a rollback watcher | **Open.** Operator's step; production reads aren't authorized here | Open |
+
+**To reach go on a later commit:**
+- #641's owner fixes or justifies the texture bound;
+- the reconnect row is made deterministic, or resampled with enough runs to resolve 20%, and measured within budget (a protocol change for its owner or Val);
+- verify full passes;
+- Val gives condition 4 and the operator condition 5.
+
+Main has since moved to `e8207b2b` (#658, touch/voice UI only). These rows were measured on `0b9a97c4`, not on `e8207b2b`.
+
+- **#649 at about 12:45Z: held, not landed by this task.**
+  - The owner reports finish-line items 1–6 complete on `0cc09391`: round 3 met; hosted 16/16 on `4c3fddc3`.
+  - At the start of the train, river-oaks-91 asked to hold until they confirm. Their record now reads "blocked on merge authorization (owner needed: Val)".
+  - This task's messages to 91 and 3e (12:41Z) are held undelivered, and there's no confirmation.
+  - Main has moved to `e8207b2b` (touch/voice UI only). The PR's own protocol then requires a merge of main, core and hosted checks, and a new ABBA plus cold transfer from support task D.
+  - Posted on #649 (issuecomment-6397758010). #662 and #663 stay stacked and ready to follow.
+- **#649 status at 04:23Z.** Round-2 ABBA met (river-oaks-3e: `a437cbbf` against `3cd60702`, with `dd682a7b`). 91 is to merge main `0b9a97c4`, which brings the #641 conflicts in `render.js` and `east-garden-commons.js`, then a round-3 ABBA on that exact SHA, then landing.
 
 ## Phase 3: 3× lane
 
@@ -248,6 +431,41 @@ Seams: Twentieth (y 111) and Eighteenth (y −71) cross Heights' 2 m reserve mar
     - The bayou under the kit bridges doesn't read clearly as water.
     - The HUD shows the inherited District address.
 - **Later merge.** Studewood `18b9a61f` (carrying #649 `c6d42f43`) was merged in as `9d130475`; focused 67/67 and `terraces-core-003` passed, and it's pushed.
+
+### Both increments merged onto #649's current head (13:00–13:20Z)
+
+#649's head `4c3fddc3` carries main `0b9a97c4`, and with it #641's luxury kit. Both stacked branches were brought up to it while the release-candidate checks ran.
+
+| | #662 Studewood | #663 Bayou Terraces |
+| --- | --- | --- |
+| Signed merge | `1af6b511`: merges `4c3fddc3` into `18b9a61f` | `f9960d2f`: merges `1af6b511` into `9d130475` |
+| Neighborhood size in the luxury kit (headless) | 2.84 and 2.43 MiB | 2.76 and 2.01 MiB |
+| New stream estimate | 3.0 and 2.6 MiB (was 1.85 and 1.65) | 2.9 and 2.15 MiB (was 2.1 and 1.5) |
+| Recipe locks | All 12 reproduce | All 12 reproduce |
+| Reachable footprint | Unchanged, 2.4661× at 1 m | Unchanged, 2.8244× at 0.5 m |
+| Focused tests | Studewood and Heights, 22/22 | Terraces, Studewood, Heights and Commons stream, 42/42 |
+| Core verify | Passed 13:07–13:12Z: tooling 274/274; preview 4,187 + 1 skip; server 925 + 228 Redis skips; desktop 120 + 3 skips | Passed 13:13–13:17Z: tooling 274/274; preview 4,198 + 1 skip; server 931 + 229 Redis skips; desktop 120 + 3 skips |
+
+- **Estimates.** Each is high, and within a quarter of the measurement, the same rule #649 uses for its own neighborhoods. #649 raised its own after the same merge.
+- **Budget tests.** They now check what the kit budgets, as #649's test does after its merge: an assembled plan's materials, triangles and solids, and a drawn plan's meshes. The drawn material count (30–34) includes overlay clones, so it was never the kit's budget.
+- **Conflicts.** `heights-stream.js` and `docs/world-expansion.md`, resolved as described in the commit messages.
+- **Hosted CI on the merge heads.** Studewood `1af6b511` passed 19 of 19, with 5 skipped. On Terraces `f9960d2f`, every check passed except `preview experience (studewood)`, run 40196965997.
+  - **The failure.** The owner stalled against a tree-row trunk at frame (466.55, 100.84) on the leg to the west chair.
+  - **Cause, measured with `isFree` along the segment.** From x 466, the line to the chair approach (470.32, 81) leaves 0.00 m clearance at the trunk (x 467), walking radius included. That was already true before the luxury kit. Earlier runs got past only by sliding along it.
+  - **Fix `7c9fab86` (journey only).** The owner turns at x 469, as the return leg already does. Clearance is now 0.95 m in both revisions, and every other leg keeps 0.55 m or more. Core passed (13:27–13:31Z). It's merged into Terraces as `b5016d29`.
+- **Hosted CI after the fix.**
+  - **Terraces `b5016d29`:** 20/20 passed, 5 skipped, including the Studewood and Terraces journeys.
+  - **Studewood `7c9fab86`:** 19/19 passed, 5 skipped.
+    - Attempt 1 failed `preview shared (development)` → `crime-shared`, "A timed evade (U) beats the rival's telegraphed counter". The same job passed on `1af6b511`, and the only change is the Studewood journey file. It's a timing flake from #646's journey.
+    - It passed on `rerun-failed-jobs`, run 40198014512 attempt 2. The first failure's log is kept at `.runtime/convergence/662-7c9fab86-shared-development-attempt1.log`.
+- **Local Metal journeys on `b5016d29` (13:57–14:05Z, one browser-lock turn): both passed.** Hosted runs upload no captures, so these were run for visual inspection in the luxury kit.
+  - studewood: 11 checks in 125.0 s;
+  - bayou-terraces: 11 checks in 103.7 s.
+  - **Receipts.** `scratchpad/p3-journeys/luxury-b5016d29.json` and 10 captures alongside it.
+  - **What the captures show:**
+    - Studewood's street has the kit's iron tree grates in pale surrounds along the shared brick lane, and both players reach the park table.
+    - The Terraces riverside walk and gardens show the planted limestone planter wall along the bank, and the game table.
+    - No missing geometry, z-fighting or untextured surfaces were seen. This is a visual check by this task, not Val's human approval.
 
 ### Land proposal for Val, updated after the terraces (projection, not measurement)
 
