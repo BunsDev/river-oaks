@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ATTACK_KEY, describeHit, nearestRival, rivalFigures, starsLabel, starsOf, starsText } from '../src/crime-ui.js';
+import { ATTACK_KEY, EVADE_KEY, describeAction, describeHit, nearestRival, policeStatus, rivalFigures, starsLabel, starsOf, starsText } from '../src/crime-ui.js';
 import { createResidentGestures } from '../src/resident-gestures.js';
 import { poseFor } from '../src/crime-poses.js';
 
@@ -132,4 +132,93 @@ test('a newly rendered stationary officer faces the authoritative direction of t
   const renderedHeading=figure.yaw+Math.PI;
   assert.ok(Math.abs(Math.sin(renderedHeading)-1)<1e-9,'officer must face east instead of away from the target');
   assert.ok(Math.abs(Math.cos(renderedHeading))<1e-9);
+});
+
+test('timed strikes are confirmed from the snapshot outcome, never the admission reply (#640)', () => {
+  assert.equal(EVADE_KEY, 'KeyU');
+  const strike = { id: 'strike:1', kind: 'strike', actorId: 'a', targetId: 'rival:westcreek', direction: [-1, 0] };
+  assert.equal(describeAction({ ...strike, phase: 'windup', outcome: null }, 'Westcreek rival', 'a'), 'Winding up…');
+  assert.equal(describeAction({ ...strike, phase: 'contact', outcome: 'hit', effect: { health: 75, incapacitated: false, stars: 1 } }, 'Westcreek rival', 'a'),
+    'Hit landed. Westcreek rival has 75 health left. Wanted level 1 of 5.');
+  assert.equal(describeAction({ ...strike, outcome: 'miss', reason: 'attack_out_of_reach' }, 'Westcreek rival', 'a'), 'Missed. Westcreek rival was out of reach.');
+  assert.equal(describeAction({ ...strike, outcome: 'miss', reason: 'attack_out_of_arc' }, 'Westcreek rival', 'a'), 'Missed. Westcreek rival moved out of the swing.');
+  assert.equal(describeAction({ ...strike, outcome: 'cancelled', reason: 'violence_off' }, 'Westcreek rival', 'a'), 'Stopped. The town is peaceful right now.');
+  const counter = { id: 'counter:2', kind: 'counter', actorId: 'rival:westcreek', targetId: 'a', direction: [1, 0] };
+  assert.equal(describeAction({ ...counter, phase: 'windup', outcome: null }, 'Westcreek rival', 'a'), 'Westcreek rival is winding up to strike back. Evade with U.');
+  assert.equal(describeAction({ ...counter, outcome: 'evaded' }, 'Westcreek rival', 'a'), 'You evaded Westcreek rival.');
+  assert.equal(describeAction({ ...counter, outcome: 'hit', effect: { health: 80, down: false } }, 'Westcreek rival', 'a'), 'Westcreek rival hit you. 80 health left.');
+  assert.equal(describeAction({ ...counter, outcome: 'hit', effect: { health: 0, down: true } }, 'Westcreek rival', 'a'), 'Westcreek rival knocked you down. You will get back up shortly.');
+  assert.equal(describeAction({ ...counter, targetId: 'b', outcome: 'hit', effect: { health: 0, down: true } }, 'Westcreek rival', 'a'), '', 'other players\' fights are not announced');
+});
+
+function harness(t, town, request) {
+  class Element {
+    constructor(){this.children=[];this.style={};this.events={};this.textContent='';this.dataset={};}
+    append(...items){this.children.push(...items);}
+    setAttribute(){}
+    addEventListener(type,fn){this.events[type]=fn;}
+    removeEventListener(type){delete this.events[type];}
+    remove(){}
+    focus(){}
+  }
+  const prior=globalThis.document;t.after(()=>{globalThis.document=prior;});
+  globalThis.document={createElement:()=>new Element()};const host=new Element(),keys=new Element();
+  return import('../src/crime-ui.js').then(({createCrimeUI})=>{
+    const ui=createCrimeUI({host,getTown:()=>town,keys,request,getSounds:()=>({unlock(){},play(){return null;}})});t.after(()=>ui.dispose());
+    const hud=host.children[0],find=(className,exact=false)=>hud.children.concat(hud.children.flatMap(child=>child.children??[])).find(el=>exact?el.className===className:String(el.className).split(' ').includes(className));
+    return {ui,hud,keys,find};
+  });
+}
+
+test('the HUD waits for the snapshot outcome, retries once with the same ID, and offers an evade by key and touch (#640)', async t => {
+  const rival = { id: 'rival:westcreek', name: 'Westcreek rival', appearance: 'sable-human', position: [-2908, -1320, 0], yaw: 0, health: 100, maxHealth: 100, incapacitated: false, staggered: false, engagedId: null };
+  const { defaultWorldPolicy, clockMinute, dangerActive } = await import('../src/world-policy.js');
+  const base = defaultWorldPolicy(), rules = { ...base, violence: { ...base.violence, mode: 'forced', zones: ['westcreek-lane'] } };
+  const worldPolicy = { ...rules, minute: clockMinute(rules.clock), active: dangerActive(rules) };
+  const town = { connected: true, selfId: 'a', snapshot: { revision: 1, worldId: 'river-oaks', worldPolicy, players: [{ id: 'a', position: [-2906.8, -1320, 0], levelId: null }], crime: { targets: [rival], wanted: [], actions: [] }, police: { units: [], surrendered: [], eligible: [] } } };
+  const sent = [];let calls = 0;
+  const { ui, find, keys } = await harness(t, town, async message => {
+    sent.push(message);calls++;
+    if (message.type === 'attack' && calls === 1) throw new Error('lost');
+    if (message.type === 'attack') return { ok: true, action: { id: 'strike:1', kind: 'strike', actorId: 'a', targetId: rival.id, phase: 'windup', remainingMs: 300, outcome: null, reason: null, direction: [-1, 0] } };
+    return { ok: true, evade: { direction: message.direction ?? 'back', remainingMs: 350 } };
+  });
+  ui.sync();
+  const shove = find('crime-attack', true), result = find('crime-result'), evade = find('crime-evade');
+  assert.ok(evade, 'an evade button exists for touch and pointer');
+  shove.events.click();await new Promise(resolve => setImmediate(resolve));
+  assert.equal(sent.filter(message => message.type === 'attack').length, 2, 'a lost reply is retried once');
+  assert.equal(sent[0].attackId, sent[1].attackId, 'with the same ID');
+  assert.equal(result.textContent, 'Winding up…', 'the admission reply never claims a hit');
+  town.snapshot = { ...town.snapshot, revision: 2, crime: { ...town.snapshot.crime, targets: [{ ...rival, health: 75, staggered: true }], wanted: [['a', 1]],
+    actions: [{ id: 'strike:1', kind: 'strike', actorId: 'a', targetId: rival.id, phase: 'contact', remainingMs: 120, outcome: 'hit', reason: null, direction: [-1, 0], effect: { damage: 25, health: 75, incapacitated: false, stars: 1 } }] } };
+  ui.sync();
+  assert.equal(result.textContent, 'Hit landed. Westcreek rival has 75 health left. Wanted level 1 of 5.');
+  // The rival telegraphs: the HUD names it and U evades, with the town deciding the outcome.
+  town.snapshot = { ...town.snapshot, revision: 3, crime: { ...town.snapshot.crime, actions: [{ id: 'counter:2', kind: 'counter', actorId: rival.id, targetId: 'a', phase: 'windup', remainingMs: 700, outcome: null, reason: null, direction: [1, 0] }] } };
+  ui.sync();
+  assert.equal(result.textContent, 'Westcreek rival is winding up to strike back. Evade with U.');
+  assert.equal(evade.hidden, false);assert.equal(evade.disabled, false);
+  let prevented = false;
+  keys.events.keydown({ code: 'KeyU', repeat: false, target: {}, preventDefault() { prevented = true; }, stopImmediatePropagation() {} });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(prevented, true);
+  assert.deepEqual(sent.filter(message => message.type === 'evade').map(message => Object.keys(message).sort()), [['evadeId', 'type']]);
+  town.snapshot = { ...town.snapshot, revision: 4, crime: { ...town.snapshot.crime, actions: [{ id: 'counter:2', kind: 'counter', actorId: rival.id, targetId: 'a', phase: 'recovery', remainingMs: 600, outcome: 'evaded', reason: null, direction: [1, 0] }] } };
+  ui.sync();
+  assert.equal(result.textContent, 'You evaded Westcreek rival.');
+  // Peaceful again: no evade, no shove.
+  town.snapshot = { ...town.snapshot, revision: 5, crime: { targets: [rival], wanted: [], actions: [] } };
+  ui.sync();
+  assert.equal(evade.hidden, true);
+});
+
+
+test('a cancelled counter stops the warning, and an officer reaching to grab is said in words (#640)', () => {
+  const counter = { id: 'counter:3', kind: 'counter', actorId: 'rival:westcreek', targetId: 'a', direction: [1, 0], reason: null };
+  assert.match(describeAction({ ...counter, phase: 'windup', outcome: null }, 'Westcreek rival', 'a'), /winding up to strike back/);
+  assert.equal(describeAction({ ...counter, phase: 'done', outcome: 'cancelled', reason: 'captured' }, 'Westcreek rival', 'a'), 'Westcreek rival backed off.');
+  const unit = { id: 'police:0', position: [0, 0, 0], yaw: 0, targetId: 'a' };
+  assert.match(policeStatus({ units: [{ ...unit, state: 'grab', remainingMs: 600 }], surrendered: [], subdued: [] }, 'a'), /reaching to grab you\. Evade with U, step away or surrender/);
+  assert.match(policeStatus({ units: [{ ...unit, state: 'pursue' }], surrendered: [], subdued: ['a'] }, 'a'), /has hold of you/);
 });
