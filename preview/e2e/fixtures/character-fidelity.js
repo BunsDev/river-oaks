@@ -278,7 +278,7 @@ window.fidelityFixture = {
 
   async qualityCycles(appearanceId, count = 5) {
     const definition = definitionFor(appearanceId), contract = characterFidelityContract(definition.rig);
-    if (!contract) throw new Error('Quality fixture requires a realistic human rig');
+    if (!contract && !defaultAppearanceRealism(definition.appearanceId)) throw new Error('Quality fixture requires a realistic human rig or a named default in the trial');
     const control = createQualityControl({apply() {}, storage:{getItem:()=>'sharp'}});
     const avatar = await loadResidentAvatar(0, 'remote-quality-fixture', definition.rig, {folk:false, appearanceId, faceRecipe:{}});
     const stage = crowdStage(1); stage.scene.add(avatar.object);

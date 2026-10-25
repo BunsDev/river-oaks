@@ -136,7 +136,8 @@ only) under daylight, dusk and interior light, plus a no-MSAA pair. It compares
 each case with realism off under the same light: whole-image error, and per
 region (hair, brows and lashes, skin) the covered area, its overlap with off and
 the CIE76 shift of its mean colour. Regions are found by rendering again without
-their meshes.
+their meshes. `--quality-cycles` also accepts Jevica and Sable while their trial
+is enabled; it runs ten Sharpest → Smoothest → Auto cycles.
 
 The [measured resource ceilings](../data/reports/character-fidelity-resource-budgets-517.json)
 are exact scene-census references for these pinned asset versions. They do not

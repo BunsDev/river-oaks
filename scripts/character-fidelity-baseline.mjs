@@ -111,7 +111,7 @@ try {
         assertLifecycle(result);
       }
       if (qualityCycles && tier === tiers[0]) {
-        const result = await tab.evaluate(id => window.fidelityFixture.qualityCycles(id), appearanceId);
+        const result = await tab.evaluate(id => window.fidelityFixture.qualityCycles(id, 10), appearanceId);
         report.results[key].qualityCycles = result;
         assertLifecycle(result);
         if (!result.checks.every(check => check.passed)) throw new Error('Quality changed character identity');

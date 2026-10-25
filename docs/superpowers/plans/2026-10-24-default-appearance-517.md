@@ -60,9 +60,11 @@ and run all five `node scripts/bake-*.mjs --check` before and after any edit the
 | --- | --- | --- |
 | 1 | Baseline capture and inspection, no source change | done (captures complete; exit 1 on HMR console errors only) |
 | 2 | Component-selective layer and tests | done; focused 54/54 |
-| 3 | Per-component trial and verdicts | run-1 done; verdicts below; run-2 (final policy, hair region) queued |
-| 4 | Cost, lifecycle and identity | queued in verify snapshot |
-| 5 | Hero and Studio decision, golden candidate | not started |
+| 3 | Per-component trial and verdicts | done: run-1 and run-3, independent visual review; roughness accept, pores revise (not shipped), coverage and hairColor reject |
+| 4 | Cost, lifecycle and identity | lifecycle done; identity done (local and hosted journeys, rollback journey); cost not established on this host (timing-4 within +10%, timing-3 over; run-to-run noise ≈ the bar) |
+| 5 | Hero and Studio decision, golden candidate | hero uses the same policy; golden left for Val (Decision 1) |
+| 6 | Costume order fix (independent code review) | done: `b0cdeeeb`, mutation-checked regression |
+| 7 | Delivery | draft PR #656 (final head and hosted checks recorded in the PR); landing waits for Val's acceptance |
 
 ## Commands and results
 
@@ -113,6 +115,102 @@ and run all five `node scripts/bake-*.mjs --check` before and after any edit the
   tiers apply the same material now), the two experience and three shared journeys.
   `verify full` restarted with `REDIS_URL` on a disposable local `redis-server`
   (no persistence, data in the scratchpad).
+- 20:39Z, first `verify full` (patch 3e7ff114 on f33c914b): every non-browser stage passed:
+  - dependency audit: no known vulnerabilities;
+  - tooling 240/240; preview 4021 / 1 skip; server with Redis 1155/1155 (0 skips); desktop 115 / 3 skip;
+  - build, ruff, format, pytest 156, demo, demo-verify;
+  - secret scan and gitleaks history scan (1253 commits): no leaks.
+
+  Stopped while waiting for the browser lock, so that the run would cover the merged head instead.
+- 20:41Z: signed commit `99478d8a` (good SSH signature); its pre-commit gitleaks found no leaks.
+  Signed merge of origin/main `1fd53fb9` produced `03aa6eef`:
+  - no changed file overlaps the branch's files or the bake inputs;
+  - lockfile unchanged;
+  - all five bake `--check` exit 0; focused 54/54.
+
+  `verify full` restarted on clean `03aa6eef` with the disposable Redis.
+- 20:47Z: pushed; draft PR #656 created via REST at `03aa6eef`.
+- 21:08Z: hosted CI on `03aa6eef` all green: 22 check runs including the aggregate `preview`.
+  Workflow runs 40131416886 and 40131414845 (CodeQL).
+  - Job 120983733821, `preview shared (required)`:
+    - `character-studio-shared` passed (20:57–21:00Z);
+    - `character-studio-tiers` passed (21:00–21:02Z);
+    - `default-appearance-tiers` passed (21:02:19–21:03:27Z).
+- 22:08Z trial run-3 passed (final policy, patch 3e7ff114, inputs 9fb7504e).
+  - All tiers render byte-identical to roughness alone.
+  - Skin ΔE ≤0.18; hair and brow IoU ≥0.996.
+  - Lifecycle residue zero across all 20 variants.
+- 22:34Z timing-3 passed (3×30 s, isolated, host not quiet, load 5–14).
+  - Sable within +1.1% at every crowd.
+  - Jevica over the bar:
+    - x1: frame p95 +10.4%, CPU p95 +10.5%;
+    - x8: frame p95 +78% (bimodal 16/33 ms), CPU p95 +7.5%;
+    - x24: −7%.
+  - GPU unchanged throughout.
+  - Load-gated Jevica rerun (timing-4, `--quiet load=10,browsers=0`) queued.
+- The character-fidelity and character-studio experience journeys passed on the snapshot.
+- 23:4xZ independent code review (subagent given the diff and contract) found a bug.
+  - In the world, realism ran before the Jevica costume.
+  - Re-tier dispose restored pre-costume materials: hair and brow shaders lost, alphaTest reset.
+  - Her skin drew map × 0.58.
+  - Other findings: hero golden (Decision), rollback broke the journey (fixed), the Node test always ran in fallback (fixed), `components:null` (fixed), and fixtures default appearanceId to the rig (accepted: representative of the player).
+  - Stopped the stale `verify full` on 03aa6eef. Everything through reflections had passed; experience was killed after 16/17 had passed. Receipt kept as full-03aa6eef-stopped.json.
+  - Also stopped the chain's remaining shared journeys.
+- 00:11Z signed fix b0cdeeeb:
+  - `underneath()` in the fidelity runtime, `beneathRealism` on the avatar, the costume wrapped in it;
+  - receipts rebaked (digest only), and all five checks pass;
+  - focused 56/56 and costume/avatar/studio 71/71;
+  - mutation check: without the wrapper the regression fails (skin roughness 0.58 ≠ 1);
+  - core verify passed (tooling 277, preview 4099 / 1 skip, server 891 / 225 Redis skips, desktop 115 / 3 skips, build, pytest 170, secrets) at load 41–45.
+- Signed merge of main 26d63a06 → 2065b5ef, pushed.
+- 00:17Z `verify full` on 2065b5ef (disposable Redis): all non-browser stages passed.
+  - dependency audit clean;
+  - tooling 277/277; preview 4099 / 1 skip; server with Redis 1158/1158; desktop 115 / 3 skips;
+  - build, ruff, format, pytest 170, demo, demo-verify;
+  - secrets and history scans: no leaks.
+  - Browser stages queued.
+- 00:31Z hosted CI on 2065b5ef: all 22 check runs green, including the aggregate `preview` (run 40145724259).
+  - `preview shared (required)` job 121026515790 passed:
+    - character-studio-shared (00:20–00:23Z);
+    - character-studio-tiers (00:23–00:25Z);
+    - default-appearance-tiers (00:25:41–00:26:46Z).
+- 01:55Z: the quality-transition fixture (`qualityCycles`) accepted only realistic rigs, so the
+  named defaults had no tier-cycle receipt. Patch (sha256 `138f73a9…`): the guard also admits an
+  appearance with a trial policy, and the baseline script passes 10 cycles (sharp→smooth→auto,
+  30 transitions, plus the rendered-transition check at high and standard against a fresh rig).
+  Queued (15th) from a snapshot at 2065b5ef + that patch: `node scripts/character-fidelity-baseline.mjs
+  --appearances jevica,sable-human --realism off --quality-cycles --repeats 0 --out .runtime/character-fidelity/quality-517`.
+- 02:28Z timing-4 passed (exit 0, Jevica only, same inputs `9fb7504e…` as timing-3, isolated, timer 0.005 ms,
+  23:36–02:28Z). The `--quiet load=10,browsers=0` gate never held: 0/36 samples quiet; every sample waited its
+  300 s and ran anyway, load 5.4–23.8. Holding the lock idle blocked the queue, so river-oaks-71 asked about it;
+  the run finished at 18/18 rather than restarting. Median of three, trial vs off:
+  x1 frame p95 +3.6%, CPU p95 +3.9%; x8 −13.6% / −8.1%; x24 +8.2% / +9.0%; GPU p50 −1 to +8%.
+  Run-to-run noise: the same code and tier measured in timing-3 and timing-4 moves by up to ±12%
+  (and −46% for the bimodal x8 frame p95), i.e. more than the 10% bar. Cost is therefore met in timing-4
+  and not in timing-3; it is not established on this host (Decision for Val).
+- 02:44Z recapture on clean 2065b5ef (inputs `7771b2af…`, `--variants off,trial-high --cycles 3`, three lights)
+  passed: all 24 PNGs byte-identical to run-3; zero lifecycle residue. The costume fix doesn't change the
+  captured look (the fixture already ran costume before realism).
+- 03:21Z quality-tier cycles passed (2065b5ef + patch `138f73a9…`, inputs `b43d139e…`): for each of Jevica
+  and Sable, 10 cycles of sharp→smooth→auto with no geometry/texture/program growth, and the rendered
+  re-tier at high and standard equal to a fresh rig (max channel 0).
+- 03:23–03:30Z on the clean snapshot: experience character-fidelity 9/9 and character-studio 43/43; rollback
+  journey (`enabled: false`) 4/4; a separate default-appearance-tiers 18/18. A separate character-studio-tiers
+  run failed its first page-ready wait across the host sleep (911 s). The third separate journey was stopped
+  as redundant with verify full's shared stage. The ipic-screening runner and a character-studio-tiers rerun
+  were queued under `caffeinate -i` at 06:18Z.
+- 06:16Z `verify full` on clean 2065b5ef (disposable Redis): every stage passed except the last.
+  - dependency audit, tooling, preview, server with Redis, desktop, build, ruff, format, pytest,
+    demo, demo-verify, secrets and history scan, security-browser, reflections;
+  - experience: 17/17 journeys, 393 checks (player-lifecycle 19, multiplayer-lifecycle 17);
+  - shared: 28/28 required journeys, 597 checks (default-appearance-tiers 18,
+    character-studio-tiers 64, character-studio-shared 81).
+  - `ipic-screening` failed with ETIMEDOUT after 926 s without running: it was still waiting for the
+    browser lock. The host had gone into idle sleep at 05:03Z, and the lock holder (this session's
+    separate shared run) stalled across the sleep.
+  Receipt kept as `.runtime/default-appearance-517/full-2065b5ef.json`; generated
+  `data/reports/experience.json` and `shared-experience.json` restored with `git checkout`.
+- The disposable Redis was stopped after verify full.
 
 ## Verdicts (trial run-1, 20:17Z)
 
@@ -143,9 +241,21 @@ names; hair is matched by material `long01`), fixed for run-2.
   or pins the golden to `off`. The reference is not changed here.
 - Jevica and Sable have no frame-time or census ceilings. Cost is judged against
   realism off at the same revision (at most +10% frame and CPU p95, median of three
-  warmed 30 s samples); no budget is added.
+  warmed 30 s samples); no budget is added. The host was never quiet (other agents'
+  browsers and GPU work), so every timing sample is uncontrolled. Two runs on the same inputs disagree (timing-3 Jevica ×1 +10.4/+10.5%, timing-4 worst +9.0%), and the same code moves by up to ±12% between runs, so cost needs a quiet-host or device rerun (Decision for Val).
+- Pores need a lip/eyelid/neck mask before they can ship (Decision 2).
+- Fixtures that load a rig without an explicit appearance (carriage, vehicles, motion,
+  foot-support cost) now take Jevica's roughness map, as the player does.
+- Handoff: the parked `river-oaks-human-studio-504` worktree has uncommitted edits to
+  `avatars.js` and `character-hero.js`; e9 branches also touch `shared-runner.js`.
+  Whoever lands second rebakes the five garment receipts if `avatars.js` changes.
 
 ## Next action
 
-Run the realism-off/low/standard/high baseline for jevica and sable-human, inspect
-the PNGs, and record what they show.
+Val reviews the per-component table and the five-minute checklist on #656 and answers
+the Decisions there: the hero golden, a pore mask follow-up, and whether cost needs a
+quiet-host or device rerun before landing. Landing is not this session's to do. The
+lander (river-oaks-71) lands only after that, with hosted checks green on the final head.
+
+Still open in this session's queue at handoff: the `ipic-screening` stage and a
+character-studio-tiers rerun with the host awake. Their results go on #656.

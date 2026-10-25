@@ -43,23 +43,206 @@ Scatter and sheen were never candidates. In the whole-preset evidence they move
 skin ΔE to 8.8–9.5 under dusk light (1.1–4.8 elsewhere), and the corneal shell
 and iris recolor change both defaults' eye colour.
 
+Run-3 repeated every component on the final code and adds what run-1 missed:
+- Hair regions, now measured:
+  - coverage leaves Jevica's hair at area ≤1.004 and IoU ≥0.991, so its
+    rejection rests on the brows;
+  - strand recolor moves Sable's hair ΔE 16.3–19.6.
+- Pores at standard strength (0.18 instead of high's 0.32) still speck the lips and
+  roughen the eyelids and nose, more lightly. Capping strength alone is not enough;
+  pores need a region mask.
+
+An independent reviewer (a separate agent given the captures and this contract,
+not these verdicts) reached the same four verdicts. On pores it suggested masking
+the lips and weakening them on the eyelids, neck and body.
+
+Crops (from run-3, daylight unless noted; magenta lines separate panels):
+- [Jevica, off vs trial](default-appearance-517/jevica-face-off-vs-trial.png) and
+  [Sable, off vs trial](default-appearance-517/sable-human-face-off-vs-trial.png):
+  rows are daylight, dusk and interior.
+- [Lips at 2×: off, trial, pores at high](default-appearance-517/jevica-lips-off-trial-pores.png)
+- [Brows: off, coverage](default-appearance-517/jevica-brows-off-coverage.png)
+- [Sable's hair: off, strand recolor](default-appearance-517/sable-hair-off-haircolor.png),
+  daylight and interior.
+
 ## Final set
 
-Pending: trial run-3 on the final policy (roughness only), queued 20:33Z.
-This section will record each tier against off, including hair and brow regions.
+From trial run-3 (`3e7ff114` patch on `f33c914b`, input manifest
+`9fb7504ef04b…`, 20:33–22:08Z, load 6–10 at the end, Chromium 156.0.8078.4 on
+ANGLE Metal, Apple M5 Max). Ranges cover both looks, all three lights and both views.
+
+- High, standard and low render byte-identically to each other and to roughness
+  alone, in all 12 light and view cases. For these two looks the graphics tier no
+  longer changes the material.
+- Against realism off, the only change is skin highlights:
+
+  | Region | Jevica | Sable |
+  | --- | --- | --- |
+  | Skin | ΔE 0.04–0.08, area 1.000, IoU 1.000 | ΔE 0.05–0.18, area 1.000, IoU ≥0.998 |
+  | Hair | ΔE ≤0.04, area 0.998–1.000, IoU ≥0.998 | ΔE ≤0.04, area 0.998–1.002, IoU ≥0.997 |
+  | Brows and lashes | ΔE ≤0.01, area 1.000, IoU 1.000 | ΔE ≤0.02, area 1.000, IoU 1.000 |
+
+  1–13% of pixels change, by at most 13–50 of 255, on the lower lip, nose tip,
+  cheeks, shoulders and nails. Silhouette, palette, eye colour, brows and hair are
+  unchanged.
+- Without MSAA, comparing the low tier with off rendered without MSAA: the same
+  ranges (skin ΔE ≤0.18, hair IoU ≥0.996, brows IoU 1.000). The software path
+  shows no fringes.
+- Lifecycle: every variant (20) went through 10 viewport and 10 two-camera 4K
+  load/dispose cycles with zero geometry, texture or shader-program residue.
+
+### Costume order (code review)
+
+An independent review of the code found that in the world, Jevica's realism was
+applied while her avatar loaded, before the caller added her costume. That had two
+effects:
+- her skin drew the roughness map scaled by the costume's 0.58, not the map at
+  full strength as captured here;
+- any later re-tier restored the materials as they were before the costume, which
+  removed her rose-gold hair and soft-brow shaders.
+
+The costume now makes its material edits beneath the applied tier
+(`createCharacterFidelity().underneath`). The world therefore uses the same order
+as the Studio hero and these captures: costume first, then realism. A regression
+loads the shipped rig as the world does and checks the costume and map through
+high, standard, low and off. The trial fixture already used this order, so the
+captures and timing above measure the shipped look. To confirm it, off and the
+trial at high were recaptured on the fixed head (`2065b5ef`, clean tree, input
+manifest `7771b2af3163…`, finished 02:44Z, 3 load/dispose cycles each). All 24
+captures are byte-identical to run-3, with zero lifecycle residue.
 
 ## Cost and lifecycle
 
-Pending: three warmed 30 s samples per crowd (1, 8, 24) for off and the trial,
-queued 20:33Z. The bar is at most +10% frame and CPU-submission p95 against off
-at the same revision; no budget is added or loosened.
+The bar is at most +10% frame p95 and CPU-submission p95 against realism off,
+at the same revision, as the median of three warmed 30 s samples. Jevica and
+Sable have no frame-time or census ceilings of their own; no budget was added
+or loosened. Because all three tiers apply the same material to these looks,
+high stands for low and standard.
+
+**Enforced gates** (each run fails otherwise), all passed:
+- source and asset inputs unchanged during the run;
+- native 4K captures and a cross-origin-isolated timing page;
+- no geometry, texture or program growth after 10 viewport and 10 two-camera 4K
+  load/dispose cycles;
+- no console errors.
+
+Everything else below is an observation.
+
+**Census.** Draw calls (Jevica 13, Sable 20), triangles, geometries, materials,
+programs, alpha-tested materials (4) and transparent materials (0) are identical
+to off. The one addition is a 512² roughness texture, 1.33 MiB uncompressed:
+Jevica 52.1 → 53.4 MiB, Sable 25.6 → 26.9 MiB. Hair, brow and lash materials are
+untouched, so hair-card overdraw is unchanged.
+
+**Timing** (observation; the host was never quiet). Two runs on the same inputs
+(`9fb7504ef04b…`), cross-origin isolated, timer resolution 0.005 ms. Trial vs off,
+median of three:
+
+| Look, crowd | timing-3 frame p95 | timing-3 CPU p95 | timing-4 frame p95 | timing-4 CPU p95 |
+| --- | --- | --- | --- | --- |
+| Jevica ×1 | 2.41 → 2.66 ms (**+10.4%**) | 2.28 → 2.52 (**+10.5%**) | 2.25 → 2.33 (+3.6%) | 2.18 → 2.26 (+3.9%) |
+| Jevica ×8 | 16.3 → 29.0 (**+78%**, bimodal 16/33 ms) | 16.2 → 17.4 (+7.5%) | 18.3 → 15.8 (−13.6%) | 17.1 → 15.7 (−8.1%) |
+| Jevica ×24 | 58.3 → 54.3 (−6.9%) | 55.1 → 52.0 (−5.7%) | 56.3 → 60.9 (+8.2%) | 53.6 → 58.4 (+9.0%) |
+| Sable ×1 | 2.64 → 2.67 (+1.1%) | 2.51 → 2.53 (+0.8%) | | |
+| Sable ×8 | 2.54 → 2.54 (0%) | 2.43 → 2.42 (−0.4%) | | |
+| Sable ×24 | 5.42 → 4.87 (−10%) | 5.28 → 4.74 (−10%) | | |
+
+GPU p50 stayed within −1% to +8% of off in every case.
+
+- timing-3: 22:08–22:34Z, both looks, load 5–14.
+- timing-4: Jevica only, 23:36–02:28Z, load 5–24.
+  - It waited up to 300 s before each sample for one-minute load ≤10.
+  - That never held: 0 of 36 samples were quiet.
+
+**Verdict on cost: not established on this host.**
+- Sable is within the bar.
+- Jevica is within it in timing-4 (worst +9.0%) and over it in timing-3.
+- The run-to-run noise is larger than the bar. The same code at the same tier
+  moves by up to ±12% between the two runs, and the ×8 frame p95 by 46%.
+  - At ×8 Jevica's CPU time sits near 16 ms, so frame intervals fall at 16 or
+    33 ms and the p95 flips between them.
+- Nothing structural changes per frame: same draws, programs and geometry, plus
+  one extra texture fetch in the skin shader.
+- A quiet-host or device rerun would settle it (Decision for Val).
+
+Jevica's crowd CPU time (about 16 ms at ×8 and 50 ms at ×24, against Sable's
+2.5 and 5 ms) is the same with realism off. It predates this trial and was not
+investigated here.
+
+**Quality-tier cycles.** These use the real avatar and graphics control, with
+synthetic 40 ms governor inputs to drive the auto step; those inputs test the
+transitions, not performance. The fixture used to accept only realistic rigs and now
+also accepts a named default in the trial. Each look ran ten cycles of
+Sharpest → Smoothest → Auto (high → standard → low), 30 transitions in all.
+- After a re-tier to high and to standard, the render matched a freshly loaded rig
+  at that tier exactly (maximum channel difference 0).
+- Geometries, textures and programs were the same after the ten cycles as before
+  (Jevica 9/16/22, Sable 21/15/23).
+- Run on `2065b5ef` plus the fixture patch, input manifest `b43d139e1713…`,
+  finished 03:21Z.
 
 ## Identity, fallback and reconnect
 
-Pending: `default-appearance-tiers` (owner as Jevica, alice as Sable, each at
-her own graphics tier; missing roughness map; reconnect), with the existing
-character-fidelity, character-studio, character-studio-shared and
-character-studio-tiers journeys.
+The `default-appearance-tiers` shared journey plays a real two-account session.
+The owner wears Jevica at Sharpest and alice wears Sable at Smoothest, each
+viewing the other. It checks:
+- each look carries only its trial components, own and remote, with no cornea
+  shell, and each viewer holds the other's canonical definition;
+- a peer's `realism` report matches its tier;
+- re-tiering sends no selection command, and no client message carries graphics
+  quality or realism state;
+- a missing roughness map is reported as `roughness_unavailable` and keeps the
+  identity and components;
+- after a reconnect both looks return with their trial components, the same
+  definitions and no fallback;
+- with `enabled: false`, both defaults stay at realism off at both tiers, own and
+  remote (a separate run of the same journey).
+
+Results:
+- Hosted Linux CI on `2065b5ef`, job 121026515790: default-appearance-tiers,
+  character-studio-shared and character-studio-tiers all passed.
+- Local Chromium (ANGLE Metal) on clean `2065b5ef`:
+  - character-fidelity 9/9 and character-studio 43/43 (experience journeys);
+  - rollback default-appearance-tiers 4/4 ([receipt](../../data/reports/default-appearance-rollback-517.json));
+  - a separate default-appearance-tiers run, 18/18.
+- `pnpm run verify full` on clean `2065b5ef`:
+  - experience stage: all 17 world journeys passed (393 checks), including
+    player-lifecycle 19/19 and multiplayer-lifecycle 17/17, which render the
+    player and peers;
+  - shared stage: all 28 required journeys passed (597 checks), including
+    default-appearance-tiers 18/18, character-studio-tiers 64/64 and
+    character-studio-shared 81/81.
+- A separate character-studio-tiers run failed at its first page-ready wait. The
+  host had gone into idle sleep at 05:03Z, and the run spanned it. The same journey
+  passed on that head in verify full's shared stage and on hosted CI; a rerun with
+  the host awake was queued.
+
+## Receipts and commands
+
+Committed receipts, under `data/reports/`:
+- Timing: [timing-3](../../data/reports/default-appearance-timing-3-517.json) and
+  [timing-4](../../data/reports/default-appearance-timing-4-517.json).
+  - Command: `node scripts/character-fidelity-baseline.mjs --appearances jevica,sable-human --realism off,high --crowd 1,8,24 --repeats 3 --seconds 30`.
+  - timing-4 used `--appearances jevica --quiet load=10,browsers=0 --quiet-timeout 300`.
+- [Quality-tier cycles](../../data/reports/default-appearance-quality-cycles-517.json):
+  the same script with `--appearances jevica,sable-human --realism off --quality-cycles --repeats 0`.
+- [Experience journeys](../../data/reports/default-appearance-experience-517.json):
+  `node preview/e2e/experience-runner.js character-fidelity character-studio`.
+- [Rollback journey](../../data/reports/default-appearance-rollback-517.json):
+  with `enabled: false`, `RIVER_OAKS_SHARED_JOURNEY=default-appearance-tiers node preview/e2e/shared-runner.js required`.
+
+The trial reports from `node scripts/default-appearance-trial.mjs` are 2–10 MB
+each, plus native 4K PNGs (144 in run-3). They are not committed; they were kept on
+the trial host under `.runtime/default-appearance-517/`. Each is identified by its
+input manifest and report digest:
+
+| Run | Revision | Input manifest | Report sha256 | Cases |
+| --- | --- | --- | --- | --- |
+| run-1 | `f33c914b` + patch | `54154c63f28b…` | `8c856852cee5…` | 66 |
+| run-3 | `f33c914b` + patch | `9fb7504ef04b…` | `b726b3b4ed61…` | 72 |
+| final | `2065b5ef`, clean | `7771b2af3163…` | `60654ef9467e…` | 12 |
+
+The crops linked above come from run-3.
 
 ## Limits
 
@@ -72,3 +255,7 @@ character-studio-tiers journeys.
   check is expected to fail until a new reference is reviewed; it was not
   replaced here.
 - Morgan and Imani are unchanged; their tiers pass no component list.
+- The +10% cost bar is not established here: run-to-run noise on this shared host
+  is about the size of the bar. A quiet-host or physical-device rerun is open.
+- No human has signed off on the look; the verdicts rest on this session's reading
+  and an independent agent's. #517 stays open for its AAA and all-device criteria.
