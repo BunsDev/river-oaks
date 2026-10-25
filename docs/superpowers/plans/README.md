@@ -4,7 +4,7 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (20)
+## Active and blocked (22)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
@@ -12,10 +12,12 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-18-play-rail-menu](2026-10-18-play-rail-menu.md)<br>Play rail as a game menu; preferences in Settings | `play-rail-menu-evidence-20261019` | active | #549 | 2026-10-19 |
 | [2026-10-18-penthouse-only](2026-10-18-penthouse-only.md)<br>Penthouse-only office implementation and evidence | `penthouse-only-20261018-cody` | active | — | 2026-10-18 |
 | [2026-10-18-ipic-screening-next](2026-10-18-ipic-screening-next.md)<br>IPIC screening, next milestone: choose a film, watch together, return to the world (#497) | `ipic-journey-approved-film-502` | active | #556 | 2026-10-19 |
+| [2026-10-18-human-studio-apple-polish](2026-10-18-human-studio-apple-polish.md)<br>Human characters and Apple platform polish | `human-studio-apple-polish-20261018` | active | #504 | 2026-10-18 |
 | [2026-10-18-character-studio-creation-441](2026-10-18-character-studio-creation-441.md)<br>Character Studio #441: guided creation flow | `novice-trial-441-20261018` | active | — | 2026-10-18 |
 | [2026-10-18-character-studio-441-integration](2026-10-18-character-studio-441-integration.md)<br>Character Studio #441: remaining acceptance and human integration | `character-studio-441-integration` | blocked | #531 | 2026-10-18 |
 | [2026-10-18-character-fidelity-517](2026-10-18-character-fidelity-517.md)<br>Character fidelity (#517): realistic humans in the live renderer | `character-fidelity-517-20261018` | active | #545 | 2026-10-19 |
 | [2026-10-18-character-fidelity-517-review](2026-10-18-character-fidelity-517-review.md)<br>#517 supporting review | `character-fidelity-517-review` | blocked | #536 | 2026-10-18 |
+| [2026-10-18-cafe-publication-pilot](2026-10-18-cafe-publication-pilot.md)<br>#420 approved Corner Café publication pilot (2026-10-18) | `cafe-publication-pilot-420` | queued | #489 | 2026-10-18 |
 | [2026-10-15-studio-pilot-acceptance](2026-10-15-studio-pilot-acceptance.md)<br>Garden Office pilot acceptance (#417, parent #413) | `studio-acceptance-417-refresh-20261015` | blocked | — | 2026-10-18 |
 | [2026-10-15-screening-seek-lead](2026-10-15-screening-seek-lead.md)<br>Screening player: seek freezes under heavy load (parked) | `screening-seek-lead` | queued | — | 2026-10-18 |
 | [2026-10-15-desktop-installers](2026-10-15-desktop-installers.md)<br>Desktop installers and signing (#372), 2026-10-15 | `desktop-installers` | queued | #399 | 2026-10-15 |
@@ -267,22 +269,50 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (90)
+## Historical, not in the register (118)
 
 | Plan | PRs mentioned |
 | --- | --- |
-| [2026-10-23-police-pursuit-598](2026-10-23-police-pursuit-598.md)<br>Police pursuit #598 Implementation Plan | #598, #597 |
+| [2026-10-24-prune-ancestor-tip](2026-10-24-prune-ancestor-tip.md)<br>Retire a local tip behind its merged head | #631 |
+| [2026-10-24-movement-pad-contrast](2026-10-24-movement-pad-contrast.md)<br>Walking movement control contrast | — |
+| [2026-10-24-likeness-closeout-518](2026-10-24-likeness-closeout-518.md)<br>Likeness closeout #518 ledger | #518, #590, #591 |
+| [2026-10-24-delivery-convergence](2026-10-24-delivery-convergence.md)<br>Delivery convergence: 2026-10-24 | #394, #410, #459 |
+| [2026-10-23-two-player-perf-budget](2026-10-23-two-player-perf-budget.md)<br>Two-player performance budget | #583, #582, #584 |
+| [2026-10-23-procedural-tools-evaluation](2026-10-23-procedural-tools-evaluation.md)<br>External procedural tools evaluation (#588) | #588, #616 |
+| [2026-10-23-police-pursuit-598](2026-10-23-police-pursuit-598.md)<br>Police pursuit #598 Implementation Plan | #598, #597, #616 |
+| [2026-10-23-phase1-review](2026-10-23-phase1-review.md)<br>Phase 1 review against #580 and #581 | #580, #581, #594 |
+| [2026-10-23-neighborhood-regeneration-review](2026-10-23-neighborhood-regeneration-review.md)<br>Neighborhood regeneration review | — |
+| [2026-10-23-mvp-regression](2026-10-23-mvp-regression.md)<br>Current-main world expansion MVP regression | #611, #587, #583 |
+| [2026-10-23-likeness-consent-audit-518](2026-10-23-likeness-consent-audit-518.md)<br>Likeness consent, quota and audit follow-up #518 ledger | #518, #615, #592 |
+| [2026-10-23-integrated-expansion-mvp](2026-10-23-integrated-expansion-mvp.md)<br>Integrated world-expansion MVP (#582–#587) | #582, #587, #611 |
+| [2026-10-23-faster-pr-checks](2026-10-23-faster-pr-checks.md)<br>Faster pull request checks | #607, #594 |
+| [2026-10-23-district-height-audit](2026-10-23-district-height-audit.md)<br>District building height audit (follow-up to #588) | #588 |
 | [2026-10-23-destination-slice-584-586](2026-10-23-destination-slice-584-586.md)<br>Destination slice: city kit, assembly and Bayou Market Commons (#584, #585, #586) | #584, #585, #586 |
+| [2026-10-23-delivery-lifecycle](2026-10-23-delivery-lifecycle.md)<br>Verified delivery cadence and proactive retirement | #622, #607, #624 |
+| [2026-10-23-crime-melee-597](2026-10-23-crime-melee-597.md)<br>#597 First criminal action: melee, rival health, wanted stars | #597, #596, #603 |
+| [2026-10-23-campus-readiness-socket-512](2026-10-23-campus-readiness-socket-512.md)<br>Campus readiness socket-replacement correction (#512) | #512, #545, #505 |
+| [2026-10-23-campus-followup-505](2026-10-23-campus-followup-505.md)<br>Garden Campus #505 follow-up ledger | #505, #506, #512 |
+| [2026-10-22-world-streaming-582-583](2026-10-22-world-streaming-582-583.md)<br>Continuous travel and spatial streaming implementation plan | #582 |
+| [2026-10-22-world-policy-596](2026-10-22-world-policy-596.md)<br>#596 World rules: shared clock, danger zones and owner policy | #596, #597, #598 |
+| [2026-10-22-world-manifest-581](2026-10-22-world-manifest-581.md)<br>World manifest foundation #581 | #581 |
+| [2026-10-22-world-gate-587](2026-10-22-world-gate-587.md)<br>World expansion MVP gate (#587) ledger | #587, #580, #594 |
 | [2026-10-22-world-expansion](2026-10-22-world-expansion.md)<br>World expansion execution ledger | #580, #588, #581 |
+| [2026-10-22-neighborhood-authoring](2026-10-22-neighborhood-authoring.md)<br>Neighborhood Authoring Implementation Plan | #584, #586 |
 | [2026-10-22-login-flicker](2026-10-22-login-flicker.md)<br>Login flicker and Character Studio in development | — |
+| [2026-10-22-likeness-intake-518](2026-10-22-likeness-intake-518.md)<br>Likeness intake #518 implementation ledger | #518, #590, #591 |
 | [2026-10-22-dependabot-python-audit](2026-10-22-dependabot-python-audit.md)<br>Dependabot Python audit correction | #553, #554 |
 | [2026-10-22-dependabot-553-554](2026-10-22-dependabot-553-554.md)<br>Dependabot review and delivery, 2026-10-22 | #553, #554, #570 |
 | [2026-10-22-character-tier-identity-443](2026-10-22-character-tier-identity-443.md)<br>#443 viewer-local graphics tiers keep one replicated identity | #443, #517, #545 |
+| [2026-10-22-campus-evidence-508](2026-10-22-campus-evidence-508.md)<br>Campus #508 acceptance evidence plan | #508, #510, #505 |
+| [2026-10-22-branch-worktree-consolidation](2026-10-22-branch-worktree-consolidation.md)<br>Branch and worktree consolidation | #549, #503, #589 |
 | [2026-10-22-baseline-followup-580](2026-10-22-baseline-followup-580.md)<br>Issue 580 independent follow-up audit | #594, #600 |
+| [2026-10-21-campus-challenge-507](2026-10-21-campus-challenge-507.md)<br>Campus #507 challenge and finish | #507, #551, #506 |
+| [2026-10-20-resilient-client-290](2026-10-20-resilient-client-290.md)<br>#290 web recovery, slice 1 | #290, #567, #309 |
 | [2026-10-20-incremental-archive-bundles](2026-10-20-incremental-archive-bundles.md)<br>Archive bundles that build on the default branch | — |
 | [2026-10-20-garment-bake-provenance-554](2026-10-20-garment-bake-provenance-554.md)<br>Garment bake provenance (#554) | #554, #545, #566 |
 | [2026-10-20-flight-edge](2026-10-20-flight-edge.md)<br>Flight building-edge snag | — |
 | [2026-10-20-desktop-platform-release](2026-10-20-desktop-platform-release.md)<br>Desktop platform release process and acceptance matrix (#373) | #373, #370, #379 |
+| [2026-10-20-background-input-290](2026-10-20-background-input-290.md)<br>#290 background input and bfcache safety (PR B) | #290, #566 |
 | [2026-10-19-ipic-auditorium-rotate](2026-10-19-ipic-auditorium-rotate.md)<br>IPIC auditorium: 3× along the building, turned to face lengthwise | — |
 | [2026-10-19-ios-fit-285](2026-10-19-ios-fit-285.md)<br>iPhone fit — #285 decision on current main (takeover) | #285, #284, #289 |
 | [2026-10-18-cartier-pilot-recovery](2026-10-18-cartier-pilot-recovery.md)<br>Cartier pilot recovery — 2026-10-18 | — |

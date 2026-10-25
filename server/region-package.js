@@ -4,6 +4,9 @@ import { createWalkingEnvironment } from '../preview/src/walking.js';
 import { storefrontSpot } from '../preview/src/arrival.js';
 import { STREET } from '../preview/src/street-profile.js';
 import { generateBuildingInteriorPlan, validBuildingInteriorGeneration } from '../preview/src/building-interiors-plan.js';
+import { ApprovedSpaceError, approvedSpaceOutdoorRings, outdoorClearOf, placeApprovedSpace, resolveApprovedSpace, validApprovedSpaceDeclaration, verifyApprovedSpaceRoutes } from '../preview/src/approved-space-plan.js';
+import { storefrontBenchSpots } from '../preview/src/street-fixtures.js';
+import { rectanglesOverlap } from '../preview/src/store-rooms.js';
 
 export const MAX_REGION_REQUEST_BYTES = 128 * 1024;
 const record=value=>value!==null && typeof value==='object' && !Array.isArray(value);
@@ -16,9 +19,10 @@ const pair=value=>Array.isArray(value) && value.length===2 && value.every(Number
 const fail=()=>{throw new Error('Invalid creator region package');};
 const VENUE_CATEGORIES=['clothes','art','restaurant','wellness'];
 const ENTRANCE_EDGES={south:0,east:1,north:2,west:3};
+const sha256=value=>createHash('sha256').update(value).digest('hex');
 
 /** Compile a bounded, creator-authored local-metre map into the shared district contract. */
-export function compileRegionPackage(region,title,{worldId='creator-region'}={}) {
+export function compileRegionPackage(region,title,{worldId='creator-region',approvedSpaces}={}) {
   if(!label(title) || !keys(region,['schema_version','bounds_m','terrain','spawn','roads','buildings','trees','places','parcels'])
     || region.schema_version!==1 || !Array.isArray(region.bounds_m) || region.bounds_m.length!==4)fail();
   const [west,south,east,north]=region.bounds_m;
@@ -55,12 +59,14 @@ export function compileRegionPackage(region,title,{worldId='creator-region'}={})
       || !finite(building.size[0],4,80) || !finite(building.size[1],4,80) || !finite(building.size[2],5.5,50)
       || !finite(building.yaw_deg,-180,180) || !['retail','residential','parking'].includes(building.kind))fail();
     if(building.interior!==undefined && (building.size[0]<6 || building.size[1]<6
-      || !keys(building.interior,['name','category','entrance','access','generation']) || !label(building.interior.name)
+      || !keys(building.interior,['name','category','entrance','access','generation','space']) || !label(building.interior.name)
       || !(building.kind==='retail' && VENUE_CATEGORIES.includes(building.interior.category)
         || building.kind==='residential' && building.interior.category==='home')
       || (building.interior.access!==undefined && (building.interior.category!=='home' || !['public','owner'].includes(building.interior.access)))
       || !Object.hasOwn(ENTRANCE_EDGES,building.interior.entrance)
-      || building.interior.generation!==undefined && !validBuildingInteriorGeneration(building.interior.generation)))fail();
+      || building.interior.generation!==undefined && !validBuildingInteriorGeneration(building.interior.generation)
+      // An approved furnished space (#420) replaces the generated plan; a building has one or the other.
+      || building.interior.space!==undefined && (building.interior.generation!==undefined || !validApprovedSpaceDeclaration(building.interior.space))))fail();
     const [x,y]=building.center,[width,depth,height]=building.size,angle=building.yaw_deg*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
     const ring=[[-width/2,-depth/2],[width/2,-depth/2],[width/2,depth/2],[-width/2,depth/2]]
       .map(([dx,dy])=>[x+dx*c-dy*s,y+dx*s+dy*c]);
@@ -111,15 +117,25 @@ export function compileRegionPackage(region,title,{worldId='creator-region'}={})
       ring:[[left,bottom],[right,bottom],[right,top],[left,top],[left,bottom]],
       ...(parcel.owner_id?{ownerId:parcel.owner_id}:{})});
   }
+  // Approved furnished spaces (#420): the server resolves each reviewed revision itself
+  // and places it with one rigid transform at the building's mapped entrance.
+  const approvedPlans=buildings.filter(building=>building.interior?.space).map(building=>{
+    const record=resolveApprovedSpace(building.interior.space,{...approvedSpaces,digest:sha256});
+    return placeApprovedSpace({worldId,building,store:stores.find(store=>store.building_id===building.id),record,interior:building.interior,altitude,
+      region:{bounds:[west,south,east,north],buildings,roads,trees,places:communityLocations,parcels,stores,spawn:region.spawn}});
+  });
+  const interiors=approvedPlans.length?[...buildingInteriors,...approvedPlans.map(plan=>({...plan,approvedSha256:sha256(JSON.stringify(plan))}))]
+    .sort((a,b)=>a.buildingId.localeCompare(b.buildingId)):buildingInteriors;
+  if(Buffer.byteLength(JSON.stringify(interiors))>128*1024)fail();
   const hash=createHash('sha256').update(JSON.stringify(region)).digest('hex');
   const world={schema_version:1,scene:'district',title,address:'Creator-authored region',origin:[0,0],crs:'LOCAL:METRES',
     bounds_m:[west,south,east,north],site_ring:[[west,south],[east,south],[east,north],[west,north],[west,south]],
     buildings,roads,trees,parcels,stores,terrain:surface,walkSurfaceOffset:STREET.walkSurfaceOffset,walkSpawn:[...region.spawn,altitude(region.spawn)],
-    collisionPolygons:buildings.map(building=>building.ring),communityLocations,
+    collisionPolygons:[...buildings.map(building=>building.ring),...approvedPlans.flatMap(approvedSpaceOutdoorRings)],communityLocations,
     provenance:{kind:'creator',source:'Creator-authored region package',source_sha256:hash,attribution:'World creator'},
     limitations:['This region and its geography were supplied by its creator.'],
     walkLookAt:[...roads[0].points[1]],street_design:{version:1,minimum_curb_width_m:8.4,clear_lane_width_m:3.5904,gutters_m:.6096,basis:'Creator-authored roads.'}};
-  if(buildingInteriors.length)world.buildingInteriors=buildingInteriors;
+  if(interiors.length)world.buildingInteriors=interiors;
   const environment=createWalkingEnvironment(world);
   if(!environment.isFree(region.spawn[0],-region.spawn[1]))fail();
   if(environment.rooms.length!==stores.length)fail();
@@ -132,6 +148,19 @@ export function compileRegionPackage(region,title,{worldId='creator-region'}={})
       || !inBounds(outside,0.5) || !environment.isFree(outside[0],-outside[1])
       || environment.roomAt(outside[0],-outside[1]))fail();
     store.visit=[outside[0],outside[1],altitude(outside)];
+  }
+  // Walk the approved spaces' required routes in the assembled world, as visitors will.
+  for(const plan of interiors.filter(plan=>plan.kind)) {
+    const room=environment.rooms.find(room=>room.approvedSpace?.buildingId===plan.buildingId);
+    if(!room)fail();
+    if(environment.rooms.some(other=>other!==room && other.buildingId===plan.buildingId && rectanglesOverlap(other.footprint,room.footprint,0.001)))
+      throw new ApprovedSpaceError('approved_space_neighbor',`${plan.source.name} would overlap another venue in this building.`);
+    // Storefront benches (street-fixtures.js) are placed from the same world data by
+    // server and browser; one standing on the terrace would be furniture in furniture.
+    if(!outdoorClearOf(plan,storefrontBenchSpots(world).map(bench=>[bench.x,bench.north]),1.2))
+      throw new ApprovedSpaceError('approved_space_neighbor',`${plan.source.name}'s terrace would meet a storefront bench.`);
+    const verdict=verifyApprovedSpaceRoutes(plan,environment,{roads});
+    if(verdict.status!=='passed')throw new ApprovedSpaceError('approved_space_route',verdict.findings[0]?.message??'Required routes are blocked.');
   }
   return world;
 }

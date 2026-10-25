@@ -54,3 +54,30 @@ test('the standalone fallback scene hides its lift behind the penthouse glass on
  const legacy = visit('office-legacy-1');
  assert.ok(legacy.visible.length > 2, 'the windowless legacy room keeps the arrival as it was');
 });
+test('the standalone fallback scene releases its once-drawn room lighting on context loss and redraws it on restore', async t => {
+ const { createOfficeScene } = await import('../src/office-scene.js');
+ const sink = new Proxy(() => sink, { get: (_, key) => key === 'measureText' ? () => ({ width: 0 }) : sink, apply: () => sink, set: () => true });
+ const previous = globalThis.document, element = () => ({ style: {}, classList: { add() {}, remove() {}, toggle() {} }, dataset: {}, append() {}, setAttribute() {}, remove() {}, appendChild() {}, getContext: () => sink, width: 0, height: 0 });
+ globalThis.document = { createElement: element }; t.after(() => { globalThis.document = previous; });
+ let drawn = null;
+ const renderer = new Proxy({}, { get: (target, key) => key === 'render' ? scene => { drawn = scene; } : key in target ? target[key] : key === 'capabilities' ? { isWebGL2: true, maxTextureSize: 4096 } : key === 'state' ? { buffers: { depth: { getReversed: () => false } } } : key === 'getClearColor' ? color => color : key === 'getRenderTarget' ? () => null : key === 'getPixelRatio' ? () => 1 : () => {}, set: (target, key, value) => { target[key] = value; return true; } });
+ const self = { id: 'self', office: { id: 'jevica-office', layout: 'office-legacy-1', levelId: 'jevica-office/l0', position: [0, 1.5], yaw: 0 } };
+ const office = createOfficeScene({ renderer, host: { ...element(), clientWidth: 1280, clientHeight: 800 }, self, players: [self], reducedMotion: true });
+ t.after(() => office.dispose());
+ office.render(0, [0, 1.5], 0, [self], { levelId: 'jevica-office/l0' });
+ const scene = drawn, lighting = scene.environment, released = [];
+ assert.ok(lighting?.renderTarget, 'the room lighting is a once-drawn PMREM target');
+ lighting.renderTarget.addEventListener('dispose', () => released.push('lighting target'));
+ let mesh = null; scene.traverse(object => { if (!mesh && object.isMesh && object.geometry.attributes.position) mesh = object; });
+ const positions = mesh.geometry.attributes.position.array;
+ mesh.geometry.addEventListener('dispose', () => released.push('geometry'));
+ office.releaseGraphics();
+ assert.deepEqual(released.sort(), ['geometry', 'lighting target'], 'the separate office scene leaves the lost context\'s caches too');
+ assert.equal(scene.environment, null); assert.equal(mesh.geometry.attributes.position.array, positions, 'CPU geometry stays for re-upload');
+ office.restoreGraphics();
+ assert.ok(scene.environment?.renderTarget); assert.notEqual(scene.environment, lighting); assert.equal(scene.environmentIntensity, .65);
+ // A restore without a release (an office opened while lost) replaces, not strands, its target.
+ const redrawn = scene.environment; redrawn.renderTarget.addEventListener('dispose', () => released.push('redrawn target'));
+ office.restoreGraphics(); assert.notEqual(scene.environment, redrawn); assert.equal(released.at(-1), 'redrawn target');
+ drawn = null; office.render(16, [0, 1.5], 0, [self], { levelId: 'jevica-office/l0' }); assert.equal(drawn, scene);
+});

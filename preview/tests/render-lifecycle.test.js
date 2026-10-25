@@ -24,3 +24,19 @@ test('starting hidden never draws a scene or advances the clock', () => {
   bindRenderVisibility({ document, setLoop: value => calls.push(value), render: 'render', resetTime: () => assert.fail('clock advanced while hidden') });
   assert.deepEqual(calls, [null]);
 });
+
+test('graphics and visibility pauses compose without an early restart', () => {
+  const document = new EventTarget(); document.hidden = false;
+  const calls = [];
+  const dispose = bindRenderVisibility({ document, setLoop: value => calls.push(value), render: 'render', resetTime: () => calls.push('reset') });
+  dispose.setPaused('graphics', true); assert.equal(calls.at(-1), null);
+  document.hidden = true; document.dispatchEvent(new Event('visibilitychange'));
+  dispose.setPaused('graphics', false); assert.equal(calls.at(-1), null);
+  document.hidden = false; document.dispatchEvent(new Event('visibilitychange'));
+  assert.deepEqual(calls.slice(-2), ['reset', 'render']);
+  dispose.setPaused('graphics', true);
+  document.dispatchEvent(new Event('visibilitychange')); assert.equal(calls.at(-1), null);
+  dispose.setPaused('rebuild', true); dispose.setPaused('graphics', false); assert.equal(calls.at(-1), null);
+  dispose.setPaused('rebuild', false); assert.deepEqual(calls.slice(-2), ['reset', 'render']);
+  dispose(); const count = calls.length; dispose.setPaused('graphics', false); assert.equal(calls.length, count);
+});

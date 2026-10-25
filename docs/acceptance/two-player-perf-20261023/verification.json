@@ -1,0 +1,169 @@
+{
+ "note": "Compact receipts. Generated data/reports were restored to their tracked versions after copying these summaries.",
+ "core": {
+  "status": "passed",
+  "revision": "98ac7d7b3a5a8db5416d88c69905e13eb205bb84",
+  "dirty": true,
+  "startedAt": "2026-10-24T01:29:07.422Z",
+  "finishedAt": "2026-10-24T01:33:26.575Z",
+  "results": [
+   [
+    "agent-tests",
+    "passed"
+   ],
+   [
+    "preview-tests",
+    "passed"
+   ],
+   [
+    "server-tests",
+    "passed"
+   ],
+   [
+    "desktop-tests",
+    "passed"
+   ],
+   [
+    "build",
+    "passed"
+   ],
+   [
+    "python-lint",
+    "passed"
+   ],
+   [
+    "python-format",
+    "passed"
+   ],
+   [
+    "python-tests",
+    "passed"
+   ],
+   [
+    "demo",
+    "passed"
+   ],
+   [
+    "demo-verify",
+    "passed"
+   ],
+   [
+    "secrets",
+    "passed"
+   ]
+  ],
+  "pathNote": "Python 3.12 first on PATH; attempt 1 failed tooling only on host Python 3.9 tarfile filter (receipt kept in local .runtime)"
+ },
+ "full": {
+  "status": "passed",
+  "revision": "98ac7d7b3a5a8db5416d88c69905e13eb205bb84",
+  "dirty": true,
+  "startedAt": "2026-10-24T01:33:45.384Z",
+  "finishedAt": "2026-10-24T04:42:02.446Z",
+  "results": [
+   [
+    "dependency-audit",
+    "passed"
+   ],
+   [
+    "agent-tests",
+    "passed"
+   ],
+   [
+    "preview-tests",
+    "passed"
+   ],
+   [
+    "server-redis-tests",
+    "passed"
+   ],
+   [
+    "desktop-tests",
+    "passed"
+   ],
+   [
+    "build",
+    "passed"
+   ],
+   [
+    "python-lint",
+    "passed"
+   ],
+   [
+    "python-format",
+    "passed"
+   ],
+   [
+    "python-tests",
+    "passed"
+   ],
+   [
+    "demo",
+    "passed"
+   ],
+   [
+    "demo-verify",
+    "passed"
+   ],
+   [
+    "secrets",
+    "passed"
+   ],
+   [
+    "secret-history",
+    "passed"
+   ],
+   [
+    "security-browser",
+    "passed"
+   ],
+   [
+    "reflections",
+    "passed"
+   ],
+   [
+    "experience",
+    "passed"
+   ],
+   [
+    "shared",
+    "passed"
+   ],
+   [
+    "ipic-screening",
+    "passed"
+   ]
+  ],
+  "redis": "isolated disposable 127.0.0.1:16473, stopped after, port closed"
+ },
+ "counts": {
+  "tooling": "207/207",
+  "preview": "3885 passed, 1 skipped (Vince glazing)",
+  "serverWithRedis": "1084/1084",
+  "desktop": "115 passed, 3 skipped (Windows-only)",
+  "python": "149 passed",
+  "securityBrowser": "2/2"
+ },
+ "journeyReports": {
+  "data/reports/experience.json": {
+   "createdAt": "2026-10-24T04:24:02.081Z",
+   "status": null,
+   "journeys": 17,
+   "outcomes": [
+    "passed"
+   ],
+   "checks": 0,
+   "sha256": "debbad8c9368a5bfb09694f09afe8330f0443b5dda76f6c435236665c40870d0"
+  },
+  "data/reports/shared-experience.json": {
+   "createdAt": "2026-10-24T04:25:22.652Z",
+   "status": "passed",
+   "journeys": 27,
+   "outcomes": [
+    "passed"
+   ],
+   "checks": 0,
+   "sha256": "e9db49752cbcd7078238847dbb9eda5fb0898c45cbd5730c4d9fd94a383a8e54"
+  }
+ }
+}

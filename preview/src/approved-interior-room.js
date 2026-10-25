@@ -87,3 +87,26 @@ export function approvedLevelRoom(plan, level, legacy) {
 export function approvedGroundRoom(plan, legacy) {
   return approvedLevelRoom(plan, plan?.levels?.[0], legacy);
 }
+
+const SPACE_HIGHLIGHTS = { counter: 'service counter', appliance: 'espresso machine', table: 'tables', cabinet: 'cabinets', sink: 'sink', shelf: 'shelving', sofa: 'sofa', desk: 'desks' };
+/**
+ * An approved furnished space (approved-space-plan.js) on the same walking contract:
+ * its blocking furnishings are the level's fixtures. It brings no residents; the
+ * first increment supports walking, entry and exit only.
+ */
+export function approvedSpaceRoom(plan, legacy) {
+  if (plan?.kind !== 'approved-space' || plan.adapterVersion !== 1 || plan.levels?.length !== 1 || !legacy)
+    throw new Error('This world needs a newer version of River Oaks');
+  const room = approvedLevelRoom(plan, plan.levels[0], { ...legacy, people: [], lights: [] });
+  room.approvedSpace = plan;
+  // A furnished room has dozens of fixtures; skip those whose bounds are out of reach.
+  // A point outside a box widened by the radius is neither inside nor near its polygon.
+  const boxes = room.obstacles.map(item => ({ footprint: item.footprint,
+    x0: Math.min(...item.footprint.map(p => p[0])), x1: Math.max(...item.footprint.map(p => p[0])),
+    y0: Math.min(...item.footprint.map(p => p[1])), y1: Math.max(...item.footprint.map(p => p[1])) }));
+  room.blocks = (east, north, radius = 0) => boxes.some(box => east > box.x0 - radius && east < box.x1 + radius
+    && north > box.y0 - radius && north < box.y1 + radius && clearOfPolygon([east, north], box.footprint, -radius));
+  room.summary = { label: plan.source.name, highlights: [...new Set(plan.space.objects.filter(item => !item.outdoor)
+    .map(item => SPACE_HIGHLIGHTS[item.kind]).filter(Boolean))].slice(0, 4) };
+  return room;
+}

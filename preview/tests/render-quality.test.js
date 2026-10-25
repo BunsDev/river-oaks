@@ -101,6 +101,59 @@ test('persistent overload at minimum resolution drops ambient occlusion, with gr
   assert.equal(governor.occlusion, true, 'selecting Auto again retries full detail');
 });
 
+test('Auto counts the decision windows that changed nothing, so a measurement can wait for it to settle', () => {
+  const unfinished = createRenderScaleGovernor();
+  for (let frame = 0; frame < 44; frame++) unfinished.sample(16.7);
+  assert.equal(unfinished.steadyWindows, 0, 'an unfinished window is not a decision');
+  const governor = createRenderScaleGovernor();
+  assert.equal(governor.steadyWindows, 0, 'a fresh Auto has not decided anything yet');
+  // Overload walks 1 → 0.85 → 0.72 → 0.61 → 0.6. The first window at the floor
+  // changes nothing; the second drops AO. That is 270 frames: 27 s at 10 fps.
+  for (let window = 0; window < 4; window++) { feed(governor, 33.3, 1); assert.equal(governor.steadyWindows, 0, `window ${window + 1} lowers the scale`); }
+  feed(governor, 33.3, 1);
+  assert.deepEqual([governor.scale, governor.occlusion, governor.steadyWindows], [0.6, true, 1]);
+  feed(governor, 33.3, 1);
+  assert.deepEqual([governor.scale, governor.occlusion, governor.steadyWindows], [0.6, false, 0], 'dropping AO is a change');
+  feed(governor, 33.3, 1);
+  assert.equal(governor.steadyWindows, 1, 'overload at the floor without AO leaves nothing to change');
+  feed(governor, 33.3, 1);
+  assert.equal(governor.steadyWindows, 2);
+  governor.resetMeasurements();
+  assert.equal(governor.steadyWindows, 0, 'a frame-time reset starts the count again');
+  feed(governor, 33.3, 1);
+  governor.reset();
+  assert.equal(governor.steadyWindows, 0, 'selecting Auto again starts over');
+});
+
+test('a step up after calm windows also restarts the settled count', () => {
+  const governor = createRenderScaleGovernor();
+  feed(governor, 33.3, 1);
+  assert.equal(governor.scale, 0.85);
+  feed(governor, 16.7, 2);
+  assert.equal(governor.steadyWindows, 2, 'calm windows that have not yet earned a step change nothing');
+  feed(governor, 16.7, 1);
+  assert.equal(governor.scale, 0.95);
+  assert.equal(governor.steadyWindows, 0);
+});
+
+test('the graphics readout reports how long Auto has held its choice', async () => {
+  const { createQualityControl } = await import('../src/render-quality.js');
+  const previousDocument = globalThis.document;
+  globalThis.document = { createElement: () => ({ dataset: {}, setAttribute() {}, append() {}, addEventListener() {}, set textContent(value) {} }) };
+  try {
+    const control = createQualityControl({ storage: { getItem: () => null, setItem() {} }, apply() {} });
+    assert.equal(control.stats.steadyWindows, 0);
+    for (let frame = 0; frame < 45 * 7; frame++) control.sample(16.7);
+    assert.equal(control.stats.steadyWindows, 7);
+    control.select('sharp');
+    assert.equal(control.stats.steadyWindows, null, 'manual modes make no decisions to wait for');
+    control.select('auto');
+    assert.equal(control.stats.steadyWindows, 0);
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});
+
 test('blocked storage falls back to Auto instead of aborting the graphics control', async () => {
   const { createQualityControl } = await import('../src/render-quality.js');
   const element = () => ({ dataset: {}, style: {}, setAttribute() {}, append() {}, addEventListener() {}, set textContent(v) {}, set hidden(v) {} });
@@ -156,4 +209,60 @@ test('the default Settings control keeps Auto AO through moving-frame tails and 
     assert.deepEqual(applied.at(-1), { mode: 'auto', scale: 1, occlusion: true });
     assert.equal(control.stats.tailShedding, false, 'receipts record that the tail rule was off');
   } finally { globalThis.document = previousDocument; }
+});
+
+// Storage is the production boundary: reconstructing the control simulates a
+// reload, and applying an explicit selection must override recovery policy.
+async function withStoredQuality(initial, run) {
+  const { createQualityControl } = await import('../src/render-quality.js');
+  const previousDocument = globalThis.document;
+  globalThis.document = { createElement: () => ({ dataset: {}, setAttribute() {}, append() {}, addEventListener() {} }) };
+  let stored = initial;
+  const storage = { getItem: () => stored, setItem: (key, value) => { assert.equal(key, 'river-oaks-graphics'); stored = value; } };
+  const create = () => createQualityControl({ storage, apply() {} });
+  try { await run(create, () => stored); } finally { globalThis.document = previousDocument; }
+}
+
+test('legacy graphics strings load and a recovery step survives reconstruction', async () => {
+  await withStoredQuality('sharp', (create, stored) => {
+    const control = create(); assert.equal(control.mode, 'sharp');
+    control.stepDown(); assert.equal(control.mode, 'auto');
+    assert.equal(JSON.parse(stored()).recoveryTier, 'auto');
+    assert.equal(create().mode, 'auto');
+  });
+});
+
+test('recovery steps stop at Smoothest and a later manual choice overrides them', async () => {
+  await withStoredQuality('auto', create => {
+    const control = create(); control.stepDown();
+    assert.equal(control.mode, 'smooth'); assert.equal(control.stats.occlusion, false);
+    control.stepDown(); assert.equal(create().mode, 'smooth');
+    control.select('sharp', true); assert.equal(control.mode, 'sharp'); assert.equal(create().mode, 'sharp');
+  });
+});
+
+test('malformed recovery storage falls back safely while valid legacy modes remain readable', async () => {
+  for (const [stored, expected] of [['smooth', 'smooth'], ['{bad', 'auto'], ['{"mode":"sharp","recoveryTier":"invalid"}', 'sharp']]) {
+    await withStoredQuality(stored, create => assert.equal(create().mode, expected));
+  }
+});
+
+test('resuming drops stale measurement windows without raising the current Auto scale', async () => {
+  await withStoredQuality('auto', create => {
+    const control = create(); feed(control, 33.3, 2);
+    const scale = control.stats.scale;
+    for (let index = 0; index < 44; index++) control.sample(33.3);
+    control.resetTime(); control.sample(33.3);
+    assert.equal(control.stats.scale, scale); assert.equal(control.stats.fps, 0);
+  });
+});
+
+test('recovery never raises a scale Auto already reduced, including across reload', async () => {
+  await withStoredQuality('auto', create => {
+    const control = create(); feed(control, 33.3, 8);
+    assert.equal(control.stats.scale, .6); assert.equal(control.stats.occlusion, false);
+    control.stepDown(); assert.equal(control.mode, 'smooth'); assert.equal(control.stats.scale, .6);
+    assert.equal(create().stats.scale, .6);
+    control.select('smooth', true); assert.equal(control.stats.scale, .75); assert.equal(create().stats.scale, .75);
+  });
 });
