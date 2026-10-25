@@ -6,9 +6,12 @@ import { describeRisk } from './world-policy-ui.js';
 // The first criminal action's HUD (#597). It shows only what the town said: a rival's health,
 // the player's wanted stars, the risk where they stand, and a hit after the town confirms it.
 // Nothing here predicts damage. Near a rival in an active danger zone it offers a shove (T or
-// the button); elsewhere it says plainly that nobody can be harmed.
+// the button); elsewhere it says plainly that nobody can be harmed. Since #640 a strike is timed:
+// the reply only admits a windup, and the outcome is read from the snapshot's actions. A rival's
+// telegraphed counter is announced in text, with an evade (U or the button).
 
 export const ATTACK_KEY = 'KeyT';
+export const EVADE_KEY = 'KeyU';
 export const MAX_STARS = 5;
 const NEAR = 6, REACH = 1.6;
 const node = (tag, text, className) => { const el = document.createElement(tag); if (text) el.textContent = text; if (className) el.className = className; return el; };
@@ -37,6 +40,8 @@ export const policeFigures = police => (police?.units ?? []).map(unit => ({
 export function policeStatus(police, userId) {
   const assigned = police?.units?.filter(unit => unit.targetId === userId) ?? [];
   if (assigned.some(unit => unit.state === 'arrest')) return 'Arrest in progress. You will return safely to the arrival point.';
+  if (police?.subdued?.includes(userId)) return 'An officer has hold of you. Arrest in progress.';
+  if (assigned.some(unit => unit.state === 'grab')) return 'An officer is reaching to grab you. Evade with U, step away or surrender.';
   if (police?.surrendered?.includes(userId)) return 'You have surrendered. Stay still while an officer approaches.';
   if (assigned.some(unit => unit.state === 'pursue')) return 'Police are approaching. Surrender to return safely to the arrival point.';
   if (assigned.some(unit => unit.state === 'search')) return 'Police are searching your last seen location.';
@@ -60,6 +65,29 @@ export function describeHit(hit, rivalName) {
   return `Hit landed. ${outcome} Wanted level ${hit.stars} of ${MAX_STARS}.`;
 }
 
+const MISSES = { attack_out_of_reach: name => `Missed. ${name} was out of reach.`, attack_out_of_arc: name => `Missed. ${name} moved out of the swing.`,
+  target_incapacitated: name => `Missed. ${name} is already down.`, staggered: () => 'Missed. You were knocked off balance.', attack_on_foot: () => 'Missed. Stand on the street to strike.' };
+const STOPPED = { violence_off: 'The town is peaceful right now.', policy_changed: 'The world rules changed.', safe_zone: 'This is a safe place. Nobody can be harmed here.',
+  not_danger_zone: 'You left the danger zone.', zone_disabled: 'This zone is peaceful right now.', outside_hours: 'Trouble here has stopped for now.', zone_boundary: 'You are in different places now.' };
+/** One sentence for a timed action that involves this player, from the town's snapshot only. */
+export function describeAction(action, rivalName, selfId) {
+  if (action.kind === 'strike' && action.actorId === selfId) {
+    if (action.outcome === null) return 'Winding up…';
+    if (action.outcome === 'hit') return describeHit(action.effect, rivalName);
+    if (action.outcome === 'miss') return MISSES[action.reason]?.(rivalName) ?? 'Missed.';
+    return action.outcome === 'cancelled' && STOPPED[action.reason] ? `Stopped. ${STOPPED[action.reason]}` : action.outcome === 'cancelled' ? '' : 'Missed.';
+  }
+  if (action.kind === 'counter' && action.targetId === selfId) {
+    if (action.outcome === null) return `${rivalName} is winding up to strike back. Evade with U.`;
+    if (action.outcome === 'evaded') return `You evaded ${rivalName}.`;
+    if (action.outcome === 'miss') return `${rivalName} missed you.`;
+    if (action.outcome === 'hit') return action.effect.down ? `${rivalName} knocked you down. You will get back up shortly.` : `${rivalName} hit you. ${action.effect.health} health left.`;
+    if (action.outcome === 'cancelled') return `${rivalName} backed off.`;
+  }
+  return '';
+}
+const actionNumber = action => Number(String(action.id).split(':')[1]) || 0;
+
 const attackId = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`).replace(/[^A-Za-z0-9]/g, '').slice(0, 32);
 
 export function createCrimeUI({ host, getTown, getEnvironment = () => null, request, getSounds = throwSounds, keys = globalThis.window }) {
@@ -76,9 +104,24 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
   card.append(name, meter, state, risk, shove);
   const policeState = node('p', null, 'crime-police-state'); policeState.setAttribute('role','status');
   const surrender = node('button', 'Surrender', 'crime-surrender'); surrender.type = 'button';
-  hud.append(wanted, policeState, surrender, card, result);
+  // Styled as the shove (multiplayer.css .crime-attack); crime-evade names it.
+  const evadeButton = node('button', null, 'crime-attack crime-evade'); evadeButton.type = 'button';
+  evadeButton.append(node('span', 'Evade'), node('kbd', 'U')); evadeButton.hidden = true;
+  hud.append(wanted, policeState, surrender, evadeButton, card, result);
   host?.append(hud);
-  let busy = false, target = null, disposed = false, lastPaint = -Infinity, wasHeld = false, surrenderCue = null;
+  let busy = false, target = null, disposed = false, lastPaint = -Infinity, wasHeld = false, surrenderCue = null, evading = false;
+  // Announce each action event once. When several change at once, say the one that matters most
+  // to this player: a counter that lands, then a counter coming, then their own strike.
+  const heard = new Set();
+  const weight = action => action.kind === 'counter' ? (action.outcome === 'hit' ? 4 : action.outcome === null ? 3 : 2) : 1;
+  const announce = (actions, nameOf) => {
+    const fresh = actions.filter(action => !heard.has(`${action.id}:${action.outcome ?? 'pending'}`));
+    for (const action of fresh) heard.add(`${action.id}:${action.outcome ?? 'pending'}`);
+    if (heard.size > 64) for (const key of [...heard].slice(0, heard.size - 64)) heard.delete(key);
+    const pick = fresh.sort((a, b) => weight(b) - weight(a) || actionNumber(b) - actionNumber(a))[0];
+    const line = pick && describeAction(pick, nameOf(pick), getTown().selfId);
+    if (line) setText(result, line);
+  };
 
   async function attack() {
     if (busy || !target || shove.hidden || disposed) return;
@@ -90,11 +133,25 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
       // A lost reply is retried once with the same ID: the town lands it at most once.
       try { reply = await request(message); } catch { reply = await request(message); }
       if (disposed) return;
-      setText(result, reply.ok ? describeHit(reply.hit, name) : reply.message ?? 'That did not land.');
+      // The reply admits a windup; the hit, if any, comes from the snapshot at contact.
+      if (reply.ok && reply.action) announce([reply.action], () => name);
+      else setText(result, reply.ok ? describeHit(reply.hit, name) : reply.message ?? 'That did not land.');
     } catch (error) { if (!disposed) setText(result, error.message); }
     finally { busy = false; if (!disposed) paint(); }
   }
   shove.addEventListener('click', () => void attack());
+  async function evade() {
+    if (evading || evadeButton.hidden || evadeButton.disabled || disposed) return;
+    evading = true; paint();
+    const message = { type: 'evade', evadeId: attackId() };
+    try {
+      let reply;
+      try { reply = await request(message); } catch { reply = await request(message); }
+      if (!disposed && !reply.ok) setText(result, reply.message ?? 'Could not evade.');
+    } catch (error) { if (!disposed) setText(result, error.message); }
+    finally { evading = false; if (!disposed) paint(); }
+  }
+  evadeButton.addEventListener('click', () => void evade());
   surrender.addEventListener('click', async () => {
     if (busy || disposed) return;
     const town = getTown(), offered = town.snapshot?.police?.surrendered?.includes(town.selfId);
@@ -105,7 +162,7 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
       const reply = await request({ type:'surrender', action:offered?'resume':'offer' });
       const current = getTown(), police = current.snapshot?.police;
       if(disposed || current.selfId!==userId || current.connected===false)return;
-      const held = Boolean(police?.surrendered?.includes(userId) || police?.units?.some(unit=>unit.targetId===userId && unit.state==='arrest'));
+      const held = Boolean(police?.surrendered?.includes(userId) || police?.subdued?.includes(userId) || police?.units?.some(unit=>unit.targetId===userId && unit.state==='arrest'));
       if(reply.ok && Number.isFinite(revision) && current.snapshot?.revision>revision && held!==reply.surrendered)return;
       if (reply.ok) { surrenderCue?.stop(); surrenderCue = sounds.play('tap'); }
       if (!disposed) setText(result, reply.ok ? (reply.surrendered ? 'Surrender accepted. Stay still.' : 'You may move again.') : reply.message ?? 'Surrender unavailable.');
@@ -113,9 +170,10 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
     finally { busy = false; if (!disposed) paint(); }
   });
   const onKey = event => {
-    if (event.code !== ATTACK_KEY || event.repeat || event.metaKey || event.ctrlKey || event.altKey || disposed) return;
-    if (typing(event.target) || hud.hidden || shove.hidden || shove.disabled) return;
-    event.preventDefault(); event.stopImmediatePropagation(); void attack();
+    if (![ATTACK_KEY, EVADE_KEY].includes(event.code) || event.repeat || event.metaKey || event.ctrlKey || event.altKey || disposed) return;
+    const button = event.code === ATTACK_KEY ? shove : evadeButton;
+    if (typing(event.target) || hud.hidden || button.hidden || button.disabled) return;
+    event.preventDefault(); event.stopImmediatePropagation(); void (event.code === ATTACK_KEY ? attack() : evade());
   };
   keys?.addEventListener('keydown', onKey, true);
 
@@ -124,7 +182,8 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
     const self = snapshot?.players?.find(player => player.id === town.selfId);
     const stars = starsOf(crime, town.selfId), near = nearestRival(self, crime);
     const police = snapshot?.police, offered = police?.surrendered?.includes(town.selfId);
-    const arresting = police?.units?.some(unit => unit.targetId === town.selfId && unit.state === 'arrest');
+    // Held by police: an arrest under way, or a grab that landed (#640).
+    const arresting = police?.units?.some(unit => unit.targetId === town.selfId && unit.state === 'arrest') || Boolean(police?.subdued?.includes(town.selfId));
     if(wasHeld && !offered && !arresting)setText(result,stars?'Surrender ended. You may move again.':'You are no longer wanted. You may move again.');
     wasHeld = Boolean(offered || arresting);
     setText(policeState,policeStatus(police,town.selfId)); policeState.hidden = !policeState.textContent;
@@ -132,21 +191,28 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
     surrender.disabled = busy || arresting;
     setText(surrender,offered?'Resume moving':'Surrender');
     if(document.activeElement===surrender && (surrender.hidden || arresting)){result.tabIndex=-1;result.focus({preventScroll:true});}
+    const worldId = snapshot?.worldId ?? 'river-oaks';
+    const policy = snapshot?.worldPolicy ? (({ minute, active, ...rules }) => validateWorldPolicy(rules, worldId))(snapshot.worldPolicy) : null;
+    const place = self ? { position: self.position, levelId: self.levelId ?? null, indoors: Boolean(self.levelId === null && getEnvironment()?.roomAt?.(self.position[0], -self.position[1])) } : null;
+    const level = policy && place ? riskAt(worldId, policy, place).level : 'peaceful';
+    // The newest timed action involving this player (#640): its outcome comes from the town.
+    const involved = (crime?.actions ?? []).filter(action => action.actorId === town.selfId || action.targetId === town.selfId);
+    const mine = involved.reduce((newest, action) => !newest || actionNumber(action) > actionNumber(newest) ? action : newest, null);
+    if (involved.length) announce(involved, action => crime.targets?.find(item => item.id === (action.kind === 'strike' ? action.targetId : action.actorId))?.name ?? 'The rival');
+    evadeButton.hidden = !self || town.connected === false || level !== 'danger' || !stars && !mine;
+    evadeButton.disabled = evading || offered || arresting;
     hud.hidden = !self || (!stars && !near && !result.textContent);
     wanted.hidden = !stars;
     setText(wanted, starsText(stars)); wanted.setAttribute('aria-label', starsLabel(stars));
     card.hidden = !near;
     target = near?.rival ?? null;
     if (!near) return;
-    const rival = near.rival, worldId = snapshot.worldId ?? 'river-oaks';
+    const rival = near.rival;
     setText(name, rival.name);
     meter.setAttribute('aria-label', `${rival.name} health`); meter.setAttribute('aria-valuemax', String(rival.maxHealth));
     meter.setAttribute('aria-valuenow', String(rival.health)); meter.setAttribute('aria-valuetext', `${rival.health} of ${rival.maxHealth}`);
     fill.style.width = `${Math.round(rival.health / rival.maxHealth * 100)}%`;
     setText(state, rival.incapacitated ? 'Down and winded. They will get back up soon.' : `${rival.health} of ${rival.maxHealth} health`);
-    const policy = snapshot.worldPolicy ? (({ minute, active, ...rules }) => validateWorldPolicy(rules, worldId))(snapshot.worldPolicy) : null;
-    const place = { position: self.position, levelId: self.levelId ?? null, indoors: Boolean(self.levelId === null && getEnvironment()?.roomAt?.(self.position[0], -self.position[1])) };
-    const level = policy ? riskAt(worldId, policy, place).level : 'peaceful';
     // Only offer a shove where it could land; otherwise say why not.
     setText(risk, level === 'danger' ? (near.inReach ? 'Danger zone. You are within reach.' : 'Danger zone. Step closer to reach them.')
       : policy ? describeRisk(riskAt(worldId, policy, place), policy).replace('Peaceful here.', 'Peaceful here. Nobody can be harmed.') : 'Peaceful here. Nobody can be harmed.');

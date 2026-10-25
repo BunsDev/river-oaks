@@ -33,11 +33,11 @@ function fakeMedia({ canPlay = type => type.startsWith('video/webm') ? 'probably
   return media;
 }
 const view = (more = {}) => ({ venueId: 'ipic', screeningId: 'ipic-e1-1', mediaId: FILM.id, status: 'playing', revision: 1, epoch: 'e1', positionMs: 0, anchorServerTimeMs: 100_000, durationMs: FILM.durationMs, hostId: 'host', ...more });
-function setup({ media = fakeMedia(), offset = 0 } = {}) {
+function setup({ media = fakeMedia(), offset = 0, probe = async () => true } = {}) {
   const local = { now: 50_000 };
   const clock = createServerClock({ now: () => local.now });
   clock.observeSync(local.now + offset, local.now, local.now); // a zero-latency sync: server = local + offset
-  const player = createScreeningPlayer({ media, clock, now: () => local.now });
+  const player = createScreeningPlayer({ media, clock, now: () => local.now, probe });
   return { media, clock, player, local };
 }
 
@@ -517,4 +517,127 @@ test('a hung resume of decoded paused media reaches the same finite recovery dea
   f.player.apply(filmView(ORIGINAL, { status: 'playing', revision: 2, anchorServerTimeMs: 101_000 }));
   f.player.tick(); f.local.now += 30_001; f.player.tick();
   assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['error', 'stalled']);
+});
+
+// Post-merge review of #571 (2026-10-24): each test below failed on main f33c914b.
+test('a file the server cannot send is a network failure, after every encoding was tried once', async () => {
+  const asked = [];
+  const f = setup({ media: fakeMedia({ canPlay: () => 'maybe' }), offset: 51_000, probe: async src => { asked.push(src); return false; } });
+  f.player.apply(filmView(ORIGINAL));
+  f.media.fail(4); // a 404 before any data reports code 4, like an unreadable file
+  f.media.fail(4);
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['error', 'decode'], 'the film stops at once; nothing plays while the files are checked');
+  f.player.tick(); await tick();
+  assert.equal(f.media.calls.play, 0);
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure, f.media.calls.load], ['error', 'network', 2], 'both encodings tried, then the cause named');
+  assert.deepEqual(asked, ORIGINAL.sources.map(source => source.src), 'one request per failed file, once');
+  assert.deepEqual(f.player.stats().attempts.map(a => a.result), ['network', 'network']);
+  // A file that is there but unreadable is still the decoder's failure.
+  const g = setup({ media: fakeMedia({ canPlay: () => 'maybe' }), offset: 51_000 });
+  g.player.apply(filmView(ORIGINAL)); g.media.fail(4); g.media.fail(4); await tick();
+  assert.deepEqual([g.player.stats().state, g.player.stats().failure], ['error', 'decode']);
+  // An answer that arrives after Retry belongs to the abandoned attempt.
+  let answer;
+  const h = setup({ media: fakeMedia({ canPlay: () => 'maybe' }), offset: 51_000, probe: () => new Promise(r => { answer = r; }) });
+  h.player.apply(filmView(ORIGINAL)); h.media.fail(4); h.media.fail(4);
+  h.player.retry(); answer(false); await tick();
+  assert.deepEqual([h.player.stats().state, h.player.stats().failure], ['loading', null]);
+  // A check that never answers leaves an honest decode failure with Retry, not a spinner.
+  const k = setup({ media: fakeMedia({ canPlay: () => 'maybe' }), offset: 51_000, probe: () => new Promise(() => {}) });
+  k.player.apply(filmView(ORIGINAL)); k.media.fail(4); k.media.fail(4);
+  k.local.now += 60_000; k.player.tick(); await tick();
+  assert.deepEqual([k.player.stats().state, k.player.stats().failure, k.media.calls.play], ['error', 'decode', 0]);
+});
+
+test('a policy refusal while the missing-file check is pending cannot hide the failure or hang Play film', async () => {
+  const answers = [];
+  const media = fakeMedia({ canPlay: () => 'maybe', play: () => Promise.reject(Object.assign(new Error('policy'), { name: 'NotAllowedError' })) });
+  const f = setup({ media, offset: 51_000, probe: () => new Promise(r => { answers.push(r); }) });
+  f.player.apply(filmView(ORIGINAL, { status: 'paused' }));
+  f.media.fail(4); f.media.fail(4);
+  f.player.apply(filmView(ORIGINAL, { revision: 2 })); // the host resumes while the files are checked
+  f.player.tick(); await tick();
+  assert.equal(media.calls.play, 0, 'a failed film is not played');
+  for (const answer of answers) answer(false);
+  await tick();
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['error', 'network']);
+});
+
+test('Play film before any frame has decoded stays loading, under the stall deadline', async () => {
+  const { SCREENING_LOAD } = await import('../src/ipic-screening.js');
+  let denied = true;
+  const media = fakeMedia({ play: () => denied ? Promise.reject(Object.assign(new Error('policy'), { name: 'NotAllowedError' })) : new Promise(() => {}) });
+  const f = setup({ media, offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.media.readyState = 0; f.player.tick(); await tick();
+  assert.equal(f.player.stats().state, 'blocked');
+  denied = false; void f.player.unlock();
+  assert.equal(f.player.stats().state, 'loading');
+  f.player.apply(filmView(ORIGINAL, { status: 'paused', revision: 2 })); // the host pauses; the pending play is aborted
+  f.player.tick(); await tick();
+  f.local.now += SCREENING_LOAD.stallMs + 1; f.player.tick();
+  assert.deepEqual([f.player.stats().state, f.player.stats().failure], ['error', 'stalled'], 'a load that never arrives is still reported');
+});
+
+test('a new source starts without the previous film’s drift or rate', async () => {
+  const f = setup({ offset: 52_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick(); await tick();
+  f.media.currentTime = 2.25; f.player.tick(); // 250 ms ahead: the rate is nudged
+  assert.equal(f.player.stats().measuredDriftMs, 250);
+  f.player.apply(view({ mediaId: 'ipic-later-v1', screeningId: 'ipic-e1-2', revision: 3, durationMs: 60_000 }));
+  for (let i = 0; i < 3; i++) { f.local.now += 1000; f.player.tick(); }
+  const s = f.player.stats();
+  assert.deepEqual([s.state, s.measuredDriftMs, s.driftMs, s.rate], ['unsupported', 0, 0, 1]);
+});
+
+test('a seek in flight is not sampled as converged drift', async () => {
+  const media = Object.assign(fakeMedia(), { seeking: false });
+  const f = setup({ media, offset: 54_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick(); await tick();
+  f.media.currentTime = 3; f.player.tick(); // a second behind: a seek is requested
+  assert.equal(f.player.stats().measuredDriftMs, -1000);
+  f.media.seeking = true; f.local.now += 16; f.player.tick(); // currentTime reads the target; nothing new is presented
+  const s = f.player.stats();
+  assert.deepEqual([s.seeking, s.measuredDriftMs], [true, -1000], 'the last sample taken outside a seek stands');
+  f.media.seeking = false; f.local.now += 16; f.player.tick();
+  assert.ok(Math.abs(f.player.stats().measuredDriftMs) < 40, `sampled again once the seek completed (${f.player.stats().measuredDriftMs})`);
+});
+
+test('Play film after an autoplay refusal keeps the decoded frame on the screen while play() is pending', async () => {
+  let denied = true, resolve;
+  const media = fakeMedia({ play: () => denied ? Promise.reject(Object.assign(new Error('policy'), { name: 'NotAllowedError' })) : new Promise(r => { resolve = r; }) });
+  const f = setup({ media, offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.media.readyState = 4; f.media.emit('canplay'); f.player.tick(); await tick();
+  assert.equal(f.player.stats().state, 'blocked');
+  denied = false; const unlocked = f.player.unlock();
+  assert.equal(f.player.stats().state, 'ready', 'ready keeps the frame bound; loading would release the screen texture');
+  f.player.tick();
+  assert.equal(media.calls.play, 2, 'the pending gesture play() is not repeated by the next tick');
+  resolve(); await unlocked;
+  assert.equal(f.player.stats().state, 'playing');
+});
+
+test('a file that ends just before the shared duration holds its last frame instead of restarting', async () => {
+  const f = setup({ offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.player.tick(); await tick();
+  // The decoded file ends 40 ms before the room's end; the browser pauses it at its end.
+  f.local.now += ORIGINAL.durationMs - 1000 - 40;
+  f.media.currentTime = (ORIGINAL.durationMs - 40) / 1000; f.media.paused = true; f.media.ended = true;
+  const plays = f.media.calls.play;
+  f.player.tick(); await tick(); f.local.now += 16; f.player.tick(); await tick();
+  assert.equal(f.media.calls.play, plays, 'play() on ended media would seek to the first frame');
+});
+
+test('Play film during a seek of a decoded film keeps it on the screen; an undecoded one stays loading', async () => {
+  const denied = () => Promise.reject(Object.assign(new Error('policy'), { name: 'NotAllowedError' }));
+  const f = setup({ media: Object.assign(fakeMedia({ play: denied }), { seeking: false }), offset: 51_000 });
+  f.player.apply(filmView(ORIGINAL)); f.media.readyState = 4; f.media.emit('canplay'); f.player.tick(); await tick();
+  assert.equal(f.player.stats().state, 'blocked');
+  Object.assign(f.media, { seeking: true, readyState: 1 }); // Chromium lowers readiness while seeking
+  void f.player.unlock();
+  assert.equal(f.player.stats().state, 'ready');
+  const g = setup({ media: Object.assign(fakeMedia({ play: denied }), { seeking: false }), offset: 51_000 });
+  g.player.apply(filmView(ORIGINAL)); g.media.readyState = 0; g.player.tick(); await tick();
+  Object.assign(g.media, { seeking: true, readyState: 1 });
+  void g.player.unlock();
+  assert.equal(g.player.stats().state, 'loading', 'no frame of this source has decoded');
 });
