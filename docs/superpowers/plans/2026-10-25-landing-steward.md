@@ -132,7 +132,11 @@ At handoff:
      - ABBA frame and CPU within budget;
      - `verify full` attempt 2 passed all 18 stages. Attempt 1 failed on the `land-pr` lander-wake intermittent and is kept.
    - **Failed as written:**
-     - **`world-streaming` GPU bound:** textures +13 against a limit of +10. 71 attributes it to #641: pre-#641 15334aad passes 286/286.
+     - **`world-streaming` GPU bound:** textures +13 against a limit of +10. 71 first attributed it to #641, because pre-#641 15334aad passes 286/286. **71 has since withdrawn that** (message to this session, after 15:50Z):
+       - An instrumented rerun on 0b9a97c4 shows the extra textures on client 0 belong to three skinned avatars. Each has a 16×16 and a 4×4 bone texture plus a morph-target array texture, first drawn after the warm-up laps.
+       - Client 0 is the only tab put through the journey's two WebGL context-loss probes. Three.js resets its counters on restore, so anything not redrawn during warm-up is counted later.
+       - The step is +9 to +13 depending on the baseline, and that rerun passed at +9.
+       - 71 calls it a journey measurement artifact, not a leak, and is correcting #587, #638 and #664. This session has not checked the rerun itself.
      - **ABBA phone reconnect:** +44.5% against a limit of 20%. 71's leading explanation is the client's random 500–1,000 ms `retryDelay(0)`, sampled once per arm. That cause is unproven.
    - **Open:** Val's sign-off and production state.
    - **Receipts,** local to 71's session under `/private/tmp/claude-501/-Users-buns-Documents-GitHub-BunsDev-river-oaks/9c88b6de-e475-455e-844a-4de2cda13c1e/scratchpad/rc-out2-0b9a97c4/`. This session checked these SHA-256 prefixes:
@@ -167,6 +171,7 @@ Ledger branch gate (`docs/landing-steward-20261024` on main 7ad9ffc6, docs only)
 - No script changed between 1fd53fb9, where core's tooling stage passed 276/276 with the D12 tests, and 7ad9ffc6. This matches the documented core/tooling timing intermittent; its cause is unproven.
 - First-failure logs: `scratchpad/tooling-ledger-first-failure.{log,json}`, `tooling-ledger-2.log`.
 - Later ledger commits: 274/274 at 12:19Z (220cbd14 content). For the handoff edit, the same test failed once more, 273/274 at 14:43Z, load 5–8 (`scratchpad/tooling-ledger-5.{log,json}`). The test file plus `plans-index.test.js` then passed 31/31 alone, and the full profile passed 274/274 at 14:45Z (`tooling-ledger-6.log`).
+- The edit correcting world-streaming hit the same test twice: 273/274 at about 16:55Z (`tooling-ledger-9.log`, `-10.{log,json}`). The test file plus `plans-index.test.js` then passed 31/31 alone, and the full profile passed 274/274 at 16:59Z (`tooling-ledger-11.log`).
 
 Not run on #660: the 16-journey `experience` stage and the remaining browser and full stages. Receipts: `~/worktree-backups/river-oaks/evidence-landing-steward-20261024/d12-snapshot/` (SHA256SUMS).
 
@@ -244,11 +249,11 @@ Detached comparison checkouts left alone: 6ff47ba1 (two-player/base-build), d1a5
    Separately, decide whether `feat/onfoot-presentation-640-20261024` (85e202db, unfinished) resumes or is cancelled.
 4. **#653.** The core-dump trade-off.
 5. **#654.** The #373 version, #372 decisions, Azure setup and #370 identity confirmations.
-6. **#641.** Val's call in a3's session was "request changes". River-oaks-33 queued its own lander at 00:38Z; confirm the rework was approved. 71's post-wave pass attributes a `world-streaming` row-10 failure on main to #641: a fixed +12 geometries and +13 textures after warm-up, while pre-#641 15334aad passes. Decide whether 33's follow-up fixes it on `main` or the budget is re-baselined. This session changes no budget.
+6. **#641.** Val's call in a3's session was "request changes". River-oaks-33 queued its own lander at 00:38Z; confirm the rework was approved. 71 first attributed the `world-streaming` row-10 texture failure to #641. It has since withdrawn that: the extra textures are avatar textures first drawn after the context-loss probes reset Three.js's counters (Results item 4). Decide whether the journey's measurement is fixed, for example by redrawing the avatars during warm-up or taking the baseline after the probes, before that row is judged. This session changes no budget.
 7. **D4.** Commons visual, keyboard/screen-reader and target-device sign-off, then an operator's read-only production-state check before any activation under `docs/world-expansion-activation.md`. Activation is outside this goal.
 8. **#649.** The six finish-line items and round 3 of the ABBA are complete; round 4 on e8207b2b is in progress. Decide whether it lands. If it does, it needs an update from `main` (behind after #658) and then a green hosted run before `pnpm run land`. Its stacked 3× PRs #662 and #663 follow it.
 9. **71's landing authority.** River-oaks-71 landed #648, #650, #651 and #652 on the authorization it recorded from its own session: "proceed with all of the above e2e through to full completion". It has since also landed #647, #645 and #646. Confirm that matches your intent, including for #649.
-10. **Phone reconnect row.** ABBA measured +44.5% against the 20% limit on RC 0b9a97c4. Decide whether to investigate it as a regression, or to have the protocol control or repeat-sample the client's random `retryDelay(0)` before the row is judged. No limit was changed.
+10. **Phone reconnect row.** ABBA measured +44.5% against the 20% limit on RC 0b9a97c4. Decide whether to investigate it as a regression, or to have the protocol control or repeat-sample the client's random `retryDelay(0)` before the row is judged. No limit was changed. 71 is drafting an opt-in harness option for this (`--reconnects=5 --reconnect-backoff=skip`). Its smoke run on main measured desktop 197–247 ms (median 216) and phone 67–185 ms (median 68).
 
     This session checked these facts read-only:
     - In `compare-rc-gardens-vs-commons.json`, both arms are the same head 0b9a97c4, so the rows compare Gardens with Commons on one build.
@@ -262,7 +267,7 @@ Detached comparison checkouts left alone: 6ff47ba1 (two-player/base-build), d1a5
 
 This session handed off at 2026-10-25 14:45Z and recorded the post-wave verdict at 15:50Z.
 
-- **Post-wave pass:** done, with a no-go verdict (Results item 4). The `world-streaming` texture regression goes to river-oaks-33 (Decision 6). The phone-reconnect row needs a decision (Decision 10).
+- **Post-wave pass:** done, with a no-go verdict (Results item 4). 71 has reclassified the `world-streaming` texture row as a journey measurement artifact (Decision 6). The phone-reconnect row needs a decision (Decision 10).
 - **Val:** Decisions 1–10.
   - Landing #660 (Decision 1) requires a ticked row and a lander. After it merges, `fix/experience-commons-stage-20261024` is released at its exact head and retired through the guarded prune.
   - The cancel decisions (Decisions 2 and 3) unblock the remaining retirements in the Gaps table.
