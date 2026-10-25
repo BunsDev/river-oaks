@@ -117,6 +117,12 @@ After the merge, f1 clarified that its own goal excluded merging, and that "fina
     - core on `13c0afc4` passed with stages run separately, tooling 279/279 serially;
     - hosted 22/22 (run 40209651820).
   - **Records:** #517 issuecomment-6400822388; register task `default-appearance-517-20261024` is blocked on Val's Decisions 1–5.
+  - **Every gate on the exact head `13c0afc4` (about 18:55Z):**
+    - verify full 18/18 (17:37–18:53Z, clean snapshot, disposable Redis);
+    - character-fidelity 9/9 and character-studio 43/43;
+    - core passed as one command on the third run (the first two hit the `land-pr` wake flake);
+    - hosted 22/22.
+    - The owner's condition stands: do not land without Val's Decision 1.
 
 ### #655 held after an independent review (about 03:55Z)
 
@@ -126,6 +132,24 @@ river-oaks-3e reported #655 ready (verify full 18/18, hosted 22/22, "awaiting Va
 3. **LOW.** Lantern home-stop names survive a rollback.
 
 The reviewer confirmed that other callers' routes are unchanged (60 pairs) and that Heights is safely excluded for now. The findings are posted on #655 and relayed through e9, because 71's messages to 3e are held. #655 stays out of the train; its owner's fix is needed.
+
+### #655's review findings fixed as stacked draft #674 (about 19:20Z, task `resident-locations-review-fixes-20261025`)
+
+The HIGH and MEDIUM findings of this task's 03:46Z review were still open at `fea24bed`, and river-oaks-3e never answered (messages to it were held). A subagent fixed them on `fix/resident-locations-review-20261025`, based on #655's branch; this task reviewed and published it.
+- **HIGH:** a rollback now re-plans residents on District ground whose route or destination lies in removed land (`reroutedResidents`) and requeues their errands. The removed-land corridors are computed without builds, as the live planner does.
+- **MEDIUM:** a route uses its keep-right lane when walkable past current objects, otherwise the nearest clear crossing row.
+- **LOW:** Commons-lantern home stops revert to the Gardens home stop.
+- **Misleading tests repaired:**
+  - a resident is actually seated;
+  - the District-grid test compares against main's 60 routes (a fixture with world fingerprints);
+  - the wanderer walks rather than teleporting.
+
+  Each regression fails on the old code.
+- **Verification:**
+  - related suites 246/246 with an owned Redis (this task reran 11/11);
+  - core passed on attempt 2 (agent 274/274; preview 4,163 + 1 skip; server 919 + 225 Redis skips; desktop 120 + 3); attempt 1 hit the `land-pr` wake flake;
+  - hosted CI on `d5666034` 15/15, including `preview experience (commons)` and the aggregate `preview`.
+- **What's next:** 3e decides whether to merge it into #655, and #655 still waits for Val's go. It was noted on #655 (issuecomment-6401515309).
 
 ### Landing incidents (kept as found)
 
@@ -636,7 +660,8 @@ The journey (`preview/e2e/crime-shared.js:78–90`, from #646/#640) reads the co
 3. **#656** Decisions 1–5. Its final head `13c0afc4` ships switched off.
 4. **#659**'s security commit `66134f27`.
 5. **#653 and #654.**
-6. **The Commons release:**
+6. **#655:** its review fixes are ready in stacked draft #674 (hosted 15/15) for river-oaks-3e; then Val's go.
+7. **The Commons release:**
    - the world-streaming journey's counting after its own context-loss probe (owner of `world-streaming-582-583`; options on #587);
    - adopting a multi-sample reconnect read (#672);
    - condition 4 (Val's sign-off) and condition 5 (production state).
@@ -647,7 +672,8 @@ The journey (`preview/e2e/crime-shared.js:78–90`, from #646/#640) reads the co
   - `feat/studewood-3x-20261024` (#662);
   - `feat/bayou-terraces-3x-20261025` (#663);
   - `feat/woodland-heights-3x-20261025` (#673);
-  - `perf/reconnect-measure-20261025` (#672).
+  - `perf/reconnect-measure-20261025` (#672);
+  - `fix/resident-locations-review-20261025` (#674).
 - **`perf/walking-obstacle-buckets-20261025`** (worktree `river-oaks-walking-buckets`, PR #669 closed as superseded). It needs explicit cancellation authority (`project:cancel`, dry-run first).
 - **Seven detached scratch checkouts holding receipts,** each registered as a blocked `convergence-3x-evidence-*` task: `rc-0b9a97c4`, `bisect-15334aad`, `heights-8f3c94fd`, `studewood-snap`, `terraces-snap`, `terraces-b5016d29` and `diag-0b9a97c4`.
   - `diag-0b9a97c4` holds local-only instrumentation and the #672 harness patch, both uncommitted.
