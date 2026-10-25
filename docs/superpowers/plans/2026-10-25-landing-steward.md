@@ -250,6 +250,14 @@ Detached comparison checkouts left alone: 6ff47ba1 (two-player/base-build), d1a5
 9. **71's landing authority.** River-oaks-71 landed #648, #650, #651 and #652 on the authorization it recorded from its own session: "proceed with all of the above e2e through to full completion". It has since also landed #647, #645 and #646. Confirm that matches your intent, including for #649.
 10. **Phone reconnect row.** ABBA measured +44.5% against the 20% limit on RC 0b9a97c4. Decide whether to investigate it as a regression, or to have the protocol control or repeat-sample the client's random `retryDelay(0)` before the row is judged. No limit was changed.
 
+    This session checked these facts read-only:
+    - In `compare-rc-gardens-vs-commons.json`, both arms are the same head 0b9a97c4, so the rows compare Gardens with Commons on one build.
+    - The phone row is 742 → 1,073 ms (+44.5%), the only row over its limit. In the same run, desktop reconnect moved 1,153 → 938 ms (−18.7%).
+    - `retryDelay(0)` in `preview/src/connection-policy.js` returns `round(500 + random() × 500)` ms. That uniform 500 ms span alone can account for the 331 ms phone difference when each arm is sampled once.
+    - Neither `connection-policy.js` nor `multiplayer-client.js` changed between 15334aad and 0b9a97c4.
+
+    This fits 71's noise explanation but does not prove it. A seeded `random` in the harness, or several samples per arm, would settle it.
+
 ## Next action
 
 This session handed off at 2026-10-25 14:45Z and recorded the post-wave verdict at 15:50Z.
