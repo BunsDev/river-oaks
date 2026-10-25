@@ -36,6 +36,7 @@ Task `next-district-586-support-20261024`, owner `claude:river-oaks-3e (4e851f0b
 | `REDIS_URL=redis://127.0.0.1:6461 pnpm run verify full`, isolated loopback Redis, Python 3.12 | **Passed, 18/18 stages** (2026-10-24 20:20Z to 2026-10-25 03:21Z). Ran on the final source tree: every source and test file predates the start and equals `1f971206`. See Results |
 | Hosted Verify on `22679471` | 22/22 green |
 | Scratch merge with main `0b9a97c4` (not pushed), related suites with Redis | 172/172 passed |
+| Main `0b9a97c4` merged into the branch: signed merge `03381365`, clean, no dependency changes | Related suites with Redis 193/193, 0 skipped. `REDIS_URL=redis://127.0.0.1:6461 nice -n 10 pnpm run verify full`, Python 3.12: **passed, 18/18 stages** on `03381365`, clean tree (receipt `dirty: false`; 2026-10-25 10:30Z to 14:06Z, of which about 3 h was queueing for the shared browser lock). Agent 274/274; preview 4,162 passed, 1 skipped; server with Redis 1,184/1,184; desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo and demo-verify; secrets and secret history; security-browser; reflections; experience 17/17 journeys; shared 27/27; IPIC screening. The generated `data/reports` files were restored, not committed. Attempt 1 (10:27Z) stopped at agent-tests on the `land-pr` queued-lander timing test (30 s timeout at load about 12, beside this session's #670 suites); it passed 29/29 alone, and that log is kept. Hosted checks at `03381365`: 22/22 green, CodeQL included. |
 | Offline 60-min server simulation, Commons revision | See Results |
 | Dev town on 5481/8881, fixture sign-in, Commons revision | See Results |
 
@@ -91,14 +92,13 @@ All on main `09bd7a83` plus this branch's uncommitted tree unless noted. Host: A
 
 ## Gaps
 
-- Bayou Heights (#649) has no resident grid: 89,628 cells over the cap. When it is split, its rollback needs the same resident relocation (noted to river-oaks-91).
+- Bayou Heights (#649) has no resident grid here: 89,628 cells over the cap. Draft #670, stacked on this branch, splits it into strips and lands after #649 with the Heights rollback's resident relocation.
 - No browser journey covers residents crossing the seam; the server simulation and the dev town are the evidence.
 - Human review of how it looks in the Commons is Val's.
 
 ## Next step
 
-Draft PR #655 waits for Val's review in the dev town and for Val's go to land. Merging and landing are not authorized for this task. With that go:
-1. Merge current main into the branch.
-2. Rerun the focused suites and `verify full` with an isolated Redis.
-3. Wait for hosted Verify on the merged head.
-4. Land through `pnpm run land` by whoever holds landing authority.
+Draft PR #655 carries main `0b9a97c4` and is verified there (see Checks). Main has since moved to `e8207b2b` (#658: touch and voice UI only, none of this branch's files), and `git merge-tree` merges it cleanly. It waits for Val's review in the dev town and for Val's go to land. Merging and landing are not authorized for this task. With that go:
+1. If main has moved, merge it into the branch again and rerun the related suites and `verify full` with an isolated Redis.
+2. Wait for hosted checks on that head.
+3. Land through `pnpm run land` by whoever holds landing authority.
