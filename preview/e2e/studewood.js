@@ -100,7 +100,8 @@ async page => {
     // Studewood Park: both players sit at its table and finish a shared game through the board UI.
     const seats=[0,1].map(chair=>plazaSalonSeats(world).find(seat=>seat.buildId===`bench:plaza-salon-chess-studewood-${chair}`));
     // The owner takes the west chair and alice the east one: the straight line from the lawn to the east chair crosses a tree-row trunk.
-    await Promise.all([walk(page,[at([445,103]),at([466,103]),seats[1].approach],'owner park'),walk(peer,[at([449,103]),at([478,103]),seats[0].approach],'alice park')]);
+    // The owner turns south at x 469, as the return leg does: from x 466 the line to the chair grazes the trunk at x 467.
+    await Promise.all([walk(page,[at([445,103]),at([469,103]),seats[1].approach],'owner park'),walk(peer,[at([449,103]),at([478,103]),seats[0].approach],'alice park')]);
     await capture(page,'studewood-park');
     for(const [tab,seat] of [[page,seats[1]],[peer,seats[0]]]){
       await tab.waitForFunction(()=>window.__riverSeatAndWater().interaction==='sit');
