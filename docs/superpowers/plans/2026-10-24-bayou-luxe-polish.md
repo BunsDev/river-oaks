@@ -82,9 +82,26 @@ A signed merge of origin/main `c41c379a` followed and was clean. It gives head `
 | `pnpm run test:experience east-garden-commons` (two clients, local, browser lock, one run) | Failed only at its final step, `alice home: stalled` (speed 0, zero velocity, standing, about 48 m inside the District, west of the Commons gateway). Every earlier step passed: walking to the Commons, shared chess, reconnect, all five lanterns, the Lantern Walk credit and the return. The signature (zero speed, standing client) matches the known intermittent walking stall behind main's red Verify (`alice plaza: stalled`, owned by `mvp-release-readiness-20261024`). One run cannot establish that, so this stays an unresolved journey failure. Receipt: `data/reports/bayou-luxe-journey-4b5bbb85….json`. |
 | In-game captures | Before (`luxe-before`), and after on the merged head (`luxe-after-final`, plus `luxe-evening-final` with HOUR=19), at the same camera poses. Local review aids only. |
 
+## Revision after Val's review (`d0044c9d`)
+
+Val reviewed the captures at all 15 poses (relayed by river-oaks-a3 at about 23:05Z) and asked for changes before landing, keeping the direction: granite road continuity, limestone, glazing and bronze.
+
+1. **Lane inlays read as white stop lines.** Market Street no longer has repeating bands. The single gateway threshold uses a warm grey stone (`#8e877c`) close to the setts in value.
+2. **Storefronts read as beige boards with white squares.** The ivory gallery interior and porcelain display niches are removed. The glass backs onto the dark, warm shop interior, with one slim brass rail per bay and a pendant per pane.
+3. **Cost.** The court and context walls use limestone rather than travertine; lamp and cafe-table segment counts are lowered; ribbon fins are every 1.6 m rather than 1.2 m.
+
+| Check on the revision | Result |
+| --- | --- |
+| Kit, headless (trees and text excluded) | 61 meshes, against 64 in the first pass and 57 on main (budget 70); 2,963,488 geometry bytes, against 3,605,536 and 2,277,280 (+30% against main); 31,052 triangles |
+| Lock | `f0cff803`: 128 pieces, 14 materials, 95,768 authored triangles; `destination check` ok |
+| Focused tests | 29/29, including new regressions for the dark storefront interior and the stone-toned band |
+| `pnpm run verify` (core) | Passed: agent 226/226, preview 3953 with 1 skipped, server 870 with 219 skipped (Redis), desktop 115 with 3 skipped, Python 156, build, secrets |
+| Hosted on `d0044c9d` | 24 success, 5 skipped (installer jobs), first attempt |
+| Captures at the same 15 poses | `.runtime/tmp/luxe-v2-after/` and `luxe-v2-evening/` (00:29Z, committed head). The stripes and white squares are gone. In shadow the dark glass reads more as dark brown than reflective glass, which is for Val to judge. |
+
 ## Gaps and next step
 
-- **Visual questions for Val, from the captures.** The paired lane inlays still read as white road markings from pedestrian height, although the code intends a laid stone detail. The porcelain display niches read as flat white rectangles from the court.
+- **Visual questions from the first captures (addressed by the revision above; Val to confirm).** The paired lane inlays still read as white road markings from pedestrian height, although the code intends a laid stone detail. The porcelain display niches read as flat white rectangles from the court.
 - **Performance.** The polish adds 7 draw calls and about 1.3 MB of kit geometry. #623's final-candidate paired comparison already shows desktop two-client CPU-submission p95 at +10.74%, over its 10% provisional allowance. The performance owner should measure this branch before release; no budget for kit geometry bytes is set.
 - **Journey.** Rerun the two-client journey, or rely on hosted `preview experience (commons)`, to separate the known stall from anything this branch adds.
 - Human visual approval, physical-device performance and production activation stay outside automated evidence.
