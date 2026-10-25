@@ -11,7 +11,7 @@ replace a real iPhone, Safari's software keyboard, safe areas or VoiceOver
 | Journey | What it checks | Engines |
 | --- | --- | --- |
 | `touch-hold` | A 390×844 touch phone covers a tap, walking while looking, a second walk finger, touchcancel, the page hiding, capture loss, the Town chat command mid-hold, three fingers lifted out of order and a rotation mid-hold. Nothing keeps moving, nothing is selected by accident and chat text stays text. | Chromium uses real CDP touches. WebKit uses real taps and a real mouse hold. Cases that need two contacts at once are listed as not run, because Playwright's WebKit can only tap. |
-| `touch-layout` | 390×844 and 375×667, portrait and landscape: no horizontal scroll; walking controls on screen, uncovered and at least 44 px; the panel scrolls; focus returns when the panel or a conversation closes. The landscape overlap below is reported as KNOWN. | Chromium and WebKit emulation |
+| `touch-layout` | 390×844 and 375×667, portrait and landscape: no horizontal scroll; walking controls on screen, uncovered and at least 44 × 44 px; the panel fits the width and scrolls to the end of content taller than the screen (recorded as not run when it fits); focus returns when the panel or a conversation closes. The landscape overlap below is reported as KNOWN. | Chromium and WebKit emulation |
 | `touch-people`, `carriage-mobile`, `background-input` | Existing touch selection, ride controls and background release | Chromium |
 
 Run one with `pnpm run test:experience <journey>`. Prefix
@@ -41,7 +41,7 @@ and the console and pad appear. **Play & rides** opens the Play dock; its
 | B, Space, C | Fly, rise, lower (Jevica) | Character → **Take flight**, then hold **Rise** / **Lower** | Code path |
 | V | Camera | Character → **Third person** / **First person** | Code path |
 | Y | Voice | **Join voice** in the walking console or the chat dock | Code path |
-| M | Mute, or push to talk | The mic button. In push-to-talk mode, hold it to talk. Lifting or a cancelled touch stops transmitting, and the tap that ends a hold never turns the microphone on. The button keeps a held finger from becoming a pan (`touch-action: none`). M and the mic buttons share one hold, so releasing any of them stops talking. | `voice-ui` unit; `touch-layout` (touch-action) |
+| M | Mute, or push to talk | The mic button. In push-to-talk mode, hold it to talk. Lifting or a cancelled touch stops transmitting, and the tap that ends a hold never turns the microphone on. The hold belongs to the finger that started it: a second finger on the same button neither restarts nor ends it. The button keeps a held finger from becoming a pan (`touch-action: none`). M and the mic buttons share one hold, so releasing any of them stops talking. | `voice-ui` unit; `touch-layout` (touch-action) |
 | Enter | Send chat | The chat field and **Send** | `touch-hold` (chat field) |
 | Escape | Close a conversation | **Close** in the conversation | `touch-layout` taps it when someone is near enough to meet; otherwise it records the case as not run |
 | ⌘/Ctrl+B, ⌘/Ctrl+Shift+B | Explore rail, Play dock | The Explore button, **Play & rides** | `touch-layout` (panel) |

@@ -63,7 +63,7 @@ async page => {
         const pad = controls.filter(control => control.pad);
         expect(pad.length === 6, `${label}: with chat folded, all six movement buttons show`, pad.map(control => control.name));
         metrics.sizes[label] = controls;
-        const offscreen = controls.filter(c => !c.inside), covered = controls.filter(c => !c.topmost), small = controls.filter(c => c.height < 44 || (c.pad && c.width < 44));
+        const offscreen = controls.filter(c => !c.inside), covered = controls.filter(c => !c.topmost), small = controls.filter(c => c.height < 44 || c.width < 44);
         expect(!offscreen.length, `${label}: every walking control is on screen`, offscreen);
         // Landscape phones have no room for the walking console below the top-right stack:
         // that overlap is recorded for a layout decision. Any other cover still fails.
@@ -71,13 +71,21 @@ async page => {
         if (stacked.length) known(`${label}: the top-right HUD covers walking controls`, stacked.map(c => `${c.name} under ${c.covering}`));
         expect(covered.length === stacked.length, `${label}: no walking control is covered by another surface`, covered.filter(c => !stacked.includes(c)));
         expect(!small.length, `${label}: walking controls are at least 44 px`, small);
-        // The panel opens over the scene, scrolls, and closes back to its toggle.
+        // The panel opens over the scene, fits the width, scrolls to the end of content taller
+        // than the screen, and closes back to its toggle. Content that fits has nothing to
+        // scroll, so that case is recorded as not run.
         await tab.locator('#panel-toggle').click(); await expanded(tab, '#panel-toggle', true); await frames(tab);
         const panel = await tab.evaluate(() => {
           const scroll = document.querySelector('.field-panel .panel-scroll') ?? document.querySelector('.field-panel'), box = document.querySelector('.field-panel').getBoundingClientRect();
-          return { scrollable: scroll.scrollHeight <= scroll.clientHeight + 1 || ['auto', 'scroll'].includes(getComputedStyle(scroll).overflowY), inside: box.left >= -1 && box.right <= innerWidth + 1, height: scroll.clientHeight, content: scroll.scrollHeight };
+          const overflow = scroll.scrollHeight > scroll.clientHeight + 1, mode = getComputedStyle(scroll).overflowY;
+          let end = null;
+          if (overflow) { scroll.scrollTop = scroll.scrollHeight; end = scroll.scrollTop > 0 && scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 2; scroll.scrollTop = 0; }
+          return { overflow, mode, end, inside: box.left >= -1 && box.right <= innerWidth + 1, height: scroll.clientHeight, content: scroll.scrollHeight };
         });
-        expect(panel.scrollable && panel.inside, `${label}: the panel fits the width and scrolls its content`, panel);
+        metrics[`${label}Panel`] = panel;
+        expect(panel.inside, `${label}: the panel fits the width`, panel);
+        if (panel.overflow) expect(['auto', 'scroll'].includes(panel.mode) && panel.end, `${label}: the panel scrolls to the end of its content`, panel);
+        else { metrics.notRun.push(`${label}: panel scroll (its ${panel.content} px of content fit in ${panel.height} px)`); console.log(`skip ${label}: panel scroll (content fits)`); }
         await tab.locator('#panel-toggle').click(); await expanded(tab, '#panel-toggle', false); await frames(tab);
         expect(await tab.evaluate(() => document.activeElement?.id === 'panel-toggle'), `${label}: closing the panel keeps focus on its toggle`, { focus: await tab.evaluate(() => document.activeElement?.id || document.activeElement?.tagName) });
         // A conversation scrolls and its close control returns focus to the opener.
