@@ -7,6 +7,22 @@ possible attacks have been eliminated or a deployed penetration test.
 
 ## Changes
 
+- Player blocking (#292, 2026-10-24). New routes: `POST /api/blocks/list`, `/add` and
+  `/remove`, on both backends. They have the same authentication, approval, ban,
+  origin and CSRF checks as other mutations, plus a 12-a-minute write limit. A
+  resident can be blocked only if they are in the world or a contact; any other id
+  gets 404. A block filters town chat and gestures per viewer, and ends the contact.
+  It refuses contact requests, messages, invitations, greetings, darts and axe
+  invitations, travel to the other resident and profile views either way. Those
+  requests are answered by asking the usual checks about a resident who is never
+  present, so even a crafted request gets the absent resident's answer. Hidden
+  residents' greetings and game invitations are dropped from each viewer's frames. A
+  new `separate` room operation, which takes exactly two distinct user ids, ends a
+  greeting or game invitation between them. It also ends a resident's office and home
+  invitations when they or Jevica block the other, in every loaded or stored world.
+  The routes are added to `vercel.json`, `server/vercel-routing.js` and the Vite proxy.
+  The standalone town keeps blocks in `BLOCKS_FILE` (mode 0600). See
+  `docs/player-blocking.md`.
 - Account erasure (#292, 2026-10-24). The signed WorkOS `user.deleted` webhook now
   runs `server/account-erasure.js` in both backends. It sets the character tombstone
   first, so the account cannot start a new session, then revokes every session and

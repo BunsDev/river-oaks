@@ -31,6 +31,7 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 | Email-code sign-in state | `server/magic-auth.js:88` | 10 minutes (`:6`) | Lapses; never names the account after use |
 | Profile: tagline, bio, pronouns, interests; shops already visited | `server/profiles.js:36` · `:85` | Until deleted | Erased (`:59`, `:107`) |
 | Contacts and direct messages | `server/social.js:41` · `:150` | Until deleted | Erased from both sides of every pair (`:108`, `:200`) |
+| Blocks: who the account blocked, with the name shown, who blocked it, and a change counter | `server/blocks.js` (Redis; `BLOCKS_FILE` in the standalone town) | Until lifted | Erased from both sides ([player blocking](player-blocking.md)) |
 | Groups: owned, memberships, invitations, messages | `server/groups.js:36` · `:212` | Until deleted | Owned groups deleted; elsewhere membership, invitations and messages removed, including groups already left (`:104`, `:255`) |
 | Events hosted, RSVPs | `server/events.js:31` · `:119` | Until the event ends | Hosted events deleted; RSVPs removed (`:60`, `:142`) |
 | Presence (world, last seen) | `server/presence.js:27` · `:86` | 90 seconds (`:4`) | Erased (`:66`, `:117`) |

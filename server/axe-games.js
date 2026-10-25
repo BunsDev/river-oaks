@@ -165,7 +165,17 @@ export function createAxeGames({ players, laneIds = [], atLane = () => null, dis
     for (const item of [...lanes.values()]) if (item.players?.includes(userId) || item.invite?.from === userId || item.invite?.to === userId) { lanes.delete(item.id); touched = true; }
     if (touched) changed();
   };
+  // Player blocking (#292): an open invitation between the two ends; a game stays.
+  const separate = (a, b) => {
+    let touched = false;
+    for (const item of [...lanes.values()]) if (item.invite && [a, b].includes(item.invite.from) && [a, b].includes(item.invite.to)) {
+      if (item.players) item.invite = null; else lanes.delete(item.id);
+      touched = true;
+    }
+    if (touched) changed();
+    return touched;
+  };
   const snapshot = () => [...lanes.values()].map(view);
 
-  return { command, prune, forget, snapshot, checkpoint, validate, load, clear };
+  return { command, prune, forget, separate, snapshot, checkpoint, validate, load, clear };
 }

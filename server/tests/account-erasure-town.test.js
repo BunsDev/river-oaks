@@ -27,10 +27,10 @@ test('the standalone town erases an account from every store and world, and keep
   const port=await freePort(),origin=`http://127.0.0.1:${port}`;
   const temporary=await mkdtemp(join(tmpdir(),'river-oaks-erasure-'));
   const town=await createTown({origin,env:{RIVER_OAKS_DEV_AUTH:'local',RIVER_OAKS_ACCEPTANCE_FIXTURE:'1',
-    MODERATION_FILE:join(temporary,'moderation.json'),WAITLIST_FILE:join(temporary,'waitlist.json')},devAuth:'local',staticRoot:null});
+    MODERATION_FILE:join(temporary,'moderation.json'),WAITLIST_FILE:join(temporary,'waitlist.json'),BLOCKS_FILE:join(temporary,'blocks.json')},devAuth:'local',staticRoot:null});
   await new Promise(resolve=>town.server.listen(port,'127.0.0.1',resolve));
   t.after(async()=>{await town.close();await rm(temporary,{recursive:true,force:true});});
-  const pat=await resident(t,origin),erin=await resident(t,origin);
+  const pat=await resident(t,origin),erin=await resident(t,origin),kim=await resident(t,origin);
   const text='erin-private-words',json=response=>response.json();
   // Erin's footprint: a profile, a contact with messages, a group, an event, a landmark and a chat line.
   assert.equal((await erin.post('/api/profile/save',{tagline:text,bio:text,pronouns:'',interests:[],expectedVersion:0})).status,200);
@@ -49,12 +49,16 @@ test('the standalone town erases an account from every store and world, and keep
   assert.equal((await json(await pat.post('/api/social/list'))).contacts.length,1);
   assert.equal((await json(await pat.post('/api/groups/list'))).groups.length,1);
   assert.ok((await json(await pat.post('/api/events/list'))).events.some(event=>event.title==='Erin social'));
+  // A third resident blocked Erin; erasure takes Erin off that list too.
+  assert.equal((await kim.post('/api/blocks/add',{peerId:erin.id})).status,200);
+  assert.deepEqual((await json(await kim.post('/api/blocks/list'))).blocked.map(item=>item.id),[erin.id]);
 
   await town.eraseAccount(erin.id);
   assert.equal(await erin.closed,4003);
   assert.equal((await erin.post('/api/profile/save',{tagline:'',bio:'',pronouns:'',interests:[],expectedVersion:1})).status,401);
   assert.deepEqual((await json(await pat.post('/api/social/list'))).contacts,[]);
   assert.deepEqual((await json(await pat.post('/api/groups/list'))).groups,[]);
+  assert.deepEqual((await json(await kim.post('/api/blocks/list'))).blocked,[]);
   assert.equal((await json(await pat.post('/api/events/list'))).events.some(event=>event.title==='Erin social'),false);
   const snapshot=world.snapshot();
   assert.equal(snapshot.players.some(player=>player.id===erin.id),false);
@@ -62,6 +66,7 @@ test('the standalone town erases an account from every store and world, and keep
   assert.equal(JSON.stringify(world.checkpoint()).includes(text),false);
   // The file waitlist forgets the request too, mirror included.
   assert.equal((await readFile(join(temporary,'waitlist.json'),'utf8')).includes(erin.id),false);
+  assert.equal((await readFile(join(temporary,'blocks.json'),'utf8')).includes(erin.id),false,'the block file forgets Erin too');
   // Pat is whole: still signed in, still in town, with their own profile intact.
   assert.equal((await pat.post('/api/profile/save',{tagline:'pat',bio:'',pronouns:'',interests:[],expectedVersion:0})).status,200);
   assert.ok(snapshot.players.some(player=>player.id===pat.id));

@@ -6,6 +6,7 @@ import Redis from 'ioredis';
 import {createRedisBackend} from '../redis-backend.js';
 import {createRedisCharacterStore} from '../character-store.js';
 import {createRedisSocial} from '../social.js';
+import {createRedisBlocks} from '../blocks.js';
 import {createRedisGroups} from '../groups.js';
 import {createRedisProfiles} from '../profiles.js';
 import {createRedisEvents} from '../events.js';
@@ -39,7 +40,7 @@ function deletion(base,userId,event='event_erasure'){
 // Every account store the backend builds, at the prefixes the backend gives them.
 function stores(redis,namespace){
  const prefix=`{${namespace}}`,accounts=accountPrefixFor(namespace);
- return {characters:createRedisCharacterStore({redis,prefix:accounts}),social:createRedisSocial({redis,prefix}),groups:createRedisGroups({redis,prefix}),
+ return {characters:createRedisCharacterStore({redis,prefix:accounts}),social:createRedisSocial({redis,prefix}),blocks:createRedisBlocks({redis,prefix}),groups:createRedisGroups({redis,prefix}),
   profiles:createRedisProfiles({redis,prefix}),events:createRedisEvents({redis,prefix}),presence:createRedisPresence({redis,prefix}),
   designLibrary:createRedisDesignLibrary({redis,prefix:accounts}),officeDesk:createRedisOfficeDesk({redis,prefix}),
   avatarPreferences:createRedisAvatarPreferences({redis,prefix}),cyclingMiles:createRedisCyclingMiles({redis,prefix:accounts}),
@@ -76,6 +77,9 @@ async function seed(s,person,peer){
   assert.equal((await s.social.accept(peer.userId,userId)).ok,true);
   assert.equal((await s.social.send(person,peer.userId,text)).ok,true);
   assert.equal((await s.social.send(peer,userId,'pat-own-words')).ok,true);
+  // Blocks both ways: the account's own list, and its place on the peer's.
+  assert.equal((await s.blocks.add(userId,{userId:'user_01SOMEONE',name:'Someone'})).ok,true);
+  assert.equal((await s.blocks.add(peer.userId,{userId,name})).ok,true);
  }
 }
 // The default world's room, as a gateway would hold it: both join and talk.
