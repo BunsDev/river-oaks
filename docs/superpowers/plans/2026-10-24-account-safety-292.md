@@ -278,15 +278,26 @@ Independent review (2026-10-24):
 
 ## Next action
 
-- Increment A: draft PR #661 (head `772e4ade`). Hosted CI is green apart from the
-  aggregate. The `verify full` rerun passed every non-browser stage; its browser stage
-  waits on the shared lock.
-- Increment B: draft PR #665 (head `075e3876`), stacked on #661. Hosted CI is green
-  after one rerun of `preview experience (places)`. The #292 evidence comment is posted
-  and corrected: the Block button isn't wired in yet.
-- Increment C: draft PR #666 (head `b33ad8ec`), stacked on #665. Core verify passed;
-  `test:server` with Redis passed 1236/1236.
-- Increment D: core verify, a signed commit and a draft PR stacked on #666.
-- Owners to ask: the owner of `multiplayer-client.js` and `main.js`, to wire blocking
-  (four calls) and a report reason; the owner of `access-entry.js`, to show the
-  support contact and to clear the device on sign-out.
+Handoff, 2026-10-25. All four increments are signed draft PRs, stacked in order, with
+green hosted CI. Nothing is merged.
+
+| Increment | PR | Head | Hosted CI |
+| --- | --- | --- | --- |
+| A: erasure | #661 | `772e4ade` | 22/22 |
+| B: blocking (server side) | #665 | `f9d865fa` | 15/15, after one rerun of a walking-precision failure in `commons` |
+| C: in-app deletion, off | #666 | `d06d9fcd` | 15/15 |
+| D: reports, contact, map | #667 | this branch | 15/15 on `e39fbd82` |
+
+Local evidence:
+- Core verify passed on each increment.
+- `test:server` with an isolated Redis passed on each, at 1192, 1223, 1236 and 1238 tests.
+- `verify full` ran only on A. Every non-browser stage passed; its browser stage waited about three hours behind the shared lock and was stopped at handoff. Its browser stage, and `verify full` on B, C and D, weren't run locally. Hosted CI ran the browser journeys on every head.
+- The private Redis was stopped.
+
+Next:
+1. Val decides on the numbered Decisions in `docs/app-review-292.md`, `docs/account-deletion.md`, `docs/player-blocking.md` and the inventory, and on review and landing order (#661, then #665, #666, #667).
+2. Owners to ask:
+   - The owner of `multiplayer-client.js` and `main.js` (`outdoor-residents-admin-controls-20261024`): wire blocking with the four calls in `docs/player-blocking.md`, and add a report reason.
+   - The owner of `access-entry.js` (`touch-network-288-290-20261024`): show the support contact before approval, and call `clearAccountStorage` on sign-out.
+3. After the policy Decisions: a content filter and a moderator reports view. Both are gaps that block review.
+4. Native work stays with #286, #287 and #293.
