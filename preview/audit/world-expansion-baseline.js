@@ -11,7 +11,7 @@ import { chromium } from 'playwright';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 import { startBrowserFixture } from '../e2e/fixture-server.js';
 import { distribution } from './metrics.js';
-import { baselineOptions, frameSummary, phaseSummary } from './baseline-options.js';
+import { baselineOptions, frameSummary, phaseSummary, reconnectSummary } from './baseline-options.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const options = baselineOptions(process.argv.slice(2), process.env);
@@ -155,7 +155,8 @@ try {
       // --reconnect-backoff=skip the page reports itself back online once the close is
       // handled, so the client retries at once (multiplayer-client.js resume()) instead
       // of after its random retryDelay(0). reconnectMs is the median of the samples.
-      row.reconnectBackoff = options.reconnectBackoff; row.reconnectSamplesMs = []; row.reconnectPositionDeltaM = 0;
+      row.reconnectBackoff = options.reconnectBackoff; row.reconnectSamplesMs = [];
+      const starts = [], ends = [];
       for (let attempt = 0; attempt < options.reconnects; attempt++) {
         if (attempt) await owner.page.waitForTimeout(1500);
         const before = await owner.page.evaluate(() => {
@@ -165,8 +166,10 @@ try {
         const rejoinStarted = performance.now();
         await owner.page.evaluate(skip => {
           const socket = window.__expansionSockets.at(-1), count = window.__expansionSockets.length;
+          // Nudge for at most 2 s; a connect that fails then falls back to the client's own retry.
           if (skip) socket.addEventListener('close', () => {
-            const nudge = () => { if (window.__expansionSockets.length > count) return; dispatchEvent(new Event('online')); setTimeout(nudge, 5); };
+            const stop = performance.now() + 2000;
+            const nudge = () => { if (window.__expansionSockets.length > count || performance.now() > stop) return; dispatchEvent(new Event('online')); setTimeout(nudge, 5); };
             nudge();
           }, { once: true });
           socket.close();
@@ -178,11 +181,10 @@ try {
         }, before);
         row.reconnectSamplesMs.push(performance.now() - rejoinStarted);
         const after = await owner.page.evaluate(() => { const town = window.__riverMultiplayer(); return town.snapshot.players.find(player => player.id === town.selfId); });
-        row.reconnectPositionDeltaM = Math.max(row.reconnectPositionDeltaM, Math.hypot(...after.position.map((value, axis) => value - before.player.position[axis])));
+        starts.push(before.player.position); ends.push(after.position);
       }
-      // One sample keeps the unrounded value the Phase 1 protocol has always recorded.
-      row.reconnectMs = row.reconnectSamplesMs.length === 1 ? row.reconnectSamplesMs[0] : distribution(row.reconnectSamplesMs).p50Ms;
-      assert.ok(row.reconnectPositionDeltaM < 0.5, 'Reconnect moved the stationary player');
+      Object.assign(row, reconnectSummary(row.reconnectSamplesMs, starts, ends));
+      assert.ok(row.reconnectPositionDeltaM < 0.5 && row.reconnectTotalDeltaM < 0.5, 'Reconnect moved the stationary player');
       assert.deepEqual(row.errors, []);
       row.status = 'passed';
     } finally { for (const context of contexts) await context.close(); await fixture.close(); fixture = null; await flush(); }

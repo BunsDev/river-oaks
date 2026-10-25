@@ -4,9 +4,11 @@ import { compareBaselines } from '../audit/baseline-compare.js';
 
 const sample = (players, meanMs, cpuP95, p95, calls = 1700) => ({ players, frameSummary: { meanMs, missedTwoRefreshes: 0 },
   cpuSubmission: { p50Ms: cpuP95 / 2, p95Ms: cpuP95 }, frame: { p95Ms: p95 }, after: { render: { calls }, memory: { geometries: 530, textures: 162 } } });
-const report = ({ head = 'base', vsync, two = [33, 14, 33.4], reconnectMs = 1000, status = 'passed', reconnectBackoff } = {}) => ({ status, head, ...vsync ? { vsync } : {},
-  ...reconnectBackoff ? { options: { reconnectBackoff } } : {},
-  profiles: [{ name: 'desktop', reconnectMs, samples: [sample(1, 16.7, 11, 16.7), sample(1, 16.7, 12, 16.7), sample(1, 16.7, 13, 16.7),
+// Without reconnectBackoff or reconnects the report has the shape written before those
+// options existed; options: {} has the shape written since, without the new fields.
+const report = ({ head = 'base', vsync, two = [33, 14, 33.4], reconnectMs = 1000, status = 'passed', reconnectBackoff, reconnects, options } = {}) => ({ status, head, ...vsync ? { vsync } : {},
+  ...options || reconnectBackoff || reconnects ? { options: { ...options, ...reconnectBackoff ? { reconnectBackoff } : {}, ...reconnects ? { reconnects } : {} } } : {},
+  profiles: [{ name: 'desktop', reconnectMs, ...reconnectBackoff ? { reconnectBackoff } : {}, ...reconnects ? { reconnectSamplesMs: Array(reconnects).fill(reconnectMs) } : {}, samples: [sample(1, 16.7, 11, 16.7), sample(1, 16.7, 12, 16.7), sample(1, 16.7, 13, 16.7),
     ...[0, 1, 2].map(() => sample(2, ...two))] }] });
 const row = (result, workload, metric) => result.rows.find(item => item.workload === workload && item.metric === metric);
 
@@ -46,11 +48,25 @@ test('mixed vsync settings, failed reports and empty arms are refused', () => {
   assert.throws(() => compareBaselines([], [report()]), /at least one/);
 });
 
-test('reports that skip the reconnect backoff compare only with each other', () => {
-  // Reports written before the option existed waited out the backoff.
-  assert.equal(compareBaselines([report()], [report({ reconnectBackoff: 'keep' })]).reconnectBackoff, 'keep');
-  assert.throws(() => compareBaselines([report()], [report({ reconnectBackoff: 'skip' })]), /same reconnect-backoff/);
-  const skipped = compareBaselines([report({ reconnectBackoff: 'skip', reconnectMs: 250 })], [report({ reconnectBackoff: 'skip', reconnectMs: 260 })]);
-  assert.equal(skipped.reconnectBackoff, 'skip');
+test('reconnect rows decide only between matched rejoin settings', () => {
+  // Older reports, with or without an options block, took one rejoin that waited out the backoff.
+  const older = compareBaselines([report()], [report({ options: { vsync: 'on' }, reconnectBackoff: 'keep', reconnects: 1 })]);
+  assert.deepEqual([row(older, 'desktop/reconnect', 'reconnectMs').settings, row(older, 'desktop/reconnect', 'reconnectMs').decision], ['keep×1', 'within']);
+  const matched = compareBaselines([report({ reconnects: 5, reconnectMs: 900 })], [report({ reconnects: 5, reconnectMs: 1200 })]);
+  assert.deepEqual([row(matched, 'desktop/reconnect', 'reconnectMs').settings, row(matched, 'desktop/reconnect', 'reconnectMs').decision], ['keep×5', 'over']);
+  const skipped = compareBaselines([report({ reconnectBackoff: 'skip', reconnects: 5, reconnectMs: 250 })], [report({ reconnectBackoff: 'skip', reconnects: 5, reconnectMs: 260 })]);
   assert.equal(row(skipped, 'desktop/reconnect', 'reconnectMs').decision, 'within');
+});
+
+test('mismatched rejoin settings leave the reconnect row undecided and the rest compared', () => {
+  for (const [base, candidate] of [[report(), report({ reconnects: 5, reconnectMs: 2000 })], [report({ reconnects: 5 }), report({ reconnectBackoff: 'skip', reconnects: 5, reconnectMs: 2000 })],
+    [[report({ reconnects: 5 }), report({ reconnects: 3 })], [report({ reconnects: 5, reconnectMs: 2000 })]]]) {
+    const result = compareBaselines([base].flat(), [candidate].flat());
+    const reconnect = row(result, 'desktop/reconnect', 'reconnectMs');
+    assert.equal(reconnect.decision, 'unmatched');
+    assert.equal(reconnect.budget, undefined);
+    assert.deepEqual(result.unmatched, ['desktop/reconnect reconnectMs']);
+    assert.deepEqual(result.over, []);
+    assert.equal(row(result, 'desktop/2p', 'frameMeanMs').decision, 'within');
+  }
 });
