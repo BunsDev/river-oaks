@@ -99,14 +99,15 @@ Shared files set the landing order: `desktop.yml`/`desktop/e2e.js`/`docs/desktop
   - On main's code (scratch `git archive HEAD` plus the new test file): **2/2 fail**. With the change: **3/3 pass**, including the catalog test.
 - **Gates:** see Results.
 
-## Results (handoff, 2026-10-25 14:45Z)
+## Results (final, 2026-10-25 15:50Z)
 
 ### Finish line
 
 At handoff:
 
 - **Met:** items 1, 2 and 3 for this session's share, and item 6.
-- **Not met:** item 4, river-oaks-71's post-wave pass, which is still running and has found a regression. Item 5 is 71's 3× lane, whose #662 and #663 stack on #649.
+- **Item 4 ran to completion, with a no-go verdict.** River-oaks-71 posted one comment on #587 and one on #638 at 15:34Z.
+- **Item 5:** this is 71's 3× lane. #662 and #663 stack on #649, which waits on Val.
 
 1. **Ticked landing rows.** None were ticked in this session, so this session landed nothing. Through 71's and 33's own landers, nine PRs merged on fresh main, in this order: #657 (c3eae4f5), #648 (26d63a06), #650 (2da76e1f), #651 (4122fe07), #652 (7ad9ffc6), #647 (2c2f2eec), #645 (a437cbbf), #646 (15334aad), #641 (0b9a97c4, 33's own lander). After the sleep window, 71's lander merged #658 (e8207b2b at 12:16:15Z, reviewed head 48f8f511; f1's #288 half). That makes ten. The land queue was empty again at 12:17Z and at 14:41Z. River-oaks-33 retires its own #641 ref (09ab2180) and river-oaks-destination-slice. It archived 460 evidence files to `~/worktree-backups/river-oaks/evidence/bayou-luxe-polish-20261024`, then retired the ref and worktree through the guarded prune (`retirement-OIEqPJ`) and proved restoration.
 2. **Register.** Each merged task is `delivered` with `{pr, reviewedHead, merge, tree, checks}`, written by its owner, or by 71 for #650.
@@ -123,14 +124,26 @@ At handoff:
      - other sessions' new scratch snapshots.
    - This session's own new gap was `landing-steward-20261024: local and PR heads differ (#668)`. A task can record one PR, and this task held both the ledger branch and the D12 branch. At 12:25Z the D12 branch moved to its own task, `experience-commons-stage-20261024` (`pr` 660, same owner and ledger). Each branch now has exactly one task and one PR, which the guarded prune also requires.
 3. **Inventory.** It went from 68 worktrees and 73 branches to 78 and 76 (02:45Z), then 86 and 76 (12:17Z), and 87 and 75 at 14:41Z. Detached checkouts went from 12 to 28. This session removed 3 worktrees and 4 refs; other sessions added more in the meantime. Every blocked candidate is listed under Gaps.
-4. **Post-wave acceptance.** Running since 04:02Z on main 0b9a97c4, in river-oaks-71's `scratchpad/rc-0b9a97c4` (`rc-run.sh`: rehearsal, journeys, ABBA + pixel parity, verify full; hosted Verify run 40160333490). River-oaks-71 runs it once on the converged main: rows 2–7, 10 and 11, world-gate-587, and Heights if #649 has merged. It compares against #657's 09bd7a83 numbers using #626's protocol, and posts the single evidence comment on #587 and on #638. This session runs and posts none of it, to avoid duplicates. The host sleep (below) invalidated 71's first journey results, so 71 reran them. At 12:16Z 71 reported that its Phase 2 RC evidence is on 0b9a97c4, before #658. #658 changes touch controls, not Commons content, and 71 records that scope in its go/no-go. **Not done at handoff.** Neither comment had been posted at 14:41Z. At 14:38Z, 71's register entry recorded the awake rerun on 0b9a97c4; this session has not checked these results itself:
-   - rehearsal passed 26/26 and 28/28;
-   - `world-gate-587` passed;
-   - `east-garden-commons` passed (bisect 4/4);
-   - **`world-streaming` failed, row 10.** It shows a fixed post-warm-up offset of +12 geometries and +13 textures. 71 attributes it to #641: pre-#641 main 15334aad passes 286/286. 71 asked river-oaks-33 for a follow-up;
-   - ABBA and pixel parity have been running since 12:34Z, with `verify full` after them.
+4. **Post-wave acceptance.** Running since 04:02Z on main 0b9a97c4, in river-oaks-71's `scratchpad/rc-0b9a97c4` (`rc-run.sh`: rehearsal, journeys, ABBA + pixel parity, verify full; hosted Verify run 40160333490). River-oaks-71 runs it once on the converged main: rows 2–7, 10 and 11, world-gate-587, and Heights if #649 has merged. It compares against #657's 09bd7a83 numbers using #626's protocol, and posts the single evidence comment on #587 and on #638. This session runs and posts none of it, to avoid duplicates. The host sleep (below) invalidated 71's first journey results, so 71 reran them. At 12:16Z 71 reported that its Phase 2 RC evidence is on 0b9a97c4, before #658. #658 changes touch controls, not Commons content, and 71 records that scope in its go/no-go. **Done, verdict no-go**, on RC 0b9a97c4 (main after #641; #658 came later and changes touch controls only). The verdict is in ledger #664 and comments [#587 6399590750](https://github.com/BunsDev/river-oaks/issues/587#issuecomment-6399590750) and [#638 6399591964](https://github.com/BunsDev/river-oaks/issues/638#issuecomment-6399591964), both posted 15:34Z. This session ran and posted none of it.
 
-   Then 71 writes the go/no-go in ledger #664 and posts the two evidence comments.
+   - **Met, with the host awake:**
+     - rehearsal 26/26 and 28/28;
+     - `world-gate-587` (26 checks) and `east-garden-commons` (10 checks);
+     - ABBA frame and CPU within budget;
+     - `verify full` attempt 2 passed all 18 stages. Attempt 1 failed on the `land-pr` lander-wake intermittent and is kept.
+   - **Failed as written:**
+     - **`world-streaming` GPU bound:** textures +13 against a limit of +10. 71 attributes it to #641: pre-#641 15334aad passes 286/286.
+     - **ABBA phone reconnect:** +44.5% against a limit of 20%. 71's leading explanation is the client's random 500–1,000 ms `retryDelay(0)`, sampled once per arm. That cause is unproven.
+   - **Open:** Val's sign-off and production state.
+   - **Receipts,** local to 71's session under `/private/tmp/claude-501/-Users-buns-Documents-GitHub-BunsDev-river-oaks/9c88b6de-e475-455e-844a-4de2cda13c1e/scratchpad/rc-out2-0b9a97c4/`. This session checked these SHA-256 prefixes:
+
+     | File | SHA-256 prefix |
+     | --- | --- |
+     | `full-attempt2.json` (`passed` at 0b9a97c4, 18 results) | `3f3615248cbc6333` |
+     | `rc-journeys-0b9a97c4.json` | `d9be195903e497b1` |
+     | `compare-rc-gardens-vs-commons.json` | `ad9aa6c90379bc04` |
+
+     The receipt records `dirty: true`. In the snapshot, only report outputs changed: the runs rewrote tracked `data/reports/experience.json` and `shared-experience.json`, and added untracked bisect and RC journey reports. The source still matches 0b9a97c4.
 5. **3× lane.** River-oaks-71 took it (23:47Z): #662 (Studewood 2.46×) and #663 (Terraces 2.82×), stacked on #649. This session did no 3× work.
 6. **Decisions for Val.** Below.
 
@@ -235,13 +248,14 @@ Detached comparison checkouts left alone: 6ff47ba1 (two-player/base-build), d1a5
 7. **D4.** Commons visual, keyboard/screen-reader and target-device sign-off, then an operator's read-only production-state check before any activation under `docs/world-expansion-activation.md`. Activation is outside this goal.
 8. **#649.** The six finish-line items and round 3 of the ABBA are complete; round 4 on e8207b2b is in progress. Decide whether it lands. If it does, it needs an update from `main` (behind after #658) and then a green hosted run before `pnpm run land`. Its stacked 3× PRs #662 and #663 follow it.
 9. **71's landing authority.** River-oaks-71 landed #648, #650, #651 and #652 on the authorization it recorded from its own session: "proceed with all of the above e2e through to full completion". It has since also landed #647, #645 and #646. Confirm that matches your intent, including for #649.
+10. **Phone reconnect row.** ABBA measured +44.5% against the 20% limit on RC 0b9a97c4. Decide whether to investigate it as a regression, or to have the protocol control or repeat-sample the client's random `retryDelay(0)` before the row is judged. No limit was changed.
 
 ## Next action
 
-This session hands off at 2026-10-25 14:45Z.
+This session handed off at 2026-10-25 14:45Z and recorded the post-wave verdict at 15:50Z.
 
-- **River-oaks-71:** finishes the post-wave pass: ABBA, pixel parity, `verify full`, the go/no-go in #664, and one comment each on #587 and #638. The `world-streaming` regression goes to river-oaks-33 (Decision 6).
-- **Val:** Decisions 1–9.
+- **Post-wave pass:** done, with a no-go verdict (Results item 4). The `world-streaming` texture regression goes to river-oaks-33 (Decision 6). The phone-reconnect row needs a decision (Decision 10).
+- **Val:** Decisions 1–10.
   - Landing #660 (Decision 1) requires a ticked row and a lander. After it merges, `fix/experience-commons-stage-20261024` is released at its exact head and retired through the guarded prune.
   - The cancel decisions (Decisions 2 and 3) unblock the remaining retirements in the Gaps table.
 - **#649** lands only on Val's authorization (Decision 8). Its ref then needs 91's exact-head release.
