@@ -172,6 +172,8 @@ credentials.json
 service-account.json
 .playwright-cli/
 output/playwright/
+# desktop/e2e.js's hot-reload probe, left behind if a run dies before cleanup
+preview/desktop-hmr-*.css
 
 .playwright-mcp/
 

@@ -6,7 +6,7 @@ import { nearRoomExit } from './room-exit.js';
 import { createPointerGesture } from './pointer-gesture.js';
 import { withinTalkingReach } from './people-picking.js';
 import { nearbyPeople } from './nearby-people.js';
-import { WALK_SPEED, createWalkingEnvironment, createWalkingState, stepWalking } from './walking.js';
+import { WALK_SPEED, createWalkingEnvironment, createWalkingState, guardedStepEnvironment, stepWalking } from './walking.js';
 import { stopHeldMovement } from './held-movement.js';
 import { bindHeldButton } from './held-button.js';
 import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounterPosition } from './encounter.js';
@@ -17,6 +17,7 @@ import { travelRefusal } from './travel-message.js';
 import './walking.css';
 import { venueDoorSites } from './venue-rooms.js';
 import { campusDoorSites } from './garden-campus-district.js';
+import { connectedLocationAt, locationCrossing } from './world-location-label.js';
 import { CAMPUS_BUILDING_ID, CAMPUS_GROUND_LEVEL, campusInteriorPlan, interiorLevelFor } from './garden-campus-levels.js';
 
 export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getLocals, reducedMotion, onEnter, onLeave, onLevelChange, canEnterStore = () => true, getInteraction = () => null, getPlay = () => null, getVoice = () => null }) {
@@ -85,11 +86,14 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   // release the microphone exactly as they release movement.
   let voiceHeld = false;
   const placedObjects = [];
+  // Local-only movement vetoes, e.g. presentation readiness. They never enter the
+  // shared environment, so map, encounter and carriage queries stay unaffected.
+  const stepGuards = [];
   let transport = null, sitting = null, performing = false, seatedGround = 0, doorwayPending = false;
   let flight = createFlightState();
   let flightAllowed=false,fastWalkSpeed=WALK_SPEED.fast;
   let thirdPerson = true, bodyVisible = true;
-  let active = false, environment, walkingWorld = null, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths';
+  let active = false, environment, walkingWorld = null, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths', connectedLocation = null;
   const drag = createPointerGesture();
   const cameraBoom=createCameraBoom();
   const clear = () => { keys.clear(); releaseButtons.forEach(release => release()); drag.cancel(); voiceHeld = false; getVoice()?.setTransmit(false); document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); stopHeldMovement(state, flight, transport); };
@@ -275,6 +279,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     // The voice row sits under the actions, above the place line.
     mountVoice(element) { more.after(element); },
     addObstacle(object) { placedObjects.push(object); return () => { const i=placedObjects.indexOf(object);if(i>=0)placedObjects.splice(i,1); }; },
+    /** guard(from, to) with [east, north] metres; false vetoes this player's own step only. */
+    addStepGuard(guard) { stepGuards.push(guard); return () => { const i=stepGuards.indexOf(guard);if(i>=0)stepGuards.splice(i,1); }; },
+    /** Whether this player's local guards permit [east, north] from → to; rides that bypass stepWalking ask here. */
+    allowsStep(from, to) { return stepGuards.every(guard => guard(from, to)); },
     get active() { return active; },
     get riding() { return Boolean(transport); },
     mount(controller) {
@@ -356,7 +364,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       $('.walking-title span').textContent = creatorRegion ? world.title : 'RIVER OAKS · GARDEN CITY';
       $('.walking-title small').textContent = creatorRegion ? 'Creator-authored region' : '4444 Westheimer Rd · Houston';
       pathLabel = creatorRegion ? 'creator region paths' : 'public district paths';
-      walkingWorld = world;
+      walkingWorld = world; connectedLocation = null;
       environment = createWalkingEnvironment(world, placedObjects);
       // Code-only venues (venue-rooms.js) and the Gardens' halls have doors too: F steps in and out of them.
       stores = [...(world.stores ?? []), ...venueDoorSites(world), ...campusDoorSites(world)];
@@ -393,7 +401,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
           const ride=transport.pose;state.yaw+=ride.yaw-yaw;
           state.position=[ride.seat[0],ride.seat[1]+.62,ride.seat[2]];
           state.speed=0;state.velocity=[0,0];
-        } else if(flight.active) stepFlight(state,environment,flight,input,delta);else stepWalking(state,environment,input,delta);
+        } else {
+          const local=guardedStepEnvironment(environment,[state.position[0],-state.position[2]],stepGuards);
+          if(flight.active) stepFlight(state,local,flight,input,delta);else stepWalking(state,local,input,delta);
+        }
       }
       place(delta);
       if (now - lastPaint < 150) return;
@@ -432,12 +443,16 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       // Seated in a cinema recliner: the HUD steps back for the film (ipic-screening.css).
       document.body.classList.toggle('theater-seated', Boolean(seatedEyeView(sitting)));
       const roomSummary=room && sharedRoomSummary(room);
+      // Crossing into or out of the Commons is announced through the polite live region.
+      const location = connectedLocationAt(walkingWorld, state.position[0], -state.position[2]), crossing = locationCrossing(connectedLocation, location);
+      connectedLocation = location;
+      if (crossing) notify(crossing);
       $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : performing ? 'Drag to look around · X steps down' : transport ? (transport.pose.kind === 'bicycle' ? `${(transport.pose.distance / 1609.344).toFixed(2)} mi cycled this ride · W to pedal · Shift to sprint · G to step off` : 'W/S to ride or reverse · A/D or arrows to steer · G to step out') : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
         ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.guests} resident${roomSummary.guests === 1 ? '' : 's'}`
         // A campus floor names itself ("The Gardens · Floor 4") and has no staff or guests to count (#508).
         : room.campusLevel ? `Inside ${room.name} · ${roomSummary.label}`
         : `Inside ${room.name}${room.generatedPlan?.index ? ` · Level ${room.generatedPlan.index + 1}` : ''} · ${roomSummary.label} · ${roomSummary.staff} staff, ${roomSummary.guests} guests`
-        : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · ${pathLabel}`;
+        : nearest ? `${nearest.anchorName} · nearby` : `${state.distance.toFixed(0)} m walked · ${location ?? pathLabel}`;
       hud.dataset.eyeHeight = (state.position[1] - environment.groundAt(state.position[0], state.position[2])).toFixed(2);
       hud.dataset.distance = state.distance.toFixed(2);
       hud.dataset.speed = state.speed.toFixed(2);

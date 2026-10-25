@@ -144,12 +144,24 @@ second interior or renderer is built.
     pending work and pauses locally. Explicit Retry begins a fresh generation.
   - **Encodings.** Each encoding the browser may decode is tried once per attempt, WebM then MP4. Retry starts a
     new attempt.
-  - **Failure reasons.** The status says why: autoplay (Play film), decode, network (the other encoding is not
-    tried), stalled (no progress for 30 s while loading or buffering, or while a play request is unanswered), or playback. An aborted load is the
-    player's own doing and is not a failure. A shared Stop releases the decoder.
+  - **Failure reasons.** The status says why: autoplay (Play film), decode, network, stalled (no progress for 30 s
+    while loading or buffering, or while a play request is unanswered), or playback. A connection that drops, or a
+    browser that is offline, is network at once and the other encoding is not tried. A file that is missing while
+    online reports the same error as an unreadable one, so each encoding is still tried once. When every encoding
+    has failed, the film stops at once as decode, with Retry; if a file failed that way, one HEAD request per file
+    then corrects the reason to network when the server did not have it (no answer, 404/410, a server error, or an
+    HTML page). Only the reason changes, and a Retry, switch or Stop in the meantime discards the answer.
+    An aborted load is the player's own doing and is not a failure. A shared Stop releases the decoder.
+  - **Play film.** The gesture keeps a decoded frame on the screen (state `ready`) until its play() answers;
+    without one the viewer is still `loading`, under the same stall deadline.
+  - **The end of a file.** A file a few milliseconds shorter than the shared duration holds its last frame rather
+    than restarting, because play() on ended media starts again from the beginning.
   - **Diagnostics.** `window.__riverScreening()` reports the source that decoded, every attempt, the drift
     measured before correction (`measuredDriftMs`), and the last presented frame from requestVideoFrameCallback
-    (`presented`). `driftMs` still reads 0 straight after a seek request, so it is no evidence of a visible frame. While the walking console's
+    (`presented`). `driftMs` still reads 0 straight after a seek request, so it is no evidence of a visible frame;
+    `measuredDriftMs` is not sampled while a seek is in flight (`seeking`), when `currentTime` already reads the
+    requested time. Both reset with each new source. The two-browser journey checks presented frames as well as
+    `currentTime`. While the walking console's
   **More** actions are open, the panel steps aside, so **Step outside** stays reachable on
   narrow screens; it returns when More closes. On narrow screens the panel also stays above an
   open play dock, so its sound and caption controls remain reachable.
@@ -187,7 +199,9 @@ second interior or renderer is built.
     and its edge pixels never smear.
   - **Lighting.** While a film is bound, its masked emissive signal replaces surface diffuse/specular lighting, so scene lights do not illuminate the film a second time. Global tone mapping, exposure, fog and postprocessing remain in effect; rendered pixels are not expected to equal direct-video RGB values. The actual-screen runner compares a fixed paused frame under low/high direct and environment lighting at constant exposure. `node preview/e2e/ipic-screen-colour-runner.mjs` captures paired direct/world samples through normal full-world rendering at noon, dusk and dawn; human color approval remains #502.
   - **What shows.** The film appears only once the current source has a decoded frame. While a replacement
-    loads, after a Stop and after a failure, the screen is its idle self.
+    loads, after a Stop and after a failure, the screen is its idle self. A seek (a late join or a drift
+    correction) lowers the element's readiness until it completes; the film already bound keeps its texture
+    meanwhile rather than flashing the idle screen.
   - **Restore.** Every borrowed material property is restored exactly, and one film texture is resident at
     a time.
   - **Test films.** `scripts/make-screening-test-sources.mjs` writes borderless test films to

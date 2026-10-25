@@ -67,16 +67,27 @@ async initialPage => {
   // The town must confirm travel and focus before the conversation opens, so a press
   // can be refused. Wait for what the visitor sees, not only the dialog.
   const notices = () => page.evaluate(() => [...document.querySelectorAll('#community-encounter-notice, .multiplayer-roster p[role=status]')].map(node => node.textContent.trim()).filter(Boolean).join(' | '));
-  const noticesBefore = await notices();
-  if (touch) await page.locator('#walking-talk').tap();
-  else { await page.locator('#walking-talk').focus(); await page.keyboard.press('Enter'); }
-  const talked = await page.waitForFunction(noticesBefore => {
-    if (!document.querySelector('#community-dialogue').hidden) return 'opened';
-    const now = [...document.querySelectorAll('#community-encounter-notice, .multiplayer-roster p[role=status]')].map(node => node.textContent.trim()).filter(Boolean).join(' | ');
-    return now && now !== noticesBefore ? `refused: ${now}` : false;
-  }, noticesBefore, { timeout: 60000 }).then(result => result.jsonValue(), () => 'no conversation and no notice within 60 s');
-  check(talked === 'opened', talked === 'opened' ? 'The primary action opens the actual conversation'
-    : `Talk press: ${talked}; town replies ${JSON.stringify(replies.slice(-4))}`);
+  const pressTalk = async () => {
+    const noticesBefore = await notices(), replyStart = replies.length;
+    if (touch) await page.locator('#walking-talk').tap();
+    else { await page.locator('#walking-talk').focus(); await page.keyboard.press('Enter'); }
+    const outcome = await page.waitForFunction(noticesBefore => {
+      if (!document.querySelector('#community-dialogue').hidden) return 'opened';
+      const now = [...document.querySelectorAll('#community-encounter-notice, .multiplayer-roster p[role=status]')].map(node => node.textContent.trim()).filter(Boolean).join(' | ');
+      return now && now !== noticesBefore ? `refused: ${now}` : false;
+    }, noticesBefore, { timeout: 60000 }).then(result => result.jsonValue(), () => 'no conversation and no notice within 60 s');
+    return { outcome, replies: replies.slice(replyStart) };
+  };
+  let talkResult = await pressTalk();
+  if (talkResult.outcome.startsWith('refused:') && talkResult.replies.some(reply => reply.error === 'travel_cooldown')) {
+    check(talkResult.outcome.includes('Wait a moment'), 'Rapid entry/talk explains the authoritative cooldown');
+    // Like the doorway retry above, wait for the visible refusal to dismiss.
+    // Retry only this named server refusal; still require the real conversation.
+    await page.waitForFunction(() => !document.querySelector('#community-encounter-notice').textContent.trim());
+    talkResult = await pressTalk();
+  }
+  check(talkResult.outcome === 'opened', talkResult.outcome === 'opened' ? 'The primary action opens the actual conversation'
+    : `Talk press: ${talkResult.outcome}; town replies ${JSON.stringify(replies.slice(-4))}`);
   await page.locator('#community-close').focus(); await page.keyboard.press('Escape');
   check(await host.evaluate(node => node === document.activeElement), 'Conversation dismissal restores world focus');
   await reveal('#walking-enter');
