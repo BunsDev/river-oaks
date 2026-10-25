@@ -55,10 +55,32 @@ test('crime state is optional for older towns but exact when present (#597)', ()
     assert.equal(validTownSnapshot({ ...snapshot(), crime: bad }), false, JSON.stringify(bad));
 });
 
+test('timed crime actions are optional for older towns but exact when present (#640)', () => {
+  const rival = (change = {}) => ({ id: 'rival:westcreek', name: 'Westcreek rival', appearance: 'sable-human', position: [-2908, -1320, 17.8], yaw: 0, health: 75, maxHealth: 100, incapacitated: false, staggered: true, engagedId: 'resident', ...change });
+  const action = (change = {}) => ({ id: 'strike:3', kind: 'strike', actorId: 'resident', targetId: 'rival:westcreek', phase: 'windup', remainingMs: 300, outcome: null, reason: null, direction: [-1, 0], ...change });
+  const crime = actions => ({ targets: [rival()], wanted: [['resident', 2]], actions });
+  const hit = action({ phase: 'contact', remainingMs: 120, outcome: 'hit', effect: { damage: 25, health: 75, incapacitated: false, stars: 2 } });
+  const counter = action({ id: 'counter:4', kind: 'counter', actorId: 'rival:westcreek', targetId: 'resident', phase: 'recovery', remainingMs: 500, outcome: 'hit', direction: [1, 0], effect: { damage: 20, health: 80, down: false } });
+  for (const good of [[], [action()], [hit], [counter], [action({ phase: 'done', remainingMs: 0, outcome: 'cancelled', reason: 'violence_off' })], [action({ phase: 'recovery', outcome: 'evaded', remainingMs: 10 })]])
+    assert.equal(validTownSnapshot({ ...snapshot(), crime: crime(good) }), true, JSON.stringify(good));
+  assert.equal(validTownSnapshot({ ...snapshot(), crime: { targets: [rival({ engagedId: null })], wanted: [] } }), true, 'actions may be absent');
+  for (const bad of [null, {}, [action({ phase: 'lunge' })], [action({ kind: 'kick' })], [action({ outcome: 'exploded' })], [action({ direction: [3, 4] })], [action({ direction: [1] })],
+    [action({ remainingMs: -1 })], [action({ remainingMs: 1.5 })], [action({ reason: 42 })], [action({ outcome: 'hit' })], [action({ effect: { damage: 25 } })],
+    [action({ outcome: 'hit', effect: { damage: 25, health: 75, incapacitated: false, stars: 9 } })], [action({ id: '' })], [action({ actorId: 7 })], [action(), action()],
+    [action({ phase: 'done', outcome: null })]])
+    assert.equal(validTownSnapshot({ ...snapshot(), crime: crime(bad) }), false, JSON.stringify(bad));
+  assert.equal(validTownSnapshot({ ...snapshot(), crime: { targets: [rival({ engagedId: 5 })], wanted: [] } }), false);
+});
+
 test('police snapshots reject malformed units, over-cap responses and inconsistent capture state', () => {
   const unit = { id: 'police:0', position: [1, 2, 0], yaw: 0, state: 'pursue', targetId: 'resident' };
   const police = { units: [unit], surrendered: ['resident'], eligible:['resident'] };
   assert.equal(validTownSnapshot({ ...snapshot(), police }), true);
+  // #640: a telegraphed grab carries its remaining windup; subdued players are listed.
+  assert.equal(validTownSnapshot({ ...snapshot(), police: { ...police, units: [{ ...unit, state: 'grab', remainingMs: 450 }], subdued: ['resident'] } }), true);
+  for (const bad of [{ ...unit, state: 'grab' }, { ...unit, state: 'grab', remainingMs: -1 }, { ...unit, remainingMs: 10 }])
+    assert.equal(validTownSnapshot({ ...snapshot(), police: { ...police, units: [bad] } }), false, JSON.stringify(bad));
+  assert.equal(validTownSnapshot({ ...snapshot(), police: { ...police, subdued: ['nobody'] } }), false);
   for (const bad of [null, {}, { ...police, units: [...Array(7)].map((_, i) => ({ ...unit, id: `police:${i}` })) },
     { ...police, units: [unit, unit] }, { ...police, surrendered: ['unknown'] },
     ...[{ position: [1, 2, NaN] }, { state: 'teleport' }, { targetId: null }, { state: 'return' }].map(change => ({ ...police, units: [{ ...unit, ...change }] }))])
