@@ -124,7 +124,7 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
 
 ## Decisions for Val
 
-1. **Merge #649 (Bayou Heights).** Its ledger at `95904d23` records items 1–6 complete. This session's checks agree: rounds 3 and 4 met, `verify full` passed 18/18, reachable ground is 2.0119×, and the adversarial probe found no blocking defects. Merge and landing are not authorized for either session.
+1. **Merge #649 (Bayou Heights).** *Answered on 2026-10-25 at about 18:50Z: Val will review and merge #649 personally.* Its ledger at `95904d23` records items 1–6 complete. This session's checks agree: rounds 3 and 4 met, `verify full` passed 18/18, reachable ground is 2.0119×, and the adversarial probe found no blocking defects. Merge and landing are not authorized for either session.
 2. **District name and art direction.** "Bayou Heights": a clock-tower hall, a bandstand on a green, an icehouse patio, and the Lantern Footbridge from the Commons (#649). Approve it or rename it.
 3. **Visual approval at pedestrian height.** #649's hosted captures and this session's inspected captures (Heights Green, Nineteenth & Yale, the Heights boulevard) are evidence only. They are not approval.
 4. **Budget protocol.** Is #626's paired protocol (D11 on #643's branch) in force on main? Both readings pass for round 4.
