@@ -2,9 +2,9 @@
 
 Objective: complete account erasure, server-enforced player blocking, and in-app
 account deletion behind a default-off flag, for #292 (App Review 5.1.1(v), 1.2).
-This ledger covers increment A, erasure, and increment B, player blocking. In-app
-deletion (C) and reports, support and the App Review map (D) follow in their own
-branches.
+This ledger covers increment A (erasure), B (player blocking) and C (in-app deletion,
+off by default). Reports, support and the App Review map (D) follow in their own
+branch.
 
 Owner: `claude:river-oaks-0b (ebc46c90)`, task `account-safety-292-20261024`.
 Worktree `river-oaks-account-safety-292`, branch `feat/account-erasure-292-20261024`,
@@ -143,6 +143,60 @@ The `app.js` join path also had an `await` between reading the old connection an
 registering the new one (added in this increment). The hidden set now loads before
 that block, which stays synchronous.
 
+## Increment C: in-app account deletion
+
+Branch `feat/account-deletion-292-20261024` in worktree `river-oaks-deletion-292`,
+stacked on increment B's head `075e3876`. Off unless `RIVER_OAKS_ACCOUNT_DELETION=1`.
+Behaviour, prerequisites and Decisions for Val are in
+[in-app account deletion](../../account-deletion.md).
+
+Files owned:
+- New: `server/account-deletion.js`, `preview/src/account-deletion.js`,
+  `docs/account-deletion.md`.
+- New tests: `server/tests/account-deletion.test.js`, `account-deletion-town.test.js`,
+  `preview/tests/account-deletion.test.js`.
+- Changed: `server/auth.js`, `redis-auth.js` and `dev-auth.js` (`signedInAt`,
+  `deleteProviderUser`, `clearSession`); `server/town.js` and `redis-backend.js` (the
+  route); `redis-security.js` (the `account_deletion` scope); `vercel-routing.js`,
+  `vercel.json` and `preview/vite.config.js` (the route); `preview/src/sidebar.js` (the
+  control, refreshed when Account opens); `preview/src/settings-dialog.css`;
+  `.env.example`; the inventory, security review and architecture docs.
+- Not changed: sign-out in `preview/src/access-entry.js` (`touch-network-288-290`) and
+  `preview/src/multiplayer-client.js` (`outdoor-residents-admin-controls-20261024`)
+  still keeps device data. `clearAccountStorage` is exported for their owners.
+
+Each guard was checked by removing it and watching its test fail:
+- the sign-in time, in Redis sessions and through single-process refreshes;
+- a WorkOS failure that isn't a 404;
+- erasure before the provider;
+- the recency check;
+- the Redis scope;
+- the flag, in the hosted backend and the town;
+- the client's refresh fence, saved looks and world drafts, the exact phrase and the
+  CSRF header.
+
+Independent review (2026-10-24). It found no way around CSRF, the origin, the flag, the
+phrase or the limit, and nothing erased before WorkOS deletes the user.
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| The status check didn't refresh an expired access token, so the control vanished about five minutes after sign-in | High | The page asks `/auth/session` first. Server test pins that the route alone doesn't refresh; client test pins the order. Red without either |
+| With the flag on and no webhook secret, "finishes on its own" could be false | Medium | With WorkOS the flag takes effect only with `WORKOS_WEBHOOK_SECRET`, otherwise it logs `account_deletion_off`. Tested in the helper, the hosted backend and the town |
+| A lost answer or a timeout misled the resident | Low | A lost answer or a sign-out triggers a session re-check; 502 says "couldn't delete right now"; client test |
+| `GET` answers with the flag off | Low | Kept on purpose: a 404 would log a failed request each time Account opens. It reveals only that deletion is off. Documented |
+| Stale inventory row and line references | Low | Fixed |
+| Focus fell to the page; the redirect after 1.5 s could cut off the announcement | Low | Focus goes to the status line, the field or the note. Continue button, then leaves after 10 s |
+| A banned resident can delete and return under a new WorkOS id | Decision | Added to Decision 2 |
+| Stale attempts count toward the limit | Note | Documented |
+| No test for the desktop exchange's sign-in time | Test | Added for both stores; red without it |
+
+| Check | Result |
+| --- | --- |
+| `pnpm run test:server` with `REDIS_URL` (isolated 6421), before review fixes | 1235/1235, 0 skipped |
+| `pnpm test` (preview unit), before review fixes | 4108/4109, 1 skip that predates this change |
+| `pnpm run test:server` with `REDIS_URL`, after review fixes | 1236/1236, 0 skipped |
+| `pnpm test` (preview unit), after review fixes | 4109/4110, the same 1 skip |
+
 ## Gaps and decisions
 
 - The lantern walk's record round keeps lamplighter display names with no account
@@ -163,5 +217,8 @@ aggregate. `verify full` on that head: the first run failed one Redis distribute
 on timing (it passed 3/3 alone). The rerun passed every non-browser stage, including the
 server with Redis at 1192/1192; its browser stage waits on the shared lock.
 
-Increment B: second review pass, `pnpm run verify` when the load is under about 20, a
-signed commit and a draft PR stacked on #661. Then increment C (in-app deletion).
+Increment B is draft PR #665 (head `075e3876`), stacked on #661. Core verify passed;
+`test:server` with Redis passed 1223/1223.
+
+Increment C: independent review, then `pnpm run verify`, a signed commit and a draft PR
+stacked on #665. Then increment D (reports, support contact, App Review map).

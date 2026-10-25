@@ -2,6 +2,7 @@ import { createRedisCharacterStore } from './character-store.js';
 import { accountPrefixFor } from './world-keys.js';
 import { createWorkOSDeletionHandler } from './workos-deletion.js';
 import { createAccountErasure } from './account-erasure.js';
+import { accountDeletionEnabled, createAccountDeletionRoute } from './account-deletion.js';
 import { createChauffeurRoute, chauffeurDailyLimit } from './chauffeur.js';
 import Redis from 'ioredis';
 import { loadDistrictData } from './district-data.js';
@@ -61,7 +62,9 @@ export async function createRedisBackend(env = process.env) {
     const chauffeurRequest = createChauffeurRoute({auth,security,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env)});
     let eraseAccount;
     const deletionRequest=createWorkOSDeletionHandler({secret:env.WORKOS_WEBHOOK_SECRET||null,onDelete:id=>eraseAccount(id)});
-    const handleRequest=async(req,res)=>await deletionRequest(req,res)||await chauffeurRequest(req,res);
+    // In-app deletion (#292) stays off unless RIVER_OAKS_ACCOUNT_DELETION is 1 and the WorkOS webhook can retry erasure.
+    const accountDeletion=createAccountDeletionRoute({enabled:accountDeletionEnabled(env),auth,security,origin,eraseAccount:id=>eraseAccount(id)});
+    const handleRequest=async(req,res)=>await deletionRequest(req,res)||await accountDeletion(req,res)||await chauffeurRequest(req,res);
     // Shared voice rooms and the daily join budget count across every gateway of this namespace.
     // A long-lived gateway sweeps orphaned voice participants on a timer; on
     // Vercel the per-minute cron (/api/voice-sweep) does it.

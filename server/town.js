@@ -1,6 +1,7 @@
 import {createCharacterMetrics} from './character-metrics.js';
 import { createWorkOSDeletionHandler } from './workos-deletion.js';
 import { createAccountErasure } from './account-erasure.js';
+import { accountDeletionEnabled, createAccountDeletionRoute } from './account-deletion.js';
 import { createMemoryCharacterStore } from './character-store.js';
 import { createMemoryOfficeDesk } from './office-desk.js';
 import { createChauffeurRoute, createLocalChauffeurSecurity, chauffeurDailyLimit } from './chauffeur.js';
@@ -149,7 +150,6 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   }
   const chauffeurRequest=createChauffeurRoute({auth,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env),
     security:localSecurity,...(mode==='local'?{isAdmin:auth.isAdmin}:{})});
-  // Player blocking (#292): a block ends office and home invitations, and reaches sockets, in every loaded world.
   // Player blocking (#292): every world this town has loaded; one that fails is logged and skipped.
   async function separateEverywhere(a,b,blocked){
     for(const [id,{game}] of [...games]) try {await game.separateAccounts(a,b,blocked);}
@@ -167,7 +167,9 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     voice:async id=>{if(voice)await voice.revokeUser(id);await voiceLeases.revoke(id);},
   },after:{avatarPreferences:id=>avatarPreferences.eraseUser(id),cyclingMiles:id=>cyclingMiles.eraseUser(id)}});
   const deletionRequest=createWorkOSDeletionHandler({secret:mode==='workos'?(env.WORKOS_WEBHOOK_SECRET||null):null,onDelete:id=>eraseAccount(id)});
-  const handleRequest=async(req,res)=>await deletionRequest(req,res)||await chauffeurRequest(req,res);
+  // In-app deletion (#292) stays off unless RIVER_OAKS_ACCOUNT_DELETION is 1 and a failed erasure can be retried.
+  const accountDeletion=createAccountDeletionRoute({enabled:accountDeletionEnabled(env,{development:mode==='local'}),auth,security:localSecurity,origin,eraseAccount:id=>eraseAccount(id)});
+  const handleRequest=async(req,res)=>await deletionRequest(req,res)||await accountDeletion(req,res)||await chauffeurRequest(req,res);
   const router=createWorldRouter({worldFor,configuredWorldId:worldId,handleRequest});
   const characterMetrics=createCharacterMetrics({enabled:env.RIVER_OAKS_CHARACTER_STUDIO_METRICS==='1'});
   return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,eraseAccount,close(){

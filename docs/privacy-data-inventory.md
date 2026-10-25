@@ -7,8 +7,10 @@ inventory, not a privacy policy or legal advice; the published policy is Val's.
 
 Account deletion starts with the signed WorkOS `user.deleted` webhook
 (`server/workos-deletion.js`), which calls `createAccountErasure`
-(`server/account-erasure.js:10`). It is wired in `server/town.js:151` (standalone)
-and `server/redis-backend.js:93` (hosted). The order is fixed:
+(`server/account-erasure.js:10`). It is wired in `server/town.js:159` (standalone)
+and `server/redis-backend.js:96` (hosted). In-app deletion, off unless
+`RIVER_OAKS_ACCOUNT_DELETION=1`, runs the same erasure after WorkOS deletes the user
+([in-app account deletion](account-deletion.md)). The order is fixed:
 
 1. The character tombstone (`server/character-store.js:220`). From then on the
    account cannot sign in or join a world.
@@ -26,7 +28,7 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 | Data | Store (memory · Redis) | Retention without deletion | On deletion |
 | --- | --- | --- | --- |
 | Character drafts, revisions, selection | `server/character-store.js:236` · `:255` | Until deleted | Replaced by the tombstone `{deleted:true}`, keyed by a SHA-256 of the id |
-| Sessions, CSRF tokens, sign-in state | `server/auth.js:73` · `server/redis-auth.js:218` | 7 days (`server/auth.js:13`, `server/redis-auth.js:12`) | Erased |
+| Sessions (with the time of sign-in), CSRF tokens, sign-in state | `server/auth.js:73` · `server/redis-auth.js:218` | 7 days (`server/auth.js:13`, `server/redis-auth.js:12`) | Erased |
 | Stored GitHub login | `server/github-names.js:79` · `:91` | Until deleted | Erased (`:87`, `:98`) |
 | Email-code sign-in state | `server/magic-auth.js:88` | 10 minutes (`:6`) | Lapses; never names the account after use |
 | Profile: tagline, bio, pronouns, interests; shops already visited | `server/profiles.js:36` · `:85` | Until deleted | Erased (`:59`, `:107`) |
@@ -54,9 +56,11 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 
 The web client uses `localStorage`, `sessionStorage` and cookies only. It has no
 IndexedDB, Cache Storage, script-readable cookie or service worker. Server erasure
-cannot reach a device. Today sign-out (`preview/src/access-entry.js:434`,
-`preview/src/multiplayer-client.js:392`) clears none of the per-account keys
-below. Clearing them at sign-out and after in-app deletion is #292 increment C.
+cannot reach a device. In-app deletion clears the per-account keys below on the
+device it runs on (`clearAccountStorage` in `preview/src/account-deletion.js`). Sign-out
+(`preview/src/access-entry.js:434`, `preview/src/multiplayer-client.js:392`) still clears
+none of them; those files belong to other tasks, and
+[in-app account deletion](account-deletion.md#on-the-device) says how they can call it.
 
 | Key | Where | Holds | Per account |
 | --- | --- | --- | --- |
@@ -85,7 +89,7 @@ this change.
 
 | Processor | Receives | Configured by | Where | Reached by deletion |
 | --- | --- | --- | --- | --- |
-| WorkOS (AuthKit) | Email address, sign-in codes and tokens; sends the sign-in emails | `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_WEBHOOK_SECRET` | `server/auth.js:223`, `server/magic-auth.js:153`, `server/redis-auth.js:356` | Its `user.deleted` event starts erasure. No code here deletes the WorkOS user yet; in-app deletion (increment C) will |
+| WorkOS (AuthKit) | Email address, sign-in codes and tokens; sends the sign-in emails | `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_WEBHOOK_SECRET` | `server/auth.js:223`, `server/magic-auth.js:153`, `server/redis-auth.js:356` | Its `user.deleted` event starts erasure. In-app deletion deletes the WorkOS user first (`server/auth.js` and `server/redis-auth.js` `deleteProviderUser`) |
 | GitHub API | The GitHub id of a GitHub sign-in, to read the public login | `GITHUB_TOKEN` | `server/github-names.js:42` | Nothing is stored there by River Oaks; the local copy is erased |
 | LiveKit | A random participant identity, a room name, voice audio | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `RIVER_OAKS_VOICE` | `server/livekit-client.js:34`, `server/voice.js:257` | Rooms are live only; erasure removes the participant. No recording code exists |
 | Cloudflare Turnstile | A challenge token; the browser loads Cloudflare's script | `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | `server/turnstile.js:7`, `preview/src/access-entry.js:192` | Nothing stored by River Oaks |
@@ -103,8 +107,8 @@ There is no analytics or error-reporting service, and no other email sender.
   account id, so erasure cannot attribute them (`server/lantern-walk.js`). It is
   one bounded record.
 - A write authorized just before revocation can land after its store's erase step
-  and leave one record. In-app deletion (#292, increment C) narrows this by
-  erasing again after the provider deletion.
+  and leave one record. In-app deletion narrows this by erasing a second time once
+  the first run finishes.
 - Campus operators are staff ids configured in the environment, not resident data.
 - Wish thank-you lines name the granting account, and only Jevica's owner accounts
   can grant wishes. Erasing one of them removes the lines with its display name,
