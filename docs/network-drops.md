@@ -13,7 +13,7 @@ that already exist:
 | Outcome | Town command (`multiplayer-client.js`) | Office desk (`office-desk-model.js`) |
 | --- | --- | --- |
 | Completed | The town's result arrives. | The server answers with the saved desk. |
-| Refused | `command()` while disconnected resolves "Reconnect before taking an action." Nothing is sent. | The server answers with a reason (`desk_conflict`, `invalid_desk`, …). The status reads "Not saved". |
+| Refused | `command()` while disconnected resolves "Reconnect before taking an action." Nothing is sent. | The server answers with a reason (`desk_conflict`, `invalid_desk`, …). The status reads "Not saved". A refused reopen after an unknown save shows the refusal, not "Not confirmed". |
 | Unknown | A socket lost with the command pending rejects with "Disconnected. Your action was not confirmed." No result within 8 s reads "The town did not confirm this action." | A request that was sent but never answered is `unconfirmed`. The status reads "Not confirmed". **Try again** repeats the same `operationId`, and the server's receipts keep it from applying twice. |
 
 After an unknown outcome, the town's next snapshot tells the page what
@@ -24,10 +24,12 @@ replayed automatically.
 
 - **Connection.** The town sends a snapshot every 200 ms. Online, a visible
   page that hears nothing for 8 s over five checks holds a dead socket
-  (`connection-policy.js`). When the browser itself reports offline, 750 ms of
-  silence is enough, so the page admits the loss within about two seconds
-  instead of eight to thirteen. A socket that keeps delivering, such as one to
-  a local server, is kept.
+  (`connection-policy.js`). When the browser reports that the network dropped
+  under a socket it was hearing, 750 ms of silence is enough, so the page
+  admits the loss within about two seconds instead of eight to thirteen.
+  The report alone is not trusted: a browser that says offline from the
+  start, or while the socket keeps delivering (such as one to a local
+  server), keeps the online rule.
 - **Access.** While a resident plays, the page rechecks access every 15 s, and
   again as soon as the browser is back online. Any answer from the server
   (signed out, another account, not approved, an error) still sends the page
@@ -41,10 +43,12 @@ socket through Playwright. The town applies each action, then the line is cut
 as its result comes back, and the context goes offline.
 
 - Cases: travel into a shop, sitting on a bench, an office-desk save whose
-  reply is lost, and a second drop while the page is rejoining.
+  reply is lost, a second drop while the page is rejoining, and an outage
+  long enough for the access recheck to fail.
 - Checks: the page admits each loss within 2 s; it says the outcome was not
-  confirmed; it refuses new actions while offline; it sends nothing twice; and
-  it never reloads.
+  confirmed; it refuses new actions while offline; it sends nothing twice;
+  the access check that failed offline runs again as the network returns;
+  and the page never reloads.
 
 Run it with:
 

@@ -26,6 +26,10 @@ async page => {
     failedRequests.push({ path, failure, at: Date.now() });
     if (/^\/(auth|api)\//.test(path)) console.log(`request failed ${path} ${failure}`);
   });
+  // Each answer the access recheck gets (access-entry.js), to tell an answered check from
+  // one the network swallowed.
+  const sessionAnswers = [];
+  page.on('response', response => { if (new URL(response.url()).pathname === '/auth/session') sessionAnswers.push({ status: response.status(), at: Date.now() }); });
   // Every town socket goes through this proxy. `armed` names the command whose
   // result cuts the line; after the cut nothing passes in either direction.
   const wire = { sockets: 0, sent: [], armed: null, armedRequest: null, cut: false, dead: false };
@@ -196,6 +200,23 @@ async page => {
     expect(settled, 'mid-reconnect: a second drop while rejoining leaves the page disconnected and retrying', metrics.midReconnect);
     await reconnect('midReconnect');
     expect(consequential() === sentBefore, 'mid-reconnect: nothing already sent is sent again', wire.sent.slice(-6));
+  }
+
+  // 5. The 15 s access recheck falls in an outage. A check with no answer says nothing
+  // about access, so the page keeps the district, and it checks again as soon as the
+  // network returns rather than at its next turn.
+  {
+    await context.setOffline(true); wire.dead = true;
+    const offlineAt = Date.now(), unanswered = () => failedRequests.find(request => request.path === '/auth/session' && request.at >= offlineAt);
+    expect(await waitFor(async () => (await connection())?.connected === false, 5000, 50), 'access: the drop is admitted');
+    expect(await waitFor(() => Boolean(unanswered()), 20000), 'access: a recheck runs while offline and gets no answer', failedRequests.slice(-4));
+    const failedAt = unanswered()?.at ?? Date.now(), onlineAt = Date.now();
+    await reconnect('access');
+    expect(await waitFor(() => sessionAnswers.some(answer => answer.at >= onlineAt), 5000), 'access: the access check is answered once the network returns');
+    const answer = sessionAnswers.find(item => item.at >= onlineAt);
+    metrics.accessRecheck = { offlineAt, failedAt, onlineAt, answer };
+    expect(answer?.status === 200 && answer.at < failedAt + 14000, 'access: it checks again as the network returns, not at its next 15 s turn', metrics.accessRecheck);
+    expect(navigations.every(item => item.at < offlineAt), 'access: the unanswered check keeps the district', navigations);
   }
 
   metrics.navigations = navigations;
