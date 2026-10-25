@@ -198,12 +198,20 @@ The reviewer confirmed that other callers' routes are unchanged (60 pairs) and t
   - **world-streaming failed** its "Scene and GPU object bounds across twenty measured trips" check.
 - **That bounds failure is not a growing leak.** Across all 14 reported laps, client 0 sits at a fixed offset from its warm-up baseline: geometries 737 → 749 (+12) and textures 227 → 240 (+13); evicted, 627 → 639 and 224 → 233–237. Scene objects stay equal (9,152). Client 1 is equal apart from a flicker of up to 4 textures. So something is allocated once after the warm-up snapshot and then held. #657's run on `09bd7a83` passed the check.
 - **Pinning the change.** world-streaming was queued on `15334aad` (just before #641) at about 11:30Z (`scratchpad/bisect-out/streaming-pre.log`).
-- **Bisect result for row 10.** On `15334aad`, world-streaming **passed 286/286** (11:33–12:34Z, load about 6), with every measured trip within the scene and GPU bounds. So **#641 introduces the fixed post-warm-up offset** on `0b9a97c4`: client 0 holds +12 geometries and +13 textures from lap 3 on. It doesn't grow; it's held through eviction.
+- **Bisect run for row 10.** On `15334aad`, world-streaming passed 286/286 (11:33–12:34Z, load about 6). This task first read that as "#641 introduces the offset". **That was wrong; see the correction below.** One passing run before #641 was luck, not a bisect.
   - **Row 10 is therefore failed for this release candidate.** The gate (`withinBounds`, `world-streaming.js:204`) allows +20 objects, +20 geometries and +10 textures over the warmed baseline.
     - Client 0 exceeds only textures, by 3 (+13 when loaded on every measured lap).
     - Its +12 geometries are within the tolerance. Evicted textures are +9 on most laps and +13 on laps 3 and 8.
-    - **Likely mechanism, not proven: late first-render, not a leak.** The renderer counts a texture on first rendered use, and materials.js keeps shared PBR textures cached across eviction by design. #641 adds several new surface materials, so a few can be first rendered after the warm-ups and then stay resident.
-  - river-oaks-33 (#641's owner) was told, with receipts, and asked for a follow-up fix.
+    - **Correction (about 17:00Z): a journey measurement artifact, not #641 and not a leak.**
+      - **Instrumented rerun** (`scratchpad/diag-0b9a97c4`, 16:21–16:51Z): a local-only copy of the journey hooks WebGL texture create, upload and delete and tags each texture by phase, over 3 measured trips.
+        - Client 0's textures created after the baseline are three triples within 2 ms (ids 897–905): a 16×16 bone texture (a ~64-bone skeleton, `Skeleton.js:252–259`), a 4×4 bone texture and a morph-target array texture (`texImage3D`).
+        - That's three skinned character avatars first drawn after the warm-ups. Everything else created after the baseline replaces render targets of the same size.
+      - **Why only client 0.** It's the only tab put through the journey's two WebGL context-loss probes (`world-streaming.js:215` pending load and `:240` active presentation). Three.js's `onContextRestore` calls `initGLContext()`, which makes a new `WebGLInfo`: every counter restarts at zero, and a resource is counted again only when next drawn.
+      - **Why it sometimes fails.** The step from lap 2 to lap 3 is +9 to +13 textures depending on where the baseline lands: 227 → 240 in the failing run; 231 → 240 here, which passed. It is then flat through every later trip.
+      - **Fix.** It belongs to the journey's owner (task `world-streaming-582-583`), not #641. For example, run the active-presentation probe after the measured trips, or bound growth across the measured trips.
+      - **Receipts:** `diag-0b9a97c4/.runtime/world-streaming/tex-diag-{baseline,lap3,lap4,lap5}.json`, the journey checkpoint `journey-2026-10-25T16-36-37.040Z.json` and `scratchpad/tex-diag.log`.
+      - **Told:** river-oaks-33 and e9 have the correction. #587 and #638 were edited in place.
+  - river-oaks-33 (#641's owner) was first asked for a follow-up fix. That request has been withdrawn (see the correction).
   - Receipts: `scratchpad/bisect-out/bisect-streaming-pre.json` and `rc-out2-0b9a97c4/rc-journeys-0b9a97c4.json`.
 - **Rerun journey times (host awake, one lock turn ending 11:36Z):**
   - world-gate-587 passed 26 checks in 571.5 s (#657: 620 s);
@@ -244,6 +252,11 @@ The reviewer confirmed that other callers' routes are unchanged (60 pairs) and t
       - `connection-policy.js` and `multiplayer-client.js` are unchanged between `15334aad` and `0b9a97c4`.
 
       That fits the noise explanation without proving it. A seeded random or several samples per arm would settle it.
+    - **Rerun with an opt-in multi-sample harness** (draft #672 `d4006820`, task `reconnect-measure-20261025`). The harness was applied locally to `scratchpad/diag-0b9a97c4`, and the run took one browser-lock turn (17:14–17:26Z, load 3.1–4.6), Gardens/Commons/Commons/Gardens with `--reconnects=5` and 5-second frame samples (the frame and CPU rows from this run are not meaningful).
+      - **Backoff kept** (the protocol's measurement, median of 5): desktop 938.8 → 971.8 ms (+3.5%), phone 937.5 → 998.1 ms (+6.5%). Within.
+      - **Backoff skipped** (the rejoin itself): desktop 215.4 → 225.8 ms (+4.8%), phone 159.6 → 112.7 ms (−29.4%). Within.
+      - **Receipts:** `scratchpad/compare-rc-reconnect-{skip,keep}.json` (sha256 `94b51ebbab8d4b01`, `b4f91acdc47ed6be`).
+      - **So the +44.5% was the backoff drawn once per arm.** The protocol's single-sample row still reads over as written, until its owner or Val adopts a multi-sample read.
     - **Reading.** As written, the row is over its budget. The likely explanation is harness noise from deliberate jitter, not a Commons cost. Making the row deterministic (seed or stub `Math.random` in the harness, or subtract the scheduled delay) or taking more samples is a protocol change for its owner or Val. It isn't made here, and the budget isn't amended.
   - **Pixel parity** (`pixel-parity.mjs`: pixels whose largest channel difference is over 24, 12 captures per pair):
     - g1–g2: 0.04–0.70%;
@@ -275,14 +288,14 @@ The reviewer confirmed that other callers' routes are unchanged (60 pairs) and t
 | # | Condition | `0b9a97c4` (this task) | #657 on `09bd7a83` |
 | --- | --- | --- | --- |
 | 1 | Build merged through the guard; hosted Verify green on the release commit | **Met.** #641 merged through the merge guard; Verify run 40160333490, Desktop and push all succeeded | Met |
-| 2 | #587 gate: traversal; frame time within the District baseline on desktop and phone; walked-away assets released; accessibility; two-player journey locally and hosted | **Not met.** Traversal passed (world-gate-587, east-garden-commons), frame/CPU are within budget, and verify full passed with every browser stage. But **phone-viewport reconnect is +44.5%** against the 20% budget (likely the client's random 500–1,000 ms reconnect backoff, sampled once per arm). **world-streaming's GPU bound fails** (textures +13 against +10, introduced by #641, likely late first-render). | Met (phone reconnect +19.1%, close to the limit) |
+| 2 | #587 gate: traversal; frame time within the District baseline on desktop and phone; walked-away assets released; accessibility; two-player journey locally and hosted | **Not met.** Traversal passed (world-gate-587, east-garden-commons), frame/CPU are within budget, and verify full passed with every browser stage. But **phone-viewport reconnect is +44.5%** against the 20% budget (likely the client's random 500–1,000 ms reconnect backoff, sampled once per arm). **world-streaming's GPU bound fails as written** (textures +13 against +10). The cause is a journey measurement artifact after its own context-loss probe on client 0, not #641; the instrumented rerun passed at +9. | Met (phone reconnect +19.1%, close to the limit) |
 | 3 | Rehearsal on the release commit, from both revisions, isolated Redis | **Met.** 26/26 (Gardens) and 28/28 (garage), twice | Met |
 | 4 | Val's human visual approval and physical-device results | **Open.** Val's to give; never simulated | Open |
 | 5 | Production revision and epoch confirmed; a rollback watcher | **Open.** Operator's step; production reads aren't authorized here | Open |
 
 **To reach go on a later commit:**
-- #641's owner fixes or justifies the texture bound;
-- the reconnect row is made deterministic, or resampled with enough runs to resolve 20%, and measured within budget (a protocol change for its owner or Val);
+- the world-streaming journey stops counting after its own context-loss probe (owner of `world-streaming-582-583`), then reruns within bounds;
+- the reconnect row is read from several samples (draft #672). With 5 rejoins per arm it measured within budget on `0b9a97c4` in both modes; adopting it is a protocol change for its owner or Val;
 - Val gives condition 4 and the operator condition 5.
 
 Main has since moved to `e8207b2b` (#658, touch/voice UI only). These rows were measured on `0b9a97c4`, not on `e8207b2b`.
@@ -560,7 +573,7 @@ The journey (`preview/e2e/crime-shared.js:78–90`, from #646/#640) reads the co
 4. **#659**'s security commit `66134f27`.
 5. **#653 and #654.**
 6. **The Commons release:**
-   - the texture bound (#641's owner);
+   - the world-streaming journey's counting after its own context-loss probe (owner of `world-streaming-582-583`; this is not #641);
    - the reconnect row protocol (make it deterministic, or take more samples);
    - condition 4 (Val's sign-off) and condition 5 (production state).
 
