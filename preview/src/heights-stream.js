@@ -8,6 +8,7 @@ import { validateStudewoodRegistration } from './studewood-world.js';
 import { studewoodBaseLayout } from '../../shared/bayou-terraces.js';
 import { validateTerracesRegistration } from './bayou-terraces-world.js';
 import { terracesBaseLayout } from '../../shared/woodland-heights.js';
+import { inWoodlandHeights } from '../../shared/woodland-heights-layout.js';
 import { validateWoodlandRegistration } from './woodland-heights-world.js';
 import { createSpatialChunkStream } from './spatial-chunk-stream.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
@@ -97,6 +98,7 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
   const terracePlans = new Set(layout.terraces?.plans.map(plan => plan.id) ?? []), onTerracePlan = point => gated(point) && terracePlans.has(planAt(point).id);
   // With the terraces at the District edge, District points must not stream them: from the District, Heights stays unloaded.
   const inDistrict = point => Boolean(layout.terraces) && point[0] < layout.edge;
+  const inWoodland = point => inWoodlandHeights(layout, point[0]);
   const sharedBytes = plans.slice(layout.studewood?.planStart ?? plans.length).reduce((bytes, plan) => {
     const { trees, planters } = cityKitLandscape(plan, { groundAt: () => layout.ground, ground: layout.ground });
     return bytes + trees.length * HEIGHTS_SHARED_PLACEMENT_BYTES.tree + planters.length * HEIGHTS_SHARED_PLACEMENT_BYTES.planter;
@@ -199,8 +201,11 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
       if (!gated(to) || presented(to)) return true;
       // As in the Commons: someone restored where Heights is not yet presented may step around
       // an obstacle or retreat west (on a terrace, back toward its footbridge); from presented
-      // ground, the next neighborhood waits to load.
-      return Boolean(from) && gated(from) && !presented(from) && (onTerracePlan(from) ? to[0] >= from[0] - 1e-9 : to[0] <= from[0] + 1e-9);
+      // ground, the next neighborhood waits to load. Woodland's gardens open east onto its lane,
+      // so a westward-only retreat would hold someone restored in one: on Woodland ground any
+      // step within Woodland stays allowed, and the way out is west along a cross street.
+      return Boolean(from) && gated(from) && !presented(from) && (onTerracePlan(from) ? to[0] >= from[0] - 1e-9
+        : inWoodland(from) && inWoodland(to) || to[0] <= from[0] + 1e-9);
     },
     debug: () => ({ ...stream.debug(), status, geometryBudgetBytes: HEIGHTS_MAX_BYTES, measuredBytes: { ...measured },
       estimatedBytes: Object.fromEntries(chunks.map(chunk => [chunk.id, chunk.estimatedBytes])) }),

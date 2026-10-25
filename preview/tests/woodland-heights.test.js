@@ -235,7 +235,8 @@ test('Heights streams Woodland as two more neighborhoods, within the ceiling, an
   assert.equal(unloaded.allowsStep(street, frame([506, 111])), true, 'Studewood is presented');
   assert.equal(unloaded.allowsStep(frame([506, 111]), frame([508, 111])), false, 'Woodland waits to load');
   assert.equal(unloaded.allowsStep(frame([520, 111]), frame([519, 111])), true, 'someone restored there may walk back west');
-  assert.equal(unloaded.allowsStep(frame([520, 111]), frame([521, 111])), false, 'but not deeper in');
+  // Woodland's gardens open east onto its lane, so on its ground still loading any step within Woodland stays allowed.
+  assert.equal(unloaded.allowsStep(frame([520, 111]), frame([521, 111])), true, 'and around within Woodland');
   unloaded.dispose();
   // Woodland south never loads: from presented garden ground at the edge of the north site, the next garden waits.
   const notices = [], partial = createHeightsStream({ world, parent: new THREE.Group(), now: () => 0, onStatus: text => notices.push(text), loadModule: standIns(new Set(['woodland-heights-south'])) });
@@ -245,4 +246,46 @@ test('Heights streams Woodland as two more neighborhoods, within the ceiling, an
   assert.equal(partial.allowsStep(garden, frame([545, -1])), false, 'the next neighborhood waits to load');
   assert.match(notices.at(-1), /Bayou Heights is still loading/, 'Woodland ground is inside the stream, so its notices show');
   partial.dispose();
+});
+
+test('nobody restored on Woodland ground is held there while it loads: every free cell walks back to Studewood', async () => {
+  // A reverse flood fill over Woodland's 0.5 m cells, stepping only where the stream allows, from Studewood's ground
+  // (west of where its streets end, less the walking radius). Its east-facing gardens once held 1,327.5 m² this way.
+  const environment = createWalkingEnvironment(world), exit = 507.15, step = .5, x0 = 500, x1 = 553, y0 = -123, y1 = 168;
+  const nx = Math.round((x1 - x0) / step) + 1, ny = Math.round((y1 - y0) / step) + 1, at = (i, j) => frame([x0 + i * step, y0 + j * step]);
+  const sized = bytes => {
+    const group = new THREE.Group(), geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(Math.round(bytes / 4)), 1));
+    group.add(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial()));
+    Object.assign(group.userData, { ready: Promise.resolve(), update() {}, shadowProxies: [], stats: () => ({ meshes: 1, triangles: 0 }), dispose() { geometry.dispose(); } });
+    return group;
+  };
+  const failures = { 'the Heights module': async () => { throw new Error('offline'); } };
+  for (const id of ['woodland-heights-north', 'woodland-heights-south']) failures[id] = async () => ({
+    buildHeightsLandscape: () => sized(HEIGHTS_CHUNK_BYTES['bayou-heights'] * .9),
+    buildHeightsNeighborhood(_layout, plan) { if (plan.id === id) throw new Error('offline'); return sized(HEIGHTS_CHUNK_BYTES[plan.id] * .9); },
+  });
+  for (const [failing, loadModule] of Object.entries(failures)) {
+    const stream = createHeightsStream({ world, parent: new THREE.Group(), now: () => 0, loadModule });
+    for (let i = 0; i < 80; i++) { stream.update([frame([530, 20]), frame([530, -60])]); await new Promise(resolve => setTimeout(resolve, 3)); }
+    const free = new Uint8Array(nx * ny), reached = new Uint8Array(nx * ny), queue = [];
+    for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
+      const point = at(i, j);
+      if (!environment.isFree(point[0], -point[1])) continue;
+      free[i * ny + j] = 1;
+      if (x0 + i * step < exit) { reached[i * ny + j] = 1; queue.push(i * ny + j); }
+    }
+    while (queue.length) {
+      const cell = queue.pop(), i = Math.floor(cell / ny), j = cell % ny;
+      for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const a = i + di, b = j + dj, k = a * ny + b;
+        if (a < 0 || b < 0 || a >= nx || b >= ny || !free[k] || reached[k] || !stream.allowsStep(at(a, b), at(i, j))) continue;
+        reached[k] = 1; queue.push(k);
+      }
+    }
+    const held = [];
+    for (let k = 0; k < nx * ny; k++) if (free[k] && !reached[k]) held.push([x0 + Math.floor(k / ny) * step, y0 + (k % ny) * step]);
+    assert.deepEqual(held.slice(0, 5), [], `${failing} failing holds ${held.length * step * step} m² of Woodland`);
+    stream.dispose();
+  }
 });

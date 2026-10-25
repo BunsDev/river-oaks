@@ -52,7 +52,8 @@ Heights streams Woodland Heights as two more of its neighborhoods (`preview/src/
 
 - **Shared part.** It draws Woodland's 69 trees and the planting of its two street-end hedges, which raise the shared estimate by 0.43 MiB to 9.38 MiB (`HEIGHTS_SHARED_PLACEMENT_BYTES`).
 - **Budgets.** Measured headless in the luxury kit (#641), the neighborhoods own 1.77 MiB (north) and 1.34 MiB (south); their estimates are 1.9 and 1.45 MiB. With the shared part, Studewood north and Woodland north fit the ceiling together (14.28 MiB estimated), so walking in along Twentieth Street does not trade one for the other.
-- **Gate.** Stepping from presented ground into a Woodland neighborhood that is still loading waits for it, as everywhere in Heights.
+- **Gate.** Stepping from presented ground into a Woodland neighborhood that is still loading waits for it, as everywhere in Heights. Someone restored on Woodland ground that is not yet presented may step anywhere within Woodland, not only west: its side gardens open east onto the garden strips and Live Oak Lane, so a westward-only retreat held up to 1,327.5 m² (found in review). The way out is then west along a cross street. A test flood-fills Woodland with the Heights module failing and with each neighborhood failing, and requires every free cell to walk back to Studewood.
+- **Headroom.** The shared estimate grows by allowances that err high: 9.38 MiB estimated, against 8,348,178 bytes measured in the journey. On estimates alone, two Heights pairs now exceed the ceiling together with the shared part: Nineteenth and Yale with Yale Street north (16.18 MiB), and the icehouse with Nineteenth and Yale (16.13 MiB). They fit in practice, because a resident chunk counts at its measured size. The next increment that adds street trees should first record the shared part's measured size, rather than lean on the allowances.
 
 ## Checkpoints and rollback
 
@@ -84,7 +85,7 @@ Woodland Heights adds 10,394.75 m² at 0.5 m, for a total of 141,664.25 m²: 3.0
   - the location label;
   - the green table;
   - streaming within the ceiling, both sides of the seam together, and the neighborhood gate;
-  - every migration direction with standing, seam, airborne and seated occupants;
+  - every migration direction with standing, seam and seated occupants, a flyer above Woodland, and players pinned either side of the rollback line;
   - Redis epoch fencing, which runs only with `REDIS_URL`.
 - **Browser journey.** `pnpm run test:experience woodland-heights`. Two clients travel to the east end of Studewood's Twentieth Street, walk east into Woodland Heights and onto the green, play at the green table, reconnect there and walk back.
 

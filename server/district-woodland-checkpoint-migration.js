@@ -70,6 +70,8 @@ export function recoverDistrictWoodlandCheckpoint({worldData,checkpoint,worldId=
     // Woodland's seams and strip are walkable beyond that line.
     const {edge,woodland}=sourceData.eastGardenCommons,east=edge+WOODLAND_STUDEWOOD_EAST;
     const landings=woodland.seams.map(([,s,,n])=>(s+n)/2);
+    // Defensive: Woodland's only ground west of the line is its seams, where nobody can fly in
+    // either world, so in practice the line alone decides; the flight check stays for safety.
     const outside=player=>player.position[0]>east-.35
       || player.altitude>.1 && !environment.canFly(player.position[0],
         environment.groundAt(player.position[0],-player.position[1])+player.altitude,-player.position[1]);

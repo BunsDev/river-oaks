@@ -110,12 +110,12 @@ test('Terraces, Studewood, Heights, Commons and Gardens checkpoints migrate into
   assert.equal(recoverDistrictTerracesCheckpoint({worldData:woodland,checkpoint,now:()=>1000}).ok,false);
 });
 
-test('rollback moves standing, seam, airborne and seated Woodland occupants to Studewood street ground by the nearer cross street',()=>{
+test('rollback moves standing, seam and seated Woodland occupants, and anyone flying above them, to Studewood street ground by the nearer cross street',()=>{
   let time=100000;const source=createSharedWorld(woodland,{now:()=>time});
   const command=(id,message)=>{time+=2000;return source.command(id,message);};
   // The owner fixture identity is one that may fly (shared-appearances.js).
   const flyer='user_01M402HKJYDTH1QJM5NAQDZ4HH';
-  for(const id of ['alice','bob',flyer,'dave','erin','frank','gus'])source.join({userId:id,name:id});
+  for(const id of ['alice','bob',flyer,'dave','erin','frank','gus','hal','ivy'])source.join({userId:id,name:id});
   assert.equal(command('alice',{type:'travel',position:frame([545,40])}).ok,true,'standing on the Woodland green');
   assert.equal(command('bob',{type:'travel',position:frame([507.4,108])}).ok,true,'on the Twentieth Street seam, just east of Studewood ground');
   assert.equal(command(flyer,{type:'travel',position:frame([545,-100])}).ok,true);
@@ -128,17 +128,21 @@ test('rollback moves standing, seam, airborne and seated Woodland occupants to S
   // The rollback line: Studewood's walkable ground ends 0.35 m short of its streets' ends at x 507.5.
   assert.equal(command('frank',{type:'travel',position:frame([506.8,111])}).ok,true,'on Studewood\'s Twentieth Street under the seam');
   assert.equal(command('gus',{type:'travel',position:frame([520,-71])}).ok,true,'on Eighteenth Street in Woodland');
-  const unmoved=['erin','frank'].map(id=>structuredClone(source.snapshot().players.find(p=>p.id===id)));
+  // Either side of the rollback line on the Twentieth Street seam: 3 cm past it moves, on it stays.
+  assert.equal(command('hal',{type:'travel',position:frame([507.18,106])}).ok,true);
+  assert.equal(command('ivy',{type:'travel',position:frame([507.15,116])}).ok,true);
+  for(const [id,x] of [['hal',507.18],['ivy',507.15]])assert.ok(Math.abs(source.snapshot().players.find(p=>p.id===id).position[0]-frame([x,0])[0])<1e-9,`${id} stands at x ${x}`);
+  const unmoved=['erin','frank','ivy'].map(id=>structuredClone(source.snapshot().players.find(p=>p.id===id)));
   const checkpoint=source.checkpoint();
   const back=recoverDistrictWoodlandCheckpoint({worldData:terraces,checkpoint,now:()=>time});
-  assert.equal(back.ok,true);assert.deepEqual(new Set(back.moved),new Set(['alice','bob',flyer,'dave','gus']));
+  assert.equal(back.ok,true);assert.deepEqual(new Set(back.moved),new Set(['alice','bob',flyer,'dave','gus','hal']));
   const inTerraces=createSharedWorld(terraces,{now:()=>time});assert.equal(inTerraces.restore(back.checkpoint).ok,true);
   const environment=createWalkingEnvironment(terraces),players=inTerraces.snapshot().players;
   for(const p of players){
-    assert.ok(p.position[0]<studewoodEast&&p.altitude===0&&!p.sitting,`${p.id} back on Studewood ground`);
+    assert.ok(p.position[0]<=studewoodEast&&p.altitude===0&&!p.sitting,`${p.id} back on Studewood ground`);
     assert.ok(environment.isFree(p.position[0],-p.position[1]),`${p.id} on free ground`);
   }
-  for(const [id,north] of [['alice',111],['bob',111],['dave',111],[flyer,-71],['gus',-71]]){
+  for(const [id,north] of [['alice',111],['bob',111],['dave',111],['hal',111],[flyer,-71],['gus',-71]]){
     const p=players.find(item=>item.id===id);
     assert.ok(p.position[0]>layout.edge+488&&Math.abs(p.position[1]-frame([0,north])[1])<10,`${id} at the end of the ${north>0?'Twentieth':'Eighteenth'} Street: ${[p.position[0]-layout.edge,p.position[1]+1335]}`);
   }
