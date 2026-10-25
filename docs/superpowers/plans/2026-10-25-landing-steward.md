@@ -99,13 +99,18 @@ Shared files set the landing order: `desktop.yml`/`desktop/e2e.js`/`docs/desktop
   - On main's code (scratch `git archive HEAD` plus the new test file): **2/2 fail**. With the change: **3/3 pass**, including the catalog test.
 - **Gates:** see Results.
 
-## Results (interim, 2026-10-25 12:30Z)
+## Results (handoff, 2026-10-25 14:45Z)
 
 ### Finish line
 
-1. **Ticked landing rows.** None were ticked in this session, so this session landed nothing. Through 71's and 33's own landers, nine PRs merged on fresh main, in this order: #657 (c3eae4f5), #648 (26d63a06), #650 (2da76e1f), #651 (4122fe07), #652 (7ad9ffc6), #647 (2c2f2eec), #645 (a437cbbf), #646 (15334aad), #641 (0b9a97c4, 33's own lander). After the sleep window, 71's lander merged #658 (e8207b2b at 12:16:15Z, reviewed head 48f8f511; f1's #288 half). That makes ten. The land queue was empty again at 12:17Z. River-oaks-33 retires its own #641 ref (09ab2180) and river-oaks-destination-slice. It archived 460 evidence files to `~/worktree-backups/river-oaks/evidence/bayou-luxe-polish-20261024`, then retired the ref and worktree through the guarded prune (`retirement-OIEqPJ`) and proved restoration.
+At handoff:
+
+- **Met:** items 1, 2 and 3 for this session's share, and item 6.
+- **Not met:** item 4, river-oaks-71's post-wave pass, which is still running and has found a regression. Item 5 is 71's 3× lane, whose #662 and #663 stack on #649.
+
+1. **Ticked landing rows.** None were ticked in this session, so this session landed nothing. Through 71's and 33's own landers, nine PRs merged on fresh main, in this order: #657 (c3eae4f5), #648 (26d63a06), #650 (2da76e1f), #651 (4122fe07), #652 (7ad9ffc6), #647 (2c2f2eec), #645 (a437cbbf), #646 (15334aad), #641 (0b9a97c4, 33's own lander). After the sleep window, 71's lander merged #658 (e8207b2b at 12:16:15Z, reviewed head 48f8f511; f1's #288 half). That makes ten. The land queue was empty again at 12:17Z and at 14:41Z. River-oaks-33 retires its own #641 ref (09ab2180) and river-oaks-destination-slice. It archived 460 evidence files to `~/worktree-backups/river-oaks/evidence/bayou-luxe-polish-20261024`, then retired the ref and worktree through the guarded prune (`retirement-OIEqPJ`) and proved restoration.
 2. **Register.** Each merged task is `delivered` with `{pr, reviewedHead, merge, tree, checks}`, written by its owner, or by 71 for #650.
-   - `project:check --github` went from 86 gaps (23:35Z) to 98 (02:45Z), then to 110 (12:17Z). This session resolved its own share: 7 refs and 5 worktrees retired.
+   - `project:check --github` went from 86 gaps (23:35Z) to 98 (02:45Z), then to 110 (12:17Z), and was 108 at 14:41Z. This session resolved its own share: 7 refs and 5 worktrees retired. Its one remaining gap is the D12 snapshot record (`no local branch`), which clears when that detached snapshot is retired (Decision 2).
    - The rise to 98 is concurrent work:
      - 10 gaps are the sweep aliases, which became retirement debt when a3 marked its task delivered;
      - 6 are new unregistered scratch snapshots from other sessions (71's 3× lane, 3e and a8);
@@ -117,8 +122,15 @@ Shared files set the landing order: `desktop.yml`/`desktop/e2e.js`/`docs/desktop
      - `garden-campus-510-verify-20261025`;
      - other sessions' new scratch snapshots.
    - This session's own new gap was `landing-steward-20261024: local and PR heads differ (#668)`. A task can record one PR, and this task held both the ledger branch and the D12 branch. At 12:25Z the D12 branch moved to its own task, `experience-commons-stage-20261024` (`pr` 660, same owner and ledger). Each branch now has exactly one task and one PR, which the guarded prune also requires.
-3. **Inventory.** It went from 68 worktrees and 73 branches to 78 and 76 (02:45Z), then 86 and 76 (12:17Z). Detached checkouts went from 12 to 27. This session removed 3 worktrees and 4 refs; other sessions added more in the meantime. Every blocked candidate is listed under Gaps.
-4. **Post-wave acceptance.** Running since 04:02Z on main 0b9a97c4, in river-oaks-71's `scratchpad/rc-0b9a97c4` (`rc-run.sh`: rehearsal, journeys, ABBA + pixel parity, verify full; hosted Verify run 40160333490). River-oaks-71 runs it once on the converged main: rows 2–7, 10 and 11, world-gate-587, and Heights if #649 has merged. It compares against #657's 09bd7a83 numbers using #626's protocol, and posts the single evidence comment on #587 and on #638. This session runs and posts none of it, to avoid duplicates. The host sleep (below) invalidated 71's first journey results, so 71 reran them. At 12:16Z 71 reported that its Phase 2 RC evidence is on 0b9a97c4, before #658. #658 changes touch controls, not Commons content, and 71 records that scope in its go/no-go. **Pending:** neither comment had been posted at 12:30Z.
+3. **Inventory.** It went from 68 worktrees and 73 branches to 78 and 76 (02:45Z), then 86 and 76 (12:17Z), and 87 and 75 at 14:41Z. Detached checkouts went from 12 to 28. This session removed 3 worktrees and 4 refs; other sessions added more in the meantime. Every blocked candidate is listed under Gaps.
+4. **Post-wave acceptance.** Running since 04:02Z on main 0b9a97c4, in river-oaks-71's `scratchpad/rc-0b9a97c4` (`rc-run.sh`: rehearsal, journeys, ABBA + pixel parity, verify full; hosted Verify run 40160333490). River-oaks-71 runs it once on the converged main: rows 2–7, 10 and 11, world-gate-587, and Heights if #649 has merged. It compares against #657's 09bd7a83 numbers using #626's protocol, and posts the single evidence comment on #587 and on #638. This session runs and posts none of it, to avoid duplicates. The host sleep (below) invalidated 71's first journey results, so 71 reran them. At 12:16Z 71 reported that its Phase 2 RC evidence is on 0b9a97c4, before #658. #658 changes touch controls, not Commons content, and 71 records that scope in its go/no-go. **Not done at handoff.** Neither comment had been posted at 14:41Z. At 14:38Z, 71's register entry recorded the awake rerun on 0b9a97c4; this session has not checked these results itself:
+   - rehearsal passed 26/26 and 28/28;
+   - `world-gate-587` passed;
+   - `east-garden-commons` passed (bisect 4/4);
+   - **`world-streaming` failed, row 10.** It shows a fixed post-warm-up offset of +12 geometries and +13 textures. 71 attributes it to #641: pre-#641 main 15334aad passes 286/286. 71 asked river-oaks-33 for a follow-up;
+   - ABBA and pixel parity have been running since 12:34Z, with `verify full` after them.
+
+   Then 71 writes the go/no-go in ledger #664 and posts the two evidence comments.
 5. **3× lane.** River-oaks-71 took it (23:47Z): #662 (Studewood 2.46×) and #663 (Terraces 2.82×), stacked on #649. This session did no 3× work.
 6. **Decisions for Val.** Below.
 
@@ -141,6 +153,7 @@ Ledger branch gate (`docs/landing-steward-20261024` on main 7ad9ffc6, docs only)
 - A third full run at 02:47Z, load 20–26, **passed 274/274**.
 - No script changed between 1fd53fb9, where core's tooling stage passed 276/276 with the D12 tests, and 7ad9ffc6. This matches the documented core/tooling timing intermittent; its cause is unproven.
 - First-failure logs: `scratchpad/tooling-ledger-first-failure.{log,json}`, `tooling-ledger-2.log`.
+- Later ledger commits: 274/274 at 12:19Z (220cbd14 content). For the handoff edit, the same test failed once more, 273/274 at 14:43Z, load 5–8 (`scratchpad/tooling-ledger-5.{log,json}`). The test file plus `plans-index.test.js` then passed 31/31 alone, and the full profile passed 274/274 at 14:45Z (`tooling-ledger-6.log`).
 
 Not run on #660: the 16-journey `experience` stage and the remaining browser and full stages. Receipts: `~/worktree-backups/river-oaks/evidence-landing-steward-20261024/d12-snapshot/` (SHA256SUMS).
 
@@ -188,7 +201,7 @@ Unreachable owners: messages to river-oaks-91 (#649) and river-oaks-3e (#655, #6
 - The branch was then merged with `main` (0cc09391).
 - 3e's round 3, main 0b9a97c4 against 0cc09391, ran under `caffeinate` from 09:54 to 10:24Z with no sleep or wake event, and met every gated limit. The worst case was desktop two-client CPU p95 at +1.0%. Round 3's first attempt fell in the sleep window and is kept as an invalid first failure.
 - Head 4c3fddc3 passed hosted Verify 16/16 (run 40184892076), including `preview experience (heights)`.
-- It is a draft, and since #658 it is behind `main` again.
+- It is a draft, and since #658 it is behind `main` again. At 14:35Z 91 was merging e8207b2b into it, which has no file overlap with #658. After that come core verify, the Redis suites, hosted Verify, and a round-4 ABBA plus cold transfer by 3e on the new pair.
 
 Detached comparison checkouts left alone: 6ff47ba1 (two-player/base-build), d1a5b48b (probe merge), 059a16a6 (streaming F1 review), 2288374f (fidelity timing), the 517 trial/verify/baseline snapshots (river-oaks-32), and the new scratch snapshots of 71, 3e and a8. Each belongs to its recorded or session owner.
 
@@ -218,13 +231,21 @@ Detached comparison checkouts left alone: 6ff47ba1 (two-player/base-build), d1a5
    Separately, decide whether `feat/onfoot-presentation-640-20261024` (85e202db, unfinished) resumes or is cancelled.
 4. **#653.** The core-dump trade-off.
 5. **#654.** The #373 version, #372 decisions, Azure setup and #370 identity confirmations.
-6. **#641.** Val's call in a3's session was "request changes". River-oaks-33 queued its own lander at 00:38Z; confirm the rework was approved.
+6. **#641.** Val's call in a3's session was "request changes". River-oaks-33 queued its own lander at 00:38Z; confirm the rework was approved. 71's post-wave pass attributes a `world-streaming` row-10 failure on main to #641: a fixed +12 geometries and +13 textures after warm-up, while pre-#641 15334aad passes. Decide whether 33's follow-up fixes it on `main` or the budget is re-baselined. This session changes no budget.
 7. **D4.** Commons visual, keyboard/screen-reader and target-device sign-off, then an operator's read-only production-state check before any activation under `docs/world-expansion-activation.md`. Activation is outside this goal.
-8. **#649.** The six finish-line items and round 3 of the ABBA are complete. Decide whether it lands. If it does, it needs an update from `main` (behind after #658) and then a green hosted run before `pnpm run land`. Its stacked 3× PRs #662 and #663 follow it.
+8. **#649.** The six finish-line items and round 3 of the ABBA are complete; round 4 on e8207b2b is in progress. Decide whether it lands. If it does, it needs an update from `main` (behind after #658) and then a green hosted run before `pnpm run land`. Its stacked 3× PRs #662 and #663 follow it.
 9. **71's landing authority.** River-oaks-71 landed #648, #650, #651 and #652 on the authorization it recorded from its own session: "proceed with all of the above e2e through to full completion". It has since also landed #647, #645 and #646. Confirm that matches your intent, including for #649.
 
 ## Next action
 
-- River-oaks-71 finishes the post-wave pass on 0b9a97c4 and posts one evidence comment each on #587 and #638. Then this ledger cites its receipts and is finalised.
-- #649 lands only on Val's authorization (Decision 8). Its ref then needs 91's exact-head release.
-- No retirement candidate is left that this session can retire without a Decision for Val (Gaps table).
+This session hands off at 2026-10-25 14:45Z.
+
+- **River-oaks-71:** finishes the post-wave pass: ABBA, pixel parity, `verify full`, the go/no-go in #664, and one comment each on #587 and #638. The `world-streaming` regression goes to river-oaks-33 (Decision 6).
+- **Val:** Decisions 1–9.
+  - Landing #660 (Decision 1) requires a ticked row and a lander. After it merges, `fix/experience-commons-stage-20261024` is released at its exact head and retired through the guarded prune.
+  - The cancel decisions (Decisions 2 and 3) unblock the remaining retirements in the Gaps table.
+- **#649** lands only on Val's authorization (Decision 8). Its ref then needs 91's exact-head release.
+- **Register:**
+  - `landing-steward-20261024` and `experience-commons-stage-20261024` are `blocked` on Val with owner e9.
+  - `landing-steward-d12-snapshot-20261024` is `blocked` on Decision 2.
+  - None of the three holds a running process or uncommitted edit.
