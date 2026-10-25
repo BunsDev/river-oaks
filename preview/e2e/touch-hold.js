@@ -112,7 +112,7 @@ async page => {
     expect(true, 'the walk buttons hold still and nothing covers them');
     await touch.evaluate(() => {
       window.__touchLog = [];
-      for (const type of ['pointerdown', 'pointerup', 'pointercancel', 'lostpointercapture']) document.addEventListener(type, event => window.__touchLog.push({ type, id: event.pointerId, primary: event.isPrimary, kind: event.pointerType, trusted: event.isTrusted, target: event.target.dataset?.walkKey ?? event.target.id ?? event.target.tagName }), true);
+      for (const type of ['pointerdown', 'pointerup', 'pointercancel', 'gotpointercapture', 'lostpointercapture']) document.addEventListener(type, event => window.__touchLog.push({ type, id: event.pointerId, primary: event.isPrimary, kind: event.pointerType, trusted: event.isTrusted, target: event.target.dataset?.walkKey ?? event.target.id ?? event.target.tagName }), true);
     });
     const reset = async () => { await cancelAll(); await touch.evaluate(() => window.dispatchEvent(new Event('blur'))); await settled(); await touch.locator('#canvas-host').focus(); };
 
@@ -197,20 +197,23 @@ async page => {
     }
 
     // 5. Capture loss mid-hold, as when the page takes the pointer (background-lifecycle.js
-    // does on hide). The browser delivers lostpointercapture with the pointer's next event
-    // (the Pointer Events "process pending pointer capture" step), and Chromium holds back
-    // touch moves inside its slop, so the finger slides 20 px, still on the button.
+    // does on hide). The capture a walk button sets at pointerdown stays pending until the
+    // pointer's next event, and releasing a pending capture loses nothing (Pointer Events,
+    // "process pending pointer capture"). So the finger first slides 20 px along the
+    // button, which makes the capture active; once the page releases it, the slide back
+    // delivers lostpointercapture.
     {
       const start = await pose();
       await down(1, forward); await walking(start);
-      const id = await touch.evaluate(() => {
-        const button = document.querySelector('[data-walk-key=KeyW]'), event = window.__touchLog.filter(e => e.type === 'pointerdown' && e.target === 'KeyW').at(-1);
-        button.releasePointerCapture(event.id); return event.id;
-      });
-      const lost = () => touch.evaluate(id => window.__touchLog.some(e => e.type === 'lostpointercapture' && e.id === id && e.target === 'KeyW'), id);
-      await frames(2); metrics.captureLostBeforeMove = await lost();
+      const id = await touch.evaluate(() => window.__touchLog.filter(e => e.type === 'pointerdown' && e.target === 'KeyW').at(-1).id);
+      const logged = type => touch.evaluate(([type, id]) => window.__touchLog.some(e => e.type === type && e.id === id && e.target === 'KeyW'), [type, id]);
+      const recent = () => touch.evaluate(() => window.__touchLog.slice(-8));
       await slide(1, [forward[0] + 20, forward[1]], 4);
-      expect(await lost(), 'the browser delivers lostpointercapture to the held walk button');
+      expect(await logged('gotpointercapture'), 'the held walk button holds the pointer capture', await recent());
+      await touch.evaluate(id => document.querySelector('[data-walk-key=KeyW]').releasePointerCapture(id), id);
+      await frames(2); metrics.captureLostBeforeMove = await logged('lostpointercapture');
+      await slide(1, forward, 4);
+      expect(await logged('lostpointercapture'), 'the browser delivers lostpointercapture to the held walk button', await recent());
       const rest = await settled();
       expect(still(rest), 'lostpointercapture mid-hold stops walking', rest);
       await lift(1); await reset();
