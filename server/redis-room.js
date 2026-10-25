@@ -2,6 +2,7 @@ import { recoverDistrictCommonsCheckpoint } from './district-commons-checkpoint-
 import { recoverDistrictHeightsCheckpoint } from './district-heights-checkpoint-migration.js';
 import { recoverDistrictStudewoodCheckpoint } from './district-studewood-checkpoint-migration.js';
 import { recoverDistrictTerracesCheckpoint } from './district-terraces-checkpoint-migration.js';
+import { recoverDistrictWoodlandCheckpoint } from './district-woodland-checkpoint-migration.js';
 import { characterSelectionOperation } from './character-store.js';
 import { defaultAppearanceFor } from '../preview/src/shared-appearances.js';
 import { randomUUID } from 'node:crypto';
@@ -210,8 +211,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
         // The garage/Gardens district revision switch (#512) chains the older garage recoveries itself.
-        // The terraces extend Studewood, which extends Heights, which extends the Commons layout, so their recoveries run first.
-        const terraces = recoverDistrictTerracesCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        // Woodland Heights extends the terraces, which extend Studewood, which extends Heights, which extends the Commons layout, so their recoveries run first.
+        const woodland = recoverDistrictWoodlandCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const terraces = woodland.ok ? woodland : recoverDistrictTerracesCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const studewood = terraces.ok ? terraces : recoverDistrictStudewoodCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const heights = studewood.ok ? studewood : recoverDistrictHeightsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const commons = heights.ok ? heights : recoverDistrictCommonsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
@@ -226,7 +228,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
           error.checkpointReason = checkpointReason;
           throw error;
         }
-        districtMigration = terraces.ok ? { kind: 'terraces', from: terraces.from, to: terraces.to, moved: terraces.moved.length }
+        districtMigration = woodland.ok ? { kind: 'woodland', from: woodland.from, to: woodland.to, moved: woodland.moved.length }
+          : terraces.ok ? { kind: 'terraces', from: terraces.from, to: terraces.to, moved: terraces.moved.length }
           : studewood.ok ? { kind: 'studewood', from: studewood.from, to: studewood.to, moved: studewood.moved.length }
           : heights.ok ? { kind: 'heights', from: heights.from, to: heights.to, moved: heights.moved.length }
           : commons.ok ? { kind: 'commons', from: commons.from, to: commons.to, moved: commons.moved.length }
@@ -478,7 +481,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       visitors,JSON.stringify(revisionUpdate?.sources??[]),
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'terraces'
+    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'woodland'
+      ? { event: 'district_woodland_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'terraces'
       ? { event: 'district_terraces_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
       : districtMigration.kind === 'studewood'
       ? { event: 'district_studewood_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
