@@ -620,7 +620,13 @@ The journey (`preview/e2e/crime-shared.js:78–90`, from #646/#640) reads the co
 - **Draft #672 (reconnect measurement):** hosted 22/22. A protocol change for its owner or Val.
 
 **Waiting on Val:**
-1. **#649:** merge authorization. Its owner keeps it blocked on Val; the round-4 ABBA result is river-oaks-3e's to report. Once it lands:
+1. **#649:** merge authorization.
+   - **State at about 18:40Z:** head `95904d23`, up to date with main. Round 4 (`e8207b2b` against `525856e2`) is within every limit, verify full passed 18/18, and hosted CI is 16/16.
+   - **Both owners route the merge to Val.** river-oaks-91's register entry says "BLOCKED on merge authorization (owner needed: Val)".
+   - **Decisions set before the merge.** river-oaks-3e's support ledger (#670 `ad27d9d6`, "Decisions for Val") lists them: the district's name and art direction, visual approval at pedestrian height, which budget protocol is in force, and the streaming ceiling.
+   - **Why this task doesn't land it.** Landing would pre-empt those decisions as well as the owner's hold.
+
+   Once it lands:
    - merge main into #662 and retarget it to `main`;
    - run core and hosted checks, then land;
    - then do the same for #663, then #673.
