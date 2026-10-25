@@ -4,6 +4,7 @@ import { isSpaceDocument, validateSpace, spaceItems, mutateSpace } from './space
 import { blankRegion, editableRegion, nextRegionId } from '../region-draft.js';
 import { assertStudioBudget } from './limits.js';
 import { previewBuildingInteriorPlan } from './interior-plan.js';
+import { validateAuthoringArtifact } from '../../../shared/neighborhood/preserve.js';
 
 export const STORAGE_KEY = 'river-oaks-world-studio-v1';
 export const MAX_REGION_BYTES = 128 * 1024;
@@ -34,7 +35,8 @@ export function studioItems(region) {
 }
 export function createStudioDocument(initial = blankRegion(), { historyLimit = 80, assessmentContext = null, routeBudget, assessmentRunner } = {}) {
   let region = validate(initial), context = isSpaceDocument(region) ? normalizeAssessmentContext(assessmentContext) : null;
-  const snapshot = () => ({ region, context });
+  let neighborhood = null;
+  const snapshot = () => ({ region, context, ...(neighborhood ? {neighborhood} : {}) });
   let past = [], future = [], saved = encode(snapshot()), savedRecord = null, revision = 0, assessment = null, rejected = null;
   const jobs = new Set();
   let refreshing = null;
@@ -75,10 +77,10 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
       return { next, result };
     });
   };
-  const commit = (next, nextContext, result = null) => {
-    if (encode(next) === encode(region) && encode(nextContext) === encode(context)) return false;
+  const commit = (next, nextContext, result = null, nextNeighborhood = neighborhood) => {
+    if (encode(next) === encode(region) && encode(nextContext) === encode(context) && encode(nextNeighborhood) === encode(neighborhood)) return false;
     past.push(snapshot()); if (past.length > historyLimit) past.shift();
-    invalidate(); region = next; context = nextContext; future = []; revision++; assessment = result ? { ...result, revision } : null; rejected = null; return true;
+    invalidate(); region = next; context = nextContext; neighborhood = nextNeighborhood; future = []; revision++; assessment = result ? { ...result, revision } : null; rejected = null; return true;
   };
   const transact = (next, options) => {
     return after(assertCandidate(next, options), checked => commit(checked.next, context, checked.result));
@@ -86,6 +88,12 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
   const api = {
     get value() { return clone(region); },
     get revision() { return revision; },
+    get neighborhood() { return clone(neighborhood); },
+    openNeighborhood(artifact, {baseRevision = revision} = {}) {
+      checkRevision(baseRevision);
+      const checked = validateAuthoringArtifact(artifact), next = validate(checked.region);
+      return commit(next, null, null, checked);
+    },
     get assessmentContext() { return clone(context); },
     get assessment() {
       if (assessment) return clone(assessment);
@@ -124,7 +132,7 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
     open(next, { assessmentContext = null } = {}) {
       next = validate(next);
       const nextContext = isSpaceDocument(next) ? normalizeAssessmentContext(assessmentContext) : null;
-      const changed = commit(next, nextContext);
+      const changed = commit(next, nextContext, null, null);
       if (!changed) { invalidate(); revision++; }
       return changed;
     },
@@ -204,8 +212,8 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
       const next = clone(region), key = { building:'buildings', tree:'trees', place:'places' }[item.type];
       next[key] = next[key].filter(value => value.id !== id);return transact(next);
     },
-    undo() { if (!past.length) return false;future.push(snapshot());invalidate();({ region, context } = past.pop());revision++;return true; },
-    redo() { if (!future.length) return false;past.push(snapshot());invalidate();({ region, context } = future.pop());revision++;return true; },
+    undo() { if (!past.length) return false;future.push(snapshot());invalidate();({ region, context, neighborhood = null } = past.pop());revision++;return true; },
+    redo() { if (!future.length) return false;past.push(snapshot());invalidate();({ region, context, neighborhood = null } = future.pop());revision++;return true; },
     restore(storage) {
       const raw = storage.getItem(STORAGE_KEY);
       savedRecord = raw;
@@ -214,14 +222,16 @@ export function createStudioDocument(initial = blankRegion(), { historyLimit = 8
       if (typeof entry?.revision !== 'string') throw new Error('Saved draft is invalid. Import a Studio file to recover.');
       const candidate = validate(entry.region);
       const nextContext = isSpaceDocument(candidate) ? normalizeAssessmentContext(entry.assessmentContext) : null;
-      invalidate(); region = candidate; context = nextContext; revision++;
+      const nextNeighborhood = entry.neighborhood ? validateAuthoringArtifact(entry.neighborhood) : null;
+      if (nextNeighborhood && (isSpaceDocument(candidate) || encode(candidate.bounds_m) !== encode(nextNeighborhood.region.bounds_m))) throw Error('Saved neighborhood does not match this draft. Open its authoring file to recover.');
+      invalidate(); region = candidate; context = nextContext; neighborhood = nextNeighborhood; revision++;
       saved = encode(snapshot()); past = []; future = [];return true;
     },
     save(storage) {
       const raw = storage.getItem(STORAGE_KEY);
       if (raw !== savedRecord) throw new Error('A draft changed in another tab. Export your work, then reopen the saved draft.');
       const next = globalThis.crypto.randomUUID();
-      const record = encode({ revision:next,region, ...(context ? { assessmentContext: context } : {}) });
+      const record = encode({ revision:next,region, ...(context ? { assessmentContext: context } : {}), ...(neighborhood ? {neighborhood} : {}) });
       storage.setItem(STORAGE_KEY, record);
       savedRecord = record;saved = encode(snapshot());
     },

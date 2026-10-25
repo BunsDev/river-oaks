@@ -31,6 +31,8 @@ async page => {
   if (await page.locator('.visit-tools').evaluate(node => node.open)) await page.locator('.visit-tools-toggle').click();
   if (await page.locator('.town-chat-dock').evaluate(node => node.open)) await page.locator('.town-chat-dock > summary').click();
   if (await page.locator('#walking-movement').isHidden()) await page.locator('#walking-controls-toggle').click();
+  // Capture the settled HUD after the real completion badge steps aside.
+  await page.locator('.asset-progress').waitFor({ state: 'hidden' });
   const buttons = page.locator('.walking-pad button');
   check(await buttons.count() === 6, 'All six movement controls are present');
   for (const theme of ['light', 'dark']) {

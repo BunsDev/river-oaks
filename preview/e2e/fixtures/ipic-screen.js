@@ -18,6 +18,10 @@ const manifest = await fetch('./screening/manifest.json').then(r => r.json());
 const catalog = { ...SCREENING_MEDIA };
 for (const film of manifest.films) catalog[film.id] = Object.freeze({ id: film.id, venues: ['ipic'], durationMs: film.files[0].durationMs, label: film.id, fixture: true, sources: film.files.map(({ src, type }) => ({ src, type })), transcript: [] });
 catalog['test-fallback'] = Object.freeze({ ...catalog['test-edge-4x3'], id: 'test-fallback', sources: [{ src: manifest.broken.src, type: manifest.broken.type }, ...catalog['test-edge-4x3'].sources] });
+// Neither of two encodings is on the server: a download failure while online, not a decoder's.
+const mp4 = catalog['test-edge-4x3'].sources[0];
+catalog['test-missing'] = Object.freeze({ ...catalog['test-edge-4x3'], id: 'test-missing',
+  sources: [{ src: mp4.src.replace(/[^/]+$/, 'missing-film.webm'), type: 'video/webm; codecs="vp9"' }, { src: mp4.src.replace(/[^/]+$/, 'missing-film.mp4'), type: mp4.type }] });
 
 const data = await fetch('/data/district.json').then(r => r.json());
 const room = planStoreRooms(data).find(r => r.interior);
@@ -65,7 +69,8 @@ let revision = 0, current = 'square', frames = 0;
 function frame() {
   player.tick();
   const stats = player.stats();
-  binding.sync({ screen, video, key: `${stats.generation}:${video.videoWidth}x${video.videoHeight}`, show: SHOWN.includes(stats.state) && video.readyState >= 2 });
+  const key = `${stats.generation}:${video.videoWidth}x${video.videoHeight}`, held = video.seeking && binding.inspect().key === key;
+  binding.sync({ screen, video, key, show: SHOWN.includes(stats.state) && (video.readyState >= 2 || held) });
   pose(current); pipeline.render(1 / 60); frames++;
   requestAnimationFrame(frame);
 }
@@ -154,7 +159,15 @@ window.screenFixture = {
     for (const [name, st] of Object.entries(mattes)) out.matte[name] = { rendered: readPixel(screenPoint(...st)), at: screenPoint(...st) };
     return out;
   },
-  inspect: () => ({ ...player.stats(), screen: binding.inspect(), decoded: [video.videoWidth, video.videoHeight], currentTime: video.currentTime, readyState: video.readyState,
+  // Force a drift seek during playback (the element jumps ahead; the player seeks back) and record what each
+  // drawn frame showed: whether the film stayed bound, and the element's readiness while seeking.
+  async seekProbe(frameCount = 40, jumpS = 2) {
+    const created = binding.inspect().counts.created, trace = [];
+    video.currentTime += jumpS;
+    for (let i = 0; i < frameCount; i++) { await nextFrames(1); trace.push({ bound: Boolean(binding.inspect().key), readyState: video.readyState, seeking: video.seeking, state: player.stats().state, measuredDriftMs: player.stats().measuredDriftMs }); }
+    return { trace, texturesCreated: binding.inspect().counts.created - created };
+  },
+  inspect: () => ({ ...player.stats(), screen: binding.inspect(), errorCode: video.error?.code ?? null, decoded: [video.videoWidth, video.videoHeight], currentTime: video.currentTime, readyState: video.readyState,
     pipeline: pipeline.stats, textures: renderer.info.memory.textures, idleTextures, materialRestored: snapshotMaterial() === idle, materialBound: snapshotMaterial() !== idle }),
 };
 // A real user gesture (the harness clicks the page) answers an autoplay refusal, as Play film does.
