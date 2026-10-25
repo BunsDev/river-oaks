@@ -32,3 +32,11 @@ test('crossing the promenade names Bayou Market Commons on arrival and the Distr
   east = edge - 3; client.update();
   assert.equal(notice.textContent, 'Back in River Oaks District');
 });
+
+test('the shared walking HUD can own arrival announcements without a second lantern notice', () => {
+  const {notice} = dom();
+  const client = createLanternWalkClient({announceArrival:false,
+    getLayout:()=>({edge:0,destination:{lanterns:[]}}),getPose:()=>({position:[20,0,0]}),
+    getSnapshot:()=>({lanterns:[],round:null}),getScene:()=>({userData:{setLanterns(){}}})});
+  client.update(); assert.equal(notice.textContent,'');
+});

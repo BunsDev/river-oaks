@@ -135,6 +135,8 @@ export function createSharedBuildLayer(scene) {
     },
     update(cameraPosition){for(const entry of entries.values())entry.visible=entry.position.distanceToSquared(cameraPosition)<110*110;},
     stats(){return {count:entries.size,materials:materials.size,geometries:geometries.size,visible:[...entries.values()].filter(item=>item.visible).length};},
+    // Removed placements and closed previews retain CPU templates outside the scene.
+    releaseGraphics(){for(const geometry of geometries)geometry.dispose();for(const surface of materials)surface.dispose();},
     dispose(){colliders.length=0;ghost=null;object.removeFromParent();object.clear();entries.clear();for(const geometry of geometries)geometry.dispose();for(const surface of materials)surface.dispose();},
   };
 }
