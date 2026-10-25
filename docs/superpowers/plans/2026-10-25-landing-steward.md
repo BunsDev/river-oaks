@@ -99,22 +99,30 @@ Shared files set the landing order: `desktop.yml`/`desktop/e2e.js`/`docs/desktop
   - On main's code (scratch `git archive HEAD` plus the new test file): **2/2 fail**. With the change: **3/3 pass**, including the catalog test.
 - **Gates:** see Results.
 
-## Results (interim, 2026-10-25 04:20Z)
+## Results (interim, 2026-10-25 12:30Z)
 
 ### Finish line
 
-1. **Ticked landing rows.** None were ticked in this session, so this session landed nothing. Through 71's and 33's own landers, nine PRs merged on fresh main, in this order: #657 (c3eae4f5), #648 (26d63a06), #650 (2da76e1f), #651 (4122fe07), #652 (7ad9ffc6), #647 (2c2f2eec), #645 (a437cbbf), #646 (15334aad), #641 (0b9a97c4, 33's own lander). The land queue was empty at 04:02Z. River-oaks-33 retires its own #641 ref (09ab2180) and river-oaks-destination-slice. It archived 460 evidence files to `~/worktree-backups/river-oaks/evidence/bayou-luxe-polish-20261024`, then retired the ref and worktree through the guarded prune (`retirement-OIEqPJ`) and proved restoration.
+1. **Ticked landing rows.** None were ticked in this session, so this session landed nothing. Through 71's and 33's own landers, nine PRs merged on fresh main, in this order: #657 (c3eae4f5), #648 (26d63a06), #650 (2da76e1f), #651 (4122fe07), #652 (7ad9ffc6), #647 (2c2f2eec), #645 (a437cbbf), #646 (15334aad), #641 (0b9a97c4, 33's own lander). After the sleep window, 71's lander merged #658 (e8207b2b at 12:16:15Z, reviewed head 48f8f511; f1's #288 half). That makes ten. The land queue was empty again at 12:17Z. River-oaks-33 retires its own #641 ref (09ab2180) and river-oaks-destination-slice. It archived 460 evidence files to `~/worktree-backups/river-oaks/evidence/bayou-luxe-polish-20261024`, then retired the ref and worktree through the guarded prune (`retirement-OIEqPJ`) and proved restoration.
 2. **Register.** Each merged task is `delivered` with `{pr, reviewedHead, merge, tree, checks}`, written by its owner, or by 71 for #650.
-   - `project:check --github` went from 86 gaps (23:35Z) to 98 (02:45Z). This session resolved its own share: 6 refs and 5 worktrees retired so far.
-   - The net rise is concurrent work:
+   - `project:check --github` went from 86 gaps (23:35Z) to 98 (02:45Z), then to 110 (12:17Z). This session resolved its own share: 7 refs and 5 worktrees retired.
+   - The rise to 98 is concurrent work:
      - 10 gaps are the sweep aliases, which became retirement debt when a3 marked its task delivered;
      - 6 are new unregistered scratch snapshots from other sessions (71's 3× lane, 3e and a8);
      - the rest are lease and head drift on PRs in flight, and the held #648/#650 releases;
      - 1 is this session's own D12 snapshot record.
-3. **Inventory.** It went from 68 worktrees and 73 branches to 78 and 76 (02:45Z). This session removed 3 worktrees and 4 refs; other sessions added more in the meantime. Every blocked candidate is listed under Gaps.
-4. **Post-wave acceptance.** Running since 04:02Z on main 0b9a97c4, in river-oaks-71's `scratchpad/rc-0b9a97c4` (`rc-run.sh`: rehearsal, journeys, ABBA + pixel parity, verify full; hosted Verify run 40160333490). River-oaks-71 runs it once on the converged main: rows 2–7, 10 and 11, world-gate-587, and Heights if #649 has merged. It compares against #657's 09bd7a83 numbers using #626's protocol, and posts the single evidence comment on #587 and on #638. This session runs and posts none of it, to avoid duplicates. Pending.
+   - The rise from 98 to 110 is mostly the sleep window: active leases expired on `account-safety-292-20261024` (4 branches), `convergence-3x-20261024`, `studewood-3x-20261024` and `bayou-terraces-3x-20261025`. The rest is:
+     - the delivered #645/#646 refs, now pending retirement under a gone owner (Decision 3);
+     - #655's head moving;
+     - `garden-campus-510-verify-20261025`;
+     - other sessions' new scratch snapshots.
+   - This session's own new gap was `landing-steward-20261024: local and PR heads differ (#668)`. A task can record one PR, and this task held both the ledger branch and the D12 branch. At 12:25Z the D12 branch moved to its own task, `experience-commons-stage-20261024` (`pr` 660, same owner and ledger). Each branch now has exactly one task and one PR, which the guarded prune also requires.
+3. **Inventory.** It went from 68 worktrees and 73 branches to 78 and 76 (02:45Z), then 86 and 76 (12:17Z). Detached checkouts went from 12 to 27. This session removed 3 worktrees and 4 refs; other sessions added more in the meantime. Every blocked candidate is listed under Gaps.
+4. **Post-wave acceptance.** Running since 04:02Z on main 0b9a97c4, in river-oaks-71's `scratchpad/rc-0b9a97c4` (`rc-run.sh`: rehearsal, journeys, ABBA + pixel parity, verify full; hosted Verify run 40160333490). River-oaks-71 runs it once on the converged main: rows 2–7, 10 and 11, world-gate-587, and Heights if #649 has merged. It compares against #657's 09bd7a83 numbers using #626's protocol, and posts the single evidence comment on #587 and on #638. This session runs and posts none of it, to avoid duplicates. The host sleep (below) invalidated 71's first journey results, so 71 reran them. At 12:16Z 71 reported that its Phase 2 RC evidence is on 0b9a97c4, before #658. #658 changes touch controls, not Commons content, and 71 records that scope in its go/no-go. **Pending:** neither comment had been posted at 12:30Z.
 5. **3× lane.** River-oaks-71 took it (23:47Z): #662 (Studewood 2.46×) and #663 (Terraces 2.82×), stacked on #649. This session did no 3× work.
 6. **Decisions for Val.** Below.
+
+**Host sleep, 2026-10-25 05:03–09:05Z.** `pmset -g log` shows idle sleep at 00:03 local time, then maintenance sleeps with dark wakes until 04:05 local. Browser and timing evidence collected in that window is invalid; this includes 71's first post-wave RC journey results on 0b9a97c4 and 3e's round-3 ABBA for #649. River-oaks-71 then started a bounded `caffeinate -ims -t 21600` (its own PID, until about 15:07Z). None of this session's evidence falls in that window: core 23:45–23:51Z, D12 stage 23:52–02:38Z, tooling 02:42–02:47Z, retirements 23:41–04:03Z.
 
 ### D12 (#660)
 
@@ -146,6 +154,7 @@ Not run on #660: the 16-journey `experience` stage and the remaining browser and
 | ci/desktop-electron-cache-371-20261024 | 04228bec (behind tip) | #652 → 7ad9ffc6 | river-oaks-desktop-electron-cache | retirement-M02i7C, evidence desktop-electron-cache/ |
 | feat/garden-campus-510-20261024 | 0918a012 (exact head) | #647 → 2c2f2eec | river-oaks-campus-510 | retirement-8tYXT0, evidence campus-510/ (193 files) |
 | docs/campus-readiness-ledger-512-20261024 | 85d66e97 (behind tip) | #648 → 26d63a06 | river-oaks-readiness-ledger-512 | retirement-SQgtF0, evidence readiness-ledger-512/ (220 files) |
+| feat/touch-network-288-20261024 | 4d870774 (behind tip of the lander's update-branch head 48f8f511) | #658 → e8207b2b | none | retirement-i15gPN, bundle sha256 `8ea3132e…` (12:20:41Z; f1 released at 12:18:58Z) |
 
 Each one had a fresh exact-head owner release with a session review, archived ignored evidence (verified by extraction), a dry run with no blockers, then `--apply` from `origin/main` tooling. Afterwards the local ref and the worktree registration were confirmed absent. GitHub's `delete_branch_on_merge` had already removed each PR's head branch on origin; this session deleted no remote ref.
 
@@ -161,6 +170,7 @@ Each one had a fresh exact-head owner release with a session review, archived ig
 | Detached `river-oaks-campus-510-review` (2586c39a, an ancestor of #647's merged head); only untracked item is a dangling `node_modules` symlink | Detached; needs `--cancel-stale` | Released by a8; needs Val | Decision 2 (add `--detached-path /Users/buns/Documents/GitHub/BunsDev/river-oaks-campus-510-review`) |
 | `fix/locomotion-handoff-637-20261024` (7e267038, #645 → a437cbbf), worktree river-oaks-locomotion-637, plus detached `scratchpad/baseline-637` and `inc2-tree` of session 728d6f06 | Owner `claude:onfoot-637-640-728d6f06` is gone; no exact-head release is possible | Val | Decision 3 |
 | `feat/onfoot-encounter-640-20261024` (65c01116, #646 → 15334aad), `feat/onfoot-presentation-640-20261024` (85e202db, stopped by the user; one untracked test), worktrees river-oaks-onfoot-640 and river-oaks-onfoot-presentation-640 | Same gone owner. The presentation branch is unfinished distinct work and must be preserved | Val | Decision 3 for the encounter ref. The presentation lane needs Val's resume or cancel decision |
+| f1's detached `613f8aea…/scratchpad/baseline-288` (4d870774; ignored reports and receipts only) | Detached; needs `--cancel-stale` | Released by f1; needs Val | Decision 2 (add `--detached-path` for it). The lane worktree river-oaks-touch-network-288 holds #659's `fix/network-drops-290-20261024` (task `network-drops-290-20261024`, held for Val) and stays |
 | This session's D12 snapshot (`scratchpad/d12-snapshot`, detached at pushed ea7b8ca1) | Own checkout, not yet stale; direct removal is not allowed | e9 | `project:prune --cancel-stale --detached-path` once it is 12 h untouched, if Val authorizes; it holds no distinct work |
 
 Unreachable owners: messages to river-oaks-91 (#649) and river-oaks-3e (#655, #649 step D), from this session at about 02:50Z and from 71 earlier, were held and expired unapproved, most likely because the permission modes differ. Coordination for #649 and #655 goes through their register entries, which 71 watches.
@@ -172,17 +182,19 @@ Unreachable owners: messages to river-oaks-91 (#649) and river-oaks-3e (#655, #6
 
 3e can't be reached by cross-session message from 71 or from this session; the PR comment is the channel.
 
-#649 (river-oaks-91, Bayou Heights 2.01×) is not landable yet:
+#649 (river-oaks-91, Bayou Heights 2.01×) now has its evidence; only merge authorization is missing (comment 6396682443, 10:47Z):
 
-- It conflicts with `main` after #641; both change `preview/src/city-kit/render.js` and `preview/src/east-garden-commons.js`.
-- Its first ABBA failed one-client CPU p95 (+24.0% desktop, +18.1% phone). Fix dd682a7b followed, with a fresh ABBA queued by 3e.
-- 91 must merge `main` itself. Relays from 33, 71 and this session to 91 expired undelivered, and this session does not touch another owner's branch.
+- Its first ABBA failed one-client CPU p95 (+24.0% desktop, +18.1% phone), and fix dd682a7b followed.
+- The branch was then merged with `main` (0cc09391).
+- 3e's round 3, main 0b9a97c4 against 0cc09391, ran under `caffeinate` from 09:54 to 10:24Z with no sleep or wake event, and met every gated limit. The worst case was desktop two-client CPU p95 at +1.0%. Round 3's first attempt fell in the sleep window and is kept as an invalid first failure.
+- Head 4c3fddc3 passed hosted Verify 16/16 (run 40184892076), including `preview experience (heights)`.
+- It is a draft, and since #658 it is behind `main` again.
 
 Detached comparison checkouts left alone: 6ff47ba1 (two-player/base-build), d1a5b48b (probe merge), 059a16a6 (streaming F1 review), 2288374f (fidelity timing), the 517 trial/verify/baseline snapshots (river-oaks-32), and the new scratch snapshots of 71, 3e and a8. Each belongs to its recorded or session owner.
 
 ## Decisions for Val
 
-1. **#660 (D12).** Hosted 22/22, core passed, local Commons stage passed. Tick it to land through `pnpm run land 660 --owner <session>`, or leave it for review.
+1. **#660 (D12, task `experience-commons-stage-20261024`).** Hosted 22/22, core passed, local Commons stage passed. Tick it to land through `pnpm run land 660 --owner <session>`, or leave it for review.
 2. **The ten sweep aliases and detached `river-oaks-pr-sweep`.** Each needs either an authorized cancel or a guard extension.
    - **Cancel.** Authorize, for example, `pnpm run project:prune --cancel-stale --branch sweep/pr489 --expected-head a4ca4cdf6bb7b59e6ab413dfd6a010b827a98347 --apply`, and the same for:
      - pr504 350290dc…
@@ -197,6 +209,7 @@ Detached comparison checkouts left alone: 6ff47ba1 (two-player/base-build), d1a5
 
      and `--detached-path /Users/buns/Documents/GitHub/BunsDev/river-oaks-pr-sweep`. These tips are already on `main`, and the tool archives and restore-tests each one first. They become eligible once they're 12 h untouched (a3's last activity was about 19:10Z on 10-24).
    - **Guard extension.** Alternatively, approve a guard change that accepts an alias tip already on the default branch when the task names its PR.
+   - The same `--cancel-stale --detached-path` decision covers the released detached checkouts `/Users/buns/Documents/GitHub/BunsDev/river-oaks-campus-510-review` (a8) and f1's `…/613f8aea-2db9-4bac-9c06-8257adaa8ba5/scratchpad/baseline-288` (expected head 4d87077436de45a3d31196d2f40df05d7d07d24b).
 3. **Checkouts whose owner session is gone.** Release on the owner's behalf, or authorize `--cancel-stale`:
    - #650: `test/screening-s1-postmerge-498-20261024` at 432c649f (river-oaks-56);
    - #645: `fix/locomotion-handoff-637-20261024` at 7e267038 (onfoot-637-640);
@@ -207,11 +220,11 @@ Detached comparison checkouts left alone: 6ff47ba1 (two-player/base-build), d1a5
 5. **#654.** The #373 version, #372 decisions, Azure setup and #370 identity confirmations.
 6. **#641.** Val's call in a3's session was "request changes". River-oaks-33 queued its own lander at 00:38Z; confirm the rework was approved.
 7. **D4.** Commons visual, keyboard/screen-reader and target-device sign-off, then an operator's read-only production-state check before any activation under `docs/world-expansion-activation.md`. Activation is outside this goal.
-8. **#649.** Tell river-oaks-91 directly to merge `main` (it conflicts with #641) and record a green head plus the fresh ABBA in its register entry. 71 lands it on that signal.
+8. **#649.** The six finish-line items and round 3 of the ABBA are complete. Decide whether it lands. If it does, it needs an update from `main` (behind after #658) and then a green hosted run before `pnpm run land`. Its stacked 3× PRs #662 and #663 follow it.
 9. **71's landing authority.** River-oaks-71 landed #648, #650, #651 and #652 on the authorization it recorded from its own session: "proceed with all of the above e2e through to full completion". It has since also landed #647, #645 and #646. Confirm that matches your intent, including for #649.
 
 ## Next action
 
 - River-oaks-71 finishes the post-wave pass on 0b9a97c4 and posts one evidence comment each on #587 and #638. Then this ledger cites its receipts and is finalised.
-- #649 lands only after 91 merges `main` and the fresh ABBA passes (Decision 8). Its ref then needs 91's exact-head release.
+- #649 lands only on Val's authorization (Decision 8). Its ref then needs 91's exact-head release.
 - No retirement candidate is left that this session can retire without a Decision for Val (Gaps table).
