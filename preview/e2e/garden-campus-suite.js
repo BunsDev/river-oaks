@@ -138,6 +138,10 @@ async page => {
  const out = await self(page), [u, v] = sourceToCampus([out.position[0], out.position[1]]);
  check(out.levelId === L1 && u > 14.5 && Math.abs(v - door[1]) < 0.6, `Losing the lease walks the resident out to the gallery side of the door (at [${u.toFixed(2)}, ${v.toFixed(2)}])`);
  check(await page.locator('#walking-play').evaluate(n => n.hidden || !/Use this desk/.test(n.textContent)), 'The desk action is gone with the lease');
+ // #510: the resident is told why, wherever the page announces it (the dialog when open, the campus panel and notice otherwise).
+ const told = await page.waitForFunction(() => [...document.querySelectorAll('#campus-dialog .campus-status, #campus-panel [role=status]')].map(n => n.textContent)
+   .find(text => /Suite T1-201: The lease ended on \d{4}-\d\d-\d\d: the campus operator ended it\./.test(text)) ?? false, null, { timeout: 15000 }).then(handle => handle.jsonValue()).catch(() => null);
+ check(Boolean(told), `The resident is told the operator ended the lease (${told ?? 'nothing said'})`);
  await page.screenshot({ path: 'output/playwright/garden-campus-suite-revoked.png' });
  await operatorContext.close();
  return { checks, limits: ['One suite on Floor 2; the other 42 suites share the code path and the server tests.'] };

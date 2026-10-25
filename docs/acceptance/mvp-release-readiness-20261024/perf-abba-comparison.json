@@ -1,0 +1,445 @@
+{
+ "summary": {
+  "A": {
+   "runs": [
+    {
+     "dir": ".runtime/world-expansion/baseline-2026-10-24T05-59-12.219Z",
+     "head": "2cbc4dc470897bd8ee4da059ac8795885ee594c1",
+     "revision": "river-oaks-gardens-3",
+     "view": "spawn",
+     "status": "passed",
+     "startedAt": "2026-10-24T05:59:12.219Z"
+    },
+    {
+     "dir": ".runtime/world-expansion/baseline-2026-10-24T06-23-10.470Z",
+     "head": "2cbc4dc470897bd8ee4da059ac8795885ee594c1",
+     "revision": "river-oaks-gardens-3",
+     "view": "spawn",
+     "status": "passed",
+     "startedAt": "2026-10-24T06:23:10.470Z"
+    }
+   ],
+   "metrics": {
+    "desktop/1p": {
+     "errors": 0,
+     "statuses": [
+      "passed",
+      "passed"
+     ],
+     "n": 6,
+     "frameP95": 16.8,
+     "cpuP95": 14.45,
+     "cpuP50": 10.649999999999999,
+     "meanInterval": 16.68522642910171,
+     "calls": 1644.5,
+     "triangles": 5521850,
+     "geometries": 530,
+     "textures": 162.5,
+     "heapMB": 410.5,
+     "load": 14.043701171875,
+     "readyMs": 4239.081791500001,
+     "assetsMs": 6742.246083,
+     "reconnectMs": null,
+     "driftM": 0
+    },
+    "desktop/2p": {
+     "errors": 0,
+     "statuses": [
+      "passed",
+      "passed"
+     ],
+     "n": 6,
+     "frameP95": 50.05,
+     "cpuP95": 17.55,
+     "cpuP50": 13.55,
+     "meanInterval": 37.30408977093573,
+     "calls": 1707,
+     "triangles": 5870044,
+     "geometries": 546,
+     "textures": 166.5,
+     "heapMB": 410.5,
+     "load": 16.461181640625,
+     "readyMs": null,
+     "assetsMs": null,
+     "reconnectMs": 1170.8422710000013,
+     "driftM": 0
+    },
+    "phone-viewport/1p": {
+     "errors": 0,
+     "statuses": [
+      "passed",
+      "passed"
+     ],
+     "n": 6,
+     "frameP95": 16.75,
+     "cpuP95": 11.95,
+     "cpuP50": 9.149999999999999,
+     "meanInterval": 16.67129886974245,
+     "calls": 1226,
+     "triangles": 4718836,
+     "geometries": 523,
+     "textures": 149,
+     "heapMB": 399.5,
+     "load": 13.787109375,
+     "readyMs": 4457.868124999994,
+     "assetsMs": 7015.63002099999,
+     "reconnectMs": null,
+     "driftM": 0
+    },
+    "phone-viewport/2p": {
+     "errors": 0,
+     "statuses": [
+      "passed",
+      "passed"
+     ],
+     "n": 6,
+     "frameP95": 33.4,
+     "cpuP95": 14.55,
+     "cpuP50": 11.55,
+     "meanInterval": 28.66085115701876,
+     "calls": 1264,
+     "triangles": 5051912,
+     "geometries": 539,
+     "textures": 153,
+     "heapMB": 399.5,
+     "load": 15.654541015625,
+     "readyMs": null,
+     "assetsMs": null,
+     "reconnectMs": 1238.3599585000193,
+     "driftM": 0
+    }
+   }
+  },
+  "B": {
+   "runs": [
+    {
+     "dir": ".runtime/world-expansion/baseline-east-garden-commons-market-1-spawn-2026-10-24T06-07-07.988Z",
+     "head": "2cbc4dc470897bd8ee4da059ac8795885ee594c1",
+     "revision": "east-garden-commons-market-1",
+     "view": "spawn",
+     "status": "passed",
+     "startedAt": "2026-10-24T06:07:07.989Z"
+    },
+    {
+     "dir": ".runtime/world-expansion/baseline-east-garden-commons-market-1-spawn-2026-10-24T06-15-05.714Z",
+     "head": "2cbc4dc470897bd8ee4da059ac8795885ee594c1",
+     "revision": "east-garden-commons-market-1",
+     "view": "spawn",
+     "status": "passed",
+     "startedAt": "2026-10-24T06:15:05.714Z"
+    }
+   ],
+   "metrics": {
+    "desktop/1p": {
+     "errors": 0,
+     "statuses": [
+      "passed",
+      "passed"
+     ],
+     "n": 6,
+     "frameP95": 16.8,
+     "cpuP95": 15.5,
+     "cpuP50": 11.45,
+     "meanInterval": 16.792612566432574,
+     "calls": 1643,
+     "triangles": 5632576,
+     "geometries": 616,
+     "textures": 171,
+     "heapMB": 422.5,
+     "load": 16.045654296875,
+     "readyMs": 4927.4241455,
+     "assetsMs": 8077.7056875,
+     "reconnectMs": null,
+     "driftM": 0
+    },
+    "desktop/2p": {
+     "errors": 0,
+     "statuses": [
+      "passed",
+      "passed"
+     ],
+     "n": 6,
+     "frameP95": 50,
+     "cpuP95": 16.8,
+     "cpuP50": 13.5,
+     "meanInterval": 33.35360382073968,
+     "calls": 1708.5,
+     "triangles": 5981236.5,
+     "geometries": 632,
+     "textures": 175,
+     "heapMB": 422.5,
+     "load": 16.535400390625,
+     "readyMs": null,
+     "assetsMs": null,
+     "reconnectMs": 1163.2451459999866,
+     "driftM": 0
+    },
+    "phone-viewport/1p": {
+     "errors": 0,
+     "statuses": [
+      "passed",
+      "passed"
+     ],
+     "n": 6,
+     "frameP95": 16.7,
+     "cpuP95": 11.3,
+     "cpuP50": 9.05,
+     "meanInterval": 16.675931072818234,
+     "calls": 1240,
+     "triangles": 4832144,
+     "geometries": 609,
+     "textures": 158,
+     "heapMB": 410.5,
+     "load": 17.19482421875,
+     "readyMs": 4189.330708499998,
+     "assetsMs": 6824.338749999995,
+     "reconnectMs": null,
+     "driftM": 0
+    },
+    "phone-viewport/2p": {
+     "errors": 0,
+     "statuses": [
+      "passed",
+      "passed"
+     ],
+     "n": 6,
+     "frameP95": 41.7,
+     "cpuP95": 13.7,
+     "cpuP50": 10.8,
+     "meanInterval": 28.699924967516424,
+     "calls": 1278,
+     "triangles": 5165220,
+     "geometries": 625,
+     "textures": 162,
+     "heapMB": 410.5,
+     "load": 12.530029296875,
+     "readyMs": null,
+     "assetsMs": null,
+     "reconnectMs": 909.2872709999792,
+     "driftM": 0
+    }
+   }
+  },
+  "C": {
+   "runs": [
+    {
+     "dir": ".runtime/world-expansion/baseline-east-garden-commons-market-1-market-street-2026-10-24T06-31-19.811Z",
+     "head": "2cbc4dc470897bd8ee4da059ac8795885ee594c1",
+     "revision": "east-garden-commons-market-1",
+     "view": "market-street",
+     "status": "passed",
+     "startedAt": "2026-10-24T06:31:19.811Z"
+    }
+   ],
+   "metrics": {
+    "desktop/1p": {
+     "errors": 0,
+     "statuses": [
+      "passed"
+     ],
+     "n": 3,
+     "frameP95": 16.8,
+     "cpuP95": 12.7,
+     "cpuP50": 9.1,
+     "meanInterval": 16.675931072818234,
+     "calls": 918,
+     "triangles": 5553852,
+     "geometries": 641,
+     "textures": 172,
+     "heapMB": 386,
+     "load": 21.6962890625,
+     "readyMs": 5506.442209000001,
+     "assetsMs": 8870.187125,
+     "reconnectMs": null,
+     "driftM": 0
+    },
+    "desktop/2p": {
+     "errors": 0,
+     "statuses": [
+      "passed"
+     ],
+     "n": 3,
+     "frameP95": 33.4,
+     "cpuP95": 14.2,
+     "cpuP50": 10.8,
+     "meanInterval": 23.4192037470726,
+     "calls": 918,
+     "triangles": 5553852,
+     "geometries": 641,
+     "textures": 172,
+     "heapMB": 386,
+     "load": 28.65087890625,
+     "readyMs": null,
+     "assetsMs": null,
+     "reconnectMs": 710.8985420000099,
+     "driftM": 0
+    },
+    "phone-viewport/1p": {
+     "errors": 0,
+     "statuses": [
+      "passed"
+     ],
+     "n": 3,
+     "frameP95": 16.7,
+     "cpuP95": 11.9,
+     "cpuP50": 9.3,
+     "meanInterval": 16.666666666666668,
+     "calls": 745,
+     "triangles": 4482210,
+     "geometries": 634,
+     "textures": 159,
+     "heapMB": 435,
+     "load": 27.96533203125,
+     "readyMs": 5192.90720799999,
+     "assetsMs": 7761.368125000008,
+     "reconnectMs": null,
+     "driftM": 0
+    },
+    "phone-viewport/2p": {
+     "errors": 0,
+     "statuses": [
+      "passed"
+     ],
+     "n": 3,
+     "frameP95": 16.8,
+     "cpuP95": 11.5,
+     "cpuP50": 8.8,
+     "meanInterval": 16.7973124300112,
+     "calls": 745,
+     "triangles": 4482210,
+     "geometries": 634,
+     "textures": 159,
+     "heapMB": 435,
+     "load": 26.51318359375,
+     "readyMs": null,
+     "assetsMs": null,
+     "reconnectMs": 895.0078750000102,
+     "driftM": 0
+    }
+   }
+  }
+ },
+ "comparisons": {
+  "B/A": {
+   "desktop/1p": {
+    "frameP95": 1,
+    "cpuP95": 1.0727,
+    "cpuP50": 1.0751,
+    "meanInterval": 1.0064,
+    "calls": 0.9991,
+    "triangles": 1.0201,
+    "geometries": 1.1623,
+    "textures": 1.0523,
+    "heapMB": 1.0292,
+    "readyMs": 1.1624,
+    "assetsMs": 1.1981,
+    "reconnectMs": null
+   },
+   "desktop/2p": {
+    "frameP95": 0.999,
+    "cpuP95": 0.9573,
+    "cpuP50": 0.9963,
+    "meanInterval": 0.8941,
+    "calls": 1.0009,
+    "triangles": 1.0189,
+    "geometries": 1.1575,
+    "textures": 1.0511,
+    "heapMB": 1.0292,
+    "readyMs": null,
+    "assetsMs": null,
+    "reconnectMs": 0.9935
+   },
+   "phone-viewport/1p": {
+    "frameP95": 0.997,
+    "cpuP95": 0.9456,
+    "cpuP50": 0.9891,
+    "meanInterval": 1.0003,
+    "calls": 1.0114,
+    "triangles": 1.024,
+    "geometries": 1.1644,
+    "textures": 1.0604,
+    "heapMB": 1.0275,
+    "readyMs": 0.9398,
+    "assetsMs": 0.9727,
+    "reconnectMs": null
+   },
+   "phone-viewport/2p": {
+    "frameP95": 1.2485,
+    "cpuP95": 0.9416,
+    "cpuP50": 0.9351,
+    "meanInterval": 1.0014,
+    "calls": 1.0111,
+    "triangles": 1.0224,
+    "geometries": 1.1596,
+    "textures": 1.0588,
+    "heapMB": 1.0275,
+    "readyMs": null,
+    "assetsMs": null,
+    "reconnectMs": 0.7343
+   }
+  },
+  "C/A": {
+   "desktop/1p": {
+    "frameP95": 1,
+    "cpuP95": 0.8789,
+    "cpuP50": 0.8545,
+    "meanInterval": 0.9994,
+    "calls": 0.5582,
+    "triangles": 1.0058,
+    "geometries": 1.2094,
+    "textures": 1.0585,
+    "heapMB": 0.9403,
+    "readyMs": 1.299,
+    "assetsMs": 1.3156,
+    "reconnectMs": null
+   },
+   "desktop/2p": {
+    "frameP95": 0.6673,
+    "cpuP95": 0.8091,
+    "cpuP50": 0.797,
+    "meanInterval": 0.6278,
+    "calls": 0.5378,
+    "triangles": 0.9461,
+    "geometries": 1.174,
+    "textures": 1.033,
+    "heapMB": 0.9403,
+    "readyMs": null,
+    "assetsMs": null,
+    "reconnectMs": 0.6072
+   },
+   "phone-viewport/1p": {
+    "frameP95": 0.997,
+    "cpuP95": 0.9958,
+    "cpuP50": 1.0164,
+    "meanInterval": 0.9997,
+    "calls": 0.6077,
+    "triangles": 0.9499,
+    "geometries": 1.2122,
+    "textures": 1.0671,
+    "heapMB": 1.0889,
+    "readyMs": 1.1649,
+    "assetsMs": 1.1063,
+    "reconnectMs": null
+   },
+   "phone-viewport/2p": {
+    "frameP95": 0.503,
+    "cpuP95": 0.7904,
+    "cpuP50": 0.7619,
+    "meanInterval": 0.5861,
+    "calls": 0.5894,
+    "triangles": 0.8872,
+    "geometries": 1.1763,
+    "textures": 1.0392,
+    "heapMB": 1.0889,
+    "readyMs": null,
+    "assetsMs": null,
+    "reconnectMs": 0.7227
+   }
+  }
+ },
+ "budgets": {
+  "frameOrCpuP95": 1.1,
+  "reconnect": 1.2,
+  "driftM": 0.5
+ }
+}
