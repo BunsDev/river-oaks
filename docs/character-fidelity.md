@@ -137,7 +137,8 @@ the test would leave it outside loopback's address space, and Chromium would the
 block Vite's WebSocket.
 
 For the named defaults, `node scripts/default-appearance-trial.mjs` captures each
-realism component alone, the trial set at every tier and the full preset (evidence
+realism component alone, the trial set at every tier (for a default the policy
+switches on; the others are skipped) and the full preset (evidence
 only) under daylight, dusk and interior light, plus a no-MSAA pair. It compares
 each case with realism off under the same light: whole-image error, and per
 region (hair, brows and lashes, skin) the covered area, its overlap with off and

@@ -9,7 +9,9 @@
 // off: Jevica's ×8 crowd (timing-6) and then Sable's ×24 crowd (timing-7) went
 // past the +10% CPU bar on the shared test host, so Jevica was stopped and then
 // the whole trial. Setting `enabled` to true turns Sable's roughness on once a
-// quiet host or device measures it within the bar. See
+// quiet host or device measures it within the bar. Measure with it set to true:
+// the timing fixture follows this policy, and with the switch off it would time
+// her whole preset at `high`. See
 // docs/acceptance/default-appearance-517.md. Every other look keeps its imported
 // materials.
 export const DEFAULT_APPEARANCE_REALISM = Object.freeze({

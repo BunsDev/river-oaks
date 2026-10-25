@@ -62,7 +62,7 @@ and run all five `node scripts/bake-*.mjs --check` before and after any edit the
 | 1 | Baseline capture and inspection, no source change | done (captures complete; exit 1 on HMR console errors only) |
 | 2 | Component-selective layer and tests | done; focused 54/54 |
 | 3 | Per-component trial and verdicts | done: run-1 and run-3, two independent visual reviews; roughness accept, pores revise (not shipped), coverage and hairColor reject |
-| 4 | Cost, lifecycle and identity | lifecycle done; identity done (local and hosted journeys, switch-on and switch-off); cost: no component met the bar, so both were stopped under rules set beforehand. Jevica after timing-6 (×8 +10.2% CPU), Sable after timing-7 (×24 +11.7% CPU). The trial ships switched off (`enabled: false`), so the shipped cost is `main`'s (Decision 3: when to turn it on) |
+| 4 | Cost, lifecycle and identity | lifecycle done; identity done (local and hosted journeys, switch-on and switch-off); cost: no component met the bar, so both were stopped. Jevica was stopped after timing-6 (×8 +10.2% CPU) under the goal's stop rule; timing-6's own pre-set rule only said "not established". Sable was stopped after timing-7 (×24 +11.7% CPU) under a rule set before it ran. The trial ships switched off (`enabled: false`), so the shipped cost is `main`'s (Decision 3: when to turn it on) |
 | 5 | Hero and Studio decision, golden candidate | hero uses the same policy; `--check` exit 2 (incompatible: osRelease, osVersion, gpu); candidate recorded with the switch on and inspected (`e5597125…`); it also carries bodice tiles, which the trial doesn't cause (from `main`'s code or the M5 GPU); the second review says don't promote it. As shipped, the hero draws imported materials, as the reference does (Decision 1) |
 | 6 | Costume order fix (independent code review) | done: `b0cdeeeb`, mutation-checked regression |
 | 7 | Delivery | draft PR #656 (final head and hosted checks recorded in the PR); landing waits for Val's acceptance |
@@ -286,7 +286,7 @@ and run all five `node scripts/bake-*.mjs --check` before and after any edit the
   - **×24: frame p95 4.21 → 4.71 ms (+12.0%), CPU p95 4.12 → 4.60 ms (+11.7%), over the bar.**
 
   All three ×24 pairs had the trial slower (+6.2%, +11.7%, +4.3% CPU). The off samples alone spread 4.05–4.77 ms
-  (17%). Under the rule set beforehand, Sable's roughness stops too, and the trial ships nothing: the policy keeps
+  (18%). Under the rule set beforehand, Sable's roughness stops too, and the trial ships nothing: the policy keeps
   `sable-human: ['roughness']` with `enabled: false`. Receipt `data/reports/default-appearance-timing-7-517.json`.
 - 15:43Z quality-tier cycles for Sable on `e8b30b8b` with the switch on passed: ten Sharpest → Smoothest → Auto
   cycles, geometries/textures/programs 21/15/23 before and after, rendered re-tier at high and standard equal to a
@@ -349,11 +349,16 @@ names; hair is matched by material `long01`), fixed for run-2.
   - timing-6 on the PR head: Jevica ×8 +10.5% frame, +10.2% CPU;
   - timing-3 on the pre-merge tree: Jevica ×1 +10.4/+10.5%.
 
-  - timing-7 on the final code: Sable ×24 +12.0% frame, +11.7% CPU.
+  - timing-7 on `e8b30b8b` (the head differs only in `enabled`, tests and docs): Sable ×24 +12.0% frame,
+    +11.7% CPU.
 
   No component met the bar, so the trial ships switched off. Jevica ×8 (pooled paired +8.5%) and Sable ×24
   (+4.3%) need a quiet host or a physical device, and profiling, before the switch is turned on (Decision for Val).
 - Pores need a lip/eyelid/neck mask before they can ship (Decision 2).
+- The switched-on world path (`loadResidentAvatar`/`createCharacterHero` reading an enabled policy) last ran on
+  `e8b30b8b` (hosted CI 40207281457, local journey 20/20). The head's unit tests pass components in directly, and
+  its CI journey takes the rollback branch. Rerun `default-appearance-tiers` with the switch on before turning it on.
+  Re-measure with the switch on too: with it off, the timing fixture times the whole preset.
 - With the switch off, fixtures that load a rig without an explicit appearance (carriage, vehicles, motion,
   foot-support cost) draw imported materials, as on `main`.
 - Handoff: the parked `river-oaks-human-studio-504` worktree has uncommitted edits to

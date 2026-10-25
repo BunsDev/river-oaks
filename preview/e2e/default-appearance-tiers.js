@@ -69,7 +69,7 @@ async page => {
   check(measurements.tiers.sableSelf.tier===at('sable-human','standard')&&measurements.tiers.sableOnOwner.tier===at('sable-human','high'),listed('sable-human')?'Alice renders her own Sable at standard while the owner renders it at high':'Sable stays off for alice at standard and for the owner at high');
   const ownerView=await remoteOf(page,aliceId),aliceView=await remoteOf(peer,ownerId);
   check(ownerView.character?.appearanceId==='sable-human'&&aliceView.character?.appearanceId==='jevica','Each viewer holds the other’s canonical definition');
-  await frame(page,aliceId);await page.screenshot({path:'output/playwright/default-appearance-sable-high-owner.png'});
+  await frame(page,aliceId);await page.screenshot({path:`output/playwright/default-appearance-sable-${at('sable-human','high')}-owner.png`});
   await frame(peer,ownerId);await peer.screenshot({path:`output/playwright/default-appearance-jevica-${at('jevica','standard')}-peer.png`});
 
   // Re-tiering changes only the viewer's own rendering, and sends nothing.

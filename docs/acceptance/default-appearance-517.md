@@ -9,11 +9,17 @@ device budget or human acceptance.
 
 **Outcome: the trial ships switched off.** Roughness passed both independent
 visual reviews for both looks, but each look went over the +10% CPU bar in a
-deciding timing run whose rule was written down before it ran:
+deciding timing run:
+- Jevica went over in timing-6. The rule recorded before it ran said only that a
+  breach meant cost would be reported as not established. After the result, her
+  roughness was stopped under the goal's stop rule for a component that breaks
+  a budget.
+- Sable went over in timing-7. The rule recorded before it ran said a breach
+  would stop her roughness too and switch the trial off.
 
 | Look | Visual verdict | Cost | Shipped |
 | --- | --- | --- | --- |
-| Jevica | accept | over in timing-3 (×1, +10.5%) and timing-6 (×8, +10.2%) | no: stopped, kept off the policy |
+| Jevica | accept | over in timing-3 (×1, +10.5% CPU; ×8 frame p95 +78%, bimodal) and timing-6 (×8, +10.2% CPU) | no: stopped, kept off the policy |
 | Sable | accept | within in timing-3, timing-5 and timing-6; over in timing-7 (×24, +11.7%) | no: the trial is switched off |
 
 As shipped, the world, the Studio hero and every peer draw both defaults with
@@ -32,7 +38,8 @@ saved character or other players' selections.
 and close-up views through the production portrait path with a fixed camera and
 pose, under three fixed lights (the hero's daylight, a warm dusk and a warm
 interior with a room environment). Each component is rendered alone at the high
-tier, the trial set at every tier, and the whole preset as evidence only. A
+tier, the trial set at every tier (for a default the policy switches on), and
+the whole preset as evidence only. A
 no-MSAA pair shows the software-rendering path. Every case is compared with
 realism off under the same light: whole-image channel error, and per region
 (hair, brows with lashes, skin) the covered area, its overlap with off (IoU of
@@ -136,7 +143,9 @@ The costume now makes its material edits beneath the applied tier
 (`createCharacterFidelity().underneath`). The world therefore uses the same order
 as the Studio hero and these captures: costume first, then realism. A regression
 loads the shipped rig as the world does and checks the costume and map through
-high, standard, low and off. The trial fixture already used this order, so the
+high, standard, low and off. Now that no named default is switched on, it applies
+the layer with an explicit tier. Without the wrapper it fails: the skin draws
+roughness 0.58 instead of 1. The trial fixture already used this order, so the
 captures and timing above measure the shipped look. To confirm it, off and the
 trial at high were recaptured on the fixed head (`2065b5ef`, clean tree, input
 manifest `7771b2af3163…`, finished 02:44Z, 3 load/dispose cycles each). All 24
@@ -237,7 +246,7 @@ Sable):
 Frame p95 follows CPU, except for Jevica ×8 in timing-3, whose frame p95 was
 bimodal at 16 or 33 ms.
 
-timing-7 ran after Jevica was stopped, on the final code (`e8b30b8b`, clean
+timing-7 ran after Jevica was stopped, on the code it timed (`e8b30b8b`, clean
 detached snapshot, input manifest `8e7a249ae13e…`, Sable only, finished 15:42Z,
 load 7.8–18.1 across all 18 samples), so it is a measurement. Before it ran, the
 ledger recorded the rule: any case over the bar stops Sable's roughness too, and
@@ -250,20 +259,25 @@ the trial ships switched off.
 | Sable ×24 | 4.21 → 4.71 (**+12.0%**) | 4.12 → 4.60 (**+11.7%**) |
 
 All three ×24 pairs had the trial slower (CPU +6.2%, +11.7%, +4.3%), while the
-three off samples alone spread from 4.05 to 4.77 ms (17%). Over the twelve paired
+three off samples alone spread from 4.05 to 4.77 ms (18%). Over the twelve paired
 samples of timing-3, timing-5, timing-6 and timing-7, Sable's CPU medians are
 −0.2% (×1), +0.0% (×8) and +4.3% (×24, range −21.2 to +19.1%).
 
 **Verdict on cost: no component met the bar on this host, so the trial ships
 switched off.**
-- Under the rule set beforehand, timing-6 decided for Jevica: her ×8 crowd was
-  over the bar, so her roughness was stopped (the goal's stop rule for a
-  component that breaks a budget).
+- timing-6 put Jevica's ×8 crowd over the bar. Its rule, set beforehand, said
+  that meant cost would be reported as not established. After the result, her
+  roughness was stopped under the goal's stop rule for a component that breaks
+  a budget.
 - Under the rule set before timing-7, Sable's ×24 crowd was over the bar, so her
-  roughness was stopped too.
-- Three of the four measurement runs have one case 0.2–2 points over the bar,
-  a different case each time (Jevica ×1 in timing-3, Jevica ×8 in timing-6,
-  Sable ×24 in timing-7). timing-5 is within the bar everywhere.
+  roughness was stopped too, and the trial was switched off.
+- Three of the four measurement runs have a case over the bar:
+  - timing-3: Jevica ×1 frame and CPU, and Jevica ×8 frame p95 (+78%, from a
+    bimodal 16/33 ms split);
+  - timing-6: Jevica ×8;
+  - timing-7: Sable ×24.
+
+  timing-5 is within the bar everywhere.
 - Sable's paired medians are 0–4%; her ×24 crowd is the one to profile.
 - Jevica ×8 CPU is the case nearest the bar. Its pooled paired median is +8.5%,
   and timing-6's pairs agree, so it may be a real cost rather than noise.
@@ -273,7 +287,7 @@ switched off.**
   - Jevica's crowd is already about five times Sable's in CPU and texture memory
     with realism off. That predates this trial.
 - On this shared host the same code moves by up to ±12% between runs, and one
-  run's off samples by up to 17%, so the host can't resolve a 10% difference.
+  run's off samples by up to 18%, so the host can't resolve a 10% difference.
   Turning the trial on needs a quiet host or a physical device, and profiling
   Sable ×24 and Jevica ×8 (Decision for Val).
 
@@ -291,7 +305,7 @@ Sharpest → Smoothest → Auto (high → standard → low), 30 transitions in a
 - Geometries, textures and programs were the same after the ten cycles as before
   (Jevica 9/16/22, Sable 21/15/23).
 - Run on `2065b5ef` plus the fixture patch, input manifest `b43d139e1713…`,
-  finished 03:21Z. Sable's cycles passed again on the final code with the switch
+  finished 03:21Z. Sable's cycles passed again on `e8b30b8b` with the switch
   on (`e8b30b8b`, finished 15:43Z, 21/15/23 before and after, rendered re-tier
   maximum 0).
 
@@ -317,8 +331,10 @@ own and remote. With the switch on, it checks:
   same definitions and no fallback.
 
 The report describes what is drawn because the material layer builds it from its
-own edits to the rig: it counts a skin material only after giving it the map
-(`character-realism.js`, `upgradeSkin`). `default-appearance-realism.test.js`
+own edits to the rig. It counts a skin material only after upgrading it
+(`character-realism.js`, `upgradeSkin`). When the roughness map is missing, it
+also lists `roughness:<material>` under `unsupported` and reports
+`fallback: "roughness_unavailable"`. `default-appearance-realism.test.js`
 checks this on the shipped rig:
 - as shipped, `loadResidentAvatar` (the loader that builds peers) draws Jevica and
   Sable at `off`, with no roughness map on the skin;
@@ -426,6 +442,8 @@ Committed receipts, under `data/reports/`:
     snapshot of `e8b30b8b`. With Jevica out of the policy, the fixture would time
     her whole preset at `high`, so she has no timing-7 case. Each timing receipt
     records the components it drew (`realismReport.components`).
+  - On the shipped head the same applies to Sable. To re-measure her roughness,
+    set `enabled: true` in the measuring tree first.
 - Hero: `node scripts/character-hero-goldens.mjs --check preview/e2e/goldens/character-hero`
   (exit 2), then `--record .runtime/character-studio/hero-candidate-517-82b51d89`
   (exit 0). The candidate stays under `.runtime/` on the trial host.
@@ -475,5 +493,10 @@ The crops linked above come from run-3.
   Sable ×24). The paired medians nearest the bar are Jevica ×8 at +8.5% and
   Sable ×24 at +4.3%. Run-to-run noise on this shared host is about the size of
   the bar, and no physical device was measured.
+- The switched-on path, in which `loadResidentAvatar` and `createCharacterHero` read
+  an enabled policy, last ran on `e8b30b8b`: hosted CI run 40207281457 and the local
+  20/20 journey. The shipped head tests the layer with components passed in, and
+  its CI journey takes the rollback branch. Before turning the switch on, rerun
+  `default-appearance-tiers` with it on.
 - No human has signed off on the look; the verdicts rest on this session's reading
   and an independent agent's. #517 stays open for its AAA and all-device criteria.

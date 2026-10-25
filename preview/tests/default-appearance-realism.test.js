@@ -100,39 +100,44 @@ test('switched on, Sable on the shipped rig takes only her trial components', as
   } finally { fidelity.dispose(); avatar.dispose(); }
 });
 
-// While Jevica is out of the trial her costume applies straight to imported
-// materials. If she is listed and switched on, the costume must stay beneath every re-tier.
-test('Jevica keeps her costume through the realism policy', async t => {
-  await shippedRig(t);
-  const avatar = await loadResidentAvatar(4, 'remote-trial-costume', 'jevica', {folk: false, appearanceId: DEFAULT_SHARED_APPEARANCE, faceRecipe: {}});
-  // The world applies the costume after loading, as player and remote avatars do.
+// The world applies the costume after loading, as player and remote avatars do.
+async function costumedJevica(id, realism) {
+  const avatar = await loadResidentAvatar(4, id, 'jevica', {folk: false, appearanceId: DEFAULT_SHARED_APPEARANCE, faceRecipe: {}, realism});
   const costume = createPlayerCostume(avatar, 'jevica');
   const material = pattern => [...avatar.rig.materials].find(([original]) => pattern.test(original.name))[1];
   const skin = material(/^young_/), hair = material(/^long01$/), brows = material(/^jevica_brows$/);
-  const costumed = () => {
+  // Her rose-gold hair and soft-brow shaders, and the costume's alpha and skin values.
+  const shaders = () => {
     assert.equal(hair.customProgramCacheKey(), 'jevica-rose-gold-hair-v2');
-    assert.equal(hair.alphaTest, .35);
     assert.equal(brows.customProgramCacheKey(), 'jevica-soft-brows-v1');
-    assert.equal(brows.alphaTest, .4);
   };
-  try {
-    if (!defaultAppearanceRealism(DEFAULT_SHARED_APPEARANCE)) {
-      assert.equal(avatar.realismReport.tier, 'off');
-      costumed();
-      assert.equal(skin.roughnessMap, null);
-      assert.equal(skin.roughness, .58, 'the costume skin is unchanged');
-      return;
-    }
-    // The trial sits on top of the costume, as in the hero and the trial captures.
-    for (const tier of [undefined, 'standard', 'low', 'high']) {
-      if (tier) await avatar.setRealismTier(tier);
-      costumed();
-      assert.equal(skin.roughnessMap?.name, 'realism-skin-roughness', `${tier} map`);
-      assert.equal(skin.roughness, 1, `${tier} map is not scaled by the costume`);
-    }
-    await avatar.setRealismTier('off');
-    costumed();
+  const costumed = () => {
+    shaders();
+    assert.equal(hair.alphaTest, .35);
+    assert.equal(brows.alphaTest, .4);
     assert.equal(skin.roughnessMap, null);
-    assert.equal(skin.roughness, .58, 'off returns the costume skin');
-  } finally { costume.dispose(); avatar.dispose(); }
+    assert.equal(skin.roughness, .58, 'the costume skin');
+  };
+  return {avatar, skin, shaders, costumed, dispose() { costume.dispose(); avatar.dispose(); }};
+}
+
+test('Jevica keeps her costume, as shipped and beneath an applied realism tier', async t => {
+  await shippedRig(t);
+  // As shipped, the costume applies straight to her imported materials.
+  const shipped = await costumedJevica('remote-trial-costume-shipped');
+  try { assert.equal(shipped.avatar.realismReport.tier, 'off'); shipped.costumed(); } finally { shipped.dispose(); }
+  // The costume edits materials beneath an applied tier, so re-tiers keep it. Jevica
+  // is not in the trial, so an explicit tier (the whole preset) applies the layer
+  // here; the order is the same for any component list.
+  const tiered = await costumedJevica('remote-trial-costume', 'high');
+  try {
+    for (const tier of [undefined, 'standard', 'low', 'high']) {
+      if (tier) await tiered.avatar.setRealismTier(tier);
+      tiered.shaders();
+      assert.equal(tiered.skin.roughnessMap?.name, 'realism-skin-roughness', `${tier} map`);
+      assert.equal(tiered.skin.roughness, 1, `${tier} map is not scaled by the costume`);
+    }
+    await tiered.avatar.setRealismTier('off');
+    tiered.costumed();
+  } finally { tiered.dispose(); }
 });
