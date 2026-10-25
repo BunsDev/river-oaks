@@ -122,6 +122,25 @@ test('water, building land, the remaining reserve and every Heights solid stay c
   assert.equal(environment.isAreaFree(...(([x, n]) => [x, -n])(frame([200, 60])), 2), true, 'open lawn');
 });
 
+test('walking, flight and sight in the District answer as on the Commons and never read a Heights solid', () => {
+  // Heights adds hundreds of solids east of the bayou; queries in the District must not scan them.
+  let reads = 0;
+  const counted = layout.solids.map((solid, i) => i < heights.solidStart ? solid : Object.defineProperty({ ...solid }, 'rect', { get() { reads++; return solid.rect; } }));
+  const environment = createWalkingEnvironment({ ...world, eastGardenCommons: { ...layout, solids: counted } });
+  const before = createWalkingEnvironment(commons), [west, south, , north] = world.bounds_m;
+  reads = 0;
+  let sampled = 0;
+  for (let x = west + .5; x < layout.edge; x += 1.7) for (let n = south + .5; n < north; n += 1.7) {
+    assert.equal(environment.isFree(x, -n), before.isFree(x, -n), `walking at ${x}, ${n}`);
+    for (const altitude of [2, 12, 40]) assert.equal(environment.canFly(x, altitude, -n), before.canFly(x, altitude, -n), `flying at ${x}, ${n}, ${altitude} m`);
+    if (sampled++ % 23 === 0) assert.equal(environment.hasSightLine([x, n, 1.3], [x + 6, n + 4, 1.3]), before.hasSightLine([x, n, 1.3], [x + 6, n + 4, 1.3]));
+  }
+  assert.ok(sampled > 20000);
+  assert.equal(reads, 0, 'no District query reads a Heights solid');
+  assert.equal(environment.canFly(...(([x, n]) => [x, layout.ground + 1, -n])(frame([205, 121]))), false, 'the bandstand still blocks flight');
+  assert.ok(reads > 0);
+});
+
 test('the icehouse table seats two players in the shared seat model', () => {
   const seats = plazaSalonSeats(world).filter(seat => seat.buildId.startsWith(`bench:plaza-salon-${HEIGHTS_TABLE}-`));
   assert.equal(seats.length, 2);
