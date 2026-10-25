@@ -549,7 +549,7 @@ function initializeRenderer() {
   officeUI=createOfficeUI({host,panelHost:visitTools,renderer,getWorld:()=>world,getMultiplayer:()=>multiplayer,walking,
     captureStreet:()=>captureOfficeStreet({scene,camera,pipeline,renderer,architecture:buildingMesh,skyline:officeSkylineOff||softwareAcceptance?null:officeOutlookFor({scale:quality?.stats.scale,coarsePointer:window.matchMedia('(pointer: coarse)').matches,maxCubemapSize:renderer.capabilities.maxCubemapSize,maxTextureSize:renderer.capabilities.maxTextureSize}),lights:storeLights,atmosphere:()=>currentAtmosphere,avatar:playerAvatar,lobby:buildingMesh?.userData.officeArrival,world,getWorld:()=>world,pose:walking?.getPose()})});
   // The Gardens (#510): the campus Play section, suites and leases, and the workstation desk.
-  campusUI=createGardenCampusUI({host,panelHost:visitTools,getWorld:()=>world,getMultiplayer:()=>multiplayer});
+  campusUI=createGardenCampusUI({host,panelHost:visitTools,getWorld:()=>world,getMultiplayer:()=>multiplayer,notify:text=>walking?.notify?.(text)});
   playProviders.push(() => campusUI?.playProvider);
   // IPIC screenings (#367): the town's timeline on the existing screen, while the player is inside IPIC.
   // Mounted on the viewport, not the canvas host: walking takes pointer capture on the canvas host.
