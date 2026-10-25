@@ -66,12 +66,6 @@ async page => {
       }, held);
       await touch.mouse.up();
     };
-    // A tap by another finger while a contact is held: a second CDP touch in Chromium, a
-    // real touch tap beside the held mouse in WebKit.
-    const tapWith = async point => {
-      if (!client) { await touch.touchscreen.tap(...point); return; }
-      await down(9, point); await lift(9);
-    };
     // Two fingers down at once: Chromium only.
     const fingers = (count, name) => {
       if (client || count < 2) return true;
@@ -202,10 +196,10 @@ async page => {
       await lift(1); await reset();
     }
 
-    // 5. Capture loss mid-hold, as when the browser or the page takes the pointer. The
-    // browser delivers lostpointercapture with the pointer's next event (the Pointer
-    // Events "process pending pointer capture" step); a real finger always jitters, so
-    // the held contact moves a pixel, as in touch-people.js.
+    // 5. Capture loss mid-hold, as when the page takes the pointer (background-lifecycle.js
+    // does on hide). The browser delivers lostpointercapture with the pointer's next event
+    // (the Pointer Events "process pending pointer capture" step), and Chromium holds back
+    // touch moves inside its slop, so the finger slides 20 px, still on the button.
     {
       const start = await pose();
       await down(1, forward); await walking(start);
@@ -215,24 +209,27 @@ async page => {
       });
       const lost = () => touch.evaluate(id => window.__touchLog.some(e => e.type === 'lostpointercapture' && e.id === id && e.target === 'KeyW'), id);
       await frames(2); metrics.captureLostBeforeMove = await lost();
-      await slide(1, [forward[0] + 1, forward[1]], 1);
+      await slide(1, [forward[0] + 20, forward[1]], 4);
       expect(await lost(), 'the browser delivers lostpointercapture to the held walk button');
       const rest = await settled();
       expect(still(rest), 'lostpointercapture mid-hold stops walking', rest);
       await lift(1); await reset();
     }
 
-    // 6. The chat keyboard opens mid-hold: another finger taps Commands and picks Town chat,
-    // which opens the dock and focuses its field. Typing is text, never movement.
+    // 6. The chat keyboard opens mid-hold through the Town chat command, which opens the
+    // dock and focuses its field. Chromium makes no click from a second finger's tap while
+    // another is held, so the command dialog is driven by its keys (? then Enter); the
+    // iPhone pass in docs/touch-play.md covers the tap. Typing is text, never movement.
     {
       const start = await pose();
       await down(1, forward); await walking(start);
-      await tapWith(await target('.commands-toggle'));
+      await touch.keyboard.press('?');
       await touch.locator('#rail-command-search').waitFor();
+      const opened = await settled();
+      expect(still(opened), 'opening Commands mid-hold stops walking', opened);
       await touch.keyboard.type('town chat');
-      const command = touch.locator('.commands-results button', { hasText: 'Town chat' }).first();
-      await command.waitFor(); const box = await command.boundingBox();
-      await tapWith([box.x + box.width / 2, box.y + box.height / 2]);
+      await touch.locator('.commands-results button').first().filter({ hasText: 'Town chat' }).waitFor();
+      await touch.keyboard.press('Enter');
       const input = touch.locator('.multiplayer-chat-form input');
       // The dock's toggle event follows the command; focus must still be in the field after it.
       await frames(3);
@@ -240,7 +237,7 @@ async page => {
       expect(await input.evaluate(element => element === document.activeElement), 'the Town chat command leaves focus in the chat field', metrics.chatFocus);
       await touch.keyboard.type('wasd');
       const rest = await settled();
-      expect(still(rest), 'focusing chat mid-hold stops walking', rest);
+      expect(still(rest), 'typing in chat mid-hold moves nothing', rest);
       expect(await input.inputValue() === 'wasd', 'chat receives the typed text');
       await lift(1);
       const after = await settled();

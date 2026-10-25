@@ -1,10 +1,11 @@
 async page => {
   // Touch layout pass (#288): at phone sizes, portrait and landscape, every
-  // walking control is on screen, touch-sized and not covered; the panel and a
-  // conversation scroll, their close controls stay reachable, and focus returns
-  // to the control that opened them. Emulated phones in Chromium, not a device:
-  // Safari's safe-area insets and software keyboard are not reproduced here.
-  const checks = [], failures = [], errors = [], metrics = { sizes: {}, known: [] }, origin = 'http://127.0.0.1:5173';
+  // walking control is on screen, touch-sized and not covered; the panel scrolls
+  // and closes back to its toggle; a conversation, when someone is near enough to
+  // meet, keeps its controls on screen and closes back to the scene. Emulated
+  // phones, not a device: Safari's safe-area insets and software keyboard are not
+  // reproduced here.
+  const checks = [], failures = [], errors = [], metrics = { sizes: {}, known: [], notRun: [] }, origin = 'http://127.0.0.1:5173';
   const expect = (ok, message, detail) => {
     (ok ? checks : failures).push(detail === undefined ? message : `${message} ${JSON.stringify(detail)}`);
     console.log(`${ok ? 'ok  ' : 'FAIL'} ${message}${ok || detail === undefined ? '' : ` ${JSON.stringify(detail)}`}`);
@@ -53,6 +54,11 @@ async page => {
           await tab.locator('.town-chat-toggle').tap();
           await tab.waitForFunction(() => !document.querySelector('.town-chat-dock').open); await frames(tab);
         }
+        if (orientation === 'portrait') {
+          // Push to talk holds a mic button; a browser pan must not take the finger.
+          const holds = await tab.evaluate(() => ['#walking-voice-mic', '.multiplayer-voice .voice-mic', '[data-walk-key=KeyW]'].map(selector => getComputedStyle(document.querySelector(selector)).touchAction));
+          expect(holds.every(value => value === 'none'), `${label}: mic and movement buttons keep a held finger (touch-action: none)`, holds);
+        }
         const controls = await audit(tab, '#walking-hud');
         const pad = controls.filter(control => control.pad);
         expect(pad.length === 6, `${label}: with chat folded, all six movement buttons show`, pad.map(control => control.name));
@@ -82,12 +88,12 @@ async page => {
           await tab.touchscreen.tap(...await meet.evaluate(button => { const box = button.getBoundingClientRect(); return [box.left + box.width / 2, box.top + box.height / 2]; }));
           await tab.locator('#community-dialogue').waitFor({ state: 'visible', timeout: 10000 });
           const dialogue = await audit(tab, '#community-dialogue');
-          expect(dialogue.every(c => c.inside || c.name === ''), `${label}: conversation controls are on screen`, dialogue.filter(c => !c.inside));
-          await tab.locator('#community-close').click(); await tab.locator('#community-dialogue').waitFor({ state: 'hidden' }); await frames(tab);
+          expect(dialogue.every(c => c.inside), `${label}: conversation controls are on screen`, dialogue.filter(c => !c.inside));
+          await tab.locator('#community-close').tap(); await tab.locator('#community-dialogue').waitFor({ state: 'hidden' }); await frames(tab);
           metrics[`${label}CloseFocus`] = await tab.evaluate(() => document.activeElement?.id || document.activeElement?.className || document.activeElement?.tagName);
           expect(['walking-meet-nearby', 'canvas-host'].includes(metrics[`${label}CloseFocus`]), `${label}: closing a conversation returns focus to the scene or its opener`, metrics[`${label}CloseFocus`]);
           if (await tab.locator('#walking-hud .walking-more').evaluate(more => more.open)) { await tab.locator('#walking-hud .walking-more > summary').tap(); await frames(tab); }
-        } else metrics[`${label}Conversation`] = 'nobody nearby to meet';
+        } else { metrics.notRun.push(`${label}: conversation layout and close focus (nobody near enough to meet)`); console.log(`skip ${label}: conversation (nobody near enough to meet)`); }
         await tab.screenshot({ path: `output/playwright/touch-layout-${engine}-${label}.png` });
       }
     } finally { await context.close(); }

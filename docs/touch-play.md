@@ -33,7 +33,7 @@ and the console and pad appear. **Play & rides** opens the Play dock; its
 | ← → | Turn | Hold the turn buttons at either end of the pad, or drag on the scene | `touch-hold` (drag) |
 | Mouse drag | Look | Drag on the scene. While a thumb holds a walk button, a second finger looks. | `touch-hold` (Chromium) |
 | Shift | Brisk walk | **None.** The sprint button has been hidden for every form since the beast forms were removed (2b5062b6). | — |
-| E | Talk | **Find a local to talk to** / **Meet someone nearby**, or tap the person | `touch-people`, `touch-layout` |
+| E | Talk | **Find a local to talk to** / **Meet someone nearby**, or tap the person | `touch-people` |
 | F, Shift+F | Doors and stairs | **Step inside** / **Go down one level**, shown when close enough | Code path |
 | Z | Sit or water | **Sit down** (the label follows the place) | Code path |
 | Q, G | Call the ride, get in or out | Character → **Call Jev** / **Ride with Jev** / **Step out** | `carriage-mobile` |
@@ -41,15 +41,20 @@ and the console and pad appear. **Play & rides** opens the Play dock; its
 | B, Space, C | Fly, rise, lower (Jevica) | Character → **Take flight**, then hold **Rise** / **Lower** | Code path |
 | V | Camera | Character → **Third person** / **First person** | Code path |
 | Y | Voice | **Join voice** in the walking console or the chat dock | Code path |
-| M | Mute, or push to talk | The mic button. In push-to-talk mode, hold it to talk. Lifting or a cancelled touch stops transmitting, and the tap that ends a hold never turns the microphone on. | `voice-ui` unit |
+| M | Mute, or push to talk | The mic button. In push-to-talk mode, hold it to talk. Lifting or a cancelled touch stops transmitting, and the tap that ends a hold never turns the microphone on. The button keeps a held finger from becoming a pan (`touch-action: none`). M and the mic buttons share one hold, so releasing any of them stops talking. | `voice-ui` unit; `touch-layout` (touch-action) |
 | Enter | Send chat | The chat field and **Send** | `touch-hold` (chat field) |
-| Escape | Close a conversation | **Close** in the conversation | `touch-layout` |
+| Escape | Close a conversation | **Close** in the conversation | `touch-layout` taps it when someone is near enough to meet; otherwise it records the case as not run |
 | ⌘/Ctrl+B, ⌘/Ctrl+Shift+B | Explore rail, Play dock | The Explore button, **Play & rides** | `touch-layout` (panel) |
 | / | Search places | Explore → Places → **Search the district** | Code path |
-| ?, ⌘/Ctrl+K | Commands and keys | **Commands**, then search and tap a command | `touch-hold` (Town chat) |
+| ?, ⌘/Ctrl+K | Commands and keys | **Commands**, then search and tap a command | Code path. `touch-hold` reaches Town chat through the dialog's keys mid-hold |
 
 "Code path" means the control exists as a touchable button, but no journey
 taps it on a phone yet.
+
+**Taps while holding.** In Chromium, a tap by a second finger while another
+finger holds a control produces no click. With a thumb on the pad, a second
+finger can look around, but it cannot press **Talk** or **Commands**; lift
+first. The iPhone pass checks whether Safari behaves the same way.
 
 **Known gap: landscape.** At 844×390 and 667×375 the walking console, with
 the pad shown, reaches up under the top-right stack. **Commands** covers →
@@ -76,9 +81,10 @@ screenshot for any fail.
    - Hold ↑ and add a finger on →. Lift ↑: you keep moving right. Lift →:
      you stop.
    - Hold ↑ and swipe to the app switcher, then return. You are not moving.
-   - Hold ↑ and, with another finger, tap **Commands**, search "town chat"
-     and tap **Town chat**. The keyboard opens in the chat field, typing
-     "wasd" gives text only, and you are still when it closes.
+   - Hold ↑ and, with another finger, tap **Commands**. Note whether it
+     opens; Chromium ignores a tap like this. If it opens, search "town
+     chat" and tap **Town chat**. The keyboard opens in the chat field,
+     typing "wasd" gives text only, and you are still when it closes.
    - Hold ↑ and rotate the phone. Nothing moves once you lift.
    - Put three fingers down at once. Nothing gets stuck, and no conversation
      opens unless you tapped a person.
@@ -95,7 +101,8 @@ screenshot for any fail.
    - Double-tap **Meet someone nearby**, then close the conversation. Focus
      returns to the scene or the button.
    - If voice is on: in push-to-talk mode, double-tap and hold the mic button
-     to talk, then release. Talking stops.
+     to talk, then release. Talking stops. Without VoiceOver, hold the mic
+     button and let your finger drift a little: talking should not cut out.
 5. **Display (1 min).** Under Settings → Accessibility, turn on Larger Text
    and Reduce Motion. Reload the page; text and buttons still fit and nothing
    overlaps.
