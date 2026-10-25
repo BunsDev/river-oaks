@@ -100,8 +100,12 @@ fitout test). No dead button or prompt was found. Labels that over-promised:
 - The T2 room name "The Commons · Shared collaboration and project demo space" and T3's
   "Atelier and creator workspace" come from the approved layout contract
   (`shared/garden-campus-layout.js` `groundUse`, generated into
-  `docs/design/garden-campus/layout-contract.json` and the view packet). Left unchanged:
-  Decision 2.
+  `docs/design/garden-campus/layout-contract.json` and the view packet). #647 left them
+  unchanged (Decision 2). The draft PR on `fix/garden-campus-hall-names-510-20261025`
+  renames them to "Shared project tables and workbench" and "Atelier work tables and
+  workbench", regenerates the packet (only the two `use` strings and the manifest hash
+  change; `node scripts/garden-campus-views.mjs --check` is clean) and adds a test that no
+  hall name promises an activity. It waits for Val's choice and does not land without it.
 
 ### 3. Remaining automatable boxes
 
@@ -202,7 +206,9 @@ At signed commit `7418b41a`:
    desk). Either approve relabelling the layout contract (for example "Shared project
    tables" and "Atelier workbenches", regenerating the design packet with
    `node scripts/garden-campus-views.mjs`), or approve a real shared activity for T2
-   (a new activity type, which this lane does not add).
+   (a new activity type, which this lane does not add). The rename is ready as a draft PR
+   (`fix/garden-campus-hall-names-510-20261025`): merge it to choose the rename, close it
+   to keep the names for a future activity.
 3. **Paid offers** stay unconfigured (see `docs/garden-campus-leases.md`). Computer stays
    with #486/#487.
 
