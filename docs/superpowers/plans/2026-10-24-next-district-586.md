@@ -119,16 +119,18 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
 
   | Grid | Gardens | Commons | Bayou Heights | Added by Heights | Ratio to Gardens |
   | --- | ---: | ---: | ---: | ---: | ---: |
-  | 1 m | 46,549 | 52,130 | 93,906 | 41,776 | 2.0174× |
-  | 0.5 m | 46,477.75 | 52,030.75 | 93,509.75 | 41,479 | 2.0119× |
+  | 1 m | 46,549 | 52,130 | 93,904 | 41,774 | 2.0173× |
+  | 0.5 m | 46,477.75 | 52,030.75 | 93,508 | 41,477.25 | 2.0119× |
 
-  The margin over 2× is 554.25 m² at 0.5 m. The first layout measured 1.969×. Replacing one Yale storefront block with Twentieth Street Square, which joins Heights Green to Yale Street, closed the gap. The fresh Commons sample is the current main value; the base commit has the same Commons fingerprint. It differs from the historical table in `docs/world-expansion.md` (51,962) by 0.13%.
+  The margin over 2× is 552.5 m² at 0.5 m. **Corrected on 2026-10-25.** This table first recorded 93,906 and 93,509.75 m². Re-measured at `b1ded7ab`, `10dab21c`, `5ea9171f`, `6e5abdff`, `3cd60702` and the merge `0cc09391`, every head gives 93,904 and 93,508 with the same Heights fingerprint, so the first figures came from a tree that was never committed. The ratio rounds the same at 0.5 m. The first layout measured 1.969×. Replacing one Yale storefront block with Twentieth Street Square, which joins Heights Green to Yale Street, closed the gap. The fresh Commons sample is the current main value; the base commit has the same Commons fingerprint. It differs from the historical table in `docs/world-expansion.md` (51,962) by 0.13%.
 - **Pinned composed-world sha256.** Base `1c23170f` and branch are identical for:
   - garage `5fc38cbe54099258f54a199f314eb0f6910a0488dff6efe6d692037b73e38b80`;
   - Gardens `df44715b918971e92630d480c200a048b3cd8b371e69625d08edb2a7a96eaf6b`;
   - Commons `d5f1179d93732630368c9b1ff7419931e72816f815b8db048c23eadff4346315`.
 
   Heights is `5824c9a38f81399597f3880ecb7c3f79e45077e0263497d860f432fd9a56d674`.
+
+  After the merge of main `0b9a97c4` (`0cc09391`; #641 changed the Commons recipe), main and branch are identical for garage `5fc38cbe…`, Gardens `df44715b…` and Commons `b78b24dd7e07e54c87e547479c27c133fd3f1d3e86f459a23f6792b2ce0d0854`. Heights is `19161d4109c94dbf1b94a9952f4b5df3202e3ecc57603a9a8f030e02f59a07bc`. The reachable areas are unchanged.
 - **Recipes.** All seven build with connectivity 1 and within budgets, and `destination check` reproduces every lock. The crossroads' pieces, surfaces, solids and stats equal the base. Totals: 1,321 pieces, 176 shells, 521 solids and 783,488 authored triangles. Client meshes per plan are 21–62, against a budget of 70.
 - **Focused tests.**
   - `preview/tests/bayou-heights.test.js`: 8/8.
@@ -319,14 +321,50 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
       - desktop: 120 passed, 3 skipped;
       - build, Python (170) and secrets: passed.
     - Hosted Verify on the pushed head is the merge gate.
-  - **Next:** a fresh ABBA under the same protocol, A = main `a437cbbf` at `east-garden-commons-market-1` against B = `3cd60702` at `bayou-heights-1`.
-    - It is queued on the shared browser lock as "piece D ABBA #649 3cd60702 (river-oaks-3e)" (03:29Z, three runs ahead). Its labels are `e-a1`, `e-b1`, `e-b2` and `e-a2`.
-    - Inside the lock, each arm waits for a one-minute load of 16 or less, then runs anyway: up to 15 min before A1 and up to 5 min before each later arm. The wait and the load are logged.
+  - **Second ABBA: A = main `a437cbbf` at `east-garden-commons-market-1`, B = `3cd60702` at `bayou-heights-1` (support task D, river-oaks-3e): meets the gate.** Same protocol, commands and harness defaults as the first, with labels `e-a1`, `e-b1`, `e-b2` and `e-a2`.
+    - **Run.** In the order A1 B1 B2 A2, under one held browser lock, 03:47:39–04:17:56Z on 2026-10-25. Each arm's load gate (one-minute load of 16 or less) admitted it without waiting. The one-minute load at each arm's start was 9.3, 13.4, 8.6 and 6.9.
+    - All four runs passed both profiles, with no page errors, no failed assets and 0 m reconnect drift. `baseline-compare.js` lists nothing over.
+    - **Receipts** are in the reviewer's scratchpad (`abba-3cd60702/`). Their sha256 prefixes, checked here:
+      - `compare.json` 1703ca8e2b5aecf7;
+      - `e-a1.json` 1450b76a335b8a76;
+      - `e-b1.json` 48c3433a08b9c2fc;
+      - `e-b2.json` 8792133abe62b465;
+      - `e-a2.json` ca8582785f94e94e.
+
+      | Workload | Metric | A | B | Change |
+      | --- | --- | ---: | ---: | ---: |
+      | Desktop, 1 client | frame mean | 16.67 ms | 16.67 ms | 0.0 % |
+      | Desktop, 1 client | CPU p95 | 8.80 ms | 8.75 ms | −0.6 % |
+      | Desktop, 2 clients | frame mean | 24.51 ms | 24.38 ms | −0.6 % |
+      | Desktop, 2 clients | CPU p95 | 10.70 ms | 10.50 ms | −1.9 % |
+      | Desktop | reconnect | 926 ms | 919 ms | −0.8 % |
+      | Phone, 1 client | frame mean | 16.67 ms | 16.67 ms | 0.0 % |
+      | Phone, 1 client | CPU p95 | 7.50 ms | 7.35 ms | −2.0 % |
+      | Phone, 2 clients | frame mean | 21.97 ms | 21.15 ms | −3.7 % |
+      | Phone, 2 clients | CPU p95 | 9.65 ms | 8.60 ms | −10.9 % |
+      | Phone | reconnect | 896 ms | 812 ms | −9.3 % |
+
+    - **The cost is gone.** The `interactions` phase measured 0.32–0.37 ms on B against 0.40–0.47 ms on A; on `6e5abdff` it was 0.73–1.08 ms. Draw calls were 0.7–1.6 % lower on B; geometries were 2 higher (0.4 %), and textures equal or 1 higher (0.7 %).
     - The `6e5abdff` CPU-profiled pair was dropped before it started, because the Node timings already attribute the cost.
 - **Cold transfer for the landing pair** (river-oaks-3e): main `a437cbbf` against `3cd60702`, measured by the same method as for `6e5abdff`.
   - **Visit JS+CSS, gzipped:** 1,729.8 → 1,732.1 KiB (+0.13 %), within the +10 % limit.
   - **Play-page initial JS:** 12.9 → 13.0 KiB (+0.92 %).
   - The walking chunk grew from 17.2 to 17.4 KiB. The Heights scene stays only in the lazy `heights-stream` chunk, which is not modulepreloaded.
+- **Hosted run on `8fa26714` (Verify 40159077086; the ledger above `3cd60702`): every job passed, 16/16**, including `preview experience (heights)` and the aggregate `preview`.
+  - The heights job took 17 min 45 s of its 20 min timeout (03:48:58–04:06:43Z), the slowest yet; the journey itself took 16 min 48 s. All sixteen jobs started within five minutes of each other.
+  - So the timeout risk recorded under Leg lengths is now nearer: about 2 min 15 s of headroom on this run.
+- **Merge of main `0b9a97c4` (`0cc09391`).** Main brought #641 (luxury city-kit pieces, with the Commons recipe and lock) and #646 (timed melee, checkpoint v17). Merged without force.
+  - **Conflict.** One, in `preview/src/city-kit/render.js`. Main's limestone hedge walls, lawn edging and brass planters are kept as main draws them. Their planting placements stay in `cityKitLandscape`, so Heights draws them once. For the seven Heights plans and the Commons destination, kit trees, planting modules, meshes and triangles equal main's kit (`scratchpad/heights/kit-parity.mjs`).
+  - **Heavier neighborhoods.** #641's pieces raise the geometry the Heights neighborhoods own, measured headless, from 12.95 MiB to 18.20 MiB (1.84–3.14 MiB each). The chunk estimates are re-derived by the existing rule, each its measurement plus 10 % rounded up to 0.05 MiB, at 1.10–1.12× measured. The shared part's 6.5 MiB estimate and the 16 MiB ceiling are unchanged.
+  - **What the ceiling holds now.** Looking north at Nineteenth and Yale, the in-view neighborhoods no longer all fit. They tied at about 1 m and sorted by id, so Yale Street North, centred in the view, lost to the icehouse and Heights Boulevard South at the edges. That failed the ceiling test. Neighborhoods in view now rank by angle off the view axis as well (10 m per radian, `HEIGHTS_VIEW_ANGLE_METRES`), and the angle is held with the 5 s view hold. At the crossroads that keeps the shared part, the crossroads, Yale Street North and Heights Boulevard South, 15.66 MiB of stand-ins.
+  - **Test changes, for review.**
+    - The ceiling test no longer requires Yale Street South (behind the camera) to stream out. Room left after the in-view ranking can hold it. The test now requires that some of Heights waits for room, and that no absent neighborhood would fit in its place. Turning south still brings it back and releases Yale Street North.
+    - The Heights budget test applied the 28-material budget to the drawn kit's own material count. Drawn neighborhoods now create up to 33 (Yale Icehouse), and main's Commons kit creates 35. The kit itself budgets materials, triangles and solids on the assembled plan (`city-kit.test.js`, `scripts/destination.mjs`) and meshes on the drawn one. The test now does the same: the Heights plans hold 7–14 materials, 19,068–183,312 triangles and 35–122 solids, and draw at most 70 meshes. No budget value changed.
+  - **Unchanged.** Reachable ground (above), every Heights destination lock, and the garage, Gardens and Commons hashes against main.
+  - **Focused checks on the merged tree.**
+    - Preview suites for the city kit, Commons, Heights, walking, crime, police and labels: 216/216.
+    - Redis-backed server suites (Heights, both activation rehearsals, Commons, crime, police, `redis-room` and the checkpoint migrations) on an isolated scratch Redis: 119/119, 0 skipped.
+    - `destination check`: 8/8 locks.
 - **Pedestrian captures, inspected.** Both runs uploaded all eight `heights-*.png`. They are CI software-profile renders: llvmpipe at render scale 0.25, with every material replaced by `MeshNormalMaterial` (`main.js:232`). So they show geometry, not appearance.
   - **Greenway:** street trees and kit blocks on both sides.
   - **Icehouse patio:** the two-chair game table, with "Icehouse game table" in the seat picker and a "Sit on the bench" prompt.
@@ -352,9 +390,9 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
     The District views did not record on either tree.
 - **Performance.** ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e); the first result, for `6e5abdff`, is above. The `#626` decision is recorded only on #643's branch (D11).
 
-## Status at handoff (product head `3cd60702`, draft PR #649)
+## Status at handoff (product head `0cc09391`, draft PR #649)
 
-**Overall: blocked.** Items 1–4 and 6 are complete. Item 5 failed its first ABBA on `6e5abdff`: one-client CPU p95 was +24.0 % on desktop and +18.1 % on phone. The load-independent cause is found and fixed in `dd682a7b`. The fixed head `3cd60702`, which also merges main, still needs its own ABBA and cold transfer. Both are support task D (river-oaks-3e) under the #626 protocol, and the gate's limits are unchanged. Heights is not activated anywhere; production activation is not authorized.
+**Overall: blocked.** Items 1–4 and 6 are complete. For item 5, the second ABBA (main `a437cbbf` against `3cd60702`) meets the gate on every metric, and the cold transfer for that pair passed. The product head has since merged main `0b9a97c4` (#641's heavier kit, #646). The landing pair therefore needs its own ABBA and cold transfer: round 3, support task D, river-oaks-3e. Merge stays with Val. Heights is not activated anywhere; production activation is not authorized.
 
 1. **Ledger before source: complete.** The objective, design, files-owned and checks sections were written before any source edit. They were committed with the first source in `b1ded7ab`, so git history alone does not show the order.
 2. **Authoritative ground and connection: complete.**
@@ -368,49 +406,55 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
    - Its landmarks are Heights Hall's clock tower, the bandstand and the footbridge.
    - It has street trees and planted beds, pedestrian streets, seating, and the icehouse table game for two.
    - `pnpm run destination check` reproduces every lock, and the authored overrides are preserved.
-4. **Measured gain: complete.** Reachable ground is 2.0119× at 0.5 m (93,509.75 m²) and 2.0174× at 1 m, with pinned composed-world hashes. Reserved land, upper floors, flight, travel and islands are excluded.
-5. **No District regression: blocked. The first ABBA failed; the fix awaits its re-measure.**
-   - **Done:**
-     - District-only cold transfer: +0.13 % on `6e5abdff`, and +0.13 % for `3cd60702` against main `a437cbbf`, both within +10 %;
+4. **Measured gain: complete.** Reachable ground on `0cc09391` is 2.0119× at 0.5 m (93,508 m²) and 2.0173× at 1 m (93,904 m²), with pinned composed-world hashes; the merge did not change it. The figures first recorded here (93,509.75 and 93,906 m²) do not reproduce at any committed head and are corrected. Reserved land, upper floors, flight, travel and islands are excluded.
+5. **No District regression: blocked until the landing pair is measured.**
+   - **Met on `3cd60702`** against main `a437cbbf`:
+     - the second ABBA, every gated metric within its limit (one-client CPU p95 −0.6 % on desktop and −2.0 % on phone), with 0 m drift;
+     - cold transfer +0.13 %.
+   - **Also done:**
      - streaming and unload checks (focused tests, and the journey's release on the way home);
      - reconnect identity and drift within 0.5 m in Heights (journey);
      - the pedestrian captures, inspected (CI software profile only).
-   - **Failed on `6e5abdff`:** the ABBA District comparison. One-client CPU p95 was +24.0 % on desktop and +18.1 % on phone, against +10 %. Mean frame, two-client CPU p95, reconnect and drift were within their limits.
-   - **Fixed, not yet re-measured:** the walking queries that scanned every Heights solid from the District (`dd682a7b`).
-   - **Not done:** the ABBA for `3cd60702` against main `a437cbbf`, queued with load gating. It settles the load-confounded part as well.
+   - **The first ABBA, on `6e5abdff`, failed** one-client CPU p95: +24.0 % on desktop and +18.1 % on phone. Its cause is fixed in `dd682a7b`, which the second ABBA measured.
+   - **Not done:** round 3, the ABBA and cold transfer for `0cc09391` (or whichever head lands) against main `0b9a97c4`.
+     - Since `3cd60702`, what a District visit runs changed only through main's own kit and encounter code, which both arms carry.
+     - The Heights estimates and view ranking act only once Heights streams, which the District never triggers.
+     - So no change is expected, but it is not measured.
 6. **Signed, verified commits in draft PRs: complete.** Every commit on #649 is SSH-signed.
-   - Core verify passed on every earlier head that changed code.
-   - On `3cd60702`, every stage passed except one load-sensitive tooling test, unchanged since earlier heads, which passes alone (see Results).
-   - Hosted Verify passed 16/16 on `6e5abdff`; the result for `3cd60702` is recorded in the PR body once it runs. Results are recorded per head under Results. Nothing is merged, enqueued or deployed.
+   - Core verify passed on `0cc09391` in one run, with a clean tree (receipt `.runtime/agent/core.json`): agent 274/274; preview 4,176 passed, 1 skipped; server 920 passed, 227 Redis-only skips; desktop 120 passed, 3 skipped; Python 170; build, demo and secrets passed.
+   - Hosted Verify passed 16/16 on `6e5abdff`, `c6d42f43` and `8fa26714`. The result for `0cc09391`'s head is recorded in the PR body once it runs.
+   - Nothing is merged, enqueued or deployed.
 
 ## Gaps and coordination
 
-- **Decision for Val:** Heights holds about 19 MiB of retained geometry in all, against the Commons' 16 MiB ceiling, which it keeps. Holding all of Heights at once needs a larger ceiling for this location. Sharing the oak models with the District's trees (one copy app-wide) would save about 3 MiB more, but it changes shared disposal. Either is a separate task.
-- Residents do not route across locations. That work is support task B, river-oaks-3e, on `feat/resident-locations-20261024`. Once residents can stand in Heights, the Heights rollback must relocate them as it does players.
-- `verify full` browser stages (security-browser, reflections, experience, shared, ipic-screening) were not run here as a whole, because the shared browser lock has a long queue. The Heights journey runs on its own, and hosted CI runs the matrix, including the new `heights` shard.
+- **Decisions for Val:**
+  - **Retained-geometry ceiling.** With #641's kit, Heights holds about 24.5 MiB of retained geometry in all: 18.20 MiB of neighborhoods measured headless, plus the shared part's 6.27 MiB measured in CI on `5ea9171f`. It keeps the Commons' 16 MiB ceiling. Looking north at Nineteenth and Yale, three neighborhoods in view wait for room. Holding all of Heights at once needs a larger ceiling for this location. Sharing the oak models with the District's trees would save about 3 MiB more, but it changes shared disposal. Either is a separate task.
+  - **Budget-test interpretation.** The Heights budget test applies the 28-material budget to assembled plans, as the kit's own test and `destination check` do. It no longer applies it to the materials a drawn kit creates: up to 33 in Heights, and 35 for main's Commons. If the drawn count is meant to be budgeted, the kit itself exceeds it first, on main.
+  - **Leg lengths.** No journey leg exceeds 70 m, which lowers the pace floor on the longest leg to 0.58 m/s (see Results). On `8fa26714` the heights job took 17 min 45 s of its 20 min timeout.
+- **Residents.** River-oaks-3e reports that #655 (resident locations, `22679471`) merges into `3cd60702` without conflicts, in a scratch checkout. They report 88/88 related tests passing on an isolated Redis, and residents never entering Heights in a 30-minute simulation. So the Heights rollback stays player-only safely. It matters only for landing order. This is their evidence; it is not re-run here.
+- `verify full` browser stages (security-browser, reflections, experience, shared, ipic-screening) were not run here as a whole, because the shared browser lock has a long queue. The Heights journey runs on its own, and hosted CI runs the matrix, including the `heights` shard.
 - Human visual approval, physical devices, hosted multiplayer and Unreal parity are separate acceptance.
 - **Retirement check at handoff (`pnpm run project:inventory`).**
   - This task's branch and worktree are active, with a draft PR, so they are not eligible.
   - `diag/heights-west-draw-20261024` exists only on the remote. It is mine, cited here as evidence, and never for merge. Delete it once #649 closes.
-  - The only retire candidate listed, `test/mvp-regression-20261023`, belongs to another owner, so it is untouched.
+  - The only retire candidate listed, `test/mvp-regression-20261023`, belongs to another owner, so it is untouched (re-checked at `0cc09391`).
 
 ## Next step
 
-1. Get hosted Verify green on `3cd60702` (or the docs-only head above it), including `preview experience (heights)` and the aggregate `preview`. If main moves again, merge it without force; the ABBA then has to match the new head.
-2. Get the ABBA result for `3cd60702` against main `a437cbbf` (support task D, river-oaks-3e), with the limits unchanged; its cold transfer already passed at +0.13 %. Record it here and on #586. If one-client CPU p95 is still over, compare the `interactions` and `players` phases with the first run's, and profile what remains.
+1. Get hosted Verify green on the head above `0cc09391`, including `preview experience (heights)` and the aggregate `preview`. If main moves again, merge it without force; round 3 then has to match the new head.
+2. Get round 3 for the landing pair from river-oaks-3e: the ABBA (#626 protocol, limits unchanged) and the cold transfer, main `0b9a97c4` against `0cc09391`. Record it here, in the PR body and on #586 and #638.
 3. Fix any review findings and re-verify. Merge, auto-merge and activation stay with Val.
-4. Decisions for Val, not taken here:
-   - a larger retained-geometry ceiling for Heights;
-   - sharing the oak models with the District's trees.
+4. Decisions for Val, listed under Gaps: the Heights ceiling, oak sharing, the budget-test reading and the leg-length tradeoff.
+5. Once #649 closes, delete the remote diagnostic branch `diag/heights-west-draw-20261024`.
 
 ### Next-session prompt
 
 > Continue task `next-district-586-20261024` (#586, #638 lane 3) in `../river-oaks-next-district-586`, on branch `feat/next-district-586-20261024`, draft PR #649. Read `docs/superpowers/plans/2026-10-24-next-district-586.md` first, especially "Status at handoff" and "Results".
 >
-> Items 1–4 and 6 are complete. Item 5, the District performance gate, is blocked. Its first ABBA, on `6e5abdff`, failed on one-client CPU p95: +24.0 % on desktop and +18.1 % on phone, against +10 %. The load-independent cause is fixed in `dd682a7b`: walking queries scanned every Heights solid from the District. `3cd60702` adds that fix and merges main `a437cbbf`.
+> Items 1–4 and 6 are complete. Item 5, the District performance gate, waits on the landing pair. The second ABBA, main `a437cbbf` against `3cd60702`, met the gate on every metric (one-client CPU p95 −0.6 % on desktop, −2.0 % on phone), and its cold transfer was +0.13 %. The product head `0cc09391` then merged main `0b9a97c4` (#641's heavier kit, #646). That changed the Heights chunk estimates and how in-view neighborhoods rank under the 16 MiB ceiling.
 >
-> Cold transfer for `3cd60702` against main `a437cbbf` passed at +0.13 %. The ABBA for that pair (#626 protocol, limits unchanged: mean frame and CPU p95 +10 %, reconnect +20 %, drift 0.5 m) is queued by river-oaks-3e on the shared browser lock. If the product head moves, both have to be re-measured.
+> Round 3, the ABBA and cold transfer for main `0b9a97c4` against `0cc09391`, is support task D (river-oaks-3e). It uses the #626 protocol with limits unchanged: mean frame and CPU p95 +10 %, reconnect +20 %, drift 0.5 m. If the product head moves, re-measure.
 >
-> Check hosted Verify on the head (the `heights` shard and the aggregate `preview`), and merge `main` without force if it has moved. The heights shard is sensitive to runner speed (see Results), and its 20 min job timeout is a recorded risk. Collect the ABBA result from river-oaks-3e, or run it under the protocol. Post one evidence comment each on #586 and #638.
+> Check hosted Verify on the head (the `heights` shard and the aggregate `preview`), and merge `main` without force if it has moved. The heights job took 17 min 45 s of its 20 min timeout on `8fa26714`. Post one evidence comment each on #586 and #638 per increment.
 >
 > Do not merge, enable auto-merge, activate `bayou-heights-1`, change budgets or the area metric, or edit other owners' branches. The diagnostic branch `diag/heights-west-draw-20261024` is evidence only, never for merge.
