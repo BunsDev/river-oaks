@@ -508,7 +508,7 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
      - the pedestrian captures, inspected (CI software profile only).
    - **The first ABBA, on `6e5abdff`, failed** one-client CPU p95: +24.0 % on desktop and +18.1 % on phone. Its cause is fixed in `dd682a7b`, which rounds 2–4 measured.
 6. **Signed, verified commits in draft PRs: complete.** Every commit on #649 is SSH-signed.
-   - Core verify passed on `525856e2` in one run, with a clean tree (receipt `.runtime/agent/core.json`): agent 274/274; preview 4,180 passed, 1 skipped; server 920 passed, 227 Redis-only skips; desktop 120 passed, 3 skipped; Python 170; build, demo and secrets passed. Redis-backed suites passed 119/119.
+   - Core verify passed on `525856e2` in one run, with a clean tree (receipt `.runtime/agent/core.json`): agent 274/274; preview 4,180 passed, 1 skipped; server 920 passed, 227 Redis-only skips; desktop 120 passed, 3 skipped; Python 170; build, demo and secrets passed. Redis-backed suites passed 119/119. `verify full` on `525856e2` passed all 18 stages (river-oaks-3e; receipt checked here; see Gaps).
    - Hosted Verify passed 16/16 on `6e5abdff`, `c6d42f43`, `8fa26714`, `7cde602c`, `4c3fddc3` and `525856e2`. On `525856e2` that was the rerun of failed jobs; attempt 1's one failure is main's `crime-shared` timing check (Results). The run on this ledger's own commit is recorded in the PR body.
    - Nothing is merged, enqueued or deployed.
 
@@ -532,7 +532,14 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
   - The `land-pr` queue-wake test fails in concurrent agent-test runs on this Mac.
 
   Both are recorded in Results with their evidence.
-- `verify full` browser stages (security-browser, reflections, experience, shared, ipic-screening) were not run here as a whole, because the shared browser lock has a long queue. The Heights journey runs on its own, and hosted CI runs the matrix, including the `heights` shard.
+- **`verify full` on `525856e2`: all 18 stages passed** (river-oaks-3e), in a clean detached checkout, from 15:33:55Z to 16:18:31Z.
+  - **Setup:** an isolated Redis, `nice -n 10` and `caffeinate`.
+  - **Receipt** `.runtime/agent/full.json`: status passed, revision `525856e2`, dirty false, sha256 prefix cac380e9606ec2b0. The receipt, its stages and the checkout's head were checked here.
+  - **Counts:**
+    - agent 274/274; preview 4,180 passed, 1 skipped; server with Redis 1,189/1,189, 0 skipped; desktop 120 passed, 3 skipped; Python 170;
+    - security-browser 2/2, experience 17/17 journeys, shared 27/27;
+    - dependency audit, reflections, IPIC screening, secrets and secret history passed.
+  - **Limit:** the local experience profile has no Heights journey. Hosted CI's `heights` shard is what covers the Heights round trip.
 - Human visual approval, physical devices, hosted multiplayer and Unreal parity are separate acceptance.
 - **Retirement check at handoff (`pnpm run project:inventory`).**
   - This task's branch and worktree are active, with a draft PR, so they are not eligible.
