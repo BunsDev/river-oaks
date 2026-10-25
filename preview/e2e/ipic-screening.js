@@ -21,11 +21,16 @@ async (host, viewer) => {
     await page.waitForFunction(() => window.__riverScreening?.()?.active === true);
   }
   // Each page reports its film position and wall time; compare them at a common instant.
-  const position = async page => page.evaluate(() => ({ at: performance.timeOrigin + performance.now(), ...window.__riverScreening() }));
+  const position = async page => page.evaluate(() => ({ at: performance.timeOrigin + performance.now(), perfNow: performance.now(), ...window.__riverScreening() }));
   async function spread() {
     const [a, b] = await Promise.all([position(host), position(viewer)]);
     const project = sample => sample.currentTime * 1000 + (sample.paused ? 0 : Date.now() - sample.at);
-    return { spreadMs: Math.abs(project(a) - project(b)), host: a, viewer: b };
+    // currentTime reads a requested seek at once; the last frame each compositor presented (this
+    // generation's only) is the visible position, carried forward to the same instant.
+    const shown = sample => sample.presented?.generation === sample.generation
+      ? sample.presented.mediaTimeMs + (sample.paused ? 0 : sample.perfNow - (sample.presented.shownAt ?? sample.presented.at) + Date.now() - sample.at) : null;
+    const [pa, pb] = [shown(a), shown(b)];
+    return { spreadMs: Math.abs(project(a) - project(b)), presentedSpreadMs: pa === null || pb === null ? null : Math.abs(pa - pb), host: a, viewer: b };
   }
 
   // Both residents are in town first; the viewer's late join is then only the trip into IPIC.
@@ -57,13 +62,18 @@ async (host, viewer) => {
   let converged = null;
   while (Date.now() - joined < 9000) {
     const sample = await spread();
-    samples.push({ sinceJoinMs: Date.now() - joined, spreadMs: Math.round(sample.spreadMs), hostDriftMs: sample.host.driftMs, viewerDriftMs: sample.viewer.driftMs, hostRate: sample.host.rate, viewerRate: sample.viewer.rate });
+    samples.push({ sinceJoinMs: Date.now() - joined, spreadMs: Math.round(sample.spreadMs), presentedSpreadMs: sample.presentedSpreadMs === null ? null : Math.round(sample.presentedSpreadMs), hostDriftMs: sample.host.driftMs, viewerDriftMs: sample.viewer.driftMs, hostRate: sample.host.rate, viewerRate: sample.viewer.rate });
     if (sample.spreadMs < 500 && converged === null) converged = Date.now() - joined;
     await viewer.waitForTimeout(250);
   }
   check(converged !== null && converged <= 5000, `viewers converged within 500 ms in ${converged} ms`);
   check(samples.filter(s => s.sinceJoinMs >= 5000).every(s => s.spreadMs < 500), 'viewers stayed within 500 ms after convergence');
-  checks.push(`two viewers converged within 500 ms after ${converged} ms and stayed there`);
+  // The same agreement in presented frames, not only in requested time. Each sample carries a frame's
+  // display estimate forward, so single samples are noisy: the median is checked and every sample kept.
+  const presentedSpreads = samples.filter(s => s.sinceJoinMs >= 5000 && s.presentedSpreadMs !== null).map(s => s.presentedSpreadMs).sort((a, b) => a - b);
+  const median = presentedSpreads[Math.floor(presentedSpreads.length / 2)];
+  check(presentedSpreads.length >= 8 && median < 500, `presented frames agree within 500 ms (median) after convergence: ${JSON.stringify(presentedSpreads)}`);
+  checks.push(`two viewers converged within 500 ms after ${converged} ms and stayed there; presented frames: median spread ${median} ms, max ${presentedSpreads.at(-1)} ms over ${presentedSpreads.length} samples`);
   // House lights: dimmed while the film plays in IPIC (eased over about a second).
   const dimmed = await viewer.waitForFunction(() => window.__riverScreening().houseLights < 0.5, null, { timeout: 10000 }).then(() => true, () => false);
   check(dimmed, `house lights dim while the film plays: ${JSON.stringify(await viewer.evaluate(() => window.__riverScreening().houseLights))}`);
