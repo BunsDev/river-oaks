@@ -162,3 +162,27 @@ test('push to talk on touch transmits only while the mic button is held, never a
   await ui.elements.dockMic.events.click({ detail: 1, preventDefault() {} });
   assert.deepEqual(voice.calls, ['toggleMic']);
 });
+
+test('a second finger on the mic neither restarts nor ends the first finger\'s hold (#288)', () => {
+  const { chatSection } = dom();
+  const voice = fakeVoice(baseState({ status: 'joined', pushToTalk: true }));
+  voice.setTransmit = value => voice.calls.push(['transmit', value]);
+  const ui = createVoiceUI({ voice, chatSection });
+  ui.render(voice.state);
+  for (const button of [ui.elements.consoleMic, ui.elements.dockMic]) {
+    // The browser keeps each finger's capture until that finger lifts or is cancelled.
+    const captured = new Set();
+    button.setPointerCapture = id => captured.add(id); button.hasPointerCapture = id => captured.has(id);
+    const press = pointerId => button.events.pointerdown({ button: 0, pointerId, preventDefault() {} });
+    const lift = pointerId => { button.events.pointerup({ pointerId }); captured.delete(pointerId); };
+    voice.calls.length = 0;
+    press(7); press(9); lift(9);
+    assert.deepEqual(voice.calls, [['transmit', true]], 'the first finger still talks');
+    lift(7);
+    assert.deepEqual(voice.calls, [['transmit', true], ['transmit', false]], 'and its lift ends the hold');
+    // A hold whose finger left without a word (its capture gone) does not block the next press.
+    voice.calls.length = 0;
+    press(11); captured.delete(11); press(12); lift(12);
+    assert.deepEqual(voice.calls, [['transmit', true], ['transmit', true], ['transmit', false]]);
+  }
+});

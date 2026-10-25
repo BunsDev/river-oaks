@@ -40,13 +40,17 @@ export function createVoiceUI({ voice, chatSection, chatDock = null, walking = n
   for (const button of [consoleJoin, dockJoin]) button.addEventListener('click', () => void voice.toggleJoin());
   // Push to talk by touch or mouse transmits while the button is held and stops when it
   // lifts or is cancelled; the click that follows a press never turns the microphone on.
-  // Keyboard and switch activation (detail 0) still toggle.
+  // Keyboard and switch activation (detail 0) still toggle. The hold belongs to the finger
+  // that started it: another landing on the same button neither restarts nor ends it,
+  // unless the first has lost its capture without a word.
   for (const button of [consoleMic, dockMic]) {
-    let holding = false;
-    const release = () => { if (!holding) return; holding = false; voice.setTransmit(false); };
+    let holder = null;
+    const release = event => { if (holder === null || event.pointerId !== holder) return; holder = null; voice.setTransmit(false); };
     button.addEventListener('pointerdown', event => {
       if (!voice.state.pushToTalk || event.button !== 0) return;
-      event.preventDefault(); holding = true;
+      event.preventDefault();
+      if (holder !== null && button.hasPointerCapture?.(holder)) return;
+      holder = event.pointerId;
       try { button.setPointerCapture?.(event.pointerId); } catch { /* the pointer already lifted */ }
       voice.setTransmit(true);
     });
