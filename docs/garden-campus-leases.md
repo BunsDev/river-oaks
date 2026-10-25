@@ -161,8 +161,8 @@ lease or overwriting a newer change (`campus_lease_stale`, `campus_lease_ended`,
   landing}` for the tenant and every guest. The reason is `expired`, `revoked`,
   `released` or `guest_removed`. `landing` is `{levelId, surfaceId, position}` in
   campus metres. The world receives each report in `campusAccessEnded`, the seam
-  where #508 moves an occupant of that suite to the landing. Until suite occupancy
-  exists nobody can be inside a suite, so the seam does nothing yet. Expiry is
+  where #508 moves an occupant of that suite to the landing: the world stands them up
+  and walks them out to the gallery side of the door. Expiry is
   checked against the clock, so an expired lease admits no one even before the next
   tick records it.
 - Ending access never touches account-private desk work, which stays with each
@@ -223,14 +223,43 @@ no new requests or acceptances, and no operator actions. Active leases keep thei
 access until they end, and tenants can still release them. Offers from an operator
 who is no longer configured can't be accepted (`campus_operator_retired`).
 
+## What residents see (#510)
+
+The suites dialog (`preview/src/garden-campus-ui.js`, model in
+`garden-campus-model.js`) shows the directory, the account's live leases and pending
+requests, and **Ended recently**: the account's own ended leases and closed requests
+from the last 30 days, newest five, each with its reason in plain words. A request that
+was answered with an offer is left out, because the offer's own row continues it.
+
+- **Tenants and requesters** read the reason from their own `list`.
+- **Guests.** Ending a lease clears its guests, and the server keeps no record of
+  them, so a former guest's `list` is silent. The page compares its own lists: guest
+  access it last saw and no longer sees is reported as "Your guest access ended:
+  <tenant> removed you, or the lease ended." That lasts only while the page is open.
+  Leaving on purpose is not reported.
+- **Walked out.** While the page holds suite access, a change in the public `leased`
+  set makes it list once, and lost access is announced: in the dialog's status when it
+  is open, otherwise in the campus panel and the walking notice. A page that reaches
+  the suite floors without having listed (a reload upstairs) lists once to learn its
+  access. A guest removed by the tenant doesn't change `leased`, so that removal is
+  learned at the next list.
+- **Retries.** A replayed retry answers with the record as it is now. If that record no
+  longer shows what the action did (an accepted lease since ended, a request since
+  declined), the dialog says what happened instead of reporting success. An operator's
+  replayed offer or extension is told in the operator's terms ("the tenant gave the suite
+  up").
+- **One account at a time.** The page keeps these lists for the account and world that
+  asked. When another account signs in on the page (or the world changes), it drops them,
+  closes an open dialog, and stops predicting suite doors until its own first list.
+
 ## Limits of this delivery
 
-- There is no UI (#510). Suite entry, occupancy and relocation are #508, and
-  `campusAccessEnded` does nothing until then.
-- The office desk API still admits only during a Jevica office visit. A campus
-  desk context is #510's.
 - The server does not notify tenants when an offer arrives or a lease ends. Clients
-  learn from `list` and from the public frame.
+  learn from `list` and from the public frame; the page's announcements above are
+  derived from those.
+- A former guest's notice depends on the page that saw the guest lease. Keeping it
+  across reloads needs a server record of former guests, which is a checkpoint
+  version change.
 - Names are recorded when a request, offer or grant is made.
 - Verified locally with synthetic identities, in memory and against an isolated
   Redis. There is no hosted, production or real-account evidence.

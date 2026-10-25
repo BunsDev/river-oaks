@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { commonsGroundAt } from '../../shared/east-garden-commons-layout.js';
 import { RETRO } from './retro-palette.js';
 import { buildCityKit } from './city-kit/render.js';
+import { KIT_MATERIALS } from '../../shared/city-kit/catalog.js';
+import { physicalSurface } from './materials.js';
 
 export { attachEastGardenCommons, detachEastGardenCommons } from './east-garden-commons-world.js';
 
@@ -12,8 +14,11 @@ export { attachEastGardenCommons, detachEastGardenCommons } from './east-garden-
 export function buildEastGardenCommons(layout) {
   const group = new THREE.Group(); group.name = 'East Garden Commons';
   if (!layout) return group;
+  // With the destination composed, the gateway ramp is paved in Market Street's granite
+  // so the District street runs on into the shared lane without a change of floor.
+  const granite=KIT_MATERIALS['granite-sett'];
   const materials = {
-    route:new THREE.MeshStandardMaterial({color:RETRO.ivory,roughness:.8}),
+    route:layout.destination?physicalSurface(granite.surface,{tileSize:granite.tile,variation:.08,color:new THREE.Color(granite.color),textureContrast:granite.textureContrast,normalScale:new THREE.Vector2(.3,.3)}):new THREE.MeshStandardMaterial({color:RETRO.ivory,roughness:.8}),
     column:new THREE.MeshStandardMaterial({color:RETRO.teal,roughness:.6}),
     canopy:new THREE.MeshStandardMaterial({color:RETRO.ivory,roughness:.8}),
     bench:new THREE.MeshStandardMaterial({color:RETRO.brass,roughness:.55}),
@@ -49,6 +54,8 @@ export function buildEastGardenCommons(layout) {
       ...xs.slice(0,-1).map((_,i)=>rows*(columns+1)+columns-1-i),...ys.slice(1,-1).map((_,i)=>(rows-1-i)*(columns+1))];
     for(let i=0;i<rim.length;i++){const a=rim[i],b=rim[(i+1)%rim.length];indices.push(a,a+topCount,b,b,a+topCount,b+topCount);}
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setIndex(indices);geometry.computeVertexNormals();geometries.add(geometry);
+    // Metric UVs (east, north) so surface materials tile at their real size.
+    geometry.setAttribute('uv',new THREE.Float32BufferAttribute(Array.from({length:positions.length/3},(_,i)=>[positions[i*3],-positions[i*3+2]]).flat(),2));
     const mesh=new THREE.Mesh(geometry,materials.route);mesh.name=surface.id;mesh.receiveShadow=true;group.add(mesh);
   }
   const baseSolids=destination?layout.solids.slice(0,layout.solids.length-destination.solids.length):layout.solids;

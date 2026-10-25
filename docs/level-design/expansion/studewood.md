@@ -47,7 +47,7 @@ Studewood extends the composed Heights layout in place (`shared/studewood.js`). 
 
 ## Streaming
 
-Heights streams Studewood as two more of its neighborhoods (`preview/src/heights-stream.js`), under the same 16 MiB retained-geometry ceiling and the same view-priority rules. The shared Heights landscape part draws Studewood's street trees once. Measured headless, the neighborhoods own 1.77 MiB (north) and 1.57 MiB (south); their estimates are 1.85 and 1.65 MiB. Stepping from presented ground into a Studewood neighborhood that is still loading waits for it, as everywhere in Heights.
+Heights streams Studewood as two more of its neighborhoods (`preview/src/heights-stream.js`), under the same 16 MiB retained-geometry ceiling and the same view-priority rules. The shared Heights landscape part draws Studewood's street trees once. Measured headless in the luxury kit (#641), the neighborhoods own 2.84 MiB (north) and 2.43 MiB (south); their estimates are 3.0 and 2.6 MiB. Stepping from presented ground into a Studewood neighborhood that is still loading waits for it, as everywhere in Heights.
 
 ## Checkpoints and rollback
 

@@ -3,7 +3,7 @@ import { packager } from '@electron/packager';
 import { flipFuses } from '@electron/fuses';
 import { DESKTOP_FUSES } from './fuses.js';
 import { DESKTOP_FILES, DESKTOP_SHARED_FILES } from './package-files.js';
-import { packagerOptions, packagedBinary } from './package-options.js';
+import { packagerOptions, packagedBinary, withNetworkRetry } from './package-options.js';
 import { APP_NAME, LINUX_EXECUTABLE } from './identity.js';
 import { cp, mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -20,7 +20,10 @@ try {
   await writeFile(join(stage, 'desktop/world-design-pack.json'), JSON.stringify(await buildWorldDesignPack(root)));
   // desktopName: Electron gives Linux windows this desktop entry's app ID (Wayland), matching the one the installers write.
   await writeFile(join(stage, 'package.json'), JSON.stringify({ name: 'river-oaks', productName: APP_NAME, version: pkg.version, type: 'module', main: 'desktop/main.js', desktopName: `${LINUX_EXECUTABLE}.desktop` }));
-  const paths = await packager(await packagerOptions({ root, stage, pkg, platform: process.platform, arch: process.arch }));
+  const options = await packagerOptions({ root, stage, pkg, platform: process.platform, arch: process.arch });
+  // A cached zip needs no network. A cold cache downloads it, and a dropped
+  // connection gets two more tries before packaging fails.
+  const paths = await withNetworkRetry(() => packager(options));
   // The packaged app launches only the explicitly configured designer executable; its
   // renderer is sandboxed. Turning off the Node entry points stops another local
   // program from running code as River Oaks (and inheriting its microphone or

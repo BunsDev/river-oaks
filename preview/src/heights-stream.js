@@ -32,6 +32,10 @@ export const HEIGHTS_VIEW_METRES = 150;
 // A neighborhood keeps that place for a while after the camera turns from it, so the small
 // turns of walking do not rebuild a neighborhood each time it crosses the edge of the view.
 export const HEIGHTS_VIEW_HOLD_MS = 5000;
+// More of Heights can be in view than the ceiling holds. Those nearer the centre of the view
+// rank first: each radian off the view axis counts as this many metres, at most about 31 m,
+// inside the 85 m prefetch distance.
+export const HEIGHTS_VIEW_ANGLE_METRES = 10;
 const MiB = 1024 * 1024;
 // The Commons' retained-geometry ceiling (commons-stream.js), unchanged for Heights. Heights
 // holds more than this in all, so deep inside it the neighborhoods the camera cannot see stream out.
@@ -39,12 +43,12 @@ export const HEIGHTS_MAX_BYTES = 16 * MiB;
 // Geometry each chunk owns, rounded up from measurement (docs/level-design/expansion/bayou-heights.md).
 // An estimate below the real size would admit a chunk the ceiling then refuses, so these err high.
 export const HEIGHTS_CHUNK_BYTES = {
-  'bayou-heights': 6.5 * MiB, 'bayou-greenway': 1.75 * MiB, 'yale-icehouse': 2.25 * MiB, 'nineteenth-and-yale': 2.75 * MiB,
-  'yale-street-north': 2.45 * MiB, 'yale-street-south': 1.65 * MiB, 'heights-boulevard-north': 2.1 * MiB, 'heights-boulevard-south': 1.45 * MiB,
-  // Studewood (heights-studewood-1), measured headless at 1.77 and 1.57 MiB.
-  'studewood-north': 1.85 * MiB, 'studewood-south': 1.65 * MiB,
-  // The Bayou Terraces (bayou-terraces-1), measured headless at 2.00 and 1.40 MiB.
-  'bayou-terrace-north': 2.1 * MiB, 'bayou-terrace-south': 1.5 * MiB,
+  'bayou-heights': 6.5 * MiB, 'bayou-greenway': 3 * MiB, 'yale-icehouse': 3.3 * MiB, 'nineteenth-and-yale': 3.45 * MiB,
+  'yale-street-north': 3.35 * MiB, 'yale-street-south': 2.05 * MiB, 'heights-boulevard-north': 2.95 * MiB, 'heights-boulevard-south': 2.05 * MiB,
+  // Studewood (heights-studewood-1) in the luxury kit, measured headless at 2.84 and 2.43 MiB.
+  'studewood-north': 3 * MiB, 'studewood-south': 2.6 * MiB,
+  // The Bayou Terraces (bayou-terraces-1) in the luxury kit, measured headless at 2.76 and 2.01 MiB.
+  'bayou-terrace-north': 2.9 * MiB, 'bayou-terrace-south': 2.15 * MiB,
 };
 // Each neighborhood composed after Heights' own adds its street trees and planted beds to the
 // shared part. Allowances per placement err high, so the shared estimate grows with them.
@@ -92,7 +96,7 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
   const chunks = [{ id: SHARED, bounds: sharedBounds, estimatedBytes: sharedBytes },
     ...plans.map(plan => ({ id: idOf(plan), plan, bounds: plan.site, estimatedBytes: HEIGHTS_CHUNK_BYTES[plan.id] ?? 3 * MiB }))];
   const boxes = plans.map(plan => { const [w, s, e, n] = plan.site; return [plan, new Box3(new Vector3(w, layout.ground - 4, -n), new Vector3(e, layout.ground + 30, -s))]; });
-  const frustum = new Frustum(), viewMatrix = new Matrix4(), measured = {}, seen = new Map();
+  const frustum = new Frustum(), viewMatrix = new Matrix4(), forward = new Vector3(), measured = {}, seen = new Map();
   const scene = new Group(), neighborhoods = new Map(), drawn = new Set();
   let shared = null, status = '';
   scene.name = 'Bayou Heights'; scene.userData.shadowProxies = [];
@@ -145,16 +149,25 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
         camera.updateMatrixWorld();
         frustum.setFromProjectionMatrix(viewMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
         const eye = [camera.position.x, -camera.position.z], time = now();
+        camera.getWorldDirection(forward);
+        const heading = Math.atan2(-forward.z, forward.x);
         for (const [plan, box] of boxes) {
           const [w, s, e, n] = plan.site, edge = [Math.min(Math.max(eye[0], w), e), Math.min(Math.max(eye[1], s), n)];
           const distance = Math.hypot(eye[0] - edge[0], eye[1] - edge[1]);
           if (distance >= HEIGHTS_VIEW_METRES) continue;
-          if (frustum.intersectsBox(box)) seen.set(plan.id, time);
-          if (!(time - (seen.get(plan.id) ?? -Infinity) < HEIGHTS_VIEW_HOLD_MS)) continue;
+          if (frustum.intersectsBox(box)) {
+            // How far the neighborhood's centre sits from the view axis, kept while it is held.
+            const off = Math.atan2((s + n) / 2 - eye[1], (w + e) / 2 - eye[0]) - heading;
+            seen.set(plan.id, { time, angle: Math.abs(Math.atan2(Math.sin(off), Math.cos(off))) });
+          }
+          const view = seen.get(plan.id);
+          if (!(time - (view?.time ?? -Infinity) < HEIGHTS_VIEW_HOLD_MS)) continue;
           // A visible neighborhood streams as if someone stood just short of it, so the one a
           // player stands in keeps its place under the ceiling: half a metre when it is already
-          // here, a metre when not, so a glance does not evict one in view for another.
-          const step = Math.min(stream.ready(idOf(plan)) ? .5 : 1, distance) / (distance || 1);
+          // here, a metre when not, so a glance does not evict one in view for another. Past
+          // that, the centre of the view ranks first.
+          const reach = (stream.ready(idOf(plan)) ? .5 : 1) + view.angle * HEIGHTS_VIEW_ANGLE_METRES;
+          const step = Math.min(reach, distance) / (distance || 1);
           wanted.push([edge[0] + (eye[0] - edge[0]) * step, edge[1] + (eye[1] - edge[1]) * step]);
         }
       }

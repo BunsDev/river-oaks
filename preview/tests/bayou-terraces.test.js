@@ -150,10 +150,12 @@ test('the terrace gardens table seats two players in the shared seat model', () 
 });
 
 test('terrace neighborhoods build within the kit budgets and their estimates err high', () => {
-  const { drawCallsPerNeighborhood, materialsPerNeighborhood } = KIT_CONVENTIONS.budgets;
+  const { drawCallsPerNeighborhood } = KIT_CONVENTIONS.budgets;
   for (const plan of terraces.plans) {
     const kit = buildHeightsNeighborhood(layout, plan), stats = kit.userData.stats(), buffers = new Set();
-    assert.ok(stats.meshes <= drawCallsPerNeighborhood && stats.materials <= materialsPerNeighborhood, `${plan.id}: ${JSON.stringify(stats)}`);
+    // The kit budgets a drawn plan's meshes; its materials, triangles and solids are budgeted
+    // on the assembled plan above (city-kit.test.js, scripts/destination.mjs).
+    assert.ok(stats.meshes <= drawCallsPerNeighborhood, `${plan.id}: ${JSON.stringify(stats)}`);
     kit.traverse(item => { if (item.geometry) for (const attribute of [...Object.values(item.geometry.attributes), item.geometry.index].filter(Boolean)) buffers.add(attribute.array.buffer); });
     const bytes = [...buffers].reduce((n, buffer) => n + buffer.byteLength, 0), estimate = HEIGHTS_CHUNK_BYTES[plan.id];
     assert.ok(bytes <= estimate && estimate <= bytes * 1.25, `${plan.id}: ${bytes} against ${estimate}`);

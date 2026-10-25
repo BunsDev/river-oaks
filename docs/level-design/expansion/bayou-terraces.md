@@ -42,7 +42,7 @@ Heights streams the two terraces as two more of its neighborhoods (`preview/src/
 - **Gate.** The Heights gate covers the terraces as well as everything east of the bayou. Stepping from the presented greenway onto a footbridge waits for its terrace. Someone restored on an unpresented terrace, or on its footbridge, may walk back east toward the greenway, and the notices name the Bayou Terraces and the way back.
 - **From the District.** Nothing streams. The terraces sit beside the District edge, but points and cameras west of that edge never load them, so the District keeps its own frame budget. They stream from the Commons and the greenway.
 - **The Commons stream.** It gates only Commons ground (its location's north–south span), so an unloaded Commons never holds a terrace walker.
-- **Budgets.** Headless, the terraces own 2.00 MiB (north) and 1.40 MiB (south); their estimates are 2.1 and 1.5 MiB.
+- **Budgets.** Headless in the luxury kit (#641), the terraces own 2.76 MiB (north) and 2.01 MiB (south); their estimates are 2.9 and 2.15 MiB.
 
 ## Checkpoints and rollback
 
