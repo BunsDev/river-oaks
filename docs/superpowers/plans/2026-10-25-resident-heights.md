@@ -6,7 +6,7 @@ Support piece B of the next-district lane (#586, #649). Residents already walk f
 
 ## Ownership and landing order
 
-Task `next-district-586-support-20261024`, owner `claude:river-oaks-3e (4e851f0b)`. Worktree `river-oaks-resident-heights`, branch `feat/resident-heights-20261025`, stacked on #655 (`bd9df00c`).
+Task `next-district-586-support-20261024`, owner `claude:river-oaks-3e (4e851f0b)`. Worktree `river-oaks-resident-heights`, branch `feat/resident-heights-20261025`, stacked on #655 (`bd9df00c`; since 2026-10-25 10:27Z its merge of main `0b9a97c4`, `03381365`).
 
 Agreed with river-oaks-91 (2026-10-25): this branch lands **after #649**. Once #649 is on main, it also brings the Heights rollback's resident handling:
 - `server/district-heights-checkpoint-migration.js` calls `relocateResidents` with the Heights bounds before moving players, and adds `moved` to its log.
@@ -42,6 +42,7 @@ Until then, nothing here changes behaviour on main: Heights code paths run only 
 | Focused and related suites, isolated Redis | 95/95 passed: resident locations, rollback and life; navigation, community, companion, creator and auto-navigation; Commons server and migration; Commons activation rehearsal; police world |
 | `nice -n 19 pnpm run verify` (core), Python 3.12 | **Passed** on the final source tree (04:55–04:59Z): agent 274/274; preview 4,096 passed, 1 skipped; server 892 passed, 225 Redis-only skips; desktop 115 passed, 3 skipped; build; Python lint, format and 170 tests; demo; secrets. The first attempt (04:52Z) failed only the known load-sensitive `land-pr` queued-lander timing test, which passed 29/29 alone; that log is kept. |
 | Scratch merge with #649 head `0cc09391` (not pushed): Heights probe and server-world simulation | See Results |
+| Main `0b9a97c4` merged in through #655 (`03381365`); signed merge `ff46d99e`, clean | Related suites on an isolated Redis: 195/195, 0 skipped (the 95 above plus Gardens, District and world migrations, police and crime, Commons games and transport, and the Redis room). `nice -n 10 pnpm run verify` (core), Python 3.12: **passed** on the third attempt (10:41–10:46Z, load 7.8): agent 274/274; preview 4,163 passed, 1 skipped; server 918 passed, 225 Redis-only skips; desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo; secrets. Attempts 1 and 2 (10:36Z and 10:38Z, load 7.1–7.8) each failed only the `land-pr` queued-lander timing test (30 s timeout), which passed 29/29 alone; `scripts/` is identical to main and both logs are kept. Hosted checks at `ff46d99e`: 15/15 green. |
 
 ## Results
 
