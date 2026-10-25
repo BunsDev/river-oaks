@@ -11,7 +11,7 @@ replace a real iPhone, Safari's software keyboard, safe areas or VoiceOver
 | Journey | What it checks | Engines |
 | --- | --- | --- |
 | `touch-hold` | A 390×844 touch phone covers a tap, walking while looking, a second walk finger, touchcancel, the page hiding, capture loss, the Town chat command mid-hold, three fingers lifted out of order and a rotation mid-hold. Nothing keeps moving, nothing is selected by accident and chat text stays text. | Chromium uses real CDP touches. WebKit uses real taps and a real mouse hold. Cases that need two contacts at once are listed as not run, because Playwright's WebKit can only tap. |
-| `touch-layout` | 390×844 and 375×667, portrait and landscape: no horizontal scroll; walking controls on screen, uncovered and at least 44 × 44 px; the panel fits the width and scrolls to the end of content taller than the screen (recorded as not run when it fits); focus returns when the panel or a conversation closes. The landscape overlap below is reported as KNOWN. | Chromium and WebKit emulation |
+| `touch-layout` | 390×844 and 375×667, portrait and landscape: no horizontal scroll; walking controls on screen, uncovered and at least 44 × 44 px; the panel fits the width and scrolls to the end of content taller than the screen (recorded as not run when it fits); closing the panel leaves focus on its toggle in Chromium and where it was in WebKit, which does not focus a tapped button, and never inside the closed panel; closing a conversation returns focus to the scene. The landscape overlap below is reported as KNOWN. | Chromium and WebKit emulation |
 | `touch-people`, `carriage-mobile`, `background-input` | Existing touch selection, ride controls and background release | Chromium |
 
 Run one with `pnpm run test:experience <journey>`. Prefix
@@ -97,6 +97,7 @@ screenshot for any fail.
    - Swipe through the walking console. Each control has a spoken name, such
      as "Walk forward" or "Show movement controls".
    - Double-tap the Explore button, swipe inside the panel, then close it.
+     VoiceOver's cursor should return to the button that opened it.
      Focus returns to the button that opened it.
    - Double-tap **Meet someone nearby**, then close the conversation. Focus
      returns to the scene or the button.
