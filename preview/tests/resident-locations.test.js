@@ -153,3 +153,26 @@ test('a resident walks across the seam into the Commons without teleporting',()=
   }
   assert.ok(crossed,`reached ${local.position.map(value=>value.toFixed(1))}`);
 });
+
+test('a location over the grid cap is split into strips that residents cross at found seams',()=>{
+  // Bayou Heights (308 × 291 cells) is over the 80,000-cell cap. A small cap splits
+  // the Commons band (116 × 81) the same way, on ground this revision has.
+  const whole=createResidentNavigation(commons,{locations:true}),split=createResidentNavigation(commons,{locations:true,locationCells:5000});
+  const regions=split.locations.regions;
+  assert.deepEqual(regions.map(region=>region.id),['district',`${COMMONS_ID}#1`,`${COMMONS_ID}#2`]);
+  for(const {bounds} of regions.slice(1))assert.ok((Math.floor(bounds[2]-bounds[0])+1)*(Math.floor(bounds[3]-bounds[1])+1)<=5000);
+  assert.equal(regions[1].bounds[2],regions[2].bounds[0]);
+  assert.ok(split.locations.portals.some(portal=>portal.west===`${COMMONS_ID}#1`&&portal.east===`${COMMONS_ID}#2`),'the strips meet at a found seam');
+  // Splitting changes no walking answer.
+  const [west,south,east,north]=whole.locations.regions[1].bounds;
+  for(let x=west-20;x<=east;x+=1.5)for(let y=south;y<=north;y+=1.5)
+    assert.equal(split.free([x,y]),whole.free([x,y]),`free at ${x.toFixed(1)},${y.toFixed(1)}`);
+  // Residents still walk from the District to the far end and back.
+  const life=createResidentLife(commons,createCommunity(commons,[],{carriage:false}));
+  const tower=life.stops.find(stop=>stop.id.endsWith('lantern-tower')).position,home=[split.locations.portals[0].from[0]-25,split.locations.portals[0].from[1]];
+  for(const [a,b] of [[home,tower],[tower,home]]){
+    const route=split.route(a,b);
+    assert.ok(route&&walkable(split,a,route),`${a} -> ${b}`);
+    assert.ok(distance(route.at(-1),b)<1e-9);
+  }
+});

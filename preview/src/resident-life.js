@@ -23,17 +23,38 @@ const streetVisitor=(local,visitor,pose)=>visitor && (!pose ||
 // (nearest, middle and farthest from the District) give them somewhere to go;
 // more would leave the nearest stops all in the Commons, and residents who
 // wandered in would rarely come back.
+// Across the footbridge, Bayou Heights adds its landing, bandstand, icehouse patio
+// and hall. Each stands where a resident can walk to and from the landing: a spot
+// tucked beside the bandstand's stage was clear but took the planner too long to leave.
 function locationStops(world,navigation) {
   const layout=world.eastGardenCommons,lanterns=[...layout?.destination?.lanterns ?? []];
   if(!navigation.locations || lanterns.length<3) return [];
   lanterns.sort((a,b)=>a.at[0]-b.at[0]);
   const stops=[];
-  for(const lantern of [lanterns[0],lanterns[lanterns.length>>1],lanterns.at(-1)]) {
-    // A lantern is a solid; stand on clear ground beside it.
-    search:for(let radius=0.8;radius<=3;radius+=0.4)for(let i=0;i<16;i++) {
-      const angle=i/16*Math.PI*2,position=[lantern.at[0]+Math.cos(angle)*radius,lantern.at[1]+Math.sin(angle)*radius];
-      if(navigation.free(position)) {stops.push({id:lantern.id,name:lantern.name,position});break search;}
+  // Landmarks are solids; stand on clear ground beside each one, nearest `toward` first.
+  const beside=(id,name,at,from,to,{toward=null,reaches=()=>true}={})=>{
+    const ring=[];
+    for(let radius=from;radius<=to;radius+=0.4)for(let i=0;i<16;i++) {
+      const angle=i/16*Math.PI*2,position=[at[0]+Math.cos(angle)*radius,at[1]+Math.sin(angle)*radius];
+      if(navigation.free(position)) ring.push(position);
     }
+    if(toward) ring.sort((a,b)=>distance(a,toward)-distance(b,toward));
+    const position=ring.slice(0,8).find(reaches);
+    if(position) stops.push({id,name,position});
+    return position;
+  };
+  for(const lantern of [lanterns[0],lanterns[lanterns.length>>1],lanterns.at(-1)]) beside(lantern.id,lantern.name,lantern.at,0.8,3);
+  const heights=layout.heights,centre=rect=>[(rect[0]+rect[2])/2,(rect[1]+rect[3])/2];
+  const around=rect=>[Math.min(rect[2]-rect[0],rect[3]-rect[1])/2+0.8,Math.hypot(rect[2]-rect[0],rect[3]-rect[1])/2+4];
+  const landing=heights?.footbridge?.landing?.every(Number.isFinite)
+    && beside(`${heights.id}/footbridge`,'Footbridge landing',centre(heights.footbridge.landing),0,3);
+  if(!landing) return stops;
+  const reaches=point=>Boolean(navigation.route(point,landing) && navigation.route(landing,point));
+  for(const [name,label,rect,at] of [['bandstand','Bandstand',heights.bandstand?.rect],['icehouse','Icehouse patio',null,heights.icehouse?.at],
+    ['hall','Heights Hall',heights.hall?.rect]]) {
+    const id=`${heights.id}/${name}`;
+    if(rect?.every(Number.isFinite)) beside(id,label,centre(rect),...around(rect),{toward:landing,reaches});
+    else if(at?.every?.(Number.isFinite)) beside(id,label,at,0.8,3,{toward:landing,reaches});
   }
   return stops;
 }

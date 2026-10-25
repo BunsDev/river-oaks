@@ -28,7 +28,7 @@ export function recoverDistrictCommonsCheckpoint({worldData,checkpoint,worldId=D
       if(player.sitting?.buildId?.startsWith('bench:plaza-salon-chess-commons-')
         && !source.command(player.id,{type:'stand'}).ok)return rejected();
     }
-    const {checksum:_checksum,...envelope}=source.checkpoint();
+    let {checksum:_checksum,...envelope}=source.checkpoint();
     // The Lantern Walk exists only in the Commons; rolling back leaves it behind.
     if(!forward)delete envelope.payload.lanternWalk;
     const moved=[],movedResidents=[];
@@ -50,42 +50,62 @@ export function recoverDistrictCommonsCheckpoint({worldData,checkpoint,worldId=D
         Object.assign(player,{position:destination,altitude:0,buildingId:null,levelId:null,vehicle:null,sitting:null,cycling:null,gesture:null,gestureUntil:0});
         placed.push(destination);moved.push(player.id);
       }
-      // Residents stroll into the Commons too. Anyone standing where the Gardens
-      // resident planner cannot reach (the Commons, or the seam corridor east of
-      // the District's site ring) walks home from the nearest clear District ground.
-      const colliders=envelope.payload.builds.map(objectCollider).filter(Boolean);
-      const navigation=createResidentNavigation(worldData,{placedObjects:colliders});
-      const corridors=createResidentNavigation(sourceData,{placedObjects:colliders,locations:true})?.locations?.portals.map(portal=>portal.rect)??[];
-      const removed=([east,north])=>east>worldData.bounds_m[2]
-        || corridors.some(r=>east>=r[0]&&east<=r[2]&&north>=r[1]&&north<=r[3]);
-      const locals=envelope.payload.state?.locals??[];
-      const clear=(east,north)=>navigation.free([east,north]) && navigation.pedestrian.classify([east,north])!=='road'
-        && !placed.some(p=>Math.hypot(p[0]-east,p[1]-north)<.9)
-        && !locals.some(other=>!other.indoor&&Math.hypot(other.position[0]-east,other.position[1]-north)<.7);
-      for(const local of locals){
-        if(!navigation || local.indoor || local.stationary || !removed(local.position) || navigation.free(local.position))continue;
-        const east=Math.min(local.position[0],worldData.bounds_m[2]-1),north=local.position[1];
-        let destination=null;
-        for(let radius=0;radius<=40&&!destination;radius+=.5)for(let i=0;i<(radius?48:1)&&!destination;i++){
-          const angle=i/48*Math.PI*2,x=east+Math.cos(angle)*radius,y=north+Math.sin(angle)*radius;
-          if(clear(x,y))destination=[x,y,navigation.ground([x,y])];
-        }
-        if(!destination)return rejected();
-        local.position=destination;
-        if(local.life)Object.assign(local.life,{route:[],destination:null,routeVersion:local.life.routeVersion+1,seat:null,speed:0,velocity:0,blocked:false,replanAt:0});
-        movedResidents.push(local.id);
-      }
-      // Their errands restart from where they now stand (as checkpoint repair does).
-      for(const job of envelope.payload.state?.jobs??[])if(['routing','traveling','assisting'].includes(job.phase)
-        && (movedResidents.includes(job.localId)||movedResidents.includes(job.helperId))){
-        job.phase='queued';job.approachAttempt=0;
-        const helper=locals.find(local=>local.id===job.helperId);
-        if(helper?.life){helper.life.route=[];helper.life.destination=null;helper.life.routeVersion++;if(helper.life.helping)helper.life.helping.onSite=false;}
-      }
+      // Residents stroll into the Commons too; anyone left in it walks home.
+      const relocated=relocateResidents({fromData:sourceData,toData:worldData,checkpoint:envelope,inside:east=>east>worldData.bounds_m[2]});
+      if(!relocated)return rejected();
+      envelope=relocated.checkpoint;movedResidents.push(...relocated.moved);
     }
     envelope.worldFingerprint=digest(worldData);
     const result={...envelope,checksum:digest(envelope)};
     if(!createSharedWorld(worldData,{worldId,...options}).restore(result).ok)return rejected();
     return {ok:true,checkpoint:result,from:forward?'gardens':'commons',to:forward?'commons':'gardens',moved,movedResidents};
   } catch {return rejected();}
+}
+
+/**
+ * Residents standing on land a rollback drops walk home from the nearest clear
+ * ground the target revision's resident planner reaches. `inside(east, north)`
+ * names the dropped land; seam corridors of the source that the target cannot
+ * reach count too. When nothing within 40 m of where a resident stood (clamped
+ * into the target's bounds) is clear, the search starts again at `toward`.
+ * Residents land at least 0.9 m from any player and 0.7 m from each other.
+ * Returns the repaired checkpoint envelope and who moved, or null when someone
+ * has nowhere to go.
+ */
+export function relocateResidents({fromData,toData,checkpoint,inside,toward=null}) {
+  const envelope=structuredClone(checkpoint),payload=envelope.payload,moved=[];
+  const colliders=payload.builds.map(objectCollider).filter(Boolean);
+  const navigation=createResidentNavigation(toData,{placedObjects:colliders,locations:true});
+  if(!navigation)return {checkpoint:envelope,moved};
+  const corridors=createResidentNavigation(fromData,{placedObjects:colliders,locations:true})?.locations?.portals.map(portal=>portal.rect)??[];
+  const removed=([east,north])=>inside(east,north)
+    || corridors.some(r=>east>=r[0]&&east<=r[2]&&north>=r[1]&&north<=r[3]);
+  const locals=payload.state?.locals??[],placed=payload.players.map(player=>player.position);
+  const clear=(east,north)=>navigation.free([east,north]) && navigation.pedestrian.classify([east,north])!=='road'
+    && !placed.some(p=>Math.hypot(p[0]-east,p[1]-north)<.9)
+    && !locals.some(other=>!other.indoor&&Math.hypot(other.position[0]-east,other.position[1]-north)<.7);
+  const search=(east,north)=>{
+    for(let radius=0;radius<=40;radius+=.5)for(let i=0;i<(radius?48:1);i++){
+      const angle=i/48*Math.PI*2,x=east+Math.cos(angle)*radius,y=north+Math.sin(angle)*radius;
+      if(clear(x,y))return [x,y,navigation.ground([x,y])];
+    }
+    return null;
+  };
+  const [west,south,east,north]=toData.bounds_m,clamp=(value,low,high)=>Math.max(low+1,Math.min(high-1,value));
+  for(const local of locals){
+    if(local.indoor || local.stationary || !removed(local.position) || navigation.free(local.position))continue;
+    const destination=search(clamp(local.position[0],west,east),clamp(local.position[1],south,north)) ?? (toward && search(toward[0],toward[1]));
+    if(!destination)return null;
+    local.position=destination;
+    if(local.life)Object.assign(local.life,{route:[],destination:null,routeVersion:local.life.routeVersion+1,seat:null,speed:0,velocity:0,blocked:false,replanAt:0});
+    moved.push(local.id);
+  }
+  // Their errands restart from where they now stand (as checkpoint repair does).
+  for(const job of payload.state?.jobs??[])if(['routing','traveling','assisting'].includes(job.phase)
+    && (moved.includes(job.localId)||moved.includes(job.helperId))){
+    job.phase='queued';job.approachAttempt=0;
+    const helper=locals.find(local=>local.id===job.helperId);
+    if(helper?.life){helper.life.route=[];helper.life.destination=null;helper.life.routeVersion++;if(helper.life.helping)helper.life.helping.onSite=false;}
+  }
+  return {checkpoint:envelope,moved};
 }
