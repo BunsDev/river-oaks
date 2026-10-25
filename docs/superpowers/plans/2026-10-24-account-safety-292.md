@@ -269,6 +269,12 @@ Independent review (2026-10-24):
     that reload after the switch, or have the journey assert the reload itself.
   - The #665 failure, a click inside the Computer frame after the first switch, has no
     diagnosis. Each PR used its one rerun.
+- Hosted `preview checks` failed on #667's first head (`c7bcae1f`) in B's own test,
+  `blocking keeps its own write limit`: 200, not 429. The hosted limiter counts per clock
+  minute, and that run crossed a minute boundary (02:34:58-02:35:00Z). The test now fixes
+  the security store's clock inside one minute (B commit `f9d865fa`, merged up the stack
+  as `d06d9fcd` into C and `b626616b` into D). It's red without the fix when started a
+  second before a boundary, and red when the limit is raised to 100.
 
 ## Next action
 
