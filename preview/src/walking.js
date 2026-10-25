@@ -39,6 +39,24 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     polygons.push([[-w, -d], [w, -d], [w, d], [-w, d]].map(([x, y]) => [building.center[0] + x * c - y * s, -(building.center[1] + x * s + y * c)]));
   }
   const obstacles = polygons.map((ring) => ({ ring, minX: Math.min(...ring.map(p => p[0])) - RADIUS, maxX: Math.max(...ring.map(p => p[0])) + RADIUS, minZ: Math.min(...ring.map(p => p[1])) - RADIUS, maxZ: Math.max(...ring.map(p => p[1])) + RADIUS }));
+  // Obstacles bucketed by their bounds. A point lies inside an obstacle's bounds only in a
+  // bucket those bounds cover, so a point query need check only its own bucket: the composed
+  // destinations' hundreds of solids cost nothing away from them. The predicate is unchanged.
+  const obstacleBucketSize = 8, obstacleBuckets = new Map();
+  // Numeric keys: bucket rows stay well inside ±32768 for any world in metres.
+  const bucketKey = (bx, bz) => bx * 65536 + bz, none = [];
+  // Queries outside the world bounds are refused before the lookup, so clamping each ring's
+  // buckets to the bounds is exact, and keeps a huge or infinite ring cheap to index.
+  const bucketOf = (value, low, high) => Math.floor(clamp(value, low, high) / obstacleBucketSize);
+  for (const obstacle of obstacles) {
+    for (let bx = bucketOf(obstacle.minX, west, east); bx <= bucketOf(obstacle.maxX, west, east); bx++)
+      for (let bz = bucketOf(obstacle.minZ, -north, -south); bz <= bucketOf(obstacle.maxZ, -north, -south); bz++) {
+        const key = bucketKey(bx, bz);
+        if (!obstacleBuckets.has(key)) obstacleBuckets.set(key, []);
+        obstacleBuckets.get(key).push(obstacle);
+      }
+  }
+  const obstaclesAt = (x, z) => obstacleBuckets.get(bucketKey(Math.floor(x / obstacleBucketSize), Math.floor(z / obstacleBucketSize))) ?? none;
   // Boutique interiors are free pockets inside footprints, entered through the mapped door.
   const rooms = levelId === null ? storeRoomsFor(world) : interiorLevelRoomsFor(world, levelId);
   if (levelId !== null && rooms.length !== 1) throw new Error('Unknown or ambiguous interior level');
@@ -90,7 +108,7 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     const room = roomFor(x, z, RADIUS);
     if (levelId !== null) return Boolean(room && !roomBlocked(room, x, -z, RADIUS));
     if (room) return !roomBlocked(room, x, -z, RADIUS);
-    return !obstacles.some(o => x > o.minX && x < o.maxX && z > o.minZ && z < o.maxZ && overlaps(x, z, o.ring));
+    return !obstaclesAt(x, z).some(o => x > o.minX && x < o.maxX && z > o.minZ && z < o.maxZ && overlaps(x, z, o.ring));
   };
   // Full conservative footprint clearance for creator placement. Unlike point
   // samples, disk/polygon intersection also catches obstacles inside the disk.
