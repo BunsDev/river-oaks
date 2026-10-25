@@ -4,7 +4,8 @@ import { compareBaselines } from '../audit/baseline-compare.js';
 
 const sample = (players, meanMs, cpuP95, p95, calls = 1700) => ({ players, frameSummary: { meanMs, missedTwoRefreshes: 0 },
   cpuSubmission: { p50Ms: cpuP95 / 2, p95Ms: cpuP95 }, frame: { p95Ms: p95 }, after: { render: { calls }, memory: { geometries: 530, textures: 162 } } });
-const report = ({ head = 'base', vsync, two = [33, 14, 33.4], reconnectMs = 1000, status = 'passed' } = {}) => ({ status, head, ...vsync ? { vsync } : {},
+const report = ({ head = 'base', vsync, two = [33, 14, 33.4], reconnectMs = 1000, status = 'passed', reconnectBackoff } = {}) => ({ status, head, ...vsync ? { vsync } : {},
+  ...reconnectBackoff ? { options: { reconnectBackoff } } : {},
   profiles: [{ name: 'desktop', reconnectMs, samples: [sample(1, 16.7, 11, 16.7), sample(1, 16.7, 12, 16.7), sample(1, 16.7, 13, 16.7),
     ...[0, 1, 2].map(() => sample(2, ...two))] }] });
 const row = (result, workload, metric) => result.rows.find(item => item.workload === workload && item.metric === metric);
@@ -43,4 +44,13 @@ test('mixed vsync settings, failed reports and empty arms are refused', () => {
   assert.throws(() => compareBaselines([report()], [report({ vsync: 'off' })]), /same vsync/);
   assert.throws(() => compareBaselines([report({ status: 'failed' })], [report()]), /Only passed/);
   assert.throws(() => compareBaselines([], [report()]), /at least one/);
+});
+
+test('reports that skip the reconnect backoff compare only with each other', () => {
+  // Reports written before the option existed waited out the backoff.
+  assert.equal(compareBaselines([report()], [report({ reconnectBackoff: 'keep' })]).reconnectBackoff, 'keep');
+  assert.throws(() => compareBaselines([report()], [report({ reconnectBackoff: 'skip' })]), /same reconnect-backoff/);
+  const skipped = compareBaselines([report({ reconnectBackoff: 'skip', reconnectMs: 250 })], [report({ reconnectBackoff: 'skip', reconnectMs: 260 })]);
+  assert.equal(skipped.reconnectBackoff, 'skip');
+  assert.equal(row(skipped, 'desktop/reconnect', 'reconnectMs').decision, 'within');
 });

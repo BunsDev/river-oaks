@@ -151,20 +151,37 @@ try {
           frameMeanMs: distribution(samples.map(sample => sample.frameSummary.meanMs)).p50Ms,
           cpuSubmissionP50Ms: distribution(samples.map(sample => sample.cpuSubmission.p50Ms)).p50Ms };
       });
-      const before = await owner.page.evaluate(() => {
-        const town = window.__riverMultiplayer();
-        return { id: town.selfId, player: town.snapshot.players.find(player => player.id === town.selfId), sockets: window.__expansionSockets.length };
-      });
-      const rejoinStarted = performance.now();
-      await owner.page.evaluate(() => window.__expansionSockets.at(-1).close());
-      await owner.page.waitForFunction(prior => {
-        const socket = window.__expansionSockets.at(-1), town = window.__riverMultiplayer();
-        return window.__expansionSockets.length > prior.sockets && socket.readyState === WebSocket.OPEN && town.connected
-          && town.selfId === prior.id && town.snapshot?.players.some(player => player.id === prior.id);
-      }, before);
-      row.reconnectMs = performance.now() - rejoinStarted;
-      const after = await owner.page.evaluate(() => { const town = window.__riverMultiplayer(); return town.snapshot.players.find(player => player.id === town.selfId); });
-      row.reconnectPositionDeltaM = Math.hypot(...after.position.map((value, axis) => value - before.player.position[axis]));
+      // Close the owner's socket and time the rejoin, --reconnects times. With
+      // --reconnect-backoff=skip the page reports itself back online once the close is
+      // handled, so the client retries at once (multiplayer-client.js resume()) instead
+      // of after its random retryDelay(0). reconnectMs is the median of the samples.
+      row.reconnectBackoff = options.reconnectBackoff; row.reconnectSamplesMs = []; row.reconnectPositionDeltaM = 0;
+      for (let attempt = 0; attempt < options.reconnects; attempt++) {
+        if (attempt) await owner.page.waitForTimeout(1500);
+        const before = await owner.page.evaluate(() => {
+          const town = window.__riverMultiplayer();
+          return { id: town.selfId, player: town.snapshot.players.find(player => player.id === town.selfId), sockets: window.__expansionSockets.length };
+        });
+        const rejoinStarted = performance.now();
+        await owner.page.evaluate(skip => {
+          const socket = window.__expansionSockets.at(-1), count = window.__expansionSockets.length;
+          if (skip) socket.addEventListener('close', () => {
+            const nudge = () => { if (window.__expansionSockets.length > count) return; dispatchEvent(new Event('online')); setTimeout(nudge, 5); };
+            nudge();
+          }, { once: true });
+          socket.close();
+        }, options.reconnectBackoff === 'skip');
+        await owner.page.waitForFunction(prior => {
+          const socket = window.__expansionSockets.at(-1), town = window.__riverMultiplayer();
+          return window.__expansionSockets.length > prior.sockets && socket.readyState === WebSocket.OPEN && town.connected
+            && town.selfId === prior.id && town.snapshot?.players.some(player => player.id === prior.id);
+        }, before);
+        row.reconnectSamplesMs.push(performance.now() - rejoinStarted);
+        const after = await owner.page.evaluate(() => { const town = window.__riverMultiplayer(); return town.snapshot.players.find(player => player.id === town.selfId); });
+        row.reconnectPositionDeltaM = Math.max(row.reconnectPositionDeltaM, Math.hypot(...after.position.map((value, axis) => value - before.player.position[axis])));
+      }
+      // One sample keeps the unrounded value the Phase 1 protocol has always recorded.
+      row.reconnectMs = row.reconnectSamplesMs.length === 1 ? row.reconnectSamplesMs[0] : distribution(row.reconnectSamplesMs).p50Ms;
       assert.ok(row.reconnectPositionDeltaM < 0.5, 'Reconnect moved the stationary player');
       assert.deepEqual(row.errors, []);
       row.status = 'passed';

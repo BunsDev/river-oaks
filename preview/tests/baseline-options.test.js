@@ -3,9 +3,15 @@ import test from 'node:test';
 import { baselineOptions, frameSummary, phaseSummary } from '../audit/baseline-options.js';
 
 test('baseline options default to the Phase 1 protocol', () => {
-  assert.deepEqual(baselineOptions([]), { seconds: 30, samples: 3, vsync: 'on', profiles: ['desktop', 'phone-viewport'], cpuProfile: 'off', label: '' });
+  assert.deepEqual(baselineOptions([]), { seconds: 30, samples: 3, vsync: 'on', profiles: ['desktop', 'phone-viewport'], cpuProfile: 'off', label: '', reconnects: 1, reconnectBackoff: 'keep' });
   assert.deepEqual(baselineOptions(['--vsync=off', '--profiles=desktop', '--samples=5', '--label=main-a1', '--cpu-profile=on']),
-    { seconds: 30, samples: 5, vsync: 'off', profiles: ['desktop'], cpuProfile: 'on', label: 'main-a1' });
+    { seconds: 30, samples: 5, vsync: 'off', profiles: ['desktop'], cpuProfile: 'on', label: 'main-a1', reconnects: 1, reconnectBackoff: 'keep' });
+});
+
+test('several reconnects, with or without the client backoff, are opt-in', () => {
+  const options = baselineOptions(['--reconnects=5', '--reconnect-backoff=skip']);
+  assert.deepEqual([options.reconnects, options.reconnectBackoff], [5, 'skip']);
+  assert.deepEqual([baselineOptions(['--reconnects=9']).reconnectBackoff, baselineOptions(['--reconnect-backoff=keep']).reconnects], ['keep', 1]);
 });
 
 test('the profile environment variable sets the default and --profiles overrides it', () => {
@@ -15,7 +21,8 @@ test('the profile environment variable sets the default and --profiles overrides
 });
 
 test('baseline options reject unknown, duplicate and out-of-range values', () => {
-  for (const args of [['--vsync=maybe'], ['--samples=0'], ['--seconds=4'], ['--profiles=tablet'], ['--label=Bad Label'], ['--seconds=30', '--seconds=31'], ['--fps=60']])
+  for (const args of [['--vsync=maybe'], ['--samples=0'], ['--seconds=4'], ['--profiles=tablet'], ['--label=Bad Label'], ['--seconds=30', '--seconds=31'], ['--fps=60'],
+    ['--reconnects=0'], ['--reconnects=10'], ['--reconnects=2.5'], ['--reconnect-backoff=fast'], ['--reconnects=3', '--reconnects=5']])
     assert.throws(() => baselineOptions(args), /Invalid or duplicate option|Use seconds/, args.join(' '));
 });
 

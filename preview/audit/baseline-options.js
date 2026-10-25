@@ -1,27 +1,36 @@
 import { distribution } from './metrics.js';
 
 // Options for world-expansion-baseline.js. Defaults reproduce the Phase 1
-// protocol (three 30-second samples per workload, display vsync, both profiles).
+// protocol (three 30-second samples per workload, display vsync, both profiles,
+// one reconnect that waits out the client's backoff).
 // RIVER_OAKS_BASELINE_PROFILES sets the default profiles; --profiles overrides it.
+// After a socket closes the client waits retryDelay(0), a random 500–1,000 ms, before
+// rejoining (connection-policy.js), so one reconnect per profile cannot resolve a 20%
+// budget. --reconnects takes the median of several; --reconnect-backoff=skip rejoins at
+// once through the client's own back-online path, leaving only the rejoin itself.
 export function baselineOptions(args, env = {}) {
-  const result = { seconds: 30, samples: 3, vsync: 'on', profiles: (env.RIVER_OAKS_BASELINE_PROFILES ?? 'desktop,phone-viewport').split(','), cpuProfile: 'off', label: '' };
+  const result = { seconds: 30, samples: 3, vsync: 'on', profiles: (env.RIVER_OAKS_BASELINE_PROFILES ?? 'desktop,phone-viewport').split(','), cpuProfile: 'off', label: '',
+    reconnects: 1, reconnectBackoff: 'keep' };
   const seen = new Set();
   for (const arg of args) {
-    const match = /^--(seconds|samples|vsync|profiles|cpu-profile|label)=(.+)$/.exec(arg);
+    const match = /^--(seconds|samples|vsync|profiles|cpu-profile|label|reconnects|reconnect-backoff)=(.+)$/.exec(arg);
     if (!match || seen.has(match[1])) throw new Error(`Invalid or duplicate option: ${arg}`);
     seen.add(match[1]);
     const [, key, value] = match;
-    if (key === 'seconds' || key === 'samples') result[key] = Number(value);
+    if (key === 'seconds' || key === 'samples' || key === 'reconnects') result[key] = Number(value);
     else if (key === 'profiles') result.profiles = value.split(',');
     else if (key === 'cpu-profile') result.cpuProfile = value;
+    else if (key === 'reconnect-backoff') result.reconnectBackoff = value;
     else result[key] = value;
   }
   if (!Number.isInteger(result.seconds) || result.seconds < 5 || result.seconds > 120
     || !Number.isInteger(result.samples) || result.samples < 1 || result.samples > 9
+    || !Number.isInteger(result.reconnects) || result.reconnects < 1 || result.reconnects > 9
     || !['on', 'off'].includes(result.vsync) || !['on', 'off'].includes(result.cpuProfile)
+    || !['keep', 'skip'].includes(result.reconnectBackoff)
     || !result.profiles.length || result.profiles.some(name => !['desktop', 'phone-viewport'].includes(name))
     || !/^[a-z0-9-]{0,40}$/.test(result.label))
-    throw new Error('Use seconds 5–120, samples 1–9, vsync on/off, cpu-profile on/off, profiles from desktop,phone-viewport and a lowercase label.');
+    throw new Error('Use seconds 5–120, samples 1–9, reconnects 1–9, vsync on/off, cpu-profile on/off, reconnect-backoff keep/skip, profiles from desktop,phone-viewport and a lowercase label.');
   return result;
 }
 

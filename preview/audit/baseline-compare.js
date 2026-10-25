@@ -44,7 +44,7 @@ function workloads(report) {
     }
     if (Number.isFinite(profile.reconnectMs)) result.set(`${profile.name}/reconnect`, { reconnectMs: profile.reconnectMs });
   }
-  return { vsync: report.vsync ?? 'on', head: report.head, result };
+  return { vsync: report.vsync ?? 'on', reconnect: `${report.options?.reconnectBackoff ?? 'keep'}`, head: report.head, result };
 }
 
 export function compareBaselines(base, candidate) {
@@ -52,6 +52,8 @@ export function compareBaselines(base, candidate) {
   const arms = [base, candidate].map(reports => reports.map(workloads));
   const vsync = new Set(arms.flat().map(item => item.vsync));
   if (vsync.size !== 1) throw new Error('Compare reports taken with the same vsync setting');
+  // A rejoin that waits out the client's random backoff and one that skips it measure different things.
+  if (new Set(arms.flat().map(item => item.reconnect)).size !== 1) throw new Error('Compare reports taken with the same reconnect-backoff setting');
   const keys = [...arms[0][0].result.keys()].filter(key => arms.flat().every(item => item.result.has(key)));
   const uncapped = [...vsync][0] === 'off';
   const kinds = { ...Object.fromEntries(SAMPLE_METRICS.map(([name, kind]) => [name, kind])), reconnectMs: 'reconnect', ...uncapped ? { frameP95Ms: 'frame' } : {} };
@@ -69,7 +71,7 @@ export function compareBaselines(base, candidate) {
         ...budget === null ? { decision: 'informational' } : { budget, decision: change <= budget ? 'within' : 'over' } });
     }
   }
-  return { vsync: [...vsync][0], heads: { base: [...new Set(arms[0].map(item => item.head))], candidate: [...new Set(arms[1].map(item => item.head))] },
+  return { vsync: [...vsync][0], reconnectBackoff: arms[0][0].reconnect, heads: { base: [...new Set(arms[0].map(item => item.head))], candidate: [...new Set(arms[1].map(item => item.head))] },
     reports: { base: base.length, candidate: candidate.length }, rows,
     over: rows.filter(row => row.decision === 'over').map(row => `${row.workload} ${row.metric}`) };
 }
