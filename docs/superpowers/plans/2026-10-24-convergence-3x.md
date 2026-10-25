@@ -109,6 +109,14 @@ After the merge, f1 clarified that its own goal excluded merging, and that "fina
   - **Second independent visual review:** accepts roughness; says not to promote the hero candidate.
   - **Correction:** the bodice tiles come from main's code or the M5 GPU, and this host can't tell which.
   - #517 correction: issuecomment-6399455259. Still held for Val.
+- **Final head `13c0afc4` (about 17:30Z, river-oaks-32): ships switched off, held for Val.**
+  - **Policy:** `sable-human:['roughness']` with `enabled:false`, so Jevica and Sable draw as on main for every viewer.
+  - **Why it's off:** Jevica was stopped after timing-6 (×8 at +10.2% CPU p95), and Sable after timing-7 (×24 at +12.0% frame and +11.7% CPU p95), under a rule recorded before that run.
+  - **Verification:**
+    - verify full on `6621d297` passed all 18 stages;
+    - core on `13c0afc4` passed with stages run separately, tooling 279/279 serially;
+    - hosted 22/22 (run 40209651820).
+  - **Records:** #517 issuecomment-6400822388; register task `default-appearance-517-20261024` is blocked on Val's Decisions 1–5.
 
 ### #655 held after an independent review (about 03:55Z)
 
@@ -512,6 +520,52 @@ Seams: Twentieth (y 111) and Eighteenth (y −71) cross Heights' 2 m reserve mar
     - The Terraces riverside walk and gardens show the planted limestone planter wall along the bank, and the game table.
     - No missing geometry, z-fighting or untextured surfaces were seen. This is a visual check by this task, not Val's human approval.
 
+### Third increment: Woodland Heights, land proposal A′ as a draft (task `woodland-heights-3x-20261025`, draft #673)
+
+**Why build it as a draft.** The goal asks for 3×, and the reserve was fully authored at 2.8244×. So recommendation A′ was built as a working draft that Val can accept or reject. It's marked not to land without Val's land decision, and it's stacked on #663 → #662 → #649.
+
+**The authoring.** A subagent wrote it in `river-oaks-woodland-3x`, using the Studewood and Terraces diffs as the template; this task reviewed and published it.
+- **The revision.** `woodland-heights-1` composes on `bayou-terraces-1`. The location `woodland-heights` spans x 507.888 → 552.888 in the recipe frame across the District's whole span (13,069.38 m²), the first location outside the original envelope.
+- **The ground.**
+  - Live Oak Lane at x 530 with bungalow gardens;
+  - Twentieth and Eighteenth continue east from Studewood's, joined by 2 m ground-only seams;
+  - corner shops and a green with a `chess-woodland` table;
+  - a rollback migration first in the Redis chain.
+- **Measured:** 141,664.25 m² at 0.5 m, **3.0480×** (3.0519× at 1 m), adding 10,394.75 m² over the Terraces and passing 3× by 2,231 m². Earlier revisions' world hashes and areas are unchanged. This task reran the footprint and recipe checks itself.
+
+| Check | Result |
+| --- | --- |
+| Recipe locks | 14/14 |
+| Focused preview suites | 125/125 (the subagent); 92/92 and then 93/93 (this task) |
+| Server suites | 23/23 with an owned Redis |
+| Core on `8c0123e3` | Passed on run 3; runs 1–2 hit the `land-pr` wake flake |
+| Local Metal journeys | woodland-heights, studewood and bayou-terraces passed, captures inspected (`scratchpad/woodland/captures/`) |
+| Hosted on `8c0123e3` | 21/21, 5 skipped, including `preview experience (woodland)` |
+
+**Independent review** (fresh context, read-only) of `8c0123e3`: one MEDIUM and three LOW, all addressed in `946e8cd2`.
+1. **MEDIUM, confirmed: east-facing side gardens held a restored player while Woodland failed to load** (1,327.5 m² by reverse flood fill).
+   - **Fix:** on Woodland ground that isn't presented, any step within Woodland is allowed; the way out is west along a cross street.
+   - **New flood-fill test:** it fails on the old gate with exactly 1,327.5 m² held.
+2. **LOW:** the airborne rollback branch couldn't fire for Woodland. It's marked defensive and the test no longer claims it.
+3. **LOW:** the rollback line wasn't pinned. It is now pinned either side; a 0.30 radius fails the test.
+4. **LOW, documented:** two Heights pairs exceed 16 MiB on estimates, while measured sizes fit.
+
+**Confirmed fine by the review:**
+- earlier worlds are byte-identical;
+- the rollback moves exactly the players on Woodland ground;
+- the Redis chain order and epoch fencing hold;
+- budgets and seams;
+- the east edge is closed;
+- journey legs are clear;
+- every documented number reproduces.
+
+**After the fixes (`946e8cd2`):**
+- focused 93/93 and server Woodland 6/6;
+- core passed on run 3 (tooling 274/274; preview 4,214 + 1 skip; server 936 + 230 Redis skips; desktop 120 + 3); runs 1–2 hit the `land-pr` wake flake again, and it passed alone;
+- hosted 21/21 + 5 skipped on `946e8cd2`.
+
+**Not done:** verify full, human visual approval, devices, matched performance. Val's land decision is required.
+
 ### Land proposal for Val, updated after the terraces (projection, not measurement)
 
 **Measured with #649, #662 and #663:** 131,269.5 m² at 0.5 m (2.8244×). The original east envelope is fully authored, so 3× (139,433.25 m²) needs **8,163.75 m² more reachable ground on new land**. Both measured increments came in at about 84–86% walkable density (Studewood 20,815.75 m² from 24,799 m² of bounds; the terraces 16,945.75 m² from 24,199.5 m²).
@@ -547,39 +601,49 @@ Both passed on `rerun-failed-jobs`. The first-attempt logs are kept in `.runtime
 
 The journey (`preview/e2e/crime-shared.js:78–90`, from #646/#640) reads the counter's `remainingMs` from a town snapshot sent every 200 ms. It accepts 80–330 ms, presses U, and needs the press inside a 350 ms window, with three attempts. On a slow hosted runner, snapshot age plus input latency can miss all three. A fix belongs to the #640 owner: for example, time the press from a fresher signal, or widen the attempts.
 
-## Handoff (about 16:15Z)
+## Handoff (about 18:15Z)
 
 **Delivered by this task:**
 - **Ten merges** through `pnpm run land` and the merge guard (Phase 1 table above).
-- **The Commons go/no-go for `0b9a97c4`**: no-go, with evidence on #587 (issuecomment-6399590750) and status on #638 (issuecomment-6399591964).
-- **Two 3× increments ready to follow #649:**
+- **The Commons go/no-go for `0b9a97c4`: no-go as written**, with evidence on #587 (issuecomment-6399590750) and status on #638 (issuecomment-6399591964). Both measured failures now have measured explanations:
+  - **World-streaming:** the journey's own context-loss probe resets three.js's counters on client 0. The instrumented rerun passed at +9. This is not #641.
+  - **Phone reconnect:** the client's random backoff, sampled once. With 5 rejoins (draft #672) it's within budget in both modes.
+- **Three 3× increments, stacked on #649 `525856e2`:**
 
-  | PR | Head | Reachable ground |
-  | --- | --- | --- |
-  | #662 Studewood | `d61bdea4` | 2.4598× |
-  | #663 Bayou Terraces | `6bbf3090` | 2.8244× |
+  | PR | Head | Reachable ground | State |
+  | --- | --- | --- | --- |
+  | #662 Studewood | `d61bdea4` | 2.4598× | Ready to follow #649 |
+  | #663 Bayou Terraces | `6bbf3090` | 2.8244× | Ready to follow #662 |
+  | #673 Woodland Heights (A′) | `946e8cd2` | **3.0480×** | Needs Val's land decision |
 
-  Both are signed, with core passed and hosted CI green (see the Phase 3 sections). Both are stacked on #649's `525856e2`.
+  All are signed, with core passed and hosted CI green: #673 is 21/21 on both `8c0123e3` and `946e8cd2`.
+- **Draft #672 (reconnect measurement):** hosted 22/22. A protocol change for its owner or Val.
 
 **Waiting on Val:**
 1. **#649:** merge authorization. Its owner keeps it blocked on Val; the round-4 ABBA result is river-oaks-3e's to report. Once it lands:
    - merge main into #662 and retarget it to `main`;
    - run core and hosted checks, then land;
-   - then do the same for #663.
+   - then do the same for #663, then #673.
 
-   Landing them then needs merge authorization at that time.
-2. **3× needs 8,163.75 m² more reachable ground,** which means land beyond the reserve. Proposal A′ is on #586 (issuecomment-6391681517).
-3. **#656** Decisions 1–4.
+   Landing them needs merge authorization at that time.
+2. **The land decision for #673** (A′, #586 issuecomment-6391681517).
+3. **#656** Decisions 1–5. Its final head `13c0afc4` ships switched off.
 4. **#659**'s security commit `66134f27`.
 5. **#653 and #654.**
 6. **The Commons release:**
-   - the world-streaming journey's counting after its own context-loss probe (owner of `world-streaming-582-583`; this is not #641);
-   - the reconnect row protocol (make it deterministic, or take more samples);
+   - the world-streaming journey's counting after its own context-loss probe (owner of `world-streaming-582-583`; options on #587);
+   - adopting a multi-sample reconnect read (#672);
    - condition 4 (Val's sign-off) and condition 5 (production state).
 
 **Preserved, not retirable now:**
-- **Branches with open PRs:** `docs/convergence-3x-20261024` (#664), `feat/studewood-3x-20261024` (#662) and `feat/bayou-terraces-3x-20261025` (#663).
+- **Branches with open PRs:**
+  - `docs/convergence-3x-20261024` (#664);
+  - `feat/studewood-3x-20261024` (#662);
+  - `feat/bayou-terraces-3x-20261025` (#663);
+  - `feat/woodland-heights-3x-20261025` (#673);
+  - `perf/reconnect-measure-20261025` (#672).
 - **`perf/walking-obstacle-buckets-20261025`** (worktree `river-oaks-walking-buckets`, PR #669 closed as superseded). It needs explicit cancellation authority (`project:cancel`, dry-run first).
-- **Six detached scratch snapshots holding receipts**, listed in the register (`convergence-3x-20261024`, `observed.localEvidence`).
+- **Seven detached scratch checkouts holding receipts,** each registered as a blocked `convergence-3x-evidence-*` task: `rc-0b9a97c4`, `bisect-15334aad`, `heights-8f3c94fd`, `studewood-snap`, `terraces-snap`, `terraces-b5016d29` and `diag-0b9a97c4`.
+  - `diag-0b9a97c4` holds local-only instrumentation and the #672 harness patch, both uncommitted.
 
-**Host.** `caffeinate` PID 71428 ended at about 15:07Z. PID 56722 holds the host awake until about 18:36Z; `kill 56722` stops it.
+**Host.** `caffeinate` PID 56722 holds the host awake until about 18:36Z; `kill 56722` stops it.
