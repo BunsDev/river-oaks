@@ -197,6 +197,54 @@ phrase or the limit, and nothing erased before WorkOS deletes the user.
 | `pnpm run test:server` with `REDIS_URL`, after review fixes | 1236/1236, 0 skipped |
 | `pnpm test` (preview unit), after review fixes | 4109/4110, the same 1 skip |
 
+## Increment D: reports, support contact, App Review map
+
+Branch `feat/account-safety-review-292-20261024` in worktree `river-oaks-review-292`,
+stacked on increment C's head `b33ad8ec`. The guideline map, gaps and Decisions for Val
+are in [App Review readiness](../../app-review-292.md).
+
+Files owned:
+- New: `preview/src/support-contact.js`, `docs/app-review-292.md`.
+- New tests: `server/tests/reports.test.js`, `preview/tests/support-contact.test.js`.
+- Changed: `server/app.js` and `server/distributed-app.js` (the report confirmation);
+  `preview/src/sidebar.js` (Support in Account); `preview/src/settings-dialog.css`;
+  `.env.example` (`VITE_SUPPORT_CONTACT`); `docs/architecture.md`,
+  `docs/security-review.md`, `docs/player-blocking.md`, `docs/privacy-data-inventory.md`
+  (report retention).
+- Not edited, owned elsewhere: `preview/src/multiplayer-client.js` (the Report button
+  sends only `disruption`; the Block button isn't wired in), `preview/src/main.js`,
+  `preview/src/access-entry.js` (the sign-in and waitlist pages show no contact).
+
+Red first: both report tests failed on the old confirmation ("Report sent to the town
+moderators."). The town one also failed because the refusals had used up the reporter's
+limit; the test now makes them from a third resident and checks that limit.
+
+Mutation checks (each red, then restored):
+- no reserved-domain check on an email address;
+- no https check; no credential check; no `rel` on the https link;
+- no named-host check; a loose address pattern.
+
+Independent review (2026-10-24):
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| The map called blocking met, but residents have no Block button: `player-blocks.js` isn't wired in (B) | High | The map marks it a blocking gap for the owner of `multiplayer-client.js`. The #292 B comment and the #665 body were corrected |
+| The list of resident content missed direct messages, groups, public events and chosen usernames | Medium | Listed, with the filter's scope widened; none of them can be reported |
+| GitHub tokens: WorkOS can hand the resident's token to the server (5.1.1(v)) | Medium | Now Decision 7: turn token return off; the code already falls back |
+| "Saved for the moderators to review" promised a review nobody owns; the town log also drops old reports | Medium | Now "Report saved."; both losses documented; inventory retention corrected. Tests red first |
+| The support contact isn't shown before approval | Medium | Recorded as a gap for the owner of `access-entry.js` |
+| The address pattern allowed mailto fields (an added Bcc), direction overrides, trailing dots and IP hosts | Low | Plain ASCII addresses and named hosts only; tests red first |
+| Dark-mode link contrast 2.97:1 | Low | `--hud-focus` in dark mode (#a8ecd6 on #203e43) |
+| Hosted report test didn't block anyone; rate limits differ by server | Low | Block step added to the hosted test; the difference is documented |
+| The sidebar wiring has no test | Low | Kept, as for deletion: no sidebar unit test exists. Recorded |
+| "Every store forgets the account" contradicted the kept audit; audit formats differ; `import.meta.env` without `?.` | Note | Reworded; formats documented; `?.` used |
+
+| Check | Result |
+| --- | --- |
+| `pnpm run test:server` with `REDIS_URL` (isolated 6421), after review fixes | 1238/1238, 0 skipped |
+| `pnpm test` (preview unit), after review fixes | 4111/4112, the same 1 skip that predates this work |
+| `pnpm run verify` (core) | passed |
+
 ## Gaps and decisions
 
 - The lantern walk's record round keeps lamplighter display names with no account
@@ -209,16 +257,30 @@ phrase or the limit, and nothing erased before WorkOS deletes the user.
   ban; a hashed tombstone is a Decision for Val, not implemented.
 - Desktop (`desktop/`) is owned by another session; its local state is listed, not
   changed.
+- Hosted `preview experience (places)` failed once on #665 and once on #666, both in
+  `office-computer-embed`. The #666 failure is a race in the journey, present on main:
+  - `preview/src/access-entry.js` checks the session every 15 s and reloads when the
+    account differs from `document.body.dataset.accountId`, which is set once at entry.
+  - The journey switches accounts on a live page, then keeps working on it. The reload
+    lands within 15 s of the switch; when the steps after the switch run slowly
+    (8.5 s against 5 s in a passing run), it detaches the desk mid-click. The log shows
+    the page navigating to its own URL.
+  - The journey's tasks are retired, and the file isn't in #292's scope. A fix: wait for
+    that reload after the switch, or have the journey assert the reload itself.
+  - The #665 failure, a click inside the Computer frame after the first switch, has no
+    diagnosis. Each PR used its one rerun.
 
 ## Next action
 
-Increment A is draft PR #661 (head `772e4ade`). Hosted CI is green apart from the
-aggregate. `verify full` on that head: the first run failed one Redis distributed test
-on timing (it passed 3/3 alone). The rerun passed every non-browser stage, including the
-server with Redis at 1192/1192; its browser stage waits on the shared lock.
-
-Increment B is draft PR #665 (head `075e3876`), stacked on #661. Core verify passed;
-`test:server` with Redis passed 1223/1223.
-
-Increment C: independent review, then `pnpm run verify`, a signed commit and a draft PR
-stacked on #665. Then increment D (reports, support contact, App Review map).
+- Increment A: draft PR #661 (head `772e4ade`). Hosted CI is green apart from the
+  aggregate. The `verify full` rerun passed every non-browser stage; its browser stage
+  waits on the shared lock.
+- Increment B: draft PR #665 (head `075e3876`), stacked on #661. Hosted CI is green
+  after one rerun of `preview experience (places)`. The #292 evidence comment is posted
+  and corrected: the Block button isn't wired in yet.
+- Increment C: draft PR #666 (head `b33ad8ec`), stacked on #665. Core verify passed;
+  `test:server` with Redis passed 1236/1236.
+- Increment D: core verify, a signed commit and a draft PR stacked on #666.
+- Owners to ask: the owner of `multiplayer-client.js` and `main.js`, to wire blocking
+  (four calls) and a report reason; the owner of `access-entry.js`, to show the
+  support contact and to clear the device on sign-out.

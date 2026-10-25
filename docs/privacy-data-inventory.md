@@ -47,7 +47,7 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 | Voice leases | `server/voice.js:57` · `:162` | While in a call | Revoked and removed from the room (`:95`, `:196`) |
 | Workplace tasks and drafts | `server/workplace.js:25` · `:81` | Workplace retention limit | Erased (`:477`); a busy workplace fails the step so it is retried |
 | World state: player, chat lines, builds, inventory, wishes, home guests, office grants, campus leases, wanted stars, screenings, lantern walk, game tables | `server/world.js:117`, checkpointed by each room | Chat: last 40 lines (`:49`); builds until removed | Forgotten in every world (`server/world.js:585`). Builds others sit on are anonymized |
-| Moderation bans, reports and audit | `server/moderation.js:5` · `server/redis-security.js:112`, `:120` | Until removed by an admin | Kept (Decision 3) |
+| Moderation bans, reports and audit | `server/moderation.js:5` · `server/redis-security.js:112`, `:120` | Bans until lifted. Reports and the audit: in the town, until the log passes 5 MB a second time (it's renamed to `.previous`, replacing the one before); hosted, the newest 10,000 bans, unbans and reports | Kept (Decision 3) |
 | Rate-limit buckets and join tickets | `server/redis-security.js:81`, `:100` | At most 24 hours; tickets 60 s (`server/ticket-policy.js:7`) | Lapse |
 | Crime cooldowns and attack receipts, per world | `server/crime.js:52` | Receipts 60 s, cooldowns shorter (`server/crime.js:10`) | Lapse; wanted stars are cleared at once |
 | Room replies | `server/redis-room.js:18` | 15 seconds | Lapse |

@@ -35,7 +35,7 @@ whisper: private messages are contact messages, covered above.
 
 Not covered: public event listings, landmarks and builds stay visible to everyone. A
 table game already in progress between them continues until one stands up. Moderation
-reports work in both directions.
+reports work in both directions (`server/tests/reports.test.js`).
 
 ## Routes
 

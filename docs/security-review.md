@@ -7,6 +7,13 @@ possible attacks have been eliminated or a deployed penetration test.
 
 ## Changes
 
+- Reports and support contact (#292, 2026-10-24). No new route or permission. A saved
+  report now answers "Report saved." on both backends, instead of claiming it was
+  sent to moderators. `VITE_SUPPORT_CONTACT`, public and set at build time, shows a
+  plain ASCII email address or an https link to a named host in Settings → Account.
+  Anything else, including mailto fields, direction overrides and bare IP addresses,
+  shows nothing. Open gaps: content filtering, a moderator reports view, and the
+  Block button, which isn't wired in yet; see `docs/app-review-292.md`.
 - In-app account deletion (#292, 2026-10-24), off unless `RIVER_OAKS_ACCOUNT_DELETION=1`
   and `WORKOS_WEBHOOK_SECRET` is set (the loopback fixture needs only the flag).
   A new route, `POST /api/account/delete`, on both backends. It needs a signed-in

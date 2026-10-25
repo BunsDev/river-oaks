@@ -482,7 +482,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
               const ok = self?.connectionId === connectionId && target && command.playerId !== identity.userId
                 && ['disruption', 'harassment', 'cheating'].includes(command.reason)
                 && await security.report({ reporterId: identity.userId, targetId: command.playerId, reason: command.reason });
-              send(ws, { type: 'result', requestId, ok: Boolean(ok), message: ok ? 'Report sent to the town moderators.' : 'Report could not be submitted.' });
+              send(ws, { type: 'result', requestId, ok: Boolean(ok), message: ok ? 'Report saved.' : 'Report could not be submitted.' });
               return;
             }
             const screened = await screenCommand(blocks, identity.userId, command, isAdmin);
