@@ -260,7 +260,7 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
     - desktop: 115 passed, 3 skipped;
     - Python: 170.
 - **Evidence comments** for this increment: #586 (comment 6391752189) and #638 (comment 6391752328).
-- **Main moved after `6e5abdff`** (#651, `4122fe07`), including `preview/src/render-quality.js`. It is deliberately not merged yet: the ABBA pair is pinned to `2da76e1f` against `6e5abdff`, and later commits on #649 are docs only. Before landing, main must be merged, Verify re-run, and the ABBA pair matched to that head.
+- **Main moved after `6e5abdff`** (#651, `4122fe07`), including `preview/src/render-quality.js`. It was not merged while the first ABBA pair (`2da76e1f` against `6e5abdff`) was queued. Once that ABBA failed and the head had to change anyway, `3cd60702` merged main `a437cbbf` (#645, #647, #651, #652) without conflicts. The next ABBA pair is that main against `3cd60702`, the head that would land.
 - **Cold transfer for `6e5abdff`** (support task D part 2, river-oaks-3e).
   - **Pair.** Base main `2da76e1f` against head `6e5abdff`. Each was a clean detached worktree with `pnpm install --frozen-lockfile` and `pnpm run build`; both exited 0, and the lockfiles are identical.
   - **Method.** Static analysis of `dist/preview` over what every District visit downloads: the play page's static-import closure plus main's static imports. The tools are the reviewer's own scratch tools, the same as for `b1ded7ab`.
@@ -268,10 +268,65 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
   - **Play-page initial JS:** 12.9 → 13.0 KiB (+0.90 %).
   - **What a District visit carries for Heights:** `bayou-heights-layout` (1.1 KiB gzipped: ids, bounds and the revision name), the revision's manifest entry, and the `heights-stream` import edge.
   - **Lazy only.** The Heights scene loads only in the lazy `heights-stream` chunk: 239.6 KiB gzipped, dynamic, not modulepreloaded.
-- **ABBA District performance for `6e5abdff`** (support task D part 1): queued 12th on the shared browser lock as of about 00:40Z, so not yet measured.
-  - **Arms.** A is base `2da76e1f` at `east-garden-commons-market-1`; B is the head at `bayou-heights-1`. They run in the order A1 B1 B2 A2.
-  - **Commands.** `preview/audit/world-expansion-baseline.js` with harness defaults, then `baseline-compare.js`.
-  - **Limits, unamended:** frame and CPU p95 within +10 %, reconnect within +20 %, drift at most 0.5 m.
+- **ABBA District performance for `6e5abdff`** (support task D part 1, river-oaks-3e): **gate not met.** One-client CPU-submission p95 was over the +10 % limit on both viewports. Every other gate metric was within its limit.
+  - **Arms.** A is base `2da76e1f` at `east-garden-commons-market-1`; B is the head at `bayou-heights-1`. They ran in the order A1 B1 B2 A2, under one held browser lock, 02:44:53–03:15:24Z on 2026-10-25.
+  - **Commands.** `RIVER_OAKS_BASELINE_REVISION=<rev> node preview/audit/world-expansion-baseline.js --label=d-<arm>`, with harness defaults: vsync on, 1440×1000 and 390×844, one and two clients, three warmed 30 s samples, District spawn camera. Then `node preview/audit/baseline-compare.js --base=d-a1.json,d-a2.json --candidate=d-b1.json,d-b2.json`. The harness file is byte-identical on base and head.
+  - **Limits, unamended:** mean frame and CPU-submission p95 within +10 %, reconnect within +20 %, drift at most 0.5 m. Vsync-locked frame p95 is informational under #626 (D11).
+  - All four runs passed, with no page errors, no failed assets and 0 m drift.
+  - **Receipts** are in the reviewer's scratchpad (`abba-6e5abdff/`). Their sha256 prefixes, checked here:
+    - `compare.json` c3f662f1f25bc37a;
+    - `d-a1.json` ac6657b08ddc9d9f;
+    - `d-b1.json` 41e74b85385e5a34;
+    - `d-b2.json` 7a451fac963cb81f;
+    - `d-a2.json` 6b5c2fe928dd396b.
+
+    | Workload | Metric | A | B | Change |
+    | --- | --- | ---: | ---: | ---: |
+    | Desktop, 1 client | frame mean | 16.67 ms | 16.67 ms | 0.0 % |
+    | Desktop, 1 client | CPU p95 | 9.80 ms | 12.15 ms | **+24.0 %, over** |
+    | Desktop, 2 clients | frame mean | 26.12 ms | 25.48 ms | −2.4 % |
+    | Desktop, 2 clients | CPU p95 | 12.20 ms | 13.25 ms | +8.6 % |
+    | Desktop | reconnect | 1,066 ms | 810 ms | −24.1 % |
+    | Phone, 1 client | frame mean | 16.67 ms | 16.67 ms | 0.0 % |
+    | Phone, 1 client | CPU p95 | 7.75 ms | 9.15 ms | **+18.1 %, over** |
+    | Phone, 2 clients | frame mean | 22.19 ms | 21.59 ms | −2.7 % |
+    | Phone, 2 clients | CPU p95 | 9.95 ms | 10.90 ms | +9.5 % |
+    | Phone | reconnect | 941 ms | 1,057 ms | +12.4 % |
+
+  - **Host load confounds part of it.** The median one-minute load per arm was A1 18.4, B1 35.7, B2 16.0 and A2 27.0. B1's phone samples ran at load 36–52. B2's phone samples, at load 9–13, measured CPU p95 8.1–8.2 ms, within A's 7.5–9.1 ms. B2's desktop samples were not low-load, at 25.7–36.8.
+  - **One cost does not depend on load.** The render audit's `interactions` phase (`main.js`, from the `residents` mark to the `interactions` mark) roughly doubled in every Heights sample: a mean of 0.73–1.08 ms against 0.40–0.57 ms on A, in every workload and both B runs. Draw calls and geometries were equal or slightly lower on B.
+  - **Cause.** Every walking query scanned all collision polygons and Commons solids, wherever it was asked. That covers `isFree`, `canFly` and `hasSightLine` in `preview/src/walking.js`. Heights raises the client collision list from 104 polygons to 626, and the Commons solids from 69 to 591.
+    - In that phase, the third-person camera boom alone asks `canFly` 42 times a frame (`third-person.js`). Walking substeps, the companion and greetings sight lines ask more, and the `players` phase uses the same queries.
+    - Rooms, seats, salon props, stores and buildings are nearly the same on both revisions, and nothing else per frame reads the Heights solids.
+    - **Measured in Node at District spawn** (`scratchpad/heights/bench-walking.mjs`), Commons → Heights:
+      - `isFree`: 221 → 628 ns;
+      - `canFly`: 166 → 1,837 ns;
+      - a 10 m sight line: 9.5 → 34 µs.
+  - **Fix (`dd682a7b`).** Obstacles, Commons flight solids and rooms now share one 16 m bucket grid, the one rooms already used.
+    - Each box is listed in every cell it touches, so the exact tests see every box a full scan would match.
+    - Answers are unchanged. A digest over about 3.8 M sampled walking, flight, area-clearance and sight queries (`scratchpad/heights/walk-answers.mjs`) is identical before and after for the garage, Gardens, Commons and Heights revisions.
+    - Heights at District spawn now measures 166 ns, 127 ns and 4.4 µs, below the Commons before the fix. The Commons itself is also faster: 117 ns, 111 ns and 2.4 µs.
+    - **New tests:**
+      - bucketed lookups give exact answers across bucket edges and signs (`walking.test.js`);
+      - District walking, flight and sight on Heights answer as on the Commons and read no Heights solid (`bayou-heights.test.js`). It fails on the full scan.
+    - Focused suites: 106 passed, 0 failed. The two Redis-only Heights tests ran against an isolated scratch Redis: 7/7.
+  - **Core verify on `3cd60702`, with this ledger in the tree: not green as one gate.**
+    - Three full runs of the tooling stage, at load 11–19, each failed one test: `scripts/tests/land-pr.test.js`, "queue release did not wake the lander". It waits up to 30 s for a file-system notification on a temporary directory, and that notification arrives late on this loaded macOS host.
+    - The file passed alone twice (29/29). `scripts/`, `package.json` and the lockfile are byte-identical to `c6d42f43`, where the full gate passed. The first failure is kept (`scratchpad/heights/verify-bucket-1.log`).
+    - The gate stops at its first failing stage, so every other stage ran under its own profile, and each passed:
+      - preview: 4,169 passed, 1 skipped;
+      - server: 894 passed, 227 Redis-only skips;
+      - desktop: 120 passed, 3 skipped;
+      - build, Python (170) and secrets: passed.
+    - Hosted Verify on the pushed head is the merge gate.
+  - **Next:** a fresh ABBA under the same protocol, A = main `a437cbbf` at `east-garden-commons-market-1` against B = `3cd60702` at `bayou-heights-1`.
+    - It is queued on the shared browser lock as "piece D ABBA #649 3cd60702 (river-oaks-3e)" (03:29Z, three runs ahead). Its labels are `e-a1`, `e-b1`, `e-b2` and `e-a2`.
+    - Inside the lock, each arm waits for a one-minute load of 16 or less, then runs anyway: up to 15 min before A1 and up to 5 min before each later arm. The wait and the load are logged.
+    - The `6e5abdff` CPU-profiled pair was dropped before it started, because the Node timings already attribute the cost.
+- **Cold transfer for the landing pair** (river-oaks-3e): main `a437cbbf` against `3cd60702`, measured by the same method as for `6e5abdff`.
+  - **Visit JS+CSS, gzipped:** 1,729.8 → 1,732.1 KiB (+0.13 %), within the +10 % limit.
+  - **Play-page initial JS:** 12.9 → 13.0 KiB (+0.92 %).
+  - The walking chunk grew from 17.2 to 17.4 KiB. The Heights scene stays only in the lazy `heights-stream` chunk, which is not modulepreloaded.
 - **Pedestrian captures, inspected.** Both runs uploaded all eight `heights-*.png`. They are CI software-profile renders: llvmpipe at render scale 0.25, with every material replaced by `MeshNormalMaterial` (`main.js:232`). So they show geometry, not appearance.
   - **Greenway:** street trees and kit blocks on both sides.
   - **Icehouse patio:** the two-chair game table, with "Icehouse game table" in the seat picker and a "Sit on the bench" prompt.
@@ -295,11 +350,11 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
     - Nineteenth Street: 621 / 2.47 M.
 
     The District views did not record on either tree.
-- **Performance.** Not started. ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e). The `#626` decision is recorded only on #643's branch (D11).
+- **Performance.** ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e); the first result, for `6e5abdff`, is above. The `#626` decision is recorded only on #643's branch (D11).
 
-## Status at handoff (product head `6e5abdff`, draft PR #649)
+## Status at handoff (product head `3cd60702`, draft PR #649)
 
-**Overall: blocked.** Items 1–4 and 6 are complete. Item 5 waits on its ABBA District performance run; its cold-transfer half passed. It is support task D (river-oaks-3e) under the #626 protocol, and the gate's limits are unchanged. Heights is not activated anywhere; production activation is not authorized.
+**Overall: blocked.** Items 1–4 and 6 are complete. Item 5 failed its first ABBA on `6e5abdff`: one-client CPU p95 was +24.0 % on desktop and +18.1 % on phone. The load-independent cause is found and fixed in `dd682a7b`. The fixed head `3cd60702`, which also merges main, still needs its own ABBA and cold transfer. Both are support task D (river-oaks-3e) under the #626 protocol, and the gate's limits are unchanged. Heights is not activated anywhere; production activation is not authorized.
 
 1. **Ledger before source: complete.** The objective, design, files-owned and checks sections were written before any source edit. They were committed with the first source in `b1ded7ab`, so git history alone does not show the order.
 2. **Authoritative ground and connection: complete.**
@@ -314,14 +369,19 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
    - It has street trees and planted beds, pedestrian streets, seating, and the icehouse table game for two.
    - `pnpm run destination check` reproduces every lock, and the authored overrides are preserved.
 4. **Measured gain: complete.** Reachable ground is 2.0119× at 0.5 m (93,509.75 m²) and 2.0174× at 1 m, with pinned composed-world hashes. Reserved land, upper floors, flight, travel and islands are excluded.
-5. **No District regression: blocked on the ABBA run.**
+5. **No District regression: blocked. The first ABBA failed; the fix awaits its re-measure.**
    - **Done:**
-     - District-only cold transfer on `6e5abdff`: +0.13 %, within +10 %;
+     - District-only cold transfer: +0.13 % on `6e5abdff`, and +0.13 % for `3cd60702` against main `a437cbbf`, both within +10 %;
      - streaming and unload checks (focused tests, and the journey's release on the way home);
      - reconnect identity and drift within 0.5 m in Heights (journey);
      - the pedestrian captures, inspected (CI software profile only).
-   - **Not done:** the matched ABBA District comparison for `6e5abdff`, queued on the shared browser lock (support task D part 1): frame and CPU p95 within +10 %, reconnect within +20 %, drift within 0.5 m.
-6. **Signed, verified commits in draft PRs: complete.** Every commit on #649 is SSH-signed. Core verify passed on every head that changed code, and hosted Verify passed 16/16 on `6e5abdff`; results are recorded per head under Results. This ledger commit is docs only. Nothing is merged, enqueued or deployed.
+   - **Failed on `6e5abdff`:** the ABBA District comparison. One-client CPU p95 was +24.0 % on desktop and +18.1 % on phone, against +10 %. Mean frame, two-client CPU p95, reconnect and drift were within their limits.
+   - **Fixed, not yet re-measured:** the walking queries that scanned every Heights solid from the District (`dd682a7b`).
+   - **Not done:** the ABBA for `3cd60702` against main `a437cbbf`, queued with load gating. It settles the load-confounded part as well.
+6. **Signed, verified commits in draft PRs: complete.** Every commit on #649 is SSH-signed.
+   - Core verify passed on every earlier head that changed code.
+   - On `3cd60702`, every stage passed except one load-sensitive tooling test, unchanged since earlier heads, which passes alone (see Results).
+   - Hosted Verify passed 16/16 on `6e5abdff`; the result for `3cd60702` is recorded in the PR body once it runs. Results are recorded per head under Results. Nothing is merged, enqueued or deployed.
 
 ## Gaps and coordination
 
@@ -336,8 +396,8 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
 
 ## Next step
 
-1. `6e5abdff` passed hosted Verify 16/16, but main has moved since. Before landing, merge main without force, run core verify, and get hosted Verify green again, including `preview experience (heights)` and the aggregate `preview`.
-2. Get the ABBA performance and cold-transfer results (support task D, river-oaks-3e) for that head, with the limits unchanged. Record them here and on #586.
+1. Get hosted Verify green on `3cd60702` (or the docs-only head above it), including `preview experience (heights)` and the aggregate `preview`. If main moves again, merge it without force; the ABBA then has to match the new head.
+2. Get the ABBA result for `3cd60702` against main `a437cbbf` (support task D, river-oaks-3e), with the limits unchanged; its cold transfer already passed at +0.13 %. Record it here and on #586. If one-client CPU p95 is still over, compare the `interactions` and `players` phases with the first run's, and profile what remains.
 3. Fix any review findings and re-verify. Merge, auto-merge and activation stay with Val.
 4. Decisions for Val, not taken here:
    - a larger retained-geometry ceiling for Heights;
@@ -347,7 +407,9 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
 
 > Continue task `next-district-586-20261024` (#586, #638 lane 3) in `../river-oaks-next-district-586`, on branch `feat/next-district-586-20261024`, draft PR #649. Read `docs/superpowers/plans/2026-10-24-next-district-586.md` first, especially "Status at handoff" and "Results".
 >
-> Items 1–4 and 6 are complete. Item 5, the District performance gate, is blocked on the matched ABBA run for `6e5abdff` (#626 protocol, limits unchanged: frame and CPU p95 +10 %, reconnect +20 %, drift 0.5 m). It is queued on the shared browser lock by river-oaks-3e. District-only cold transfer on that head passed at +0.13 %. If the head moves, both have to be re-measured.
+> Items 1–4 and 6 are complete. Item 5, the District performance gate, is blocked. Its first ABBA, on `6e5abdff`, failed on one-client CPU p95: +24.0 % on desktop and +18.1 % on phone, against +10 %. The load-independent cause is fixed in `dd682a7b`: walking queries scanned every Heights solid from the District. `3cd60702` adds that fix and merges main `a437cbbf`.
+>
+> Cold transfer for `3cd60702` against main `a437cbbf` passed at +0.13 %. The ABBA for that pair (#626 protocol, limits unchanged: mean frame and CPU p95 +10 %, reconnect +20 %, drift 0.5 m) is queued by river-oaks-3e on the shared browser lock. If the product head moves, both have to be re-measured.
 >
 > Check hosted Verify on the head (the `heights` shard and the aggregate `preview`), and merge `main` without force if it has moved. The heights shard is sensitive to runner speed (see Results), and its 20 min job timeout is a recorded risk. Collect the ABBA result from river-oaks-3e, or run it under the protocol. Post one evidence comment each on #586 and #638.
 >
