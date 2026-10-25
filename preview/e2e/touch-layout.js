@@ -74,9 +74,10 @@ async page => {
         // The panel opens over the scene, fits the width, scrolls to the end of content taller
         // than the screen, and closes back to its toggle. Content that fits has nothing to
         // scroll, so that case is recorded as not run.
-        // Chromium focuses a tapped button and WebKit does not; the toggle's own handler moves
-        // no focus. So closing must leave focus on the toggle in Chromium and where it was
-        // before in WebKit, and never inside the closed panel.
+        // Chromium focuses a tapped button. WebKit, like Safari, does not, and its tap takes
+        // focus off whatever had it, so focus ends on the page; the toggle's own handler moves
+        // no focus. So closing must leave focus on the toggle in Chromium and on the page in
+        // WebKit, and never inside the closed panel.
         const focusBefore = await tab.evaluate(() => document.activeElement?.id || document.activeElement?.tagName);
         await tab.locator('#panel-toggle').tap(); await expanded(tab, '#panel-toggle', true); await frames(tab);
         const panel = await tab.evaluate(() => {
@@ -92,8 +93,8 @@ async page => {
         else { metrics.notRun.push(`${label}: panel scroll (its ${panel.content} px of content fit in ${panel.height} px)`); console.log(`skip ${label}: panel scroll (content fits)`); }
         await tab.locator('#panel-toggle').tap(); await expanded(tab, '#panel-toggle', false); await frames(tab);
         const focusAfter = await tab.evaluate(() => ({ focus: document.activeElement?.id || document.activeElement?.tagName, inPanel: Boolean(document.activeElement?.closest('#control-panel')) }));
-        const focusExpected = engine === 'chromium' ? 'panel-toggle' : focusBefore;
-        expect(!focusAfter.inPanel && focusAfter.focus === focusExpected, `${label}: closing the panel leaves focus on its toggle (Chromium) or where it was (WebKit)`, { ...focusAfter, before: focusBefore, expected: focusExpected });
+        const focusExpected = engine === 'chromium' ? 'panel-toggle' : 'BODY';
+        expect(!focusAfter.inPanel && focusAfter.focus === focusExpected, `${label}: closing the panel leaves focus on its toggle (Chromium) or the page (WebKit)`, { ...focusAfter, before: focusBefore, expected: focusExpected });
         // A conversation scrolls and its close control returns focus to the opener.
         const meet = tab.locator('#walking-meet-nearby');
         if (await meet.isEnabled() && await tab.evaluate(() => !document.querySelector('#walking-meet-nearby').closest('[hidden]'))) {
