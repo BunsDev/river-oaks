@@ -61,8 +61,8 @@ and run all five `node scripts/bake-*.mjs --check` before and after any edit the
 | 1 | Baseline capture and inspection, no source change | done (captures complete; exit 1 on HMR console errors only) |
 | 2 | Component-selective layer and tests | done; focused 54/54 |
 | 3 | Per-component trial and verdicts | done: run-1 and run-3, independent visual review; roughness accept, pores revise (not shipped), coverage and hairColor reject |
-| 4 | Cost, lifecycle and identity | lifecycle done; identity done (local and hosted journeys, rollback journey); cost met on the PR head (timing-5 on 82b51d89, worst +9.1%); timing-3 on the pre-merge tree was 0.5 points over at Jevica ×1 |
-| 5 | Hero and Studio decision, golden candidate | hero uses the same policy; `--check` exit 2 (incompatible: osRelease, osVersion, gpu); candidate recorded and inspected (`e5597125…`); it also carries `main`'s bodice tiles, which the trial doesn't cause; golden left for Val (Decision 1) |
+| 4 | Cost, lifecycle and identity | lifecycle done; identity done (local and hosted journeys, rollback journey); cost not established: timing-5 within the bar, timing-6 (deciding run, rule set beforehand) +10.2% CPU at Jevica ×8, timing-3 +10.5% at Jevica ×1; Sable shows no cost; Jevica ×8 pooled paired CPU +8.5% (Decision 3) |
+| 5 | Hero and Studio decision, golden candidate | hero uses the same policy; `--check` exit 2 (incompatible: osRelease, osVersion, gpu); candidate recorded and inspected (`e5597125…`); it also carries bodice tiles, which the trial doesn't cause (from `main`'s code or the M5 GPU); a second independent review says don't promote it; golden left for Val (Decision 1) |
 | 6 | Costume order fix (independent code review) | done: `b0cdeeeb`, mutation-checked regression |
 | 7 | Delivery | draft PR #656 (final head and hosted checks recorded in the PR); landing waits for Val's acceptance |
 
@@ -223,7 +223,38 @@ and run all five `node scripts/bake-*.mjs --check` before and after any edit the
 - 13:44Z hero `--record .runtime/character-studio/hero-candidate-517-82b51d89` passed: 3 identical captures,
   `sable-human.png` `e5597125…`. Inspected against the reference: identity, eyes, brows, hair and palette match;
   skin carries the roughness highlights. The bodice shows rectangular shading tiles. The same tiles appear in
-  timing-5's off capture, so they come from `main`'s outfit changes since `d9dca2e5`, not the trial.
+  timing-5's off capture, so the trial doesn't cause them. They come from `main`'s outfit changes since
+  `d9dca2e5` or from the M5 GPU; every older capture is on the M3 Max, so this host can't tell which.
+- 14:14Z timing-6 queued on `7757f387`, with the same code and command as timing-5. The rule was set before
+  its result: cost counts as met on the head only if timing-6 also keeps every frame and CPU p95 within +10%;
+  otherwise cost is reported as not established.
+- 14:20Z second independent review (subagent given the head's off and trial captures, the face grids and the
+  hero images, without verdicts):
+  - roughness: accept. Skin pixels only, at most 17/255; eyes, irises, hair and outfit byte-identical; no
+    seams; tone within 2/255.
+  - Nails can't be judged at the captured scale. The shoulder sheen comes close to satiny.
+  - Hero candidate: don't promote it as it stands.
+- 14:46Z timing-6 finished on 7757f387 (inputs `956cf7d8…`, load 3.4–11.9, all 36 samples ≤20). Jevica ×8 is
+  over the bar: frame p95 +10.5%, CPU p95 +10.2%. All three trial samples were slower than all three off
+  samples, at lower load. Every other case is within the bar (Jevica ×1 −4.7% CPU, Sable at most +5.1%).
+  Under the rule, cost is not established. Pooled over the nine paired samples of timing-3, timing-5 and
+  timing-6, CPU medians are Jevica +2.4% / +8.5% / −2.0% (×1 / ×8 / ×24) and Sable 0.0% / +0.2% / +2.0%.
+  The census matches off at every crowd size (plus one shared 1.4 MB texture), and the costume edit runs once
+  at load, so nothing structural explains a CPU cost. Receipt `data/reports/default-appearance-timing-6-517.json`.
+- 14:48–14:56Z core verify on this docs-and-receipt change failed twice in its first stage. One tooling test,
+  `land-pr.test.js:122` ("a queued lander wakes on release…"), timed out at 30 s waiting for a file-watch
+  wake, at load 3–7.
+  - It passes on its own (29/29).
+  - It fails the same way in the whole tooling suite on the clean `2065b5ef` snapshot, which passed that
+    suite in verify full.
+  - The same suite passed on `7757f387` at 13:52Z.
+
+  So the host's file notifications caused it, not this change, and core stopped there. The other core stages
+  were then run one by one on the same tree, 14:57–15:01Z, and all passed:
+  - preview 4166 / 1 skip, server 917 / 225 Redis skips, desktop 120 / 3 skips;
+  - build, ruff check and format, pytest 170, demo, demo-verify (exit 2, as expected) and secrets.
+
+  Logs: `.runtime/default-appearance-517/core-evidence-3*.log` and `core-rest-3.log`.
 
 ## Verdicts (trial run-1, 20:17Z)
 
@@ -252,16 +283,19 @@ names; hair is matched by material `long01`), fixed for run-2.
   with no realism argument. With the trial on, that path takes Sable's trial
   components, so the pinned check is expected to fail until Val promotes a candidate
   or pins the golden to `off`. The reference is not changed here. It also predates
-  `main`'s outfit changes: the candidate recorded here carries `main`'s bodice
-  tiles, so promoting it as it stands would make those tiles part of the reference.
+  `main`'s outfit changes. The candidate recorded here carries bodice tiles, from
+  that code or from the M5 GPU, so promoting it as it stands would make those tiles
+  part of the reference.
 - Jevica and Sable have no frame-time or census ceilings. Cost is judged against
   realism off at the same revision (at most +10% frame and CPU p95, median of three
   warmed 30 s samples); no budget is added. The host was never quiet (other agents'
   browsers and GPU work). The measurement runs (load ≤20) disagree near the bar:
   - timing-5 on the PR head: worst +9.1%;
+  - timing-6 on the PR head: Jevica ×8 +10.5% frame, +10.2% CPU;
   - timing-3 on the pre-merge tree: Jevica ×1 +10.4/+10.5%.
 
-  The same code moves by up to ±12% between runs. A physical-device run is open (Decision for Val).
+  Cost is not established. Jevica ×8 CPU (pooled paired +8.5%) may be a real cost. It needs a quiet host or a
+  physical device, and profiling (Decision for Val).
 - Pores need a lip/eyelid/neck mask before they can ship (Decision 2).
 - Fixtures that load a rig without an explicit appearance (carriage, vehicles, motion,
   foot-support cost) now take Jevica's roughness map, as the player does.
@@ -272,7 +306,8 @@ names; hair is matched by material `long01`), fixed for run-2.
 ## Next action
 
 Val reviews the per-component table and the five-minute checklist on #656 and answers
-the Decisions there: the hero golden (including `main`'s bodice tiles), a pore mask
-follow-up, and whether timing-5's margin is enough without a device run. Landing is
+the Decisions there: the hero golden (including the bodice tiles), a pore mask
+follow-up, and cost, which is not established here: whether to profile Jevica ×8 and run on a quiet host or a
+device before landing, or limit the trial to Sable, which shows no cost. Landing is
 not this session's to do. The lander (river-oaks-71) lands only after that, with hosted
 checks green on the final head. Nothing is left running in this session's queue.
