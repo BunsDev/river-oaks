@@ -67,10 +67,12 @@ The client streams Heights as its own location (`preview/src/heights-stream.js`,
   - Each of the seven neighborhoods, bounded by its plan site.
   - One shared part over the whole location: the footbridge, bandstand and Heights Hall, plus every street tree and planted bed. Built once, the oak models (3.13 MiB for the three detail levels) and the planting models are cloned once rather than once per neighborhood.
 - **Ceiling.** The Commons' 16 MiB retained-geometry ceiling applies unchanged.
-  - Headless, the neighborhoods own 1.29–2.49 MiB each (12.95 MiB in all).
+  - Headless, the neighborhoods own 1.84–3.14 MiB each (18.20 MiB in all) with the luxury kit pieces of #641; before it, they owned 1.29–2.49 MiB (12.95 MiB). Each chunk's estimate is its measurement plus 10 %, rounded up to 0.05 MiB.
   - The shared part holds the oak models, about 2.4 MiB of planting, and the instances.
-  - Heights is therefore larger than one ceiling. Deep inside it, neighborhoods the camera cannot see stream out; at Nineteenth and Yale, that is one or two behind the camera.
-  - At equal distance the shared part is kept first, then the neighborhood underfoot, then those in view within 150 m. A neighborhood in view keeps that place for 5 s after the camera turns away, and one already loaded outranks one that isn't, so the small turns of walking do not rebuild neighborhoods.
+  - Heights is therefore larger than one ceiling. Deep inside it, neighborhoods the camera cannot see give way to those it can. At Nineteenth and Yale looking north, the shared part, the crossroads, Yale Street North and Heights Boulevard South fit; the greenway, the icehouse and the north boulevard wait for room.
+  - The shared part is kept first, then the neighborhood underfoot, then those in view within 150 m. Among those in view, the one nearest the centre of the view ranks first: each radian off the view axis counts as 10 m.
+  - A neighborhood in view keeps its place, and the angle it was seen at, for 5 s after the camera turns away. One already loaded outranks one that isn't. So the small turns of walking do not rebuild neighborhoods.
+  - Room left over can hold a neighborhood behind the camera, but never room that one still absent could take in its place.
   - Holding all of Heights at once would need a larger ceiling for this location, which is a separate decision.
 - **Loading.** Each part loads within 85 m of the player or of a camera that sees it, and unloads beyond 110 m. Batches draw only while their neighborhood is attached: trees within 120 m, the kit's block-detail distance, and planting within 60 m, the trees' middle level. Beyond that the beds are a few pixels, yet across all 329 of them they are over a million triangles in each pass.
   - From the District, Heights stays unloaded, including from the gateway looking down Market Street.

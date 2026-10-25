@@ -88,10 +88,10 @@ The `bayou-heights-1` revision is sampled from the same District spawn and reach
 
 | Grid spacing | Gardens | Commons | Bayou Heights | Added by Heights | Heights ÷ Gardens |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 m | 46,549 m² | 52,130 m² | 93,906 m² | 41,776 m² | 2.0174× |
-| 0.5 m | 46,477.75 m² | 52,030.75 m² | 93,509.75 m² | 41,479 m² | 2.0119× |
+| 1 m | 46,549 m² | 52,130 m² | 93,904 m² | 41,774 m² | 2.0173× |
+| 0.5 m | 46,477.75 m² | 52,030.75 m² | 93,508 m² | 41,477.25 m² | 2.0119× |
 
-The Gardens baseline reproduces exactly. The fresh Commons sample differs from the historical table above by about 0.13%. That table remains the record of its own revision. Reserved land, upper floors, flight, travel and islands contribute nothing. Bayou Heights reaches the 2× step of the expansion target; the 3–5× range remains open. `expansionCapacity` now projects from the Heights total.
+The branch's first commit, its later heads and its merge of #641 and #646 all measure these values. An earlier figure (93,906 and 93,509.75 m²) does not reproduce at any of them. The Gardens baseline reproduces exactly. The fresh Commons sample differs from the historical table above by about 0.13%. That table remains the record of its own revision. Reserved land, upper floors, flight, travel and islands contribute nothing. Bayou Heights reaches the 2× step of the expansion target; the 3–5× range remains open. `expansionCapacity` now projects from the Heights total.
 
 ## First playable destination
 

@@ -155,12 +155,16 @@ test('the icehouse table seats two players in the shared seat model', () => {
 });
 
 test('each neighborhood and the shared landscape stay within the kit budgets and dispose what they own', () => {
-  const { drawCallsPerNeighborhood, materialsPerNeighborhood } = KIT_CONVENTIONS.budgets;
+  const { drawCallsPerNeighborhood, materialsPerNeighborhood, trianglesPerNeighborhood, solidsPerNeighborhood } = KIT_CONVENTIONS.budgets;
   const parts = [...heights.plans.map(plan => buildHeightsNeighborhood(layout, plan)), buildHeightsLandscape(layout)];
   for (const [index, plan] of heights.plans.entries()) {
     const kit = parts[index], stats = kit.userData.stats();
     assert.equal(kit.name, `bayou-heights/${plan.id}`);
-    assert.ok(stats.meshes <= drawCallsPerNeighborhood && stats.materials <= materialsPerNeighborhood, `${plan.id}: ${JSON.stringify(stats)}`);
+    // The kit budgets an assembled plan's materials, triangles and solids, and a drawn plan's
+    // meshes (city-kit.test.js, scripts/destination.mjs).
+    assert.ok(plan.stats.materials <= materialsPerNeighborhood && plan.stats.triangles <= trianglesPerNeighborhood
+      && plan.stats.solids <= solidsPerNeighborhood, `${plan.id}: ${JSON.stringify(plan.stats)}`);
+    assert.ok(stats.meshes <= drawCallsPerNeighborhood, `${plan.id}: ${JSON.stringify(stats)}`);
     assert.equal(kit.getObjectByName(`${plan.id} trees`).children.length, 0, `${plan.id} leaves its trees to the shared landscape`);
   }
   const landscape = parts.at(-1), landmarks = landscape.getObjectByName('bayou-heights/landmarks');
