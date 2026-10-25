@@ -76,6 +76,8 @@ This task marked it ready and queued it through the check-waiting wrapper, telli
 
 After the merge, f1 clarified that its own goal excluded merging, and that "final from my side" meant only that it had stopped pushing. f1 would have flagged that landing needed Val's go-ahead. This task landed #658 on Val's goal in this session, as recorded under "Authorization and default decisions", with the owner's confirmation the plan required. f1 is reporting this to Val as it stands. If Val wants it undone, a revert is an ordinary PR.
 
+**Val's answer (22:06Z, in f1's session): keep the merge `e8207b2b`.** f1 recorded it as `landingConfirmation` on task `touch-network-288-290-20261024`. Val also chose to record the WebKit two-player failure (`multiplayer-dev.js:215`: the builder's placement hint never turns valid, failing at #659's head and its base `1fd53fb9` alike) without a fix. #659 stays held for Val's review of `66134f27`.
+
 ### #656 held for Val's decisions (reported by river-oaks-32 at about 09:15Z)
 
 - **Head:** `82b51d89b15eb744cae6aca258f72407eedbd224`.
@@ -659,8 +661,14 @@ The journey (`preview/e2e/crime-shared.js:78–90`, from #646/#640) reads the co
   All are signed, with core passed and hosted CI green: #673 is 21/21 on both `8c0123e3` and `946e8cd2`.
 - **Draft #672 (reconnect measurement):** hosted 22/22. A protocol change for its owner or Val.
 
+**Update at 22:10Z.** Two Val decisions have arrived in other sessions since this handoff:
+- **#658: keep the merge** (22:06Z, f1's session; see the #658 section).
+- **#649: Val chose to review and merge it personally** (about 18:50Z, recorded in river-oaks-3e's register entry `next-district-586-support-20261024`). So this task won't queue a lander for #649. #649's head is now `df794f95` (docs only on top of `525856e2`; hosted 25 passed, 5 skipped), and 91's entry lists the decisions Val takes with it: the Heights ceiling (about 24.5 MiB), oak sharing, the budget-test reading, and the heights journey's leg length (19m09s of its 20-minute timeout).
+
+After Val merges #649, this task prepares #662 and then #663 as before: merge main, retarget to `main`, run core and hosted. Both had independent reviews addressed (Studewood and Terraces sections above). They extend the district Val is reviewing in person, so they land only on Val's word at that point, not on the overnight reading.
+
 **Waiting on Val:**
-1. **#649:** merge authorization.
+1. **#649:** Val's own review and merge.
    - **State at about 18:40Z:** head `95904d23`, up to date with main. Round 4 (`e8207b2b` against `525856e2`) is within every limit, verify full passed 18/18, and hosted CI is 16/16.
    - **Both owners route the merge to Val.** river-oaks-91's register entry says "BLOCKED on merge authorization (owner needed: Val)".
    - **Decisions set before the merge.** river-oaks-3e's support ledger (#670 `ad27d9d6`, "Decisions for Val") lists them: the district's name and art direction, visual approval at pedestrian height, which budget protocol is in force, and the streaming ceiling.
