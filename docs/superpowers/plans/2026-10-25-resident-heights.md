@@ -117,7 +117,7 @@ Rehearsed on the same scratch merge, kept as a patch in the session scratchpad:
   - `{"event":"district_heights_checkpoint_migrated","from":"heights","to":"gardens","moved":3,"movedResidents":0}`
 
   No resident stood in Heights during that run, so 0 is expected there.
-- **Deviation to confirm with river-oaks-91:** they asked for the resident relocation before players move. Running it after the players are placed keeps residents clear of the new player positions.
+- **Order, agreed with river-oaks-91 (2026-10-25):** after the players are placed. The first agreement said before, but run first, `relocateResidents` would keep 0.9 m from the players' old Heights positions, and players placed afterwards could land beside a resident it had just moved.
 
 ## Gaps
 
