@@ -26,7 +26,16 @@ const streetVisitor=(local,visitor,pose)=>visitor && (!pose ||
 // Across the footbridge, Bayou Heights adds its landing, bandstand, icehouse patio
 // and hall. Each stands where a resident can walk to and from the landing: a spot
 // tucked beside the bandstand's stage was clear but took the planner too long to leave.
+// Proving that takes route searches of about a second on Heights, and a server builds
+// the same world several times while it migrates a checkpoint, so a world's stops are
+// placed once.
+const placedStops=new WeakMap();
 function locationStops(world,navigation) {
+  if(!placedStops.has(world)) placedStops.set(world,placeLocationStops(world,navigation));
+  return placedStops.get(world).map(stop=>({...stop,position:[...stop.position]}));
+}
+
+function placeLocationStops(world,navigation) {
   const layout=world.eastGardenCommons,lanterns=[...layout?.destination?.lanterns ?? []];
   if(!navigation.locations || lanterns.length<3) return [];
   lanterns.sort((a,b)=>a.at[0]-b.at[0]);

@@ -176,3 +176,16 @@ test('a location over the grid cap is split into strips that residents cross at 
     assert.ok(distance(route.at(-1),b)<1e-9);
   }
 });
+
+test('a world places its location stops once, and every resident life gets its own copy',()=>{
+  const first=createResidentLife(commons,createCommunity(commons,[],{carriage:false}));
+  const second=createResidentLife(commons,createCommunity(commons,[],{carriage:false}));
+  const located=life=>life.stops.filter(stop=>stop.id.includes('/lantern-'));
+  assert.equal(located(first).length,3);
+  assert.deepEqual(located(second),located(first));
+  located(first)[0].position[0]+=100;
+  assert.notDeepEqual(located(second)[0].position,located(first)[0].position,'one life moving a stop leaves the others alone');
+  // Another copy of the same world places the same stops.
+  const fresh=createResidentLife(structuredClone(commons),createCommunity(commons,[],{carriage:false}));
+  assert.deepEqual(located(fresh),located(second));
+});
