@@ -121,10 +121,28 @@ Posted 2026-10-24 ~20:40Z: [#370](https://github.com/BunsDev/river-oaks/issues/3
 
 | PR | Branch | Head | State |
 | --- | --- | --- | --- |
-| [#651](https://github.com/BunsDev/river-oaks/pull/651) | `fix/desktop-macos-e2e-371-20261024` | `d0be556f` | draft, review-ready; Desktop and Verify green; 10 of 10 diag legs at `b3127a6b` and at `d0be556f`; independent review addressed |
-| [#652](https://github.com/BunsDev/river-oaks/pull/652) | `ci/desktop-electron-cache-371-20261024` | `04228bec` | draft, review-ready; Desktop and Verify green on first attempt; the `-zip` keys missed and were saved by the explicit save step on all three runners, macOS included; independent review addressed |
+| [#651](https://github.com/BunsDev/river-oaks/pull/651) | `fix/desktop-macos-e2e-371-20261024` | `d0be556f` | merged 2026-10-25 00:32Z (see Delivery); 10 of 10 diag legs at `b3127a6b` and at `d0be556f`; independent review addressed |
+| [#652](https://github.com/BunsDev/river-oaks/pull/652) | `ci/desktop-electron-cache-371-20261024` | `04228bec` | merged 2026-10-25 01:55Z (see Delivery); the `-zip` keys missed and were saved by the explicit save step on all three runners, macOS included; independent review addressed |
 | [#653](https://github.com/BunsDev/river-oaks/pull/653) | `fix/desktop-linux-crash-370-20261024` | `2a2d9d11` | draft, review-ready; Desktop and Verify green on first attempt; Linux leg asserted `killed` with the pipe on (gone 815 ms, playable 7.5 s); independent review addressed; core-dump trade-off is Val's decision |
-| [#654](https://github.com/BunsDev/river-oaks/pull/654) | `docs/desktop-release-packet-373-20261024` | `807691d9` | draft; docs; hosted green |
+| [#654](https://github.com/BunsDev/river-oaks/pull/654) | `docs/desktop-release-packet-373-20261024` | this branch | draft; docs; hosted green |
+
+## Delivery
+
+Val authorized landing #651 and #652; river-oaks-71 landed both through `pnpm run land` and the merge guard. This session confirmed each merge on freshly fetched `origin/main`, recorded it in the register and released the task at its exact local tip; river-oaks-e9 retired the local branch and worktree through `project:prune`. GitHub deleted each PR's head branch two seconds after its merge (the repository has `delete_branch_on_merge` on; `head_ref_deleted` events at 00:32:20Z and 01:55:30Z); the `diag/*` refs are untouched.
+
+| PR | Local tip | Reviewed head (lander update-branch) | Merge | Tree | Hosted at reviewed head |
+| --- | --- | --- | --- | --- | --- |
+| #651 | `d0be556f` | `12ae37ac` (+ main `2da76e1f`) | `4122fe07` | `f390e64b` | 29 success, 2 skipped; `preview` success |
+| #652 | `04228bec` | `65aef4ac` (+ main `4122fe07`) | `7ad9ffc6` | `db531070` | 29 success, 2 skipped (Windows signing); installers and SHA256SUMS success; the first attempt at 01:06Z was refused as unstable while Windows installers ran, and the relanding waited for every check |
+
+Desktop on main after #651 (run 40147087966, `4122fe07`): all three e2e legs, both installer legs and SHA256SUMS passed; macOS passed on the first attempt.
+
+Desktop on main after #652 (run 40152491598, `7ad9ffc6`): every leg passed. As expected on main's first run, each runner logged `Cache not found for input keys: electron-<OS>-<arch>-44.9.1-zip`, downloaded only the zip (no `SHASUMS256.txt` request) and logged `Cache saved with key: electron-Linux-X64-44.9.1-zip`, `electron-Windows-X64-44.9.1-zip` and `electron-macOS-ARM64-44.9.1-zip`. Later main runs, and PRs (which can read main's caches), should restore these keys.
+
+Retirement archives (bundle restore-tested by the guard; ignored evidence verified by extraction):
+
+- #651: bundle `~/worktree-backups/river-oaks/retirement-T00qVG/history.bundle` (sha256 `0e1ddadc…093cb`, tag `archive/worktree-prune/c6baca16-…`); `.runtime/agent` receipts and `data/generated/demo` in `~/worktree-backups/river-oaks/evidence-landing-steward-20261024/desktop-macos-e2e/evidence.tar`.
+- #652: bundle `~/worktree-backups/river-oaks/retirement-M02i7C/history.bundle` (sha256 `0a0c88ad…cb533`, tag `archive/worktree-prune/d7802250-…`); four `.runtime/agent` receipts and `data/generated/demo` in `~/worktree-backups/river-oaks/evidence-landing-steward-20261024/desktop-electron-cache/evidence.tar`.
 
 ## Results
 
@@ -133,7 +151,7 @@ Posted 2026-10-24 ~20:40Z: [#370](https://github.com/BunsDev/river-oaks/issues/3
 - **Linux crash recovery (#370):** 218,431 ms to 153–815 ms on the CI runner with `systemd-coredump` active; asserted on every Linux leg from now on.
 - **Candidate and rehearsal (#373):** unsigned set from `67203a6a` verified; per-row human steps in [the rehearsal ledger](2026-10-24-desktop-release-rehearsal.md).
 - **Decisions packaged and evidence map posted:** [#370](https://github.com/BunsDev/river-oaks/issues/370#issuecomment-6389040777), [#372](https://github.com/BunsDev/river-oaks/issues/372#issuecomment-6389040987), [#373](https://github.com/BunsDev/river-oaks/issues/373#issuecomment-6389041177), [#369](https://github.com/BunsDev/river-oaks/issues/369#issuecomment-6389751828).
-- Nothing was merged, tagged, released or deployed; no environment, variable or Azure change.
+- This session merged, tagged, released and deployed nothing; #651 and #652 were landed by river-oaks-71 under Val's authorization. No environment, variable or Azure change.
 
 ## Gaps
 
@@ -143,4 +161,4 @@ Posted 2026-10-24 ~20:40Z: [#370](https://github.com/BunsDev/river-oaks/issues/3
 
 ## Next action
 
-Handed off to Val: review and, if authorized, land #651, #652 and #654; decide #653's core-dump trade-off; answer #370's four identity confirmations, #372's two decisions and the Azure setup, and #373's version. After merges, retire the four worktrees with `project:prune` (dry run, then `--apply`); the diag branches' local refs retire with them, and their remote branches stay unless Val authorizes deletion.
+#651 and #652 are delivered and their worktrees retired. Handed off to Val: review and, if authorized, land #654; decide #653's core-dump trade-off; answer #370's four identity confirmations, #372's two decisions and the Azure setup, and #373's version. After those merges, retire the remaining two worktrees with `project:prune` (dry run, then `--apply`); the diag branches' local refs retire with them, and their remote branches stay unless Val authorizes deletion.
