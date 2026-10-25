@@ -56,7 +56,29 @@ Order: #648 → #650 → #651 → #652 → #645 → #646, then each held PR as i
 | #657 | Val authorized earlier, in river-oaks-33's session | river-oaks-33's lander | Merged `c3eae4f5` at about 23:49Z (Verify passed on `942711f5`) |
 | #648 | Docs-only; hosted 22/22; core passed at `85d66e97` | 71, queued 23:37Z | Merged `26d63a06` at about 00:05Z, reviewed head `bbd68da9` (update-branch), Verify passed; on fetched main |
 | #651 | Owner 7c agreed; Desktop and Verify green; 10/10 diagnostic legs; independent review addressed | 71, queued 23:39Z | Merged `4122fe07` at about 00:40Z, reviewed head `12ae37ac`, Verify passed; on fetched main |
+| #645 | Hosted 22/22; every verify full stage passed across two runs on 7e267038; two reviews addressed (owner session gone) | 71; attempt 1 refused "unstable" (CodeQL swift queued); attempt 2 through the wrapper | Merged `a437cbbf` at about 03:10Z, reviewed head `e4d0413`; 22/22 checks complete; on fetched main; owner task marked delivered. Human gameplay-feel review (#637/#599) open |
+| #647 | Owner a8 confirmed final head 2586c39a; review's four defects fixed failing-first; hosted 29/29; core on identical source | 71; attempt 2 through the check-waiting wrapper | Merged `2c2f2eec` at about 02:58Z, reviewed head `0918a012`; all 29 checks complete, including CodeQL Swift; on fetched main |
+| #652 | Owner 7c agreed; Desktop and Verify green; cache miss and hit proven on three runners; review addressed | 71; attempt 1 refused "unstable" (Desktop installers running); attempt 3 through the check-waiting wrapper | Merged `7ad9ffc6` at about 01:55Z, reviewed head `65aef4ac`; all 31 checks complete; on fetched main |
 | #650 | Two independent reviews addressed; hosted 22/22; core `b612ac51`; actual-screen 12/12; two-browser 19/19 (owner river-oaks-56, gone) | 71, queued 23:39Z | Merged `2da76e1f` at about 00:17Z, reviewed head `b7b9e5d0`, Verify passed; on fetched main; owner task marked delivered |
+
+### Landing incidents (kept as found)
+
+- **01:06Z, #652 refused.** Verify passed on `65aef4ac`, but the merge guard refused with "merge state is unstable": the Desktop workflow's `installers (windows-latest)` job was still running. The repository lander waits only for Verify.
+  - #652 and #647 change Desktop-workflow paths: `.github/workflows/desktop.yml` for #652, and a `shared/` file for #647.
+  - Both now land through a task-local wrapper, `scratchpad/land-wait-checks.mjs`. It uses the repository's own `land()`, queue and merge guard, but its guard first runs `pnpm run pr:wait <pr> --until checks`. No repository tooling changed.
+- **01:08Z, stopped lander left the queue lock.** Stopping #647's plain lander to switch tools left the queue's lock directory behind.
+  - `local-queue.mjs` reclaims an abandoned lock after 30 s, but `withLock` gives up after about 10 s (400 × 25 ms).
+  - So the #646 and #652 landers exited with "The queue lock is held". They were requeued at 01:09Z; nothing merged wrongly and no other session's lander was affected.
+  - A follow-up for the tooling owner: make the retry window outlast the 30 s stale-lock window, or stop landers only between lock operations.
+- **01:43Z, #645 refused.** Same refusal: Verify passed on `2b39b9c3`, but CodeQL's `Analyze (swift)` job and the PR workflow were still queued for runners.
+  - Every lander of this task now uses the check-waiting wrapper: #652, #647, #645 and #646, in queue order after river-oaks-33's #641.
+  - #646's plain lander was stopped with SIGTERM to its own PID, so it dequeued cleanly and left no lock.
+  - river-oaks-33 was told about the refusal and the wrapper.
+
+- **02:23Z, browser queue stalled.** The shared browser lock has been held since 23:36Z by river-oaks-32's `character-fidelity-baseline.mjs … --quiet load=10 … --out timing-4` (PID 85902), at 0% CPU, waiting for host load ≤ 10. Host load has stayed between 12 and 40 all night with about 20 sessions, and 11 runs are queued behind it, including both of this task's journeys. Its owner was asked to stop it or release the lock while waiting. This task did not touch it.
+- **02:22Z, #647 waiting.** CodeQL's `Analyze (swift)` job was still queued for a runner on `0918a01`, the only incomplete check of 29. The wrapper holds the turn until it completes.
+
+- **02:45Z, pace.** Each landing turn begins with an update-branch, and GitHub's default CodeQL setup then reruns `Analyze (swift)` on `macos-latest`. With macOS runners contended, those runs take 60–95 minutes: #645's ran from 01:07Z to 02:42Z, and #647's has been queued since 01:56Z. The merge guard requires every workflow to be complete, so the train lands about one PR per 60–95 minutes. That is outside this task's control, and no guard or check was bypassed.
 
 ## Phase 2: release candidate (after the train)
 
@@ -159,6 +181,18 @@ Seams: Twentieth (y 111) and Eighteenth (y −71) cross Heights' 2 m reserve mar
   - **Core attempts on that tree.** `core-004` failed the `land-pr` watch-latency timing test again, at load 17; `core-005` passed (00:44–00:49Z).
   - **Follow-up.** Pushed and commented on #662. The Studewood and terraces journey snapshots were re-synced before they started.
 
+- **Hosted green on `6be77a56`** (19 success, 5 skipped), including `preview experience (studewood)` (Verify 40148167697) and `(heights)`.
+  - **Browser figures on the CPU runner.** The shared Heights part measured 7,292,066 B, above the old 6,815,744 B estimate and within the new 7,987,200 B, which confirms the diagnosis. `studewood-north` measured 1,850,396 B and `studewood-south` 1,646,592 B, both within their estimates. Resident was 16,025,470 of 16,777,216 B.
+  - **Journey passed:** the Twentieth Street walk, the "Entering Studewood" notice, the park table game, reconnect and return.
+
+- **Local Metal journey passed** (snapshot files equal to `6be77a56`, ended 02:43:58Z): 11/11 checks in 124 s, no page errors, reconnect 1,069 ms, drift 0 m, the same byte figures as hosted.
+  - **Captures inspected:** the street and the park (water tower, stalls, café tables, game table).
+  - **Visual gaps noted for Val:** bare ground past the east edge on the horizon, and the inherited District address in the HUD.
+
+- **Later merge.** #649's handoff head `c6d42f43` (91's docs-only ledger on `6e5abdff`, which merged main `2da76e1f`) was merged in as `18b9a61f`, with no conflicts.
+  - Focused 66/66 preview and 10 server tests, plus 2 Redis-only skips.
+  - Core attempts `core-006` and `core-007` failed only the `land-pr` watch-latency test, which passed 3/3 alone in about 100 ms. `core-008` passed. The change is pushed.
+
 ### Second increment: Bayou Terraces (task `bayou-terraces-3x-20261025`)
 
 - **Where.** Worktree `river-oaks-terraces-3x`, branch `feat/bayou-terraces-3x-20261025`, stacked on Studewood `33e671e3`.
@@ -202,6 +236,18 @@ Seams: Twentieth (y 111) and Eighteenth (y −71) cross Heights' 2 m reserve mar
   - a signed commit and a draft PR stacked on #662.
 
 - **Delivered as draft PR #663** (https://github.com/BunsDev/river-oaks/pull/663). Signed commit `125c7f3e`, based on `feat/studewood-3x-20261024`. `terraces-core-002` (00:53–00:57Z) passed: tooling 274/274; preview 4,129 plus 1 skip; server 905 plus 229 Redis-only skips; desktop 115 plus 3 skips.
+
+- **Hosted green on `125c7f3e`** (20 success, 5 skipped), including `preview experience (terraces)` (Verify 40148743422), `(studewood)` and `(heights)`.
+  - **Browser figures.** The shared part measured 8,175,390 B against 9,388,032 B estimated; `bayou-terrace-north` measured 2,093,952 B against 2,202,010 B; resident was 11,935,710 B.
+  - **Journey passed:** the footbridge crossing, "Entering Bayou Terraces", the gardens table game, reconnect and return.
+
+- **Local Metal journey passed** (snapshot files equal to `125c7f3e`, ended 03:19:27Z): 11/11 checks in 100 s, no page errors, reconnect 931 ms.
+  - **Captures inspected:** the riverside walk and the gardens table.
+  - **Gaps for follow-up and review:**
+    - The Commons Lantern Walk chip shows on the terraces, because `lantern-walk.js` hides it only east of the bayou. That's a design call, left unchanged.
+    - The bayou under the kit bridges doesn't read clearly as water.
+    - The HUD shows the inherited District address.
+- **Later merge.** Studewood `18b9a61f` (carrying #649 `c6d42f43`) was merged in as `9d130475`; focused 67/67 and `terraces-core-003` passed, and it's pushed.
 
 ### Land proposal for Val, updated after the terraces (projection, not measurement)
 
