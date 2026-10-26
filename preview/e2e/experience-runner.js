@@ -43,6 +43,8 @@ try {
       // The Gardens campus revision (#507) for its public traversal (#508).
       'garden-campus-traversal':{RIVER_OAKS_DISTRICT_REVISION:'river-oaks-gardens-3'},
       'east-garden-commons':{RIVER_OAKS_DISTRICT_REVISION:'east-garden-commons-market-1'},
+      'world-streaming':{RIVER_OAKS_DISTRICT_REVISION:'east-garden-commons-market-1'},
+      'world-gate-587':{RIVER_OAKS_DISTRICT_REVISION:'east-garden-commons-market-1'},
       'garden-campus-suite':{RIVER_OAKS_DISTRICT_REVISION:'river-oaks-gardens-3',RIVER_OAKS_CAMPUS_OPERATOR_IDS:'bob'},
     }[name]??{};
     // The Computer embed journey frames a separate-origin child fixture (#486); other journeys get no Computer origin.
@@ -83,7 +85,7 @@ try {
           window: [innerWidth, innerHeight, devicePixelRatio], screen: [screen.width, screen.height, screen.colorDepth],
           canvas: canvas && [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight] };
       }).catch(failure => ({ unavailable: failure.message }))));
-      results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack, pageErrors, consoleErrors: consoleErrors.slice(-20), diagnostics });
+      results.push({ name, status: 'failed', seconds: (Date.now() - started) / 1000, error: error.stack, pageErrors, consoleErrors: consoleErrors.slice(-20), diagnostics, ...(error.journeyEvidence ? { journeyEvidence: error.journeyEvidence } : {}) });
       console.error(`Failed ${name}: ${error.message}`);
       await page.screenshot({ path: join(root, `output/playwright/experience-${name}-failure.png`) }).catch(() => {});
       process.exitCode = 1;

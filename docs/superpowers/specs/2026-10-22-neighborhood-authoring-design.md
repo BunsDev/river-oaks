@@ -1,0 +1,34 @@
+# Neighborhood authoring design
+
+The goal is a coherent, economical neighborhood production workflow: deterministic roads, blocks, parcels and building placements informed by geographic references, reusable architecture and explicit art constraints, with handcrafted landmarks and manual edits protected from regeneration. The final outcome includes repeatable previews, exports, validation and actionable diagnostics in the existing River Oaks toolchain. Generating a large city is not a success criterion.
+
+## Architecture
+
+Use a versioned recipe and a separate authoring artifact. The recipe describes a bounded local-metre street lattice, parcel frontage, setbacks, buildable coverage, height limits and reusable building templates. Street IDs define stable block identities; parcel slots define stable building identities. Per-slot seeded choices must not depend on input array order. A new seed changes only generated variation. Geographic inputs retain origin, CRS and source provenance; interpreted design guides remain visibly distinct from surveyed geometry.
+
+The generator produces an ordinary region-v1 document accepted by World Studio and the existing authoritative region compiler. Do not add fields to region-v1 or change server publication permissions. Recipe provenance, block topology, template assignments, approvals and override history live in the authoring artifact and the Studio save envelope. Template geometry initially uses the existing building primitive contract; finished modular architecture from the separately owned #584–#586 kit is an integration dependency, not something this pipeline may overwrite.
+
+Regeneration reads the previous authoring artifact and optionally a Studio export. Compare the export against the previous resolved region to capture additions, edits and deletion tombstones. Persist those overrides across further builds. Approved IDs retain their resolved objects independently of seeds and recipe changes. Missing targets, ID collisions, road/building overlap, invalid parcel containment and changed coordinate frames fail with explicit diagnostics. Do not relocate or remove authored objects to make a candidate validate.
+
+Every build writes a new candidate directory containing the authoring artifact, a Studio region, a compiled world, a top-down preview and diagnostics. Never replace an existing directory. Output hashes use canonical content and exclude clocks. Repeated equivalent inputs must produce identical output bytes. Studio open/edit/export followed by regeneration is the first integration path; direct Studio regeneration controls follow once document ownership and preservation behavior are verified.
+
+## Full acceptance contract
+
+1. Two deliberately distinct small neighborhoods demonstrate coherent street connections, blocks, parcel frontages and reusable architecture; variation follows artistic constraints rather than unconstrained randomness.
+2. Identical inputs, reordered independent inputs and a fresh process produce byte-identical artifacts. A seed changes eligible generated objects while stable IDs, manual additions, edits, deletions and approved objects remain protected.
+3. Existing geographic pipeline output supplies a real coordinate frame and reference geometry without converting invented design into claims of survey accuracy. Invalid or unsupported geometry fails visibly. No acquisition or paid service is required for fixture tests.
+4. Roads, setbacks, parcel containment, collision, access and production budgets receive independent behavioral validation. Diagnostics identify objects and actionable constraints. The authoritative server compiler must accept exported regions.
+5. A user can preview, export, edit in World Studio and regenerate without silent loss. Candidate export cannot overwrite accepted output. Browser evidence demonstrates the actual journey and rendered neighborhood; source/unit checks alone do not prove this.
+6. Existing mapped District geometry, approved authored work and other owners' branches remain unchanged. Finish with focused tests, core, full with isolated Redis, relevant browser evidence and a requirement-by-requirement audit. Native acceptance and deployment require separate evidence and are not implied by a local export.
+
+## Decisions and alternatives
+
+Extend the current region and building contracts through an offline recipe compiler. A Python-only city generator would duplicate Studio's region semantics; modifying the live district during every build would risk approved work. Keep geographic conversion in the existing Python seam and retain immutable reference inputs. Keep generation bounded to the current editor budgets and make unsupported road networks explicit rather than silently rectifying them.
+
+The geographic adapter retains cropped source roads and polygon parcels, including holes, in a versioned reference plan. Compatible rectangular parcels also enter region-v1; other polygons and protected source buildings remain reference overlays. Python precomputes fixed-template options; JavaScript independently checks final geometry. Fit controls bind the plan to bounds, constraints, templates and reservations; changing them requires explicit recompilation. The mapped source world is never replaced.
+
+The Studio panel reviews candidates in a disposable worker and fences results by document revision and request generation. Applying records the region and authoring baseline in one history transaction. Ordinary edits preserve that baseline for reconciliation; undo, redo and device saves retain it. Unrelated ordinary document opens clear it. Portable authoring export reconciles current edits without mutating the document. Checksums must match the CLI, and importing a checksum-valid artifact also requires generation/history consistency.
+
+Visual architecture uses a recorded immutable snapshot from the separately owned kit. Optional recipe bindings assign fixed shop-row or court-shell assemblies and palettes to templates; placement metadata retains the original binding, dimensions, facade direction and kit revision for approved/manual work. The shared compiler produces an architecture sidecar used by Studio rendering and private walking. Ordinary region/world exports retain the existing runtime contract. Unsupported authored changes or uneven terrain produce an explicit blockout fallback instead of deforming modules or changing terrain.
+
+Generation, preservation, candidate exports, geographic import, Studio controls and visual kit integration now have implementations. Two distinct preset exports and repeated-process production measurements have local evidence. The corrected existing/new Studio browser journeys, core and full verification with isolated Redis have passed. The implementation ledger records evidence for all six local acceptance requirements and the separate delivery, native, human and production boundaries.

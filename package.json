@@ -98,11 +98,11 @@
     "predestination": "node scripts/enforce-pnpm.mjs"
   },
   "dependencies": {
-    "@vercel/functions": "^3.10.1",
+    "@vercel/functions": "^3.10.3",
     "@workos-inc/node": "^11.0.0",
     "ioredis": "^6.0.0",
     "livekit-client": "2.23.0",
-    "livekit-server-sdk": "2.19.1",
+    "livekit-server-sdk": "2.19.2",
     "three": "0.186.1",
     "ws": "^8.22.0"
   },
@@ -114,7 +114,7 @@
     "electron": "44.9.1",
     "electron-winstaller": "5.4.4",
     "playwright": "1.64.1",
-    "vite": "8.3.4"
+    "vite": "8.3.5"
   },
   "main": "desktop/main.js",
   "packageManager": "pnpm@10.34.5+sha512.a4ee05f2f73658255bd6a89859c065a45c28a57daefae2c893a168ee2b73168c37b91e83e57ea67654ad03f03031746430e8bce38e362e042605fb8abc80192e"
