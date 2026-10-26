@@ -115,7 +115,7 @@ const traces=(entries,needles)=>entries.filter(entry=>needles.some(needle=>entry
 
 test('a signed WorkOS deletion leaves no trace of the account in any Redis store',{skip:!process.env.REDIS_URL,timeout:30000},async t=>{
  const namespace=`account-erasure:${randomUUID()}`,redis=new Redis(process.env.REDIS_URL);redis.on('error',()=>{});
- const app=await createRedisBackend({PUBLIC_ORIGIN:origin,REDIS_URL:process.env.REDIS_URL,REDIS_NAMESPACE:namespace,WORKOS_WEBHOOK_SECRET:secret});
+ const app=await createRedisBackend({PUBLIC_ORIGIN:origin,REDIS_URL:process.env.REDIS_URL,REDIS_NAMESPACE:namespace,WORKOS_WEBHOOK_SECRET:secret,CRON_SECRET:'cron-fixture'});
  t.after(async()=>{await app.close();let cursor='0';do{const [next,keys]=await redis.scan(cursor,'MATCH',`*${namespace}*`,'COUNT',500);cursor=next;if(keys.length)await redis.del(...keys);}while(cursor!=='0');await redis.quit();});
  const s=stores(redis,namespace);
  await seed(s,pat);await seed(s,erin,pat);await seedWorld(redis,namespace);
@@ -125,6 +125,15 @@ test('a signed WorkOS deletion leaves no trace of the account in any Redis store
  assert.ok(before.includes(roomPrefixFor(namespace,'river-oaks')+':state'),'the room checkpoint holds the account');
  const base=await listen(app);
  assert.equal((await deletion(base,erin.userId)).status,200);
+ // Until its second pass, the request's record names the account, under the WorkOS event.
+ const pendingKey=accountPrefixFor(namespace)+':erasure:pending:v1';
+ const recorded=JSON.parse(await redis.hget(pendingKey,erin.userId));
+ assert.equal(recorded.eventId,'event_erasure');assert.ok(recorded.settleAt>Date.now(),'the second pass waits for the request timeout');
+ const sweep=()=>fetch(base+'/api/erasure-sweep',{headers:{Authorization:'Bearer cron-fixture'}}).then(response=>response.json());
+ assert.deepEqual(await sweep(),{ok:true,finished:0,failed:0,waiting:1});
+ // The cron runs the second pass once it is due.
+ await redis.hset(pendingKey,erin.userId,JSON.stringify({...recorded,settleAt:Date.now()-1}));
+ assert.deepEqual(await sweep(),{ok:true,finished:1,failed:0,waiting:0});
  // The only record kept is the character tombstone that refuses the deleted id a new session.
  const left=(await dump(redis,namespace)).filter(entry=>needles.some(needle=>entry.text.includes(needle)));
  const tombstone=accountPrefixFor(namespace)+':characters:v1';
@@ -145,6 +154,21 @@ test('a signed WorkOS deletion leaves no trace of the account in any Redis store
  assert.deepEqual(await s.social.list(pat.userId),[]);
  // A duplicate delivery stays a success, finds nothing more and leaves Pat alone.
  assert.equal((await deletion(base,erin.userId,'event_erasureagain')).status,200);
+ assert.deepEqual(traces(await dump(redis,namespace),needles).filter(key=>!key.includes(':reply:')),[tombstone,pendingKey]);
+ await redis.hset(pendingKey,erin.userId,JSON.stringify({eventId:'event_erasureagain',settleAt:Date.now()-1}));
+ assert.deepEqual(await sweep(),{ok:true,finished:1,failed:0,waiting:0});
  assert.deepEqual(traces(await dump(redis,namespace),needles).filter(key=>!key.includes(':reply:')),[tombstone]);
  assert.equal((await s.profiles.get(pat.userId)).tagline,'pat-own-words');
+});
+
+test('on Vercel, a deletion webhook without the cron secret is reported at every start', { skip: !process.env.REDIS_URL, timeout: 30000 }, async t => {
+  const warnings = [];t.mock.method(console, 'warn', line => warnings.push(line));
+  const namespace = `account-erasure:${randomUUID()}`, redis = new Redis(process.env.REDIS_URL);redis.on('error', () => {});
+  t.after(async () => { let cursor = '0';do { const [next, keys] = await redis.scan(cursor, 'MATCH', `*${namespace}*`, 'COUNT', 500);cursor = next;if (keys.length) await redis.del(...keys); } while (cursor !== '0');await redis.quit(); });
+  const env = { PUBLIC_ORIGIN: origin, REDIS_URL: process.env.REDIS_URL, REDIS_NAMESPACE: namespace, WORKOS_WEBHOOK_SECRET: secret, VERCEL: '1' };
+  for (const [more, expected] of [[{}, true], [{ CRON_SECRET: 'cron-fixture' }, false]]) {
+    warnings.length = 0;
+    const app = await createRedisBackend({ ...env, ...more });await app.close();
+    assert.equal(warnings.some(line => line === JSON.stringify({ event: 'account_erasure_sweep_unscheduled' })), expected, JSON.stringify(more));
+  }
 });

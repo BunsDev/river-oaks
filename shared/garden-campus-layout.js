@@ -68,9 +68,9 @@ const TOWERS = [
   { id: 'T1', name: 'Grove Offices', tiers: [[2, rect(6, 46, 25, 70)], [2, rect(6, 48.5, 22, 70)], [2, rect(6, 51, 19, 70)]],
     core: rect(8, 55, 13, 61), spur: rect(13, 56, 14.5, 59), door: [25, 58], approach: 'P9', capZ: 28.1, groundUse: 'Shared work lounge and rental reception' },
   { id: 'T2', name: 'The Commons', tiers: [[3, rect(6, 90, 25, 116)], [2, rect(6, 93, 22, 116)], [2, rect(6, 96, 19, 116)]],
-    core: rect(8, 100, 13, 106), spur: rect(13, 101.5, 14.5, 104.5), door: [25, 103], approach: 'P4', capZ: 32.1, groundUse: 'Shared collaboration and project demo space' },
+    core: rect(8, 100, 13, 106), spur: rect(13, 101.5, 14.5, 104.5), door: [25, 103], approach: 'P4', capZ: 32.1, groundUse: 'Shared project tables and workbench' },
   { id: 'T3', name: 'Atelier Offices', tiers: [[2, rect(6, 128, 25, 150)], [2, rect(6, 131, 22, 150)], [2, rect(6, 134, 19, 150)]],
-    core: rect(8, 136, 13, 142), spur: rect(13, 137.5, 14.5, 140.5), door: [25, 139], approach: 'P6', capZ: 28.1, groundUse: 'Atelier and creator workspace' },
+    core: rect(8, 136, 13, 142), spur: rect(13, 137.5, 14.5, 140.5), door: [25, 139], approach: 'P6', capZ: 28.1, groundUse: 'Atelier work tables and workbench' },
 ];
 const GROUND_FLOOR_HEIGHT = 5, UPPER_FLOOR_HEIGHT = 4, PARAPET = 1, PUBLIC_LEVEL = 4, PUBLIC_Z = 13;
 // The public Floor 4 spine through every tower (u 14.5-17.5, the bridge clear strip).
