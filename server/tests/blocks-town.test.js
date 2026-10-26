@@ -67,13 +67,16 @@ test('a block in the standalone town holds across a reconnect and a second tab, 
   assert.deepEqual(await patSocket.command({ type: 'travel', peerId: erin.id }), await thirdSocket.command({ type: 'travel', peerId: 'dev-000000000000' }));
   // A gesture from Pat reaches Erin's view as nothing.
   patSocket.socket.send(JSON.stringify({ type: 'gesture', kind: 'wave' }));
-  await settle(400);
-  assert.equal(erinSocket.view.latest.players.find(player => player.id === pat.id)?.gesture ?? null, null);
-  assert.ok(thirdSocket.view.latest.players.find(player => player.id === pat.id)?.gesture);
+  const waving = socket => socket.view.latest.players.find(player => player.id === pat.id)?.gesture ?? null;
+  for (let i = 0;i < 60 && !waving(thirdSocket);i++) await settle(50);
+  assert.ok(waving(thirdSocket), 'the gesture reached the town');
+  await settle(200);
+  assert.equal(waving(erinSocket), null);
 
   // A reconnect, then a second tab: the block comes with the session, not the socket.
   erinSocket.socket.close();await settle(300);
   const again = await connect(t, origin, erin);
+  assert.equal(again.seen.has('pat-before-reconnect'), false, 'the first frame hides earlier lines too');
   patSocket.say('pat-after-reconnect');thirdSocket.say('third-two');await settle();
   assert.equal(again.seen.has('pat-after-reconnect'), false);
   assert.ok(again.seen.has('third-two'), 'the new socket is live');

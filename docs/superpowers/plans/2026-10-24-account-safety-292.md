@@ -143,6 +143,44 @@ The `app.js` join path also had an `await` between reading the old connection an
 registering the new one (added in this increment). The hidden set now loads before
 that block, which stays synchronous.
 
+Lander review (river-oaks-e9, 2026-10-26), each finding fixed or covered red first:
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| Campus guest grants outlasted a block, and a new grant between the two was accepted | Medium | `world.separate` ends grants either way through `campus.separate` and walks the guest out; a grant toward a blocked resident names its sender instead, so the world answers `campus_invalid_guest`. World and hosted tests (red without each half) |
+| The join snapshot's filtering had no test | Medium | A reconnecting socket's first frame hides earlier lines, town and hosted (red with the filter removed) |
+| A block that answered 503 left the contact in both lists and invitable to a group | Low | The settle runs in `finally`; lists already hid it, and the group invite now checks the block; `blocks-api.test.js` (red without the check) |
+| A third party's greeting toward a hidden resident still showed | Low | Hidden from the viewer; `blocks-world.test.js` |
+| `separate` with nothing to end bumped the world revision; removing a block that did not exist bumped versions | Low | Bumped only when something ended or existed, memory and Redis |
+| A group's latest line from a hidden resident was shown | Low | Covered: the list shows none when the latest is theirs (red with the filter removed) |
+| The blocks step belongs in erasure's `after` stage; MGET and rebuild only when needed | Low | Recorded, not changed |
+
+Found while fixing: on the hosted path a block between two residents reached only
+worlds loaded on that gateway, but campus guest access outlasts either of them being
+in the world. Such a block now also reaches the default world, which serves the
+campus, if it is loaded or stored; `blocks-distributed.test.js` (red without it).
+A retry of a campus grant first sent before the block is answered as a conflicting
+operation (`docs/player-blocking.md`).
+
+A second agent reviewed those fixes with no access to this ledger. Every claim held but
+the third-party greeting; mutations of each fix went red except two:
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| A third party's greeting toward a hidden resident still played: a snapshot gives a greeting as the gesture too | Low-medium | The gesture goes with it; the fixture now matches a real snapshot (red before) |
+| A grant checked before a block was stored could land after its separation and keep access, longest on the hosted path | Low | Once a campus grant or Jevica's invitation succeeds, the server checks again and ends it; `blocks-campus-race.test.js`, town and hosted (red before) |
+| The campus walk-out and the lease version bump had no test | Low | `blocks-world.test.js` unit case (red with either removed) |
+| An unblock loaded the stored default world | Low | Reached only for a block; not tested |
+| `updatedAt` could go backwards across gateways; Redis remove left a stale reverse entry | Nit | `Math.max`, as `end` does, tested with a clock a minute behind; remove clears both and bumps if either went. Both red before |
+| Docs: the campus exception to "never told", the grant names its sender, operator offers | Doc | Corrected; operator offers listed as not covered |
+| `campus.separate` also edits an inert campus section | Nit | Kept, as `forget` does: access recorded there must not outlast a block if the campus is served again |
+
+The same agent then checked those fixes: all correct, the race test genuine (red with
+either server's recheck removed, or campus grants dropped from `grantedPeer`). Its nits:
+a failed recheck was silent (now logged as `block_recheck_failed`), the sender's reply
+still shows a grant ended by the recheck (documented), and the `Math.max` clamp had no
+test (added, red with the raw time).
+
 ## Gaps and decisions
 
 - The lantern walk's record round keeps lamplighter display names with no account

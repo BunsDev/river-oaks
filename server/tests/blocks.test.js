@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import Redis from 'ioredis';
-import { BLOCK_LIMIT, createMemoryBlocks, createRedisBlocks, loadHidden } from '../blocks.js';
+import { BLOCK_LIMIT, createMemoryBlocks, createRedisBlocks, grantedPeer, loadHidden } from '../blocks.js';
 
 // Both twins: a block counts both ways, keeps the name for the list, holds a limit,
 // and account erasure removes the account from every list it is on.
@@ -122,4 +122,31 @@ test('a hidden set loads only when the version moves, and an earlier read never 
   await blocks.remove('erin', 'pat');await loadHidden(counting, holder, 'erin');
   release();await earlier;
   assert.deepEqual([...holder.hidden], [], 'the later, empty set stands');
+});
+
+twins('removing someone who is not blocked changes no version', async blocks => {
+  const versions = () => Promise.all(['erin', 'stranger'].map(id => blocks.version(id)));
+  const before = await versions();
+  assert.deepEqual(await blocks.remove('erin', 'stranger'), { ok: true });
+  assert.deepEqual(await versions(), before);
+});
+
+test('every command that gives another account access is checked again once it succeeds, and nothing else', () => {
+  for (const command of [{ type: 'campus', action: 'grant', peerId: 'pat' }, { type: 'office', action: 'invite', peerId: 'pat' }, { type: 'homeAccess', action: 'grant', peerId: 'pat' }])
+    assert.equal(grantedPeer(command), 'pat', JSON.stringify(command));
+  for (const command of [{ type: 'campus', action: 'ungrant', peerId: 'pat' }, { type: 'office', action: 'remove', peerId: 'pat' }, { type: 'interaction', action: 'invite', peerId: 'pat' },
+    { type: 'campus', action: 'grant' }, { type: 'campus', action: 'grant', peerId: 7 }, null])
+    assert.equal(grantedPeer(command), null, JSON.stringify(command));
+});
+
+test('Redis: removing a block also clears a reverse index entry left without its list entry', { skip: !redisUrl }, async t => {
+  const redis = new Redis(redisUrl), prefix = `{blocks-test:${randomUUID()}}`;redis.on('error', () => {});
+  t.after(async () => { const keys = await redis.keys(`${prefix}*`); if (keys.length) await redis.del(...keys); await redis.quit(); });
+  const blocks = createRedisBlocks({ redis, prefix }), hash = id => createHash('sha256').update(id).digest('hex');
+  await redis.sadd(`${prefix}:blocks:v1:by:${hash('stranger')}`, 'erin');
+  assert.deepEqual([...await blocks.hidden('stranger')], ['erin'], 'the leftover hides them');
+  const before = await Promise.all(['erin', 'stranger'].map(id => blocks.version(id)));
+  assert.deepEqual(await blocks.remove('erin', 'stranger'), { ok: true });
+  assert.deepEqual([...await blocks.hidden('stranger')], []);
+  assert.deepEqual(await Promise.all(['erin', 'stranger'].map(id => blocks.version(id))), before.map(version => version + 1), 'and sockets reload');
 });

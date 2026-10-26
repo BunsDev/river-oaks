@@ -149,8 +149,8 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   }
   const chauffeurRequest=createChauffeurRoute({auth,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env),
     security:localSecurity,...(mode==='local'?{isAdmin:auth.isAdmin}:{})});
-  // Player blocking (#292): a block ends office and home invitations, and reaches sockets, in every loaded world.
-  // Player blocking (#292): every world this town has loaded; one that fails is logged and skipped.
+  // Player blocking (#292): a block ends invitations, and reaches sockets, in every world this
+  // town has loaded; one that fails is logged and skipped.
   async function separateEverywhere(a,b,blocked){
     for(const [id,{game}] of [...games]) try {await game.separateAccounts(a,b,blocked);}
     catch {console.warn(JSON.stringify({event:'block_separation_incomplete',worldId:id}));}

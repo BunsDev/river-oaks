@@ -25,8 +25,11 @@ export function viewFor(snapshot, hidden, viewerId = null) {
   if (!hidden?.size || !snapshot) return snapshot;
   const view = { ...snapshot };
   if (Array.isArray(snapshot.chat)) view.chat = snapshot.chat.filter(entry => !hidden.has(entry.authorId));
+  // A greeting shows from neither side: the hidden resident's, or anyone's toward them,
+  // whose snapshot also gives the greeting as their gesture.
   if (Array.isArray(snapshot.players)) view.players = snapshot.players.map(player => hidden.has(player.id) && (player.gesture || player.interaction)
-    ? { ...player, gesture: null, interaction: null } : player);
+    ? { ...player, gesture: null, interaction: null }
+    : hidden.has(player.interaction?.peerId) ? { ...player, gesture: player.gesture === player.interaction.kind ? null : player.gesture, interaction: null } : player);
   if (Array.isArray(snapshot.interactions)) view.interactions = snapshot.interactions.filter(item => !hidden.has(item.fromId) && !hidden.has(item.toId));
   for (const key of ['tables', 'darts', 'axes']) if (Array.isArray(snapshot[key])) {
     view[key] = snapshot[key].map(item => unseen(hidden, item?.invite, viewerId) ? { ...item, invite: null } : item);
@@ -43,13 +46,25 @@ export function viewFor(snapshot, hidden, viewerId = null) {
 export const ABSENT_RESIDENT = 'resident-not-here';
 const invitation = command => command.type === 'office' && command.action === 'invite' ? 'invalid_office_guest'
   : command.type === 'homeAccess' && command.action === 'grant' ? 'invalid_home_access' : null;
+// A campus guest grant toward a blocked account names the actor instead. The world then
+// answers after its own lease, tenant, status and version checks: a tenant naming
+// themself is an invalid guest, and anyone else keeps the refusal they would get. A
+// retry of a grant first sent before the block is answered as a conflicting operation.
 export async function screenCommand(blocks, userId, command, isAdmin) {
   if (!blocks || typeof command?.peerId !== 'string') return { command };
   const aimed = command.type === 'travel' || ['interaction', 'darts', 'axes'].includes(command.type) && command.action === 'invite';
+  const grant = command.type === 'campus' && command.action === 'grant';
   const refusal = invitation(command);
-  if (!aimed && !(refusal && isAdmin(userId)) || !await blocks.between(userId, command.peerId)) return { command };
+  if (!aimed && !grant && !(refusal && isAdmin(userId)) || !await blocks.between(userId, command.peerId)) return { command };
+  if (grant) return { command: { ...command, peerId: userId } };
   return aimed ? { command: { ...command, peerId: ABSENT_RESIDENT } } : { refusal: { ok: false, error: refusal, message: refusal } };
 }
+
+// Access a command gives another account: a campus guest grant, or Jevica's office and
+// home invitations. One checked just before a block was stored can land after the
+// block's separation, so once it succeeds the server checks again and ends it.
+export const grantedPeer = command => typeof command?.peerId === 'string'
+  && (command.type === 'campus' && command.action === 'grant' || invitation(command)) ? command.peerId : null;
 
 // A connection's hidden set follows its account's block version: a refresh reads the
 // version first and reloads the set only when it changed, and a read that started
@@ -82,6 +97,7 @@ export function createMemoryBlocks(initial = []) {
     },
     async remove(userId, peerId) {
       if (!validId(userId) || !validId(peerId)) return invalid;
+      if (!blocked.get(userId)?.has(peerId)) return { ok: true };
       drop(blocked, userId, peerId); drop(blockers, peerId, userId); bump(userId, peerId);
       return { ok: true };
     },
@@ -144,7 +160,9 @@ redis.call('HSET', KEYS[1], ARGV[1], ARGV[3])
 redis.call('SADD', KEYS[2], ARGV[2])
 redis.call('INCR', KEYS[3]) redis.call('INCR', KEYS[4])
 return 'ok'`;
-const REMOVE = `redis.call('HDEL', KEYS[1], ARGV[1]) redis.call('SREM', KEYS[2], ARGV[2]) redis.call('INCR', KEYS[3]) redis.call('INCR', KEYS[4]) return 'ok'`;
+// Both the list entry and its reverse index go; only a removal that took one of them
+// away changes either version.
+const REMOVE = `if redis.call('HDEL', KEYS[1], ARGV[1]) + redis.call('SREM', KEYS[2], ARGV[2]) > 0 then redis.call('INCR', KEYS[3]) redis.call('INCR', KEYS[4]) end return 'ok'`;
 const BETWEEN = `if redis.call('HEXISTS', KEYS[1], ARGV[1]) == 1 or redis.call('HEXISTS', KEYS[2], ARGV[2]) == 1 then return 1 end return 0`;
 
 export function createRedisBlocks({ redis, prefix } = {}) {

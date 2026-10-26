@@ -121,7 +121,9 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   // Worlds are reached together, so the request waits for the slowest one, not the sum.
   async function separateEverywhere(a,b,blocked){
     const everywhere=blocked&&admin(a)!==admin(b);
-    await Promise.all((everywhere?await worldIds():[...worlds.keys()]).map(async id=>{
+    // Between two residents: the worlds loaded here, and for a block the default world, which
+    // serves the campus, where guest access outlasts either of them being there.
+    await Promise.all((everywhere?await worldIds():[...new Set([...(blocked?[DEFAULT_WORLD_ID]:[]),...worlds.keys()])]).map(async id=>{
       try {
         if(!worlds.has(id)&&!await storedWorld(id))return;
         const world=await worldFor(id);if(!world)throw new Error('World unavailable');
