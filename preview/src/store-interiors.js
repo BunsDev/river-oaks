@@ -8,6 +8,7 @@ import { buildAxeRoomInterior } from './axe-room-interior.js';
 import { AXE_ROOM_INTERIOR } from './axe-room-plan.js';
 import { generatedVerticalRoute } from './generated-vertical-route.js';
 import { generatedContactPixels } from './generated-contact-shading.js';
+import { plainDepthMaterial, shadowProxyMesh } from './shadow-proxy.js';
 
 // Walk-in boutique interiors: shell, finishes, fixtures and merchandise per
 // room plan. Generic shops use procedural surfaces; IPIC uses its dedicated
@@ -159,7 +160,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const add = (geometry, material, a, d, y, scale, yaw = 0, color = '#ffffff', tilt = [0, 0]) => {
     const key = `${room?.buildingId ?? 'x'}:${geometry.uuid}:${material.uuid}`;
     if (tinted.has(material) && color === '#ffffff') color = suiteOf(room)[tinted.get(material)];
-    if (!batches.has(key)) batches.set(key, { geometry, material, matrices: [], colors: [] });
+    if (!batches.has(key)) batches.set(key, { geometry, material, building: room?.buildingId ?? 'x', matrices: [], colors: [] });
     E.set(tilt[0], yaw, tilt[1]); Q.setFromEuler(E); P.set(a, y, -d); S.set(scale[0], scale[1], scale[2]);
     M.compose(P, Q, S).premultiply(roomMatrix);
     const batch = batches.get(key); batch.matrices.push(M.clone()); batch.colors.push(color);
@@ -524,7 +525,8 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     luxeShell(room);
   }
   surfaces.build(group, track);
-  for (const { geometry, material, matrices, colors } of batches.values()) {
+  const shadowShared = new Map();
+  for (const { geometry, material, building, matrices, colors } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometry, material, matrices.length);
     const color = new THREE.Color();
     matrices.forEach((matrix, index) => { mesh.setMatrixAt(index, matrix); mesh.setColorAt(index, color.set(colors[index])); });
@@ -535,7 +537,32 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     mesh.computeBoundingSphere();
     if (material === glassCase || material === bottleGlass) mesh.renderOrder = 2;
     group.add(mesh);
+    if (mesh.castShadow && plainDepthMaterial(material)) {
+      const key = `${building}:${geometry.uuid}`;
+      if (!shadowShared.has(key)) shadowShared.set(key, []);
+      shadowShared.get(key).push(mesh);
+    }
   }
+  // Sun shadows (#289): the depth pass ignores finish, so a building's casting batches of one
+  // geometry cast through one hidden instanced proxy of the same instances (shadow-proxy.js).
+  const shadowProxies = [], shadowMembers = [];
+  for (const meshes of shadowShared.values()) {
+    if (meshes.length < 2) continue;
+    const proxy = shadowProxyMesh(meshes[0].geometry, meshes.reduce((sum, mesh) => sum + mesh.count, 0));
+    let index = 0;
+    for (const mesh of meshes) for (let i = 0; i < mesh.count; i++) { mesh.getMatrixAt(i, M); proxy.setMatrixAt(index++, M); }
+    proxy.name = 'Interior shadow batch'; proxy.userData.members = meshes; proxy.computeBoundingSphere();
+    group.add(proxy); shadowProxies.push(proxy); shadowMembers.push(...meshes);
+  }
+  // main.js shows the proxies only while the sun draws its map. Development audit: false
+  // lets every batch cast for itself again.
+  group.userData.shadowBatch = enabled => {
+    for (const mesh of shadowMembers) mesh.castShadow = !enabled;
+    for (const proxy of shadowProxies) proxy.visible = false;
+    group.userData.shadowProxies = enabled ? shadowProxies : [];
+    return shadowProxies.length;
+  };
+  group.userData.shadowBatch(true);
   group.userData.lightPositions = lightPositions;
   group.userData.screens = specialtyInteriors.filter(interior => interior.userData.screen).map(interior => ({ material: interior.userData.screen, aspect: interior.userData.screenAspect, frame: interior.userData.screenFrame ?? null, object: interior }));
   group.userData.dartboards = specialtyInteriors.filter(interior => interior.userData.darts).map(interior => interior.userData.darts);

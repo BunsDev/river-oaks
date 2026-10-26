@@ -61,7 +61,7 @@ import { DISTRICT_REVISION_GARDENS, attachGardenCampus, campusDoorSites, campusG
 import { campusLevelRoom } from './garden-campus-levels.js';
 import { createGardenCampusUI } from './garden-campus-ui.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
-import { castShadowsFromProxies } from './landscape-models.js';
+import { castShadowsFromProxies, TREE_DETAIL_TILE_M } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
 import { createStorefrontReflections } from './reflections.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from './world-surface.js';
@@ -575,7 +575,8 @@ function initializeRenderer() {
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
-  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? [])]);
+  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? []),
+    ...(plazaSalon?.userData.shadowProxies ?? []), ...(birdCams?.shadowProxies ?? []), ...(buildingMesh?.userData.interiors?.userData.shadowProxies ?? [])]);
   sun.shadow.bias = -0.00002;
   sun.shadow.normalBias = 0.018;
   sun.shadow.camera.near = 10;
@@ -1335,6 +1336,21 @@ try {
   else if (JSON.parse(localStorage.getItem('river-oaks-debug') ?? '{}').open) void openDebugTools(true);
 } catch { /* storage unavailable */ }
 
+// Development audit: switches off sun-shadow casting under the matching nodes, and back.
+function leanCasters(match) {
+  const restore = new Set();
+  return enabled => {
+    if (!enabled) { for (const mesh of restore) mesh.castShadow = true; restore.clear(); return 0; }
+    scene.traverse(node => { if (match(node)) node.traverse(mesh => { if (mesh.isMesh && mesh.castShadow) { restore.add(mesh); mesh.castShadow = false; } }); });
+    return restore.size;
+  };
+}
+
+// Development audit: tree shadow proxies batched by size, or the crowns' own tiles.
+function treeShadowTiles(size) {
+  return enabled => { let proxies = 0; scene.traverse(node => { proxies += node.userData.shadowTile?.(enabled ? size : TREE_DETAIL_TILE_M) ?? 0; }); return proxies; };
+}
+
 // Explicit diagnostic timing; normal production builds omit this API.
 // The crowd camera remains development-only.
 if (renderAudit) {
@@ -1366,6 +1382,28 @@ if (renderAudit) {
       occlusionSortEquality: () => pipeline?.compareOcclusionSort() ?? null,
       // Draws and submitted triangles for one frame, by pass and tagged owner.
       drawCensus: () => new Promise(resolve => { pendingDrawCensus = { census: createDrawCensus(renderer, camera), resolve }; }),
+      // #289 draw reductions, each switchable for a same-instant comparison (still).
+      drawBudget: {
+        'bike-shadow': enabled => plazaSalon?.userData.rack?.shadowProxy(enabled) ?? 0,
+        'interior-shadow-batch': enabled => buildingMesh?.userData.interiors?.userData.shadowBatch?.(enabled) ?? 0,
+        'bird-proxy': enabled => birdCams?.shadowProxy(enabled) ?? 0,
+        'tree-shadow-48': treeShadowTiles(48), 'tree-shadow-96': treeShadowTiles(96),
+        // Measurement only: one lean group at a time stops casting.
+        'interior-shadow': leanCasters(node => node.name === 'Boutique interiors layer'),
+        'bird-shadow': leanCasters(node => node.name.endsWith('(bird cam)')),
+        // Sensitivity check for a parity view: tree shadows gone must change the frame.
+        'tree-shadow-none': leanCasters(node => node.name === 'Mature urban shade trees'),
+        'bike-shadow-none': leanCasters(node => node.name === 'Parked bikes' || node.name === 'Parked bikes shadow'),
+      },
+      // Renders the current instant again (nothing advances) and reads it back,
+      // so a toggle can be compared against the same scene state.
+      still() {
+        followSunShadow(); treeShadows?.hide();
+        renderer.info.reset(); pipeline.render(0);
+        const gl = renderer.getContext(), width = gl.drawingBufferWidth, height = gl.drawingBufferHeight, pixels = new Uint8Array(width * height * 4);
+        gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        return { calls: renderer.info.render.calls, width, height, pixels };
+      },
       crowdView() {
         const players = multiplayer?.snapshot?.players ?? [];
         if (!players.length) throw new Error('Join the shared world before framing its crowd.');
@@ -1380,6 +1418,38 @@ if (renderAudit) {
       // position and target, and optional FOV. release() hands the camera back.
       view({ position, target, fov }) { auditCamera = { position: new THREE.Vector3(...position), target: new THREE.Vector3(...target), fov, restoreFov: auditCamera?.restoreFov ?? camera.fov }; },
       release() { if (auditCamera?.fov) { camera.fov = auditCamera.restoreFov; camera.updateProjectionMatrix(); } auditCamera = null; },
+      // #289 parity views: beside a named node, looking past it the way its shadow falls,
+      // or (shadow) from above the ground where the node's shadow lands. Returns the target.
+      frame(name, { shadow = false } = {}) {
+        const node = scene.getObjectByName(name);
+        if (!node || !world) throw new Error(`Nothing named ${name} to frame.`);
+        const box = new THREE.Box3().setFromObject(node), center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()).length();
+        const toSun = sunOffset.clone().normalize(), away = new THREE.Vector3(-toSun.x, 0, -toSun.z).normalize();
+        if (shadow) {
+          const at = center.clone();
+          for (let i = 0; i < 4; i++) at.copy(center).addScaledVector(toSun, -(center.y - groundSurfaceHeight(world, at.x, -at.z)) / toSun.y);
+          auditCamera = { position: at.clone().add(new THREE.Vector3(0.5, 10, 0.5)), target: at, restoreFov: auditCamera?.restoreFov ?? camera.fov };
+          return at.toArray();
+        }
+        const target = center.clone().addScaledVector(away, size * 0.3);
+        const position = center.clone().addScaledVector(new THREE.Vector3(away.z, 0, -away.x), Math.max(4, size * 1.2)).add(new THREE.Vector3(0, Math.max(2, size * 0.5), 0));
+        auditCamera = { position, target, restoreFov: auditCamera?.restoreFov ?? camera.fov };
+        return target.toArray();
+      },
+      // #289 parity view: inside the index-th store nearest the player (a stable order while
+      // the camera moves), just behind its glass, looking in, where sun through the facade
+      // throws the fixtures' shadows. Returns the room's building and name.
+      frameRoom(index) {
+        const at = room => new THREE.Vector3(room.facade[0], room.floor, -room.facade[1]);
+        const [east, north] = walking?.getPosition() ?? [camera.position.x, -camera.position.z], from = room => Math.hypot(room.facade[0] - east, room.facade[1] - north);
+        const rooms = (buildingMesh?.userData.rooms ?? []).filter(room => !room.generatedPlan && room.facade && room.outward).sort((a, b) => from(a) - from(b));
+        const room = rooms[index % rooms.length];
+        if (!room) throw new Error('No store rooms to frame.');
+        const [ox, oy] = room.outward, inward = new THREE.Vector3(-ox, 0, oy);
+        auditCamera = { position: at(room).addScaledVector(inward, 0.8).setY(room.floor + 1.6), target: at(room).addScaledVector(inward, room.depth).setY(room.floor + 0.9),
+          restoreFov: auditCamera?.restoreFov ?? camera.fov };
+        return `${room.buildingId ?? '?'} ${room.name ?? room.storeId ?? index}`;
+      },
     } : {}),
     graphics() {
       const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
