@@ -110,7 +110,9 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
   | Smooth quality and reduced motion at Nineteenth & Yale | 5/5 after correcting my own check (`ready()` is the footbridge entry). Neighbourhoods 9–11 m away wait for room at 9.9–14.9 MB of the 16 MiB budget, which is #649's ceiling decision. Capture inspected. | run3 |
   | Two players crossing the footbridge seam while one reconnects | All checks pass | run2 |
   | Keyboard only: Tab, then the arrow keys and W/Shift | 3/3. Tab reaches the 3D view in 18 presses. The walk goes from District arrival over the footbridge into Heights, 281 m in 57 s; capture inspected. | run4 `75af5a2d…` |
-  | Not run | a client and server on different revisions in the browser (rehearsed on the server, and the client has a handler); loops on foot | — |
+  | The server changes revision under an open page (2026-10-26, at #649 `9432e090`; script `tools/heights-revision-walk.mjs`) | Commons → Heights → Commons, restarting the loopback town on the same web port, from fresh fixture state each time. **R**, 9/9: the page reloads once into each revision and stays for 20 s; Heights Green is ready after the switch; after the rollback no Heights geometry is resident and the player is west of the footbridge; no page errors. R's reloads came from Vite's dev-server restart (the fence's key stayed null). **V**, 12/12: with Vite's dev client stubbed (env import kept, styles applied, hot updates ignored), `districtChanged` itself reloads exactly once into each revision, its key naming `bayou-heights-1` then `east-garden-commons-market-1`, in 5.3 s and 14.1 s; captures inspected. | R+F `8a602fb4…`, V `da998341…` |
+  | Five District ↔ Heights loops on foot (keyboard: Market Street, the footbridge, the Heights Green entrance) | 5/5. Legs 59–66 s; Heights ready 25–31 ms after each arrival and released 14–41 ms after reaching home; 0 stream failures; geometries at home 689 after loop 1, then 693 four times; no reloads or page errors. | R+F `8a602fb4…` |
+  | Not run | a client build older than the server's revision (the fence's second-visit path, `ws.close(4000)`), which needs two client builds | — |
 
 ## Rollback
 
@@ -135,8 +137,7 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
   - the go to land #655;
   - #670, which waits for #649.
 - **Not started:**
-  - a browser check of a client and server on different revisions;
-  - the unload loops on foot;
+  - a client build older than the server's revision (the revision checks above use one build);
   - land for 3× (see Decisions).
 
 ## Decisions for Val
