@@ -90,6 +90,9 @@ try {
       changed(); new MutationObserver(changed).observe(host, { attributes: true, attributeFilter: ['data-multiplayer'] });
     };
     watch();
+    // Diag only (never merged): keep the town sockets so the run can drop one on purpose.
+    const Native = window.WebSocket, sockets = window.__diagTownSockets = [];
+    window.WebSocket = class extends Native { constructor(url, ...rest) { super(url, ...rest); if (String(url).includes('/multiplayer')) sockets.push(this); } };
   });
   page.setDefaultTimeout(120000);
   page.on('pageerror', error => errors.push(error.message));
@@ -264,11 +267,20 @@ try {
   const townSinceAttempt = () => page.evaluate(() => window.__desktopQualityTown?.town ?? []);
   const dropped = town => sharedTown && town.some(state => state !== 'joined');
   const qualityRetries = report.qualityRetries = [];
+  // Diag only: close the open town socket as a missed heartbeat would, and wait for
+  // the gate to take the Settings dialog.
+  const diagDrops = report.diagDrops = [];
+  const dropTown = async when => {
+    const closed = await page.evaluate(() => (window.__diagTownSockets ?? []).filter(ws => ws.readyState === 1).map(ws => (ws.close(), ws.url.split('?')[0])));
+    await page.waitForFunction(() => !document.querySelector('#settings-dialog')?.open);
+    diagDrops.push({ when, closed: closed.length });
+  };
   const chooseQuality = async mode => {
     for (;;) {
       if (sharedTown) await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.multiplayer === 'joined');
       await watchTown();
       const chosen = await openHudSpace(page, 'settings-section', 'Graphics')
+        .then(async () => { if (mode === 'auto' && !qualityRetries.length) await dropTown('before the Auto choice'); })
         .then(() => page.locator(`[data-quality=${mode}]`).click())
         .then(() => true, async error => {
           if (await settingsOpen() || !dropped(await townSinceAttempt()) || qualityRetries.length >= 2) throw error;
@@ -285,6 +297,7 @@ try {
   assert.equal(await page.locator('[data-quality=smooth]').getAttribute('aria-pressed'), 'true');
   check('graphics preference survives reload');
   await chooseQuality('auto');
+  await dropTown('after the Auto choice');
   // Close Settings, unless a town drop since the Auto attempt began already has.
   if (await settingsOpen()) await page.locator('#settings-dialog .settings-header button').click().catch(async error => { if (await settingsOpen() || !dropped(await townSinceAttempt())) throw error; });
   else assert.ok(dropped(await townSinceAttempt()), `Settings closed after choosing Auto without a town drop (town ${JSON.stringify(await townSinceAttempt())})`);
@@ -303,6 +316,10 @@ try {
     throw new Error(`Auto did not settle within the timeout (quality ${quality}): ${error.message}`);
   });
   const settledMs = Math.round(performance.now() - settling);
+  assert.equal(diagDrops.length, 2, 'diag: both forced drops happened');
+  assert.ok(diagDrops.every(drop => drop.closed === 1), `diag: each drop closed one town socket ${JSON.stringify(diagDrops)}`);
+  assert.deepEqual(qualityRetries.map(retry => retry.mode), ['auto'], 'diag: the forced drop before the Auto choice was retried once');
+  assert.ok(qualityRetries[0].town.some(state => state !== 'joined'), `diag: the retry saw the town leave ${JSON.stringify(qualityRetries)}`);
   report.performance = await page.evaluate(async () => {
     const intervals = [];
     let last;
