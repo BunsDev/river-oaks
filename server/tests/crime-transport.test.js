@@ -77,6 +77,7 @@ async function harness(t, mode) {
   return { sessions, gateway, join, sockets, apps };
 }
 
+const actionIn = (frame, id) => frame.crime.actions?.find(item => item.id === id);
 for (const mode of ['memory', 'redis']) test(`${mode}: one hit is seen by every client once, through retries${mode === 'redis' ? ', reconnects and writer replacement' : ' and reconnects'}`, { skip: mode === 'redis' && !process.env.REDIS_URL, timeout: 120_000 }, async t => {
   const { sessions, gateway, join, sockets, apps } = await harness(t, mode);
   const first = await gateway(), second = await gateway();
@@ -89,20 +90,28 @@ for (const mode of ['memory', 'redis']) test(`${mode}: one hit is seen by every 
   assert.equal(rivalIn(bob.snapshot).health, 100);
   assert.equal((await owner.send({ type: 'worldPolicy', action: 'update', expectedRevision: 0, changes: { violence: { mode: 'forced', zones: ['westcreek-lane'] } } })).ok, true);
   await alice.until(frame => frame.worldPolicy.revision === 1);
-  // A refused attack ID is not spent: the same ID lands once the rule allows it.
+  // A refused attack ID is not spent: the same ID is admitted once the rule allows it. It lands
+  // at contact (#640): the reply confirms a windup, and every client sees the hit once.
   const landed = await alice.send(strike);
   assert.equal(landed.ok, true, JSON.stringify(landed));
-  assert.deepEqual([landed.hit.health, landed.hit.stars], [75, 1]);
+  assert.deepEqual([landed.action.phase, landed.action.outcome, landed.hit], ['windup', null, undefined]);
   for (const client of [bob, owner]) {
     const frame = await client.until(value => rivalIn(value).health === 75);
     assert.equal(starsIn(frame, 'alice'), 1);
+    // The hit is public in the frame that shows its damage (actions stay public while shown).
+    assert.equal(actionIn(frame, landed.action.id)?.outcome, 'hit');
   }
+  // Out of the rival's counter range (#640), so its counters cannot interleave with this test.
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  const away = await alice.send({ type: 'travel', position: [RX, RN + 5] });
+  assert.equal(away.ok, true, JSON.stringify(away));
   // Retried on the same socket, then after a reconnect through the other gateway.
-  assert.equal((await alice.send(strike)).replayed, true);
+  const replay = await alice.send(strike);
+  assert.deepEqual([replay.replayed, replay.action.id, replay.action.outcome], [true, landed.action.id, 'hit']);
   alice.ws.terminate();sessions.alice = 1;
   const aliceAgain = await join(second, 'alice');
   const retried = await aliceAgain.send(strike);
-  assert.deepEqual([retried.ok, retried.replayed, retried.hit.health], [true, true, 75]);
+  assert.deepEqual([retried.ok, retried.replayed, retried.action.id, retried.action.effect.health], [true, true, landed.action.id, 75]);
   assert.deepEqual([rivalIn(bob.snapshot).health, starsIn(bob.snapshot, 'alice')], [75, 1], 'still one hit');
   // Bob is not the target of anything, and players cannot fight with PvP off.
   assert.equal((await bob.send({ type: 'attack', targetId: 'alice', attackKind: 'melee' })).error, 'pvp_off');
@@ -112,6 +121,25 @@ for (const mode of ['memory', 'redis']) test(`${mode}: one hit is seen by every 
   const third = await gateway();
   const ownerAgain = await join(third, 'owner');
   assert.deepEqual([rivalIn(ownerAgain.snapshot).health, starsIn(ownerAgain.snapshot, 'alice')], [75, 1], 'health and stars survive writer replacement');
+  // Writer replacement in the middle of a windup: the replacement resolves it exactly once.
+  const aliceThird = await join(third, 'alice');
+  const back = await aliceThird.send({ type: 'travel', position: [RX + 1.2, RN] });
+  assert.equal(back.ok, true, JSON.stringify(back));
+  const pendingStrike = { ...strike, attackId: 'alice-transport-0002' };
+  const pending = await aliceThird.send(pendingStrike);
+  assert.equal(pending.ok, true, JSON.stringify(pending));
+  assert.equal(pending.action.phase, 'windup');
+  for (const ws of sockets) ws.terminate();
+  for (const app of apps.splice(0)) await app.close();
+  const fourth = await gateway();
+  const ownerLast = await join(fourth, 'owner');
+  const settled = await ownerLast.until(frame => rivalIn(frame).health < 75);
+  assert.deepEqual([rivalIn(settled).health, starsIn(settled, 'alice')], [50, 2], 'one contact after replacement');
+  const aliceLast = await join(fourth, 'alice');
+  const again = await aliceLast.send(pendingStrike);
+  assert.deepEqual([again.replayed, again.action.id, again.action.outcome], [true, pending.action.id, 'hit']);
+  await new Promise(resolve => setTimeout(resolve, 600));
+  assert.equal(rivalIn(ownerLast.snapshot).health, 50, 'never twice');
 });
 
 for (const mode of ['memory', 'redis']) test(`${mode}: police, authenticated surrender and one arrest agree across clients and writer replacement`, { skip: mode === 'redis' && !process.env.REDIS_URL, timeout: 120_000 }, async t => {

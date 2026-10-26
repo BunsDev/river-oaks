@@ -245,7 +245,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   host.addEventListener('blur', clear);
   bindPageLifecycle({ release: clear });
   host.addEventListener('pointerdown', event => {
-    if (!active || dialogueOpen() || !drag.begin(event,{captureTarget:host})) return;
+    if (!active || dialogueOpen() || !drag.begin(event,{captureTarget:host,anyFinger:true})) return;
 
     host.setPointerCapture(event.pointerId); host.focus({ preventScroll: true });
   });

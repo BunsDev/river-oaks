@@ -46,10 +46,10 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 | Waitlist request: name, email, username; invites; audit | `server/waitlist.js:62` · `:406` | Until deleted | Erased; others' records keep an `erased-account` marker where the account decided or invited (`:239`, `:497`) |
 | Voice leases | `server/voice.js:57` · `:162` | While in a call | Revoked and removed from the room (`:95`, `:196`) |
 | Workplace tasks and drafts | `server/workplace.js:25` · `:81` | Workplace retention limit | Erased (`:477`); a busy workplace fails the step so it is retried |
-| World state: player, chat lines, builds, inventory, wishes, home guests, office grants, campus leases, wanted stars, screenings, lantern walk, game tables | `server/world.js:117`, checkpointed by each room | Chat: last 40 lines (`:49`); builds until removed | Forgotten in every world (`server/world.js:585`). Builds others sit on are anonymized |
+| World state: player, chat lines, builds, inventory, wishes, home guests, office grants, campus leases, wanted stars, screenings, lantern walk, game tables | `server/world.js:117`, checkpointed by each room | Chat: last 40 lines (`:49`); builds until removed | Forgotten in every world (`server/world.js:591`). Builds others sit on are anonymized |
 | Moderation bans, reports and audit | `server/moderation.js:5` · `server/redis-security.js:112`, `:120` | Until removed by an admin | Kept (Decision 3) |
 | Rate-limit buckets and join tickets | `server/redis-security.js:81`, `:100` | At most 24 hours; tickets 60 s (`server/ticket-policy.js:7`) | Lapse |
-| Crime cooldowns and attack receipts, per world | `server/crime.js:52` | Receipts 60 s, cooldowns shorter (`server/crime.js:10`) | Lapse; wanted stars are cleared at once |
+| Crime cooldowns, attack receipts, strikes, fights and evades; police pursuits, surrenders and holds, per world | `server/crime.js:75`, `server/police.js:29` | Receipts 60 s (`server/crime.js:12`); cooldowns, finished strikes and evades within seconds (`:11`, `:16`) | Forgetting the account first runs its departure, which ends its fight and every police pursuit or hold at once. Wanted stars are cleared at once; the cooldown and a cancelled strike lapse within seconds |
 | Room replies | `server/redis-room.js:18` | 15 seconds | Lapse |
 
 ## Client and desktop storage
