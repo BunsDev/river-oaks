@@ -15,6 +15,20 @@ async page => {
   const { createResidentNavigation } = await import('../src/navigation.js');
   const world = await loadDistrictData({ districtRevision: 'east-garden-commons-market-1' });
   const nav = createResidentNavigation(world, { allowRoads: true }), edge = world.eastGardenCommons.edge;
+  const { createWalkingEnvironment } = await import('../src/walking.js');
+  const { keepClear } = await import('./route-clearance.js');
+  // Resident routes can pass a corner closer than a walking player fits, and a walker
+  // pressed into one stalls: detour legs to keep 0.3 m where they can (route-clearance.js).
+  // Routes are cached per metre of start, so repeated laps reuse the first lap's.
+  const walking = createWalkingEnvironment(world), routes = new Map();
+  const clearRoute = (from, to) => {
+    const key = `${from.map(Math.round)}>${to}`;
+    if (!routes.has(key)) {
+      const path = nav.route(from, to);
+      routes.set(key, path && keepClear((x, y, r) => walking.isAreaFree(x, -y, r), from, path, { canTravel: nav.canTravel }));
+    }
+    return routes.get(key);
+  };
   const { mkdir, writeFile } = await import('node:fs/promises');
   const checkpointPath = `.runtime/world-streaming/journey-${new Date().toISOString().replaceAll(':', '-')}.json`;
   await mkdir('.runtime/world-streaming', { recursive: true });
@@ -187,7 +201,7 @@ async page => {
     const approach = [[-2685, -1334], [-2685, -1335]];
     const far = [-2786, -1370];
     const commonsGroups = state => state.inventory.district.filter(item => item.name === 'East Garden Commons').length;
-    const probePath = nav.route((await self(probe)).position.slice(0, 2), approach[0]);
+    const probePath = clearRoute((await self(probe)).position.slice(0, 2), approach[0]);
     check(Boolean(probePath?.length), 'The probe client has a collision-valid path to the promenade');
     await walk(probe, [...probePath, gates[0]], 'Probe client reaches gateway');
     await probe.locator('#canvas-host').focus(); await probe.keyboard.down('ShiftLeft'); await probe.keyboard.down('KeyW'); await probe.waitForTimeout(1500); await probe.keyboard.up('KeyW'); await probe.keyboard.up('ShiftLeft');
@@ -209,11 +223,11 @@ async page => {
     // Streaming still works after a restore. Its GPU counts are not bounded: a
     // restored client registers resources again whenever it next draws them.
     await walk(probe, [[edge - 8, -1335], approach[0]], 'Probe client returns after the restore');
-    await walk(probe, nav.route((await self(probe)).position.slice(0, 2), far), 'Probe client walks away from the Commons');
+    await walk(probe, clearRoute((await self(probe)).position.slice(0, 2), far), 'Probe client walks away from the Commons');
     await probe.waitForFunction(() => window.__riverSpatialStream().residentBytes === 0);
     const probeEvicted = await probe.evaluate(() => window.__riverSpatialStream());
     check(probeEvicted.pending === 0 && probeEvicted.chunks[0].state === 'absent' && commonsGroups(probeEvicted) === 0, 'After a restore the Commons evicts with no pending loads or groups');
-    await walk(probe, [...nav.route((await self(probe)).position.slice(0, 2), approach[0]), gates[0]], 'Probe client returns to the gateway');
+    await walk(probe, [...clearRoute((await self(probe)).position.slice(0, 2), approach[0]), gates[0]], 'Probe client returns to the gateway');
     await probe.waitForFunction(() => window.__riverSpatialStream().chunks[0].state === 'ready', null, { timeout: 45000 });
     await walk(probe, [[edge + 80, -1335]], 'Probe client crosses again after the restore');
     const probeReloaded = await probe.evaluate(() => window.__riverSpatialStream()), probeCrossings = await probe.evaluate(() => window.__streamProbe.crossings);
@@ -228,7 +242,7 @@ async page => {
     check(true, 'The probe client has left before the bounded clients fix any baseline');
     const initial = await mutuallyVisible(); await measure('District arrival baseline');
     await page.screenshot({ path: 'output/playwright/world-streaming-district-baseline.png' });
-    const paths = initial.map((player, i) => nav.route(player.position.slice(0, 2), approach[i]));
+    const paths = initial.map((player, i) => clearRoute(player.position.slice(0, 2), approach[i]));
     check(paths.every(path => path?.length), 'Both original arrivals have collision-valid paths to the promenade');
     await Promise.all(tabs.map((tab, i) => walk(tab, [...paths[i], gates[i]], `Player ${i} reaches gateway`)));
     await Promise.all(tabs.map(tab => tab.waitForFunction(() => window.__riverSpatialStream().chunks[0].state === 'ready', null, { timeout: 45000 })));
@@ -241,6 +255,8 @@ async page => {
     const districtInventory = state => state.inventory.district.filter(item => item.name !== 'East Garden Commons');
     const withinBounds = (rows, reference) => rows.every((state, i) => state.objects <= reference[i].objects + 20
       && state.renderer.geometries <= reference[i].renderer.geometries + 20 && state.renderer.textures <= reference[i].renderer.textures + 10);
+    // Each lap walks the same eviction and reload legs; settle them before anyone moves.
+    for (let i = 0; i < tabs.length; i++) { clearRoute(approach[i], [far[0], far[1] - i]); clearRoute([far[0], far[1] - i], approach[i]); }
     for (let lap = 0; lap < totalTrips; lap++) {
       const outward = tabs.map((_, i) => [[edge + 80, -1335 - i]]);
       await Promise.all(tabs.map((tab, i) => walk(tab, outward[i], `Lap ${lap + 1} player ${i} outward`)));
@@ -273,7 +289,7 @@ async page => {
 
       await Promise.all(tabs.map(async (tab, i) => {
         await walk(tab, [approach[i]], `Eviction ${lap + 1} player ${i} approach`);
-        const path = nav.route((await self(tab)).position.slice(0, 2), [far[0], far[1] - i]);
+        const path = clearRoute((await self(tab)).position.slice(0, 2), [far[0], far[1] - i]);
         check(Boolean(path?.length), `Eviction ${lap + 1} player ${i} has a walkable route`);
         await walk(tab, path, `Eviction ${lap + 1} player ${i}`);
       }));
@@ -304,14 +320,14 @@ async page => {
         resourceViolations.push(violation); console.log(`Resource bound exceeded: ${JSON.stringify(violation)}`); await checkpoint();
       }
       if (lap < totalTrips - 1) {
-        await Promise.all(tabs.map(async (tab, i) => walk(tab, [...nav.route((await self(tab)).position.slice(0, 2), approach[i]), gates[i]], `Reload ${lap + 1} player ${i}`)));
+        await Promise.all(tabs.map(async (tab, i) => walk(tab, [...clearRoute((await self(tab)).position.slice(0, 2), approach[i]), gates[i]], `Reload ${lap + 1} player ${i}`)));
         await Promise.all(tabs.map(tab => tab.waitForFunction(() => window.__riverSpatialStream().chunks[0].state === 'ready')));
       }
     }
     // A client without the Commons loaded must still list a peer standing there:
     // readiness gates only that client's own steps, never shared occupancy.
     check((await measure('Before split occupancy'))[0].residentBytes === 0, 'Observer has the Commons unloaded before the peer crosses');
-    await walk(peer, [...nav.route((await self(peer)).position.slice(0, 2), approach[1]), gates[1], [edge + 80, -1336]], 'Peer alone reaches the Commons plaza');
+    await walk(peer, [...clearRoute((await self(peer)).position.slice(0, 2), approach[1]), gates[1], [edge + 80, -1336]], 'Peer alone reaches the Commons plaza');
     const alone = await self(peer), observer = await measure('Split occupancy');
     check(observer[0].residentBytes === 0 && alone.position[0] > edge + 79, 'Observer stays unloaded while the peer occupies the Commons');
     await page.waitForFunction(id => document.querySelector(`.world-map-peer[data-peer-id="${id}"]`), alone.id, { timeout: 15000 });
