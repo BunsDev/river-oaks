@@ -682,10 +682,51 @@ Landing the two harness PRs through the land queue and guard, once their checks 
   - Task marked delivered. The branch and worktree were retired with `project:prune --apply`: manifest `~/worktree-backups/river-oaks/retirement-SatxyJ/manifest.json`, with evidence first copied to `~/worktree-backups/river-oaks/evidence/world-streaming-probe-client-20261025-811669c3/`.
   - The coordination note on `world-streaming-582-583` now records the merge.
 
-**Rerun on main `cb83c7cd`, which carries both fixes.**
+**Rerun on main `cb83c7cd`, which carries both fixes.** Before this, at about 22:15Z, the final go/no-go for `0b9a97c4` went to river-oaks-33: no-go as written. The ABBA reconnect row and the world-streaming row each failed as written, and each was traced to how it was measured.
 - `scratchpad/rc-run.sh` started at 00:01Z on a clean detached checkout, `rc-cb83c7cd` (registered as an evidence task), with an isolated Redis and `caffeinate`.
 - It runs: rehearsals; world-gate-587, world-streaming and east-garden-commons; a Gardens/Commons ABBA at the new default of 5 rejoins; pixel parity; then verify full.
 - The Commons rehearsal passed at 00:02Z.
+- **Journeys** (00:05–00:31Z):
+  - world-gate-587: passed.
+  - east-garden-commons: passed.
+  - **world-streaming, attempt 1: failed** with "Reload 1 player 1 stalled", on warm-up lap 1, before any bound was checked.
+    - The peer stopped at (−2708.31, −1349.73), pressed against a 1.75 m box. The route it was following passes that box's corner with 0.05 m of static clearance (walking radius included).
+    - Every resident route from the far point to the promenade passes this corner at 0.05–0.10 m. Earlier runs slid past it, including all 22 laps on `e8207b2b`.
+    - This is route fragility in the journey, not streaming; #675 didn't change walking. The checkpoint is kept in `rc-out-cb83c7cd/`.
+  - **Attempt 2: passed** (01:03–02:06Z), from a separate clean snapshot, `ws2-cb83c7cd`. 290 checks in 3,745.7 s, with no resource violations.
+    - Largest change against the lap-2 baseline: loaded client 0 +0 geometries / +4 textures; evicted client 1 +0 / +4.
+    - Heap ratios 1.006 / 1.007. Client 0's reconnect took 674 ms with zero drift. Source hashes unchanged.
+    - Receipts: checkpoint `7babb536a6fc1f5b`, report `6a90386915ef7c35`, copied to `rc-out-cb83c7cd/`.
+  - The release-candidate snapshot sample (`ws-rc-0b9a97c4`) was stopped after measured trip 4 to free the browser lock for this rerun. Up to that point it had 85 checks and 0 violations, with both clients within +0 / +4; its checkpoint (`00044e1790709dae`) is kept in `ws-rc-sample-partial/`.
+- **Paired ABBA** (00:31–01:03Z), Gardens/Commons/Commons/Gardens, with 5 rejoins per profile and the backoff kept. All budgeted metrics are within allowance, and every reconnect row has matched `keep×5` settings:
+
+  | Workload | Frame mean | CPU p95 | Reconnect (median of 5) |
+  | --- | --- | --- | --- |
+  | Desktop, 1 client | 0.0% | +4.2% | −14.2% (1,111 → 953 ms) |
+  | Desktop, 2 clients | +0.1% | +3.6% | |
+  | Phone viewport, 1 client | 0.0% | +1.6% | +7.2% (982 → 1,052 ms) |
+  | Phone viewport, 2 clients | +0.5% | 0.0% | |
+
+  - The first arm confirmed the merged harness end to end: desktop samples 899–1,187 ms, phone 810–1,162 ms, zero drift.
+  - **Pixel parity:** Gardens against Commons changed 0.04–0.40% of pixels, against a same-revision spread of 0.03–0.74%.
+  - **Receipts:** `rc-out-cb83c7cd/compare-gardens-vs-commons.json`, `pixel-parity.json` and `abba.log`.
+- **Verify full: passed all 18 stages on attempt 1** (01:03–02:45Z).
+  - Tooling 274/274; preview 4,165 + 1 skip; server with Redis 1,182/1,182; desktop 120 + 3 skips.
+  - 44 browser journeys passed across security, reflections, experience, shared and ipic-screening.
+  - Receipt sha256 `8502800676dbffa0`.
+- **Hosted Verify on main `cb83c7cd`** (push run 40247308809): 20 passed, 1 skipped, after one `rerun-failed-jobs`. Attempt 1 failed only `preview shared (development)` → `crime-shared`, the recurring "timed evade" flake; its log is kept in `rc-out-cb83c7cd/`.
+- **Verdict for `cb83c7cd`: conditions 1–3 met. A go for the engineering gate; activation waits on conditions 4 (Val) and 5 (operator), and stays off.**
+  - Posted on #587 (issuecomment-6407077852) and sent to river-oaks-33 to take to Val for condition 4.
+  - The verdict states world-streaming attempt 1's failure and its cause.
+- **Follow-up draft (task `world-streaming-route-clearance-20261026`).** The journey wraps its resident routes in `preview/e2e/route-clearance.js`. `keepClear()` detours a leg around its least-clear point: of the sideways offsets that pass `nav.canTravel`, it takes the one leaving the whole detoured leg clearest, and repeats on each half while the leg keeps less than 0.3 m. A leg is replaced only by a clearer one, and the destination never moves.
+  - The journey caches routes per metre of start and settles the lap routes before anyone walks.
+  - **Independent review of the first version:** no HIGH. All three MEDIUMs are addressed in the rework:
+    - the guards were untested;
+    - the greedy detour left eviction legs at 0.10 m;
+    - each call blocked about 1 s.
+  - **Now:** about 30 ms per call (worst 63 ms). The walked lap routes keep at least 0.30 m (reload) and 0.25 m (eviction), against about 0 for the raw resident routes, by `isAreaFree`.
+  - **Tests:** 4/4. Mutants that drop the improvement guard, `canTravel` or the detours each fail.
+  - Core, a journey run and a final review follow verify full.
 
 **#672: the five-rejoin read adopted** (head `69afb992`).
 - Reconnects default to 5, with the backoff kept.
