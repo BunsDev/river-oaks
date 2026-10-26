@@ -5,6 +5,12 @@ export const IPIC_INTERIOR = 'ipic-photo-v1';
 export const isIpicStore = store => store.name === 'IPIC Theaters' && store.building_id === 'osm-way-625330798';
 export const IPIC_FLIGHTS = Object.freeze([{ start: 6, end: 12, base: 0 }, { start: 14, end: 20, base: 3 }]);
 export const IPIC_ESCALATOR = Object.freeze({ lanes: [-1.4, 1.4], railOffset: .91, railWidth: .11, treadWidth: 1.5 });
+// The stone walls either side of the escalator well, at a = ±IPIC_RUN_WALL (0.18 m thick).
+export const IPIC_RUN_WALL = 2.72;
+// Where the drawn ceilings are, over the street floor (ipic-interior.js; each slab is 0.18 m thick). The escalator
+// well is one volume from reception to the lounge, closed at the lounge's ceiling (Val, 2026-10-26). Only the
+// mural landing's side bays keep a lower ceiling.
+export const IPIC_CEILINGS = Object.freeze({ reception: 3.9, landingBays: 6.7, upper: 10.3, auditorium: 10.4 });
 // The upper-lounge planter at a = -5.65 was moved 5 cm west (Val, 2026-10-15) to widen the passage to the
 // auditorium, which then ran between it and the sofa. The sofa now backs onto the west guardrail (2026-10-18).
 export const IPIC_PLANTERS = Object.freeze([[-4.8, 0, 1.6, 1.8], [5.7, 0, 1.6, 1.8], [-5.65, 6, 25.4, 1.5], [1, 6, 25.4, 1.5]]);
@@ -18,10 +24,11 @@ export const IPIC_BAR = Object.freeze({ a: 4.6, d: 23, w: 1.6, l: 3.9 });
 export const IPIC_BACK_BAR = 6.28;
 // The auditorium (Val, 2026-10-19). The photographed house (IMG_9767) put its two rows 5.8 m and 2.8 m from a
 // 12.1 m screen, 92° and 130° of view, where cinema guidance asks for 30-60°. IPIC already fills the
-// building's depth, so the auditorium is a wing along the building behind the shops, three times the room's
-// 13 m, facing its north end wall (a = IPIC_WING.aMin). The wing is a second part of the room (store-rooms.js
-// addRoomParts). See docs/ipic-interior.md.
-export const IPIC_WING = Object.freeze({ aMin: -19.5, aMax: 19.5, d0: 26, d1: 34 });
+// building's depth, so the auditorium is a wing along the building behind the shops, facing its north end wall
+// (a = IPIC_WING.aMin). The wing is a second part of the room (store-rooms.js addRoomParts). See
+// docs/ipic-interior.md. It first ran 39 m, 25 m of it empty carpet past the doorway (Val, 2026-10-26: "tons of
+// dead space"); it now ends 0.9 m past the doorway (a = -4.7), a cross aisle behind the back row.
+export const IPIC_WING = Object.freeze({ aMin: -19.5, aMax: -2.9, d0: 26, d1: 34 });
 // Viewing guidance: the horizontal angle 2·atan(W/2D) is at most 60° from the front row, about 40° from THX's ideal
 // seat (THX asks 36° of its back row) and never below SMPTE EG-18's 30°; the image's top edge is at most 35° above the front row's
 // eye; and no recliner in front hides any of the image, so each row's eye line to the image's bottom edge
@@ -107,6 +114,18 @@ export function ipicFloor(d, a = 0) {
   return 6 + auditoriumFloor(a);
 }
 
+// The underside of the lowest ceiling drawn over (d, a), over the street floor: reception's coffers (as far as the
+// far face of the well's header wall, so no camera stops inside it), the escalator well (and the landing's side
+// bays), the lounge's and the Tuck Room's beams, and the auditorium. The walking camera stays under it
+// (third-person.js). Hanging lamps and plants (the cocoons, the pothos strands) are not ceilings.
+export function ipicCeiling(d, a = 0) {
+  const slab = y => y - .09;
+  if (d < 6.2) return 3.6;
+  if (d < 20) return d > 11.82 && d < 14.18 && Math.abs(a) > IPIC_RUN_WALL ? slab(IPIC_CEILINGS.landingBays) : slab(IPIC_CEILINGS.upper);
+  if (d < IPIC_WING.d0) return 9.6;
+  return slab(IPIC_CEILINGS.auditorium);
+}
+
 // Which way a seat faces in the room frame (a, d): +d at yaw 0, -a at yaw PI/2, as ipicSeatSites turns it.
 export const ipicSeatForward = seat => [-Math.sin(seat.yaw), Math.cos(seat.yaw)];
 
@@ -114,6 +133,7 @@ export function configureIpicRoom(room) {
   room.interior = IPIC_INTERIOR;
   room.height = 10.4;
   room.floorAt = (east, north) => { const [a, d] = room.toLocal(east, north); return room.floor + ipicFloor(d, a); };
+  room.ceilingAt = (east, north) => { const [a, d] = room.toLocal(east, north); return room.floor + ipicCeiling(d, a); };
   // The auditorium wing beyond the 13 m room; store-rooms.js addRoomParts makes containment and lookup see it.
   room.parts = [{ ...IPIC_WING }];
   room.fixtures = [];
@@ -158,6 +178,10 @@ export function configureIpicRoom(room) {
   // Auditorium doorway at a=-4.7; partitions agree with rendered geometry.
   block('ipic-cinema-wall', (room.aMin - 5.6) / 2, 26, -5.6 - room.aMin, .18, 6, 4.4);
   block('ipic-cinema-wall', (-3.8 + room.aMax) / 2, 26, room.aMax + 3.8, .18, 6, 4.4);
+  // Behind the cinema wall, past the auditorium's east end wall, the room's own rectangle is back of house: walled
+  // off and filled by its collider, from the end wall's inner face.
+  const backOfHouse = IPIC_WING.aMax - .09;
+  block('ipic-back-of-house', (backOfHouse + room.aMax) / 2, (26.09 + room.depth) / 2, room.aMax - backOfHouse, room.depth - 26.09, 6, 4.4);
   // The sofa's back, arms and coffee table box its front in for the server body, and its arms meet the
   // wall and the escalator head, so each place names where its sitter steps out and is approached from:
   // the open floor beside the table at that place's front corner.
@@ -193,11 +217,11 @@ export function configureIpicRoom(room) {
     { role: 'guest', pose: 'stand', a: -4.7, d: 4.5, facing: [0, -1], seed: room.index * 7 + 1 },
     { role: 'guest', pose: 'stand', a: .4, d: 4.9, facing: [1, 0], seed: room.index * 7 + 2 },
   ];
-  // Downlights through the lower floors, then the auditorium wing's: over the house and the foyer behind it.
+  // Downlights through the lower floors, then the auditorium wing's: over the house and the cross aisle behind it.
   // Every one past d 27 is a house light (ipic-interior.js) and dims while a film plays.
   room.lights = [
     ...[1.5, 4.8, 12.8, 21, 24].flatMap(d => [-3, 3].map(a => ({ a, d, y: ipicFloor(d) + 3.2, accent: false }))),
-    ...[-16.5, -12.5, -8.5, -4.5, .5, 6.5, 12.5, 17.5].flatMap(a => [28, 32].map(d => ({ a, d, y: 6 + 3.2, accent: false }))),
+    ...[-16.5, -12.5, -8.5, -4.5].flatMap(a => [28, 32].map(d => ({ a, d, y: 6 + 3.2, accent: false }))),
   ];
   room.summary = { label: 'IPIC · reception, lounge & cinema', staff: 2, guests: 3, mannequins: 0,
     highlights: ['two escalator runs', 'mural landing', 'Tuck Room bar', 'recliner auditorium'] };

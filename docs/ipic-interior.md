@@ -120,7 +120,7 @@ Results:
 | Lane top to either sofa place's approach (its front corner beside the table), other seats occupied | 1.09 m | fits (0.3 m before the sofa moved) |
 | Doorway to each of the 9 recliner approaches (1.4 m in front of the seat, in the legroom), other 10 seats occupied | 0.89 m | the server body fits; the widest accepted body reaches a sit spot within the 3.6 m sit reach for every recliner (1.2–3.09 m away) |
 | Legroom in front of a row, with the row in front seated | 0.891 m (footrests to the seated bodies in front) | below 1.01 m, above the widest posed body (0.80 m); accepted by Val, 2026-10-15 |
-| Turning circles: reception, landing, lounge, auditorium, every seat occupied | 3.05, 1.32, 2.69, 4.0 m radius | fit (0.888 m needed) |
+| Turning circles: reception, landing, lounge, auditorium, every seat occupied | 3.05, 1.32, 2.69, 2.86 m radius (the auditorium's was 4.0 m in the empty foyer before 2026-10-26) | fit (0.888 m needed) |
 
 The server walks these routes in `server/tests/ipic-routes.test.js`. It covers:
 
@@ -157,9 +157,10 @@ collide; none is on a public route.
    before the footrest, 0.45 m from it and from the seated bodies in front. With the row
    in front seated the legroom is 0.891 m: the widest accepted body sits from the side
    aisles, within the server's sit reach.
-4. ~~**Open sky over the escalator runs.**~~ Fixed: the runs share the ceilings of the
-   floors they rise to; a test requires a ceiling above every walkable point. Found by
-   the photo review (`docs/ipic-review/photo-review.md`, P1).
+4. ~~**Open sky over the escalator runs.**~~ Fixed: the escalator well is closed overhead,
+   at the lounge's ceiling since 2026-10-26 (see "Escalator well, reception and the
+   camera"). A test requires a ceiling above every walkable point. Found by the photo
+   review (`docs/ipic-review/photo-review.md`, P1).
 5. **Drawn without collision, where a body can stand:**
    - the base under each recliner cushion, the side tables, and the sofa cushions: seat
      zones, whose cushion centres must stay free for the sit protocol;
@@ -179,6 +180,65 @@ replaced by the 2026-10-19 wing), P17
 (auditorium carpet) and P18 (the walled-in landing) are fixed, and P2 (the mural, kept large in
 its bay) is resolved as Val chose. All 18 are now fixed or resolved.
 
+## Escalator well, reception and the camera (Val, 2026-10-26)
+
+Val reported:
+
+- the Tuck Room entry was "busted";
+- there was "a roof in the middle of the escalator";
+- upstairs "you're half a body high".
+
+A walk-through on main c6eba6a3 measured the player's pose, the drawn feet and the camera
+against `ipicFloor`. Its ledger is `docs/superpowers/plans/2026-10-26-ipic-movement-design.md`.
+The body sat correctly everywhere; the camera and the enclosure did not.
+
+- **The camera went through ceilings.** Indoors, the walking camera's boom stopped at walls
+  and the floor, but not at ceilings.
+  - Riding the first run, it rose above reception's ceiling.
+  - Riding the second run and at the landing, it rose above the landing's ceiling.
+  - Upstairs, it rose above the lounge's and the Tuck Room's ceilings.
+
+  The view was then the top of a ceiling slab across the escalator, or filling the frame, or
+  looking down past the lounge's cocoons, which hid half of the player.
+
+  Now a room may give `ceilingAt`, and the boom stops 0.3 m under it (`third-person.js`).
+  IPIC's comes from `ipicCeiling(d, a)` in `ipic-plan.js`:
+  - reception's coffers, and the well's header wall;
+  - the well, and the landing's side bays;
+  - the lounge's and the Tuck Room's beams;
+  - the auditorium.
+
+  `IPIC_CEILINGS` holds the drawn heights for both the plan and the meshes. Across a lane,
+  the rails still collapse the boom, as before.
+- **A roof across the escalator.** The mural landing's ceiling ran across both lanes at
+  6.7 m, 0.7 m above the lounge floor. Now the escalator well is one volume between the run
+  walls, from reception to the lounge:
+  - it is closed overhead at the lounge's ceiling (10.3 m), and by a header wall above
+    reception's ceiling;
+  - the run walls rise to that ceiling, and stone fascias continue them over the landing;
+  - only the landing's side bays keep their own 6.7 m ceiling.
+- **The opening under the sign.** The side bay west of the first run was open at d = 6,
+  right under "IPIC & THE TUCK ROOM ↗". It had no floor, front or outer wall, so the
+  street's ground and the next shop's shelves showed through it.
+  - Walls now close both bays at d = 6, up to reception's ceiling.
+  - The sign hangs on the west wall, beside the escalator, instead of across the lane's
+    head.
+- **Pits beside the second run.** From the lounge, past the glass guardrails, the bays
+  beside the second run went down to the street's ground. They are now light wells, each
+  with a stone floor at the landing's level, walls to the ceiling and a tall planter.
+
+`preview/tests/ipic-camera.test.js` places the real camera at ten stops along the route, in
+eight directions and at four pitches. It requires:
+
+- the camera stays under the drawn ceiling;
+- the first thing below the camera is the floor, or something standing on it;
+- looking up or down the runs, the visitor stays in view.
+
+On main, 32 of the camera poses look down on the top of a ceiling.
+
+`ipic-agreement.test.js` now also sends its sight lines from reception and the lounge into
+the escalators' enclosure. On main, 496 of them left the interior.
+
 ## Auditorium and screen (Val, 2026-10-19)
 
 `IPIC_WING`, `IPIC_VIEWING`, `IPIC_AUDITORIUM_ROWS` and `IPIC_SCREEN` in `ipic-plan.js`
@@ -188,9 +248,20 @@ holds them to the guidance below.
 **Why it changed.** The photographed house put its two rows 5.79 m and 2.79 m from a
 12.1 m screen: 92° and 130° of view, where cinema guidance asks for 30–60°. IPIC already
 fills the building's depth, so seat distance had to come from its length. The auditorium is
-now a wing along the building, behind the shops: a −19.5 to 19.5 by d 26 to 34, three
-times the room's 13 m width. The screen is on its north end wall (a −19.35), and the rows
-face it. The wing is a second part of the IPIC room (`addRoomParts` in `store-rooms.js`).
+now a wing along the building, behind the shops. The screen is on its north end wall
+(a −19.35), and the rows face it. The wing is a second part of the IPIC room
+(`addRoomParts` in `store-rooms.js`).
+
+**Shortened (Val, 2026-10-26).** The wing first ran a −19.5 to 19.5, three times the
+room's 13 m width. 25.7 m of it, east of the back row, was empty carpet ending in a black
+wall. Val: "the dimensions are contorted and tons of dead space". Now:
+
+- The wing runs a −19.5 to −2.9 by d 26 to 34 (16.6 × 8 m). It ends 0.9 m past the
+  doorway.
+- The rest of the room's rectangle behind the cinema wall is back of house: walled off,
+  with `ipic-back-of-house` filling it.
+- There are eight house lights, all over the house and the cross aisle.
+- The screen, rows, rake and seats are unchanged.
 
 **Guidance used.** These are secondary sources; the SMPTE EG-18 text itself was not
 available.
@@ -230,8 +301,9 @@ modelled, only recliner headrests.
   with treads and glow nosings. Every eye line clears the headrest in front by 0.12 m, so
   no recliner hides any of the image. `hiddenBottomFraction` is now 0 for every seat; the
   back row used to lose 22 %.
-- **Entry.** The cinema doorway (a −4.7, d 26) opens onto a rear foyer behind the back row.
-  A cross-aisle along the d-26 wall runs to the side aisle and each row's legroom.
+- **Entry.** The cinema doorway (a −4.7, d 26) opens onto a 3.16 m cross aisle. It runs
+  between the back row's recliner bases (a −6.15) and the wing's east end wall (a −2.99).
+  From there the side aisles lead to each row's legroom.
 - **Short of THX.** The back row's 33° meets SMPTE's 30° but not THX's 36°. With a 7.4 m
   screen, 36° needs the back row within 4.98 m of the front row (a 2.49 m pitch). That
   leaves less legroom than the widest posed body. The other route is a deeper wing for a

@@ -27,8 +27,12 @@ export function thirdPersonPose(state, environment) {
     // Indoor rooms already define traversable floor space. Outdoor roof-height
     // restrictions would collapse the camera into the visitor inside every shop.
     const clear = room !== null ? environment.isFree(px, pz) : (environment.canFly?.(px, target[1] + boom[1] * t, pz) ?? environment.isFree(px, pz));
-    if (!clear || (environment.roomAt?.(px, pz)?.storeId ?? null) !== room) break;
-    if (target[1] + boom[1] * t < environment.groundAt(px, pz) + 0.25) break;
+    const here = environment.roomAt?.(px, pz) ?? null, y = target[1] + boom[1] * t;
+    if (!clear || (here?.storeId ?? null) !== room) break;
+    if (y < environment.groundAt(px, pz) + 0.25) break;
+    // A room that draws its ceilings (IPIC's) keeps the camera under them. Otherwise, on the escalators and
+    // upstairs, the view was the top of a ceiling slab (Val, 2026-10-26).
+    if (here?.ceilingAt && y > here.ceilingAt(px, -pz) - 0.3) break;
     fraction = t;
   }
   return { position: target.map((value, index) => value + boom[index] * fraction), target, showBody: fraction > 0.18 };
