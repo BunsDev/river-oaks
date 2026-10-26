@@ -117,6 +117,32 @@ Docs: `docs/desktop.md` now says which pull requests get all three runners and t
 
 Posted 2026-10-24 ~20:40Z: [#370](https://github.com/BunsDev/river-oaks/issues/370#issuecomment-6389040777) (four identity confirmations, with #653 for the crash finding), [#372](https://github.com/BunsDev/river-oaks/issues/372#issuecomment-6389040987) (Azure setup steps by variable name, `.deb` Maintainer, desktop shortcut) and [#373](https://github.com/BunsDev/river-oaks/issues/373#issuecomment-6389041177) (candidate, version, machines, blockers). Correction to the goal prompt: #372 has two open decisions, not three. Windows-only cookie encryption was settled when 0.2.1 turned `EnableCookieEncryption` on for every platform (`docs/security-review.md`; installers ledger 2026-10-15); the 10-22 status still listed it.
 
+## Increment 6: Settings closed by a town drop (#371, 2026-10-26)
+
+Task `desktop-e2e-settings-drop-371-20261026`, branch `fix/desktop-e2e-settings-town-drop-371-20261026`, worktree `river-oaks-desktop-settings-drop`.
+
+The failure trail from #651 caught the cause in Desktop job 121709518224 (Dependabot #678, run 40361899066). Timeline after the reload:
+
+| t (ms) | Event |
+| --- | --- |
+| 4,471 | town `connecting` |
+| 22,300 | town `joined` |
+| 59,062 | `settings-dialog` closed via `setStatus` ← `show` ← `lost` ← the WebSocket `close` handler |
+| 59,159 | town `disconnected` |
+| 60,153 | town `joined` |
+
+Nothing reopened Settings, so the Auto click waited 120 s for a hidden button. Vite logged `ws proxy error: write EPIPE` about 2 s before the close. Leg 5's unexplained close (1 of 40) failed the same way, before the trail existed.
+
+[#683](https://github.com/BunsDev/river-oaks/pull/683) changes only `desktop/e2e.js`. `chooseQuality(mode)` waits for the town, opens Settings → Graphics and chooses. If that fails with the dialog closed, it rejoins, reopens and chooses again, at most twice, recorded in `report.qualityRetries`. The final close is skipped when a drop already closed the dialog.
+
+Results:
+
+- **Local:** core `verify` passed at `68c6fc55`.
+- **#683's own runs:** 29 checks passed, 2 skipped.
+- **Forced-drop run 40389088261** (`ac00e1c6`): the town socket was closed before the Auto choice and after it. All ten legs recovered with exactly one retry and nine passed. Leg 43 failed the 100-frame check at 9.4 fps on the floor. Its scene counts match main's passing legs exactly, so the runner was slow, not the change.
+- **Head run 40396746242** (`d1eb78b6`): 10 of 10 passed, with no natural drop. Frames ranged 108–405.
+- **Comment posted:** [#371](https://github.com/BunsDev/river-oaks/issues/371#issuecomment-6427022352).
+
 ## Pull requests
 
 | PR | Branch | Head | State |
@@ -125,6 +151,7 @@ Posted 2026-10-24 ~20:40Z: [#370](https://github.com/BunsDev/river-oaks/issues/3
 | [#652](https://github.com/BunsDev/river-oaks/pull/652) | `ci/desktop-electron-cache-371-20261024` | `04228bec` | merged 2026-10-25 01:55Z (see Delivery); the `-zip` keys missed and were saved by the explicit save step on all three runners, macOS included; independent review addressed |
 | [#653](https://github.com/BunsDev/river-oaks/pull/653) | `fix/desktop-linux-crash-370-20261024` | `2a2d9d11` | draft, review-ready; Desktop and Verify green on first attempt; Linux leg asserted `killed` with the pipe on (gone 815 ms, playable 7.5 s); independent review addressed; core-dump trade-off is Val's decision |
 | [#654](https://github.com/BunsDev/river-oaks/pull/654) | `docs/desktop-release-packet-373-20261024` | this branch | draft; docs; hosted green |
+| [#683](https://github.com/BunsDev/river-oaks/pull/683) | `fix/desktop-e2e-settings-town-drop-371-20261026` | `68c6fc55` | draft, review-ready; Desktop and Verify green; forced drops recovered in 10 of 10 legs; 10 of 10 legs green at the head |
 
 ## Delivery
 
@@ -146,7 +173,7 @@ Retirement archives (bundle restore-tested by the guard; ignored evidence verifi
 
 ## Results
 
-- **macOS e2e (#371):** both measured causes fixed and a third harness race found and fixed; 20 consecutive green legs across the two final heads. One Settings close (leg 5, 1 of 40) is unexplained; the e2e now records its closer on failure.
+- **macOS e2e (#371):** both measured causes fixed and a third harness race found and fixed; 20 consecutive green legs across the two final heads. One Settings close (leg 5, 1 of 40) was unexplained then. The trail later showed the same failure caused by a town drop; #683 recovers from it.
 - **Windows packaging (#371):** the github.com fetch on every package run is gone (zip-only on a miss, nothing on a hit), proven on three runners in both states.
 - **Linux crash recovery (#370):** 218,431 ms to 153–815 ms on the CI runner with `systemd-coredump` active; asserted on every Linux leg from now on.
 - **Candidate and rehearsal (#373):** unsigned set from `67203a6a` verified; per-row human steps in [the rehearsal ledger](2026-10-24-desktop-release-rehearsal.md).
@@ -157,8 +184,9 @@ Retirement archives (bundle restore-tested by the guard; ignored evidence verifi
 
 - A CI pass is not a human matrix row.
 - The governor's frame-count windows still make Auto slow to shed load on a GPU below 10 fps; this goal does not change that decision rule.
+- Some macOS runners stay below 10 fps even at Auto's floor (`{0.6, AO off}`): forced-drop leg 43 drew 95 frames. The e2e's 100-frame check can therefore still fail on a slow runner. Lowering the floor or the threshold is Val's decision.
 - The Linux fix is proven on CI's unsandboxed e2e renderer; the sandboxed renderer on a real Ubuntu desktop is a rehearsal row.
 
 ## Next action
 
-#651 and #652 are delivered and their worktrees retired. Handed off to Val: review and, if authorized, land #654; decide #653's core-dump trade-off; answer #370's four identity confirmations, #372's two decisions and the Azure setup, and #373's version. After those merges, retire the remaining two worktrees with `project:prune` (dry run, then `--apply`); the diag branches' local refs retire with them, and their remote branches stay unless Val authorizes deletion.
+#651 and #652 are delivered and their worktrees retired. Handed off to Val: review and, if authorized, land #683 and #654; decide #653's core-dump trade-off and the slow-runner floor; answer #370's four identity confirmations, #372's two decisions and the Azure setup, and #373's version. After those merges, retire the remaining three worktrees with `project:prune` (dry run, then `--apply`); the diag branches' local refs retire with them, and their remote branches stay unless Val authorizes deletion.
