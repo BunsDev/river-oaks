@@ -41,9 +41,21 @@ possible attacks have been eliminated or a deployed penetration test.
   the catalog forget the account. On Redis this goes through the room's one writer,
   as a new `forget` room operation that takes only a user id. If any step fails, the
   webhook answers 503 and WorkOS retries; nothing is reported as done early. The
-  failure log names the failed steps, never the account or a store's error text.
-  Concurrent runs for one account share one run. No new route or input is exposed.
-  The webhook keeps its signature, size, time and pending-delivery limits.
+  failure log names the WorkOS event id and the failed steps, the tombstone and the
+  revocation included, never the account or a store's error text. Concurrent runs
+  for one account share one run. A world that fails no longer stops the others.
+  Each request is recorded (account id, event id) until a second whole run a minute
+  after the first: a request let in before revocation can still write while its body
+  arrives. The request timeout is 15 s, enforced every 30 s, so about 45 s in all, and
+  the second run erases that. A record is dropped only while unchanged, so a newer
+  request from another server keeps its own. A sweep retries failed requests and runs
+  due second passes, on a 30 s timer or through the new Vercel cron route
+  `GET /api/erasure-sweep`. That route takes no input, exists only with `CRON_SECRET`,
+  compares its bearer token in constant time, and answers 404 from the Vercel entry,
+  without starting the backend, while the webhook secret is unset. The entry matches
+  the sweep paths without their query, so a query string no longer skips that gate
+  for any of the three crons. On Vercel with the webhook but no `CRON_SECRET`, nothing
+  sweeps, and the backend logs `account_erasure_sweep_unscheduled` at every start. The webhook keeps its signature, size, time and pending-delivery limits.
   `docs/privacy-data-inventory.md` lists what is kept, and why: the hashed character
   tombstone, the moderation and security audit, and room replies that lapse within
   15 s.

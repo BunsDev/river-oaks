@@ -13,9 +13,12 @@ async function getBackend() {
 }
 const server = createServer(async (req, res) => {
   req.url = normalizeVercelRoute(req.url);
-  // The per-minute cron must cost nothing while the workplace is off.
-  if (req.url === '/api/workplace-sweep' && process.env.RIVER_OAKS_WORKPLACE !== '1'
-    || req.url === '/api/voice-sweep' && process.env.RIVER_OAKS_VOICE !== 'on') {
+  // A cron must cost nothing while its feature is off. Erasure runs only with the
+  // WorkOS deletion webhook configured.
+  const path = req.url.split('?')[0];
+  if (path === '/api/workplace-sweep' && process.env.RIVER_OAKS_WORKPLACE !== '1'
+    || path === '/api/voice-sweep' && process.env.RIVER_OAKS_VOICE !== 'on'
+    || path === '/api/erasure-sweep' && !process.env.WORKOS_WEBHOOK_SECRET) {
     res.writeHead(404, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({ error: 'Not found' }));
   }
