@@ -244,19 +244,36 @@ try {
   await page.waitForFunction(() => document.querySelector('#community-speech').textContent.length > 40);
   await page.locator('#community-close').click();
   check('resident conversation');
-  await openHudSpace(page, 'settings-section', 'Graphics');
-  await page.locator('[data-quality=smooth]').click();
-  await page.waitForFunction(() => JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}').mode === 'smooth');
+  // Connecting to the town locks the access gate, and the gate closes an open
+  // Settings dialog (multiplayer-client.js setStatus). So does a drop: this runner
+  // can miss the town's 30 s heartbeat (holdW above), and in Desktop job 121709518224
+  // it did with Settings open, 5 s after the town rejoined from the reload, leaving
+  // the Auto button hidden for the click's whole timeout. Choose with the town
+  // joined; if the gate took the dialog first, rejoin, reopen it and choose again.
+  const settingsOpen = async () => await page.locator('#settings-dialog[open]').count() > 0;
+  const qualityRetries = report.qualityRetries = [];
+  const chooseQuality = async mode => {
+    for (;;) {
+      if (sharedTown) await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.multiplayer === 'joined');
+      const chosen = await openHudSpace(page, 'settings-section', 'Graphics')
+        .then(() => page.locator(`[data-quality=${mode}]`).click())
+        .then(() => true, async error => {
+          if (await settingsOpen() || qualityRetries.length >= 2) throw error;
+          return false;
+        });
+      if (chosen) break;
+      qualityRetries.push({ mode, town: await page.locator('#canvas-host').getAttribute('data-multiplayer') });
+    }
+    await page.waitForFunction(mode => JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}').mode === mode, mode);
+  };
+  await chooseQuality('smooth');
   await page.reload();
   await gameReady();
-  // Connecting to the town locks the access gate, and the gate closes an open
-  // Settings dialog (multiplayer-client.js setStatus). Open it once joined.
-  if (sharedTown) await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.multiplayer === 'joined');
   assert.equal(await page.locator('[data-quality=smooth]').getAttribute('aria-pressed'), 'true');
   check('graphics preference survives reload');
-  await openHudSpace(page, 'settings-section', 'Graphics');
-  await page.locator('[data-quality=auto]').click();
-  await page.locator('#settings-dialog .settings-header button').click();
+  await chooseQuality('auto');
+  // A drop after the choice has already closed the dialog.
+  if (await settingsOpen()) await page.locator('#settings-dialog .settings-header button').click().catch(async error => { if (await settingsOpen()) throw error; });
   // Selecting Auto restarts it at full resolution with AO, and it decides once
   // per 45 frames: on a 10 fps runner it needs about 27 s to reach its floor and
   // drop AO. Measure the loop once Auto has stopped stepping down (two decision
