@@ -21,6 +21,7 @@ import { createRedisAvatarPreferences, legacyDefaultAppearance } from './avatar-
 import { createRedisDesignLibrary } from './design-library.js';
 import { createRedisPresence } from './presence.js';
 import { createRedisCyclingMiles } from './cycling-miles.js';
+import { eraseEach } from './account-erasure.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
@@ -107,17 +108,16 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   // store. Every world in the catalog is reached, loaded here or not.
   const worldIds=async()=>[...new Set([configuredWorldId,...(await catalog.list()).map(entry=>entry.id)])];
   // Account erasure (#292). Only a world loaded here or with a durable checkpoint can
-  // hold the account; one that cannot load fails the step, so the run is retried.
+  // hold the account; one that cannot load fails the step, so the run is retried, and
+  // every other world still forgets the account meanwhile.
   const storedWorld=async id=>await redis.exists(`${roomPrefixFor(namespace,id)}:state`)===1;
   const accountSteps={
-    worlds:async userId=>{
-      for(const id of await worldIds()) {
-        if(!worlds.has(id)&&!await storedWorld(id))continue;
-        const world=await worldFor(id);if(!world)throw new Error('World unavailable');
-        await world.game.forgetAccount(userId);
-      }
-    },
-    landmarks:async userId=>{for(const id of await worldIds())await landmarkStoreFor(id).eraseUser(userId);},
+    worlds:async userId=>eraseEach(await worldIds(),async id=>{
+      if(!worlds.has(id)&&!await storedWorld(id))return;
+      const world=await worldFor(id);if(!world)throw new Error('World unavailable');
+      await world.game.forgetAccount(userId);
+    }),
+    landmarks:async userId=>eraseEach(await worldIds(),id=>landmarkStoreFor(id).eraseUser(userId)),
     social:userId=>social.eraseUser(userId),groups:userId=>groups.eraseUser(userId),profiles:userId=>profiles.eraseUser(userId),
     events:userId=>events.eraseUser(userId),presence:userId=>presence.eraseUser(userId),debugReports:userId=>debugReports.eraseUser(userId),
     officeDesk:userId=>officeDesk.eraseUser(userId),designLibrary:userId=>designLibrary.eraseUser(userId),

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:net';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { WebSocket } from 'ws';
@@ -67,4 +68,21 @@ test('the standalone town erases an account from every store and world, and keep
   assert.ok(snapshot.players.some(player=>player.id===pat.id));
   // A second run finds nothing more to do.
   await town.eraseAccount(erin.id);
+});
+
+test('a world that cannot forget the account fails the erasure only after every other world has forgotten it', { timeout: 30000 }, async t => {
+  const temporary = await mkdtemp(join(tmpdir(), 'river-oaks-erasure-'));
+  const town = await createTown({ origin: 'http://127.0.0.1:5999', env: { RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_ACCEPTANCE_FIXTURE: '1',
+    MODERATION_FILE: join(temporary, 'moderation.json'), WAITLIST_FILE: join(temporary, 'waitlist.json') }, devAuth: 'local', staticRoot: null });
+  t.after(async () => { await town.close();await rm(temporary, { recursive: true, force: true }); });
+  t.mock.method(console, 'warn', () => {});
+  const region = JSON.parse(readFileSync(new URL('../../preview/public/data/sample-region.json', import.meta.url)));
+  assert.equal((await town.catalog.publish({ id: 'moon-garden', title: 'Moon Garden', region }, 'owner')).ok, true);
+  // The first world reached cannot forget anyone; the second still must.
+  const broken = await town.worldFor('river-oaks'), other = await town.worldFor('moon-garden'), forgotten = [];
+  broken.game.forgetAccount = async () => { throw new Error('world unavailable'); };
+  const forget = other.game.forgetAccount;
+  other.game.forgetAccount = async id => { await forget(id);forgotten.push(id); };
+  await assert.rejects(town.eraseAccount('user_erin'), /Account erasure incomplete/);
+  assert.deepEqual(forgotten, ['user_erin'], 'the other world forgot the account');
 });
