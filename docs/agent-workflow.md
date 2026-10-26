@@ -40,7 +40,7 @@ it is not an unattended test fixture.
 | `pnpm run verify python` | Ruff, Python tests, offline synthetic pipeline |
 | `pnpm run verify` | Web + Python + worktree secret guard; default `core` |
 | `pnpm run verify security` | Worktree and full local Git-history secret scan |
-| `pnpm run verify browser` | Build, security browser regressions, WebGL reflection, thirteen experience journeys (player-lifecycle, multiplayer-lifecycle, contextual-first-visit, store-intro, photo-mode, rail-navigation, places-guide, world-studio, spatial-circulation, spatial-streets, office-desk, office-visit) and all shared-town journeys |
+| `pnpm run verify browser` | Build, security browser regressions, WebGL reflection, sixteen experience journeys (player-lifecycle, multiplayer-lifecycle, contextual-first-visit, store-intro, photo-mode, rail-navigation, places-guide, world-studio, spatial-circulation, spatial-streets, office-desk, office-visit, office-computer-embed, garden-campus-office, garden-campus-traversal, garden-campus-suite), the Commons journey (east-garden-commons) as its own `experience-commons` stage, all shared-town journeys and IPIC screening |
 | `pnpm run verify full` | Core + mandatory Redis server tests + JavaScript dependency audit + history scan + browser journeys |
 
 `pnpm run agent:doctor full` prints JSON prerequisite diagnostics, exits 2 when
@@ -66,7 +66,7 @@ RIVER_OAKS_SHARED_SOFTWARE=1 RIVER_OAKS_SECURITY_SOFTWARE=1 RIVER_OAKS_EXPERIENC
 
 The shared runner uses temporary identities and owned servers; CPU rendering
 proves fixture behavior, not visual quality. On macOS, run the browser profile
-directly. The `shared` (30 minutes) and `experience` (20 minutes) tasks have longer deadlines; the others use the 10-minute default. All browser tasks require functioning WebGL2.
+directly. The `shared` (30 minutes) and `experience` (20 minutes) tasks have longer deadlines; the others use the 10-minute default. The Commons journey runs in its own `experience-commons` stage (10 minutes, report `data/reports/experience-commons.json`, ignored by Git). It used to run last in `experience`, which took 880–1,177 s when it passed locally and hit its 1,200 s deadline under load, killing the Commons journey; the Commons journey alone took 163–240 s. All browser tasks require functioning WebGL2.
 
 For a changed browser interaction, also run its named journey, for example:
 `pnpm run test:experience hud-and-quality`. Local browser runs from different
