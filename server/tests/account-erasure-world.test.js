@@ -96,3 +96,38 @@ test('campus leases, requests and receipts of the account go; another tenant kee
   const restored = createSharedWorld(served, { now: () => state.time, campusOperators: ['campus-operator'] });
   assert.deepEqual(restored.restore(JSON.parse(JSON.stringify(world.checkpoint()))), { ok:true });
 });
+
+// #640 made the town's crime and police state checkpointed and strict: a fighter or a held
+// player with no player record fails a restore. Forgetting an account mid-fight and
+// mid-pursuit must leave neither. Its attack cooldown and its cancelled strike keep the id
+// for a moment, as crime cooldowns always have (crime.js isn't this task's to change), and
+// lapse within seconds.
+test('an account forgotten mid-fight and under police pursuit leaves no trace, and the world restores', async () => {
+  const { readFileSync } = await import('node:fs');
+  const district = JSON.parse(readFileSync(new URL('../../preview/public/data/district.json', import.meta.url)));
+  let time = 5_000_000;
+  const options = { now: () => time, isAdmin: id => id === 'owner' };
+  const world = createSharedWorld(district, options);
+  for (const user of [{ userId:'owner', name:'Owner' }, erin, pat]) assert.equal(world.join(user).ok, true);
+  assert.equal(world.command('owner', { type:'worldPolicy', action:'update', expectedRevision:0,
+    changes:{ violence:{ mode:'forced', zones:['westcreek-lane'] } } }).ok, true);
+  const target = world.snapshot().crime.targets[0];
+  world.players.get(erin.userId).position = [target.position[0] + 1.2, target.position[1], target.position[2]];
+  assert.equal(world.command(erin.userId, { type:'attack', targetId:target.id, attackKind:'melee' }).ok, true);
+  time += 300;world.step(.05);
+  const pursued = () => world.snapshot().police.units.some(unit => unit.targetId === erin.userId);
+  for (let i = 0; i < 100 && !pursued(); i++) { time += 100;world.step(.1); }
+  assert.ok(pursued(), 'police pursue the account');
+  assert.ok(world.snapshot().crime.wanted.some(entry => JSON.stringify(entry).includes(erin.userId)), 'the account is wanted');
+
+  assert.equal(world.forgetAccount(erin.userId), true);
+  const restored = createSharedWorld(district, options);
+  assert.deepEqual(restored.restore(JSON.parse(JSON.stringify(world.checkpoint()))), { ok:true });
+  const { police, crime } = world.checkpoint().payload;
+  assert.equal(JSON.stringify(police).includes(erin.userId), false, 'no officer, surrender or hold names the account');
+  assert.equal(JSON.stringify(crime.participants).includes(erin.userId), false);
+  assert.equal(world.snapshot().crime.wanted.some(entry => JSON.stringify(entry).includes(erin.userId)), false, 'no stars');
+  for (let i = 0; i < 5; i++) { time += 1000;world.step(.1); }
+  assert.deepEqual(traces(world), [], 'the cooldown and the cancelled strike lapse');
+  assert.ok(world.players.has(pat.userId), 'a peer stays');
+});

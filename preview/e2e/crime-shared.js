@@ -50,25 +50,46 @@ async page => {
     const meter = hud.getByRole('progressbar', { name: 'Westcreek rival health' });
     check(await meter.getAttribute('aria-valuenow') === '100', 'Health is a labelled progress bar');
 
-    // T shoves. Watch the HUD from the moment of the key press: it may change only after the reply.
+    // T strikes. Watch the HUD from the moment of the key press: health may change only with the
+    // town's snapshot, and (#640) only at the strike's contact, after a windup.
     await visitor.evaluate(() => {
-      window.__crimeTrace = [];
-      const meterNode = document.querySelector('.crime-health');
+      window.__crimeTrace = []; window.__crimeLines = [];
+      const meterNode = document.querySelector('.crime-health'), line = document.querySelector('.crime-result');
       const seen = () => window.__crimeTrace.push({ meter: meterNode.getAttribute('aria-valuenow'), town: window.__riverMultiplayer().snapshot.crime.targets.find(item => item.id === 'rival:westcreek').health });
       new MutationObserver(seen).observe(meterNode, { attributes: true, attributeFilter: ['aria-valuenow'] });
+      new MutationObserver(() => window.__crimeLines.push(line.textContent)).observe(line, { childList: true, characterData: true, subtree: true });
     });
     await visitor.locator('#canvas-host').focus();await visitor.keyboard.press('KeyT');
-    await hud.locator('.crime-result', { hasText: 'Hit landed.' }).waitFor();
+    await visitor.waitForFunction(() => window.__crimeLines.some(text => text.startsWith('Hit landed.')));
+    const lines = await visitor.evaluate(() => window.__crimeLines);
+    check(lines.indexOf('Winding up…') >= 0 && lines.indexOf('Winding up…') < lines.findIndex(text => text.startsWith('Hit landed.')), 'The strike winds up before the town confirms contact');
     const trace = await visitor.evaluate(() => window.__crimeTrace);
     check(trace.length > 0 && trace.every(item => Number(item.meter) === item.town), 'Every health change on screen matched the town\'s state at that moment');
     const after = await town(visitor);
     check(after.rival.health === 75 && after.wanted.some(([id, stars]) => id === after.selfId && stars === 1), 'One hit: 25 damage and one star');
-    check(/Westcreek rival has 75 health left\. Wanted level 1 of 5\./.test(await hud.locator('.crime-result').textContent()), 'The hit is confirmed in plain words');
+    check(lines.some(text => /Westcreek rival has 75 health left\. Wanted level 1 of 5\./.test(text)), 'The hit is confirmed in plain words');
     check(await hud.locator('.crime-wanted').getAttribute('aria-label') === 'Wanted level: 1 of 5 stars', 'Wanted stars have a spoken label');
     await page.waitForFunction(id => { const crime = window.__riverMultiplayer().snapshot.crime;
       return crime.targets.find(item => item.id === 'rival:westcreek').health === 75 && crime.wanted.some(([who, stars]) => who === id && stars === 1); }, after.selfId);
     check(true, 'The owner\'s browser sees the same hit and star');
     await page.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === id && item.gesture === 'shove'), after.selfId).catch(() => {});
+
+    // The rival answers with a telegraphed counter (#640). U, timed against the town's own
+    // remaining windup (the evade window is 350 ms), evades it: no damage, said in words. A
+    // counter seen too late to time lands; the rival telegraphs again after its cooldown.
+    await visitor.waitForFunction(() => window.__crimeLines.some(text => /winding up to strike back/.test(text)));
+    let evadedCounter = null;
+    for (let attempt = 0; attempt < 3 && !evadedCounter; attempt++) {
+      const counter = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), counter = m.snapshot.crime.actions?.find(item => item.kind === 'counter' && item.targetId === m.selfId && item.outcome === null);
+        return counter && counter.remainingMs >= 80 && counter.remainingMs <= 330 && { id: counter.id, health: m.snapshot.players.find(p => p.id === m.selfId).health }; }, null, { polling: 16, timeout: 10000 }).then(handle => handle.jsonValue()).catch(() => null);
+      if (!counter) continue;
+      await visitor.locator('#canvas-host').focus(); await visitor.keyboard.press('KeyU');
+      const outcome = await visitor.waitForFunction(id => window.__riverMultiplayer().snapshot.crime.actions?.find(item => item.id === id && item.outcome !== null)?.outcome, counter.id).then(handle => handle.jsonValue());
+      if (outcome === 'evaded') evadedCounter = { ...counter, after: (await town(visitor)).self.health };
+    }
+    check(evadedCounter, 'A timed evade (U) beats the rival\'s telegraphed counter');
+    await visitor.waitForFunction(() => window.__crimeLines.some(text => /^You evaded Westcreek rival/.test(text)));
+    check(evadedCounter.after === evadedCounter.health, 'An evaded counter does no damage');
 
     // Emergency off: the next shove is not offered, and the town is unchanged.
     await rules.getByRole('button', { name: 'Emergency off: stop all danger now' }).click();
