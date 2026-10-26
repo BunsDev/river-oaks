@@ -118,6 +118,17 @@ An independent review of `22679471` (the same product code as `fea24bed`) confir
 | Related suites with an isolated Redis (resident, navigation, police, creator, Commons, migrations, world, Redis room) | 246/246 passed, 0 skipped |
 | `pnpm run verify` (core), Python 3.12 on PATH, on the review-fix tree | **Attempt 1 (18:51Z) failed** at agent-tests: 273/274; the one failure was the known `land-pr` timing test "a queued lander wakes on release", which timed out at 30 s. That test file then passed 29/29 alone. **Attempt 2 (18:53–18:57Z) passed**: agent 274/274; preview 4,163 passed, 1 skipped; server 919 passed, 225 skipped (Redis cases; core runs without Redis); desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo, demo-verify; secrets. Only this row was added after it. |
 
+**Merged into this branch** by its owner, river-oaks-3e, as `f3f8085c` on 2026-10-26 (signed; parents `fea24bed` and `d5666034`). Review notes:
+- Corridors without builds match the live planner: `createResidentLife` builds its navigation with `locations` and no objects, then sets objects.
+- `lane()` sees current objects: `canWalk` samples `free`, which falls back to `district.open`, and `open` checks the placed-object list that `setPlacedObjects` replaces in place.
+- Lantern stop ids are the lanterns' own ids, so the `lanterns` set matches both `destination.id` and `anchorId`.
+- Hosted checks on `d5666034` all passed.
+
+| Check on `f3f8085c` | Result |
+| --- | --- |
+| Related suites (resident, navigation, companion, creator, auto, community, Commons, migrations, world, police, crime, Commons activation rehearsal, Redis room) with an isolated Redis at 6461 | 196/196 passed, 0 skipped (the same files gave 193 before the review fixes). A first attempt pointed at a Redis that had stopped; it was halted and is kept as `focused-655-f3f8085c-redis-down-stopped.log`, not counted. |
+| `pnpm run verify` (core), Python 3.12 on PATH, 08:28–08:33Z at load 7.5–12.3 | **Passed on the first attempt**, `dirty: false`, revision `f3f8085c`: agent 274/274; preview 4,163 passed, 1 skipped; server 919 passed, 225 skipped (Redis cases; core runs without Redis); desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo, demo-verify; secrets. Receipt `core.json` sha256 `ffae2de5ccbab602…`. |
+
 ## Gaps
 
 - Bayou Heights (#649) has no resident grid here: 89,628 cells over the cap. Draft #670, stacked on this branch, splits it into strips and lands after #649 with the Heights rollback's resident relocation.
@@ -126,7 +137,7 @@ An independent review of `22679471` (the same product code as `fea24bed`) confir
 
 ## Next step
 
-Draft PR #655 carries main `0b9a97c4` and is verified there (see Checks). Main has since moved to `e8207b2b` (#658: touch and voice UI only, none of this branch's files), and `git merge-tree` merges it cleanly. It waits for Val's review in the dev town and for Val's go to land. Merging and landing are not authorized for this task. With that go:
-1. If main has moved, merge it into the branch again and rerun the related suites and `verify full` with an isolated Redis.
+Draft PR #655 carries main `0b9a97c4` and the review fixes (#674, merged as `f3f8085c`). `verify full` last ran at `03381365`, before the review fixes, so it must run again before landing. Main has since moved to `cb83c7cd` (#658 touch and voice UI; #672 and #675 the performance and streaming harnesses, none of this branch's files). It waits for Val's review in the dev town and for Val's go to land. Merging and landing are not authorized for this task. With that go:
+1. Merge main into the branch again and rerun the related suites and `verify full` with an isolated Redis.
 2. Wait for hosted checks on that head.
 3. Land through `pnpm run land` by whoever holds landing authority.
