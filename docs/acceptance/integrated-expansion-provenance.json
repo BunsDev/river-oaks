@@ -1,0 +1,219 @@
+{
+  "destinationHead": "c2598c65d2566816b967596661ca924972d43f44",
+  "dependencyPatch": "16eff1a0d0c86a368f07c03cf02d48054895ebcd",
+  "scope": "Source snapshots adopted with user approval; hashes identify donor inputs, not final integration output or verification. Original worktrees were not changed.",
+  "donors": [
+    {
+      "head": "f4aa1670b2073fc6c8c9aeed2b167c7c3e5f6d8f",
+      "files": {
+        "docs/superpowers/plans/2026-10-22-world-streaming-582-583.md": "875037d240d252b16c7a10abbe3b14791d4100e3f38b566da6397519cba2d0c3",
+        "docs/superpowers/specs/2026-10-22-world-streaming-design.md": "66face160b7f4910dde49d81d42195d511bea2bd19d6d5166a7d96bd38edeba9",
+        "docs/world-streaming.md": "fd9673690ea8ec6b4365e725189b1839c4a61918bbad39fb671d312ee490f89f",
+        "preview/audit/world-streaming-matched.js": "cdd3729fda07492ac539b6a6ea974e34dd8fe7f873c1a9daa6be1501939e22d8",
+        "preview/audit/world-streaming-simulation.js": "388bc2c4608444fe59f2e4a8e922cb316c481a0ec6230e14d844d818011f26de",
+        "preview/e2e/experience-runner.js": "91cf95aa3da8bee416aeebf9c72921dbc117dca21e3970d71cf0b50dd738844a",
+        "preview/e2e/world-streaming.js": "93904d890c1807346022dc989989cc402c229dfe4817f42970b7f5ffd8bd4d21",
+        "preview/src/commons-stream.js": "e674a99263a69132488d75fedbf7acd2ec41706f923a90057de7b650ee53a899",
+        "preview/src/main.js": "b257fabaa8db2283e9a7457bc9bed993bee5a02c7566c60b8c29f54002d36d14",
+        "preview/src/plaza-bicycle.js": "d15506a14e85a7f8a5d0bc2fed0a1880e5e4f3364f57230ae4bed4d113e37245",
+        "preview/src/spatial-chunk-stream.js": "34de01c0a97396e73d45e802566f86dd14cb66e243ab85d3a7a713adad901745",
+        "preview/src/spatial-stream.css": "7c0fd0847b3d874eaa1f3db933c384081f82c1117a4eb32a4f23b292ffaf89f9",
+        "preview/src/walking-ui.js": "7f0cfbe053072f10bae7f15bf347d9776c28488eb7625878e66711a8060c21ba",
+        "preview/src/walking.js": "1196b1f0fbe29e226f10fab6597f01ede86c43a1131b540a4ac4f698655d798b",
+        "preview/tests/commons-ride-guard.test.js": "187f96f5b933c29c57ce9dae1151934efe868fead00969a1709017a024147bd9",
+        "preview/tests/commons-stream.test.js": "64f35daf6b876cf6ebc7a66fb94eab8ca2db6cc8c137b0cd15e57aa3a44e6b3b",
+        "preview/tests/continuous-walk-582.test.js": "ffddc680eb1a02818e871c9b2cdd4445f52559a11ad54d2e935b85f1bdd088cd",
+        "preview/tests/spatial-chunk-stream.test.js": "e3e7eebf02284c130cbb162fbbea17f7eaf8352979dd400ba5773dc3256f2168",
+        "server/tests/east-garden-commons.test.js": "49f7c7a4fdd19925badf04646d1d96afa347a84df4c88f49102802f350ed1094"
+      },
+      "lane": "streaming"
+    },
+    {
+      "head": "52379be69efd395d624fedd57eeee8e283850a62",
+      "files": {
+        "config/neighborhoods/garden-blocks.json": "e4a139ef305c23427c5a61052d2d02ac0a3c8eb1b3074875f61e5d26f6ca47ff",
+        "config/neighborhoods/garden-court.json": "f2d709279de2b3357303a82aca638ae0424deed9a0d1cb4d3d295bfc53fd7f68",
+        "config/neighborhoods/garden-market.json": "52fe34d402359f91f2545068bf23f990bf622136c9a1a0bb457d4fd2a6aacce7",
+        "config/neighborhoods/kit-snapshot.json": "fa97d08b8c1f025c0f9805920605f80bb62970acd31f38b76b72b4b37c036a8e",
+        "docs/neighborhood-authoring.md": "6d55c77c3004601ae3fddf781d9832fb7c42eb40d1814c9a45c0de565893aa95",
+        "docs/superpowers/plans/2026-10-22-neighborhood-authoring.md": "ae347725486ae9d97e621514a242e7256bfcf4e9984b773c39d76827cb17af7f",
+        "docs/superpowers/plans/2026-10-23-neighborhood-regeneration-review.md": "fff8c7feb1d2fa0dc47b5db6fe70f165dc111a47311c6554697b4817ede17754",
+        "docs/superpowers/specs/2026-10-22-neighborhood-authoring-design.md": "3eb9cd84a4e602f49d26da891bbe8a6e8eb4cb6a526cd32d0205c809db6f7208",
+        "preview/e2e/fixtures/neighborhood-review.js": "c8d48756e5d22a239b6c93d7bc1379bd3d1193c7e28e1024d91e22c0e870d9a6",
+        "preview/e2e/neighborhood-authoring.js": "30cf69985ff6930074516af0a0335e2ce1eeecf5abf60f501b343b55806c674f",
+        "preview/e2e/neighborhood-review.js": "8fcdea8f3a02a99cd5a8d792c534f179565afeecbb0ba6d2cc764cdff746f26d",
+        "preview/src/streetscape-kit.js": "01898619f4b50aeab7fd73328b708fe60be2777229743d34cc5c7f3f323e5b30",
+        "preview/src/studio/document.js": "f58c6289acace7cc954e9163e03823c760ddf159106a605380719aab3335a680",
+        "preview/src/studio/main.js": "79148fe40b3d1e3526292dda0174c53efb28b492059984463be18c9ca08fe4ae",
+        "preview/src/studio/neighborhood-panel.js": "f90cd07da318eece822b00c94af4996cba324c828d22e98d56c0463f2cded81a",
+        "preview/src/studio/neighborhood-session.js": "3f55ed58ff950fb53057e1a09dbbbbb512b936850e196bb76f3595f02a62325c",
+        "preview/src/studio/neighborhood-worker.js": "54362a2afef2e50d2c1a3cc029fe7114a13f643bd9a8d6b1ff261b8e18a00aef",
+        "preview/src/studio/neighborhood.css": "7291595893481e9c8fa283e40e2beb00ee519cef54135da5f5f4bc845553d36c",
+        "preview/src/studio/scene.js": "69979ce6247f7b5957dda6cef1ba00683ecfb41e685d0329a4ff3bd8e482e429",
+        "preview/src/studio/viewport.js": "81c9167a441cef2111287b4159d06bd99a92a9f3c2253685e2f1b45a7f9c21a6",
+        "preview/tests/streetscape-kit.test.js": "f461c1223313bc4a7bd0dbc406576d3448527b653bd0b7895115fd0441ccb248",
+        "preview/tests/studio-neighborhood-architecture.test.js": "758d52f1a97c932c550063c8c39180b6fa47a2acb4f380bb6239c85dec3ed3fc",
+        "preview/tests/studio-neighborhood.test.js": "1538dcb300b36dfe4f72d22d161b0c30f884c55cd5ebd1115fec4e872e7f6754",
+        "scripts/neighborhood-measure.mjs": "700cc366595c52a3602901e8e797cb47c0398c31e381872738b8eae0c6001d60",
+        "scripts/neighborhood-review.mjs": "a88e0b0723e9fa4f7ffdcfa9d5f6fed8c9747c7d60204b6542dd9de20bc5d8e4",
+        "scripts/neighborhood-source.mjs": "1a8cdc807ec66803a5f93694341fe869e35fb85138c8e6ac9bf418a6d76494da",
+        "scripts/neighborhood.mjs": "fe32c5af7d2c9f22a1bb279b14da8b3a1aa0142db74b867e50002b2182021fbb",
+        "scripts/tests/neighborhood-architecture.test.js": "0de65370a2943c8b722c8d6c03014f68e63104b33fc15ec8ff051ef96525c5b6",
+        "scripts/tests/neighborhood-cli.test.js": "a775abab1be00215985de70c241c136b6538e8514ede8df249d10521aad06663",
+        "scripts/tests/neighborhood-hash.test.js": "094b2ede6a169daabec091f7edd5067bfcfe292dc815fc661b598acd5d860637",
+        "scripts/tests/neighborhood-reference.test.js": "fe1e24b46a5bc7bc39f11aadd21842556b7fdc5eab6a2d45bfcc07ddc1f92bcd",
+        "scripts/tests/neighborhood.test.js": "bee8190a69106466d293e1f01fbb6ea6b950c7373a2dd7c755f38858affc0c9b",
+        "shared/neighborhood/architecture.js": "ac816a29cc9fe98f319cf795efbe21ea5a0eaf689885dce1050c90057a364ea1",
+        "shared/neighborhood/format.js": "385527aec95ade0c57c10615800b920e069c7614903cf18db0daa3ed4b00b1d8",
+        "shared/neighborhood/generate.js": "842eb0ddf63749092b258388609afa6d8025c77fd503526aeebcb81964e10720",
+        "shared/neighborhood/polygon.js": "e78b873e8d2668f27b4b1cf99cb25c25b8f34f90b08f569f709263f6263ff1c1",
+        "shared/neighborhood/preserve.js": "5bf78b5ef2961cb9e0293385c4fa122a6745016c487269b2ed368ece92fa50d3",
+        "shared/neighborhood/preview.js": "9998f15939152cb8e2d30c1e4716ce365f7cbf93dab57b25b88b6cf3c6e10eb6",
+        "shared/neighborhood/reference.js": "2780365076d0de2ca257da73ea5c8df7f125f19f652c927a94e4b5073b6dafbe",
+        "shared/neighborhood/sha256.js": "2bffb05dbdc2ba15a2473146ad18976964db04749a8fa60b8325bdcc2545ee1a",
+        "shared/neighborhood/validate.js": "f5c5b666b7fd3c154684a141ea569006526f2a68ed809a7c6ec4e56d7334471a",
+        "shared/streetscape-kit.js": "f7d6730d114e375a4b27fcf08073388362b6ebffc5bb74b0a8116638a4c0bd6f",
+        "src/river_oaks/neighborhood_reference.py": "b5a5185a4476ed87fe9f832ba6754bcc59a61c3cee1e8ac173f9edf578616790",
+        "tests/test_neighborhood_reference.py": "ecd144ebceea811d9ad58357e2dd931d900c1f9551fb32ed438c154b5bbbb26f"
+      },
+      "lane": "authoring"
+    },
+    {
+      "head": "638a157f5b0673381be893f1699434b1d24ec82c",
+      "files": {
+        "docs/superpowers/plans/2026-10-22-world-gate-587.md": "fea3c66b2839aa5ba3bd19910506b5391cb97c636bcda9723ba33e7ae0316a0d",
+        "docs/world-expansion-release-readiness.md": "2cd7142310357113167d06382a1cc3859fcb87d7f67e0c5ed4a3a3b9ebb51c0d",
+        "preview/audit/world-gate-587.js": "3c1631fab1346805894bffdb1d5c4f2b205ff9ad89039a213574e4885326fbe0",
+        "preview/e2e/experience-runner.js": "bb34a6b51762f654235ad1ede579787ad7d5e39b6dfe13bfe708e2c75cc4e258",
+        "preview/e2e/world-gate-587.js": "da8ac874e19283cd4b7e7d99bb1d19e3e499fd9382d7da30344d4988581038e3",
+        "preview/index.html": "b55e53d896b0f30259e5e11b2e58f07491ae1d6d9df00f92f8716903b7018ed7",
+        "preview/src/hud-glass.css": "395942f2fe89c8cdc21a6472e65df5479cd5ee6976864183786151cb6fafb886",
+        "preview/src/main.js": "1f0d0478b51e89abaeb23ca5926fa0cf20d42102083567a2870aa14524dbbef1",
+        "preview/src/walking-ui.js": "6e1554d07e79e4e1699691a0427f3660d72caafb0cf328fea247fb86a6937191",
+        "preview/src/world-location-label.js": "7f4f4483ecedec70d2eb65f2e88aa38184ed85991c98501408da66eef88a35a7",
+        "preview/tests/world-location-label.test.js": "6b22451144c085e0b666167337593f2396c38896bb71f3a9bbb80cdb76a536bd"
+      },
+      "lane": "gate"
+    },
+    {
+      "lane": "graphics-recovery",
+      "head": "d0d881efff2e3892d03846fe8cce7c8d0940a6c0",
+      "base": "a35214f38795ced1ee6867aad5c3c2723a7ceaae",
+      "publishedHead": "f65de07ec4abcf2fef676c10f43cd9d44dcdc66c",
+      "handoffSha256": "7fd8c5725087869c36b80f1869ae86028d5240e62cd50f8ba7355808f72fe9f3",
+      "deltaSha256": "dcbcbb84e99dddd7cd33a308ca99b3d249f13463a752867c6eb8bc47e1575fdc",
+      "scope": "Source-only37-file handoff into623; no569, source task/checkout/PR/ownership preserved. Input hashes below are immutable donor bytes; composed outputs are separate.",
+      "files": {
+        "docs/debug-reports.md": "e0d5d3c565161955d520237141511be030d607f12ccc321d3a496df0f1d1b9bb",
+        "docs/design/garden-office/asset-manifest.json": "8143878b8b6ac6efcedf7ff75726e7944ddbcd8223ac4976e956df0ba1f76274",
+        "docs/desktop.md": "28ada38c9ade817f5a8c0799ced20fd4ae1a2b8ebba0102888270dc5ec48bec8",
+        "docs/superpowers/plans/2026-10-20-resilient-client-290.md": "448ad06cff198d35e7e8ab5f1ed81a226d8dd4edf386bff3759ecdfe928040ab",
+        "docs/testing.md": "4e739cf3fd3f1ece8427a353b5c65b4a36a7eea541678ecfe8b09f8ef5da1207",
+        "preview/e2e/graphics-recovery.js": "ad65a127f788bf8df745e0ca503f7bf22fd07508cb189aa385322e4249b8583b",
+        "preview/src/debug-report.js": "c62bf1ff00b50e56eba5e0f75c4129327ef399e37b8563c57e9822b41a8c25cb",
+        "preview/src/graphics-lifecycle.js": "bf1e788a385a69431bf3ef09ab05e53cb3e301a23d6779fa679a4ed7a3bb25da",
+        "preview/src/graphics-recovery-ui.js": "7e9d258060eccd568cbe90af63835555d684169d385a9cdf42a3a84fa9f9fbf0",
+        "preview/src/graphics-recovery.css": "5e0e560777d97707a8a683951c49e3988207a1420c00ac0527c06bc172843e63",
+        "preview/src/graphics-recovery.js": "6d5f73e0dbe614079b9a4556a1ed18eec1acab2a20350be58f5ed6f8a053dc39",
+        "preview/src/graphics-reload-state.js": "1fe985d860297bf1e5cbe657b6ac57c01182c94c5c3abe6fbd063f2fbb8287d0",
+        "preview/src/graphics-resources.js": "f85ad85a1c8d851e90e1d257519b745c95080a238b13c018788c449e83c7bae4",
+        "preview/src/main.js": "3f1bfd09ba4ccff64f4b2cc7a7e6f207049a84fb81a7f6113934950636dc5ff3",
+        "preview/src/materials.js": "46789ec1dd4b86b1552c4f9fa2004f53e797813a5c59476f3e2d71a02be029d0",
+        "preview/src/office-skyline.js": "0dbbeae25b6a91c4318d0dc382a371080297c64f9d238e3f7f5d4d9d7973d19d",
+        "preview/src/office-ui.js": "55a0d81efc4401e7c4ff2d3c8f8a1e326098355dff31bb8e3ce63c023d0b79c0",
+        "preview/src/office-world-scene.js": "1f1fda4038dc0a37e5bb938a67d8c7662f3e3ad312a25ebbe1555d60d3420a3a",
+        "preview/src/photo-mode.js": "3e9847f095c088355d9c3b58a81b4c3a5c230d7b651c92701ee62922ceff95f6",
+        "preview/src/reflections.js": "691e0828b5376b231e70309fb605407688477d154881ca00658274b0aa811091",
+        "preview/src/render-lifecycle.js": "4465f512c36a1fb25aae4dea5e821f19c4cc23f2a907e46c027ca6a9a784c271",
+        "preview/src/render-pipeline.js": "13bd251102db6ca2217064d5f92b57feddb170a6893bad003d79a3cd28044b40",
+        "preview/src/render-quality.js": "76952c66e1812119a84c3740a92be732b1d2bff000bdb786c06a578ccb5a31cd",
+        "preview/src/resident-portraits.js": "86a5f67996f5ace8f47b971891cc9b8c8412b29850135eeff40fcca0008e8dc7",
+        "preview/tests/debug-report.test.js": "204688255658b3d46114b6a9b077c3d472181d47beaf623592f63918e38942e2",
+        "preview/tests/environment-recovery.test.js": "bc12274411d0959f6f17df61bc9ce5254fa2815a26dc5c140042c45aafea7ae7",
+        "preview/tests/graphics-lifecycle.test.js": "d09c31f64ecf484253384e76c8c312e9e05e62f2562d8a5c86ec9aa61b83d425",
+        "preview/tests/graphics-recovery-ui.test.js": "b55a03f07eaa5f8c8cf116efbfc809e406d80e625214477c7551ea9ded0bf7fc",
+        "preview/tests/graphics-recovery.test.js": "176e7288e1c8c1bee37469227da9d717c3f7a196314daa0e06fb7a4708742b77",
+        "preview/tests/graphics-reload-state.test.js": "39fa7c3c52adf0d1eaa64b1317730474a27b2f994573adce3183dd59bfc22608",
+        "preview/tests/graphics-resources.test.js": "9e42c457daac363864cbb53b1e131750396d80a3e79cfc40661218dd9f1b2e65",
+        "preview/tests/office-skyline.test.js": "c4b4b79451c923fb651ed6773d8e713d6372b9d9888a3517fa9b35d267cd0cfb",
+        "preview/tests/reflections.test.js": "edfc81afdd43aca09e985adf568b54175cad374938ad73136a4ec3e4038a322e",
+        "preview/tests/render-lifecycle.test.js": "273a10c28a5a7bf541a02d936165cdb6f369b062be35ab0765e0394304fbe53c",
+        "preview/tests/render-pipeline.test.js": "9fb7b816ef4a16d721331c580a4011e5ac431ce4a9108edbdf410246484f3d8f",
+        "preview/tests/render-quality.test.js": "8adeccc82182f790e1fdbdfc8e28a3d9b4646c953a4282006f1b4321f26d4536",
+        "preview/tests/resident-portraits.test.js": "6a808469224ee560ec5b906f2663983a0f4813bd714e6114fdef0c4237670fde"
+      },
+      "composedOutputs": {
+        "docs/testing.md": "063339fb73c2d552ecd272f4e3ac299dec9ddb68249a45cf9e870c2e6f412b87",
+        "preview/src/main.js": "5e67caa10c3ac180b22cde9ab402045eb6e13d3ad3983ebc79449467f76f7163",
+        "preview/src/render-quality.js": "2792ce6260e9c42b14ab2c119a95f12afe74729cb6500d0db4c7c3f028faa9d8"
+      },
+      "postCompositionAdaptations": {
+        "preview/src/main.js": {
+          "sha256": "3345e5778b96812e493dff8362bc6c0d5500f246f3b6a238fb20b82f3cd5312a",
+          "reason": "Release retained build-cache GPU owners across context generations, with real Three registration regression"
+        },
+        "preview/src/shared-build-layer.js": {
+          "sha256": "75da73195bf33689f8e696bee94f790149fa63900b3556cd1b778d45fad4327e",
+          "reason": "Release retained build-cache GPU owners across context generations, with real Three registration regression"
+        },
+        "preview/tests/shared-build-layer.test.js": {
+          "sha256": "ccddca2da4987ffbac5582a9f42ebfdabc338203acabf21529eb8b135a3880c4",
+          "reason": "Release retained build-cache GPU owners across context generations, with real Three registration regression"
+        }
+      }
+    }
+  ],
+  "contrastIntegration20261024": {
+    "adoptedAt": "2026-10-24T07:48:45.733927+00:00",
+    "base": "16eff1a0d0c86a368f07c03cf02d48054895ebcd",
+    "published": "53c01b0612a387957973ccca22db5114d016c04c",
+    "patchSha256": "30ae7dfdefeadc746a6f6e9875951e6d57c34cc39d425ad27635926157192ba2",
+    "sourceOwnerRetained": true,
+    "files": {
+      "preview/src/hud-glass.css": "cbb75a47a1ddc4d68544908901f001a6c4154ab93b8f5fc0d25315ad918f36fa",
+      "preview/e2e/walking-controls-contrast.js": "4bad0930c6d92d2d9f2261249d588959213d57771e60b9b3f9d56aca8e30cacd"
+    },
+    "adaptations": {
+      "preview/e2e/walking-controls-contrast.js": "Wait for real asset-completion badge to become hidden before notice capture; no product visibility state changed. Candidate browser proof pending."
+    },
+    "scope": "Source-only granted delta; status-stack/layout retained. Donor receipts keep donor scope."
+  },
+  "normalJourneyTraceIntegration20261024": {
+    "donorSha256": "89321a584022eddd9c3636a16abcad0d86df875dd6420231341c11a610487b64",
+    "baselineHead": "c4a83b6e73045922d9b28ba3c5137e4095a23875",
+    "currentManifest": "graphics-source-before-core-003.json",
+    "preparedOnly": false,
+    "files": {
+      "preview/e2e/input-authority-trace.js": "0ae61605f3866ae07b01b8545afe82a9555e15c81ed9ed8a91f64ddb4dde765b",
+      "preview/e2e/east-garden-commons.js": "788d8f314b9ae7bdaba51951974e87be5403343758c779b443d50e2eca3b34fb",
+      "preview/e2e/experience-runner.js": "304a45d8e8f40d50996042c59d748d62c538fce882bec1b701bffa410471c714",
+      "preview/tests/input-authority-trace.test.js": "f71c52c202877c57b619183213c560b3a9d86a8b9a325fa5254431853f521ac8"
+    },
+    "unchangedWalkDriverSha256": "76ddc6aec4b54035d4744bfee611b10348dfd128ff7426fb243d3658ee8496c8",
+    "timeoutOccurrencesUnchanged": true,
+    "noNewFixtureShortcut": true,
+    "observerRegression": "RED field acceptance assertion preserved; GREEN 1 test includes passthrough, redaction, correlation, bounded ring, cleanup and both-page capture failures",
+    "scope": "Prepared CI-only diagnostic; no candidate edits, product fix or browser acceptance.",
+    "adoptedBeforeCoreStarted": true,
+    "sourceManifest": "graphics-source-before-core-004.json",
+    "metadata": "Explicit local eye/south versus server ground/north coordinate frames; no direct coordinate divergence inference."
+  },
+  "gatewayDriverHeapIntegration20261024": {
+    "base": "33b1bf803970ff4d1746f5af7d1ce92ad539b7cd",
+    "main": "c41c379a58fd8b68dd09a895b891fe32b1a51bc4",
+    "manifest": "graphics-source-before-core-007.json",
+    "scope": "One-linegatewaygeometryrepair, grantedModeApulse, freshpresscompatibilitywithnormallydelivered569, diagnosticpostGCheap. First failuresandoldreceipts retained.",
+    "files": {
+      "preview/src/east-garden-commons.js": "453f3cb5481786efaa5be2386c8e8088cc4a5bf73b7c37b180dc713ad47aa6d1",
+      "preview/e2e/east-garden-commons.js": "afdf92e53398ff67e0319b97f2961e686a66206923896849e359d0600472e267",
+      "preview/e2e/world-streaming.js": "f5cd5cbfc12658c825130a05f789fc02f590cc64d901d3cd0ade6b6e0483ea90",
+      "preview/e2e/retained-heap.js": "cce1b9337c6c09f6de8006b79c028b5c971743d17f66a21c711678018f2d3243",
+      "preview/tests/east-garden-commons-ramp.test.js": "5feff85f172bfadf8d4e0458a14c4d618c4cb9ddbf588307642adfb044e8bf90",
+      "preview/tests/commons-walk-driver.test.js": "f90ac12b9a84013749aed499345e89667d1cbe04519b93a11f630b53490887dc",
+      "preview/tests/retained-heap.test.js": "f03b3b8bf347cb7c773b17f98cb93e62c9ccb38cd42afff9ff065bde7eafbb80"
+    },
+    "review": "Noblockingfindingsafterreviewcorrections; actualDOM andnormaljourney/final20trip pending",
+    "preservationStash": "514dc64bf52e6cc845abbfeefbe5acede41960f0",
+    "noDroppedOwnerChanges": true
+  }
+}

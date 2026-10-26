@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "id": "garden-court",
+  "title": "Garden Court",
+  "seed": "court-1",
+  "spawn": [-70, -28],
+  "frame": {
+    "crs": "LOCAL:METRES",
+    "origin": [
+      0,
+      0
+    ],
+    "source": "Authored synthetic layout; not surveyed Houston geography"
+  },
+  "bounds_m": [
+    -96,
+    -64,
+    96,
+    64
+  ],
+  "streets": [
+    {
+      "id": "west",
+      "axis": "north",
+      "at_m": -76,
+      "width_m": 8.4
+    },
+    {
+      "id": "middle",
+      "axis": "north",
+      "at_m": 0,
+      "width_m": 8.4
+    },
+    {
+      "id": "east",
+      "axis": "north",
+      "at_m": 76,
+      "width_m": 8.4
+    },
+    {
+      "id": "south",
+      "axis": "east",
+      "at_m": -44,
+      "width_m": 8.4
+    },
+    {
+      "id": "north",
+      "axis": "east",
+      "at_m": 44,
+      "width_m": 8.4
+    }
+  ],
+  "constraints": {
+    "frontage_m": 24,
+    "setback_m": 3,
+    "max_coverage": 0.55,
+    "max_height_m": 12
+  },
+  "templates": [
+    {
+      "id": "garden-shop",
+      "kind": "retail",
+      "size": [
+        16,
+        12,
+        8
+      ]
+    },
+    {
+      "id": "court-house",
+      "kind": "residential",
+      "size": [
+        12,
+        16,
+        10
+      ]
+    }
+  ],
+  "reserved": [
+    {
+      "id": "green-court",
+      "bounds_m": [
+        -66,
+        2,
+        -12,
+        32
+      ],
+      "reason": "Authored green court; retain open gathering space"
+    }
+  ],
+  "architecture": {
+    "schema_version": 1,
+    "bindings": [
+      {
+        "templateId": "garden-shop",
+        "assembly": "shop-row",
+        "palette": "court"
+      },
+      {
+        "templateId": "court-house",
+        "assembly": "court-shells",
+        "palette": "court"
+      }
+    ]
+  }
+}

@@ -177,6 +177,14 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     return state;
   }
 
+  // A view from a snapshot or a reply. A retried command's reply repeats the view it first produced,
+  // which can be older than snapshots since: the player ignores it, and so does the panel.
+  function adopt(state, view) {
+    if (!view) return;
+    state.player.apply(view);
+    if (!state.view || view.epoch !== state.view.epoch || view.revision >= state.view.revision) state.view = view;
+  }
+
   async function sync(state) {
     const client = getMultiplayer(); if (!client?.connected) return;
     state.syncAt = now();
@@ -184,7 +192,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     if (session !== state || state.token !== generation || !reply?.ok) return;
     state.clock.observeSync(reply.serverTimeMs, sent, now());
     state.canHost = Boolean(reply.canHost);
-    state.player.apply(reply.screening); state.view = reply.screening;
+    adopt(state, reply.screening);
     render(state, true);
   }
 
@@ -197,7 +205,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
     if (session === state && !reply) reply = await getMultiplayer()?.command(command).catch(() => null);
     if (session !== state) return;
     state.busy = false;
-    if (reply?.ok) { state.player.apply(reply.screening); state.view = reply.screening; if (reply.serverTimeMs) state.clock.observeFrame(reply.serverTimeMs, now()); }
+    if (reply?.ok) { adopt(state, reply.screening); if (reply.serverTimeMs) state.clock.observeFrame(reply.serverTimeMs, now()); }
     // A refusal shows the room as it is: a stale view, or a host grant or venue that changed, syncs again.
     else { state.message = MESSAGES[reply?.error] ?? reply?.message ?? 'The film could not be changed. Try again.'; if (['screening_stale', 'screening_host_required', 'screening_not_in_venue'].includes(reply?.error)) void sync(state); }
     render(state, true);
@@ -207,9 +215,11 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
   // and only once that source has a decoded frame: while a replacement loads, or after a stop or a
   // failure, the screen is its idle self rather than a frame of an earlier film (#498).
   const SHOWN = ['ready', 'playing', 'buffering', 'paused', 'ended', 'blocked'];
+  // A seek lowers readyState until it completes; the film already bound for this source keeps its texture.
   function bindScreen(state) {
-    const stats = state.player.stats(), { video } = state;
-    state.screen.sync({ screen: getScreen?.(), video, key: `${stats.generation}:${video.videoWidth}x${video.videoHeight}`, show: SHOWN.includes(stats.state) && video.readyState >= 2 });
+    const stats = state.player.stats(), { video } = state, key = `${stats.generation}:${video.videoWidth}x${video.videoHeight}`;
+    const held = video.seeking && state.screen.inspect().key === key;
+    state.screen.sync({ screen: getScreen?.(), video, key, show: SHOWN.includes(stats.state) && (video.readyState >= 2 || held) });
     // What this update put on the screen, beside the player's state at that moment. The software acceptance
     // profile draws (and updates this) once a second, so journeys read it rather than the live state.
     state.drawn = { state: stats.state, shared: stats.sharedStatus, mediaId: stats.mediaId, attached: Boolean(state.screen.inspect().key) };
@@ -350,7 +360,7 @@ export function createIpicScreening({ host, THREE, getMultiplayer, getVenue, get
       const state = session; if (!state || state.stopped || !Array.isArray(snapshot?.screenings)) return;
       state.clock.observeFrame(snapshot.serverTimeMs, now());
       const view = snapshot.screenings.find(item => item.venueId === venueId);
-      if (view) { state.player.apply(view); if (!state.view || view.epoch !== state.view.epoch || view.revision >= state.view.revision) state.view = view; }
+      adopt(state, view);
     },
     update() {
       const venue = getVenue(), connected = getMultiplayer()?.connected, at = now();

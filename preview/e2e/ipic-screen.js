@@ -94,6 +94,16 @@ async page => {
   check(fallback.failure === null && fallback.screen.key && fallback.source.src.endsWith('.mp4') && fallback.attempts.map(a => a.result).join() === 'decode,decoded', `fallback to the MP4: ${JSON.stringify(fallback)}`);
   checks.push(`a source no decoder accepts falls back to the next encoding once (${fallback.attempts.map(a => `${a.src.split('/').pop()}: ${a.result}`).join(', ')})`);
 
+  // Online, but neither file is on the server. Browsers report a download that fails before any data as
+  // code 4, like an unreadable file; each encoding is still tried once, then the failure is named for what it is.
+  await fx('show', 'test-missing');
+  // The film stops at once; the reason is corrected when both files have been checked.
+  await page.waitForFunction(() => window.screenFixture.inspect().failure === 'network', null, { timeout: 10000 }).catch(() => {});
+  const missing = await fx('inspect');
+  results.missing = missing;
+  check(missing.state === 'error' && missing.failure === 'network' && !missing.screen.key && missing.attempts.map(a => a.result).join() === 'network,network', `missing files online: ${JSON.stringify(missing)}`);
+  checks.push(`files missing while online: both encodings tried once (MediaError code ${missing.errorCode}), reported as a download failure, not a decoder's`);
+
   // A switch while the previous film is still loading: the abort is not a failure.
   await fx('show', 'test-edge-16x9', { wait: false });
   const switched = await fx('show', 'test-edge-4x3');
@@ -154,6 +164,12 @@ async page => {
   const presented = frames.filter(item => item.presented);
   check(presented.length >= 6 && presented.at(-1).presented.frames > presented[0].presented.frames && presented.at(-1).presented.mediaTimeMs > presented[0].presented.mediaTimeMs, `presented frames advance: ${JSON.stringify(frames)}`);
   results.frames = frames;
+  // A drift seek during playback must not drop the film from the screen or replace its texture.
+  const seek = await fx('seekProbe');
+  results.seekProbe = seek;
+  check(seek.trace.some(item => item.seeking) || seek.trace.some(item => Math.abs(item.measuredDriftMs) > 400), `the forced jump was observed: ${JSON.stringify(seek)}`);
+  check(seek.trace.every(item => item.bound) && seek.texturesCreated === 0, `a drift seek keeps the film bound with its texture: ${JSON.stringify(seek)}`);
+  checks.push(`a drift seek keeps the film on the screen with the same texture (${seek.trace.filter(item => item.seeking).length} of ${seek.trace.length} frames seeking, lowest readyState ${Math.min(...seek.trace.map(item => item.readyState))})`);
   await fx('pose', 'seated'); await capture('ipic-original-v1-seated'); await fx('pose', 'square');
   checks.push(`the short plays with presented frames advancing (${presented[0].presented.frames} → ${presented.at(-1).presented.frames})`);
 

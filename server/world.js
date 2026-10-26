@@ -65,7 +65,7 @@ const fields = (message, allowed) => Object.keys(message).every(key => allowed.i
 const textId = value => typeof value === 'string' && value.length > 0 && value.length <= 160;
 const reject = (error, message = error) => ({ok:false,error,message});
 
-const CHECKPOINT_VERSION = 16, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
+const CHECKPOINT_VERSION = 17, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
 const LIFE_FIELDS = ['elapsed','storm','revision','packet','cursor','paused','stats'];
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const nonnegative = value => Number.isFinite(value) && value >= 0;
@@ -197,8 +197,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const screenings=createScreenings({players,grants:screeningHosts,changed:()=>revision++,
     inVenue:(player,venueId)=>!player.levelId && !offices.has(player.id)
       && environment.roomAt(player.position[0],-player.position[1])?.interior===SCREENING_VENUES[venueId]?.interior});
-  // The first criminal action (#597): melee on authored rivals, decided by the world rule.
+  // On foot at street level in an active danger zone: who police pursue, and who stays a crime
+  // participant (#640). Read from the town's positions and rule, never a client's report.
+  const inDanger=player=>!player.levelId && !player.vehicle && !player.sitting && !player.performing && player.altitude<=.1
+    && !offices.has(player.id) && riskAt(worldId,worldPolicy,placeOf(player,null,false)).level==='danger';
+  // The first criminal action (#597): melee on authored rivals, decided by the world rule. Timed
+  // with a rival's counter, an evade and participant health since #640.
   const crime=createCrime({worldId,players,now,changed:()=>revision++,isResident:id=>localById.has(id),
+    engageable:inDanger,held:id=>police.held(id),captured:id=>police.captured(id),
     groundAt:(east,north)=>environment.groundAt(east,-north),
     decide:(attacker,target,targetType)=>evaluateViolence({worldId,policy:worldPolicy,
       attacker:{type:'player',...placeOf(attacker,attacker.levelId??null,attacker.buildingId || offices.has(attacker.id))},
@@ -208,13 +214,12 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // the same bounded grid and physical collision, across the full walking area.
   const policeWorldData={...worldData,site_ring:null};
   const policeNavigation=createResidentNavigation(policeWorldData,{allowRoads:true,placedObjects:colliders});
-  const police=createPolice({players,starsOf:crime.starsOf,changed:()=>revision++,navigation:policeNavigation,
+  const police=createPolice({players,starsOf:crime.starsOf,changed:()=>revision++,navigation:policeNavigation,observe:crime.observe,evading:crime.evading,participating:crime.participating,
     posts:(CRIME_TARGETS[worldId]??[]).flatMap(target=>[4].map(offset=>{
       const east=target.position[0]+offset,north=target.position[1];
       return [east,north,environment.groundAt(east,-north)];
     })),
-    eligible:player=>!player.levelId && !player.vehicle && !player.sitting && !player.performing && player.altitude<=.1
-      && !offices.has(player.id) && riskAt(worldId,worldPolicy,placeOf(player,null,false)).level==='danger',
+    eligible:inDanger,
     sight:(a,b)=>environment.hasSightLine([a[0],a[1],a[2]+1.2],[b[0],b[1],b[2]+1.2]),
     arrest:player=>{
       interactions.cancel(player.id);focus.delete(player.id);releaseBike(player);
@@ -565,6 +570,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     offices.leave(userId);
     releaseBike(leaving);
     players.delete(userId);
+    crime.release(userId,now());
     screenings.prune(now());
     police.step(now(),0);
     interactions.cancel(userId);
@@ -617,6 +623,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   };
   function pose(player, message, time) {
     const correction = error => ({...reject(error),correction:publicPlayer(player),player:publicPlayer(player)});
+    // Down after a rival's counter (#640): a bounded hold that ends by itself.
+    if(crime.down(player.id,time))return correction('incapacitated');
     if(police.held(player.id))return correction('surrendered');
     const {position,yaw,altitude} = message;
     if (!fields(message,['type','position','yaw','altitude','levelId','vehicle','interactionId']) || (message.vehicle != null && !vehicleKind(message.vehicle))
@@ -878,6 +886,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         worldPolicy={...worldPolicy,revision:next,violence:{...worldPolicy.violence,mode:'off',pvp:false},lastChange:{kind:'emergency_off',revision:next,at:time}};
         revision++;
       }
+      crime.cancel(time,'violence_off',{peace:true});
       police.step(time,0);
       return {ok:true,worldPolicy:publicWorldPolicy()};
     }
@@ -890,6 +899,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const proposed=proposePolicy(worldPolicy,message.changes,worldId);
     if(!proposed)return reject('invalid_world_policy','Those world rules are not valid.');
     const next=worldPolicy.revision+1;
+    crime.cancel(time,'policy_changed');
     worldPolicy={...proposed,revision:next,lastChange:{kind:'update',revision:next,at:time}};
     worldPolicyAt=time;revision++;police.step(time,0);
     return {ok:true,worldPolicy:publicWorldPolicy()};
@@ -921,6 +931,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(offices.has(userId) && !['office','chat'].includes(message.type))return reject('leave_office_first');
     if(message.type==='office' && message.action==='move')return offices.command(player,message,time);
     if(message.type==='surrender'){if(!spend(ledger,time))return reject('rate_limited');return police.surrender(userId,message);}
+    if(crime.down(userId,time) && !['chat','pose'].includes(message.type))return reject('incapacitated','You are down. Wait to get back up.');
     if(police.held(userId) && !['chat','pose'].includes(message.type))return reject('surrendered','Resume moving before doing that.');
     if (message.type==='pose') return pose(player,message,time);
     // Voice is negotiated over HTTP from the transport's authority; it is never a game command.
@@ -933,12 +944,20 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       && !['chat','interaction','gesture','appearance','character','movement'].includes(message.type)
       && !(isCampusLevelId(player.levelId) && ['campus','sit','stand'].includes(message.type)))return reject('return_to_ground_level');
     if(message.type==='attack') {
-      // Identity is this session's; the target, damage, health and stars are the town's.
+      // Identity is this session's; the target, damage, health and stars are the town's. The
+      // reply is the admitted windup (#640); the hit, if any, lands at contact in a later snapshot.
       const reply=crime.attack(player,message,time);
       if(reply.ok && !reply.replayed) {
         interactions.cancel(player.id);focus.delete(player.id);
         player.gesture='shove';player.gestureUntil=time+CRIME_RULES.strikeMs;
       }
+      return reply.ok?{...reply,player:publicPlayer(player)}:reply;
+    }
+    if(message.type==='evade') {
+      // A short window in which contact against this player misses (#640). The client moves
+      // the body; the town only times the window.
+      const reply=crime.evade(player,message,time);
+      if(reply.ok && !reply.replayed){interactions.cancel(player.id);focus.delete(player.id);}
       return reply.ok?{...reply,player:publicPlayer(player)}:reply;
     }
     if(message.type==='stage') {
@@ -1226,7 +1245,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}
         : {version:saved.version,worldId:saved.worldId,worldFingerprint:saved.worldFingerprint,payload:saved.payload};
       if (!record(saved) || !fields(saved,legacy?['version','worldFingerprint','payload','checksum']:['version','worldId','worldFingerprint','payload','checksum'])
-        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
+        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
         || saved.worldFingerprint!==worldFingerprint || saved.checksum!==digest(envelope)) throw new Error('Invalid envelope');
       let recovered=decodeCheckpoint(JSON.stringify(saved.payload));
       if (sharedPopulation && recovered.state?.locals?.length!==residentIdentities.length) {
@@ -1367,14 +1386,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       const nextWorldPolicy=recovered.worldPolicy===undefined?defaultWorldPolicy():validateWorldPolicy(recovered.worldPolicy,worldId);
       if(!nextWorldPolicy || saved.version<14 && nextWorldPolicy.revision!==0)throw new Error('Invalid world policy');
       // v15 crime state (#597): rivals' health, wanted stars and private receipts. None before.
-      const nextCrime=crime.validate(recovered.crime,saved.version);
-      const blankPolice={units:[],surrendered:[],cursor:0};
+      const nextCrime=crime.validate(recovered.crime,saved.version,nextPlayers);
+      const blankPolice={units:[],surrendered:[],cursor:0};// v16 shape; police.validate upgrades it
       if(saved.version>=16 && recovered.police===undefined)throw new Error('Missing police state');
       if(saved.version<16 && recovered.police && (recovered.police.units?.length || recovered.police.surrendered?.length || recovered.police.cursor))throw new Error('Invalid police version');
       const policeSaved=saved.version>=16?recovered.police:recovered.police??blankPolice;
       const restoredPoliceNavigation=policeSaved?.units?.length
         ? createResidentNavigation(policeWorldData,{allowRoads:true,placedObjects:[...nextBuilds.values()].map(objectCollider).filter(Boolean)}) : policeNavigation;
-      const nextPolice=police.validate(policeSaved,new Set(nextPlayers.keys()),restoredPoliceNavigation);
+      const nextPolice=police.validate(policeSaved,new Set(nextPlayers.keys()),restoredPoliceNavigation,saved.version);
       const recoveredEnvironment=createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean));
       const recoveredUpperEnvironments=new Map();
       const recoveredEnvironmentFor=levelId=>{
@@ -1525,7 +1544,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       screenings.load(nextScreenings);
       interactions.restore(nextInteractions);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;voiceIdentities.clear();
-      worldPolicy=nextWorldPolicy;worldPolicyAt=-Infinity;crime.load(nextCrime);police.load(nextPolice);policeNavigation?.setPlacedObjects(colliders);
+      worldPolicy=nextWorldPolicy;worldPolicyAt=-Infinity;crime.load(nextCrime);police.load(nextPolice,now());policeNavigation?.setPlacedObjects(colliders);
       return {ok:true};
     } catch (error) {
       onFailure?.(checkpointFailureReason(error));
@@ -1591,9 +1610,11 @@ export function migrateWorldCheckpoint({fromData,toData,checkpoint,worldId=DEFAU
   payload.campus=copy(previous.campus);
   // The world rules belong to the world, not its geography: the same world keeps the same zones.
   payload.worldPolicy=copy(previous.worldPolicy);
-  // Wanted levels follow accounts; rivals stand in authored places, so they start fresh.
-  payload.crime={...copy(previous.crime),rivals:[]};
-  payload.police={units:[],surrendered:[],cursor:0};
+  // Wanted levels follow accounts; rivals stand in authored places, so they start fresh. Nobody
+  // is connected after a migration: pending contacts are cancelled and participation ends (#640).
+  payload.crime={...copy(previous.crime),rivals:[],participants:[],evades:[],
+    actions:(previous.crime.actions??[]).map(action=>action.outcome===null?{...action,outcome:'cancelled',reason:'region_changed',resolvedAt:Math.max(action.startedAt,now())}:action)};
+  payload.police={units:[],surrendered:[],subdued:[],cursor:0};
   // A creator region compiled before #491 walked on bare terrain; its revision compiles the
   // street datum (STREET.walkSurfaceOffset). Creations standing on that datum, outdoors or in
   // a built-in room, move with it. Those on a generated level keep its floor.

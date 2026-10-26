@@ -1562,7 +1562,7 @@
               116
             ],
             "access": "public",
-            "use": "Shared collaboration and project demo space",
+            "use": "Shared project tables and workbench",
             "door": {
               "position": [
                 25,
@@ -3020,7 +3020,7 @@
               150
             ],
             "access": "public",
-            "use": "Atelier and creator workspace",
+            "use": "Atelier work tables and workbench",
             "door": {
               "position": [
                 25,
