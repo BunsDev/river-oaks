@@ -370,5 +370,20 @@ export function createCampusLeases({ enabled = true, worldId, operators = [], pl
     receipts = receipts.filter(item => { try { return JSON.parse(item.key)[0] !== userId; } catch { return true; } });
     changed();
   }
-  return { enabled, command, prune, forget, suiteAccess, entitlements, snapshot, checkpoint, validate, blank, load, units: () => [...UNITS.values()] };
+  // A block (#292): guest access between the two accounts ends, whichever of them is the
+  // tenant, and the guest is walked out, as when the tenant removes them. True when any did.
+  function separate(a, b, time) {
+    let removed = false;
+    for (const lease of live()) {
+      const guestId = lease.tenantId === a ? b : lease.tenantId === b ? a : null;
+      const guest = guestId && lease.guests.find(item => item.userId === guestId);
+      if (!guest) continue;
+      Object.assign(lease, { guests: lease.guests.filter(item => item !== guest), version: lease.version + 1, updatedAt: Math.max(lease.updatedAt, time) });
+      onAccessEnded(ended(guest.userId, 'guest', lease, 'guest_removed'));
+      removed = true;
+    }
+    if (removed) changed();
+    return removed;
+  }
+  return { enabled, command, prune, forget, separate, suiteAccess, entitlements, snapshot, checkpoint, validate, blank, load, units: () => [...UNITS.values()] };
 }

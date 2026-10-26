@@ -83,10 +83,13 @@ test('a blocked profile reads as one that is not here, and shared groups drop th
   assert.deepEqual(erinRead.value.group.messages.map(item => item.text), ['erin words']);
   const listed = await call(groupAction, 'list', pat, null, { groups });
   assert.equal(listed.value.groups[0].latest?.text ?? null, 'pat words');
+  await groups.send(erin, group.id, 'erin later');
+  assert.equal((await call(groupAction, 'list', pat, null, { groups })).value.groups[0].latest, null, 'the latest line is Erin’s, so none is shown');
+  assert.equal((await call(groupAction, 'list', erin, null, { groups })).value.groups[0].latest.text, 'erin later');
   // Unblocking restores what was hidden; the contact itself does not come back.
   await call(blockAction, 'remove', pat, { peerId: 'erin' });
   assert.equal((await call(profileAction, 'view', pat, { peerId: 'erin' }, { profiles })).status, 200);
-  assert.equal((await call(groupAction, 'read', pat, { groupId: group.id }, { groups })).value.group.messages.length, 2);
+  assert.equal((await call(groupAction, 'read', pat, { groupId: group.id }, { groups })).value.group.messages.length, 3);
 });
 
 test('a contact request racing a block does not leave a contact behind', async () => {
@@ -107,4 +110,22 @@ test('an Unblock with no block of one’s own leaves a contact alone', async () 
   assert.equal((await call(socialAction, 'accept', erin, { peerId: 'pat' })).status, 200);
   assert.equal((await call(blockAction, 'remove', erin, { peerId: 'pat' })).status, 200, 'a stale click from another tab');
   assert.equal((await social.list('erin')).length, 1);
+});
+
+test('when the contact cannot be ended, the block still ends invitations, and the contact stays out of lists and groups', async () => {
+  const { call, social, groups } = setup();
+  assert.equal((await call(socialAction, 'request', pat, { peerId: 'erin' })).status, 200);
+  assert.equal((await call(socialAction, 'accept', erin, { peerId: 'pat' })).status, 200);
+  const separated = [], failing = { ...social, async remove() { throw new Error('social store down'); } };
+  const answer = await call(blockAction, 'add', pat, { peerId: 'erin' }, { social: failing, separated: async (...args) => separated.push(args) });
+  assert.equal(answer.status, 503);
+  assert.deepEqual(separated, [['pat', 'erin', true]], 'invitations end and sockets hear of the block anyway');
+  assert.equal((await social.list('pat')).length, 1, 'the contact is still stored');
+  for (const [viewer, peer] of [[pat, 'erin'], [erin, 'pat']]) {
+    const listed = await call(socialAction, 'list', viewer, null);
+    assert.equal(listed.value.contacts.some(item => item.peer.id === peer), false, `${viewer.userId}’s list`);
+  }
+  const group = (await groups.create(pat, { name: 'Pat circle' })).group;
+  const invited = await call(groupAction, 'invite', pat, { groupId: group.id, peerId: 'erin' }, { groups });
+  assert.deepEqual(invited, await call(groupAction, 'invite', pat, { groupId: group.id, peerId: 'gone' }, { groups }), 'answered as for someone who is not a contact');
 });

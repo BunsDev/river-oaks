@@ -15,13 +15,15 @@ possible attacks have been eliminated or a deployed penetration test.
   shows nothing. Open gaps: content filtering, a moderator reports view, and the
   Block button, which isn't wired in yet; see `docs/app-review-292.md`.
 - In-app account deletion (#292, 2026-10-24), off unless `RIVER_OAKS_ACCOUNT_DELETION=1`
-  and `WORKOS_WEBHOOK_SECRET` is set (the loopback fixture needs only the flag).
+  and `WORKOS_WEBHOOK_SECRET` is set, and on Vercel `CRON_SECRET` too (the loopback
+  fixture needs only the flag).
   A new route, `POST /api/account/delete`, on both backends. It needs a signed-in
   session, the same origin and the CSRF token, at most 3 attempts an hour, the exact
   phrase `delete my account`, and a sign-in within ten minutes. Sessions now record
   `signedInAt`, which survives refreshes. Approval and bans aren't checked. WorkOS
   deletes the user first; any failure other than 404 erases nothing. Then the session
-  cookie is cleared and account erasure runs twice. The `GET` form reports only
+  cookie is cleared and account erasure runs, recorded for its second pass a minute
+  later. The `GET` form reports only
   whether deletion is available and whether the sign-in is recent. The route is added
   to `vercel.json`, `server/vercel-routing.js` and the Vite proxy, and
   `account_deletion` to the Redis rate-limit scopes. See `docs/account-deletion.md`.
@@ -48,9 +50,21 @@ possible attacks have been eliminated or a deployed penetration test.
   the catalog forget the account. On Redis this goes through the room's one writer,
   as a new `forget` room operation that takes only a user id. If any step fails, the
   webhook answers 503 and WorkOS retries; nothing is reported as done early. The
-  failure log names the failed steps, never the account or a store's error text.
-  Concurrent runs for one account share one run. No new route or input is exposed.
-  The webhook keeps its signature, size, time and pending-delivery limits.
+  failure log names the WorkOS event id and the failed steps, the tombstone and the
+  revocation included, never the account or a store's error text. Concurrent runs
+  for one account share one run. A world that fails no longer stops the others.
+  Each request is recorded (account id, event id) until a second whole run a minute
+  after the first: a request let in before revocation can still write while its body
+  arrives. The request timeout is 15 s, enforced every 30 s, so about 45 s in all, and
+  the second run erases that. A record is dropped only while unchanged, so a newer
+  request from another server keeps its own. A sweep retries failed requests and runs
+  due second passes, on a 30 s timer or through the new Vercel cron route
+  `GET /api/erasure-sweep`. That route takes no input, exists only with `CRON_SECRET`,
+  compares its bearer token in constant time, and answers 404 from the Vercel entry,
+  without starting the backend, while the webhook secret is unset. The entry matches
+  the sweep paths without their query, so a query string no longer skips that gate
+  for any of the three crons. On Vercel with the webhook but no `CRON_SECRET`, nothing
+  sweeps, and the backend logs `account_erasure_sweep_unscheduled` at every start. The webhook keeps its signature, size, time and pending-delivery limits.
   `docs/privacy-data-inventory.md` lists what is kept, and why: the hashed character
   tombstone, the moderation and security audit, and room replies that lapse within
   15 s.

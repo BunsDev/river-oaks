@@ -31,8 +31,9 @@ export async function groupAction({action,identity,groups,social,readBody,allowW
   let result;
   if(action==='create')result=await groups.create(identity,data);
   else if(action==='invite') {
+    // A contact a block could not end yet is not one.
     const contact=(await social?.list(identity.userId))?.find(item=>item.status==='accepted' && item.peer.id===data.peerId);
-    if(!contact)return failure(409,'Add this resident as a contact before inviting them.');
+    if(!contact||await blocks?.between(identity.userId,data.peerId))return failure(409,'Add this resident as a contact before inviting them.');
     result=await groups.invite(identity,data.groupId,{userId:contact.peer.id,name:contact.peer.name});
   }
   else if(action==='accept')result=await groups.accept(identity.userId,data.groupId);

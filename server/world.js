@@ -624,25 +624,30 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     peer.poseAt=time;peer.moveBudget=peer.liftBudget=0.1;
     peer.gesture=null;peer.gestureUntil=0;focus.delete(peer.id);
   }
-  // Player blocking (#292): a greeting or game invitation between the two ends. Only
-  // Jevica's accounts invite residents into offices and private homes, so a block
-  // between one of them and a resident also ends the resident's invitations, and
-  // steps them out. New ones are refused while the block lasts.
+  // Player blocking (#292): a greeting or game invitation between the two ends, and so
+  // does campus guest access either way. Only Jevica's accounts invite residents into
+  // offices and private homes, so a block between one of them and a resident also ends
+  // the resident's invitations, and steps them out. New ones are refused while the
+  // block lasts. The revision moves only when something ended.
   function separate(a,b) {
     const greeting=interactions.snapshot().some(item=>[a,b].includes(item.fromId)&&[a,b].includes(item.toId));
     if (greeting) {interactions.cancel(a);revision++;}
     const invited=[tableGames,cafeGames,dartsGames,axeGames].map(games=>games.separate(a,b)).some(Boolean);
-    if (isAdmin(a)===isAdmin(b)) return greeting||invited;
-    const resident=isAdmin(a)?b:a,time=now();
-    offices.forget(resident);
-    for (const [storeId,guests] of [...homeGuests]) {
-      if (!guests.includes(resident)) continue;
-      const rest=guests.filter(id=>id!==resident);
-      if (rest.length) homeGuests.set(storeId,rest); else homeGuests.delete(storeId);
-      leaveHome(players.get(resident),storeId,time);
+    const time=now();
+    let ended=campus.separate(a,b,time);
+    if (isAdmin(a)!==isAdmin(b)) {
+      const resident=isAdmin(a)?b:a;
+      ended=offices.forget(resident)||ended;
+      for (const [storeId,guests] of [...homeGuests]) {
+        if (!guests.includes(resident)) continue;
+        const rest=guests.filter(id=>id!==resident);
+        if (rest.length) homeGuests.set(storeId,rest); else homeGuests.delete(storeId);
+        leaveHome(players.get(resident),storeId,time);
+        ended=true;
+      }
     }
-    revision++;
-    return true;
+    if (ended) revision++;
+    return greeting||invited||ended;
   }
   function reachable(player, local) {
     if (offices.has(player.id))return false;

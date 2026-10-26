@@ -92,8 +92,8 @@ and ownership are Decision 2.
 
 **Blocking. Gap, blocking.** [Player blocking](player-blocking.md) (#665) is enforced
 on the server. It covers chat, gestures, greetings, contacts, direct messages,
-profiles, group messages, invitations, travel and private places, and it holds across
-reconnects and worlds. But residents can't make a block yet. The Block button for
+profiles, group messages, invitations, travel, private places and Garden campus guest
+access, and it holds across reconnects and worlds. But residents can't make a block yet. The Block button for
 the roster and the blocked list for Settings (`preview/src/player-blocks.js`) are
 built and tested, but not wired in: `preview/src/multiplayer-client.js` and
 `preview/src/main.js` belong to other active tasks. Until their owners make the four
@@ -115,16 +115,18 @@ Connect needs a support URL too (Decision 3).
 
 - **Erasure (#661).** When WorkOS sends `user.deleted`, every store and world forgets
   the account, apart from reports, bans and the moderation audit
-  ([privacy data inventory](privacy-data-inventory.md)).
+  ([privacy data inventory](privacy-data-inventory.md)). Each request is recorded and
+  run again a minute later, for a write already in flight, and retried until it
+  succeeds.
 - **In-app deletion (#666).** Settings → Account → Delete account deletes the WorkOS
   user, signs out, runs erasure and clears what the device keeps
   ([account deletion](account-deletion.md)). It's off until
   `RIVER_OAKS_ACCOUNT_DELETION=1`, and with WorkOS it also needs
-  `WORKOS_WEBHOOK_SECRET`.
+  `WORKOS_WEBHOOK_SECRET`, and on Vercel `CRON_SECRET`.
 
 Apple asks apps to say what's kept and how long the rest takes. The page says the
-account is deleted at once, and that anything left is removed by the retried
-webhook. The policy has to say what stays: reports, bans and the moderation audit
+account is deleted at once, and that anything left is removed by the erasure's
+second run and retries, within minutes when every store answers. The policy has to say what stays: reports, bans and the moderation audit
 (inventory Decision 3).
 
 **Social credentials. Decision.** Apple says an app must let people revoke

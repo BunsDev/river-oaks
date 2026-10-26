@@ -64,7 +64,8 @@
   ],
   "crons": [
     { "path": "/api/workplace-sweep", "schedule": "* * * * *" },
-    { "path": "/api/voice-sweep", "schedule": "* * * * *" }
+    { "path": "/api/voice-sweep", "schedule": "* * * * *" },
+    { "path": "/api/erasure-sweep", "schedule": "*/5 * * * *" }
   ],
   "redirects": [
     {
@@ -247,6 +248,7 @@
     { "source": "/api/voice/renew", "destination": "/api/server?_river_path=/api/voice/renew" },
     { "source": "/api/voice/leave", "destination": "/api/server?_river_path=/api/voice/leave" },
     { "source": "/api/voice-sweep", "destination": "/api/server?_river_path=/api/voice-sweep" },
+    { "source": "/api/erasure-sweep", "destination": "/api/server?_river_path=/api/erasure-sweep" },
     {
       "source": "/multiplayer",
       "destination": "/api/server?_river_path=/multiplayer"
