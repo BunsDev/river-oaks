@@ -92,6 +92,8 @@ export function validateRecipe(recipe) {
     const north = pointOk(street.from) && pointOk(street.to) && street.from[0] === street.to[0] && street.from[1] < street.to[1];
     if (!east && !north) fail(`street ${street.id} must run east along one y or north along one x`);
     if (!(street.lane > 0 && street.sidewalk > 0)) fail(`street ${street.id} widths`);
+    if (street.paving !== undefined && !KIT_MATERIALS[street.paving]) fail(`street ${street.id} paving`);
+    if (street.bands !== undefined && !(street.bands.spacing > 0 && street.bands.offset >= 0)) fail(`street ${street.id} bands`);
     streets.set(street.id, street);
   }
   for (const plaza of recipe.plazas ?? []) { unique('plaza', plaza.id); if (!rectOk(plaza.rect)) fail(`plaza ${plaza.id}`); }
@@ -196,7 +198,13 @@ function assembleStreet(recipe, street, seed, pieces, walks) {
   const base = `${recipe.id}/${street.id}`, [xa, y] = street.from, xb = street.to[0], half = street.lane / 2, outer = half + street.sidewalk;
   // One walkable rectangle spans the curbless street, lane and both sidewalks.
   walks.push({ id: `${base}/walk`, rect: [xa, mm(y - outer), xb, mm(y + outer)] });
-  pieces.push({ id: `${base}/lane`, piece: 'street/shared-lane', rect: [xa, mm(y - half), xb, mm(y + half)] });
+  pieces.push({ id: `${base}/lane`, piece: 'street/shared-lane', rect: [xa, mm(y - half), xb, mm(y + half)], ...(street.paving ? { material: street.paving } : {}) });
+  // Porcelain cross bands inlaid in the lane, and flush channel drains inside each curb.
+  if (street.bands) for (let x = xa + street.bands.offset, index = 0; x <= xb - .5; x += street.bands.spacing)
+    // A pair of slim inlays, 0.12 m wide and 0.3 m apart, reads as a laid detail, not a road marking.
+    for (const offset of [-.21, .21]) pieces.push({ id: `${base}/band-${index++}`, piece: 'street/band', rect: [mm(x + offset - .06), mm(y - half + .3), mm(x + offset + .06), mm(y + half - .3)] });
+  if (street.drains) for (const [side, sign] of [['n', 1], ['s', -1]])
+    pieces.push({ id: `${base}/drain-${side}`, piece: 'street/channel', rect: sign > 0 ? [xa, mm(y + half - .3), xb, mm(y + half - .12)] : [xa, mm(y - half + .12), xb, mm(y - half + .3)] });
   pieces.push({ id: `${base}/sidewalk-n`, piece: 'street/sidewalk', rect: [xa, mm(y + half), xb, mm(y + outer)] });
   pieces.push({ id: `${base}/sidewalk-s`, piece: 'street/sidewalk', rect: [xa, mm(y - outer), xb, mm(y - half)] });
   for (const [side, edge] of [['n', y + half], ['s', y - half]]) pieces.push({ id: `${base}/curb-${side}`, piece: 'street/flush-curb', rect: [xa, mm(edge - .08), xb, mm(edge + .08)] });
@@ -253,15 +261,17 @@ function assembleIntersections(recipe, pieces) {
       if (!own) continue;
       if (piece.at && insideRect(near, piece.at[0], piece.at[1])) { pieces.splice(i, 1); continue; }
       if (piece.id.endsWith('/pit') && insideRect(near, (piece.rect[0] + piece.rect[2]) / 2, (piece.rect[1] + piece.rect[3]) / 2)) { pieces.splice(i, 1); continue; }
-      if (!piece.rect || !['street/shared-lane', 'street/sidewalk', 'street/flush-curb'].includes(piece.piece)) continue;
+      if (!piece.rect || !['street/shared-lane', 'street/sidewalk', 'street/flush-curb', 'street/band', 'street/channel'].includes(piece.piece)) continue;
       const parts = subtractRect(piece.rect, box);
       pieces.splice(i, 1, ...parts.map((rect, k) => ({ ...piece, id: `${piece.id}-${k}`, rect })));
     }
-    pieces.push({ id: `${base}/centre`, piece: 'street/intersection', rect: [mm(xb - hb), mm(ya - ha), mm(xb + hb), mm(ya + ha)] });
-    pieces.push({ id: `${base}/crosswalk-w`, piece: 'street/crosswalk', rect: [box[0], mm(ya - ha), mm(xb - hb), mm(ya + ha)], across: 'x' });
-    pieces.push({ id: `${base}/crosswalk-e`, piece: 'street/crosswalk', rect: [mm(xb + hb), mm(ya - ha), box[2], mm(ya + ha)], across: 'x' });
-    pieces.push({ id: `${base}/crosswalk-s`, piece: 'street/crosswalk', rect: [mm(xb - hb), box[1], mm(xb + hb), mm(ya - ha)], across: 'y' });
-    pieces.push({ id: `${base}/crosswalk-n`, piece: 'street/crosswalk', rect: [mm(xb - hb), mm(ya + ha), mm(xb + hb), box[3]], across: 'y' });
+    // The crossing takes the paving of the street it interrupts.
+    const paving = a.paving ? { material: a.paving } : {};
+    pieces.push({ id: `${base}/centre`, piece: 'street/intersection', rect: [mm(xb - hb), mm(ya - ha), mm(xb + hb), mm(ya + ha)], ...paving });
+    pieces.push({ id: `${base}/crosswalk-w`, piece: 'street/crosswalk', rect: [box[0], mm(ya - ha), mm(xb - hb), mm(ya + ha)], across: 'x', ...paving });
+    pieces.push({ id: `${base}/crosswalk-e`, piece: 'street/crosswalk', rect: [mm(xb + hb), mm(ya - ha), box[2], mm(ya + ha)], across: 'x', ...paving });
+    pieces.push({ id: `${base}/crosswalk-s`, piece: 'street/crosswalk', rect: [mm(xb - hb), box[1], mm(xb + hb), mm(ya - ha)], across: 'y', ...paving });
+    pieces.push({ id: `${base}/crosswalk-n`, piece: 'street/crosswalk', rect: [mm(xb - hb), mm(ya + ha), mm(xb + hb), box[3]], across: 'y', ...paving });
     for (const [k, [x0, y0, x1, y1]] of [[box[0], box[1], xb - hb, ya - ha], [xb + hb, box[1], box[2], ya - ha], [box[0], ya + ha, xb - hb, box[3]], [xb + hb, ya + ha, box[2], box[3]]].entries())
       pieces.push({ id: `${base}/corner-${k}`, piece: 'street/sidewalk', rect: [mm(x0), mm(y0), mm(x1), mm(y1)] });
   }
@@ -322,7 +332,7 @@ export function assembleNeighborhood(source, { seed = source?.seed } = {}) {
   }
   const lanterns = pieces.filter(piece => piece.piece === 'furniture/lantern').map(piece => ({ id: piece.id, at: [...piece.at], name: piece.name ?? piece.id.split('/').pop() }));
   const triangles = pieces.reduce((sum, piece) => sum + (KIT_PIECES[piece.piece].triangles ?? 0) * (piece.piece === 'building/shell' ? 1 + (piece.faces?.length ?? 0) * (piece.bays ?? 1) * piece.storeys / 4 : 1), 0);
-  const materials = new Set(pieces.flatMap(piece => [piece.wall, piece.trim, piece.awning, KIT_PIECES[piece.piece].material].filter(Boolean)));
+  const materials = new Set(pieces.flatMap(piece => [piece.wall, piece.trim, piece.awning, piece.material ?? KIT_PIECES[piece.piece].material].filter(Boolean)));
   for (const material of materials) if (!KIT_MATERIALS[material]) fail(`unknown material ${material}`);
   const plan = {
     id: recipe.id, kit: KIT_VERSION, seed, site: [...recipe.site],

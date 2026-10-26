@@ -30,7 +30,17 @@ function town({ data = district, restore } = {}) {
   const stars = id => world.snapshot().crime.wanted.find(([userId]) => userId === id)?.[1] ?? 0;
   // Everything an attack could change, so refusals can prove they changed nothing.
   const state = () => { const snap = world.snapshot();return JSON.stringify({ crime: snap.crime, players: snap.players.map(({ id, gesture, position }) => ({ id, gesture, position })), revision: snap.revision }); };
-  return { world, clock, place, later, rules, attack, rival, stars, state };
+  // #640: a strike lands at contact. Step through it, then step back out of the rival's
+  // counter range so these resolver checks see only the strike (crime-phases.test.js covers the
+  // counter). Returns the resolved public action.
+  const land = (extra = {}) => {
+    place(ALICE, [RX + 1.2, RN]);
+    const reply = attack(ALICE, extra);assert.equal(reply.ok, true, JSON.stringify(reply));
+    later(CRIME_RULES.strikeWindupMs);world.step(0.05);
+    place(ALICE, [RX, RN + 5]);later(CRIME_RULES.hitReactionMs);world.step(0.05);
+    return world.snapshot().crime.actions.find(item => item.id === reply.action.id) ?? reply.action;
+  };
+  return { world, clock, place, later, rules, attack, land, rival, stars, state };
 }
 const open = f => { f.rules({ mode: 'forced', zones: ['westcreek-lane'] });f.place(ALICE, [RX + 1.2, RN]); };
 
@@ -45,18 +55,22 @@ test('the town starts peaceful: rivals stand whole and nobody can attack them', 
   assert.equal(f.state(), before, 'a refusal changes nothing');
 });
 
-test('a permitted hit is one authoritative transition: damage, a star, a strike, all public', () => {
+test('a permitted hit is one authoritative transition at contact: damage, a star, a strike, all public', () => {
+  // #640 changed this from an instant hit in the reply to a timed action resolved at contact.
   const f = town();open(f);
   const reply = f.attack(ALICE, { attackId: 'alice-hit-0001' });
   assert.equal(reply.ok, true, JSON.stringify(reply));
-  assert.deepEqual(reply.hit, { targetId: RIVAL.id, damage: 25, health: 75, incapacitated: false, stars: 1 });
-  assert.deepEqual([f.rival().health, f.rival().staggered, f.stars(ALICE)], [75, true, 1]);
+  assert.deepEqual([reply.action.phase, reply.action.outcome, reply.hit], ['windup', null, undefined]);
   assert.equal(f.world.snapshot().players.find(player => player.id === ALICE).gesture, 'shove');
+  f.later(CRIME_RULES.strikeWindupMs);f.world.step(0.05);
+  const resolved = f.world.snapshot().crime.actions.find(item => item.id === reply.action.id);
+  assert.deepEqual(resolved.effect, { damage: 25, health: 75, incapacitated: false, stars: 1 });
+  assert.deepEqual([f.rival().health, f.rival().staggered, f.stars(ALICE)], [75, true, 1]);
   // The same attack ID again is the same result, and nothing moves.
   const before = f.state();
   f.later(CRIME_RULES.cooldownMs);
   const again = f.attack(ALICE, { attackId: 'alice-hit-0001' });
-  assert.deepEqual([again.ok, again.replayed, again.hit.health, again.hit.stars], [true, true, 75, 1]);
+  assert.deepEqual([again.ok, again.replayed, again.action.id, again.action.outcome, again.action.effect.health, again.action.effect.stars], [true, true, reply.action.id, 'hit', 75, 1]);
   const lasting = text => JSON.parse(text).crime.targets.map(({ id, health, incapacitated }) => [id, health, incapacitated]).concat(JSON.parse(text).crime.wanted);
   assert.deepEqual(lasting(f.state()), lasting(before), 'a duplicate never lands twice');
   // Private details stay out of the snapshot.
@@ -119,29 +133,38 @@ test('reach, height, walls, seats and flight are checked from the town\'s own po
   const w = town({ data: walled });open(w);
   assert.equal(w.attack(ALICE).error, 'attack_out_of_reach', 'a wall blocks the swing');
   w.place(ALICE, [RX, RN + 1.2]);
-  assert.equal(w.attack(ALICE).ok, true, 'around the wall it lands');
+  const around = w.attack(ALICE);assert.equal(around.ok, true, 'around the wall it is admitted');
+  w.later(CRIME_RULES.strikeWindupMs);w.world.step(0.05);
+  assert.equal(w.rival().health, 75, 'and lands');
 });
 
 test('cooldown, incapacitation and recovery are deterministic; stars clamp at five and cool off with quiet time', () => {
+  // #640: hits resolve at contact (land() steps through it); timings count from contact.
   const f = town();open(f);
   assert.equal(f.attack(ALICE).ok, true);
   const before = f.state();
   assert.equal(f.attack(ALICE).error, 'attack_cooldown');
   assert.equal(f.state(), before);
-  for (const health of [50, 25, 0]) { f.later(CRIME_RULES.cooldownMs);assert.equal(f.attack(ALICE).hit.health, health); }
+  f.later(CRIME_RULES.strikeWindupMs);f.world.step(0.05);f.place(ALICE, [RX, RN + 5]);f.later(CRIME_RULES.hitReactionMs);f.world.step(0.05);
+  assert.equal(f.rival().health, 75);
+  for (const health of [50, 25, 0]) assert.equal(f.land().effect.health, health);
+  const lastHit = f.clock.time - CRIME_RULES.hitReactionMs;
   assert.deepEqual([f.rival().incapacitated, f.stars(ALICE)], [true, 4]);
-  f.later(CRIME_RULES.cooldownMs);
+  f.later(CRIME_RULES.cooldownMs);f.place(ALICE, [RX + 1.2, RN]);
   assert.equal(f.attack(ALICE).error, 'target_incapacitated', 'nobody is hit while down');
   assert.equal(f.stars(ALICE), 4);
   // Recovery: whole again exactly when the clock runs out, not before.
-  f.later(CRIME_RULES.recoveryMs - CRIME_RULES.cooldownMs - 1);f.world.step(0.05);
+  f.clock.time = lastHit + CRIME_RULES.recoveryMs - 1;f.world.step(0.05);
   assert.equal(f.rival().incapacitated, true);
   f.later(1);f.world.step(0.05);
   assert.deepEqual([f.rival().health, f.rival().incapacitated], [100, false]);
   // Two more hits: stars stop at five.
-  assert.equal(f.attack(ALICE).hit.stars, 5);
-  f.later(CRIME_RULES.cooldownMs);assert.equal(f.attack(ALICE).hit.stars, 5);
-  // Quiet time: one star per period, whatever the step sizes.
+  assert.equal(f.land().effect.stars, 5);
+  assert.equal(f.land().effect.stars, 5);
+  // Quiet time: one star per period, whatever the step sizes. Police watching her pause the
+  // cooldown (#640), so she steps out of the danger zone; officers stand down at once and the
+  // quiet period runs from that last step.
+  f.place(ALICE, [-2790, -1300]);
   const quietFrom = f.clock.time;
   f.clock.time = quietFrom + CRIME_RULES.starDecayMs - 1;f.world.step(0.05);
   assert.equal(f.stars(ALICE), 5);
@@ -160,7 +183,7 @@ test('departed sessions and upper floors cannot attack; others still play', () =
   f.world.players.get(ALICE).levelId = 'garage/l2';
   assert.ok(['return_to_ground_level', 'attack_on_foot'].includes(f.attack(ALICE).error));
   f.world.players.get(ALICE).levelId = null;
-  assert.equal(f.attack(ALICE).ok, true);
+  assert.equal(f.attack(ALICE).ok, true, 'admitted; it lands at contact (#640)');
   // Social life keeps working beside it.
   f.later(2000);
   assert.equal(f.world.command(BOB, { type: 'chat', text: 'what was that?' }).ok, true);
@@ -169,9 +192,9 @@ test('departed sessions and upper floors cannot attack; others still play', () =
 
 test('checkpoints keep health, stars and receipts; older towns restore with none; garbled crime state is refused', () => {
   const f = town();open(f);
-  f.attack(ALICE, { attackId: 'alice-hit-0002' });f.later(CRIME_RULES.cooldownMs);f.attack(ALICE);
+  f.land({ attackId: 'alice-hit-0002' });f.land();
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 16);
+  assert.equal(saved.version, 17);
   const back = town({ restore: saved });back.clock.time = f.clock.time;
   assert.deepEqual(back.world.snapshot().crime, f.world.snapshot().crime);
   back.place(ALICE, [RX + 1.2, RN]);back.later(CRIME_RULES.cooldownMs);
@@ -179,9 +202,11 @@ test('checkpoints keep health, stars and receipts; older towns restore with none
   assert.equal(back.rival().health, 50);
   // Recovery and decay continue from the saved times.
   back.clock.time = f.clock.time + CRIME_RULES.recoveryMs;back.world.step(0.05);
+  // (#640: the last hit landed a hit-reaction before the checkpoint, so recovery is due by now.)
   assert.equal(back.rival().health, 100);
   // An older (v14) town: no crime at all, everything else kept.
-  const { crime, ...payload } = structuredClone(f.world.checkpoint().payload);
+  // (#640: land() steps the town, so police now exist; a v14 town has neither crime nor police.)
+  const { crime, police: _police, ...payload } = structuredClone(f.world.checkpoint().payload);
   const envelope = { version: 14, worldId: saved.worldId, worldFingerprint: saved.worldFingerprint, payload };
   const old = town({ restore: { ...envelope, checksum: digest(envelope) } });
   assert.deepEqual(old.world.snapshot().crime.wanted, []);
