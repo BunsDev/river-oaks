@@ -3,7 +3,7 @@ import test from 'node:test';
 import { loadDistrictData } from '../../server/district-data.js';
 import { createResidentNavigation } from '../src/navigation.js';
 import { createWalkingEnvironment } from '../src/walking.js';
-import { keepClear } from '../e2e/route-clearance.js';
+import { clearRouter, keepClear } from '../e2e/route-clearance.js';
 
 // Lowest room along a walked route (0.05 m steps up to 0.5 m, -1 inside an obstacle),
 // sampled at `step` metres, waypoints included and the destination excluded.
@@ -41,6 +41,9 @@ test('a detour that canTravel refuses is not taken', () => {
   // The box sits above the line, so the only clearer offsets lie below it.
   const isAreaFree = box([-1, 0.05, 1, 2.05]), canTravel = (a, b) => a[1] >= -1e-9 && b[1] >= -1e-9;
   assert.deepEqual(keepClear(isAreaFree, [-5, 0], [[5, 0]], { canTravel }), [[5, 0]]);
+  // Only the second half, from below the line into the destination, is refused.
+  const intoDestination = (a, b) => !(b[0] === 5 && a[1] < -1e-9);
+  assert.deepEqual(keepClear(isAreaFree, [-5, 0], [[5, 0]], { canTravel: intoDestination }), [[5, 0]]);
 });
 
 test('the world-streaming routes that graze corners on cb83c7cd keep their room or gain it', async () => {
@@ -64,4 +67,28 @@ test('the world-streaming routes that graze corners on cb83c7cd keep their room 
     for (const point of clear) { assert.ok(canTravel(current, point), `every kept leg from ${from} passes canTravel`); current = point; }
   }
   for (const [from, path] of reloads) assert.ok(lowestRoom(isAreaFree, from, keepClear(isAreaFree, from, path, { canTravel })) >= 0.3 - 1e-9, `the reload route from ${from} keeps 0.3 m`);
+});
+
+test('the journey router reuses a lap route but re-clears its first leg from a shifted start', async () => {
+  const world = await loadDistrictData({ districtRevision: 'east-garden-commons-market-1' });
+  const walking = createWalkingEnvironment(world), isAreaFree = (x, y, r) => walking.isAreaFree(x, -y, r);
+  const nav = createResidentNavigation(world, { allowRoads: true }), route = clearRouter(walking, nav);
+  const start = [-2786, -1370], shifted = [-2785.51, -1369.51], to = [-2685, -1334];
+  const lap = route(start, to);
+  assert.equal(route([-2786.05, -1370.05], to), lap, 'a start within 0.15 m reuses the cached route');
+  const fromShifted = route(shifted, to);
+  assert.deepEqual(fromShifted.at(-1), to);
+  assert.deepEqual(fromShifted.slice(-lap.length + 1), lap.slice(1), 'only the first leg is re-cleared');
+  // Walking the cached route from here keeps only about 0.20 m on its first leg.
+  assert.ok(lowestRoom(isAreaFree, shifted, fromShifted) > lowestRoom(isAreaFree, shifted, lap), 'clearer than walking the cached route from there');
+  assert.ok(lowestRoom(isAreaFree, shifted, fromShifted) >= lowestRoom(isAreaFree, shifted, nav.route(shifted, to)), 'no tighter than the resident route from there');
+});
+
+test('the journey router does not cache a missing route', () => {
+  let calls = 0;
+  const nav = { route: () => (calls++ ? [[5, 0]] : null), canTravel: () => true }, walking = { isAreaFree: () => true };
+  const route = clearRouter(walking, nav);
+  assert.equal(route([0, 0], [5, 0]), null);
+  assert.deepEqual(route([0, 0], [5, 0]), [[5, 0]]);
+  assert.equal(calls, 2);
 });

@@ -10,10 +10,10 @@ export function keepClear(isAreaFree, from, path, { margin = 0.3, step = 0.1, de
   const rooms = new Map();
   // Room around a point in 0.05 m steps up to the margin; -1 inside an obstacle.
   const room = ([x, y]) => {
-    const key = `${Math.round(x * 20)},${Math.round(y * 20)}`;
+    const key = `${x},${y}`;
     if (!rooms.has(key)) {
       let found = isAreaFree(x, y, 0) ? 0 : -1;
-      for (let steps = Math.round(margin / 0.05); found === 0 && steps > 0; steps--) if (isAreaFree(x, y, steps * 0.05)) found = steps * 0.05;
+      for (let steps = Math.ceil(margin / 0.05 - 1e-9); found === 0 && steps > 0; steps--) if (isAreaFree(x, y, steps * 0.05)) found = steps * 0.05;
       rooms.set(key, found);
     }
     return rooms.get(key);
@@ -44,4 +44,24 @@ export function keepClear(isAreaFree, from, path, { margin = 0.3, step = 0.1, de
   let current = from;
   for (const point of path) { result.push(...leg(current, point, depth)); current = point; }
   return result;
+}
+
+// The journey's router over keepClear(). Routes are cached per metre of start, so laps
+// reuse the first lap's route; a hit from a start more than 0.15 m away re-clears the
+// first leg from where the walker stands, or routes afresh if that leg isn't walkable.
+// walking is createWalkingEnvironment(world); nav is createResidentNavigation(world, ...).
+export function clearRouter(walking, nav, options = {}) {
+  const isAreaFree = (x, y, r) => walking.isAreaFree(x, -y, r), settings = { canTravel: nav.canTravel, ...options }, routes = new Map();
+  const fresh = (from, to) => { const path = nav.route(from, to); return path && keepClear(isAreaFree, from, path, settings); };
+  return (from, to) => {
+    const key = `${from.map(Math.round)}>${to}`, cached = routes.get(key);
+    if (!cached) {
+      const route = fresh(from, to);
+      if (route) routes.set(key, { from, route });
+      return route;
+    }
+    if (Math.hypot(from[0] - cached.from[0], from[1] - cached.from[1]) <= 0.15) return cached.route;
+    if (!nav.canTravel(from, cached.route[0])) return fresh(from, to);
+    return [...keepClear(isAreaFree, from, [cached.route[0]], settings), ...cached.route.slice(1)];
+  };
 }

@@ -16,19 +16,10 @@ async page => {
   const world = await loadDistrictData({ districtRevision: 'east-garden-commons-market-1' });
   const nav = createResidentNavigation(world, { allowRoads: true }), edge = world.eastGardenCommons.edge;
   const { createWalkingEnvironment } = await import('../src/walking.js');
-  const { keepClear } = await import('./route-clearance.js');
+  const { clearRouter } = await import('./route-clearance.js');
   // Resident routes can pass a corner closer than a walking player fits, and a walker
   // pressed into one stalls: detour legs to keep 0.3 m where they can (route-clearance.js).
-  // Routes are cached per metre of start, so repeated laps reuse the first lap's.
-  const walking = createWalkingEnvironment(world), routes = new Map();
-  const clearRoute = (from, to) => {
-    const key = `${from.map(Math.round)}>${to}`;
-    if (!routes.has(key)) {
-      const path = nav.route(from, to);
-      routes.set(key, path && keepClear((x, y, r) => walking.isAreaFree(x, -y, r), from, path, { canTravel: nav.canTravel }));
-    }
-    return routes.get(key);
-  };
+  const clearRoute = clearRouter(createWalkingEnvironment(world), nav);
   const { mkdir, writeFile } = await import('node:fs/promises');
   const checkpointPath = `.runtime/world-streaming/journey-${new Date().toISOString().replaceAll(':', '-')}.json`;
   await mkdir('.runtime/world-streaming', { recursive: true });
