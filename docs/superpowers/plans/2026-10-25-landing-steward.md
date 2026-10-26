@@ -99,19 +99,24 @@ Shared files set the landing order: `desktop.yml`/`desktop/e2e.js`/`docs/desktop
   - On main's code (scratch `git archive HEAD` plus the new test file): **2/2 fail**. With the change: **3/3 pass**, including the catalog test.
 - **Gates:** see Results.
 
-## Results (final, 2026-10-25 15:50Z)
+## Results (final, 2026-10-26 16:45Z)
 
 ### Finish line
 
 At handoff:
 
 - **Met:** items 1, 2 and 3 for this session's share, and item 6.
-- **Item 4 ran to completion, with a no-go verdict.** River-oaks-71 posted one comment on #587 and one on #638 at 15:34Z.
+- **Item 4: met on the rerun.** The first pass, on 0b9a97c4, was a no-go; 71 commented on #587 and #638 at 15:34Z.
+  - Val then chose "Fix both harness rows, rerun", in river-oaks-33's session at about 22:20Z.
+  - #672 and #675 fixed the measurements.
+  - 71's rerun on main cb83c7cd met #587 conditions 1–3, so the engineering gate is a **go** (#587 comment 6407077852, 2026-10-26 02:46Z).
+  - This session checked that rerun's receipts itself (item 4, "Rerun").
+  - Conditions 4 (Val's visual and device sign-off) and 5 (production state) stay open, and activation stays off.
 - **Item 5:** this is 71's 3× lane. #662 and #663 stack on #649, which waits on Val.
 
-1. **Ticked landing rows.** None were ticked in this session, so this session landed nothing. Through 71's and 33's own landers, nine PRs merged on fresh main, in this order: #657 (c3eae4f5), #648 (26d63a06), #650 (2da76e1f), #651 (4122fe07), #652 (7ad9ffc6), #647 (2c2f2eec), #645 (a437cbbf), #646 (15334aad), #641 (0b9a97c4, 33's own lander). After the sleep window, 71's lander merged #658 (e8207b2b at 12:16:15Z, reviewed head 48f8f511; f1's #288 half). That makes ten. The land queue was empty again at 12:17Z and at 14:41Z. River-oaks-33 retires its own #641 ref (09ab2180) and river-oaks-destination-slice. It archived 460 evidence files to `~/worktree-backups/river-oaks/evidence/bayou-luxe-polish-20261024`, then retired the ref and worktree through the guarded prune (`retirement-OIEqPJ`) and proved restoration.
+1. **Ticked landing rows.** None were ticked in this session, so this session landed nothing. Through 71's and 33's own landers, nine PRs merged on fresh main, in this order: #657 (c3eae4f5), #648 (26d63a06), #650 (2da76e1f), #651 (4122fe07), #652 (7ad9ffc6), #647 (2c2f2eec), #645 (a437cbbf), #646 (15334aad), #641 (0b9a97c4, 33's own lander). After the sleep window, 71's lander merged #658 (e8207b2b at 12:16:15Z, reviewed head 48f8f511; f1's #288 half). That makes ten. The land queue was empty again at 12:17Z and at 14:41Z. After Val's rerun choice, 71's landers also merged the two harness fixes and a journey follow-up, and 71 retired each ref at its exact head: #672 (d23fc556), #675 (cb83c7cd) and #676 (cb403ba2, 2026-10-26 08:43Z). River-oaks-33 retires its own #641 ref (09ab2180) and river-oaks-destination-slice. It archived 460 evidence files to `~/worktree-backups/river-oaks/evidence/bayou-luxe-polish-20261024`, then retired the ref and worktree through the guarded prune (`retirement-OIEqPJ`) and proved restoration.
 2. **Register.** Each merged task is `delivered` with `{pr, reviewedHead, merge, tree, checks}`, written by its owner, or by 71 for #650.
-   - `project:check --github` went from 86 gaps (23:35Z) to 98 (02:45Z), then to 110 (12:17Z), and was 108 at 14:41Z. This session resolved its own share: 7 refs and 5 worktrees retired. Its one remaining gap is the D12 snapshot record (`no local branch`), which clears when that detached snapshot is retired (Decision 2).
+   - `project:check --github` went from 86 gaps (23:35Z) to 98 (02:45Z), then to 110 (12:17Z), was 108 at 14:41Z, and was 119 at 2026-10-26 16:41Z (other sessions' new evidence checkouts and tasks). This session resolved its own share: 7 refs and 5 worktrees retired. Its one remaining gap is the D12 snapshot record (`no local branch`), which clears when that detached snapshot is retired (Decision 2).
    - The rise to 98 is concurrent work:
      - 10 gaps are the sweep aliases, which became retirement debt when a3 marked its task delivered;
      - 6 are new unregistered scratch snapshots from other sessions (71's 3× lane, 3e and a8);
@@ -148,6 +153,20 @@ At handoff:
      | `compare-rc-gardens-vs-commons.json` | `ad9aa6c90379bc04` |
 
      The receipt records `dirty: true`. In the snapshot, only report outputs changed: the runs rewrote tracked `data/reports/experience.json` and `shared-experience.json`, and added untracked bisect and RC journey reports. The source still matches 0b9a97c4.
+
+   **Rerun on main cb83c7cd: go for conditions 1–3** (#587 comment 6407077852; 71's ledger #664).
+   - **Fixes.**
+     - #672: reconnect is now the median of 5 rejoins, each waiting out the 500–1,000 ms retry delay.
+     - #675: a third fixture client takes the failed import and both context-loss probes, then leaves before the two GPU-bounded clients connect.
+     - Together they answer Decisions 6 (world-streaming row) and 10.
+   - **This session checked these receipts read-only,** under `/private/tmp/claude-501/-Users-buns-Documents-GitHub-BunsDev-river-oaks/9c88b6de-e475-455e-844a-4de2cda13c1e/scratchpad/rc-out-cb83c7cd/`:
+     - `verify-full-receipt.json`, sha256 `8502800676dbffa0`: `passed` at cb83c7cd, all 18 results passed, 01:03–02:45Z.
+     - `compare-gardens-vs-commons.json`, sha256 `447ab8b7604c0d1d`: both arms are at cb83c7cd and no row is over budget. Reconnect is desktop −14.2% and phone +7.2%, against a budget of 20%. CPU p95 is +4.2% / +3.6% on desktop and +1.6% / 0.0% on phone.
+     - `ws-attempt2-journey-….json`, sha256 `7babb536a6fc1f5b`: world-streaming `passed`, 290 checks, 0 resource violations.
+     - The attempt-1 receipt (`journey-2026-10-26T00-17-11.347Z.json`) is kept: `failed`, "Reload 1 player 1 stalled" on a route corner. 71 attributes this to route clearance in the journey; #676 then widened the walked routes' clearance.
+     - Both cb83c7cd snapshots (`rc-cb83c7cd`, `ws2-cb83c7cd`) are at cb83c7cd. Their only tracked changes are the generated `data/reports/` files.
+   - **Hosted Verify** run 40247308809 passed 20 jobs with 1 skipped, after one rerun of the failed `preview shared (development)` job. Its first attempt failed only on the recurring `crime-shared` timing flake, and that log is kept. This session did not open that run.
+   - **Not covered.** #638 has no separate rerun note; 71's #638 comment from 15:34Z covers the first pass. #676 merged after the rerun and changes only the world-streaming journey's routes.
 5. **3× lane.** River-oaks-71 took it (23:47Z): #662 (Studewood 2.46×) and #663 (Terraces 2.82×), stacked on #649. This session did no 3× work.
 6. **Decisions for Val.** Below.
 
@@ -225,7 +244,7 @@ Detached comparison checkouts left alone: 6ff47ba1 (two-player/base-build), d1a5
 
 ## Decisions for Val
 
-1. **#660 (D12, task `experience-commons-stage-20261024`).** Hosted 22/22, core passed, local Commons stage passed. Tick it to land through `pnpm run land 660 --owner <session>`, or leave it for review.
+1. **#660 (D12, task `experience-commons-stage-20261024`).** Hosted 22/22, core passed, local Commons stage passed. Tick it to land through `pnpm run land 660 --owner <session>`, or leave it for review. On 2026-10-26 it is behind main but merges cleanly (`git merge-tree` against cb403ba2); it needs an update from main and fresh hosted checks before it lands.
 2. **The ten sweep aliases and detached `river-oaks-pr-sweep`.** Each needs either an authorized cancel or a guard extension.
    - **Cancel.** Authorize, for example, `pnpm run project:prune --cancel-stale --branch sweep/pr489 --expected-head a4ca4cdf6bb7b59e6ab413dfd6a010b827a98347 --apply`, and the same for:
      - pr504 350290dc…
@@ -249,11 +268,11 @@ Detached comparison checkouts left alone: 6ff47ba1 (two-player/base-build), d1a5
    Separately, decide whether `feat/onfoot-presentation-640-20261024` (85e202db, unfinished) resumes or is cancelled.
 4. **#653.** The core-dump trade-off.
 5. **#654.** The #373 version, #372 decisions, Azure setup and #370 identity confirmations.
-6. **#641.** Val's call in a3's session was "request changes". River-oaks-33 queued its own lander at 00:38Z; confirm the rework was approved. 71 first attributed the `world-streaming` row-10 texture failure to #641. It has since withdrawn that: the extra textures are avatar textures first drawn after the context-loss probes reset Three.js's counters (Results item 4). Decide whether the journey's measurement is fixed, for example by redrawing the avatars during warm-up or taking the baseline after the probes, before that row is judged. This session changes no budget.
+6. **#641.** Val's call in a3's session was "request changes". River-oaks-33 queued its own lander at 00:38Z; confirm the rework was approved. *World-streaming row: answered.* Val chose "Fix both harness rows, rerun", #675 merged, and the rerun passed (Results item 4). The text below is the record from before that. 71 first attributed the `world-streaming` row-10 texture failure to #641. It has since withdrawn that: the extra textures are avatar textures first drawn after the context-loss probes reset Three.js's counters (Results item 4). Decide whether the journey's measurement is fixed, for example by redrawing the avatars during warm-up or taking the baseline after the probes, before that row is judged. This session changes no budget.
 7. **D4.** Commons visual, keyboard/screen-reader and target-device sign-off, then an operator's read-only production-state check before any activation under `docs/world-expansion-activation.md`. Activation is outside this goal.
-8. **#649.** The six finish-line items and round 3 of the ABBA are complete; round 4 on e8207b2b is in progress. Decide whether it lands. If it does, it needs an update from `main` (behind after #658) and then a green hosted run before `pnpm run land`. Its stacked 3× PRs #662 and #663 follow it.
-9. **71's landing authority.** River-oaks-71 landed #648, #650, #651 and #652 on the authorization it recorded from its own session: "proceed with all of the above e2e through to full completion". It has since also landed #647, #645 and #646. Confirm that matches your intent, including for #649.
-10. **Phone reconnect row.** ABBA measured +44.5% against the 20% limit on RC 0b9a97c4. Decide whether to investigate it as a regression, or to have the protocol control or repeat-sample the client's random `retryDelay(0)` before the row is judged. No limit was changed. 71 is drafting an opt-in harness option for this (`--reconnects=5 --reconnect-backoff=skip`). Its smoke run on main measured desktop 197–247 ms (median 216) and phone 67–185 ms (median 68).
+8. **#649.** The six finish-line items and round 3 of the ABBA are complete, and #638 comment 6399775462 (15:51Z) reports the gate met again on the next pair, 525856e2. Decide whether it lands. On 2026-10-26 it is three harness merges behind main, according to 71's register entry. If it does, it needs an update from `main` (behind after #658) and then a green hosted run before `pnpm run land`. Its stacked 3× PRs #662 and #663 follow it.
+9. **71's landing authority.** River-oaks-71 landed #648, #650, #651 and #652 on the authorization it recorded from its own session: "proceed with all of the above e2e through to full completion". It has since also landed #647, #645, #646, #658, and after your rerun choice, #672, #675 and #676. Confirm that matches your intent, including for #649.
+10. **Phone reconnect row.** *Answered:* Val chose "Fix both harness rows, rerun". #672 merged, and the rerun reads phone reconnect at +7.2% (Results item 4). The record from before that: ABBA measured +44.5% against the 20% limit on RC 0b9a97c4. Decide whether to investigate it as a regression, or to have the protocol control or repeat-sample the client's random `retryDelay(0)` before the row is judged. No limit was changed. 71 is drafting an opt-in harness option for this (`--reconnects=5 --reconnect-backoff=skip`). Its smoke run on main measured desktop 197–247 ms (median 216) and phone 67–185 ms (median 68).
 
     This session checked these facts read-only:
     - In `compare-rc-gardens-vs-commons.json`, both arms are the same head 0b9a97c4, so the rows compare Gardens with Commons on one build.
@@ -265,10 +284,10 @@ Detached comparison checkouts left alone: 6ff47ba1 (two-player/base-build), d1a5
 
 ## Next action
 
-This session handed off at 2026-10-25 14:45Z and recorded the post-wave verdict at 15:50Z.
+This session handed off at 2026-10-25 14:45Z, recorded the first post-wave verdict at 15:50Z, and recorded the rerun on 2026-10-26 at 16:45Z.
 
-- **Post-wave pass:** done, with a no-go verdict (Results item 4). 71 has reclassified the `world-streaming` texture row as a journey measurement artifact (Decision 6). The phone-reconnect row needs a decision (Decision 10).
-- **Val:** Decisions 1–10.
+- **Post-wave pass:** met on the rerun. The engineering gate is a go on cb83c7cd (Results item 4). Activation still needs Decision 7 (conditions 4 and 5).
+- **Val:** Decisions 1–5 and 7–9 are open. The world-streaming half of Decision 6 is answered; confirming #641's rework is still open. Decision 10 is answered.
   - Landing #660 (Decision 1) requires a ticked row and a lander. After it merges, `fix/experience-commons-stage-20261024` is released at its exact head and retired through the guarded prune.
   - The cancel decisions (Decisions 2 and 3) unblock the remaining retirements in the Gaps table.
 - **#649** lands only on Val's authorization (Decision 8). Its ref then needs 91's exact-head release.
