@@ -31,7 +31,7 @@ import { workplaceAction } from './workplace-api.js';
 import { securityHeaders } from './security-headers.js';
 import { createVoiceRoutes } from './voice-routes.js';
 import { createRideFlush } from './ride-flush.js';
-import { loadHidden, screenCommand, viewFor } from './blocks.js';
+import { grantedPeer, loadHidden, screenCommand, viewFor } from './blocks.js';
 import { blockAction } from './blocks-api.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
 import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, continuedConnection, retireAfter, rotateNotice } from './connection-close.js';
@@ -439,6 +439,10 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
               ?await characterSelection.command(identity.userId,command,selection,{connectionId:token,sessionId:identity.sessionId??null})
               :world.command(identity.userId,screened.command,{sessionId:identity.sessionId??null});
             equipObservation?.result(result);
+            // A grant checked just before a block was stored is ended once it lands. Without a
+            // known block nothing is separated; a failed check is logged.
+            if(result.ok && grantedPeer(command) && await blocks?.between(identity.userId,command.peerId)
+              .catch(()=>{console.warn(JSON.stringify({event:'block_recheck_failed'}));return false;}))world.separate(identity.userId,command.peerId);
             if(result.ok && !characterSelection && avatarPreferences && ['appearance','movement'].includes(command.type))
               await avatarPreferences.save(identity.userId,world.accountAppearance(identity.userId));
             if(result.ok && command.type==='uncycle')await flushRides();

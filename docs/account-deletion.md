@@ -3,8 +3,10 @@
 Added 2026-10-24 for #292 (App Review guideline 5.1.1(v): an app that lets people
 create an account lets them delete it from inside the app). It is **off by default**.
 `RIVER_OAKS_ACCOUNT_DELETION=1` turns it on, on the server only, and only together with
-`WORKOS_WEBHOOK_SECRET`, so that a failed erasure is retried. Without the secret the
-server logs `account_deletion_off` once and keeps deletion off. The loopback fixture
+`WORKOS_WEBHOOK_SECRET`, so that a failed erasure is retried; on Vercel, `CRON_SECRET`
+too, since only the cron runs the erasure's second pass and retries there. Without them
+the server logs `account_deletion_off` once, with the missing one as its `reason`, and
+keeps deletion off. The loopback fixture
 sign-in needs only the flag. Turning it on is Val's decision; see
 [Before turning it on](#before-turning-it-on).
 
@@ -45,12 +47,13 @@ Then:
    only its answer was lost, its `user.deleted` webhook erases the account.
 2. The session cookie is cleared.
 3. Account erasure runs ([privacy data inventory](privacy-data-inventory.md)): the
-   tombstone, every session and socket, then every store and world. It runs a second
-   time once the first finishes, for a write that was already in flight.
+   tombstone, every session and socket, then every store and world. The request is
+   recorded, and the erasure sweep runs it again a minute after it finishes, for a write
+   that was already in flight.
 4. The answer is 200 `{ deleted: true, complete: true }`. If erasure failed, it's 503
    `{ deleted: true, complete: false }`, and the page says the rest finishes on its
-   own. WorkOS sends `user.deleted` for the deletion in step 1, and that webhook runs
-   erasure again, with retries, until it succeeds.
+   own: the sweep retries the recorded request, and WorkOS sends `user.deleted` for the
+   deletion in step 1, whose webhook runs erasure again, with retries, until it succeeds.
 
 `GET /api/account/delete` answers `{ available: false }`, or
 `{ available: true, recent }` for a signed-in resident when the flag is on. It always
@@ -93,11 +96,12 @@ desktop shell's user-data folder is outside this change.
 ## Tests
 
 - `server/tests/account-deletion.test.js`:
-  - every refusal, the order (provider, sign-out, erasure twice) and both failure paths;
+  - every refusal, the order (provider, sign-out, erasure) and both failure paths;
   - the limit;
   - both WorkOS session stores with a fake WorkOS: sign-in time through refreshes and
     the desktop exchange, an expired access token, a 404 user and a failing provider;
-  - the flag and webhook rule, in the helper and the hosted backend.
+  - the recorded request and its second pass a minute later, through the sweep;
+  - the flag, webhook and Vercel cron rule, in the helper and the hosted backend.
   The email-code sign-in path sets `signedInAt` in the same `finishSignIn`; no test
   drives it. Nor does any test drive the hosted backend's signed-in path, which needs
   real WorkOS credentials.
@@ -117,7 +121,8 @@ desktop shell's user-data folder is outside this change.
 
 - WorkOS must deliver `user.deleted` to `/api/workos/events`. `WORKOS_WEBHOOK_SECRET`
   is required for the flag to take effect, but the server can't check that WorkOS
-  actually sends the events.
+  actually sends the events. On Vercel, `CRON_SECRET` is required too, and the
+  `/api/erasure-sweep` cron must be scheduled.
 - The privacy policy should say what deletion removes and keeps (the inventory's
   Decisions), and how long the rest takes.
 - The native iOS shell (#286, #287) has to reach Settings → Account.

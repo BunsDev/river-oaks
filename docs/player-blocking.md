@@ -12,30 +12,42 @@ lift it. Each account can hold up to 200 blocks.
 
 | While a block lasts | Enforced in |
 | --- | --- |
-| Neither receives the other's town chat lines, gestures or greetings with anyone. Lines already on screen when a socket joins are filtered too | `viewFor` in `server/blocks.js`, applied per viewer in `server/app.js` and `server/distributed-app.js` |
+| Neither receives the other's town chat lines, gestures or greetings with anyone, nor anyone's greeting toward the other. Lines already on screen when a socket joins are filtered too | `viewFor` in `server/blocks.js`, applied per viewer in `server/app.js` and `server/distributed-app.js` |
 | The contact ends, with its direct messages and invitations. A new contact request, a direct message, and world or place invitations are refused | `server/blocks-api.js`, `server/social-api.js` |
 | Neither can open the other's profile | `server/profile-api.js` |
 | A group they share stays, without the other's messages | `server/groups-api.js` |
 | A pending greeting (handshake or dance) or game invitation between them ends. Neither can greet the other, invite them to darts or axe throwing, or travel to them. A table game invitation from one reaches the other's view as nothing, while its sender still sees it waiting | `separate` in `server/world.js` and the game modules; `screenCommand` and `viewFor` in `server/blocks.js` |
 | Private homes and offices: only Jevica's accounts invite, so a block between one of them and a resident ends the resident's invitations and steps them out. Jevica can't invite that resident again until the block is lifted | `separate` in `server/world.js`; `screenCommand` in `server/blocks.js` |
+| Garden campus guest access, where campus operators are configured: a grant between them ends, whichever of them is the tenant, and the guest is walked out of the suite. Neither can grant the other while the block lasts | `separate` in `server/world.js` and `server/campus-leases.js`; `screenCommand` in `server/blocks.js` |
 
 Lifting a block restores chat, gestures, greetings, profiles and group messages. Contacts
 and invitations don't come back by themselves; either resident can ask again. Unblocking
 first removes any contact still between them. A contact can't begin during a block, so a
 contact left by a failed removal goes before the block lifts.
 
-The blocked resident is never told. Every refusal is the one given for a resident who
+The blocked resident is never told, except through Jevica's invitations and campus guest
+grants (Decisions 2 and 4). Every other refusal is the one given for a resident who
 isn't here or isn't a contact. Contact actions, greetings, darts and axe invitations,
 and travel toward a blocked resident are each asked about a resident who is never
 present. The usual checks then answer, in their usual order, even for a malformed
-request from a modified client. `server/tests/blocks-api.test.js` and
+request from a modified client. A campus grant toward a blocked resident names its
+sender instead, so it gets the world's answer for that, after the world's own lease,
+tenant, status and version checks: a tenant is told that resident can't be their guest,
+and anyone else gets the refusal they would get anyway. A retry of a grant first sent
+before the block is answered as a conflicting operation. A grant or invitation checked
+just before a block was stored can reach the world after the block ended access; once
+it succeeds the server checks again and ends it (`grantedPeer` in `server/blocks.js`,
+`server/tests/blocks-campus-race.test.js`). Its sender's reply still shows the grant;
+the next view doesn't. A failed check is logged as `block_recheck_failed`, and the grant
+stands: without a known block nothing is separated. `server/tests/blocks-api.test.js` and
 `server/tests/blocks-world.test.js` compare the two answers. The resident who made the
 block sees it in their blocked list (`POST /api/blocks/list`). There is no separate
 whisper: private messages are contact messages, covered above.
 
 Not covered: public event listings, landmarks and builds stay visible to everyone. A
-table game already in progress between them continues until one stands up. Moderation
-reports work in both directions (`server/tests/reports.test.js`).
+table game already in progress between them continues until one stands up. A campus
+operator can still offer a lease, under the operator's name, to a resident who blocked
+them. Moderation reports work in both directions (`server/tests/reports.test.js`).
 
 ## Routes
 
@@ -47,7 +59,9 @@ answers 404. The hosted deployment routes them through `vercel.json` and
 `server/vercel-routing.js`, and the Vite dev server proxies them.
 
 The block is kept once it's stored. If the contact can't be ended right after, add
-answers 503 and asking again ends it. If ending invitations fails in a world, that's
+answers 503 and asking again ends it. Invitations in the worlds end anyway, and until
+then the contact stays out of both residents' contact lists and can't be invited to a
+group. If ending invitations fails in a world, that's
 logged without account ids and the block still stands. New invitations are refused on
 every request anyway.
 
@@ -111,5 +125,11 @@ many residents reads a long set when it joins and after each change.
    does. A world that can't be loaded at that moment keeps the old invitation until it's
    revoked; no new one can be made. Worlds are reached together, so the request waits
    for the slowest one, and each world reached stays loaded on that server, as with
-   erasure. A block between two residents reaches only loaded worlds. It doesn't need more: a greeting or game invitation needs both of them in
-   the world where the block is made.
+   erasure. A block between two residents reaches the worlds loaded on that server and
+   the default world, which serves the campus, if it is loaded or stored. A greeting or
+   game invitation needs both of them in the world where the block is made; campus guest
+   access doesn't.
+4. **Campus grants.** A refused grant tells a tenant that this resident can't be their
+   guest, as a refused invitation tells Jevica. A grant to an account that isn't present
+   succeeds, so the two can't be made indistinguishable. Recommended: keep, as for
+   offices and homes.

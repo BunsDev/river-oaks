@@ -23,6 +23,7 @@ import { createRedisAvatarPreferences, legacyDefaultAppearance } from './avatar-
 import { createRedisDesignLibrary } from './design-library.js';
 import { createRedisPresence } from './presence.js';
 import { createRedisCyclingMiles } from './cycling-miles.js';
+import { eraseEach } from './account-erasure.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
@@ -109,7 +110,8 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   // store. Every world in the catalog is reached, loaded here or not.
   const worldIds=async()=>[...new Set([configuredWorldId,...(await catalog.list()).map(entry=>entry.id)])];
   // Account erasure (#292). Only a world loaded here or with a durable checkpoint can
-  // hold the account; one that cannot load fails the step, so the run is retried.
+  // hold the account; one that cannot load fails the step, so the run is retried, and
+  // every other world still forgets the account meanwhile.
   const storedWorld=async id=>await redis.exists(`${roomPrefixFor(namespace,id)}:state`)===1;
   // Player blocking (#292): a block reaches sockets in every world loaded here, and other
   // gateways' sockets within five seconds. A greeting or game invitation needs both
@@ -121,7 +123,9 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   // Worlds are reached together, so the request waits for the slowest one, not the sum.
   async function separateEverywhere(a,b,blocked){
     const everywhere=blocked&&admin(a)!==admin(b);
-    await Promise.all((everywhere?await worldIds():[...worlds.keys()]).map(async id=>{
+    // Between two residents: the worlds loaded here, and for a block the default world, which
+    // serves the campus, where guest access outlasts either of them being there.
+    await Promise.all((everywhere?await worldIds():[...new Set([...(blocked?[DEFAULT_WORLD_ID]:[]),...worlds.keys()])]).map(async id=>{
       try {
         if(!worlds.has(id)&&!await storedWorld(id))return;
         const world=await worldFor(id);if(!world)throw new Error('World unavailable');
@@ -130,14 +134,12 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
     }));
   }
   const accountSteps={
-    worlds:async userId=>{
-      for(const id of await worldIds()) {
-        if(!worlds.has(id)&&!await storedWorld(id))continue;
-        const world=await worldFor(id);if(!world)throw new Error('World unavailable');
-        await world.game.forgetAccount(userId);
-      }
-    },
-    landmarks:async userId=>{for(const id of await worldIds())await landmarkStoreFor(id).eraseUser(userId);},
+    worlds:async userId=>eraseEach(await worldIds(),async id=>{
+      if(!worlds.has(id)&&!await storedWorld(id))return;
+      const world=await worldFor(id);if(!world)throw new Error('World unavailable');
+      await world.game.forgetAccount(userId);
+    }),
+    landmarks:async userId=>eraseEach(await worldIds(),id=>landmarkStoreFor(id).eraseUser(userId)),
     social:userId=>social.eraseUser(userId),blocks:userId=>blocks.eraseUser(userId),groups:userId=>groups.eraseUser(userId),profiles:userId=>profiles.eraseUser(userId),
     events:userId=>events.eraseUser(userId),presence:userId=>presence.eraseUser(userId),debugReports:userId=>debugReports.eraseUser(userId),
     officeDesk:userId=>officeDesk.eraseUser(userId),designLibrary:userId=>designLibrary.eraseUser(userId),

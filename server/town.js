@@ -1,6 +1,6 @@
 import {createCharacterMetrics} from './character-metrics.js';
 import { createWorkOSDeletionHandler } from './workos-deletion.js';
-import { createAccountErasure } from './account-erasure.js';
+import { createAccountErasure, createMemoryPendingErasures, eraseEach } from './account-erasure.js';
 import { accountDeletionEnabled, createAccountDeletionRoute } from './account-deletion.js';
 import { createMemoryCharacterStore } from './character-store.js';
 import { createMemoryOfficeDesk } from './office-desk.js';
@@ -150,23 +150,28 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   }
   const chauffeurRequest=createChauffeurRoute({auth,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env),
     security:localSecurity,...(mode==='local'?{isAdmin:auth.isAdmin}:{})});
-  // Player blocking (#292): every world this town has loaded; one that fails is logged and skipped.
+  // Player blocking (#292): a block ends invitations, and reaches sockets, in every world this
+  // town has loaded; one that fails is logged and skipped.
   async function separateEverywhere(a,b,blocked){
     for(const [id,{game}] of [...games]) try {await game.separateAccounts(a,b,blocked);}
     catch {console.warn(JSON.stringify({event:'block_separation_incomplete',worldId:id}));}
   }
   // Account erasure (#292): the tombstone, sessions and sockets first, then every store and world.
   const eraseAccount=createAccountErasure({tombstone:id=>characters.deleteAccount(id),revoke:id=>auth.revokeUser(id),steps:{
-    worlds:async id=>{for(const {game} of games.values())await game.forgetAccount(id);},
-    landmarks:async id=>{for(const store of landmarkStores.values())await store.eraseUser(id);},
+    worlds:id=>eraseEach([...games.values()],({game})=>game.forgetAccount(id)),
+    landmarks:id=>eraseEach([...landmarkStores.values()],store=>store.eraseUser(id)),
     social:id=>social.eraseUser(id),blocks:id=>blocks.eraseUser(id),groups:id=>groups.eraseUser(id),profiles:id=>profiles.eraseUser(id),events:id=>events.eraseUser(id),
     presence:id=>presence.eraseUser(id),debugReports:id=>debugReports.eraseUser(id),officeDesk:id=>officeDesk.eraseUser(id),
     waitlist:id=>waitlist.eraseUser(id),
     workplace:async id=>{if(workplace&&(await workplace.erase({userId:id}))?.ok===false)throw new Error('Workplace erasure busy');},
     // Live removal needs the lease, so it goes first.
     voice:async id=>{if(voice)await voice.revokeUser(id);await voiceLeases.revoke(id);},
-  },after:{avatarPreferences:id=>avatarPreferences.eraseUser(id),cyclingMiles:id=>cyclingMiles.eraseUser(id)}});
-  const deletionRequest=createWorkOSDeletionHandler({secret:mode==='workos'?(env.WORKOS_WEBHOOK_SECRET||null):null,onDelete:id=>eraseAccount(id)});
+  },after:{avatarPreferences:id=>avatarPreferences.eraseUser(id),cyclingMiles:id=>cyclingMiles.eraseUser(id)},
+  // This town's stores live in memory, so its record of each request does too; WorkOS
+  // retries a request that a restart interrupted.
+  pending:createMemoryPendingErasures()});
+  const erasureSweep=setInterval(()=>{void eraseAccount.sweep().catch(()=>{});},30_000);erasureSweep.unref();
+  const deletionRequest=createWorkOSDeletionHandler({secret:mode==='workos'?(env.WORKOS_WEBHOOK_SECRET||null):null,onDelete:(id,eventId)=>eraseAccount(id,{eventId})});
   // In-app deletion (#292) stays off unless RIVER_OAKS_ACCOUNT_DELETION is 1 and a failed erasure can be retried.
   const accountDeletion=createAccountDeletionRoute({enabled:accountDeletionEnabled(env,{development:mode==='local'}),auth,security:localSecurity,origin,eraseAccount:id=>eraseAccount(id)});
   const handleRequest=async(req,res)=>await deletionRequest(req,res)||await accountDeletion(req,res)||await chauffeurRequest(req,res);
@@ -174,7 +179,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const characterMetrics=createCharacterMetrics({enabled:env.RIVER_OAKS_CHARACTER_STUDIO_METRICS==='1'});
   return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,eraseAccount,close(){
     if(closing)return closing;
-    closed=true;workplace?.close();voice?.close();
+    closed=true;clearInterval(erasureSweep);workplace?.close();voice?.close();
     closing=(async()=>{
       try{
       await Promise.allSettled([...pending.values()]);

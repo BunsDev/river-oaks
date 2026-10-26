@@ -13,6 +13,8 @@ import { createRedisLandmarks } from '../landmarks.js';
 import { createWorldGateway } from '../world-gateway.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 import { WORLD_PROTOCOL_VERSION } from '../../preview/src/world-contract.js';
+import { GARDEN_CAMPUS_ID, GARDEN_CAMPUS_VERSIONS } from '../../shared/garden-campus-layout.js';
+import { CAMPUS_LEASE_CONTRACT } from '../../shared/garden-campus-lease-contract.js';
 
 // Blocking on the hosted path: two gateways share one Redis room and block store. A block
 // made through one gateway reaches sockets on the other, survives a gateway restart, and
@@ -89,6 +91,7 @@ test('a block made through one gateway reaches the other, survives a restart and
   await second.app.close();await second.room.close();nodes.delete(second);
   const third = await start();
   const back = await connect(third, 'carol');
+  assert.equal(back.seen.has('bob-line'), false, 'the first frame hides earlier lines too');
   bob.say('bob-after-restart');await settle();
   assert.equal(back.seen.has('bob-after-restart'), false);
   assert.ok(dana.seen.has('bob-after-restart'), 'the line was sent');
@@ -153,4 +156,39 @@ test('a block between Jevica and a resident ends invitations in a stored world n
   const back = await connect(second, 'alice');
   assert.deepEqual((await office(back, 'list')).offices[0].guests, [], 'the stored world was reached');
   assert.equal((await post(second, 'bob', '/api/blocks/list')).status, 200);
+});
+
+test('a block between two residents ends campus guest access in the stored default world, though no gateway has loaded it', live, async t => {
+  const redis = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1 });redis.on('error', () => {});
+  const namespace = `river-oaks:test-blocks:${randomUUID()}`, open = new Set();
+  const auth = { handle: async () => false, isSessionActive: async () => true, close() {}, authenticate: async req => {
+    const userId = req.headers.cookie?.match(/test_session=(\w+)/)?.[1];
+    return userId ? { userId, name: userId, sessionId: `${userId}-session`, csrfToken: 'test-csrf', expiresAt: Date.now() + 120_000 } : null;
+  } };
+  const security = createRedisSecurity({ redis, prefix: `{${namespace}}` });
+  t.after(async () => { for (const gateway of open) await gateway.close();security.close();const keys = await redis.keys(`*${namespace}*`);if (keys.length) await redis.del(...keys);await redis.quit(); });
+  // The campus is served only in the default world (#509); carol operates it.
+  const served = { ...data, gardenCampus: { id: GARDEN_CAMPUS_ID, revision: 'river-oaks-gardens-3', versions: { ...GARDEN_CAMPUS_VERSIONS } } };
+  const start = async () => {
+    const gateway = createWorldGateway({ redis, namespace, worldData: served, auth, security, waitlist: approvedWaitlist, origin, isAdmin: id => id === 'alice', moderators: [], campusOperators: ['carol'] });
+    await new Promise(resolve => gateway.server.listen(0, '127.0.0.1', resolve));open.add(gateway);
+    return { gateway, url: `http://127.0.0.1:${gateway.server.address().port}`, room: { worldId: 'river-oaks' } };
+  };
+  const { connect } = await fixture(t);
+  const campus = (socket, message) => socket.command({ type: 'campus', operationId: `op-${randomUUID().slice(0, 12)}`, worldId: 'river-oaks', contract: { ...CAMPUS_LEASE_CONTRACT }, ...message });
+  const first = await start();
+  const carol = await connect(first, 'carol'), bob = await connect(first, 'bob');await connect(first, 'dana');
+  const offered = await campus(carol, { action: 'issue', unitId: 'T1-F2-W-S', tenantId: 'bob', startsAt: Date.now(), endsAt: Date.now() + 30 * 86_400_000 });
+  assert.equal(offered.ok, true, JSON.stringify(offered));
+  const accepted = await campus(bob, { action: 'accept', leaseId: offered.lease.id, expectedVersion: offered.lease.version });
+  assert.equal(accepted.ok, true, JSON.stringify(accepted));
+  assert.equal((await campus(bob, { action: 'grant', leaseId: accepted.lease.id, expectedVersion: accepted.lease.version, peerId: 'dana' })).ok, true);
+  for (const socket of [carol, bob]) socket.ws.close();
+  await first.gateway.close();open.delete(first.gateway);
+  // Nothing is loaded on the second gateway; the default world is only stored.
+  const second = await start();
+  await second.gateway.separateAccounts('dana', 'bob', true);
+  const back = await connect(second, 'bob');
+  const listed = await back.command({ type: 'campus', action: 'list' });
+  assert.deepEqual(listed.campus.leases.find(item => item.id === offered.lease.id).guests, [], 'the stored default world was reached');
 });

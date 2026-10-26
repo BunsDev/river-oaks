@@ -176,7 +176,7 @@ test('erasure shuts the account out first, reports a failed step by name only, a
   } });
   await assert.rejects(eraseAccount(erin.userId), /Account erasure incomplete/);
   assert.deepEqual(order.slice(0, 2), ['tombstone:user_erin', 'revoke:user_erin']);
-  assert.deepEqual(warnings.map(line => JSON.parse(line)), [{ event: 'account_erasure_incomplete', steps: ['waitlist'] }]);
+  assert.deepEqual(warnings.map(line => JSON.parse(line)), [{ event: 'account_erasure_incomplete', eventId: null, steps: ['waitlist'] }]);
   flaky = false;order.length = 0;
   await eraseAccount(erin.userId);
   assert.deepEqual(order, ['tombstone:user_erin', 'revoke:user_erin', 'social', 'waitlist']);

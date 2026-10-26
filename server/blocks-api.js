@@ -30,10 +30,12 @@ export async function blockAction({ action, identity, blocks, social, readBody, 
   const result = await blocks.add(identity.userId, { userId: data.peerId, name });
   if (!result.ok) return result.reason === 'limit' ? { status: 429, value: { error: 'Block limit reached.' } } : { status: 400, value: { error: 'Invalid resident.' } };
   // A block ends the contact, with its messages and invitations, in both directions. The
-  // block stands once stored; if the contact cannot be ended, asking again ends it.
+  // block stands once stored; if the contact cannot be ended, asking again ends it, and
+  // meanwhile it stays out of both contact lists and group invitations. Invitations in
+  // the worlds end, and open sockets hear of the block, either way.
   try { await social?.remove(identity.userId, data.peerId); }
   catch { return { status: 503, value: { error: 'Blocked, but the contact could not be ended yet. Try again.' } }; }
-  await settle(separated, identity.userId, data.peerId, true);
+  finally { await settle(separated, identity.userId, data.peerId, true); }
   return { status: 200, value: { ok: true } };
 }
 

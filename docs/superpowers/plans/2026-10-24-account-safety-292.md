@@ -56,6 +56,8 @@ the character store was erased.
 | `account-erasure-world.test.js` | 5/5 |
 | `account-erasure-town.test.js` | 1/1 |
 | `pnpm run test:server` with `REDIS_URL` (isolated) | 1160/1160, 0 skipped (before the store and world tests were added) |
+| After both 2026-10-26 reviews, merged with main `09233cdd`: erasure, screenings, cycling, WorkOS, routing and town files with `REDIS_URL` | 94/94, 0 skipped |
+| `pnpm run test:server` with `REDIS_URL`, same tree, load 42–46 | 1241/1243, 0 skipped. The two failures, a district epoch switch and a district height recovery, are each a `join` after a room restore; they pass alone and as whole files (28/28), and neither file nor the join path is changed here |
 
 ## Independent review (2026-10-24)
 
@@ -79,6 +81,41 @@ A separate agent read the diff with no access to this ledger. It found:
 Found while fixing, not changed here: the waitlist's request path does not release
 a name hold when a GitHub login changes, so the old name stays taken for everyone.
 That is outside erasure and is left for its owner.
+
+## Lander review (river-oaks-e9, 2026-10-26)
+
+The lander's independent review of PR #661, each finding fixed red first:
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| A profile save let in before revocation, whose body arrived after the run, wrote a fresh record | Medium | Each request is recorded under its WorkOS event id before it runs; a second whole run follows a minute after the first. `account-erasure-late-write.test.js` holds a real POST body across the run (red without the second run) |
+| One world that could not load stopped the others from forgetting the account | Medium | `eraseEach` in the gateway and town worlds and landmarks steps. Regressions with a broken first world: town and hosted worlds, hosted landmarks (each red with the old loop). The town's landmark stores are in memory and cannot fail, so that loop has no failure case to test |
+| A failed request left no durable record, and failures did not name the event | Medium | Memory and Redis pending stores, swept on a 30 s timer or the Vercel cron `/api/erasure-sweep`; every failure logs the event id and step names, never the account |
+| Four mutations (after-stage order, drained-ride splice, room ride forget, app ride forget, non-ok room answer) survived | Medium | `account-erasure-pending`, `account-erasure-room` and `cycling-flush` tests; each mutation now fails exactly one test |
+| Another host's screening receipt kept the erased host | Low | Receipts naming the host are dropped; `screenings.test.js` (red before) |
+| A ride `ADD` for a tombstoned account, builds left by an erased owner, event-id dedupe | Low | Recorded: inventory Decision 4 (builds); the second run covers late ride adds |
+
+A second agent reviewed those fixes with no access to this ledger:
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| On Vercel without `CRON_SECRET` nothing sweeps, so no second run and records keep ids | Medium | The backend logs `account_erasure_sweep_unscheduled` at every start; `.env.example` and the inventory say so; regression in `account-erasure.test.js` (red without the log) |
+| The per-world fix had no regression | Medium | Town and hosted tests above (each red with the old sequential loop) |
+| The second pass deleted a newer record another server had written | Low | Compare-and-delete in both stores (Lua on Redis); contract test for both (red with HDEL) |
+| A sweep that could not list the records was silent | Low | Logs `account_erasure_sweep_failed`, with no account |
+| "15-second timeout" and "about a minute" were loose | Low | Docs give about 45 s for a body and up to six minutes on Vercel; a test ties `ERASURE_SETTLE_MS` to each server's request timeout plus Node's check interval (red at 40 s) |
+| A query string skipped the Vercel entry's cron gate | Low | The entry matches the path without its query, for all three crons; regression (red before) |
+| `process.env` restored wholesale; a fixed 50 ms wait after releasing rides | Test | Restored per key; the room tests await every add (the splice mutation still fails) |
+| Sweeps have no backoff or claim across instances | Low | Recorded below |
+
+The same agent then checked those fixes. All held; it found four low items, each fixed:
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| A record that parses but isn't in the written form (keys reordered, a field missing or added) was rerun on every sweep and never dropped | Low | It is treated as a first run, which rewrites it; Redis test with four such records (red before) |
+| The inventory's line references had moved | Low | Updated |
+| The margin test checked `createGameServer`, which doesn't listen in production | Low | It also checks the world router and the hosted world server (red with the router at 60 s) |
+| The landmarks loop had no regression | Low | Hosted test with one world's landmark delete failing (red with the old loop) |
 
 ## Increment B: player blocking
 
@@ -142,6 +179,44 @@ darts and axe throwing. New or remaining:
 The `app.js` join path also had an `await` between reading the old connection and
 registering the new one (added in this increment). The hidden set now loads before
 that block, which stays synchronous.
+
+Lander review (river-oaks-e9, 2026-10-26), each finding fixed or covered red first:
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| Campus guest grants outlasted a block, and a new grant between the two was accepted | Medium | `world.separate` ends grants either way through `campus.separate` and walks the guest out; a grant toward a blocked resident names its sender instead, so the world answers `campus_invalid_guest`. World and hosted tests (red without each half) |
+| The join snapshot's filtering had no test | Medium | A reconnecting socket's first frame hides earlier lines, town and hosted (red with the filter removed) |
+| A block that answered 503 left the contact in both lists and invitable to a group | Low | The settle runs in `finally`; lists already hid it, and the group invite now checks the block; `blocks-api.test.js` (red without the check) |
+| A third party's greeting toward a hidden resident still showed | Low | Hidden from the viewer; `blocks-world.test.js` |
+| `separate` with nothing to end bumped the world revision; removing a block that did not exist bumped versions | Low | Bumped only when something ended or existed, memory and Redis |
+| A group's latest line from a hidden resident was shown | Low | Covered: the list shows none when the latest is theirs (red with the filter removed) |
+| The blocks step belongs in erasure's `after` stage; MGET and rebuild only when needed | Low | Recorded, not changed |
+
+Found while fixing: on the hosted path a block between two residents reached only
+worlds loaded on that gateway, but campus guest access outlasts either of them being
+in the world. Such a block now also reaches the default world, which serves the
+campus, if it is loaded or stored; `blocks-distributed.test.js` (red without it).
+A retry of a campus grant first sent before the block is answered as a conflicting
+operation (`docs/player-blocking.md`).
+
+A second agent reviewed those fixes with no access to this ledger. Every claim held but
+the third-party greeting; mutations of each fix went red except two:
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| A third party's greeting toward a hidden resident still played: a snapshot gives a greeting as the gesture too | Low-medium | The gesture goes with it; the fixture now matches a real snapshot (red before) |
+| A grant checked before a block was stored could land after its separation and keep access, longest on the hosted path | Low | Once a campus grant or Jevica's invitation succeeds, the server checks again and ends it; `blocks-campus-race.test.js`, town and hosted (red before) |
+| The campus walk-out and the lease version bump had no test | Low | `blocks-world.test.js` unit case (red with either removed) |
+| An unblock loaded the stored default world | Low | Reached only for a block; not tested |
+| `updatedAt` could go backwards across gateways; Redis remove left a stale reverse entry | Nit | `Math.max`, as `end` does, tested with a clock a minute behind; remove clears both and bumps if either went. Both red before |
+| Docs: the campus exception to "never told", the grant names its sender, operator offers | Doc | Corrected; operator offers listed as not covered |
+| `campus.separate` also edits an inert campus section | Nit | Kept, as `forget` does: access recorded there must not outlast a block if the campus is served again |
+
+The same agent then checked those fixes: all correct, the race test genuine (red with
+either server's recheck removed, or campus grants dropped from `grantedPeer`). Its nits:
+a failed recheck was silent (now logged as `block_recheck_failed`), the sender's reply
+still shows a grant ended by the recheck (documented), and the `Math.max` clamp had no
+test (added, red with the raw time).
 
 ## Increment C: in-app account deletion
 
@@ -293,9 +368,14 @@ Independent review (2026-10-26):
 
 - The lantern walk's record round keeps lamplighter display names with no account
   id; erasure cannot attribute them. Bounded to one record.
-- A request authorized just before revocation can commit after its store's
-  erase step and leave one record. In-app deletion (C) narrows this by running the
-  erasure again after the provider deletion; the webhook retry does not.
+- A request authorized just before revocation can commit after its store's erase
+  step; the second run a minute later erases it. A store call that stalls longer
+  than that, past every server's request timeout, is not covered.
+- Sweeps have no backoff and no claim across servers: with several long-lived
+  gateways, each runs a due second pass, and a request that keeps failing (a world
+  that cannot load) reruns every 30 s on each, logging each time. Erasure is
+  idempotent, so this costs load and log volume, not correctness. Adding a per-record
+  lease and an attempt count is the follow-up.
 - Bans, the moderation audit and the Redis security audit are kept (Decision 3).
   Deleting an account and signing up again gets a new WorkOS id and so evades a
   ban; a hashed tombstone is a Decision for Val, not implemented.
@@ -309,8 +389,8 @@ Independent review (2026-10-26):
     lands within 15 s of the switch; when the steps after the switch run slowly
     (8.5 s against 5 s in a passing run), it detaches the desk mid-click. The log shows
     the page navigating to its own URL.
-  - The journey's tasks are retired, and the file isn't in #292's scope. A fix: wait for
-    that reload after the switch, or have the journey assert the reload itself.
+  - The journey's tasks are retired, and the file isn't in #292's scope. #686 (main
+    `c6eba6a3`, 2026-10-26) fixed it; every head is now merged with it.
   - The #665 failure, a click inside the Computer frame after the first switch, has no
     diagnosis. Each PR used its one rerun.
 - Hosted `preview checks` failed on #667's first head (`c7bcae1f`) in B's own test,
@@ -322,38 +402,19 @@ Independent review (2026-10-26):
 
 ## Next action
 
-Handoff, 2026-10-26. The stack is merged with `origin/main` (`cb403ba2`), and increment E
-is added on top. There are five signed draft PRs, stacked in order. Nothing is merged.
+Status, 2026-10-26. river-oaks-e9 lands the stack in order (#661, #665, #666, #667,
+#682), each after its own re-review and hosted CI; Val authorized that in e9's session.
+The lander's reviews of #661 and #665 are fixed, each followed by two independent
+reviews, and each increment carries the one below it. C now runs the erasure once and
+relies on its recorded second pass. Each PR goes back to e9 after verify, push and
+hosted CI.
 
-| Increment | PR | Head | Hosted CI |
-| --- | --- | --- | --- |
-| A: erasure | #661 | `21f09534` | 22/22 |
-| B: blocking (server side) | #665 | `dab7a8c7` | 13/15: `office-computer-embed` failed on both attempts (see below) |
-| C: in-app deletion, off | #666 | `ca67c388` | 15/15 |
-| D: reports, contact, map | #667 | `2cc1dbf9` | 15/15 |
-| E: moderators read reports | #682 | this branch | 15/15 on `684bc93d`, after one rerun of a shard cancelled at its 20-minute limit |
-
-Merging main:
-- #640 made crime and police checkpoints strict. `forgetAccount` runs the departure first, so a forgotten account leaves a world that restores.
-- A test covers an account forgotten mid-fight and under pursuit. Replacing the departure with `players.delete` fails it.
-- The inventory row for crime and police says what clears at once and what lapses.
-- Two inventory conflicts (in D and E) were resolved row by row. Every cited line was checked by its text.
-
-Local evidence on the merged heads:
-- `test:server` with an isolated Redis: A 1219, B 1250, C 1263, D 1265, E 1273. All passed, with 0 skipped.
-- Core verify passed on A (`21f09534`, at load 12) and on E (`684bc93d`, at load 14), the top of the stack. B, C and D ran it only through their `test:server` and hosted CI.
-- `pnpm test` (preview unit) on E before the merge: 4120/4121. The one skip predates this work.
-- `verify full` didn't run locally on any merged head, because of the browser lock. Hosted CI ran the browser journeys.
-
-B's places shard failed on both attempts in `office-computer-embed`, after the journey's live account switch. That's the race in "Gaps and decisions". The same journey failed this week on `docs/convergence-3x-20261024`, a docs-only branch, and on a Dependabot bump. #666 and #667 contain B's tree and passed it. B's one rerun is used. A fix belongs to whoever takes the journey.
-
-Hosted runners were slow around 17:54Z. They cancelled B's `campus` and `worlds-and-creator` shards and E's `required` shard at the 20-minute job limit, with every journey before the cut passing. `main`'s run lost a shard the same way. One rerun of failed jobs cleared B's two.
-
-Next:
-1. Val decides on the numbered Decisions in `docs/app-review-292.md`, `docs/account-deletion.md`, `docs/player-blocking.md` and the inventory, and on review and landing order: #661, #665, #666, #667, then #682.
+Still open from the earlier handoffs (the 2026-10-26 one, before the lander's reviews, recorded
+the merged heads and their evidence; see git history):
+1. Val decides on the numbered Decisions in `docs/app-review-292.md`, `docs/account-deletion.md`, `docs/player-blocking.md` and the inventory.
 2. Owners to ask:
    - The owner of `multiplayer-client.js` and `main.js` (`outdoor-residents-admin-controls-20261024`): wire blocking with the four calls in `docs/player-blocking.md`, and add a report reason.
-   - The owner of `access-entry.js` (`touch-network-288-290-20261024`): show the support contact before approval; call `clearAccountStorage` on sign-out; fix or settle the 15 s reload race the browser journey trips on.
+   - The owner of `access-entry.js` (`touch-network-288-290-20261024`): show the support contact before approval; call `clearAccountStorage` on sign-out. (The 15 s reload race the browser journey tripped on was fixed by #686.)
 3. Still blocking 1.2, after the policy Decisions:
    - a content filter;
    - keeping reported content with the report, and keeping reports until a moderator closes them;

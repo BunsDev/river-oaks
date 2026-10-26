@@ -7,18 +7,45 @@ inventory, not a privacy policy or legal advice; the published policy is Val's.
 
 Account deletion starts with the signed WorkOS `user.deleted` webhook
 (`server/workos-deletion.js`), which calls `createAccountErasure`
-(`server/account-erasure.js:10`). It is wired in `server/town.js:159` (standalone)
-and `server/redis-backend.js:96` (hosted). In-app deletion, off unless
+(`server/account-erasure.js:25`). It is wired in `server/town.js:160` (standalone)
+and `server/redis-backend.js:99` (hosted). In-app deletion, off unless
 `RIVER_OAKS_ACCOUNT_DELETION=1`, runs the same erasure after WorkOS deletes the user
 ([in-app account deletion](account-deletion.md)). The order is fixed:
 
-1. The character tombstone (`server/character-store.js:220`). From then on the
+1. The request is recorded under its WorkOS event id (below).
+2. The character tombstone (`server/character-store.js:220`). From then on the
    account cannot sign in or join a world.
-2. Every session is revoked and every socket closed (`server/auth.js:357`,
+3. Every session is revoked and every socket closed (`server/auth.js:357`,
    `server/redis-auth.js:489`).
-3. Every store below, and every world in the catalog, erases the account in
+4. Every store below, and every world in the catalog, erases the account in
    parallel. If any step fails, the webhook answers 503 and WorkOS retries the whole
-   run; repeating a finished run changes nothing.
+   run; repeating a finished run changes nothing. A world that cannot load fails the
+   step only after every other world has forgotten the account
+   (`server/account-erasure.js:84`).
+5. A second, whole run is due a minute after the first finishes
+   (`server/account-erasure.js:20`). A request let in before the sessions ended can
+   still write while the server waits for its body. The request timeout is 15 seconds
+   (`api/server.js:37`), but Node enforces it every 30, so that can last about 45
+   seconds; the second run erases what it wrote. Only then is the record dropped, and
+   only if no newer request for the account replaced it.
+
+The record holds the account id, the WorkOS event id and when the second run is due.
+Hosted, it is one Redis hash (`server/account-erasure.js:113`); a failed or
+interrupted request stays in it, and the sweep (`server/account-erasure.js:64`)
+retries it and runs each due second run: every 30 seconds on a long-lived server
+(`server/redis-backend.js:104`), and every five minutes through the Vercel cron
+`/api/erasure-sweep` (`server/account-erasure.js:130`), so on Vercel the second run
+and the record's removal take up to about six minutes. The cron needs `CRON_SECRET`.
+Without it on Vercel, nothing sweeps: no second run happens, a failed request is
+retried only by WorkOS, and each record keeps its account id. The backend logs
+`account_erasure_sweep_unscheduled` at every start in that case
+(`server/redis-backend.js:107`).
+The standalone town keeps the record in memory, like its other stores
+(`server/town.js:172`), and WorkOS retries a request that a restart interrupted.
+Every failure is logged with the WorkOS event id and the names of the failed steps,
+the tombstone and the revocation included, and never the account
+(`server/account-erasure.js:32`). A sweep that can't read the records logs
+`account_erasure_sweep_failed`.
 
 ## Server stores
 
@@ -28,6 +55,7 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 | Data | Store (memory · Redis) | Retention without deletion | On deletion |
 | --- | --- | --- | --- |
 | Character drafts, revisions, selection | `server/character-store.js:236` · `:255` | Until deleted | Replaced by the tombstone `{deleted:true}`, keyed by a SHA-256 of the id |
+| Erasure request: account id, WorkOS event id, when its second run is due | `server/account-erasure.js:102` · `:113` | A minute after the first run finishes, plus up to 30 seconds (long-lived servers) or five minutes (Vercel cron) until the sweep; a failing request stays until it succeeds. On Vercel without `CRON_SECRET`, indefinitely | The record of the erasure itself; dropped after the second run |
 | Sessions (with the time of sign-in), CSRF tokens, sign-in state | `server/auth.js:73` · `server/redis-auth.js:218` | 7 days (`server/auth.js:13`, `server/redis-auth.js:12`) | Erased |
 | Stored GitHub login | `server/github-names.js:79` · `:91` | Until deleted | Erased (`:87`, `:98`) |
 | Email-code sign-in state | `server/magic-auth.js:88` | 10 minutes (`:6`) | Lapses; never names the account after use |
@@ -106,9 +134,8 @@ There is no analytics or error-reporting service, and no other email sender.
 - The lantern walk's record round keeps lamplighters' display names with no
   account id, so erasure cannot attribute them (`server/lantern-walk.js`). It is
   one bounded record.
-- A write authorized just before revocation can land after its store's erase step
-  and leave one record. In-app deletion narrows this by erasing a second time once
-  the first run finishes.
+- A write let in before revocation is erased by the second run. A store call that
+  stalls for longer than that minute could still leave one record.
 - Campus operators are staff ids configured in the environment, not resident data.
 - Wish thank-you lines name the granting account, and only Jevica's owner accounts
   can grant wishes. Erasing one of them removes the lines with its display name,
@@ -116,9 +143,10 @@ There is no analytics or error-reporting service, and no other email sender.
 - If LiveKit is unreachable when the account is erased, the voice lease still goes
   and the voice sweep removes the participant later (`server/voice.js:363`).
 - The hosted world step loads each world that has a checkpoint; a world that
-  cannot load fails the step, and WorkOS retries the whole run.
+  cannot load fails the step after the others have run, and the run is retried.
 - A world owner that lost its lease can still hold ride metres it has not banked,
-  and sends them when it shuts down. Erasure covers the current owner only.
+  and sends them when it shuts down. Erasure covers the current owner only; the
+  second run erases a total banked within its minute, not one banked later.
 
 ## Decisions for Val
 
@@ -132,3 +160,9 @@ There is no analytics or error-reporting service, and no other email sender.
    survives the reported account's deletion. A new sign-up gets a new WorkOS id,
    so a deleted and banned account can return. Recommended: keep the audit, and
    decide whether to add a hashed ban list keyed by email.
+4. **Builds of an erased account.** Erasure deletes every build the account placed,
+   in every world, unless someone is sitting on it (`server/world.js:595`). For a
+   resident that is their own content. For one of Jevica's owner accounts it would
+   remove furniture other residents use. Recommended: keep deleting residents'
+   builds, and decide whether builds by an owner account are kept, re-owned as
+   `erased-account`.
