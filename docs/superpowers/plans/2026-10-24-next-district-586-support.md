@@ -22,14 +22,16 @@ This session also delivered Val's separate request of 2026-10-24, "let residents
 
 | PR | Head | CI | What it is |
 | --- | --- | --- | --- |
-| #655 | `fea24bed83fa72715f5c86c7e95f85259866e304` | Hosted 22/22, CodeQL included. `verify full` 18/18 on `03381365` (its merge of main `0b9a97c4`). | Residents walk anywhere in town, the Commons included (Val's request). Ledger `2026-10-24-resident-locations.md`. Main has since moved to `e8207b2b` (#658, no overlap; merges cleanly). |
-| #670 | `10594bef696e659b233fa8952acb759656f8b234` | Hosted 15/15 at each of `ff46d99e`, `2143595e`, `a6c1766b` and `10594bef`. Core verify passed at `59617b59`. | Piece B: residents walk on into Bayou Heights. Ledger `2026-10-25-resident-heights.md`. Lands after #649. |
-| #649 (river-oaks-91) | `95904d23fc29f7af502053e001cd9c70736c955b` (product `525856e2`) | Owner's record | The district itself. Its ledger records finish-line items 1–6 complete. Pieces C and D below are this session's evidence on it. |
+| #655 | `2ac33123e17c7322a3830b8599100e03fb370037` | Hosted 22/22 at `2ac33123` after one rerun. `preview experience (campus)` attempt 1 failed a keyboard walk in `garden-campus-suite`, "could not walk to stranger to the T1 lift"; it passed on attempt 2, and the log and artifact are kept. Core verify passed on the first attempt at `f3f8085c`, related suites 196/196. `verify full` 18/18 was on `03381365`, before the review fixes. | Residents walk anywhere in town, the Commons included (Val's request). `f3f8085c` merges #674, river-oaks-71's fixes for an independent review. Ledger `2026-10-24-resident-locations.md`. Main `cb83c7cd` merges cleanly. |
+| #670 | `760d8edaccf3fb04a7efac04096d6ac461bda699` | Hosted 15/15 at `760d8eda`, as at every earlier head. Core verify passed on the first attempt at `84190512`, related suites 200/200. | Piece B: residents walk on into Bayou Heights. `84190512` merges #655 `2ac33123` and carries #674's rollback fixes into `relocateResidents`. Ledger `2026-10-25-resident-heights.md`. Lands after #649. |
+| #649 (river-oaks-91) | `ba942859708cfec355c134c90b713adb9b3ef9e0`, a merge of main `cb83c7cd` (tree `85794d04`) | Owner's record | The district itself. After round 5, its owner's register records item 5 (District budgets) as **not met** on `ba942859`; see Piece D. |
+| #674 (river-oaks-71) | `d5666034`, merged into #655's branch as `f3f8085c` | Hosted, all green | Fixes for the independent review of #655: rollback re-plans residents walking toward removed land, crossings step past placed objects, lantern home stops come back. |
 
 ## Piece A: budget protocol
 
 - D11 ("adopt #626") is recorded only on #643's branch (`docs/superpowers/plans/2026-10-24-mvp-release-readiness.md`). `docs/world-expansion.md` and `docs/acceptance/two-player-perf-20261023.md` on main still call #626 a proposal.
 - Not confirmable here, so both readings are reported for round 4, with limits unamended.
+- **Reconnect is decided on main since #672** (`cb83c7cd`): reconnect is the median of five rejoins per profile, each waiting out the client's random 500–1,000 ms retry delay (`--reconnects=5`, backoff `keep`). `docs/world-expansion.md` records that Val adopted it on 2026-10-25. Round 5 is read under it.
 - **Paired #626 reading** (A1 B1 B2 A2, baseline-compare of the A runs against the B runs): within on every gated metric.
 - **Single matched-pair reading** (A1 against B1 and A2 against B2):
   - frame p95 changes 0.0 to ±0.6 %;
@@ -54,6 +56,17 @@ Method:
 | 2 | `a437cbbf` → `3cd60702` | +0.13 % | Met |
 | 3 | `0b9a97c4` → `0cc09391` | +0.13 % | The first attempt is **invalid**: Mac maintenance sleep hit runs A1 and B1. The rerun was met, at load medians 4.7–5.8. Hashes: g-a1 `bc1ba01e…`, g-b1 `47fd06a1…`, g-b2 `436b2f59…`, g-a2 `75490145…`, compare `a598d488…`. |
 | 4 | `e8207b2b` → `525856e2` | +0.13 % (1732.2 → 1734.4 KiB) | Met, at load medians 4.0–4.3. 0 errors, drift 0, assets 102/102. Hashes: h-a1 `78f9a7ca…`, h-b1 `355f5c0d…`, h-b2 `bcf29189…`, h-a2 `1a0b30fa…`, compare `1edf62d5…`. |
+| 5 | `cb83c7cd` → `d03bb8d6`, a scratch merge of `df794f95` with `cb83c7cd`. Its tree, `85794d04`, is the same as #649's `ba942859`. | +0.13 % (1732.2 → 1734.5 KiB), receipt `compare-bundles-d03bb8d6.txt` `29fea616…` | **Not met.** Phone reconnect was +25.9 % (825.8 → 1,039.9 ms) against a +20 % limit. Every frame and CPU row was within (−3.2 % to 0.0 %); desktop reconnect −9.5 %; drift 0. Settings `keep×5` on both arms; arms started at load 8.9, 6.7, 7.5 and 6.6 with no wait (08:42–09:14Z). Hashes: r5-a1 `f8904c6c…`, r5-b1 `83c0a408…`, r5-b2 `e34a201c…`, r5-a2 `234c44b6…`, compare `3eb02f7c…`. River-oaks-91 checked it independently and agrees. |
+
+**Round 5's phone reconnect, diagnosed (not a gate).**
+- **Per-arm phone medians:** A1 762.9 and A2 888.7 ms, B1 982.3 and B2 1,097.5 ms. The two A arms are the same revision yet differ by 16 %.
+- **Pooled over 10 samples a side:** phone +17.0 % (Mann-Whitney z = 2.19); desktop −9.5 % (z = −0.76).
+- **Same pair, same order, skipping the random retry delay** (`--reconnect-backoff=skip --reconnects=9`, 1 × 5 s samples, 09:46–09:53Z): the rejoin itself did not change.
+  - Rows: phone 239.6 → 235.3 ms (−1.8 %); desktop 310.0 → 314.6 ms (+1.5 %).
+  - Pooled over 18 samples a side: phone −2.3 % (z = −1.01); desktop +1.6 % (z = −0.13).
+  - Hashes: d5-a1 `68f10fcf…`, d5-b1 `19083f80…`, d5-b2 `4a570327…`, d5-a2 `d7c0b174…`, compare `c458eb5a…`.
+- **Reading:** a rejoin takes about 235 ms on phone, and `keep` adds a uniform 500–1,000 ms delay, so about 70 % of each gated sample is random. River-oaks-91 found no #649 change on the rejoin path. No gated rerun was made hoping for a pass; see Decisions for Val.
+- **Main then moved to `cb403ba2`** (#676: `preview/e2e/route-clearance.js`, `preview/e2e/world-streaming.js` and a new unit test; no product code). The product delta keeps patch-id `523d1862`, so round 5 and its diagnostic still describe the same product against the same main product code. On river-oaks-91's request, no new gated round runs unless Val asks.
 
 **`verify full` on #649 at `525856e2`:** run in a clean scratch checkout with an isolated Redis and Python 3.12. It **passed all 18 stages**. The receipt shows `dirty: false` (sha256 `cac380e9…`).
 - agent 274/274; preview 4,180 passed, 1 skipped; server with Redis 1,189/1,189; desktop 120 passed, 3 skipped; Python 170;
@@ -102,19 +115,23 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
 ## Rollback
 
 - **#655:** Commons → Gardens moves residents standing on removed land to clear District ground. Tested in `server/tests/resident-locations-rollback.test.js`.
-- **#670:** `relocateResidents` is extracted, and Commons → Gardens uses it.
-- **Heights → Commons:** player-only on #649. The resident wiring is prepared and rehearsed on a scratch merge (rehearsal 31/31, new tests 4/4) as `heights-rollback-wiring-server.patch` and `resident-heights-rollback.test.js.pending`. It lands on #670 after #649 is on main.
+- **#655 after #674:** residents still on District ground re-plan where they stand when their route enters removed land or they head for a Commons lantern; a lantern home stop gives way to the resident's home stop.
+- **#670:** `relocateResidents` is extracted, and Commons → Gardens uses it. It carries #674's fixes. Its caller names the dropped stops (`gone`), and only corridors the target lacks count as dropped land.
+- **Heights → Commons:** player-only on #649. The resident wiring is prepared as `heights-rollback-wiring-server.patch` (`465a209a…`) and `resident-heights-rollback.test.js.pending` (`d6681aa3…`). It lands on #670 after #649 is on main.
+  - Rehearsed again on scratch `ae7d3150`, which is #649 `ba942859` + #670 `760d8eda` + the patch: 12/12 (`heights-wiring-ae7d3150.log`, `a21f9d81…`).
+  - That run covered the Heights activation rehearsal, the 5 Heights rollback tests and the 6 Commons rollback tests.
+  - The new Heights case re-plans a walk to the bandstand, leaves a walk into the Commons alone, and restores a Heights Hall home stop. It fails if the Heights rollback doesn't name its stops.
 - **To roll back any of these PRs:** revert its merge commit on main. All of them are opt-in by revision and change no default revision's fingerprint.
 
 ## Complete, blocked, not started
 
 - **Complete:**
-  - pieces A, C and D for #649 at `525856e2`;
-  - #655 verified on main `0b9a97c4`;
-  - #670 verified, with its Heights activation fix;
-  - the Heights rollback wiring, rehearsed.
+  - pieces A and C for #649; piece D rounds 1–5, with round 5's reconnect diagnostic;
+  - #655 verified on main `0b9a97c4`, with #674's review fixes verified at `f3f8085c` (core, related suites, hosted);
+  - #670 verified at `84190512`, with its Heights activation fix and #674's fixes carried into `relocateResidents`;
+  - the Heights rollback wiring, rehearsed against #649's current head.
 - **Blocked on Val:**
-  - merging #649;
+  - round 5's phone reconnect (Decision 12), then merging #649;
   - the go to land #655;
   - #670, which waits for #649.
 - **Not started:**
@@ -124,14 +141,14 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
 
 ## Decisions for Val
 
-1. **Merge #649 (Bayou Heights).** *Answered on 2026-10-25 at about 18:50Z: Val will review and merge #649 personally.* Its ledger at `95904d23` records items 1–6 complete. This session's checks agree: rounds 3 and 4 met, `verify full` passed 18/18, reachable ground is 2.0119×, and the adversarial probe found no blocking defects. Merge and landing are not authorized for either session.
+1. **Merge #649 (Bayou Heights).** *Answered on 2026-10-25 at about 18:50Z: Val will review and merge #649 personally.* Since then, round 5 on main `cb83c7cd` is not met on phone reconnect; see Decision 12. Its ledger at `95904d23` records items 1–6 complete. This session's checks agree: rounds 3 and 4 met, `verify full` passed 18/18, reachable ground is 2.0119×, and the adversarial probe found no blocking defects. Merge and landing are not authorized for either session.
 2. **District name and art direction.** "Bayou Heights": a clock-tower hall, a bandstand on a green, an icehouse patio, and the Lantern Footbridge from the Commons (#649). Approve it or rename it.
 3. **Visual approval at pedestrian height.** #649's hosted captures and this session's inspected captures (Heights Green, Nineteenth & Yale, the Heights boulevard) are evidence only. They are not approval.
 4. **Budget protocol.** Is #626's paired protocol (D11 on #643's branch) in force on main? Both readings pass for round 4.
 5. **Streaming ceiling.** Heights keeps the 16 MiB retained-geometry ceiling. At Nineteenth & Yale, nearby neighbourhoods wait for room. Raise the ceiling for this location, or share the oak models (#649's ledger).
 6. **Land beyond the reserve.** Heights reaches 2.01×; 3× needs 139,433.25 m². Open PRs from other sessions claim more ground: #662 Studewood, 2.46×, and #663 Bayou Terraces, 2.82×. Reaching 3× needs land beyond the current reserve or a decision among those lanes.
 7. **No new activity type.** Heights reuses the table-game contract at the icehouse table; this session added none.
-8. **#655:** review residents in the dev town (`http://127.0.0.1:5481/play`, fixture sign-in, Commons revision). Then give the go: merge main, re-verify, and land through `pnpm run land 655` by whoever holds landing authority.
+8. **#655:** review residents in the dev town (`http://127.0.0.1:5481/play`, fixture sign-in, Commons revision). #674's review fixes are merged in, and the dev town has served them since 08:13Z on 2026-10-26. Then give the go: merge main, rerun `verify full` (it last ran before the review fixes), and land through `pnpm run land 655` by whoever holds landing authority.
 9. **Server cost of wandering residents.** p99 per step:
    - #655 on the Commons: 8.5 → 25 ms.
    - #670 on Heights after warm-up: 3.8–5.1 → 12.7–13.7 ms.
@@ -141,13 +158,20 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
 10. **The `land-pr` queued-lander test.** It times out in about half of the concurrent runs here and passes alone or serially. Does it get an owner?
 11. **Nine detached scratch checkouts** of this session's. They are kept. Removing them needs `pnpm run project:prune --cancel-stale`, which needs maintainer authorization.
 
+12. **Round 5's phone reconnect.** Under the adopted `keep×5` reading, phone reconnect is +25.9 % against +20 %. The skip-delay diagnostic shows the rejoin itself unchanged (−1.8 % phone, +1.5 % desktop). Choose one:
+    - accept #649's budgets on the diagnostic;
+    - rerun round 5 under the same protocol;
+    - change how reconnect is gated, for example to skip mode or more rejoins per arm.
+    Neither session has rerun it.
+
 ## Next-session prompt
 
 > Continue `next-district-586-support-20261024` as its owner. Read `pnpm run --silent register show next-district-586-support-20261024`, this ledger, and the ledgers of #655 and #670.
+> - If Val decides Decision 12 or river-oaks-91 asks: run what was decided, under the browser lock with `caffeinate`, and send the receipt hashes.
 > - When #649 is on main:
 >   1. Merge main into `feat/resident-heights-20261025` (no rebase, no force-push).
->   2. Apply the Heights rollback wiring: the scratchpad patch, or rebuild it from #670's ledger.
->   3. Add `server/tests/resident-heights-rollback.test.js`.
+>   2. Apply the Heights rollback wiring: the scratchpad patch (`465a209a…`), or rebuild it from #670's ledger. It names the Heights stops as `gone` and returns `reroutedResidents`.
+>   3. Add `server/tests/resident-heights-rollback.test.js` (pending file `d6681aa3…`, 5 tests).
 >   4. Run it and the Heights activation rehearsal with an isolated Redis.
 >   5. Run `verify full`, then mark #670 ready.
 > - On Val's go for #655: merge current main, rerun its related suites and `verify full`, and hand it to an authorized lander.

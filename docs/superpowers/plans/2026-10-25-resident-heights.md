@@ -112,7 +112,11 @@ Rehearsed on the same scratch merge, kept as a patch in the session scratchpad:
   - Players are placed first, so residents keep 0.9 m from the players' new spots, the same order as the Commons → Gardens rollback.
   - Then `relocateResidents` runs with `inside` = the Heights bounds and `toward` = the Commons-side end of the footbridge deck (east −2551.34, north −1335).
   - The result gains `movedResidents`. The forward path returns an empty list, and the chained rollback to Gardens merges both lists.
-- After the #674 merge, the patch also passes `gone` for Heights stops (ids starting `bayou-heights/`), returns `reroutedResidents`, and merges both lists in the chained rollback. These additions pass a syntax check only; they are rehearsed when the patch is applied after #649.
+- After the #674 merge, the patch also does three things: it passes `gone` for Heights stops (ids starting `bayou-heights/`), returns `reroutedResidents`, and merges both lists in the chained rollback.
+- **Rehearsed again** on scratch `ae7d3150` (#649 `ba942859` + this branch `760d8eda` + the patch, never pushed), with an isolated Redis: 12/12.
+  - That covers the Heights activation rehearsal, the 5 Heights rollback tests and the 6 Commons rollback tests.
+  - The added Heights case re-plans a walk from Commons ground to the bandstand. It leaves a walk through the District–Commons corridor alone, restores a Heights Hall home stop, and chained to Gardens re-plans both walks.
+  - Without `gone` in the Heights rollback it fails: the hall home stop survives.
 - `server/redis-room.js`: the `district_heights_checkpoint_migrated` log line gains a `movedResidents` count.
 - `server/tests/resident-heights-rollback.test.js` (new), 4/4 passing:
   - Heights → Commons moves a resident on Heights Green and one at the footbridge landing to Commons ground the planner reaches.
