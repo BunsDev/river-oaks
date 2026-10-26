@@ -643,6 +643,62 @@ Both passed on `rerun-failed-jobs`. The first-attempt logs are kept in `.runtime
 
 The journey (`preview/e2e/crime-shared.js:78–90`, from #646/#640) reads the counter's `remainingMs` from a town snapshot sent every 200 ms. It accepts 80–330 ms, presses U, and needs the press inside a 350 ms window, with three attempts. On a slow hosted runner, snapshot age plus input latency can miss all three. A fix belongs to the #640 owner: for example, time the press from a fresher signal, or widen the attempts.
 
+## Both harness rows fixed, then a rerun on main (Val's decision, about 22:20Z)
+
+**The decision.** Val gave this in river-oaks-33's session at about 22:20Z: "Fix both harness rows, rerun". 33 relayed it here and asked for the final go/no-go. 33 reads it as covering both of the following, then a rerun of the Commons go/no-go on current main:
+- the world-streaming journey fix;
+- adopting #672's five-rejoin reconnect read.
+
+Landing the two harness PRs through the land queue and guard, once their checks pass, falls under it and under this task's overnight authorization. Conditions 4 (Val) and 5 (operator) still gate activation, and activation stays off. The final go/no-go for `0b9a97c4` (no-go as written) was sent to 33 at about 22:15Z, before this decision.
+
+**Coordination.** The journey belongs to `world-streaming-582-583`, owned by codex:world-streaming-delivery-20261023, whose lease expired 2026-10-24T17:15Z. A note is recorded there as `coordination20261025`; that task is otherwise unclaimed and unchanged, and its worktree has no edit to the journey.
+
+**#675: world-streaming probes on a third client** (task `world-streaming-probe-client-20261025`, head `811669c3`).
+- **The mechanism, refined from `diag-0b9a97c4`'s receipts.** Around the probes, client 0 deleted 243 of the 251 GL textures it had registered before the first one. Client 1, which never lost its context, kept 171 of 212.
+  - On restore, three.js builds a new `WebGLInfo` and counts each resource again on its next draw. So avatars that weren't redrawn during the warm-ups registered later.
+  - The failing +13 is that +9 step plus a +4 swing that both clients show.
+  - Moving only the active-presentation probe wouldn't have been enough: the pending-load probe resets client 0 before the warm-ups as well.
+- **The change.** A third fixture client, `bob`, goes first and alone. It takes:
+  - the failed import;
+  - both context losses;
+  - one eviction/reload/re-cross cycle after the restore.
+
+  It leaves before the bounded clients connect. The socket reconnect stays on client 0 at lap 0, because it leaves the renderer alone. GPU counts after a restore are no longer bounded; that's the stated trade-off.
+- **Independent review.**
+  - HIGH: the bounded clients' one-hour fixture sessions could expire around lap 22 if all three clients connected at the start. Addressed.
+  - MEDIUM and LOW coverage findings: addressed, or stated in the PR.
+- **Checks.**
+  - Core: attempt 1 hit the `land-pr` flake (log kept); attempt 2 passed.
+  - Hosted: 22/22, after one `rerun-failed-jobs` of `preview experience (campus-traversal)`, a "phone back on the street" failure in a journey this change doesn't load. It passed on main and #672. The log is kept.
+- **A void run (this task's slip).** The first version's main run was voided at measured trip 3. I edited the journey in the run's own worktree, which breaks its end-of-run source-hash check, so I stopped the run. In the trips it completed, client 0 showed zero growth over its baseline.
+  - Since then, runs go from detached snapshots: `ws-main-e8207b2b` and `ws-rc-0b9a97c4`, both registered as evidence tasks and both carrying the file at sha256 `d274e2a4049976eb`.
+- **Journey on main `e8207b2b`: passed**, 22:42–23:45Z, 290 checks in 3,766.7 s, with no resource violations.
+  - Against the lap-2 baseline, client 0's largest change was +0 geometries / +0 textures, loaded and evicted, on all 20 trips. Client 1's was +0 / −4 loaded.
+  - Heap ratios 1.009 / 1.005. Client 0's reconnect took 1,218 ms with zero drift. Source hashes were unchanged.
+  - Receipts: checkpoint `08c341adac7b5f61`, report `61a8282c153b74f2`, in `ws-main-e8207b2b`.
+  - The release-candidate snapshot run started at 23:45Z as a second sample.
+- **Landed** as `cb83c7cd` at 00:00:58Z through the wrapper and the merge guard.
+  - The lander updated the branch onto main `d23fc556`, giving `fa26b3eb`, and all 22 checks passed on the first attempt.
+  - Task marked delivered. The branch and worktree were retired with `project:prune --apply`: manifest `~/worktree-backups/river-oaks/retirement-SatxyJ/manifest.json`, with evidence first copied to `~/worktree-backups/river-oaks/evidence/world-streaming-probe-client-20261025-811669c3/`.
+  - The coordination note on `world-streaming-582-583` now records the merge.
+
+**Rerun on main `cb83c7cd`, which carries both fixes.**
+- `scratchpad/rc-run.sh` started at 00:01Z on a clean detached checkout, `rc-cb83c7cd` (registered as an evidence task), with an isolated Redis and `caffeinate`.
+- It runs: rehearsals; world-gate-587, world-streaming and east-garden-commons; a Gardens/Commons ABBA at the new default of 5 rejoins; pixel parity; then verify full.
+- The Commons rehearsal passed at 00:02Z.
+
+**#672: the five-rejoin read adopted** (head `69afb992`).
+- Reconnects default to 5, with the backoff kept.
+- `reconnectSummary()` is unit-tested: a single sample is kept unrounded; several give a true median; drift is checked per rejoin and cumulatively.
+- Skip-mode nudges stop after 2 s.
+- The compare reads each profile's rejoin settings from its samples and marks a mismatched reconnect row `unmatched`.
+- `docs/world-expansion.md` states the read.
+- **Independent review:** no HIGH. The MEDIUM (an untested summary) and six LOWs are addressed.
+- **Checks:** focused 15/15; core passed in one run. Hosted 22/22 after one `rerun-failed-jobs` of `preview experience (places)`, the known `office-computer-embed` account-switch race. The log is kept.
+- **Landed** as `d23fc556` at 23:40:05Z through the wrapper and the merge guard: reviewed head `69afb992`, 22/22 complete.
+  - The ready mark waited for a GraphQL limit reset (23:39Z).
+  - Task marked delivered. The local branch and worktree were retired with `project:prune --apply`: manifest `~/worktree-backups/river-oaks/retirement-vr2WNV/manifest.json`, with evidence copied first to `~/worktree-backups/river-oaks/evidence/reconnect-measure-20261025-69afb992/`.
+
 ## Handoff (about 18:15Z)
 
 **Delivered by this task:**
