@@ -22,9 +22,9 @@ This session also delivered Val's separate request of 2026-10-24, "let residents
 
 | PR | Head | CI | What it is |
 | --- | --- | --- | --- |
-| #655 | `2ac33123e17c7322a3830b8599100e03fb370037` | Hosted 22/22 at `2ac33123` after one rerun. `preview experience (campus)` attempt 1 failed a keyboard walk in `garden-campus-suite`, "could not walk to stranger to the T1 lift"; it passed on attempt 2, and the log and artifact are kept. Core verify passed on the first attempt at `f3f8085c`, related suites 196/196. `verify full` 18/18 was on `03381365`, before the review fixes. | Residents walk anywhere in town, the Commons included (Val's request). `f3f8085c` merges #674, river-oaks-71's fixes for an independent review. Ledger `2026-10-24-resident-locations.md`. Main `cb83c7cd` merges cleanly. |
-| #670 | `760d8edaccf3fb04a7efac04096d6ac461bda699` | Hosted 15/15 at `760d8eda`, as at every earlier head. Core verify passed on the first attempt at `84190512`, related suites 200/200. | Piece B: residents walk on into Bayou Heights. `84190512` merges #655 `2ac33123` and carries #674's rollback fixes into `relocateResidents`. Ledger `2026-10-25-resident-heights.md`. Lands after #649. |
-| #649 (river-oaks-91) | `ba942859708cfec355c134c90b713adb9b3ef9e0`, a merge of main `cb83c7cd` (tree `85794d04`) | Owner's record | The district itself. After round 5, its owner's register records item 5 (District budgets) as **not met** on `ba942859`; see Piece D. |
+| #655 | `462928015e58b2aaf37da311767ec18d02613dee`, a merge of main `cb403ba2` | Hosted 22/22 at `46292801` on the first attempt; `verify full` there did not pass in six attempts (see "Complete, blocked, not started"). Hosted 22/22 at `2ac33123` after one rerun. `preview experience (campus)` attempt 1 failed a keyboard walk in `garden-campus-suite`, "could not walk to stranger to the T1 lift"; it passed on attempt 2, and the log and artifact are kept. Core verify passed on the first attempt at `f3f8085c`, related suites 196/196. `verify full` 18/18 was on `03381365`, before the review fixes. | Residents walk anywhere in town, the Commons included (Val's request). `f3f8085c` merges #674, river-oaks-71's fixes for an independent review. Ledger `2026-10-24-resident-locations.md`. Main `cb83c7cd` merges cleanly. |
+| #670 | `e5481b0ffad603ab57a457914208d7ecf42f26ab` (ledger only since `84190512`) | Hosted 15/15 at `e5481b0f` after one rerun: in attempt 1, `preview experience (commons)` lost the second player's town updates on a CPU-rendered runner ("The town went quiet"); log `e7648e1e…`, report `903b970f…`. Hosted 15/15 at `760d8eda`, as at every earlier head. Core verify passed on the first attempt at `84190512`, related suites 200/200. | Piece B: residents walk on into Bayou Heights. `84190512` merges #655 `2ac33123` and carries #674's rollback fixes into `relocateResidents`. Ledger `2026-10-25-resident-heights.md`. Lands after #649. |
+| #649 (river-oaks-91) | `1c51fa3921388c1dfc074812cb8476894a33f247`; round 5 measured `ba942859708cfec355c134c90b713adb9b3ef9e0`, a merge of main `cb83c7cd` (tree `85794d04`), and the product patch is unchanged since, per its owner | Owner's record: at `1c51fa39`, 25 checks passed and 5 installer or signing jobs were skipped | The district itself. After round 5, its owner's register records item 5 (District budgets) as **not met** on `ba942859`; see Piece D. |
 | #674 (river-oaks-71) | `d5666034`, merged into #655's branch as `f3f8085c` | Hosted, all green | Fixes for the independent review of #655: rollback re-plans residents walking toward removed land, crossings step past placed objects, lantern home stops come back. |
 
 ## Piece A: budget protocol
@@ -112,7 +112,7 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
   | Keyboard only: Tab, then the arrow keys and W/Shift | 3/3. Tab reaches the 3D view in 18 presses. The walk goes from District arrival over the footbridge into Heights, 281 m in 57 s; capture inspected. | run4 `75af5a2d…` |
   | The server changes revision under an open page (2026-10-26, at #649 `9432e090`; script `tools/heights-revision-walk.mjs`) | Commons → Heights → Commons, restarting the loopback town on the same web port, from fresh fixture state each time. **R**, 9/9: the page reloads once into each revision and stays for 20 s; Heights Green is ready after the switch; after the rollback no Heights geometry is resident and the player is west of the footbridge; no page errors. R's reloads came from Vite's dev-server restart (the fence's key stayed null). **V**, 12/12: with Vite's dev client stubbed (env import kept, styles applied, hot updates ignored), `districtChanged` itself reloads exactly once into each revision, its key naming `bayou-heights-1` then `east-garden-commons-market-1`, in 5.3 s and 14.1 s; captures inspected. | R+F `8a602fb4…`, V `da998341…` |
   | Five District ↔ Heights loops on foot (keyboard: Market Street, the footbridge, the Heights Green entrance) | 5/5. Legs 59–66 s; Heights ready 25–31 ms after each arrival and released 14–41 ms after reaching home; 0 stream failures; geometries at home 689 after loop 1, then 693 four times; no reloads or page errors. | R+F `8a602fb4…` |
-  | Not run | a client build older than the server's revision (the fence's second-visit path, `ws.close(4000)`), which needs two client builds | — |
+  | A page behind the town (2026-10-26, at #649 `1c51fa39`; the same script with cases O and U, `57a13be9…`) | The town stays at Heights, and every page load's `/api/world-data` answer is rewritten to an older revision. **O**, 7/7, answer `east-garden-commons-market-1`: the fence reloads exactly once; the next load's town socket closes 4000 "District revision changed"; the key names `bayou-heights-1`; the terminal "River Oaks has been improved" notice shows after 11.5 s; for 30 s after it there is no reload and no new town socket; its Refresh button loads once and closes 4000 again, with no loop; with the real answer the page joins Heights in 3.5 s with graphics `ok`; no page errors. **U**, 4/4, answer `bayou-heights-2`, as a client build from before the next revision would see: "Preview unavailable: This district revision is not supported by this client" in the loading panel, no reload in 30 s, no town socket after the error, no page errors. Observed, not asserted: that page still joined the town (`connected: true`, one socket) with chat enabled. The check and the fence's `loadedDistrict !== undefined` guard date from #507, so this is not new in #649 (Decision 13). Captures inspected. | `52fbc3d0…` |
 
 ## Rollback
 
@@ -131,13 +131,18 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
   - pieces A and C for #649; piece D rounds 1–5, with round 5's reconnect diagnostic;
   - #655 verified on main `0b9a97c4`, with #674's review fixes verified at `f3f8085c` (core, related suites, hosted);
   - #670 verified at `84190512`, with its Heights activation fix and #674's fixes carried into `relocateResidents`;
-  - the Heights rollback wiring, rehearsed against #649's current head.
-- **Blocked on Val:**
-  - round 5's phone reconnect (Decision 12), then merging #649;
-  - the go to land #655;
-  - #670, which waits for #649.
+  - the Heights rollback wiring, rehearsed against #649's current head;
+  - #649's revision checks: a revision switch under an open page (R, V), five loops on foot (F), and a page behind the town (O, U).
+- **Handed over:** on 2026-10-26 at about 20:20Z, river-oaks-71 relayed through river-oaks-a3 that Val gave #655 its go and chose to rerun the gated ABBA for #649 (Decision 12). This session hasn't confirmed either with Val. river-oaks-71 lands #655 with its lander, then merges main into #649 and runs round 6 with this ledger's round-5 protocol. This session stopped its checks on #655 and doesn't push its branch.
+- **#655 `verify full` at `46292801`** (main `cb403ba2` merged; hosted 22/22) did not pass in six attempts. None of the failures point at #655:
+  - Attempts 1, 2 and 6: the experience stage was SIGKILLed at its 1,200 s limit while load rose. Every journey that finished passed, the first 16 at +12–27 % over the quiet run. Attempt 6 reached the last step of `east-garden-commons`, after all 15 earlier stages passed.
+  - Attempts 3–5: `agent-tests` 273/274, the `land-pr` wake test (Decision 10). The file alone passes 29/29, and the suite run serially passes 274/274.
+  - A quiet pass needs about 1,082 of the 1,200 s.
+  - Logs, receipts and journey reports are in the scratchpad, as `verify-full-655-46292801-attempt{1..6}`.
+- **Blocked:**
+  - #649 waits for round 6 and Val's merge;
+  - #670 waits for #655 (merge main into it) and #649 (the Heights wiring).
 - **Not started:**
-  - a client build older than the server's revision (the revision checks above use one build);
   - land for 3× (see Decisions).
 
 ## Decisions for Val
@@ -163,18 +168,20 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
     - accept #649's budgets on the diagnostic;
     - rerun round 5 under the same protocol;
     - change how reconnect is gated, for example to skip mode or more rejoins per arm.
-    Neither session has rerun it.
+    Neither session has rerun it. *Relayed on 2026-10-26 by river-oaks-71: Val chose a rerun, round 6, on the main #649 lands on. river-oaks-71 runs it.*
+
+13. **A page that can't draw its district still joins the town.** When `/api/world-data` names a revision the client doesn't know (case U), the page shows "Preview unavailable" but connects as a player, with chat enabled. The fence's check is skipped because no revision was loaded. This dates from #507, so #649 doesn't make it worse. It would matter if a stale client build ever loaded against a newer server. Should it be followed up, for example by not opening the town socket until the world has loaded?
 
 ## Next-session prompt
 
 > Continue `next-district-586-support-20261024` as its owner. Read `pnpm run --silent register show next-district-586-support-20261024`, this ledger, and the ledgers of #655 and #670.
-> - If Val decides Decision 12 or river-oaks-91 asks: run what was decided, under the browser lock with `caffeinate`, and send the receipt hashes.
+> - Round 6 for #649 is river-oaks-71's, per its relay. Send the protocol or receipts if it asks.
+> - When #655 is on main: #670 retargets to main. Merge main into `feat/resident-heights-20261025`, rerun its related suites and core, push, and wait for hosted checks.
 > - When #649 is on main:
 >   1. Merge main into `feat/resident-heights-20261025` (no rebase, no force-push).
 >   2. Apply the Heights rollback wiring: the scratchpad patch (`465a209a…`), or rebuild it from #670's ledger. It names the Heights stops as `gone` and returns `reroutedResidents`.
 >   3. Add `server/tests/resident-heights-rollback.test.js` (pending file `d6681aa3…`, 5 tests).
 >   4. Run it and the Heights activation rehearsal with an isolated Redis.
 >   5. Run `verify full`, then mark #670 ready.
-> - On Val's go for #655: merge current main, rerun its related suites and `verify full`, and hand it to an authorized lander.
 >
 > Never merge, land or deploy. Sign every commit. Use REST and `pnpm run pr:wait`.
