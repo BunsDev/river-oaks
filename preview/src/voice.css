@@ -19,6 +19,9 @@
 .game-hud .multiplayer-voice button[aria-disabled=true] { opacity: .6; }
 .game-hud .multiplayer-voice .voice-unlock { background: var(--accent-soft, var(--hud-tile)); color: var(--accent, inherit); }
 .game-hud .multiplayer-voice .voice-dock-status { flex: 1 0 100%; margin: 0; font-size: 11px; color: var(--muted); }
+/* Push to talk holds a mic button: the browser must not take the finger for a pan,
+   which would cancel the press and cut the speaker off. */
+:root[data-theme] #walking-hud #walking-voice-mic, .game-hud .multiplayer-voice .voice-mic { touch-action: none; user-select: none; }
 .game-hud .chat-voice { font-size: 11px; color: var(--hud-action); }
 .game-hud .chat-voice:empty { display: none; }
 .game-hud #control-panel .multiplayer-person .voice-roster-mute[aria-pressed=true] { background: var(--hud-action); color: var(--hud-on-action); }

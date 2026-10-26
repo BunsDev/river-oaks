@@ -80,11 +80,13 @@ function suiteFitout(suite, levelId) {
 
 // Public ground rooms: the furniture programme for each hall and the café, in campus metres.
 // Every piece keeps a 3 m clear route from the door to the core lobby (along the door's
-// axis) and stays out of the lobby; chairs are seat sites, not collision.
+// axis) and stays out of the lobby; chairs are seat sites, not collision. Seat titles name
+// the furniture: every public seat opens the sitter's own private desk and nothing shared,
+// so none promises a review, demo or presentation (#510).
 const HALL_PROGRAMME = {
-  T1: { title: 'Shared work lounge', tables: [[21.5, 62.4], [19, 66.5]], bench: null, reception: [22.6, 52.3] },
-  T2: { title: 'Collaboration and project review', tables: [[18.5, 94.5], [18.5, 111.5]], bench: [19, 99] },
-  T3: { title: 'Atelier workbenches', tables: [[18.5, 131.5], [18.5, 146.5]], bench: [14.6, 146.8] },
+  T1: { tableTitle: 'Shared work lounge table', tables: [[21.5, 62.4], [19, 66.5]], bench: null, reception: [22.6, 52.3] },
+  T2: { tableTitle: 'Shared project table', benchTitle: 'Shared project workbench', tables: [[18.5, 94.5], [18.5, 111.5]], bench: [19, 99] },
+  T3: { tableTitle: 'Atelier work table', benchTitle: 'Atelier workbench', tables: [[18.5, 131.5], [18.5, 146.5]], bench: [14.6, 146.8] },
 };
 const WORK_TABLE = { du: 3.2, dv: 1.6, height: 0.74 }, WORKBENCH = { du: 4, dv: 0.9, height: 0.9 };
 function hallFitout(tower) {
@@ -95,7 +97,7 @@ function hallFitout(tower) {
     // Two chairs on each long side, facing the table.
     for (const [side, offset] of [[-1, -0.8], [-1, 0.8], [1, -0.8], [1, 0.8]]) {
       const seatId = `${id}-chair-${seats.filter(seat => seat.table === id).length + 1}`, position = [round(u + offset), round(v + side * (WORK_TABLE.dv / 2 + 0.45))];
-      seats.push({ id: seatId, table: id, kind: 'chair', title: `${plan.title} table`, position, facing: [0, -side], height: SEAT_HEIGHT,
+      seats.push({ id: seatId, table: id, kind: 'chair', title: plan.tableTitle, position, facing: [0, -side], height: SEAT_HEIGHT,
         approach: [position[0], round(position[1] + side * 0.9)], workstation: seatId });
     }
   });
@@ -105,7 +107,7 @@ function hallFitout(tower) {
     obstacles.push({ id, kind: 'workbench', rect: box(u, v, WORKBENCH.du, WORKBENCH.dv), height: WORKBENCH.height });
     for (const offset of [-1.2, 0, 1.2]) {
       const position = [round(u + offset), round(v - WORKBENCH.dv / 2 - 0.45)], seatId = `${id}-stool-${seats.filter(seat => seat.table === id).length + 1}`;
-      seats.push({ id: seatId, table: id, kind: 'stool', title: plan.title, position, facing: [0, 1], height: 0.65, approach: [position[0], round(position[1] - 0.9)], workstation: seatId });
+      seats.push({ id: seatId, table: id, kind: 'stool', title: plan.benchTitle, position, facing: [0, 1], height: 0.65, approach: [position[0], round(position[1] - 0.9)], workstation: seatId });
     }
   }
   return { roomId: hall.id, obstacles, seats };

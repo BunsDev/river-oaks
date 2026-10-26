@@ -15,6 +15,11 @@ async page => {
   const { createResidentNavigation } = await import('../src/navigation.js');
   const world = await loadDistrictData({ districtRevision: 'east-garden-commons-market-1' });
   const nav = createResidentNavigation(world, { allowRoads: true }), edge = world.eastGardenCommons.edge;
+  const { createWalkingEnvironment } = await import('../src/walking.js');
+  const { clearRouter } = await import('./route-clearance.js');
+  // Resident routes can pass a corner closer than a walking player fits, and a walker
+  // pressed into one stalls: detour legs to keep 0.3 m where they can (route-clearance.js).
+  const clearRoute = clearRouter(createWalkingEnvironment(world), nav);
   const { mkdir, writeFile } = await import('node:fs/promises');
   const checkpointPath = `.runtime/world-streaming/journey-${new Date().toISOString().replaceAll(':', '-')}.json`;
   await mkdir('.runtime/world-streaming', { recursive: true });
@@ -26,12 +31,20 @@ async page => {
   const peerContext = await page.context().browser().newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
   await peerContext.addCookies([{ name: 'fixture_session', value: 'alice', url: origin }]);
   const peer = await peerContext.newPage();
+  // A context restore makes three.js forget every GPU resource it registered and
+  // count each again on its next draw, so the two bounded clients never lose
+  // their context. A third client takes the load-failure and context-loss probes
+  // and leaves before either bounded client connects.
+  const probeContext = await page.context().browser().newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
+  await probeContext.addCookies([{ name: 'fixture_session', value: 'bob', url: origin }]);
+  const probe = await probeContext.newPage();
+  let probeOpen = true;
   const tabs = [page, peer];
   const self = tab => tab.evaluate(() => { const town = window.__riverMultiplayer(); return town.snapshot.players.find(p => p.id === town.selfId); });
   const point = tab => tab.evaluate(() => window.__riverCarriage().pose);
   let failLoads = true, failedRequests = 0, deferModule = true, pendingModuleRequested;
   const moduleRequested = new Promise(resolve => { pendingModuleRequested = resolve; }), pendingModules = [];
-  await page.route('**/src/east-garden-commons.js*', route => {
+  await probe.route('**/src/east-garden-commons.js*', route => {
     if (failLoads) { failedRequests++; return route.abort('failed'); }
     if (deferModule) return new Promise(resolve => {
       pendingModules.push(async () => { await route.continue(); resolve(); }); pendingModuleRequested();
@@ -172,29 +185,59 @@ async page => {
     await checkpoint();
   };
   try {
-    await Promise.all(tabs.map(ready));
-    const initial = await mutuallyVisible(); await measure('District arrival baseline');
-    await page.screenshot({ path: 'output/playwright/world-streaming-district-baseline.png' });
+    // The probe client goes first and alone: a fixture session lasts an hour from its
+    // handshake, and the bounded clients need nearly all of it for their trips.
+    await ready(probe);
     const gates = [[edge - 2, -1335], [edge - 2, -1336]];
     const approach = [[-2685, -1334], [-2685, -1335]];
-    const paths = initial.map((player, i) => nav.route(player.position.slice(0, 2), approach[i]));
-    check(paths.every(path => path?.length), 'Both original arrivals have collision-valid paths to the promenade');
-    await Promise.all(tabs.map((tab, i) => walk(tab, [...paths[i], gates[i]], `Player ${i} reaches gateway`)));
-    await page.locator('#canvas-host').focus(); await page.keyboard.down('ShiftLeft'); await page.keyboard.down('KeyW'); await page.waitForTimeout(1500); await page.keyboard.up('KeyW'); await page.keyboard.up('ShiftLeft');
-    check(failedRequests > 0 && (await self(page)).position[0] < edge, 'Failed module load keeps player safely in District');
-    await page.screenshot({ path: 'output/playwright/world-streaming-load-recovery.png' });
+    const far = [-2786, -1370];
+    const commonsGroups = state => state.inventory.district.filter(item => item.name === 'East Garden Commons').length;
+    const probePath = clearRoute((await self(probe)).position.slice(0, 2), approach[0]);
+    check(Boolean(probePath?.length), 'The probe client has a collision-valid path to the promenade');
+    await walk(probe, [...probePath, gates[0]], 'Probe client reaches gateway');
+    await probe.locator('#canvas-host').focus(); await probe.keyboard.down('ShiftLeft'); await probe.keyboard.down('KeyW'); await probe.waitForTimeout(1500); await probe.keyboard.up('KeyW'); await probe.keyboard.up('ShiftLeft');
+    check(failedRequests > 0 && (await self(probe)).position[0] < edge, 'Failed module load keeps player safely in District');
+    await probe.screenshot({ path: 'output/playwright/world-streaming-load-recovery.png' });
     failLoads = false;
     let pendingTimer;
     try { await Promise.race([moduleRequested, new Promise((_, reject) => { pendingTimer = setTimeout(() => reject(new Error('Commons retry never reached the pending module response')), 45000); })]); }
     finally { clearTimeout(pendingTimer); }
-    check((await page.evaluate(() => window.__riverSpatialStream())).pending === 1, 'Commons import is pending before the graphics-loss probe');
-    await recoverGraphics(page, 'Pending Commons load', async () => {
+    check((await probe.evaluate(() => window.__riverSpatialStream())).pending === 1, 'Commons import is pending before the graphics-loss probe');
+    await recoverGraphics(probe, 'Pending Commons load', async () => {
       deferModule = false; await Promise.all(pendingModules.splice(0).map(release => release()));
     });
-    await page.waitForFunction(() => window.__riverSpatialStream().chunks[0].state === 'ready', null, { timeout: 45000 });
+    await probe.waitForFunction(() => window.__riverSpatialStream().chunks[0].state === 'ready', null, { timeout: 45000 });
     check(true, 'Failed asset recovers automatically without reloading');
+    await walk(probe, [[edge + 80, -1335]], 'Probe client reaches the Commons plaza');
+    check((await probe.evaluate(() => window.__riverSpatialStream())).residentBytes > 0, 'Commons presentation is resident before the active graphics-loss probe');
+    await recoverGraphics(probe, 'Active Commons presentation');
+    // Streaming still works after a restore. Its GPU counts are not bounded: a
+    // restored client registers resources again whenever it next draws them.
+    await walk(probe, [[edge - 8, -1335], approach[0]], 'Probe client returns after the restore');
+    await walk(probe, clearRoute((await self(probe)).position.slice(0, 2), far), 'Probe client walks away from the Commons');
+    await probe.waitForFunction(() => window.__riverSpatialStream().residentBytes === 0);
+    const probeEvicted = await probe.evaluate(() => window.__riverSpatialStream());
+    check(probeEvicted.pending === 0 && probeEvicted.chunks[0].state === 'absent' && commonsGroups(probeEvicted) === 0, 'After a restore the Commons evicts with no pending loads or groups');
+    await walk(probe, [...clearRoute((await self(probe)).position.slice(0, 2), approach[0]), gates[0]], 'Probe client returns to the gateway');
+    await probe.waitForFunction(() => window.__riverSpatialStream().chunks[0].state === 'ready', null, { timeout: 45000 });
+    await walk(probe, [[edge + 80, -1335]], 'Probe client crosses again after the restore');
+    const probeReloaded = await probe.evaluate(() => window.__riverSpatialStream()), probeCrossings = await probe.evaluate(() => window.__streamProbe.crossings);
+    check(probeReloaded.residentBytes > 0 && commonsGroups(probeReloaded) === 1 && probeCrossings.length >= 3
+      && probeCrossings.every(row => row.directionDot > .9 && row.cameraStep < row.playerStep + 1.5), 'After a restore the Commons reloads as one group and every crossing keeps camera direction and continuous position');
+    const probeId = (await self(probe)).id;
+    await probe.goto('about:blank'); await probeContext.close(); probeOpen = false;
+    await Promise.all(tabs.map(ready));
+    // The server keeps a departed player for its 30 s grace before removing it.
+    await Promise.all(tabs.map(tab => tab.waitForFunction(id => !window.__riverMultiplayer().snapshot.players.some(p => p.id === id)
+      && !window.__riverMultiplayer().remotes.some(p => p.id === id), probeId, { timeout: 120000 })));
+    check(true, 'The probe client has left before the bounded clients fix any baseline');
+    const initial = await mutuallyVisible(); await measure('District arrival baseline');
+    await page.screenshot({ path: 'output/playwright/world-streaming-district-baseline.png' });
+    const paths = initial.map((player, i) => clearRoute(player.position.slice(0, 2), approach[i]));
+    check(paths.every(path => path?.length), 'Both original arrivals have collision-valid paths to the promenade');
+    await Promise.all(tabs.map((tab, i) => walk(tab, [...paths[i], gates[i]], `Player ${i} reaches gateway`)));
+    await Promise.all(tabs.map(tab => tab.waitForFunction(() => window.__riverSpatialStream().chunks[0].state === 'ready', null, { timeout: 45000 })));
     const baseline = await measure('Loaded gateway baseline');
-    const far = [-2786, -1370];
     // GPU counters register resources on first rendered use, not scene creation.
     // Traverse the entire return/eviction route twice before fixing comparable
     // loaded and evicted baselines. Keep twenty additional measured trips.
@@ -203,6 +246,8 @@ async page => {
     const districtInventory = state => state.inventory.district.filter(item => item.name !== 'East Garden Commons');
     const withinBounds = (rows, reference) => rows.every((state, i) => state.objects <= reference[i].objects + 20
       && state.renderer.geometries <= reference[i].renderer.geometries + 20 && state.renderer.textures <= reference[i].renderer.textures + 10);
+    // Each lap walks the same eviction and reload legs; settle them before anyone moves.
+    for (let i = 0; i < tabs.length; i++) { clearRoute(approach[i], [far[0], far[1] - i]); clearRoute([far[0], far[1] - i], approach[i]); }
     for (let lap = 0; lap < totalTrips; lap++) {
       const outward = tabs.map((_, i) => [[edge + 80, -1335 - i]]);
       await Promise.all(tabs.map((tab, i) => walk(tab, outward[i], `Lap ${lap + 1} player ${i} outward`)));
@@ -211,9 +256,8 @@ async page => {
       for (let i = 0; i < tabs.length; i++) await tabs[i].waitForFunction(id => window.__riverMultiplayer().remotes.some(p => p.id === id && p.ready && p.onScreen), arrived[1 - i].id);
       check(true, `Lap ${lap + 1}: both remote avatars are rendered on screen`);
       if (lap === 0) {
+        // A socket reconnect leaves the renderer alone, so it stays on a bounded client.
         await page.screenshot({ path: 'output/playwright/world-streaming-commons.png' });
-        check((await page.evaluate(() => window.__riverSpatialStream())).residentBytes > 0, 'Commons presentation is resident before the active graphics-loss probe');
-        await recoverGraphics(page, 'Active Commons presentation');
         const before = await self(page), count = await page.evaluate(() => window.__streamProbe.sockets.length);
         const reconnectStarted = performance.now();
         await page.evaluate(() => window.__streamProbe.sockets.at(-1).close());
@@ -228,7 +272,6 @@ async page => {
       const returned = await mutuallyVisible();
       check(returned.every((p, i) => p.position[0] < edge && p.id === initial[i].id && p.appearance === initial[i].appearance), `Lap ${lap + 1}: identity, avatar and shared return positions preserved`);
       const row = await measure(`Round trip ${lap + 1}`);
-      const commonsGroups = state => state.inventory.district.filter(item => item.name === 'East Garden Commons').length;
       check(row.every(state => commonsGroups(state) === 1), `Lap ${lap + 1}: exactly one Commons presentation group per client`);
       const remotes = await Promise.all(tabs.map(tab => tab.evaluate(() => window.__riverMultiplayer().remotes.map(p => p.id))));
       check(remotes.every(ids => new Set(ids).size === ids.length), `Lap ${lap + 1}: no duplicate remote avatars`);
@@ -237,7 +280,7 @@ async page => {
 
       await Promise.all(tabs.map(async (tab, i) => {
         await walk(tab, [approach[i]], `Eviction ${lap + 1} player ${i} approach`);
-        const path = nav.route((await self(tab)).position.slice(0, 2), [far[0], far[1] - i]);
+        const path = clearRoute((await self(tab)).position.slice(0, 2), [far[0], far[1] - i]);
         check(Boolean(path?.length), `Eviction ${lap + 1} player ${i} has a walkable route`);
         await walk(tab, path, `Eviction ${lap + 1} player ${i}`);
       }));
@@ -268,14 +311,14 @@ async page => {
         resourceViolations.push(violation); console.log(`Resource bound exceeded: ${JSON.stringify(violation)}`); await checkpoint();
       }
       if (lap < totalTrips - 1) {
-        await Promise.all(tabs.map(async (tab, i) => walk(tab, [...nav.route((await self(tab)).position.slice(0, 2), approach[i]), gates[i]], `Reload ${lap + 1} player ${i}`)));
+        await Promise.all(tabs.map(async (tab, i) => walk(tab, [...clearRoute((await self(tab)).position.slice(0, 2), approach[i]), gates[i]], `Reload ${lap + 1} player ${i}`)));
         await Promise.all(tabs.map(tab => tab.waitForFunction(() => window.__riverSpatialStream().chunks[0].state === 'ready')));
       }
     }
     // A client without the Commons loaded must still list a peer standing there:
     // readiness gates only that client's own steps, never shared occupancy.
     check((await measure('Before split occupancy'))[0].residentBytes === 0, 'Observer has the Commons unloaded before the peer crosses');
-    await walk(peer, [...nav.route((await self(peer)).position.slice(0, 2), approach[1]), gates[1], [edge + 80, -1336]], 'Peer alone reaches the Commons plaza');
+    await walk(peer, [...clearRoute((await self(peer)).position.slice(0, 2), approach[1]), gates[1], [edge + 80, -1336]], 'Peer alone reaches the Commons plaza');
     const alone = await self(peer), observer = await measure('Split occupancy');
     check(observer[0].residentBytes === 0 && alone.position[0] > edge + 79, 'Observer stays unloaded while the peer occupies the Commons');
     await page.waitForFunction(id => document.querySelector(`.world-map-peer[data-peer-id="${id}"]`), alone.id, { timeout: 15000 });
@@ -293,11 +336,12 @@ async page => {
     finalSourceSha256 = await sourceHashes();
     check(JSON.stringify(finalSourceSha256) === JSON.stringify(sourceSha256), 'Runtime and harness source hashes stay unchanged throughout the journey');
     outcome = 'passed';
-    return { sourceSha256, finalSourceSha256, checks, samples, crossings, continuity, reconnects, graphicsRecoveries, retainedHeaps, heapRatios, failedRequests, scope: 'Two Chromium fixture clients, actual context loss/restore during pending Commons import and active presentation, two recorded route warm-ups followed by 20 measured full keyboard round trips to the Commons plaza with chunk eviction on every District return; real loopback authority. Runtime.getHeapUsage usedSize is isolate-wide JavaScript heap measured at equivalent post-GC evicted states; backing storage and embedder heap are separate counters, not included in this ratio. Rolling frame observations can include GC and decide no timing gate. Buffer bytes are exact geometry storage, not total GPU memory. No physical-device, hosted or human accessibility acceptance.' };
+    return { sourceSha256, finalSourceSha256, checks, samples, crossings, continuity, reconnects, graphicsRecoveries, retainedHeaps, heapRatios, failedRequests, scope: 'Two bounded Chromium fixture clients that never lose their context, after a third fixture client takes a failed Commons import, actual context loss/restore during pending Commons import and active presentation, and one eviction/reload cycle after the restore, then leaves; one bounded client reconnects; two recorded route warm-ups followed by 20 measured full keyboard round trips to the Commons plaza with chunk eviction on every District return; real loopback authority. Runtime.getHeapUsage usedSize is isolate-wide JavaScript heap measured at equivalent post-GC evicted states; backing storage and embedder heap are separate counters, not included in this ratio. Rolling frame observations can include GC and decide no timing gate. Buffer bytes are exact geometry storage, not total GPU memory. No physical-device, hosted or human accessibility acceptance.' };
   } catch (error) { outcome = 'failed'; failure = error.message; throw error; }
   finally {
     deferModule = false;
     await Promise.allSettled(pendingModules.splice(0).map(release => release()));
     await checkpoint(); await peerContext.close();
+    if (probeOpen) await probeContext.close();
   }
 }
