@@ -247,22 +247,35 @@ try {
   // Connecting to the town locks the access gate, and the gate closes an open
   // Settings dialog (multiplayer-client.js setStatus). So does a drop: this runner
   // can miss the town's 30 s heartbeat (holdW above), and in Desktop job 121709518224
-  // it did with Settings open, 5 s after the town rejoined from the reload, leaving
+  // it did with Settings open, about 5 s after the reloaded game was ready, leaving
   // the Auto button hidden for the click's whole timeout. Choose with the town
-  // joined; if the gate took the dialog first, rejoin, reopen it and choose again.
+  // joined; if a town drop during the attempt took the dialog, rejoin, reopen it and
+  // choose again. A dialog that closes without a drop is still a failure.
   const settingsOpen = async () => await page.locator('#settings-dialog[open]').count() > 0;
+  // Watch the town from the start of each attempt; the watch lasts until the next
+  // attempt or the next load.
+  const watchTown = () => page.evaluate(() => {
+    window.__desktopQualityTown?.watch.disconnect();
+    const host = document.querySelector('#canvas-host');let state = host.dataset.multiplayer;const town = [state];
+    const watch = new MutationObserver(() => { if (host.dataset.multiplayer !== state) town.push(state = host.dataset.multiplayer); });
+    watch.observe(host, { attributes: true, attributeFilter: ['data-multiplayer'] });
+    window.__desktopQualityTown = { watch, town };
+  });
+  const townSinceAttempt = () => page.evaluate(() => window.__desktopQualityTown?.town ?? []);
+  const dropped = town => sharedTown && town.some(state => state !== 'joined');
   const qualityRetries = report.qualityRetries = [];
   const chooseQuality = async mode => {
     for (;;) {
       if (sharedTown) await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.multiplayer === 'joined');
+      await watchTown();
       const chosen = await openHudSpace(page, 'settings-section', 'Graphics')
         .then(() => page.locator(`[data-quality=${mode}]`).click())
         .then(() => true, async error => {
-          if (await settingsOpen() || qualityRetries.length >= 2) throw error;
+          if (await settingsOpen() || !dropped(await townSinceAttempt()) || qualityRetries.length >= 2) throw error;
           return false;
         });
       if (chosen) break;
-      qualityRetries.push({ mode, town: await page.locator('#canvas-host').getAttribute('data-multiplayer') });
+      qualityRetries.push({ mode, town: await townSinceAttempt() });
     }
     await page.waitForFunction(mode => JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}').mode === mode, mode);
   };
@@ -272,8 +285,9 @@ try {
   assert.equal(await page.locator('[data-quality=smooth]').getAttribute('aria-pressed'), 'true');
   check('graphics preference survives reload');
   await chooseQuality('auto');
-  // A drop after the choice has already closed the dialog.
-  if (await settingsOpen()) await page.locator('#settings-dialog .settings-header button').click().catch(async error => { if (await settingsOpen()) throw error; });
+  // Close Settings, unless a town drop since the Auto attempt began already has.
+  if (await settingsOpen()) await page.locator('#settings-dialog .settings-header button').click().catch(async error => { if (await settingsOpen() || !dropped(await townSinceAttempt())) throw error; });
+  else assert.ok(dropped(await townSinceAttempt()), `Settings closed after choosing Auto without a town drop (town ${JSON.stringify(await townSinceAttempt())})`);
   // Selecting Auto restarts it at full resolution with AO, and it decides once
   // per 45 frames: on a 10 fps runner it needs about 27 s to reach its floor and
   // drop AO. Measure the loop once Auto has stopped stepping down (two decision
