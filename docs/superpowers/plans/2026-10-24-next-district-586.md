@@ -591,6 +591,30 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
     - **`heights` was cancelled at its 20 min timeout** after a 10 min 50 s browser install (25.3 MB at 38.9 kB/s).
   - **The heights journey had passed every check it reached, in 8 min 27 s.** That includes "owner approach reached" and "alice approach reached", the step the arrival race failed on `9432e090`. Both players had reached Nineteenth and Yale and turned east.
   - **Not rerun.** The ledger commit above `67d6f70c` gets its own run on the same tree, and that run is the landing evidence. Logs are kept in the session scratchpad.
+- **Hosted Verify 40376947679 on ledger commit `1c51fa39`: 16/16 on the rerun of failed jobs, and the aggregate `preview` passed.** All 25 checks on the head passed, with 5 installer and signing jobs skipped.
+  - In attempt 1, `heights` passed in 16 min 51 s: a cached browser install and a 15 min 55 s journey, including the fixed arrivals and the walk home.
+  - Attempt 1's other failures were not from this branch:
+    - `places` hit main's `office-computer-embed` reload race after a live account switch (the element was detached);
+    - `required` and `checks` were cancelled at 20 min after mirror installs of 7 min 57 s and 10 min 49 s.
+  - Attempt 2 reran those three, and all passed.
+- **Page behind the town** (river-oaks-3e, on `1c51fa39`; receipt `heights-revision-walk.json` 52fbc3d0, 11 checks, 0 failed, checked here, with no host sleep in its window).
+  - The town ran at `bayou-heights-1`, and each page load's `/api/world-data` answer was rewritten to an older or newer revision.
+  - **O, answered `east-garden-commons-market-1`: 7/7.**
+    - `districtChanged` reloads exactly once. The next load's town socket closes with 4000 "District revision changed".
+    - The terminal "River Oaks has been improved" notice follows, with no further reload or socket for 30 s. Its Refresh button loads once, again with no loop.
+    - Given the real answer, the page joins Heights in 3.5 s.
+  - **U, answered `bayou-heights-2`, a revision this client does not know: 4/4.**
+    - The page shows "Preview unavailable: This district revision is not supported by this client", with no reload and no page errors.
+    - It was seen, but not asserted, that the page still joined the town with chat enabled. That check dates from #507, so it is not new here. River-oaks-3e records it for Val as support-ledger Decision 13, not as a blocker.
+  - Every planned adversarial case has now run.
+- **Landing decision.** River-oaks-71 posted a plan on #649 (comment 6426366515), reporting a decision Val gave in its session: rerun the gated ABBA as round 6 on the main #649 lands on, and land only within budget.
+  - Later on 2026-10-26, Val told this session directly: "commit push and merge to main".
+  - This session follows that direct instruction and told river-oaks-71, which confirmed delivery. **No round 6 was run.** So the landing pair has no gated District measurement. It is not a gate change, and round 5 stays NOT MET as recorded.
+- **Merge of main `caa1a7ef` (`05f5a37c`).** It brings nine merges: #679 (pnpm dependency group), #671 (T2/T3 hall names), #660, #678, #654, #684, #659 (network drops), #686 (computer embed account reload) and #656 (default appearance). It merged without force or conflicts.
+  - Main's product code moved (#659, #656, #671, #686 and #679's dependencies), so round 5 does not describe this pair.
+  - **Core verify passed in one run** with a clean tree and the host held awake (`caffeinate -s`, no `pmset` sleep from 18:33:06 to 18:38:46 local): agent 281/281; preview 4,206 passed, 1 skipped; server 922 passed, 227 Redis-only skips; desktop 120 passed, 3 skipped; Python 170; build, demo and secrets passed.
+  - **`destination check`:** 8/8, with output identical to `ba942859`'s.
+  - **Reachable audit (`--reachable`):** identical to `ba942859` apart from durations, with every area and composed-world hash the same. That is 2.0119× at 0.5 m and 2.0173× at 1 m.
 - **Pedestrian captures, inspected.** Both runs uploaded all eight `heights-*.png`. They are CI software-profile renders: llvmpipe at render scale 0.25, with every material replaced by `MeshNormalMaterial` (`main.js:232`). So they show geometry, not appearance.
   - **Greenway:** street trees and kit blocks on both sides.
   - **Icehouse patio:** the two-chair game table, with "Icehouse game table" in the seat picker and a "Sit on the bench" prompt.
@@ -614,18 +638,19 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
     - Nineteenth Street: 621 / 2.47 M.
 
     The District views did not record on either tree.
-- **Performance.** ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e). Its four rounds are above: `6e5abdff` failed, and `3cd60702` passed. `0cc09391` passed on the rerun, and `525856e2` passed in round 4. The current landing pair, `ba942859`, did not meet the gate in round 5 (phone reconnect). The `#626` decision is recorded only on #643's branch (D11).
+- **Performance.** ABBA under the #626 protocol, with thresholds unamended, is support task D (river-oaks-3e). Its four rounds are above: `6e5abdff` failed, and `3cd60702` passed. `0cc09391` passed on the rerun, and `525856e2` passed in round 4. `ba942859` did not meet the gate in round 5 (phone reconnect). The landing pair after main `caa1a7ef` was not measured, because Val directed the merge. The `#626` decision is recorded only on #643's branch (D11).
 
-## Status at handoff (head `67d6f70c`, draft PR #649)
+## Status at handoff (head `05f5a37c` plus this ledger commit, PR #649, landing on Val's instruction)
 
-**Overall: blocked. Item 5 is NOT MET on the landing pair.** In round 5 (main `cb83c7cd` against `ba942859`), phone reconnect is +25.9 % against the +20 % limit. Items 1–4 and 6 are complete.
-- Since round 5, main has moved three times, adding tests, a Python lock and a Dockerfile digest. `309225cd` fixed the journey's arrival race. The product delta is unchanged: patch-id `efb62029`, leaving out the plans and the journey file.
-- A diagnostic without the retry delay finds the rejoin itself unchanged (phone −1.8 %, desktop +1.5 %). It is not the gated protocol.
-- Val decides between accepting on that diagnostic, rerunning round 5 and changing how reconnect is gated.
-- Merge is Val's too. Per river-oaks-3e, Val will review and merge #649 personally.
+**Overall: landing on Val's direct instruction, with item 5 NOT MET as measured.** Items 1–4 and 6 are complete. On 2026-10-26 Val told this session "commit push and merge to main", so #649 goes through `pnpm run land` and the merge guard.
+- **Round 5** (main `cb83c7cd` against `ba942859`): phone reconnect was +25.9 % against the +20 % limit. Every other gated row was within.
+- **Diagnostic** without the retry delay: the rejoin itself is unchanged (phone −1.8 %, desktop +1.5 %). It is not the gated protocol.
+- **The landing pair is not measured.** Main's product code has moved since round 5. No round 6 was run, because Val directed the merge first. This records Val's decision, not a gate change.
 - Heights is not activated anywhere, and production activation is not authorized.
-- If main's product code moves before merge, item 5 has to be re-measured for the new pair.
-- **Hosted Verify on this tree has no fully green attempt yet.** Run 40373209344 tested the tree of `67d6f70c`. The heights journey passed every check it reached, but the job was cancelled at 20 min behind a 10 min 50 s mirror install, and `crime-shared` failed on main's evade flake. The run on this ledger's own commit is recorded in the PR body.
+- **Evidence for the landing tree:**
+  - Core verify passed on `05f5a37c`. Reachable ground and the destination locks are identical to `ba942859`.
+  - Hosted Verify on the previous head `1c51fa39` was fully green on the rerun.
+  - Hosted Verify on the landing head is the lander's, and its result goes in the PR body.
 
 1. **Ledger before source: complete.** The objective, design, files-owned and checks sections were written before any source edit. They were committed with the first source in `b1ded7ab`, so git history alone does not show the order.
 2. **Authoritative ground and connection: complete.**
@@ -639,8 +664,9 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
    - Its landmarks are Heights Hall's clock tower, the bandstand and the footbridge.
    - It has street trees and planted beds, pedestrian streets, seating, and the icehouse table game for two.
    - `pnpm run destination check` reproduces every lock, and the authored overrides are preserved.
-4. **Measured gain: complete.** Reachable ground on `ba942859` is 2.0119× at 0.5 m (93,508 m²) and 2.0173× at 1 m (93,904 m²), with pinned composed-world hashes. No merge of main changed it. Later heads add only main's tests, a Python lock and a Dockerfile digest, plus the journey fix. The figures first recorded here (93,509.75 and 93,906 m²) do not reproduce at any committed head and are corrected. Reserved land, upper floors, flight, travel and islands are excluded.
-5. **No District regression: NOT MET on the landing pair**, with limits unamended.
+4. **Measured gain: complete.** Reachable ground on `ba942859` is 2.0119× at 0.5 m (93,508 m²) and 2.0173× at 1 m (93,904 m²), with pinned composed-world hashes. No merge of main changed it. Re-measured on `05f5a37c`, after main `caa1a7ef`, every area and composed-world hash is identical. The figures first recorded here (93,509.75 and 93,906 m²) do not reproduce at any committed head and are corrected. Reserved land, upper floors, flight, travel and islands are excluded.
+5. **No District regression: NOT MET as measured, with limits unamended. #649 lands on Val's direct instruction.**
+   - **The landing pair is not measured.** Main `caa1a7ef` against `05f5a37c` was never run: main's product code moved after round 5, and Val directed the merge without round 6.
    - **Not met on `ba942859`** against main `cb83c7cd` (round 5): phone reconnect is +25.9 % against +20 %.
      - Within: every frame and CPU metric (one-client CPU p95 −3.2 % on desktop and −1.7 % on phone; two-client −1.6 % and −2.3 %), desktop reconnect (−9.5 %), drift (0 m) and cold transfer (+0.13 %).
      - The diagnostic without the retry delay measures the rejoin itself at +1.5 % on desktop and −1.8 % on phone (Results).
@@ -659,8 +685,8 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
      - the pedestrian captures, inspected (CI software profile only).
    - **The first ABBA, on `6e5abdff`, failed** one-client CPU p95: +24.0 % on desktop and +18.1 % on phone. Its cause is fixed in `dd682a7b`, which rounds 2–4 measured.
 6. **Signed, verified commits in draft PRs: complete.** Every commit on #649 is SSH-signed.
-   - Core verify passed on `67d6f70c` in one run, with a clean tree and the host held awake (receipt `.runtime/agent/core.json`): agent 274/274; preview 4,191 passed, 1 skipped; server 920 passed, 227 Redis-only skips; desktop 120 passed, 3 skipped; Python 170; build, demo and secrets passed.
-     - It also passed on `65f6eb28`, the journey fix `309225cd`, `75ba74a8` and `ba942859`.
+   - Core verify passed on `05f5a37c` (main `caa1a7ef` merged) in one run, with a clean tree and the host held awake (receipt `.runtime/agent/core.json`): agent 281/281; preview 4,206 passed, 1 skipped; server 922 passed, 227 Redis-only skips; desktop 120 passed, 3 skipped; Python 170; build, demo and secrets passed.
+     - It also passed on `67d6f70c`, `65f6eb28`, the journey fix `309225cd`, `75ba74a8` and `ba942859`.
      - Their failed attempts failed only on known load flakes in the agent stage, or ran while the host slept (Results).
      - Redis-backed suites passed 119/119 on `ba942859`.
      - `verify full` passed all 18 stages on `525856e2` (river-oaks-3e; receipt checked here; see Gaps). It has not been run since. The merges after it brought only harness, probe-client, test and docs changes, a Python lock and a Dockerfile digest. The journey fix changes only the hosted Heights journey, which `verify full` does not run.
@@ -669,13 +695,15 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
      - On `75ba74a8` no attempt passed every job. `worlds-and-creator` timed out in both attempts behind a slow package mirror that hit other branches too, and heights passed on the rerun (Results).
      - On `9432e090`, attempt 1 hit the mirror. Attempt 2 failed heights on the journey's arrival race, which `309225cd` fixes.
      - On `65f6eb28` (the tree of `67d6f70c`), 13 jobs passed. Heights was cancelled at 20 min after a 10 min 50 s install, with every check passed so far, and `crime-shared` failed main's evade flake (Results).
-     - The run on this ledger's own commit is recorded in the PR body.
-   - Nothing is merged, enqueued or deployed.
+     - On `1c51fa39` it passed 16/16 on the rerun of failed jobs, and the aggregate `preview` passed (Results).
+     - The run on this ledger's own commit, and the lander's, are recorded in the PR body.
+   - Merge goes through `pnpm run land` and the merge guard, on Val's instruction. Nothing is deployed or activated.
 
 ## Gaps and coordination
 
 - **Decisions for Val:**
-  - **Round 5's reconnect.** Under the adopted read (five rejoins, each with the client's random 500–1,000 ms retry delay), phone reconnect is +25.9 % against +20 %, so item 5 is not met. Without the delay, the rejoin itself is −1.8 % on phone and +1.5 % on desktop.
+  - **Round 5's reconnect: Val directed the merge on 2026-10-26** without round 6. The record below stands, and the landing pair is unmeasured. A later ABBA of main with `bayou-heights-1` against `east-garden-commons-market-1` would measure the landed code, if Val wants it.
+  - Under the adopted read (five rejoins, each with the client's random 500–1,000 ms retry delay), phone reconnect is +25.9 % against +20 %, so item 5 is not met. Without the delay, the rejoin itself is −1.8 % on phone and +1.5 % on desktop.
     - About 70 % of each gated sample is that random delay. Round 5's two main arms alone differ by 16 % on phone.
     - Three options:
       - accept on the diagnostic;
@@ -718,29 +746,30 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
   - **Limit:** the local experience profile has no Heights journey. Hosted CI's `heights` shard is what covers the Heights round trip.
 - Human visual approval, physical devices, hosted multiplayer and Unreal parity are separate acceptance.
 - **Retirement check at handoff (`pnpm run project:inventory`).**
-  - This task's branch and worktree are active, with a draft PR, so they are not eligible.
+  - This task's branch and worktree are active, with PR #649 landing, so they are not eligible until the exact-head release after the merge.
   - `diag/heights-west-draw-20261024` exists only on the remote. It is mine, cited here as evidence, and never for merge. Delete it once #649 closes.
   - The only retire candidate listed, `test/mvp-regression-20261023`, belongs to another owner, so it is untouched (re-checked at `ba942859`).
 
 ## Next step
 
-1. Val: decide on round 5's reconnect (Gaps): accept on the diagnostic, rerun round 5, or change how reconnect is gated. Then review #649 and decide on merge. Merge, auto-merge, activation and gate changes are not authorized for this task.
-2. If Val asks for a rerun, support task D reruns round 5 under the adopted read, and its receipts are checked independently here.
-3. If main moves before merge, merge it without force and re-run core verify and hosted Verify.
-   - If main's product code changed, ask support task D for a new ABBA and cold transfer against the new pair.
-   - If only tests, docs or build files outside the product changed, a new gated round would be the round 5 rerun, which is Val's decision. The check: the PR's delta from main, leaving out `docs/superpowers/plans` and `preview/e2e/bayou-heights.js`, still has patch-id `efb62029`.
-4. Hosted Verify needs a fully green run on the landing head before merge (Status).
-5. Fix any review findings and re-verify.
-6. Other decisions for Val, listed under Gaps: the Heights ceiling, oak sharing, the budget-test reading, and the leg lengths and the heights job's timeout.
-7. Once #649 closes, delete the remote diagnostic branch `diag/heights-west-draw-20261024`. Then piece B (#670) wires residents into the Heights rollback.
+1. Land #649 on Val's instruction: mark it ready, then run `pnpm run land 649 --owner river-oaks-91`. The lander updates from `main` with GitHub's update-branch, waits for Verify, reruns failed jobs once, and hands the merge to the guard. Observe it until it exits. Keep the first failure, and fix anything that is this branch's.
+2. Confirm the merge and its ancestry on freshly fetched `main`. Record the reviewed head, the merge SHA and the required checks in the PR, #586 and #638.
+3. Release the task at the exact merged head (`owner: null`, `leaseUntil` removed, `retirement: { head, releasedAt, sessionsReviewedAt }`). Run `pnpm run project:prune --branch feat/next-district-586-20261024 --expected-head <sha>` as a dry run, then apply. Delete the remote diagnostic branch `diag/heights-west-draw-20261024`.
+4. This ledger lands with #649, so the merge SHA and the retirement evidence are recorded outside it: in the PR, the issues and the register.
+5. Piece B (#670, river-oaks-3e) then wires residents into the Heights rollback.
+6. Other decisions for Val, listed under Gaps: the Heights ceiling, oak sharing, the budget-test reading, the heights job's timeout, and whether to measure the landed code with an ABBA. Activation of `bayou-heights-1` stays unauthorized.
 
 ### Next-session prompt
 
-> Continue task `next-district-586-20261024` (#586, #638 lane 3) in `../river-oaks-next-district-586`, on branch `feat/next-district-586-20261024`, draft PR #649. Read `docs/superpowers/plans/2026-10-24-next-district-586.md` first, especially "Status at handoff" and "Results".
+> Continue task `next-district-586-20261024` (#586, #638 lane 3) in `../river-oaks-next-district-586`, on branch `feat/next-district-586-20261024`, PR #649. Read `docs/superpowers/plans/2026-10-24-next-district-586.md` first, especially "Status at handoff", "Results" and "Next step".
 >
-> Head `67d6f70c` merges main `85a5e4c7`. Since round 5, main has moved three times, adding tests, a Python lock and a Dockerfile digest, and `309225cd` fixed the journey's arrival race. Items 1–4 and 6 are complete, but **item 5 is NOT MET**. In round 5 (`cb83c7cd` against `ba942859`, the same product delta: patch-id `efb62029` leaving out the plans and the journey file), phone reconnect was +25.9 % against +20 %, under the read Val adopted on 2026-10-25 (five rejoins, each with the client's random 500–1,000 ms retry delay). Every frame and CPU metric, desktop reconnect, drift and cold transfer are within. A diagnostic without the delay measures the rejoin itself at −1.8 % on phone and +1.5 % on desktop. Accepting on it, rerunning round 5 or changing the reconnect gate is Val's decision. Do not rerun the gated round unless Val asks. Merge is Val's; per river-oaks-3e, Val will merge #649 personally.
+> On 2026-10-26 Val told the owning session directly, "commit push and merge to main". #649 therefore lands through `pnpm run land 649 --owner river-oaks-91` and the merge guard, with item 5 NOT MET as measured.
+> - Round 5 (`cb83c7cd` against `ba942859`) put phone reconnect at +25.9 % against +20 %. The landing pair (main `caa1a7ef` against `05f5a37c`) was not measured. That is Val's decision, not a gate change.
+> - Items 1–4 and 6 are complete. Core verify, `destination check` and the reachable audit passed on `05f5a37c`, identical to `ba942859`.
 >
-> First check for Val's decision, the hosted Verify on the current head (see the PR body), and whether `main` has moved past `85a5e4c7`. If main has moved, merge it without force and re-run core verify and hosted Verify (the `heights` shard and the aggregate `preview`). If main's product code changed, ask support task D (river-oaks-3e) for a new ABBA and cold transfer for the new pair; if only tests or docs changed, a new gated round is the round 5 rerun and Val's call. Use the #626 protocol with limits unchanged (mean frame and CPU p95 +10 %, reconnect +20 % on the adopted five-rejoin read, drift 0.5 m), under `caffeinate`, with a per-arm load gate. Check its receipts independently with `scratchpad/heights/abba-check.mjs`.
+> First check whether #649 has merged: read the lander's handle or output, the PR state and the hosted Verify on the landing head.
+> - **If it has not merged,** resolve concrete failures in scope. Keep the first failure, and rerun failed jobs only once per run. Do not start a second lander.
+> - **If it has merged,** confirm the merge SHA and its ancestry on freshly fetched `main`, and record them on the PR, #586 and #638. Then do the exact-head release and the guarded `project:prune` (dry run, then apply), and delete the remote `diag/heights-west-draw-20261024`.
 >
 > - The heights job has taken up to 19 min 09 s of its 20 min timeout.
 > - If hosted `crime-shared` fails its evade check, or `places` fails after a live account switch, look for the same failure on main or a docs-only branch before calling it this branch's.
@@ -749,4 +778,4 @@ Evidence for head `b1ded7ab` (draft PR #649), rebased onto main `67203a6a`, unle
 > - Rerun only the failed jobs, once, and keep the first failure.
 > - Post one evidence comment each on #586 and #638 per increment.
 >
-> Do not merge, enable auto-merge, activate `bayou-heights-1`, change budgets or the area metric, or edit other owners' branches. The diagnostic branch `diag/heights-west-draw-20261024` is evidence only, never for merge.
+> Merging #649 through the lander is authorized by Val's instruction. Do not enable auto-merge, deploy, activate `bayou-heights-1`, change budgets or the area metric, or edit other owners' branches. The diagnostic branch `diag/heights-west-draw-20261024` is evidence only, never for merge.
