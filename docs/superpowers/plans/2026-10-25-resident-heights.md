@@ -43,6 +43,7 @@ Until then, nothing here changes behaviour on main: Heights code paths run only 
 | `nice -n 19 pnpm run verify` (core), Python 3.12 | **Passed** on the final source tree (04:55–04:59Z): agent 274/274; preview 4,096 passed, 1 skipped; server 892 passed, 225 Redis-only skips; desktop 115 passed, 3 skipped; build; Python lint, format and 170 tests; demo; secrets. The first attempt (04:52Z) failed only the known load-sensitive `land-pr` queued-lander timing test, which passed 29/29 alone; that log is kept. |
 | Scratch merge with #649 head `0cc09391` (not pushed): Heights probe and server-world simulation | See Results |
 | Main `0b9a97c4` merged in through #655 (`03381365`); signed merge `ff46d99e`, clean | Related suites on an isolated Redis: 195/195, 0 skipped (the 95 above plus Gardens, District and world migrations, police and crime, Commons games and transport, and the Redis room). `nice -n 10 pnpm run verify` (core), Python 3.12: **passed** on the third attempt (10:41–10:46Z, load 7.8): agent 274/274; preview 4,163 passed, 1 skipped; server 918 passed, 225 Redis-only skips; desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo; secrets. Attempts 1 and 2 (10:36Z and 10:38Z, load 7.1–7.8) each failed only the `land-pr` queued-lander timing test (30 s timeout), which passed 29/29 alone; `scripts/` is identical to main and both logs are kept. Hosted checks at `ff46d99e`: 15/15 green. |
+| #655's review fixes (#674) merged in through `2ac33123`; signed merge `84190512` | Related suites on an isolated Redis (6461): 200/200, 0 skipped (the 195 above, #674's 3 tests and 1 new). The new test fails with the corridor filter removed. Core verify: **passed** on the first attempt (08:36–08:41Z, load 8.4–13.6), `dirty: false`: agent 274/274; preview 4,165 passed, 1 skipped; server 921 passed, 225 Redis-only skips; desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo; secrets. Receipt `core.json` sha256 `fc901b154bf58ea8…`. |
 
 ## Results
 
@@ -94,6 +95,15 @@ A scratch merge of #649's head `4c3fddc3` with this branch (not pushed) failed #
 - **Fix (`59617b59`).** A world's stops are placed once per world object, in a `WeakMap`, and copied for each resident life. Repeat builds took 69–77 ms; the first still pays the placement, about 1.3 s, once per world object. A new test checks that two lives on one world get equal, independent stops, and that a cloned world gets the same stops. That test also passes without the cache: only the rehearsal with #649 shows the regression, which is why that is the red and green evidence here.
 - **After the fix:** related suites on an isolated Redis 196/196, 0 skipped. Core verify (`nice -n 10`, Python 3.12) passed on the first attempt: agent 274/274; preview 4,164 passed, 1 skipped; server 918 passed, 225 Redis-only skips; desktop 120 passed, 3 skipped; build; Python; demo; secrets.
 
+## #655's review fixes carried into `relocateResidents` (merge `84190512`)
+
+An independent review of #655 found that a Commons → Gardens rollback froze residents who were still on District ground but walking into the Commons. It also found a placed object could block a seam lane, and a lantern home stop survived the rollback. river-oaks-71 fixed these in #674, which is merged into #655 as `f3f8085c`. This branch had moved that rollback into `relocateResidents`, so the merge carries the fixes there:
+- `relocateResidents` takes `gone(stopId)` from its caller and returns `rerouted` next to `moved`. The Commons rollback names its lanterns; the Heights rollback names its own stops (`bayou-heights/…`).
+- Residents still on kept ground re-plan where they stand when their route enters dropped land or they are heading for a dropped stop. Their errands are requeued, and a dropped stop held as a home stop gives way to the resident's home stop.
+- Corridors are found without builds, as the live planner finds them. Only the corridors the target lacks count as dropped land. So a rollback to a target that keeps the District–Commons corridor (Heights → Commons) leaves walks through it alone; without this, every resident on the way into the Commons would have re-planned.
+- Route legs keep this branch's reverse search and cross with #674's `lane()`, which steps past a blocked keep-right lane.
+- New test: "relocateResidents re-plans walks into dropped land or to a dropped stop, not across corridors the target keeps". It fails with the corridor filter removed.
+
 ## Heights rollback wiring, prepared for after #649 (not on this branch)
 
 Rehearsed on the same scratch merge, kept as a patch in the session scratchpad:
@@ -102,6 +112,7 @@ Rehearsed on the same scratch merge, kept as a patch in the session scratchpad:
   - Players are placed first, so residents keep 0.9 m from the players' new spots, the same order as the Commons → Gardens rollback.
   - Then `relocateResidents` runs with `inside` = the Heights bounds and `toward` = the Commons-side end of the footbridge deck (east −2551.34, north −1335).
   - The result gains `movedResidents`. The forward path returns an empty list, and the chained rollback to Gardens merges both lists.
+- After the #674 merge, the patch also passes `gone` for Heights stops (ids starting `bayou-heights/`), returns `reroutedResidents`, and merges both lists in the chained rollback. These additions pass a syntax check only; they are rehearsed when the patch is applied after #649.
 - `server/redis-room.js`: the `district_heights_checkpoint_migrated` log line gains a `movedResidents` count.
 - `server/tests/resident-heights-rollback.test.js` (new), 4/4 passing:
   - Heights → Commons moves a resident on Heights Green and one at the footbridge landing to Commons ground the planner reaches.
@@ -130,6 +141,6 @@ Rehearsed on the same scratch merge, kept as a patch in the session scratchpad:
 
 After #649 lands:
 1. Merge main into the branch (a rebase would need a force-push).
-2. Apply the prepared Heights rollback wiring and its tests (see above), and rerun the Heights rehearsal.
+2. Apply the prepared Heights rollback wiring and its tests (see above). Add a Heights case for re-planning: a resident on Commons ground walking to the bandstand, and one anchored at a Heights stop. Then rerun the Heights rehearsal.
 3. Run `verify full` with an isolated Redis.
 4. Mark the PR ready.
