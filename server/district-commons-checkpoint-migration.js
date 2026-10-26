@@ -5,6 +5,7 @@ import { attachEastGardenCommons, detachEastGardenCommons } from '../preview/src
 import { createWalkingEnvironment } from '../preview/src/walking.js';
 import { objectCollider } from '../preview/src/creator-object.js';
 import { createResidentNavigation } from '../preview/src/navigation.js';
+import { createCommunity } from '../preview/src/community.js';
 import { DEFAULT_WORLD_ID } from '../preview/src/world-contract.js';
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const rejected = () => ({ok:false,error:'invalid_checkpoint'});
@@ -31,7 +32,7 @@ export function recoverDistrictCommonsCheckpoint({worldData,checkpoint,worldId=D
     let {checksum:_checksum,...envelope}=source.checkpoint();
     // The Lantern Walk exists only in the Commons; rolling back leaves it behind.
     if(!forward)delete envelope.payload.lanternWalk;
-    const moved=[],movedResidents=[];
+    const moved=[],movedResidents=[],reroutedResidents=[];
     if(!forward){
       const environment=createWalkingEnvironment(worldData,envelope.payload.builds.map(objectCollider).filter(Boolean));
       const outside=player=>player.position[0]>worldData.bounds_m[2]-.35
@@ -50,34 +51,44 @@ export function recoverDistrictCommonsCheckpoint({worldData,checkpoint,worldId=D
         Object.assign(player,{position:destination,altitude:0,buildingId:null,levelId:null,vehicle:null,sitting:null,cycling:null,gesture:null,gestureUntil:0});
         placed.push(destination);moved.push(player.id);
       }
-      // Residents stroll into the Commons too; anyone left in it walks home.
-      const relocated=relocateResidents({fromData:sourceData,toData:worldData,checkpoint:envelope,inside:east=>east>worldData.bounds_m[2]});
+      // Residents stroll into the Commons too; anyone left in it walks home, and anyone
+      // heading for it or for one of its lanterns re-plans where they stand.
+      const lanterns=new Set((sourceData.eastGardenCommons?.destination?.lanterns??[]).map(lantern=>lantern.id));
+      const relocated=relocateResidents({fromData:sourceData,toData:worldData,checkpoint:envelope,
+        inside:east=>east>worldData.bounds_m[2],gone:id=>lanterns.has(id)});
       if(!relocated)return rejected();
-      envelope=relocated.checkpoint;movedResidents.push(...relocated.moved);
+      envelope=relocated.checkpoint;movedResidents.push(...relocated.moved);reroutedResidents.push(...relocated.rerouted);
     }
     envelope.worldFingerprint=digest(worldData);
     const result={...envelope,checksum:digest(envelope)};
     if(!createSharedWorld(worldData,{worldId,...options}).restore(result).ok)return rejected();
-    return {ok:true,checkpoint:result,from:forward?'gardens':'commons',to:forward?'commons':'gardens',moved,movedResidents};
+    return {ok:true,checkpoint:result,from:forward?'gardens':'commons',to:forward?'commons':'gardens',moved,movedResidents,reroutedResidents};
   } catch {return rejected();}
 }
 
 /**
  * Residents standing on land a rollback drops walk home from the nearest clear
  * ground the target revision's resident planner reaches. `inside(east, north)`
- * names the dropped land; seam corridors of the source that the target cannot
- * reach count too. When nothing within 40 m of where a resident stood (clamped
- * into the target's bounds) is clear, the search starts again at `toward`.
- * Residents land at least 0.9 m from any player and 0.7 m from each other.
- * Returns the repaired checkpoint envelope and who moved, or null when someone
- * has nowhere to go.
+ * names the dropped land; seam corridors of the source that the target lacks
+ * count too. When nothing within 40 m of where a resident stood (clamped into the
+ * target's bounds) is clear, the search starts again at `toward`. Residents land
+ * at least 0.9 m from any player and 0.7 m from each other.
+ * Residents still on kept ground may be walking into dropped land or to a stop it
+ * held (`gone(stopId)`). The target would stop them at the old corridor entrance,
+ * and a failed re-plan keeps the old route, so they re-plan where they stand; a
+ * dropped stop someone last rested at gives way to their home stop.
+ * Returns the repaired checkpoint envelope, who moved and who re-plans, or null
+ * when someone has nowhere to go.
  */
-export function relocateResidents({fromData,toData,checkpoint,inside,toward=null}) {
-  const envelope=structuredClone(checkpoint),payload=envelope.payload,moved=[];
+export function relocateResidents({fromData,toData,checkpoint,inside,gone=()=>false,toward=null}) {
+  const envelope=structuredClone(checkpoint),payload=envelope.payload,moved=[],rerouted=[];
   const colliders=payload.builds.map(objectCollider).filter(Boolean);
   const navigation=createResidentNavigation(toData,{placedObjects:colliders,locations:true});
-  if(!navigation)return {checkpoint:envelope,moved};
-  const corridors=createResidentNavigation(fromData,{placedObjects:colliders,locations:true})?.locations?.portals.map(portal=>portal.rect)??[];
+  if(!navigation)return {checkpoint:envelope,moved,rerouted};
+  // The live planner finds its corridors before anything is built; so does this.
+  const kept=new Set(navigation.locations?.regions.map(region=>region.id)??[]);
+  const corridors=(createResidentNavigation(fromData,{locations:true})?.locations?.portals??[])
+    .filter(portal=>!kept.has(portal.west) || !kept.has(portal.east)).map(portal=>portal.rect);
   const removed=([east,north])=>inside(east,north)
     || corridors.some(r=>east>=r[0]&&east<=r[2]&&north>=r[1]&&north<=r[3]);
   const locals=payload.state?.locals??[],placed=payload.players.map(player=>player.position);
@@ -100,12 +111,23 @@ export function relocateResidents({fromData,toData,checkpoint,inside,toward=null
     if(local.life)Object.assign(local.life,{route:[],destination:null,routeVersion:local.life.routeVersion+1,seat:null,speed:0,velocity:0,blocked:false,replanAt:0});
     moved.push(local.id);
   }
+  const homes=new Map(createCommunity(toData,[],{carriage:false}).locals.map(local=>[local.id,local]));
+  for(const local of locals){
+    if(local.indoor || local.stationary)continue;
+    if(local.life && !moved.includes(local.id) && (local.life.route.some(removed) || gone(local.life.destination?.id))){
+      Object.assign(local.life,{route:[],destination:null,routeVersion:local.life.routeVersion+1,blocked:false,replanAt:0});
+      rerouted.push(local.id);
+    }
+    const home=gone(local.anchorId) && homes.get(local.id);
+    if(home){local.anchorId=home.anchorId;local.anchorName=home.anchorName;if(local.persona)local.persona.anchorName=home.anchorName;}
+  }
   // Their errands restart from where they now stand (as checkpoint repair does).
+  const restarted=[...moved,...rerouted];
   for(const job of payload.state?.jobs??[])if(['routing','traveling','assisting'].includes(job.phase)
-    && (moved.includes(job.localId)||moved.includes(job.helperId))){
+    && (restarted.includes(job.localId)||restarted.includes(job.helperId))){
     job.phase='queued';job.approachAttempt=0;
     const helper=locals.find(local=>local.id===job.helperId);
     if(helper?.life){helper.life.route=[];helper.life.destination=null;helper.life.routeVersion++;if(helper.life.helping)helper.life.helping.onSite=false;}
   }
-  return {checkpoint:envelope,moved};
+  return {checkpoint:envelope,moved,rerouted};
 }

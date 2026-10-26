@@ -14,6 +14,7 @@ Task `next-district-586-support-20261024`, owner `claude:river-oaks-3e (4e851f0b
 - `preview/src/resident-life.js`: Commons stops and wandering.
 - `server/district-commons-checkpoint-migration.js`: Commons → Gardens rollback walks residents home.
 - `preview/tests/resident-locations.test.js`, `server/tests/resident-locations-rollback.test.js`, this ledger.
+- `preview/tests/fixtures/district-routes-main.json`: main's District routes (added by the review fixes).
 
 ## Design
 
@@ -36,6 +37,7 @@ Task `next-district-586-support-20261024`, owner `claude:river-oaks-3e (4e851f0b
 | `REDIS_URL=redis://127.0.0.1:6461 pnpm run verify full`, isolated loopback Redis, Python 3.12 | **Passed, 18/18 stages** (2026-10-24 20:20Z to 2026-10-25 03:21Z). Ran on the final source tree: every source and test file predates the start and equals `1f971206`. See Results |
 | Hosted Verify on `22679471` | 22/22 green |
 | Scratch merge with main `0b9a97c4` (not pushed), related suites with Redis | 172/172 passed |
+| Main `0b9a97c4` merged into the branch: signed merge `03381365`, clean, no dependency changes | Related suites with Redis 193/193, 0 skipped. `REDIS_URL=redis://127.0.0.1:6461 nice -n 10 pnpm run verify full`, Python 3.12: **passed, 18/18 stages** on `03381365`, clean tree (receipt `dirty: false`; 2026-10-25 10:30Z to 14:06Z, of which about 3 h was queueing for the shared browser lock). Agent 274/274; preview 4,162 passed, 1 skipped; server with Redis 1,184/1,184; desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo and demo-verify; secrets and secret history; security-browser; reflections; experience 17/17 journeys; shared 27/27; IPIC screening. The generated `data/reports` files were restored, not committed. Attempt 1 (10:27Z) stopped at agent-tests on the `land-pr` queued-lander timing test (30 s timeout at load about 12, beside this session's #670 suites); it passed 29/29 alone, and that log is kept. Hosted checks at `03381365`: 22/22 green, CodeQL included. |
 | Offline 60-min server simulation, Commons revision | See Results |
 | Dev town on 5481/8881, fixture sign-in, Commons revision | See Results |
 
@@ -89,16 +91,53 @@ All on main `09bd7a83` plus this branch's uncommitted tree unless noted. Host: A
   - the Commons activation rehearsal;
   - Redis room.
 
+## Review fixes
+
+An independent review of `22679471` (the same product code as `fea24bed`) confirmed three defects and some tests that did not test what they claimed. They are fixed on `fix/resident-locations-review-20261025`, which starts at `fea24bed`.
+
+1. **Rollback froze residents walking toward the Commons (high).**
+   - **Cause:** Commons → Gardens reset only residents standing in removed land. A resident still on District ground kept its route into the Commons. In Gardens it stopped at the old corridor entrance, and `recoverRoute` keeps the old route whenever a re-plan fails. The probe resident waited at (−2681.05, −1334.00) for 20 simulated minutes.
+   - **Fix:** the rollback also clears the route and destination of any resident whose route enters removed land, or who is heading for a Commons lantern. It reports them as `reroutedResidents` and requeues their errands, as it does for moved residents.
+   - **Corridor rectangles:** it now finds them as the live planner does, before any build. With builds included, a planter on a lane hid the corridor, and residents standing in it were left outside the site ring.
+2. **An object on a seam lane left residents pacing (medium).**
+   - **Cause:** lanes are found once, without objects, and `route()` appended a lane's far end unchecked. A planter at edge − 12 m on the eastbound lane, which the build check accepts, kept an eastbound resident pacing between edge − 15 and edge − 12.5. It took the route-search slot about once a second.
+   - **Fix:** each corridor keeps its crossing rows. A route uses its keep-right lane when that lane is walkable past current objects, and otherwise the nearest clear row. This adds walkability checks only, no grid search, and still at most three leg searches per hop.
+   - **Result:** with the planter, the resident crosses on row −1333. A probe of 16 staggered opposite meetings, run without a test, all resolved within 90 s.
+3. **A lantern home stop survived rollback (low).** A resident anchored at a Commons lantern gets its Gardens home stop back, `persona.anchorName` included.
+4. **Tests that now test what they claim.**
+   - **District routes:** `preview/tests/fixtures/district-routes-main.json` holds 60 routes from main's own planner: residents and police, on both revisions. They come from `e8207b2b`'s `navigation.js` (blob `27584465`), run with this tree's unchanged dependencies. It also stores each revision's world-data fingerprint, so a geography change asks for a recapture rather than looking like a planner regression. The old test only compared this planner with and without `locations`; a 1.03 → 1.05 change to District path smoothing passes it but fails the new one.
+   - **Wandering:** the test now walks, at most 1.4 m/s per step and on walkable ground, from the far west into the Commons in about 6 simulated minutes. Each outing is held as a stroll toward the tower.
+   - **Rollback:** a resident now sits on a District bench and stays seated. A planter narrows the corridor. New tests cover findings 1 and 3. The finding 1 test uses a real volunteer visit and steps Gardens until both residents re-plan.
+
+| Review-fix check | Result |
+| --- | --- |
+| Reviewer probes `stale-route.mjs`, `object-in-lane.mjs` on `fea24bed` | Both reproduce: walker waiting at (−2681.05, −1334.00) through t = 1200 s; eastbound resident pacing between edge − 15 and edge − 12.5 for 10 min |
+| Same probes after the fixes | Walker re-plans to District stops and keeps walking; resident crosses on row −1333 and reaches the tower by t = 120 s |
+| Reviewer's route-parity probe (main vs this planner) | 60 pairs, 0 differences |
+| New tests on `fea24bed`'s product code | Object-in-lane test fails with the old `navigation.js` (eastbound still at edge − 12.6 m after 90 s). Finding 1 and 3 tests fail with the old migration; finding 1 still fails on behaviour alone ("waiting for space at −2681.1, −1334.0"). Restoring the old with-builds corridor line fails the planter assertion. |
+| Related suites with an isolated Redis (resident, navigation, police, creator, Commons, migrations, world, Redis room) | 246/246 passed, 0 skipped |
+| `pnpm run verify` (core), Python 3.12 on PATH, on the review-fix tree | **Attempt 1 (18:51Z) failed** at agent-tests: 273/274; the one failure was the known `land-pr` timing test "a queued lander wakes on release", which timed out at 30 s. That test file then passed 29/29 alone. **Attempt 2 (18:53–18:57Z) passed**: agent 274/274; preview 4,163 passed, 1 skipped; server 919 passed, 225 skipped (Redis cases; core runs without Redis); desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo, demo-verify; secrets. Only this row was added after it. |
+
+**Merged into this branch** by its owner, river-oaks-3e, as `f3f8085c` on 2026-10-26 (signed; parents `fea24bed` and `d5666034`). Review notes:
+- Corridors without builds match the live planner: `createResidentLife` builds its navigation with `locations` and no objects, then sets objects.
+- `lane()` sees current objects: `canWalk` samples `free`, which falls back to `district.open`, and `open` checks the placed-object list that `setPlacedObjects` replaces in place.
+- Lantern stop ids are the lanterns' own ids, so the `lanterns` set matches both `destination.id` and `anchorId`.
+- Hosted checks on `d5666034` all passed.
+
+| Check on `f3f8085c` | Result |
+| --- | --- |
+| Related suites (resident, navigation, companion, creator, auto, community, Commons, migrations, world, police, crime, Commons activation rehearsal, Redis room) with an isolated Redis at 6461 | 196/196 passed, 0 skipped (the same files gave 193 before the review fixes). A first attempt pointed at a Redis that had stopped; it was halted and is kept as `focused-655-f3f8085c-redis-down-stopped.log`, not counted. |
+| `pnpm run verify` (core), Python 3.12 on PATH, 08:28–08:33Z at load 7.5–12.3 | **Passed on the first attempt**, `dirty: false`, revision `f3f8085c`: agent 274/274; preview 4,163 passed, 1 skipped; server 919 passed, 225 skipped (Redis cases; core runs without Redis); desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo, demo-verify; secrets. Receipt `core.json` sha256 `ffae2de5ccbab602…`. |
+
 ## Gaps
 
-- Bayou Heights (#649) has no resident grid: 89,628 cells over the cap. When it is split, its rollback needs the same resident relocation (noted to river-oaks-91).
+- Bayou Heights (#649) has no resident grid here: 89,628 cells over the cap. Draft #670, stacked on this branch, splits it into strips and lands after #649 with the Heights rollback's resident relocation.
 - No browser journey covers residents crossing the seam; the server simulation and the dev town are the evidence.
 - Human review of how it looks in the Commons is Val's.
 
 ## Next step
 
-Draft PR #655 waits for Val's review in the dev town and for Val's go to land. Merging and landing are not authorized for this task. With that go:
-1. Merge current main into the branch.
-2. Rerun the focused suites and `verify full` with an isolated Redis.
-3. Wait for hosted Verify on the merged head.
-4. Land through `pnpm run land` by whoever holds landing authority.
+Draft PR #655 carries main `0b9a97c4` and the review fixes (#674, merged as `f3f8085c`). `verify full` last ran at `03381365`, before the review fixes, so it must run again before landing. Main has since moved to `cb83c7cd` (#658 touch and voice UI; #672 and #675 the performance and streaming harnesses, none of this branch's files). It waits for Val's review in the dev town and for Val's go to land. Merging and landing are not authorized for this task. With that go:
+1. Merge main into the branch again and rerun the related suites and `verify full` with an isolated Redis.
+2. Wait for hosted checks on that head.
+3. Land through `pnpm run land` by whoever holds landing authority.
