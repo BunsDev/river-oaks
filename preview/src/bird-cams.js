@@ -1,6 +1,7 @@
 import { bindPageLifecycle } from './background-lifecycle.js';
 import { isGameplayKey } from './keyboard-input.js';
 import * as THREE from 'three';
+import { rigidCasters, shadowProxyGeometry, shadowProxyMesh } from './shadow-proxy.js';
 
 // Bird cams: a few city birds that Jev flies over the district on autopilot,
 // circling whatever is happening — a conversation, a neighbour helping, a
@@ -194,7 +195,7 @@ export function stepBird(bird, delta, { environment, interests = [], control = n
   return bird;
 }
 
-function birdModel(spec) {
+export function birdModel(spec) {
   const group = new THREE.Group(); group.name = `${spec.name} (bird cam)`;
   const material = (color, roughness = .8) => new THREE.MeshStandardMaterial({ color, roughness });
   const body = material(spec.body), wing = material(spec.wing), accent = material(spec.accent), beak = material(spec.beak, .5), eye = material('#111111', .2);
@@ -214,12 +215,19 @@ function birdModel(spec) {
     return pivot;
   });
   group.userData.wings = wings;
+  // The rigid body parts cast through one hidden proxy (#289); the flapping
+  // wings and the double-sided tail keep casting themselves.
+  const casters = rigidCasters(group, item => item.parent === group), proxy = shadowProxyMesh(shadowProxyGeometry(casters, group));
+  proxy.name = `${spec.name} shadow`; group.add(proxy);
+  group.userData.shadow = { proxy, casters, enable(enabled) { for (const item of casters) item.castShadow = !enabled; if (!enabled) proxy.visible = false; } };
+  group.userData.shadow.enable(true);
   group.scale.setScalar(BIRD_SCALE);
   return group;
 }
 
 export function createBirdCams({ scene, camera, host, getEnvironment, getInterests, getPathHints = () => ({}), now = () => performance.now(), random = Math.random }) {
   const flock = [], models = [];
+  let proxiesOn = true;
   let riding = null, companion = null, transition = 0, control = { turn: 0, climb: 0, throttle: 0 }, keys = new Set(), started = false;
   const from = { position: new THREE.Vector3(), quaternion: new THREE.Quaternion() };
   const listeners = new Set(), emit = () => { for (const listener of listeners) listener(api.state); };
@@ -231,7 +239,7 @@ export function createBirdCams({ scene, camera, host, getEnvironment, getInteres
       const x = west + (east - west) * (.3 + index * .2), z = z0 + (z1 - z0) * (.4 + index * .1);
       const ground = environment.groundAt(x, z), clear = clearAltitude(environment, x, z, ground + BIRD_FLIGHT.minClearance, ground + environment.flightCeiling);
       const bird = createBird(spec, [x, Math.max(ground + BIRD_FLIGHT.cruiseClearance, clear + 4), z], index * 2.1);
-      const model = birdModel(spec); scene.add(model); flock.push(bird); models.push(model);
+      const model = birdModel(spec); model.userData.shadow.enable(proxiesOn); scene.add(model); flock.push(bird); models.push(model);
     });
     emit();
   }
@@ -315,7 +323,11 @@ export function createBirdCams({ scene, camera, host, getEnvironment, getInteres
       camera.position.lerpVectors(from.position, eye, ease); camera.quaternion.slerpQuaternions(from.quaternion, target, ease);
       return true;
     },
-    dispose() { releaseBackground(); for (const model of models) model.removeFromParent(); flock.length = 0; models.length = 0; listeners.clear(); },
+    // Hidden sun-shadow casters for main.js to show while the sun draws its map.
+    get shadowProxies() { return proxiesOn ? models.map(model => model.userData.shadow.proxy) : []; },
+    // Development audit: false restores every part's own caster.
+    shadowProxy(enabled) { proxiesOn = Boolean(enabled); for (const model of models) model.userData.shadow.enable(proxiesOn); return models.length; },
+    dispose() { releaseBackground(); for (const model of models) { model.removeFromParent(); model.userData.shadow.proxy.geometry.dispose(); model.userData.shadow.proxy.material.dispose(); } flock.length = 0; models.length = 0; listeners.clear(); },
   };
   return api;
 }

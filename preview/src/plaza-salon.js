@@ -14,6 +14,7 @@ import { START_FEN, fromFEN } from './chess-rules.js';
 import { MILLS as MORRIS_MILLS, POINTS as MORRIS_POINTS, SIZE as MORRIS_SIZE } from './morris-rules.js';
 import { groundSurfaceHeight } from './world-surface.js';
 import { buildPlanterPlanting } from './landscape-models.js';
+import { rigidCasters, shadowProxyGeometry, shadowProxyMesh } from './shadow-proxy.js';
 
 // The plaza salon drawn from its shared plan (plaza-salon-plan.js): teak and
 // walnut, dusty-pink upholstery, pitted travertine, smoked bronze and warm
@@ -151,6 +152,31 @@ function slattedWall(radius, height, start, length, slatWidth = 0.075) {
   for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * slats);
   geometry.translate(0, height / 2, 0);
   return geometry;
+}
+
+// The parked bikes are identical models, about eleven sun-shadow draws each (#289).
+// One instanced proxy of the first bike's own casting triangles, in its own frame,
+// casts for all of them in one draw. It is hidden except while the sun draws its map.
+function parkedBikeShadow(bikes) {
+  if (!bikes.length) return null;
+  const [first] = bikes, casters = bikes.flatMap(bike => rigidCasters(bike));
+  const proxy = shadowProxyMesh(shadowProxyGeometry(rigidCasters(first), first), bikes.length);
+  proxy.name = 'Parked bikes shadow';
+  // Instance matrices are float32: keep them relative to the rack, not district coordinates.
+  proxy.position.copy(first.position);
+  const fromRack = new THREE.Matrix4().makeTranslation(first.position.clone().negate());
+  const place = (i, shown) => {
+    bikes[i].updateMatrix();
+    const matrix = fromRack.clone().multiply(bikes[i].matrix);
+    proxy.setMatrixAt(i, shown ? matrix : new THREE.Matrix4().makeScale(0, 0, 0).copyPosition(matrix));
+  };
+  bikes.forEach((_, i) => place(i, true)); proxy.computeBoundingSphere();
+  return {
+    proxy, casters: casters.length,
+    show(i, shown) { place(i, shown); proxy.instanceMatrix.needsUpdate = true; proxy.computeBoundingSphere(); },
+    enable(enabled) { for (const mesh of casters) mesh.castShadow = !enabled; if (!enabled) proxy.visible = false; },
+    dispose() { proxy.geometry.dispose(); proxy.material.dispose(); proxy.dispose(); },
+  };
 }
 
 export function buildPlazaSalon(world) {
@@ -1126,18 +1152,29 @@ export function buildPlazaSalon(world) {
       bikes.add(model.object); models.push(model);
     }
   }
-  const parked = slots.map(() => true);
+  const parked = slots.map(() => true), shadow = parkedBikeShadow(models.map(model => model.object));
+  // The proxy casts for the bikes; main.js shows it only while the sun draws its map.
+  group.userData.shadowProxies = [];
+  if (shadow) group.add(shadow.proxy);
   group.userData.rack = {
     slots: slots.length,
     parked: () => parked.slice(),
     // Hide the bikes whose slots are taken (slot ids from the cycling snapshot); true when anything changed.
     setTaken(taken) {
       const held = new Set(taken ?? []); let changed = false;
-      slots.forEach((slot, i) => { const show = !held.has(slot.id); if (parked[i] !== show) { parked[i] = show; models[i].object.visible = show; changed = true; } });
+      slots.forEach((slot, i) => { const show = !held.has(slot.id); if (parked[i] !== show) { parked[i] = show; models[i].object.visible = show; shadow?.show(i, show); changed = true; } });
       return changed;
     },
-    dispose: () => models.forEach(model => model.dispose()),
+    // Development audit: false restores each bike's own casters.
+    shadowProxy(enabled) {
+      if (!shadow) return 0;
+      shadow.enable(enabled); group.userData.shadowProxies.length = 0;
+      if (enabled) group.userData.shadowProxies.push(shadow.proxy);
+      return shadow.casters;
+    },
+    dispose: () => { models.forEach(model => model.dispose()); shadow?.dispose(); },
   };
+  group.userData.rack.shadowProxy(true);
   group.userData.counts = { chairs: plan.chairs.length, chess: plan.chess.length, planters: plan.planters.length, lanterns: plan.lanterns.length, strands: plan.strands.length, rackSlots: slots.length };
   return group;
 }
