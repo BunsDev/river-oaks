@@ -3,6 +3,7 @@ import './access-gate.css';
 import { installDiagnostics, registerDiagnosticSource } from './debug-report.js';
 import { startArtRotation } from './access-art-rotation.js';
 import { generatedUsername } from './generated-username.js';
+import { answeredFetch, reloadAfterFailedCheck } from './access-recheck.js';
 
 // Problem reports start collecting with the sign-in page, so a failure before the
 // game loads is still in the report.
@@ -72,7 +73,7 @@ $('.access-github').addEventListener('click', () => { try { sessionStorage.setIt
 $('#access-reports').addEventListener('click', () => { void import('./debug-report-ui.js').then(({ openReportInbox }) => openReportInbox({ dismissOnOutsideClick })); });
 
 async function api(path, options = {}) {
-  const response = await fetch(path, { credentials: 'same-origin', cache: 'no-store', ...options });
+  const response = await answeredFetch(fetch, path, { credentials: 'same-origin', cache: 'no-store', ...options });
   const body = await response.json();
   if (!response.ok) throw Object.assign(new Error(body.error ?? 'Access is unavailable'), { detail: body });
   return body;
@@ -148,8 +149,9 @@ async function checkAccess() {
       await import('./main.js');
       gate.hidden = true; endSplash();
     }
-  } catch {
-    if (entered) location.reload();
+  } catch (error) {
+    if (reloadAfterFailedCheck(entered, error)) location.reload();
+    if (entered) return;
     endSplash();
     providers.hidden = true; retry.hidden = false; showJourney(null); usernameForm.hidden = true; waiting.hidden = true;
     redeemButton.disabled = true; title.textContent = WELCOME;
@@ -443,3 +445,4 @@ gateSignout.addEventListener('click', signout);
 
 await checkAccess();
 setInterval(checkAccess, 15_000);
+window.addEventListener('online', checkAccess);
