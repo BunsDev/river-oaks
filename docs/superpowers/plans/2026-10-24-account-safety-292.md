@@ -322,26 +322,41 @@ Independent review (2026-10-26):
 
 ## Next action
 
-Handoff, 2026-10-25. All four increments are signed draft PRs, stacked in order, with
-green hosted CI. Nothing is merged.
+Handoff, 2026-10-26. The stack is merged with `origin/main` (`cb403ba2`), and increment E
+is added on top. There are five signed draft PRs, stacked in order. Nothing is merged.
 
 | Increment | PR | Head | Hosted CI |
 | --- | --- | --- | --- |
-| A: erasure | #661 | `772e4ade` | 22/22 |
-| B: blocking (server side) | #665 | `f9d865fa` | 15/15, after one rerun of a walking-precision failure in `commons` |
-| C: in-app deletion, off | #666 | `d06d9fcd` | 15/15 |
-| D: reports, contact, map | #667 | this branch | 15/15 on `e39fbd82` |
+| A: erasure | #661 | `21f09534` | 22/22 |
+| B: blocking (server side) | #665 | `dab7a8c7` | 13/15: `office-computer-embed` failed on both attempts (see below) |
+| C: in-app deletion, off | #666 | `ca67c388` | 15/15 |
+| D: reports, contact, map | #667 | `2cc1dbf9` | 15/15 |
+| E: moderators read reports | #682 | this branch | 15/15 on `684bc93d`, after one rerun of a shard cancelled at its 20-minute limit |
 
-Local evidence:
-- Core verify passed on each increment.
-- `test:server` with an isolated Redis passed on each, at 1192, 1223, 1236 and 1238 tests.
-- `verify full` ran only on A. Every non-browser stage passed; its browser stage waited about three hours behind the shared lock and was stopped at handoff. Its browser stage, and `verify full` on B, C and D, weren't run locally. Hosted CI ran the browser journeys on every head.
-- The private Redis was stopped.
+Merging main:
+- #640 made crime and police checkpoints strict. `forgetAccount` runs the departure first, so a forgotten account leaves a world that restores.
+- A test covers an account forgotten mid-fight and under pursuit. Replacing the departure with `players.delete` fails it.
+- The inventory row for crime and police says what clears at once and what lapses.
+- Two inventory conflicts (in D and E) were resolved row by row. Every cited line was checked by its text.
+
+Local evidence on the merged heads:
+- `test:server` with an isolated Redis: A 1219, B 1250, C 1263, D 1265, E 1273. All passed, with 0 skipped.
+- Core verify passed on A (`21f09534`, at load 12) and on E (`684bc93d`, at load 14), the top of the stack. B, C and D ran it only through their `test:server` and hosted CI.
+- `pnpm test` (preview unit) on E before the merge: 4120/4121. The one skip predates this work.
+- `verify full` didn't run locally on any merged head, because of the browser lock. Hosted CI ran the browser journeys.
+
+B's places shard failed on both attempts in `office-computer-embed`, after the journey's live account switch. That's the race in "Gaps and decisions". The same journey failed this week on `docs/convergence-3x-20261024`, a docs-only branch, and on a Dependabot bump. #666 and #667 contain B's tree and passed it. B's one rerun is used. A fix belongs to whoever takes the journey.
+
+Hosted runners were slow around 17:54Z. They cancelled B's `campus` and `worlds-and-creator` shards and E's `required` shard at the 20-minute job limit, with every journey before the cut passing. `main`'s run lost a shard the same way. One rerun of failed jobs cleared B's two.
 
 Next:
-1. Val decides on the numbered Decisions in `docs/app-review-292.md`, `docs/account-deletion.md`, `docs/player-blocking.md` and the inventory, and on review and landing order (#661, then #665, #666, #667).
+1. Val decides on the numbered Decisions in `docs/app-review-292.md`, `docs/account-deletion.md`, `docs/player-blocking.md` and the inventory, and on review and landing order: #661, #665, #666, #667, then #682.
 2. Owners to ask:
    - The owner of `multiplayer-client.js` and `main.js` (`outdoor-residents-admin-controls-20261024`): wire blocking with the four calls in `docs/player-blocking.md`, and add a report reason.
-   - The owner of `access-entry.js` (`touch-network-288-290-20261024`): show the support contact before approval, and call `clearAccountStorage` on sign-out.
-3. After the policy Decisions: a content filter and a moderator reports view. Both are gaps that block review.
-4. Native work stays with #286, #287 and #293.
+   - The owner of `access-entry.js` (`touch-network-288-290-20261024`): show the support contact before approval; call `clearAccountStorage` on sign-out; fix or settle the 15 s reload race the browser journey trips on.
+3. Still blocking 1.2, after the policy Decisions:
+   - a content filter;
+   - keeping reported content with the report, and keeping reports until a moderator closes them;
+   - notifying a moderator.
+4. At retirement, after the merges: split the register task into one task per PR branch, as `project:prune` needs.
+5. Native work stays with #286, #287 and #293.
