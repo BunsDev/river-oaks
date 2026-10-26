@@ -153,6 +153,8 @@ __pycache__/
 *.egg-info/
 data/raw/
 data/generated/
+# The local Commons experience stage's report (config/agent-workflow.json, experience-commons).
+data/reports/experience-commons.json
 data/models/
 unreal/**/Binaries/
 unreal/**/Intermediate/
@@ -172,6 +174,8 @@ credentials.json
 service-account.json
 .playwright-cli/
 output/playwright/
+# desktop/e2e.js's hot-reload probe, left behind if a run dies before cleanup
+preview/desktop-hmr-*.css
 
 .playwright-mcp/
 
