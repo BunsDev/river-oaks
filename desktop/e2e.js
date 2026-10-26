@@ -90,6 +90,9 @@ try {
       changed(); new MutationObserver(changed).observe(host, { attributes: true, attributeFilter: ['data-multiplayer'] });
     };
     watch();
+    // Diag only (never merged): keep the town sockets so the run can drop one on purpose.
+    const Native = window.WebSocket, sockets = window.__diagTownSockets = [];
+    window.WebSocket = class extends Native { constructor(url, ...rest) { super(url, ...rest); if (String(url).includes('/multiplayer')) sockets.push(this); } };
   });
   page.setDefaultTimeout(120000);
   page.on('pageerror', error => errors.push(error.message));
@@ -252,10 +255,19 @@ try {
   // joined; if the gate took the dialog first, rejoin, reopen it and choose again.
   const settingsOpen = async () => await page.locator('#settings-dialog[open]').count() > 0;
   const qualityRetries = report.qualityRetries = [];
+  // Diag only: close the open town socket as a missed heartbeat would, and wait for
+  // the gate to take the Settings dialog.
+  const diagDrops = report.diagDrops = [];
+  const dropTown = async when => {
+    const closed = await page.evaluate(() => (window.__diagTownSockets ?? []).filter(ws => ws.readyState === 1).map(ws => (ws.close(), ws.url.split('?')[0])));
+    await page.waitForFunction(() => !document.querySelector('#settings-dialog')?.open);
+    diagDrops.push({ when, closed: closed.length });
+  };
   const chooseQuality = async mode => {
     for (;;) {
       if (sharedTown) await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.multiplayer === 'joined');
       const chosen = await openHudSpace(page, 'settings-section', 'Graphics')
+        .then(async () => { if (mode === 'auto' && !qualityRetries.length) await dropTown('before the Auto choice'); })
         .then(() => page.locator(`[data-quality=${mode}]`).click())
         .then(() => true, async error => {
           if (await settingsOpen() || qualityRetries.length >= 2) throw error;
@@ -272,6 +284,7 @@ try {
   assert.equal(await page.locator('[data-quality=smooth]').getAttribute('aria-pressed'), 'true');
   check('graphics preference survives reload');
   await chooseQuality('auto');
+  await dropTown('after the Auto choice');
   // A drop after the choice has already closed the dialog.
   if (await settingsOpen()) await page.locator('#settings-dialog .settings-header button').click().catch(async error => { if (await settingsOpen()) throw error; });
   // Selecting Auto restarts it at full resolution with AO, and it decides once
@@ -289,6 +302,9 @@ try {
     throw new Error(`Auto did not settle within the timeout (quality ${quality}): ${error.message}`);
   });
   const settledMs = Math.round(performance.now() - settling);
+  assert.equal(diagDrops.length, 2, 'diag: both forced drops happened');
+  assert.ok(diagDrops.every(drop => drop.closed === 1), `diag: each drop closed one town socket ${JSON.stringify(diagDrops)}`);
+  assert.deepEqual(qualityRetries.map(retry => retry.mode), ['auto'], 'diag: the forced drop before the Auto choice was retried once');
   report.performance = await page.evaluate(async () => {
     const intervals = [];
     let last;
