@@ -2,6 +2,7 @@ import {isRealisticHumanRig, characterFidelityContract} from './character-fideli
 import {createCharacterFidelity, followCharacterQuality} from './character-fidelity-runtime.js';
 import {createCharacterExpressions} from './character-expressions.js';
 import { createArmContacts } from './arm-contact.js';
+import { createBicycleRider } from './bicycle-rider.js';
 import { applyHandshakeContact } from './handshake-contact.js';
 import { shareAvatarSkeletons } from './avatar-skeletons.js';
 import { createConversationGaze } from './conversation-gaze.js';
@@ -157,12 +158,13 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const kit=supplyBag(),hand=model.getObjectByName('hand_r');root.add(kit);
   const can=wateringCan();root.add(can);
   const adjustment = new THREE.Quaternion();
-  const feet = createFootPlacement(model, root), baseY = model.position.y;
+  const feet = createFootPlacement(model, root), baseY = model.position.y, baseZ = model.position.z;
   const seatedShoes=new Map(feet.legs.map(leg=>[leg,leg.foot.getWorldQuaternion(new THREE.Quaternion())]));
   const noMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const gaze=createConversationGaze(),gazeOrigin=new THREE.Vector3(),gazeRotation=new THREE.Quaternion(),gazeForward=new THREE.Vector3();
   const gazeHead=model.getObjectByName('head'),gazeNeck=model.getObjectByName('neck_01');
-  const greetingArm=createArmContacts(model,root).find(arm=>arm.side==='r');
+  const arms=createArmContacts(model,root),greetingArm=arms.find(arm=>arm.side==='r');
+  const bicycle=createBicycleRider({model,root,feet,arms,seatedShoes,axes:avatar.axes,hipHeight:avatar.hipHeight});
   const gestures=createResidentGestures({reducedMotion:noMotion});
   const conversation=createConversationMotion({seed:id??index,reducedMotion:noMotion});
   const conversationBody=createConversationBody(avatar);
@@ -188,6 +190,8 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
     get conversationPose() {return conversation.pose;},
     get facePose() {return face.pose;},
     get feet() {return feet.legs;},
+    // The saddle height this rider sets on a bicycle (bicycle-rider.js).
+    get bicycleSaddle() {return bicycle.saddle;},
     update(now, action, speaking, locomotion, groundAt = () => root.getWorldPosition(new THREE.Vector3()).y, lookTarget = null, {conversing=false} = {}) {
       const t=now/1000+index*0.7;
       const elapsed=previousTime===null?0:Math.max(0,(now-previousTime)/1000);
@@ -202,7 +206,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       const strength = Math.min(1,walkingSpeed/0.65);
       // Let leg reach determine pelvis lowering; a fixed walking drop keeps
       // the supporting knee crouched even directly beneath the body.
-      model.position.y = baseY - 0.004*strength;
+      model.position.y = baseY - 0.004*strength; model.position.z = baseZ;
       for (const bone of bones) {
         bone.quaternion.copy(rest.get(bone));
         if(noMotion && !locomotion?.speed) continue;
@@ -229,6 +233,8 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
           adjustment.setFromAxisAngle(avatar.axes.get(bone).y,attention.yaw*weight);bone.quaternion.multiply(adjustment);
         }
       }
+      const cycling=Boolean(locomotion?.riding)&&locomotion.ridingKind==='bicycle';
+      if(!cycling)bicycle.release();
       if(locomotion?.riding) {
         const seated={thigh_l:[0,0,0],thigh_r:[0,0,0],calf_l:[0,0,0],calf_r:[0,0,0],foot_l:[0,0,0],foot_r:[0,0,0],spine_03:[.035,0,0],upperarm_l:[.20,0,.025],upperarm_r:[.20,0,-.025],lowerarm_l:[0,0,.60],lowerarm_r:[0,0,.60]};
         if(locomotion.ridingKind==='motorcycle'&&locomotion.ridingDriver) {
@@ -239,6 +245,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
           seated.spine_03=[.025+(noMotion?0:Math.sin(t*1.4)*.003),0,lean*.25];
         }
         model.position.y=baseY;
+        if(cycling)bicycle.posture(seated,locomotion,dt,noMotion);
         for(const bone of bones)if(seated[bone.name]) {
           bone.quaternion.copy(rest.get(bone));
           seated[bone.name].forEach((angle,i)=>{adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);bone.quaternion.multiply(adjustment);});
@@ -246,23 +253,26 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
             adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);bone.quaternion.multiply(adjustment);
           });
         }
-        root.updateWorldMatrix(true,true);
-        const worldRotation=root.getWorldQuaternion(new THREE.Quaternion()),forward=new THREE.Vector3(0,0,1).applyQuaternion(worldRotation);
-        const board=avatar.hipHeight-.025-(locomotion.seatToFloor??.5075);
-        for(const leg of feet.legs) {
-          leg.ikOrientation=worldRotation.clone().multiply(seatedShoes.get(leg));
-          const scale=leg.foot.getWorldScale(new THREE.Vector3());
-          const bottom=Math.min(...leg.sole.map(p=>p.clone().multiply(scale).applyQuaternion(seatedShoes.get(leg)).y));
-          const target=root.localToWorld(new THREE.Vector3(locomotion.ridingKind==='motorcycle'?Math.sign(leg.rest.x)*.32:leg.rest.x,board-bottom,locomotion.ridingKind==='motorcycle'?.26:.44));
-          if(locomotion.ridingKind==='seat') {
-            // These authored cushions are high. Let short legs hang naturally
-            // instead of stretching nearly straight to reach the floor.
-            const hip=root.worldToLocal(leg.thigh.getWorldPosition(new THREE.Vector3()));
-            target.copy(root.localToWorld(new THREE.Vector3(leg.rest.x,Math.max(board-bottom,hip.y-leg.lowerLength),hip.z+leg.upperLength)));
+        if(cycling)bicycle.place(locomotion);
+        else {
+          root.updateWorldMatrix(true,true);
+          const worldRotation=root.getWorldQuaternion(new THREE.Quaternion()),forward=new THREE.Vector3(0,0,1).applyQuaternion(worldRotation);
+          const board=avatar.hipHeight-.025-(locomotion.seatToFloor??.5075);
+          for(const leg of feet.legs) {
+            leg.ikOrientation=worldRotation.clone().multiply(seatedShoes.get(leg));
+            const scale=leg.foot.getWorldScale(new THREE.Vector3());
+            const bottom=Math.min(...leg.sole.map(p=>p.clone().multiply(scale).applyQuaternion(seatedShoes.get(leg)).y));
+            const target=root.localToWorld(new THREE.Vector3(locomotion.ridingKind==='motorcycle'?Math.sign(leg.rest.x)*.32:leg.rest.x,board-bottom,locomotion.ridingKind==='motorcycle'?.26:.44));
+            if(locomotion.ridingKind==='seat') {
+              // These authored cushions are high. Let short legs hang naturally
+              // instead of stretching nearly straight to reach the floor.
+              const hip=root.worldToLocal(leg.thigh.getWorldPosition(new THREE.Vector3()));
+              target.copy(root.localToWorld(new THREE.Vector3(leg.rest.x,Math.max(board-bottom,hip.y-leg.lowerLength),hip.z+leg.upperLength)));
+            }
+            const pole=leg.thigh.getWorldPosition(new THREE.Vector3()).add(forward);
+            if(locomotion.ridingKind==='motorcycle')pole.add(new THREE.Vector3(Math.sign(leg.rest.x)*.28,0,0).applyQuaternion(worldRotation));
+            leg.error=applyLegIK(leg,target,pole);
           }
-          const pole=leg.thigh.getWorldPosition(new THREE.Vector3()).add(forward);
-          if(locomotion.ridingKind==='motorcycle')pole.add(new THREE.Vector3(Math.sign(leg.rest.x)*.28,0,0).applyQuaternion(worldRotation));
-          leg.error=applyLegIK(leg,target,pole);
         }
       }
       if(locomotion?.superheroFlight) {
