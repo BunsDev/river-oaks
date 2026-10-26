@@ -79,6 +79,15 @@ test('every public seat is titled for the furniture it is, and promises no share
     ['Atelier work table', 'Atelier workbench', 'Garden café table', 'Shared project table', 'Shared project workbench', 'Shared work lounge table']);
 });
 
+// #510 Decision 2: a hall's use is its room name ("The Commons · …") on the street and in the
+// places list. The halls run no shared activity, so their names promise none either.
+test('every public hall is named for what it holds, and promises no shared activity', () => {
+  for (const tower of CAMPUS.towers) {
+    const use = tower.levels[0].hall.use;
+    assert.doesNotMatch(use, /review|demo|present|collaborat|book|meeting|creator/i, `${tower.id} hall: "${use}" promises an activity the hall does not run`);
+  }
+});
+
 test('the fit-out draws every desk with one neutral screen and every seat, and releases what it owns', async () => {
   assert.equal(buildGardenCampusFitout(await loadDistrictData()), null, 'nothing without the campus');
   const group = buildGardenCampusFitout(await loadDistrictData({ districtRevision: 'river-oaks-gardens-3' }));
