@@ -211,16 +211,20 @@ async page => {
   await page.locator('#design-list button', {hasText:'Place a copy'}).click();
   await aimAt(...acceptedAim);
   await page.waitForFunction(() => document.querySelector('#build-hint')?.dataset.valid === 'true');
-  await page.locator('#build-place').click();
+  // Click the ground, as the panel tells a mouse user to. Moving to Place here
+  // leaves the canvas, and the preview then sits ahead, wherever that is.
+  await page.mouse.down(); await page.mouse.up();
   await page.waitForFunction(() => window.__riverMultiplayer().snapshot.builds.length === 1);
   const copy = await page.evaluate(() => window.__riverMultiplayer().snapshot.builds[0]);
   check(copy.id !== placed.id && copy.kind === placed.kind && copy.finish === placed.finish, 'The owner places a fresh copy from a saved design');
   await page.locator('#design-list button', {hasText:'Delete design'}).click();
   await page.waitForFunction(() => document.querySelector('#design-count')?.textContent === '0/48');
   check((await page.evaluate(() => window.__riverMultiplayer().snapshot.builds[0]?.id)) === copy.id, 'Deleting a saved design leaves its placed copy intact');
+  // Delete design took the pointer off the canvas, so point at the copy again.
+  await aimAt(...acceptedAim);
   await page.waitForFunction(() => /creation|standing/.test(document.querySelector('#build-hint')?.textContent ?? ''), null, { timeout: 5000 }).catch(() => {});
   const blocked = await builder();
-  check(blocked.valid === 'false', `The preview turns red on the spot just taken (${blocked.hint})`);
+  check(blocked.valid === 'false' && /creation|standing/.test(blocked.hint), `The preview turns red on the spot just taken (${blocked.hint})`);
   const yaw = (await builder()).yaw; await page.keyboard.press('KeyR');
   check(Math.abs((await builder()).yaw - yaw - Math.PI / 8) < 1e-6, 'R turns the preview');
   await page.keyboard.press('Escape');
