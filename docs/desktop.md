@@ -86,7 +86,7 @@ The script never takes a password, key or issuer. CI does not sign: the `Desktop
 - `TypeSafe-Place-<version>-<windows|linux|macos>-<arch>-unsigned`: a zip of the packaged directory with a `SHA256SUMS` file, kept 14 days. Only a build that passed the fuse and asar check is uploaded.
 - `desktop-e2e-<runner>`: the e2e receipt `data/reports/desktop-ci-<runner>.json` and `output/playwright/desktop-development*.png`.
 
-The same run builds the Windows and Linux installers and tests them on fresh runners; see [installers](#installers-for-windows-and-linux). Pull requests hold no secrets, so their builds are unsigned (ad-hoc on macOS); only the dispatch- and tag-only Windows signing job can sign. It is not a required check: the `preview` aggregate in `verify.yml` still gates `main`. To fetch a build for manual testing:
+The same run builds the Windows and Linux installers and tests them on fresh runners; see [installers](#installers-for-windows-and-linux). A pull request that changes `desktop/` or the workflow gets all three runners and the installers; one that reaches the workflow only through `shared/`, `scripts/studio-skill-pack.js`, `package.json` or the lockfile gets the Linux leg alone, without installers. Pushes to `main`, tags and manual runs always get everything, and a newer push to the same pull request cancels its older run. Pull requests hold no secrets, so their builds are unsigned (ad-hoc on macOS); only the dispatch- and tag-only Windows signing job can sign. It is not a required check: the `preview` aggregate in `verify.yml` still gates `main`. To fetch a build for manual testing:
 
 ```sh
 gh run list --workflow Desktop --branch main --limit 1
