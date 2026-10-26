@@ -14,6 +14,8 @@ Make the desktop app release-ready on all three platforms without Val's hands: f
 | `desktop-electron-cache-371-20261024` | `ci/desktop-electron-cache-371-20261024` | `river-oaks-desktop-electron-cache` | `.github/workflows/desktop.yml`, `desktop/package.js`, `desktop/package-options.js`, `desktop/tests/package-options.test.js` |
 | `desktop-linux-crash-370-20261024` | `fix/desktop-linux-crash-370-20261024` | `river-oaks-desktop-linux-crash` | `desktop/main.js` (recovery), `desktop/tests/`, `docs/desktop.md` (Rendering and recovery) |
 | `desktop-platform-release-373` | `docs/desktop-release-packet-373-20261024` | `river-oaks-desktop-release-packet` | this ledger, the rehearsal ledger, `docs/desktop.md` (CI and release sections), `docs/agent-workflow.md` |
+| `desktop-e2e-settings-drop-371-20261026` | `fix/desktop-e2e-settings-town-drop-371-20261026` | `river-oaks-desktop-settings-drop` | `desktop/e2e.js` |
+| `desktop-ci-electron-scope-20261026` | `ci/desktop-electron-scope-20261026` | `river-oaks-desktop-electron-scope` | `.github/workflows/desktop.yml` (scope job), `scripts/tests/desktop-workflow-scope.test.js`, `docs/desktop.md` (CI builds), `docs/testing.md` (Desktop workflow), this ledger |
 
 ## Baseline (19:28Z)
 
@@ -142,6 +144,24 @@ Results:
 - **Forced-drop run 40389088261** (`ac00e1c6`): the town socket was closed before the Auto choice and after it. All ten legs recovered with exactly one retry and nine passed. Leg 43 failed the 100-frame check at 9.4 fps on the floor. Its scene counts match main's passing legs exactly, so the runner was slow, not the change.
 - **Head run 40396746242** (`d1eb78b6`): 10 of 10 passed, with no natural drop. Frames ranged 108–405.
 - **Comment posted:** [#371](https://github.com/BunsDev/river-oaks/issues/371#issuecomment-6427022352).
+
+## Increment 7: Electron bumps get every platform (#371, 2026-10-26)
+
+Task `desktop-ci-electron-scope-20261026`, branch `ci/desktop-electron-scope-20261026`, worktree `river-oaks-desktop-electron-scope`. Val authorized it on 2026-10-26, with landing.
+
+The Desktop `scope` job gave the full matrix and installers only to pull requests that change `desktop/` or the workflow. An Electron bump changes only `package.json` and the lockfile, so it got the Linux leg alone: #619 moved Electron 44.8.0 → 44.9.1 that way, and Dependabot #681 (44.9.1 → 45.0.0) would have too. The step now reads each file's patch from the same API call. It also gives every platform when a changed line in `package.json`, `pnpm-lock.yaml` or `pnpm-workspace.yaml` names `electron`, `electron-winstaller` or an `@electron` package, or when GitHub leaves out a `package.json` or lockfile patch as too big. `pnpm-workspace.yaml`, which decides whether Electron's postinstall download runs, joins the workflow's paths. `electron-to-chromium`, a browserslist dependency, does not count.
+
+An independent review found no correctness bugs. It confirmed:
+- API and jq errors fail the step instead of downgrading it.
+- The regex matches all 43 lockfile and 6 `package.json` lines that mention Electron, and no unrelated line.
+- The test passes with bash 3.2 and with dash as `sh`.
+
+Its doc findings are fixed: the wording now names lines, not "packaging tools", and the too-big rule includes `package.json`. Two gaps remain, both as before: a bump to an Electron tool's own dependency (such as `postject` or `resedit`) and a `package.json` `version` bump still get Linux only on a pull request, while `main` and tags build everything.
+
+Results:
+
+- **`scripts/tests/desktop-workflow-scope.test.js`:** runs the step's own script from `desktop.yml` with a stand-in `gh` that serves fixture patches. It needs bash and jq, as on ubuntu-latest. 5 of 5 pass; against `main`'s workflow, the three tests that need every platform from `package.json`, the lockfile or `pnpm-workspace.yaml` fail, and the other two pass.
+- **Real pull requests:** the step, run locally with the real `gh` against 11 merged or open pull requests, gives every platform to #681 and #619 where `main`'s rule gave Linux only. It keeps every platform for #554 and #652, and Linux only for #679, #628, #629, #621, #611, #548 and #671.
 
 ## Pull requests
 
