@@ -7,7 +7,7 @@ async page => {
   const origin = 'http://127.0.0.1:5173', checks = [];
   const racks = ['amorino-rack', 'cartier-rack', 'harry-winston-rack', 'saint-bernard-rack', 'steak-48-rack', 'diptyque-rack'];
   const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
-  const cycling = p => p.evaluate(() => { const { goNear, face, ...state } = window.__riverCycling(); return state; });
+  const cycling = p => p.evaluate(() => { const { goNear, frame, ...state } = window.__riverCycling(); return state; });
   // A named wait: a timeout reports the step and the cycling state instead of a bare timer.
   const waitOn = async (p, label, fn, arg, timeout) => { try { await p.waitForFunction(fn, arg, { timeout }); } catch (error) { throw new Error(`${label}: ${error.message.split('\n')[0]} · state ${JSON.stringify(await cycling(p))}`); } };
   const frames = p => p.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
@@ -26,7 +26,7 @@ async page => {
       check((await page.evaluate(id => window.__riverCycling().goNear(id), near)).ok, `Arrived at ${rack}`);
       await waitOn(page, `${rack} prompt`, () => window.__riverCycling().prompt === 'take-bike', null, 30000);
       check(/Take a bike/.test(await page.locator('#walking-interact').textContent()), `${rack} offers Take a bike`);
-      check(await page.evaluate(id => window.__riverCycling().face(id), near), `Facing ${rack}`);
+      check(await page.evaluate(id => window.__riverCycling().frame(id), near), `Framing ${rack}`);
       await frames(page);
       await page.screenshot({ path: `output/playwright/city-bike-racks-${rack}.png` });
       await page.locator('#canvas-host').focus();

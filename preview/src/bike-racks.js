@@ -20,7 +20,7 @@ const CITY_RACKS = [
   { id: 'saint-bernard-rack', x: -2683.0, north: -1405.0, heading: Math.PI / 2 },
   // Southwest, by Steak 48.
   { id: 'steak-48-rack', x: -2877.0, north: -1427.0, heading: Math.PI },
-  // West, by Diptyque.
+  // West, between Diptyque and Baccarat.
   { id: 'diptyque-rack', x: -2823.5, north: -1316.0, heading: -Math.PI / 2 },
 ].map(rack => Object.freeze({ ...SHAPE, ...rack }));
 

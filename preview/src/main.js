@@ -1494,8 +1494,9 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
       }
       return { ok: false };
     },
-    // Turn to look at a slot's bike from where you stand (for journey screenshots).
-    face(slotId) {
+    // Turn your back to a slot's bike (a walker faces -sin/-cos yaw), so the camera
+    // behind you frames its rack (for journey screenshots).
+    frame(slotId) {
       const slot = world ? bikeRackSlots(world).find(item => item.id === slotId) : null, pose = walking?.getPose();
       if (!slot || !pose) return false;
       walking.setYaw(Math.atan2(slot.x - pose.position[0], -slot.north - pose.position[2]));

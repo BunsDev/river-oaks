@@ -34,7 +34,7 @@ slots and without changing the cycling rules.
 - `preview/src/plaza-bicycle.js`: the G prompt offers the nearest free slot at any rack.
 - `preview/src/main.js`:
   - builds the layer, hides taken bikes from the snapshot, and lists the proxies for shadows;
-  - adds `cityParked` and a dev-only `face(slotId)` to `__riverCycling`.
+  - adds `cityParked` and a dev-only `frame(slotId)` to `__riverCycling`.
 - Copy and docs:
   - leaderboard copy: "Bike racks · lifetime miles" and "Take a bike from any bike rack.";
   - `docs/multiplayer.md`.
@@ -80,11 +80,41 @@ kept a spot only if:
   - the shadow proxy left out of the per-rack batch;
   - server slots cut to the plaza's.
 
+- Browser, at 2eb2805c, 21:48–21:53Z, load 19–42, under the browser lock. In both
+  Chromium and WebKit, all passed:
+  - city-bike-racks 45 checks;
+  - cycling-rack 12;
+  - cycling-leaderboard 8.
+  The reports are `data/reports/city-bike-racks-{chromium,webkit}.json`
+  (untracked), and the rack screenshots are `output/playwright/city-bike-racks-*.png`.
+- Draw census, scratch `rack-census.mjs`, with draw-census-local's setup (WebKit,
+  Gardens, 440×796, AO off):
+
+  | View | Total main / shadow | City racks main / shadow | Triangles main / shadow |
+  | --- | --- | --- | --- |
+  | Arrival (amorino in view) | 421.6 / 455 | 8 / 3 | 40k / 78k |
+  | At Cartier | 473 / 449 | 15 / 2 | 78k / 40k |
+
+  Sent to river-oaks-32.
+- Draft #688 opened at 2eb2805c.
+- Screenshot review: all six racks sit on open paving in front of storefronts.
+  - Saint Bernard is at the southeast edge, facing the open ground.
+  - The west rack is between Diptyque and Baccarat, under the arcade.
+- Follow-up: renamed the dev hook `face()` to `frame()`. A walker faces
+  (-sin, -cos) yaw, so the hook turns the player's back to the bike and the
+  camera frames the rack. The west rack's comment now names both stores.
+- Follow-up verification:
+  - `pnpm run verify` passed (22:06–22:21Z, load 22–65), with the same counts as
+    above: agent 276/276; preview 4178 pass, 1 skip; server 916 pass, 225 Redis
+    skips; desktop 120 pass, 3 skips; build, Python, demo and secrets.
+  - city-bike-racks passed 45 checks in Chromium (22:21Z) and in WebKit (22:45Z),
+    each after waiting its turn in the browser lock. The reports are
+    `data/reports/city-bike-racks-{chromium,webkit}-2.json`.
+
 ## Gaps
 - Not checked against player creations saved on a live town. A saved creation on
   a rack spot would only make that slot refuse a rider (`isFree`).
 
 ## Next action
-Run `pnpm run verify`, then the browser journeys (city-bike-racks, cycling-rack
-and cycling-leaderboard) in Chromium and WebKit. Take the draw census against
-main for river-oaks-32. Then a signed commit and a draft PR.
+1. Watch hosted CI on #688.
+2. Leave the PR as a draft for Val's review. No merge.
