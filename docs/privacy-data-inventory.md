@@ -33,15 +33,15 @@ The record holds the account id, the WorkOS event id and when the second run is 
 Hosted, it is one Redis hash (`server/account-erasure.js:113`); a failed or
 interrupted request stays in it, and the sweep (`server/account-erasure.js:64`)
 retries it and runs each due second run: every 30 seconds on a long-lived server
-(`server/redis-backend.js:101`), and every five minutes through the Vercel cron
+(`server/redis-backend.js:104`), and every five minutes through the Vercel cron
 `/api/erasure-sweep` (`server/account-erasure.js:130`), so on Vercel the second run
 and the record's removal take up to about six minutes. The cron needs `CRON_SECRET`.
 Without it on Vercel, nothing sweeps: no second run happens, a failed request is
 retried only by WorkOS, and each record keeps its account id. The backend logs
 `account_erasure_sweep_unscheduled` at every start in that case
-(`server/redis-backend.js:104`).
+(`server/redis-backend.js:107`).
 The standalone town keeps the record in memory, like its other stores
-(`server/town.js:163`), and WorkOS retries a request that a restart interrupted.
+(`server/town.js:172`), and WorkOS retries a request that a restart interrupted.
 Every failure is logged with the WorkOS event id and the names of the failed steps,
 the tombstone and the revocation included, and never the account
 (`server/account-erasure.js:32`). A sweep that can't read the records logs

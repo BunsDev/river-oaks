@@ -5,7 +5,7 @@ import { once } from 'node:events';
 import { randomUUID } from 'node:crypto';
 import Redis from 'ioredis';
 import { accountDeletionEnabled, createAccountDeletionRoute, DELETION_PHRASE, RECENT_SIGN_IN_MS } from '../account-deletion.js';
-import { createAccountErasure } from '../account-erasure.js';
+import { createAccountErasure, createMemoryPendingErasures } from '../account-erasure.js';
 import { createLocalChauffeurSecurity } from '../chauffeur.js';
 import { createAuth } from '../auth.js';
 import { createRedisAuth } from '../redis-auth.js';
@@ -63,13 +63,13 @@ test('every refusal leaves the account alone', async t => {
   assert.deepEqual(calls, []);
 });
 
-test('deletion asks the provider first, then erases twice, and signs the browser out', async t => {
+test('deletion asks the provider first, signs the browser out, then erases', async t => {
   const { request, calls } = await harness(t);
   const response = await ask(request);
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { deleted: true, complete: true });
   assert.match(response.headers.get('set-cookie'), /Max-Age=0/);
-  assert.deepEqual(calls, [['provider', 'erin'], ['signed out'], ['erased', 'erin'], ['erased', 'erin']]);
+  assert.deepEqual(calls, [['provider', 'erin'], ['signed out'], ['erased', 'erin']], 'once: the erasure\'s own second pass follows a minute later');
 });
 
 test('when the provider cannot delete the account, nothing is erased and the session stays', async t => {
@@ -136,17 +136,18 @@ async function sessionStore(t, kind) {
     security = createLocalChauffeurSecurity({ isBanned: async () => false, now });
   }
   const base = kind === 'redis' ? origin : 'http://localhost:3000';
-  const eraseAccount = createAccountErasure({ tombstone: async id => { tombstones.add(id); }, revoke: id => auth.revokeUser(id), steps: { stores: async id => { erased.push(id); } } });
+  const eraseAccount = createAccountErasure({ tombstone: async id => { tombstones.add(id); }, revoke: id => auth.revokeUser(id), steps: { stores: async id => { erased.push(id); } },
+    pending: createMemoryPendingErasures(), now });
   const route = createAccountDeletionRoute({ enabled: true, auth, security, origin: base, eraseAccount, now });
   const request = await serve(t, async (req, res) => await auth.handle(req, res) || await route(req, res));
   const remove = (current, body = { confirm: DELETION_PHRASE }) => request('/api/account/delete', { method: 'POST',
     headers: { Origin: base, Cookie: current.cookie, 'X-CSRF-Token': current.csrfToken, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const status = async current => (await request('/api/account/delete', { headers: { Cookie: current.cookie } })).json();
-  return { request, base, workos, deletion, erased, remove, status, advance: ms => { time += ms; } };
+  return { request, base, workos, deletion, erased, eraseAccount, remove, status, advance: ms => { time += ms; } };
 }
 for (const kind of ['single-process', 'redis']) {
   test(`${kind} sessions keep their sign-in time through refreshes, and WorkOS deletes the user before erasure`, { skip: kind === 'redis' && !process.env.REDIS_URL }, async t => {
-    const { request, base, workos, deletion, erased, remove, status, advance } = await sessionStore(t, kind);
+    const { request, base, workos, deletion, erased, eraseAccount, remove, status, advance } = await sessionStore(t, kind);
     let erin = await session(request, await signIn(request, workos, 'user_1'));
     assert.deepEqual(await status(erin), { available: true, recent: true });
     // The access token lasts five minutes; a refresh is not a new sign-in.
@@ -164,13 +165,18 @@ for (const kind of ['single-process', 'redis']) {
     erin = await session(request, await signIn(request, workos, 'user_1'));
     const removed = await remove(erin);
     assert.equal(removed.status, 200);assert.match(removed.headers.getSetCookie().join('\n'), /river_oaks_session=; [^\n]*Max-Age=0/);
-    assert.deepEqual([deletion.deleted, erased], [['user_1'], ['user_1', 'user_1']]);
+    assert.deepEqual([deletion.deleted, erased], [['user_1'], ['user_1']]);
     assert.equal((await session(request, erin.cookie)).authenticated, false, 'every session of the account ended');
+    // The request is recorded; a minute later the sweep runs its second pass, for a write already in flight.
+    assert.deepEqual(await eraseAccount.sweep(), { finished: 0, failed: 0, waiting: 1 });
+    advance(60_000);
+    assert.deepEqual(await eraseAccount.sweep(), { finished: 1, failed: 0, waiting: 0 });
+    assert.deepEqual(erased, ['user_1', 'user_1']);
 
     // A user WorkOS no longer has counts as deleted.
     let pat = await session(request, await signIn(request, workos, 'user_2'));
     deletion.fail(Object.assign(new Error('Not found'), { status: 404 }));
-    assert.equal((await remove(pat)).status, 200);assert.deepEqual(erased.slice(2), ['user_2', 'user_2']);
+    assert.equal((await remove(pat)).status, 200);assert.deepEqual(erased.slice(2), ['user_2']);
     // Any other WorkOS failure erases nothing and keeps the session.
     const kim = await session(request, await signIn(request, workos, 'user_3'));
     deletion.fail(Object.assign(new Error('Server error'), { status: 500 }));
@@ -198,6 +204,11 @@ test('the flag turns deletion on only where a failed erasure is retried', t => {
   assert.deepEqual(warnings, []);
   assert.equal(accountDeletionEnabled({ RIVER_OAKS_ACCOUNT_DELETION: '1' }), false, 'no webhook, no retry');
   assert.deepEqual(warnings.map(line => JSON.parse(line)), [{ event: 'account_deletion_off', reason: 'webhook_secret_missing' }]);
+  // On Vercel only the cron sweeps, so without its secret no second pass or retry would run.
+  warnings.length = 0;
+  assert.equal(accountDeletionEnabled({ RIVER_OAKS_ACCOUNT_DELETION: '1', WORKOS_WEBHOOK_SECRET: 'set', VERCEL: '1' }), false);
+  assert.deepEqual(warnings.map(line => JSON.parse(line)), [{ event: 'account_deletion_off', reason: 'cron_secret_missing' }]);
+  assert.equal(accountDeletionEnabled({ RIVER_OAKS_ACCOUNT_DELETION: '1', WORKOS_WEBHOOK_SECRET: 'set', VERCEL: '1', CRON_SECRET: 'set' }), true);
 });
 
 test('the hosted backend serves the deletion route only with the flag on and the webhook configured', { skip: !process.env.REDIS_URL }, async t => {
