@@ -7,6 +7,19 @@ possible attacks have been eliminated or a deployed penetration test.
 
 ## Changes
 
+- Moderator reports list (#292, 2026-10-26). New read-only route
+  `GET /api/moderation/reports` on both servers, also rewritten on Vercel and sent to
+  the configured world like `/api/moderation/ban`. It needs a signed-in session.
+  A banned account gets 403. Anyone outside `MODERATOR_USER_IDS`, or without waitlist
+  approval (as the ban route requires), gets `{ moderator: false }` before anything is
+  read. Anything but GET gets 405. A moderator may read 30 times a minute. It returns
+  the newest 200 saved reports with reporter and reported ids, shown names, reason,
+  time and the reported account's ban state; it never returns other audit entries.
+  Damaged log lines and unknown reasons are skipped. The hosted list is read 500
+  entries at a time, only as far as needed; the town reads its two logs, up to about
+  5 MB each, in the moderation queue. Names reach the page as text only, and the page
+  shows a failure only on a moderator's answer. Bans from the list go through the
+  existing CSRF-checked `/api/moderation/ban`, after a confirmation, one at a time.
 - Reports and support contact (#292, 2026-10-24). No new route or permission. A saved
   report now answers "Report saved." on both backends, instead of claiming it was
   sent to moderators. `VITE_SUPPORT_CONTACT`, public and set at build time, shows a

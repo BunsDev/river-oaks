@@ -47,8 +47,8 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 | Voice leases | `server/voice.js:57` · `:162` | While in a call | Revoked and removed from the room (`:95`, `:196`) |
 | Workplace tasks and drafts | `server/workplace.js:25` · `:81` | Workplace retention limit | Erased (`:477`); a busy workplace fails the step so it is retried |
 | World state: player, chat lines, builds, inventory, wishes, home guests, office grants, campus leases, wanted stars, screenings, lantern walk, game tables | `server/world.js:117`, checkpointed by each room | Chat: last 40 lines (`:49`); builds until removed | Forgotten in every world (`server/world.js:585`). Builds others sit on are anonymized |
-| Moderation bans, reports and audit | `server/moderation.js:5` · `server/redis-security.js:112`, `:120` | Bans until lifted. Reports and the audit: in the town, until the log passes 5 MB a second time (it's renamed to `.previous`, replacing the one before); hosted, the newest 10,000 bans, unbans and reports | Kept (Decision 3) |
-| Rate-limit buckets and join tickets | `server/redis-security.js:81`, `:100` | At most 24 hours; tickets 60 s (`server/ticket-policy.js:7`) | Lapse |
+| Moderation bans, reports and audit | `server/moderation.js:6` · `server/redis-security.js:114`, `:122` | Bans until lifted. Moderators see the newest 200 reports, with both accounts' shown names, in Settings → Account → Reports (`server/moderation-reports.js`). Reports and the audit: in the town, until the log passes 5 MB a second time (it's renamed to `.previous`, replacing the one before); hosted, the newest 10,000 bans, unbans and reports | Kept (Decision 3) |
+| Rate-limit buckets and join tickets | `server/redis-security.js:83`, `:102` | At most 24 hours; tickets 60 s (`server/ticket-policy.js:7`) | Lapse |
 | Crime cooldowns and attack receipts, per world | `server/crime.js:52` | Receipts 60 s, cooldowns shorter (`server/crime.js:10`) | Lapse; wanted stars are cleared at once |
 | Room replies | `server/redis-room.js:18` | 15 seconds | Lapse |
 
@@ -71,7 +71,7 @@ none of them; those files belong to other tasks, and
 | `river-oaks-creator-region-draft-v1[:<world>]` | `preview/src/region-draft.js:7` | Region drafts (admin) | Authored content |
 | `river-oaks-studio-designer-v1` | `preview/src/studio/designer-panel.js:3` | Studio project id, brief, familiar's name | Authored content |
 | `river-oaks-entered`, `river-oaks-signing-in` | `preview/src/access-entry.js:145`, `:71` | Entry and sign-in redirect flags | Device |
-| Theme, graphics, debug layers, panels, guides, sounds | `preview/src/theme.js:11`, `preview/src/render-quality.js:13`, `preview/src/debug-tools.js:28`, `preview/src/sidebar.js:76`, `preview/src/play-dock.js:22`, `preview/src/walking-ui.js:214`, `preview/src/salon-guide-content.js:168` | Display preferences | Device |
+| Theme, graphics, debug layers, panels, guides, sounds | `preview/src/theme.js:11`, `preview/src/render-quality.js:13`, `preview/src/debug-tools.js:28`, `preview/src/sidebar.js:79`, `preview/src/play-dock.js:22`, `preview/src/walking-ui.js:214`, `preview/src/salon-guide-content.js:168` | Display preferences | Device |
 | Cookie `river_oaks_session` (HttpOnly) | `server/auth.js:10` | Sealed session | Yes; expired at sign-out (`server/auth.js:335`) |
 | Cookie `river_oaks_gate` (HttpOnly) | `server/asset-gate.js:10` | Signed asset pass | Yes; not cleared at sign-out, lapses with its TTL |
 | Sign-in state cookies (HttpOnly) | `server/auth.js:11`, `server/magic-auth.js:5`, `server/email-verification.js:3` | One sign-in attempt | Cleared after use |

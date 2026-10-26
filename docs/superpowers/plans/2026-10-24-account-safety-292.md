@@ -245,6 +245,50 @@ Independent review (2026-10-24):
 | `pnpm test` (preview unit), after review fixes | 4111/4112, the same 1 skip that predates this work |
 | `pnpm run verify` (core) | passed |
 
+## Increment E: moderators read reports
+
+Branch `feat/moderation-reports-292-20261026` in worktree `river-oaks-moderation-292`,
+stacked on increment D's head `99cc3d30`. It closes one part of the 1.2 report gap:
+moderators couldn't read reports in the app.
+
+Files owned:
+- New: `server/moderation-reports.js`, `preview/src/moderation-reports.js`.
+- New tests: `server/tests/moderation-reports.test.js`, `preview/tests/moderation-reports.test.js`.
+- Changed: `server/moderation.js` and `server/redis-security.js` (a `reports()` reader
+  each, and the `moderation_reports` limit scope); `server/app.js` and
+  `server/distributed-app.js` (the route); `server/world-router.js` (every
+  `/api/moderation/` path goes to the configured world); `server/vercel-routing.js` and
+  `vercel.json`; `preview/src/sidebar.js` and `preview/src/settings-dialog.css`;
+  `server/tests/vercel-routing.test.js`, `server/tests/hardening-router-admission.test.js`;
+  `docs/app-review-292.md`, `docs/privacy-data-inventory.md`, `docs/security-review.md`.
+
+Red first: the server and client tests failed with the modules missing; the routing
+cases failed on the old rewrite list and router.
+
+Mutation checks (each red, then restored):
+- Server:
+  - no moderator check; no ban check; no approval check; no limit, and no limit scope;
+  - no report-kind check; town log not reversed, or `.previous` not read;
+  - one hosted chunk only; lookup errors not caught.
+- Client:
+  - no own-account guard; no stale-answer fence; no in-flight guard; a ban without the confirmation;
+  - failures shown to residents; failures shown only on the first answer;
+  - raw error codes shown; focus lost when the group hides; `known` never reset.
+
+Independent review (2026-10-26):
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| The list skipped waitlist approval, which the ban route requires; an unapproved moderator read every report | Medium | Treated as a resident. Town and hosted tests red first |
+| Residents saw the Reports group whenever the request failed (per-address 429, a Redis outage) | Medium | A failure shows only on a moderator's answer, or right after one. Tests red first |
+| No per-moderator read limit; the whole hosted list read each time; lookup errors gave the generic 503 | Low | 30 a minute on both servers; hosted read 500 at a time, only as far as needed; lookups inside the 503. The town still reads its two logs (about 5 MB each) in the moderation queue: recorded |
+| Raw error codes and client errors shown after a ban | Low | Sentences only; anything else reads "The ban didn't change. Try again." |
+| Up to 200 buttons named "Ban…"; focus lost when the group hides | Low | Each button names its account; focus goes to the Account pane |
+| A test compared a name with itself; no test that non-moderators never reach the store; hosted 401, 403 and cap untested | Low | All added |
+| The inventory's `sidebar.js` line was already off by two; "whether it is banned" covered only the reported account | Low | Corrected |
+| The sidebar wiring has no test | Low | As for deletion and support, no sidebar unit test exists. Recorded |
+| Found after the review: Account refreshes the list each time it opens, so the new limit's 429 could empty the list a moderator was reading | Low | The last list stays under any moderator failure. Test red first |
+
 ## Gaps and decisions
 
 - The lantern walk's record round keeps lamplighter display names with no account

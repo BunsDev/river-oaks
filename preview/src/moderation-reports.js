@@ -1,0 +1,96 @@
+// Settings → Account → Reports, for moderators only (#292, App Review guideline 1.2):
+// what residents reported, newest first, and a ban for the reported account. The server
+// decides who is a moderator and enforces every ban; this list only asks and shows.
+const LIST_PATH = '/api/moderation/reports', BAN_PATH = '/api/moderation/ban';
+const REASONS = { disruption: 'disruptive', harassment: 'harassment', cheating: 'cheating' };
+const UNAVAILABLE = 'Reports are unavailable right now.', NOT_CHANGED = 'The ban didn’t change. Try again.';
+// Server answers that are sentences are shown; codes such as waitlist_approval_required aren't.
+const sentence = text => typeof text === 'string' && /\s/.test(text) && /[.!?]$/.test(text);
+
+// Hidden until refresh() hears that the signed-in account moderates; refresh() runs
+// whenever the Account pane opens.
+export function createModerationReports({ fetcher = (...args) => fetch(...args), locale } = {}) {
+  const make = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text) node.textContent = text; return node; };
+  const root = make('div', 'settings-group moderation-reports'); root.hidden = true;
+  const heading = make('h4', null, 'Reports');
+  const help = make('p', 'moderation-reports-help', 'What residents reported, newest first. A ban signs the account out of the town and keeps it out until you lift it.');
+  const status = make('p', 'moderation-reports-status'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.tabIndex = -1;
+  const list = make('ol', 'moderation-reports-list'); list.setAttribute('aria-label', 'Reports, newest first');
+  root.append(heading, help, status, list);
+  // Asking for the session first refreshes an expired access token, as the rest of the client does.
+  const signedIn = async () => { const value = await (await fetcher('/auth/session', { credentials: 'same-origin', cache: 'no-store' })).json(); return value?.authenticated ? value : null; };
+  const when = at => { try { return new Date(at).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' }); } catch { return at; } };
+
+  // `known`: the last answer said this account moderates, so a failure since is theirs.
+  let asked = 0, self = null, busy = false, known = false;
+  // Every action button in the list, so a ban in flight can hold them all.
+  const buttons = new Set();
+  const hold = held => { for (const button of buttons) button.disabled = held; };
+  const setBan = async (account, banned) => {
+    if (busy) return;
+    busy = true; hold(true);
+    let message = NOT_CHANGED, changed = false;
+    try {
+      const session = await signedIn();
+      if (!session) message = 'Sign in again to change a ban.';
+      else {
+        const response = await fetcher(BAN_PATH, { method: 'POST', credentials: 'same-origin', cache: 'no-store',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrfToken }, body: JSON.stringify({ userId: account.id, banned }) });
+        const value = await response.json().catch(() => ({}));
+        if (response.ok) { message = banned ? `${account.name} is banned.` : `${account.name}’s ban is lifted.`; changed = true; }
+        else if (sentence(value?.error)) message = value.error;
+      }
+    } catch { /* NOT_CHANGED: no answer, or one that isn't JSON */ }
+    busy = false;
+    if (changed) await refresh(); else hold(false);
+    status.textContent = message;
+    // A refresh can hide the group (the session ended); focus then stays in the pane.
+    (root.hidden ? root.closest?.('[role="tabpanel"]') : status)?.focus?.();
+  };
+  const row = item => {
+    const node = make('li', 'moderation-report');
+    const summary = make('p', 'moderation-report-summary', `${item.reported.name}: ${REASONS[item.reason] ?? item.reason}${item.reported.banned ? ' (banned)' : ''}`);
+    const meta = make('p', 'moderation-report-meta', `Reported by ${item.reporter.name}, `);
+    const time = make('time', null, when(item.at)); time.setAttribute('datetime', item.at); meta.append(time);
+    const actions = make('div', 'moderation-report-actions');
+    const button = (text, onClick, className = 'moderation-report-action') => {
+      const node = make('button', className, text); node.type = 'button'; node.disabled = busy; node.addEventListener('click', onClick); buttons.add(node); return node;
+    };
+    const idle = () => {
+      if (item.reported.id === self) return actions.replaceChildren();
+      if (item.reported.banned) return actions.replaceChildren(button(`Lift ${item.reported.name}’s ban`, () => setBan(item.reported, false)));
+      const start = button(`Ban ${item.reported.name}…`, () => {
+        const confirm = button(`Ban ${item.reported.name}`, () => setBan(item.reported, true), 'moderation-report-action moderation-report-confirm');
+        actions.replaceChildren(confirm, button('Cancel', () => { idle(); actions.children[0]?.focus?.(); }));
+        confirm.focus?.();
+      });
+      actions.replaceChildren(start);
+    };
+    idle();
+    node.append(summary, meta, actions);
+    return node;
+  };
+  async function refresh() {
+    const mine = ++asked;
+    let session = null, response = null, value = null, threw = false;
+    try {
+      session = await signedIn();
+      if (session) { response = await fetcher(LIST_PATH, { credentials: 'same-origin', cache: 'no-store' }); value = await response.json().catch(() => null); }
+    } catch { threw = true; }
+    if (mine !== asked) return;
+    self = session?.user?.id ?? null;
+    if (response?.ok && value?.moderator === true && Array.isArray(value.reports)) {
+      known = true; root.hidden = false;
+      buttons.clear(); list.replaceChildren(...value.reports.map(row));
+      status.textContent = value.reports.length ? '' : 'No reports yet.';
+      return;
+    }
+    // Rate limits and outages answer before the route knows who is asking, so a failure
+    // is shown only when the route says it is a moderator's, or this account just was one.
+    // The last list stays under it.
+    const failed = (threw || (session && response && !response.ok && response.status !== 401 && response.status !== 403)) && (value?.moderator === true || known);
+    if (failed) { root.hidden = false; status.textContent = value?.moderator === true && sentence(value.error) ? value.error : UNAVAILABLE; return; }
+    known = false; root.hidden = true; status.textContent = ''; buttons.clear(); list.replaceChildren();
+  }
+  return Object.assign(root, { refresh });
+}

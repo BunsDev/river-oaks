@@ -18,7 +18,7 @@ export function createWorldRouter({worldFor,configuredWorldId=DEFAULT_WORLD_ID,h
   validateWorldId(configuredWorldId);
   function select(req) {
     const url=new URL(req.url,'http://localhost');
-    if(url.pathname.startsWith('/auth/') || url.pathname.startsWith('/api/waitlist/') || url.pathname==='/api/worlds' || url.pathname.startsWith('/api/world-draft/') || url.pathname==='/api/world-data' || url.pathname==='/api/moderation/ban' || url.pathname==='/health')return configuredWorldId;
+    if(url.pathname.startsWith('/auth/') || url.pathname.startsWith('/api/waitlist/') || url.pathname==='/api/worlds' || url.pathname.startsWith('/api/world-draft/') || url.pathname==='/api/world-data' || url.pathname.startsWith('/api/moderation/') || url.pathname==='/health')return configuredWorldId;
     const ids=url.searchParams.getAll('world');
     if(ids.length>1)throw new Error('Invalid world');
     return validateWorldId(ids[0]??DEFAULT_WORLD_ID);

@@ -1,5 +1,6 @@
 import { mkdir,readFile,writeFile,rename,appendFile,stat } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { REPORT_LIST_LIMIT, normalizeReport } from './moderation-reports.js';
 
 // One authoritative process owns this durable file on a mounted private volume.
 export async function createModeration(path) {
@@ -24,5 +25,16 @@ export async function createModeration(path) {
       await audit({type:value?'ban':'unban',userId,moderatorId});
     });},
     report(reporterId,userId,reason){return serialize(()=>audit({type:'report',reporterId,userId,reason}));},
+    // Saved reports, newest first (moderation-reports.js): the current log, then the one
+    // rotated at 5 MB. Reading never changes either.
+    reports(limit=REPORT_LIST_LIMIT){return serialize(async()=>{
+      const found=[];
+      for(const log of [path+'.audit.jsonl',path+'.audit.jsonl.previous']){
+        const text=await readFile(log,'utf8').catch(error=>{if(error.code==='ENOENT')return '';throw error;});
+        const lines=text.split('\n').filter(Boolean).reverse();
+        for(const line of lines){let entry=null;try{entry=normalizeReport(JSON.parse(line));}catch{}if(entry)found.push(entry);if(found.length>=limit)return found;}
+      }
+      return found;
+    });},
   };
 }

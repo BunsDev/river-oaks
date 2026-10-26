@@ -14,6 +14,7 @@ import { CLIENT_ADDRESS, createClientAddress, rateLimitKey } from './client-addr
 import { ADMITTED } from './world-router.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { createDebugReportRoutes } from './debug-report-routes.js';
+import { createModerationReportsRoute } from './moderation-reports.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, acceptsWorldProtocol, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
@@ -117,6 +118,9 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
     onRevoke: async userId => { await disconnectUser(userId); await workplace?.suspend(userId); await onBan?.(userId); } });
   const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
     allow: id => security.allow('debug-report', id, 3, 600_000) });
+  // Moderators read saved player reports (#292).
+  const handleModerationReports = createModerationReportsRoute({ auth, moderators, isBanned: id => security.isBanned(id), isApproved: id => waitlist.isApproved(id),
+    allow: id => security.allow('moderation_reports', id, 30, 60_000), reports: () => security.reports(), usernameOf: id => waitlist.usernameOf?.(id) ?? null });
   // Sends the committed view. The snapshot is serialized once per broadcast, not
   // once per connection; `only` limits it to one connection (a command's sender).
   function publish(view, only = null) {
@@ -155,6 +159,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
       if (await handleDebugReports(req, res, path)) return;
+      if (path === '/api/moderation/reports') { await handleModerationReports(req, res); return; }
       if (handleCharacters && await handleCharacters(req,res,path)) return;
       if (handleVoice && await handleVoice(req, res, path, url)) return;
       // The default district answers with its served revision (#507) even without a catalog.

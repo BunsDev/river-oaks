@@ -17,6 +17,7 @@ import { CLIENT_ADDRESS, createClientAddress, rateLimitKey } from './client-addr
 import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { createDebugReportRoutes } from './debug-report-routes.js';
+import { createModerationReportsRoute } from './moderation-reports.js';
 import { createMemoryDebugReports } from './debug-reports.js';
 import { protectedGameAsset } from './game-assets.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, acceptsWorldProtocol, validateWorldId } from '../preview/src/world-contract.js';
@@ -103,6 +104,10 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     } });
   const debugReportSends = createRateLimiter(3,600000);
   const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned, allow: id => debugReportSends(id) });
+  // Moderators read saved player reports (#292).
+  const moderationReads = createRateLimiter(30,60000);
+  const handleModerationReports = createModerationReportsRoute({ auth, moderators, isBanned: async id => isBanned(id), isApproved: id => waitlist.isApproved(id),
+    allow: async id => moderationReads(id), reports: moderation?.reports ? () => moderation.reports() : null, usernameOf: id => waitlist.usernameOf?.(id) ?? null });
   async function body(req,max=4096) {
     let size=0,chunks=[];
     for await (const chunk of req) {size+=chunk.length;if(size>max)throw new Error('Request too large');chunks.push(chunk);}
@@ -119,6 +124,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       if (await auth.handle(req,res)) return;
       if (await handleWaitlist(req, res, pathname)) return;
       if (await handleDebugReports(req, res, pathname)) return;
+      if (pathname==='/api/moderation/reports') {await handleModerationReports(req,res);return;}
       if (handleCharacters && await handleCharacters(req,res,pathname)) return;
       if (handleVoice && await handleVoice(req,res,pathname,new URL(req.url,'http://localhost'))) return;
       // The default district answers with its served revision (#507) even without a catalog.

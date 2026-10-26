@@ -16,7 +16,7 @@ the binary is marked **native**.
 | Guideline | What it asks | Where River Oaks is | Status |
 | --- | --- | --- | --- |
 | 1.2 | Filter objectionable content | Length limits and control-character checks only; no content filter | **Gap, blocking** |
-| 1.2 | Report offensive content, respond in time | Residents can be reported from the roster, and reports are saved. Messages, events and groups can't be reported; nobody is told; moderators can't read reports in the app | **Gap, blocking** |
+| 1.2 | Report offensive content, respond in time | Residents can be reported from the roster, and reports are saved. Moderators read them, newest first, in Settings → Account → Reports and can ban from there (this change). Messages, events and groups can't be reported; nobody is told | **Gap, blocking** |
 | 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The Block button is built but not wired into the client | **Gap, blocking** (client owner) |
 | 1.2 | Published contact information | Settings → Account → Support, once `VITE_SUPPORT_CONTACT` is set (this change). Not on the sign-in or waitlist pages | Needs a value; **gap** before approval |
 | 5.1.1(v) | Delete the account in the app | In-app deletion behind a default-off flag (#666), webhook erasure (#661) | Met in source, off |
@@ -71,9 +71,6 @@ saved." The client shows the server's text, so its owner's file doesn't change.
 
 Still missing:
 - **Nobody is told.** No email, no notification, no queue.
-- **Moderators can't read reports in the app.** A moderator can ban from the roster
-  (`/api/moderation/ban`, `MODERATOR_USER_IDS`), but reading reports needs the
-  server's file or Redis.
 - **The button always sends `disruption`.** The file is owned by
   `outdoor-residents-admin-controls-20261024`; a reason choice is for that task.
 - **A report carries no content.** It doesn't include the chat line or profile text
@@ -85,10 +82,21 @@ Still missing:
   unbans and reports together. The town renames its log to `.previous` at 5 MB,
   replacing the one before.
 
-Proposed next increment: a moderator-only `GET /api/moderation/reports` on both
-servers that reads both formats, a Reports list for moderators, the reported content
-kept with the report, and reports kept until a moderator closes them. Response time
-and ownership are Decision 2.
+**Moderators read reports in the app.** `GET /api/moderation/reports` reads where each
+server already saves reports: the town's audit log and the log it rotated at 5 MB, or
+the hosted Redis audit list. It returns the newest 200, with both accounts' shown
+names and whether the reported account is banned. Settings → Account → Reports shows
+them to approved accounts in `MODERATOR_USER_IDS`, up to 30 reads a minute each;
+anyone else gets `{ moderator: false }` and sees nothing, even when a request fails. Each
+row offers Ban…, which asks once, or Lift ban, through the existing
+`/api/moderation/ban`. The route only reads: it marks nothing as handled and keeps
+nothing new. A moderator can't ban their own account from the list. Tests:
+`server/tests/moderation-reports.test.js` (both servers, Redis for the hosted one),
+`preview/tests/moderation-reports.test.js` and the routing cases in
+`server/tests/vercel-routing.test.js` and `server/tests/hardening-router-admission.test.js`.
+
+Proposed next increment: keep the reported content with the report, and keep reports
+until a moderator closes them. Response time and ownership are Decision 2.
 
 **Blocking. Gap, blocking.** [Player blocking](player-blocking.md) (#665) is enforced
 on the server. It covers chat, gestures, greetings, contacts, direct messages,
@@ -223,7 +231,7 @@ Recommended: leave Computer out of iOS v1 (Decision 5).
 | App Store privacy answers and the privacy policy | Val | Draft from the inventory |
 | Age rating: chat and voice with other residents | Val | Not answered |
 | Reviewer access: an approved waitlist account that signs in without a live inbox, with no public bypass | #293 | Not started |
-| Review notes: where Delete account, Report and Support are, and Block once it's wired in | #293 | This page lists them |
+| Review notes: where Delete account, Report, Support and the moderators' Reports list are, and Block once it's wired in | #293 | This page lists them |
 | Support URL in App Store Connect | Val | Needs the contact |
 | Deletion on in production, with `user.deleted` delivery checked | Val | Off |
 | Business model | Val | No purchase code exists; record that v1 is free, if it is |
