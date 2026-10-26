@@ -726,7 +726,11 @@ Landing the two harness PRs through the land queue and guard, once their checks 
     - each call blocked about 1 s.
   - **Now:** about 30 ms per call (worst 63 ms). The walked lap routes keep at least 0.30 m (reload) and 0.25 m (eviction), against about 0 for the raw resident routes, by `isAreaFree`.
   - **Tests:** 4/4. Mutants that drop the improvement guard, `canTravel` or the detours each fail.
-  - Core, a journey run and a final review follow verify full.
+  - **Draft #676 `fc24f72d`, signed.**
+    - Core: attempts 1–3 failed only the `land-pr` wake flake (logs kept; the file alone passes 29/29); attempt 4 passed.
+    - Hosted: 22/22 after one rerun of the `office-computer-embed` race.
+    - **Journey on a detached `cb83c7cd` with the exact files: passed** (02:49–03:52Z). 290 checks, 0 violations, at most +0 / +4; heap ratio 1.007 / 1.008. Checkpoint `a8940cc09dbf3054`.
+    - It stays a draft for the journey owner or Val.
 
 **#672: the five-rejoin read adopted** (head `69afb992`).
 - Reconnects default to 5, with the backoff kept.
@@ -800,3 +804,30 @@ After Val merges #649, this task prepares #662 and then #663 as before: merge ma
   - `diag-0b9a97c4` holds local-only instrumentation and the #672 harness patch, both uncommitted.
 
 **Host.** `caffeinate` PID 56722 holds the host awake until about 18:36Z; `kill 56722` stops it.
+
+## Handoff (about 03:00Z, 2026-10-26)
+
+**Delivered since the 18:15Z handoff:**
+- **Val's two decisions recorded.** Keep #658's merge (22:06Z, f1's session). Val will merge #649 personally (about 18:50Z, 3e's register).
+- **Both harness rows fixed and landed** on Val's "Fix both harness rows, rerun", relayed by river-oaks-33:
+  - **#672** landed as `d23fc556`: the five-rejoin reconnect read is now the protocol.
+  - **#675** landed as `cb83c7cd`: the context-loss probes run on a third client.
+  - Each had an independent review addressed, core passed, hosted was complete, and its branch was retired with restore-tested archives.
+- **The Commons go/no-go rerun on main `cb83c7cd`: conditions 1–3 met.** Evidence is on #587 (issuecomment-6407077852) and the verdict went to river-oaks-33 for Val's condition 4. World-streaming attempt 1's route-corner stall is reported alongside it.
+- **Draft #676** (task `world-streaming-route-clearance-20261026`): keeps the journey's walked routes clear of obstacle corners. It stays a draft for the journey owner or Val.
+- **#649's owners told that main moved.** The messages to river-oaks-91 and 3e were held undelivered, so the note is on #649 (issuecomment-6407190389): their next ABBA needs matched reconnect settings on both arms.
+
+**Waiting on Val:**
+1. **Commons activation:** condition 4 (visual and physical-device sign-off), then condition 5 (production state, for the operator). Activation stays off.
+2. **#649:** Val's own review and merge. #649 is now behind main by the two harness merges. Then #662 → #663, which land only on Val's word, and #673 after Val's land decision.
+3. **#656, #659 (`66134f27`), #653, #654:** unchanged.
+4. **#655:** 3e takes #674, then Val's go.
+5. **#676:** adopt or close.
+
+**Preserved, not retirable now:**
+- **Branches with open PRs:** `docs/convergence-3x-20261024` (#664), `feat/studewood-3x-20261024` (#662), `feat/bayou-terraces-3x-20261025` (#663), `feat/woodland-heights-3x-20261025` (#673), `fix/resident-locations-review-20261025` (#674) and `test/world-streaming-route-clearance-20261026` (#676).
+- **`perf/walking-obstacle-buckets-20261025`:** needs explicit cancellation authority.
+- **Detached evidence checkouts**, each a blocked `convergence-3x-evidence-*` task:
+  - from earlier: `rc-0b9a97c4`, `bisect-15334aad`, `heights-8f3c94fd`, `studewood-snap`, `terraces-snap`, `terraces-b5016d29` and `diag-0b9a97c4`;
+  - added tonight: `ws-rc-0b9a97c4`, `ws-main-e8207b2b`, `rc-cb83c7cd`, `ws2-cb83c7cd` and `ws-route-cb83c7cd`.
+  - They hold the receipts cited above. Retire them only once nobody needs those receipts.
