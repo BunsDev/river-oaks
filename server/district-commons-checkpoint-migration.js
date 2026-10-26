@@ -5,6 +5,7 @@ import { attachEastGardenCommons, detachEastGardenCommons } from '../preview/src
 import { createWalkingEnvironment } from '../preview/src/walking.js';
 import { objectCollider } from '../preview/src/creator-object.js';
 import { createResidentNavigation } from '../preview/src/navigation.js';
+import { createCommunity } from '../preview/src/community.js';
 import { DEFAULT_WORLD_ID } from '../preview/src/world-contract.js';
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const rejected = () => ({ok:false,error:'invalid_checkpoint'});
@@ -31,7 +32,7 @@ export function recoverDistrictCommonsCheckpoint({worldData,checkpoint,worldId=D
     const {checksum:_checksum,...envelope}=source.checkpoint();
     // The Lantern Walk exists only in the Commons; rolling back leaves it behind.
     if(!forward)delete envelope.payload.lanternWalk;
-    const moved=[],movedResidents=[];
+    const moved=[],movedResidents=[],reroutedResidents=[];
     if(!forward){
       const environment=createWalkingEnvironment(worldData,envelope.payload.builds.map(objectCollider).filter(Boolean));
       const outside=player=>player.position[0]>worldData.bounds_m[2]-.35
@@ -55,7 +56,8 @@ export function recoverDistrictCommonsCheckpoint({worldData,checkpoint,worldId=D
       // the District's site ring) walks home from the nearest clear District ground.
       const colliders=envelope.payload.builds.map(objectCollider).filter(Boolean);
       const navigation=createResidentNavigation(worldData,{placedObjects:colliders});
-      const corridors=createResidentNavigation(sourceData,{placedObjects:colliders,locations:true})?.locations?.portals.map(portal=>portal.rect)??[];
+      // The live planner finds its corridors before anything is built; so does this.
+      const corridors=createResidentNavigation(sourceData,{locations:true})?.locations?.portals.map(portal=>portal.rect)??[];
       const removed=([east,north])=>east>worldData.bounds_m[2]
         || corridors.some(r=>east>=r[0]&&east<=r[2]&&north>=r[1]&&north<=r[3]);
       const locals=envelope.payload.state?.locals??[];
@@ -75,9 +77,25 @@ export function recoverDistrictCommonsCheckpoint({worldData,checkpoint,worldId=D
         if(local.life)Object.assign(local.life,{route:[],destination:null,routeVersion:local.life.routeVersion+1,seat:null,speed:0,velocity:0,blocked:false,replanAt:0});
         movedResidents.push(local.id);
       }
+      // Residents still on District ground may be walking into removed land or
+      // to a Commons stop. Gardens would stop them at the old corridor entrance,
+      // and a failed re-plan keeps the old route, so they re-plan where they stand.
+      // A Commons stop someone last rested at gives way to their home stop.
+      const lanterns=new Set((sourceData.eastGardenCommons?.destination?.lanterns??[]).map(lantern=>lantern.id));
+      const homes=new Map(createCommunity(worldData,[],{carriage:false}).locals.map(local=>[local.id,local]));
+      for(const local of locals){
+        if(local.indoor || local.stationary)continue;
+        if(local.life && !movedResidents.includes(local.id) && (local.life.route.some(removed) || lanterns.has(local.life.destination?.id))){
+          Object.assign(local.life,{route:[],destination:null,routeVersion:local.life.routeVersion+1,blocked:false,replanAt:0});
+          reroutedResidents.push(local.id);
+        }
+        const home=lanterns.has(local.anchorId) && homes.get(local.id);
+        if(home){local.anchorId=home.anchorId;local.anchorName=home.anchorName;if(local.persona)local.persona.anchorName=home.anchorName;}
+      }
       // Their errands restart from where they now stand (as checkpoint repair does).
+      const restarted=[...movedResidents,...reroutedResidents];
       for(const job of envelope.payload.state?.jobs??[])if(['routing','traveling','assisting'].includes(job.phase)
-        && (movedResidents.includes(job.localId)||movedResidents.includes(job.helperId))){
+        && (restarted.includes(job.localId)||restarted.includes(job.helperId))){
         job.phase='queued';job.approachAttempt=0;
         const helper=locals.find(local=>local.id===job.helperId);
         if(helper?.life){helper.life.route=[];helper.life.destination=null;helper.life.routeVersion++;if(helper.life.helping)helper.life.helping.onSite=false;}
@@ -86,6 +104,6 @@ export function recoverDistrictCommonsCheckpoint({worldData,checkpoint,worldId=D
     envelope.worldFingerprint=digest(worldData);
     const result={...envelope,checksum:digest(envelope)};
     if(!createSharedWorld(worldData,{worldId,...options}).restore(result).ok)return rejected();
-    return {ok:true,checkpoint:result,from:forward?'gardens':'commons',to:forward?'commons':'gardens',moved,movedResidents};
+    return {ok:true,checkpoint:result,from:forward?'gardens':'commons',to:forward?'commons':'gardens',moved,movedResidents,reroutedResidents};
   } catch {return rejected();}
 }
