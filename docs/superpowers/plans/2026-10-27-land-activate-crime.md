@@ -54,6 +54,7 @@ Goal prompt: scratchpad `2026-10-27-land-activate-crime-goal.md` (pasted by Val 
 
   Cancelled jobs (heights 19, places 11, checks 11, commons 10, shared-required 9, …) are almost all superseded-push cancellations and are not failures.
 - No unowned dominant signature remains to fix: the top one is closed by #698, the walk stalls by #702. `world-streaming` (lap-12 eviction) is addressed by #703, below.
+- **Post-#702 walk stall seen once more** on this ledger's own first push (`c780e787`, docs only, main `18222a6d`-era tree): run 40594097177, `preview experience (heights)`, `bayou-heights: alice home: stalled` with the pose 0.17 m from the target (`target x −2431.336`, `pose x −2431.163`). So the shared walk driver did not end every stall; the arrival tolerance at that stop is the next place to look. Not fixed here (docs lane); the superseding push's run is the evidence for #717.
 
 ### Round 2: draft wave
 Messages: the owner names from the register are not reachable by `SendMessage` (only river-oaks-bd/2b/31/ac/d7 and two background "Next long-running goal prompt" sessions are listed). The background session (4) is river-oaks-3e: no overlap with #703/#688/#705/#708/#710; it holds #695 (increment 6 in progress, landing with known pairs is Val's decision) and #707 stacked on it. Both left alone.
