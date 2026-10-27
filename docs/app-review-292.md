@@ -130,7 +130,7 @@ Connect needs a support URL too (Decision 3).
   user, signs out, runs erasure and clears what the device keeps
   ([account deletion](account-deletion.md)). It's off until
   `RIVER_OAKS_ACCOUNT_DELETION=1`, and with WorkOS it also needs
-  `WORKOS_WEBHOOK_SECRET`, and on Vercel `CRON_SECRET`.
+  `WORKOS_WEBHOOK_SECRET`, and on Vercel `CRON_SECRET` and the production deployment.
 
 Apple asks apps to say what's kept and how long the rest takes. The page says the
 account is deleted at once, and that anything left is removed by the erasure's

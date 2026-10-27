@@ -40,8 +40,9 @@ Without it on Vercel, nothing sweeps: no second run happens, a failed request is
 retried only by WorkOS, and each record keeps its account id. The backend logs
 `account_erasure_sweep_unscheduled` at every start in that case
 (`server/redis-backend.js:107`).
-The standalone town keeps the record in memory, like its other stores
-(`server/town.js:172`), and WorkOS retries a request that a restart interrupted.
+The standalone town keeps the record in memory (`server/town.js:172`). WorkOS retries
+a webhook request that a restart interrupted, but a restart before a request's second
+run skips that run.
 Every failure is logged with the WorkOS event id and the names of the failed steps,
 the tombstone and the revocation included, and never the account
 (`server/account-erasure.js:32`). A sweep that can't read the records logs
