@@ -32,9 +32,11 @@ for (const revision of [undefined, DISTRICT_REVISION_GARDENS]) {
   });
 }
 
-test('a registered reservation cannot grant movement or expand authoritative bounds', async () => {
+test('a registered location cannot grant movement or expand authoritative bounds in a revision that does not compose it', async () => {
   const manifest = validateWorldManifest(read('world-manifest'));
-  const reservation = manifest.locations.find(location => location.status === 'reserved');
+  // No reserved land remains (the Bayou Terraces authored the last strips), so this uses an
+  // authored location the default revision does not compose: registration alone grants nothing.
+  const reservation = manifest.locations.find(location => location.status === 'reserved') ?? manifest.locations.find(location => location.id === 'bayou-terrace-north');
   const data = await loadDistrictData();
   const world = createSharedWorld(data, { now: () => 100000 });
   const joined = world.join({ userId: 'manifest-visitor', name: 'Manifest Visitor' });

@@ -8,6 +8,8 @@ import { createResidentNavigation } from '../src/navigation.js';
 import { validateWorldManifest, locationWorldBounds } from '../src/world-manifest.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { HEIGHTS_REVISION } from '../../shared/bayou-heights-layout.js';
+import { STUDEWOOD_REVISION } from '../../shared/studewood-layout.js';
+import { TERRACES_REVISION } from '../../shared/bayou-terraces-layout.js';
 const districtBytes = await readFile(new URL('../public/data/district.json', import.meta.url));
 const world = await loadDistrictData({ districtRevision: DISTRICT_REVISION_GARDENS });
 const manifest = validateWorldManifest(JSON.parse(await readFile(new URL('../public/data/world-manifest.json', import.meta.url))));
@@ -78,14 +80,20 @@ function reachableSample(data, cell) {
 }
 if(process.argv.includes('--reachable')) {
   const expanded=await loadDistrictData({districtRevision:COMMONS_REVISION}), garage=await loadDistrictData();
-  const connected=await loadDistrictData({districtRevision:HEIGHTS_REVISION});
+  const connected=await loadDistrictData({districtRevision:HEIGHTS_REVISION}),beyond=await loadDistrictData({districtRevision:STUDEWOOD_REVISION}),banks=await loadDistrictData({districtRevision:TERRACES_REVISION});
   report.groundReachability=[];
   for(const cell of [1,.5]) {
     const original=reachableSample(world,cell),commons=reachableSample(expanded,cell),defaultRevision=reachableSample(garage,cell);
     // Bayou Heights is reached only on foot over the footbridge from the same District spawn.
     const heights=reachableSample(connected,cell);
+    // Studewood is reached on foot along Twentieth or Eighteenth Street from Heights Boulevard.
+    const studewood=reachableSample(beyond,cell);
+    // The Bayou Terraces are reached over their footbridges from the Heights greenway.
+    const terraces=reachableSample(banks,cell);
     report.groundReachability.push({defaultRevision,original,commons,addedSampledAreaM2:commons.sampledAreaM2-original.sampledAreaM2,ratio:commons.sampledAreaM2/original.sampledAreaM2,
-      heights,heightsAddedSampledAreaM2:heights.sampledAreaM2-commons.sampledAreaM2,heightsRatio:heights.sampledAreaM2/original.sampledAreaM2});
+      heights,heightsAddedSampledAreaM2:heights.sampledAreaM2-commons.sampledAreaM2,heightsRatio:heights.sampledAreaM2/original.sampledAreaM2,
+      studewood,studewoodAddedSampledAreaM2:studewood.sampledAreaM2-heights.sampledAreaM2,studewoodRatio:studewood.sampledAreaM2/original.sampledAreaM2,
+      terraces,terracesAddedSampledAreaM2:terraces.sampledAreaM2-studewood.sampledAreaM2,terracesRatio:terraces.sampledAreaM2/original.sampledAreaM2});
   }
   // 3–5x is measured reachable ground. Project the remaining reserved envelopes at
   // the District's own measured density to show whether the layout can hold it.
@@ -93,10 +101,10 @@ if(process.argv.includes('--reachable')) {
   const districtBounds=area(locationWorldBounds(manifest.locations.find(location=>location.id===manifest.default_location)));
   const density=baseline/districtBounds;
   const reservedM2=report.locations.filter(location=>location.status==='reserved').reduce((sum,location)=>sum+location.boundsAreaM2,0);
-  const projected=fine.heights.sampledAreaM2+reservedM2*density;
+  const projected=fine.terraces.sampledAreaM2+reservedM2*density;
   report.expansionCapacity={baselineRevision:fine.original.revision,baselineM2:baseline,targetM2:{low:3*baseline,high:5*baseline},
     districtDensity:density,reservedBoundsM2:reservedM2,projectedTotalM2:projected,projectedRatio:projected/baseline,
-    reservedBoundsNeededM2:{low:(3*baseline-fine.heights.sampledAreaM2)/density,high:(5*baseline-fine.heights.sampledAreaM2)/density},
+    reservedBoundsNeededM2:{low:(3*baseline-fine.terraces.sampledAreaM2)/density,high:(5*baseline-fine.terraces.sampledAreaM2)/density},
     scope:'Projection assumes future neighborhoods match the District\'s measured walkable density; it is a layout sizing check, not measured area.'};
   report.reachabilityScope='Approximate ground-level area from connected sampled cell centres using authoritative collision/height queries. Samples have finite resolution; the full area of boundary cells is not proven clear, narrow routes may be missed, and source/rendered differences remain unmeasured. No upper-floor, flight, dynamic-object, physical accessibility or browser traversal acceptance. This does not establish the 3–5x playable-area target.';
 }
