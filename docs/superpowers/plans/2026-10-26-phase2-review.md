@@ -57,12 +57,14 @@ Task `phase2-review-20261026`, owner `claude:river-oaks-phase2 (044cb069)`, bran
 
 - 04:12 UTC: core attempt 6 passed every stage at load 7.5 (receipt core-attempt-6).
 
+- 04:14 UTC: committed `69b7403e` (signed) and opened draft PR #697 via the REST API (the GraphQL endpoint was rate limited).
+
 ## Results, gaps and next step
 
 Results: the review found Phase 2's streaming design sound (server authority resident, local-only readiness veto, abort-fenced late completions, disposal on every path) and fixed one visible defect, camera churn beyond the retention radius (15 s linger, regression test), plus measured-byte accounting in the scheduler (regression test), notice naming and stale docs. Evidence: three journeys (7, 21, 22 round trips; 49 evictions releasing all 8,239,722 bytes; 0 loading notices on 88 crossings; probe failure and context-loss recovery three times; reconnects ≤ 1.42 s with 0 m drift) and a passing matched comparison (Market frame p95 equal to Gardens on all four profiles; CPU, reconnect and transfer within the Phase 1 budgets). Full detail and tables: [the acceptance report](../acceptance/phase2-review-20261026.md).
 
 Gaps (not blocking): (1) one client's renderer texture count plateaus +13 over the lap-1 reference (bound +10) in every run, outside the streamed Market, bounded after lap 16, unattributed; (2) the after-twenty post-GC heap sample was never reached because each run's final far-point walk failed under load; (3) the harness keyboard walk (straight outward leg, no route across the seam) is fragile above one-minute load ~15; (4) the server simulation was taken on a loaded host (p50 is the stable signal); (5) the core gate needed six attempts because attempts 1–3 and 5 each failed one different host-timing test under other sessions' load (each passes alone) and attempt 4 failed the secrets scan on a raw receipt; attempt 6 passed in full; (6) no hosted, physical-device, production or human-accessibility evidence.
 
-Next step: commit the branch (signed), push a draft PR for review/phase2-20261026, record the PR on the register. Merge requires authorization.
+Delivery: commit `69b7403e` (SSH-signed, verified) on `review/phase2-20261026`, pushed; draft PR [#697](https://github.com/BunsDev/river-oaks/pull/697) opened 2026-10-27 04:15 UTC and recorded on the register. Next step: read the hosted `preview` checks on #697, address review, then mark ready only with merge authorization. Not merged.
 
 Retirement: the three detached snapshot worktrees under this session's scratchpad (`phase2-snapshot`, `phase2-snapshot-fix`, `phase2-snapshot-fix-b`, all at main `40f4e786`, the latter two carrying the branch patch as working-tree edits) have finished their runs and their evidence is copied; `project:prune --cancel-stale --detached-path` refused them on 2026-10-27 03:05 UTC (touched within the cutoff), so they are registered as `phase2-review-snapshot-*-20261026` with that next action instead of being removed by hand.
