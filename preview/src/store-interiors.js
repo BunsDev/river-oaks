@@ -504,7 +504,8 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * W / tile, uv.getY(i) * D / tile);
     const floor = new THREE.Mesh(floorGeometry, floorOf(room)); floor.receiveShadow = true;
     placeMesh(floor, c, D / 2, 0.012);
-    add(box, black, c, D / 2, -0.3, [W, 0.6, D], 0, '#5a5148');
+    // The slab under the floor starts 6 cm back, so its front face stays clear of the shop glass 3 cm in front.
+    add(box, black, c, D / 2 + 0.03, -0.3, [W, 0.6, D - 0.06], 0, '#5a5148');
     // Walls sit inside the room's own footprint so neighbours never show through.
     add(box, ceiling, c, D / 2, H + 0.125, [W, 0.25, D]);
     add(box, walls[room.theme], c, D - 0.075, H / 2, [W, H, 0.15]);

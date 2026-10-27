@@ -32,4 +32,6 @@ test('district facades keep glass off the building mass, and display alcoves out
   // end on the room's wall face; and fluted millwork 4 mm off a room's back wall stays in front.
   const rooms = fights.filter(fight => /^Mesh\|interior-.* facade:facade-(interior|floor)\||interior-fluted/.test(`${fight.a} ${fight.b}`));
   assert.deepEqual(rooms.map(named), []);
+  // A feature panel's artwork lies 5 mm in front of its brass surround and still shows from afar.
+  assert.deepEqual(fights.filter(fight => /retail-artwork/.test(`${fight.a} ${fight.b}`) && /interior-brass/.test(`${fight.a} ${fight.b}`)).map(named), []);
 });
