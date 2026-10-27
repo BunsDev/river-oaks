@@ -167,6 +167,10 @@
       "destination": "/api/server?_river_path=/api/moderation/ban"
     },
     {
+      "source": "/api/moderation/reports",
+      "destination": "/api/server?_river_path=/api/moderation/reports"
+    },
+    {
       "source": "/api/waitlist/status",
       "destination": "/api/server?_river_path=/api/waitlist/status"
     },
