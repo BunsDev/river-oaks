@@ -167,8 +167,8 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     // Live removal needs the lease, so it goes first.
     voice:async id=>{if(voice)await voice.revokeUser(id);await voiceLeases.revoke(id);},
   },after:{avatarPreferences:id=>avatarPreferences.eraseUser(id),cyclingMiles:id=>cyclingMiles.eraseUser(id)},
-  // This town's stores live in memory, so its record of each request does too; WorkOS
-  // retries a request that a restart interrupted.
+  // Each request's record lives in memory: WorkOS retries a request that a restart
+  // interrupted, but a restart before its second run skips that run.
   pending:createMemoryPendingErasures()});
   const erasureSweep=setInterval(()=>{void eraseAccount.sweep().catch(()=>{});},30_000);erasureSweep.unref();
   const deletionRequest=createWorkOSDeletionHandler({secret:mode==='workos'?(env.WORKOS_WEBHOOK_SECRET||null):null,onDelete:(id,eventId)=>eraseAccount(id,{eventId})});

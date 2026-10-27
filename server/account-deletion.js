@@ -4,7 +4,8 @@ import { timingSafeEqual } from 'node:crypto';
 // RIVER_OAKS_ACCOUNT_DELETION=1. A signed-in resident confirms with the exact phrase,
 // within ten minutes of signing in. The sign-in provider deletes the account first,
 // so nobody can sign in to it again; then every store forgets it. The erasure records
-// the request and runs again a minute later, for a write that was already in flight.
+// the request, and its sweep runs it again a minute or more later, for a write that was
+// already in flight.
 // If erasure fails after the provider deleted the account, the erasure sweep and the
 // provider's user.deleted webhook run it again, with retries. Approval and bans are
 // not checked: anyone who can sign in can leave.
@@ -18,13 +19,15 @@ const json = (res, status, value) => {
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string' && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
 // The flag turns deletion on only where a failed erasure is retried: with WorkOS, the
-// signed user.deleted webhook must be configured, and on Vercel, where only the cron
-// sweeps, its secret too. The loopback fixture sign-in has no provider account to
-// delete, so the flag alone is enough there.
+// signed user.deleted webhook must be configured. On Vercel only the cron sweeps, so
+// its secret is needed too, and Vercel calls the cron only on the production
+// deployment. The loopback fixture sign-in has no provider account to delete, so the
+// flag alone is enough there.
 export function accountDeletionEnabled(env, { development = false } = {}) {
   if (env.RIVER_OAKS_ACCOUNT_DELETION !== '1') return false;
   if (development) return true;
-  const missing = !env.WORKOS_WEBHOOK_SECRET ? 'webhook_secret_missing' : env.VERCEL === '1' && !env.CRON_SECRET ? 'cron_secret_missing' : null;
+  const missing = !env.WORKOS_WEBHOOK_SECRET ? 'webhook_secret_missing' : env.VERCEL !== '1' ? null
+    : !env.CRON_SECRET ? 'cron_secret_missing' : env.VERCEL_ENV !== 'production' ? 'cron_not_scheduled' : null;
   if (!missing) return true;
   console.warn(JSON.stringify({ event: 'account_deletion_off', reason: missing }));
   return false;

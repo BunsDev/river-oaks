@@ -8,15 +8,16 @@ possible attacks have been eliminated or a deployed penetration test.
 ## Changes
 
 - In-app account deletion (#292, 2026-10-24), off unless `RIVER_OAKS_ACCOUNT_DELETION=1`
-  and `WORKOS_WEBHOOK_SECRET` is set, and on Vercel `CRON_SECRET` too (the loopback
-  fixture needs only the flag).
+  and `WORKOS_WEBHOOK_SECRET` is set; on Vercel it also needs `CRON_SECRET`, and stays
+  off outside production, since Vercel calls the cron only there (the loopback fixture
+  needs only the flag).
   A new route, `POST /api/account/delete`, on both backends. It needs a signed-in
   session, the same origin and the CSRF token, at most 3 attempts an hour, the exact
   phrase `delete my account`, and a sign-in within ten minutes. Sessions now record
   `signedInAt`, which survives refreshes. Approval and bans aren't checked. WorkOS
   deletes the user first; any failure other than 404 erases nothing. Then the session
-  cookie is cleared and account erasure runs, recorded for its second pass a minute
-  later. The `GET` form reports only
+  cookie is cleared and account erasure runs, recorded for its second pass a minute or
+  more later. The `GET` form reports only
   whether deletion is available and whether the sign-in is recent. The route is added
   to `vercel.json`, `server/vercel-routing.js` and the Vite proxy, and
   `account_deletion` to the Redis rate-limit scopes. See `docs/account-deletion.md`.

@@ -208,15 +208,21 @@ test('the flag turns deletion on only where a failed erasure is retried', t => {
   warnings.length = 0;
   assert.equal(accountDeletionEnabled({ RIVER_OAKS_ACCOUNT_DELETION: '1', WORKOS_WEBHOOK_SECRET: 'set', VERCEL: '1' }), false);
   assert.deepEqual(warnings.map(line => JSON.parse(line)), [{ event: 'account_deletion_off', reason: 'cron_secret_missing' }]);
-  assert.equal(accountDeletionEnabled({ RIVER_OAKS_ACCOUNT_DELETION: '1', WORKOS_WEBHOOK_SECRET: 'set', VERCEL: '1', CRON_SECRET: 'set' }), true);
+  // Vercel calls the cron only on the production deployment, so a preview never sweeps.
+  warnings.length = 0;
+  for (const VERCEL_ENV of [undefined, 'preview', 'development']) assert.equal(accountDeletionEnabled({ RIVER_OAKS_ACCOUNT_DELETION: '1', WORKOS_WEBHOOK_SECRET: 'set', VERCEL: '1', CRON_SECRET: 'set', VERCEL_ENV }), false, VERCEL_ENV);
+  assert.deepEqual(warnings.map(line => JSON.parse(line).reason), ['cron_not_scheduled', 'cron_not_scheduled', 'cron_not_scheduled']);
+  assert.equal(accountDeletionEnabled({ RIVER_OAKS_ACCOUNT_DELETION: '1', WORKOS_WEBHOOK_SECRET: 'set', VERCEL: '1', CRON_SECRET: 'set', VERCEL_ENV: 'production' }), true);
 });
 
 test('the hosted backend serves the deletion route only with the flag on and the webhook configured', { skip: !process.env.REDIS_URL }, async t => {
   t.mock.method(console, 'warn', () => {});
-  for (const [flag, secret, served] of [['', 'webhook-fixture', false], ['1', '', false], ['1', 'webhook-fixture', true]]) {
+  const vercel = { VERCEL: '1', CRON_SECRET: 'cron-fixture' };
+  for (const [flag, secret, served, extra = {}] of [['', 'webhook-fixture', false], ['1', '', false], ['1', 'webhook-fixture', true],
+    ['1', 'webhook-fixture', false, { VERCEL: '1' }], ['1', 'webhook-fixture', false, { ...vercel, VERCEL_ENV: 'preview' }], ['1', 'webhook-fixture', true, { ...vercel, VERCEL_ENV: 'production' }]]) {
     const namespace = `river-oaks:test-deletion-flag:${randomUUID()}`;
     const app = await createRedisBackend({ PUBLIC_ORIGIN: 'http://127.0.0.1', REDIS_URL: process.env.REDIS_URL, REDIS_NAMESPACE: namespace,
-      RIVER_OAKS_ACCOUNT_DELETION: flag, WORKOS_WEBHOOK_SECRET: secret });
+      RIVER_OAKS_ACCOUNT_DELETION: flag, WORKOS_WEBHOOK_SECRET: secret, ...extra });
     t.after(async () => {
       await app.close();
       const redis = new Redis(process.env.REDIS_URL);const keys = await redis.keys(`*${namespace}*`);if (keys.length) await redis.del(...keys);await redis.quit();
@@ -224,6 +230,27 @@ test('the hosted backend serves the deletion route only with the flag on and the
     const request = await serve(t, async (req, res) => { app.server.emit('request', req, res); return true; });
     assert.deepEqual(await (await request('/api/account/delete')).json(), { available: false });
     // Without WorkOS credentials nobody is signed in, so the route, when it exists, answers 401.
-    assert.equal((await request('/api/account/delete', { method: 'POST', headers: { Origin: 'http://127.0.0.1' } })).status, served ? 401 : 404, `flag ${flag || 'unset'}, webhook ${secret ? 'set' : 'unset'}`);
+    assert.equal((await request('/api/account/delete', { method: 'POST', headers: { Origin: 'http://127.0.0.1' } })).status, served ? 401 : 404, `flag ${flag || 'unset'}, webhook ${secret ? 'set' : 'unset'}, ${JSON.stringify(extra)}`);
+  }
+});
+
+// Erasure's second pass and its retries run only through the sweep: a timer on a
+// long-lived backend, the cron on Vercel.
+test('the hosted backend sweeps recorded erasures on a timer, except on Vercel', { skip: !process.env.REDIS_URL }, async t => {
+  t.mock.method(console, 'warn', () => {});
+  for (const [extra, timed] of [[{}, 1], [{ VERCEL: '1', CRON_SECRET: 'cron-fixture', VERCEL_ENV: 'production' }, 0]]) {
+    const intervals = [], real = globalThis.setInterval;
+    const spy = t.mock.method(globalThis, 'setInterval', (fn, ms, ...rest) => { intervals.push([fn, ms]);return real(fn, ms, ...rest); });
+    const namespace = `river-oaks:test-deletion-sweep:${randomUUID()}`;
+    const app = await createRedisBackend({ PUBLIC_ORIGIN: 'http://127.0.0.1', REDIS_URL: process.env.REDIS_URL, REDIS_NAMESPACE: namespace,
+      RIVER_OAKS_ACCOUNT_DELETION: '1', WORKOS_WEBHOOK_SECRET: 'webhook-fixture', ...extra });
+    spy.mock.restore();
+    t.after(async () => {
+      await app.close();
+      const redis = new Redis(process.env.REDIS_URL);const keys = await redis.keys(`*${namespace}*`);if (keys.length) await redis.del(...keys);await redis.quit();
+    });
+    let sweeps = 0;app.eraseAccount.sweep = async () => { sweeps++;return { finished: 0, failed: 0, waiting: 0 }; };
+    for (const [fn, ms] of intervals) if (ms === 30_000) try { fn(); } catch {}
+    assert.equal(sweeps, timed, JSON.stringify(extra));
   }
 });
