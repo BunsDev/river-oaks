@@ -1,7 +1,7 @@
 import { openHudSpace } from '../preview/e2e/hud-navigation.js';
 import { _electron as electron } from 'playwright';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -370,25 +370,36 @@ try {
   await page.screenshot({ path: join(root, `output/playwright/desktop-${report.mode}.png`) });
   // Playwright marks a deliberately crashed Page permanently crashed. Verify
   // automatic recovery through the surviving native webContents instead.
-  const recovered = await app.evaluate(async ({ BrowserWindow }) => {
+  // Times from the crash: Electron reporting it, the reload finishing, and the game playable.
+  const { recovered, ...crashRecovery } = await app.evaluate(async ({ BrowserWindow }) => {
     const contents = BrowserWindow.getAllWindows()[0].webContents;
+    const crashed = Date.now(), timings = {};
+    contents.once('render-process-gone', (_event, details) => { timings.goneMs = Date.now() - crashed; timings.reason = details.reason; });
     await new Promise((resolve, reject) => {
       const loaded = () => { clearTimeout(timer); resolve(); };
       const timer = setTimeout(() => {
         contents.removeListener('did-finish-load', loaded);
-        reject(new Error(`Recovery navigation did not finish: loading=${contents.isLoading()}, crashed=${contents.isCrashed()}`));
+        reject(new Error(`Recovery navigation did not finish: loading=${contents.isLoading()}, crashed=${contents.isCrashed()}, ${JSON.stringify(timings)}`));
       }, 60000);
       contents.once('did-finish-load', loaded);
       contents.forcefullyCrashRenderer();
     });
+    timings.loadedMs = Date.now() - crashed;
     const deadline = Date.now() + 60000;
     while (Date.now() < deadline) {
       const ready = await contents.executeJavaScript("document.querySelector('#loading')?.hidden && document.querySelector('#canvas-host')?.dataset.playerReady === 'true'");
-      if (ready) return true;
+      if (ready) return { recovered: true, ...timings, playableMs: Date.now() - crashed };
       await new Promise(resolve => setTimeout(resolve, 100));
     }
-    return false;
+    return { recovered: false, ...timings };
   });
+  report.crashRecovery = crashRecovery;
+  // Where Linux pipes core dumps to a collector, the renderer must be ended
+  // rather than waited for (desktop/core-dump-watch.js, #370).
+  if (process.platform === 'linux') {
+    crashRecovery.corePattern = (await readFile('/proc/sys/kernel/core_pattern', 'utf8').catch(() => '')).trim();
+    if (crashRecovery.corePattern.startsWith('|')) assert.equal(crashRecovery.reason, 'killed', `a renderer writing its core through ${crashRecovery.corePattern.split(' ')[0]} is ended, not waited for`);
+  }
   assert.equal(recovered, true, 'crash recovery rebuilds a playable character');
   check('renderer crash recovers to playable game');
   report.gpu = await app.evaluate(({ app }) => app.getGPUFeatureStatus());
