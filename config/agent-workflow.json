@@ -9,7 +9,8 @@
       "preview-tests",
       "server-tests",
       "desktop-tests",
-      "build"
+      "build",
+      "build-play"
     ],
     "python": [
       "python-lint",
@@ -28,6 +29,7 @@
       "server-tests",
       "desktop-tests",
       "build",
+      "build-play",
       "python-lint",
       "python-format",
       "python-tests",
@@ -51,6 +53,7 @@
       "server-redis-tests",
       "desktop-tests",
       "build",
+      "build-play",
       "python-lint",
       "python-format",
       "python-tests",
@@ -75,7 +78,8 @@
       "desktop-tests"
     ],
     "build": [
-      "build"
+      "build",
+      "build-play"
     ],
     "desktop-package": [
       "desktop-tests",
@@ -139,6 +143,14 @@
         "pnpm",
         "run",
         "build"
+      ]
+    },
+    {
+      "id": "build-play",
+      "command": [
+        "pnpm",
+        "run",
+        "build:play"
       ]
     },
     {

@@ -34,7 +34,7 @@ it is not an unattended test fixture.
 | Command | Scope |
 | --- | --- |
 | `pnpm run verify tooling` | `test:agent`: runner failure/timeout/prerequisite regressions, catalog consistency, the task-register merge driver, project status/inventory/archives/prune/cancel, secret and ref hooks, pnpm policy, skill views and the plans index |
-| `pnpm run verify preview` / `server` / `desktop` / `build` | Focused existing suite or build for the owning runtime |
+| `pnpm run verify preview` / `server` / `desktop` / `build` | Focused existing suite or build for the owning runtime. `build` runs `pnpm run build` (the deployed site) and `pnpm run build:play` (the play entry alone in `dist/play` for a packaged host, #286, with its manifest `dist/play-manifest.json` and the check that it carries no landing page, studio, dev proxy target, Electron, Python or runtime state) |
 | `pnpm run verify desktop-package` | Desktop unit tests, `desktop:package` for the host platform and arch, then `desktop:package:check`: the fuse wire matches `desktop/fuses.js` and the asar holds exactly the staged files (receipt `.runtime/agent/desktop-package.json`) |
 | `pnpm run verify web` | Agent, preview, server, desktop unit tests; production web/landing build |
 | `pnpm run verify python` | Ruff, Python tests, offline synthetic pipeline |
