@@ -5,15 +5,16 @@ import { findDepthFights } from '../src/depth-layer-audit.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
 
-test('district facades keep glass off the building mass and display alcoves out of the next edge\'s wall', async () => {
+test('district facades keep glass off the building mass, and display alcoves out of the next edge\'s wall and the boutiques beside them', async () => {
   // Node has no DOM: a 2D context that accepts any call and hands back blank pixels.
   const pixels = (...args) => { const [w, h] = args.length > 2 ? args.slice(2) : typeof args[0] === 'object' ? [args[0].width, args[0].height] : args; return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) }; };
   const sink = new Proxy(() => sink, { get: (_, key) => key === 'measureText' ? () => ({ width: 0 }) : key === 'getImageData' || key === 'createImageData' ? pixels : sink, apply: () => sink, set: () => true });
   // Texture loads finish after the test, so the stub stays for this file's own process.
   const element = () => ({ style: {}, classList: { add() {}, remove() {}, toggle() {} }, dataset: {}, append() {}, setAttribute() {}, remove() {}, appendChild() {}, addEventListener() {}, removeEventListener() {}, getContext: () => sink, width: 0, height: 0 });
   globalThis.document = { createElement: element, createElementNS: element };
-  const { buildDistrictBuildings } = await import('../src/district.js');
-  const built = buildDistrictBuildings(world), group = built.group ?? built;
+  const [{ buildDistrictBuildings }, THREE] = await Promise.all([import('../src/district.js'), import('three')]);
+  const built = buildDistrictBuildings(world), group = new THREE.Group();
+  group.add(built, built.userData.interiors);
   group.updateMatrixWorld(true);
   const fights = findDepthFights(group);
   const named = fight => `${fight.a} × ${fight.b} at ${fight.at.map(value => value.toFixed(1))}`;
@@ -27,4 +28,8 @@ test('district facades keep glass off the building mass and display alcoves out 
   // glass, its floor, ceiling and side wall a centimetre behind them across the whole bay.
   const alcoves = fights.filter(fight => /facade-(interior|floor)\|/.test(`${fight.a} ${fight.b}`) && fight.largest > 0.5);
   assert.deepEqual(alcoves.map(named), []);
+  // Nor does an alcove close itself with a side wall 4 cm in front of a boutique room's wall, or
+  // end on the room's wall face; and fluted millwork 4 mm off a room's back wall stays in front.
+  const rooms = fights.filter(fight => /^Mesh\|interior-.* facade:facade-(interior|floor)\||interior-fluted/.test(`${fight.a} ${fight.b}`));
+  assert.deepEqual(rooms.map(named), []);
 });

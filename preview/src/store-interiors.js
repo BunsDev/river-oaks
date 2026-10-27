@@ -119,7 +119,8 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const glow = standard({ color: '#fff1d6', emissive: '#ffd9a6', emissiveIntensity: 1.9, roughness: 0.4 });
   const lamp = standard({ color: '#fff6e6', emissive: '#ffe1b8', emissiveIntensity: 2.4, roughness: 0.4 });
   const warmPanel = standard({ color: '#f1dfc4', emissive: '#f4c98d', emissiveIntensity: 0.9, roughness: 0.9 });
-  const mirror = standard({ color: '#ffffff', roughness: 0.03, metalness: 1, envMapIntensity: 1 });
+  // Every mirror pane lies on its brass surround or a wall: pulled forward a couple of depth steps, it wins.
+  const mirror = standard({ color: '#ffffff', roughness: 0.03, metalness: 1, envMapIntensity: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
   reflectionMaterials.push(mirror);
   const foliage = standard({ color: '#3f6a45', roughness: 0.95 });
   const bronze = standard({ color: '#5a4a3a', roughness: 0.4, metalness: 0.7 });

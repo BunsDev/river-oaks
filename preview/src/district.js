@@ -11,7 +11,7 @@ import { thinStorefrontGlass, displayRoomSurface } from './storefront-materials.
 import { hedgeClusters } from './street-furniture.js';
 import { storefrontBenchSpots } from './street-fixtures.js';
 export { storefrontBenchSpots };
-import { storeRoomsFor, interiorLevelRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
+import { storeRoomsFor, interiorLevelRoomsFor, uncoveredBay, coveringRoom, roomAt } from './store-rooms.js';
 import { venueDoorSites } from './venue-rooms.js';
 import { CAMPUS_BUILDING_KIND, isCampusRoom } from './garden-campus-district.js';
 import { buildGardenCampus } from './garden-campus.js';
@@ -269,11 +269,16 @@ export function buildDistrictBuildings(world) {
             // the alcove stops 30 cm short of it, behind the corner pier (depth-layer-audit.js).
             const lead = k===0 && t0<0.001 ? 0.3 : 0, tail = k===bays-1 && t1>0.999 ? 0.3 : 0;
             const width = Math.max(0.2, span*(t1-t0)-lead-tail), shift = ((t0+t1)/2-0.5)*span+(lead-tail)/2;
+            // A boutique room starting just past the bay closes that side with its own wall.
+            const beside=side=>{ const past=side<0?bay0:bay1; return Boolean(roomAt(rooms,past[0]+dx/length*0.15*side,past[1]+dy/length*0.15*side,0)); };
+            const into=side=>(side<0?t0<0.001:t1>0.999)&&beside(side)?0.02:0;
             const atc=(depth,height)=>{const p=at(depth,height);p[0]+=dx/length*shift;p[2]-=dy/length*shift;return p;};
             const nearest=world.stores.filter(store=>store.building_id===building.id).sort((left,right)=>Math.hypot(left.facade[0]-x,left.facade[1]+z)-Math.hypot(right.facade[0]-x,right.facade[1]+z))[0];
             // Floor and ceiling end 5 mm inside the back wall's ends, so their end caps don't share its plane.
             part(floor,atc(1.35,0.28),[width-0.01,0.10,2.7],yaw,index);
-            part(interiors.forCategory(nearest?.category),atc(2.7,2.25),[width,4.0,0.12],yaw,index);
+            // The back wall runs 2 cm on into such a room's wall, so its end cap is buried there.
+            const back=atc(2.7,2.25),reach=(into(1)-into(-1))/2;back[0]+=dx/length*reach;back[2]-=dy/length*reach;
+            part(interiors.forCategory(nearest?.category),back,[width+into(-1)+into(1),4.0,0.12],yaw,index);
             part(interior,atc(1.35,4.16),[width-0.01,0.12,2.7],yaw,index);
             // Warm display strips, ceiling spots and plinths reveal depth through recessed glass.
             part(light,atc(1.35,3.98),[Math.max(0.3,width-0.5),0.025,0.06],yaw,index);
@@ -296,14 +301,16 @@ export function buildDistrictBuildings(world) {
             }
             for(const side of [-1,1]) {
               if(entryAt((k+(side>0?1:0))*span)) continue;
-              // A room wall already closes the side that borders a boutique.
+              // A room wall already closes the side that borders a boutique, inside this bay or just past it.
               if(side<0 ? t0>0.001 : t1<0.999) continue;
-              // It rises from inside the floor slab, so no underside shows below the floor. At a corner
-              // it fills back to 20 cm from it, clear of the next edge's glass 11 cm in, so no gap
+              if(beside(side)) continue;
+              // It rises from inside the floor slab, so no underside shows below the floor, and starts
+              // 2 cm behind the facade line, where a boutique room's wall ends too. At a corner it
+              // fills back to 20 cm from it, clear of the next edge's glass 11 cm in, so no gap
               // behind the corner pier opens onto the empty building.
               const inset=side<0?lead:tail, thick=inset?inset-0.2:0.08, edge=span/2-inset+(inset?thick/2:0);
-              const p=at(1.35,2.25);p[0]+=dx/length*edge*side;p[2]-=dy/length*edge*side;
-              part(interior,p,[thick,3.9,2.7],yaw,index);
+              const p=at(1.36,2.25);p[0]+=dx/length*edge*side;p[2]-=dy/length*edge*side;
+              part(interior,p,[thick,3.9,2.68],yaw,index);
             }
           }
         }
