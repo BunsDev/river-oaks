@@ -35,6 +35,13 @@ export function carriageFootprint(placement) {
   }
   return points;
 }
+// A road vehicle can stand wherever its whole footprint fits where a walker could stand:
+// on the road or off it, but never indoors, through a person or through a tree.
+export function vehicleCanOccupy(placement,environment,world,people=[]) {
+  if(carriageFootprint(placement).some(([x,z])=>!environment.isFree(x,z)||environment.roomAt?.(x,z)))return false;
+  if(people.some(p=>!p.indoor&&!p.vehicleRole&&carriageContains(placement,p.position[0],placement.position[1]+1,-p.position[1],.65)))return false;
+  return !treeSupports(world).some(tree=>carriageContains(placement,tree.position[0],placement.position[1]+1,-tree.position[1],.6));
+}
 export function findCarriageParking(world,pose,people=[],scale=1,team=false,vehicle=null) {
   if(!world||!pose||pose.roomId||pose.flying||pose.altitude>0.05)return null;
   const environment=createWalkingEnvironment(world),network=createPedestrianNetwork(world),candidates=[];

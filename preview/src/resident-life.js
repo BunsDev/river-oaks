@@ -24,11 +24,11 @@ const streetVisitor=(local,visitor,pose)=>visitor && (!pose ||
 // more would leave the nearest stops all in the Commons, and residents who
 // wandered in would rarely come back.
 // Across the footbridge, Bayou Heights adds its landing, bandstand, icehouse patio
-// and hall. Each stands where a resident can walk to and from the landing: a spot
+// and hall. Each stands in open ground, clear all round, nearest the landing: a spot
 // tucked beside the bandstand's stage was clear but took the planner too long to leave.
-// Proving that takes route searches of about a second on Heights, and a server builds
-// the same world several times while it migrates a checkpoint, so a world's stops are
-// placed once.
+// Proving each stop by route search cost seconds the first time a server built Heights,
+// inside the request that switched the district; resident-locations.test.js proves the
+// chosen stops reach the landing and back. A world's stops are placed once.
 const placedStops=new WeakMap();
 function locationStops(world,navigation) {
   if(!placedStops.has(world)) placedStops.set(world,placeLocationStops(world,navigation));
@@ -41,14 +41,14 @@ function placeLocationStops(world,navigation) {
   lanterns.sort((a,b)=>a.at[0]-b.at[0]);
   const stops=[];
   // Landmarks are solids; stand on clear ground beside each one, nearest `toward` first.
-  const beside=(id,name,at,from,to,{toward=null,reaches=()=>true}={})=>{
+  const beside=(id,name,at,from,to,{toward=null,open=()=>true}={})=>{
     const ring=[];
     for(let radius=from;radius<=to;radius+=0.4)for(let i=0;i<16;i++) {
       const angle=i/16*Math.PI*2,position=[at[0]+Math.cos(angle)*radius,at[1]+Math.sin(angle)*radius];
       if(navigation.free(position)) ring.push(position);
     }
     if(toward) ring.sort((a,b)=>distance(a,toward)-distance(b,toward));
-    const position=ring.slice(0,8).find(reaches);
+    const position=ring.slice(0,8).find(open);
     if(position) stops.push({id,name,position});
     return position;
   };
@@ -58,12 +58,19 @@ function placeLocationStops(world,navigation) {
   const landing=heights?.footbridge?.landing?.every(Number.isFinite)
     && beside(`${heights.id}/footbridge`,'Footbridge landing',centre(heights.footbridge.landing),0,3);
   if(!landing) return stops;
-  const reaches=point=>Boolean(navigation.route(point,landing) && navigation.route(landing,point));
+  // Clear at 0.6 m and 1.2 m all round, so a resident can leave the stop in any direction.
+  const open=([east,north])=>{
+    for(let i=0;i<16;i++)for(const radius of [0.6,1.2]) {
+      const angle=i/16*Math.PI*2;
+      if(!navigation.free([east+Math.cos(angle)*radius,north+Math.sin(angle)*radius])) return false;
+    }
+    return true;
+  };
   for(const [name,label,rect,at] of [['bandstand','Bandstand',heights.bandstand?.rect],['icehouse','Icehouse patio',null,heights.icehouse?.at],
     ['hall','Heights Hall',heights.hall?.rect]]) {
     const id=`${heights.id}/${name}`;
-    if(rect?.every(Number.isFinite)) beside(id,label,centre(rect),...around(rect),{toward:landing,reaches});
-    else if(at?.every?.(Number.isFinite)) beside(id,label,at,0.8,3,{toward:landing,reaches});
+    if(rect?.every(Number.isFinite)) beside(id,label,centre(rect),...around(rect),{toward:landing,open});
+    else if(at?.every?.(Number.isFinite)) beside(id,label,at,0.8,3,{toward:landing,open});
   }
   return stops;
 }

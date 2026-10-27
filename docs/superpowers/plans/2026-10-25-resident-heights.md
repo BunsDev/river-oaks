@@ -44,6 +44,7 @@ Until then, nothing here changes behaviour on main: Heights code paths run only 
 | Scratch merge with #649 head `0cc09391` (not pushed): Heights probe and server-world simulation | See Results |
 | Main `0b9a97c4` merged in through #655 (`03381365`); signed merge `ff46d99e`, clean | Related suites on an isolated Redis: 195/195, 0 skipped (the 95 above plus Gardens, District and world migrations, police and crime, Commons games and transport, and the Redis room). `nice -n 10 pnpm run verify` (core), Python 3.12: **passed** on the third attempt (10:41–10:46Z, load 7.8): agent 274/274; preview 4,163 passed, 1 skipped; server 918 passed, 225 Redis-only skips; desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo; secrets. Attempts 1 and 2 (10:36Z and 10:38Z, load 7.1–7.8) each failed only the `land-pr` queued-lander timing test (30 s timeout), which passed 29/29 alone; `scripts/` is identical to main and both logs are kept. Hosted checks at `ff46d99e`: 15/15 green. |
 | #655's review fixes (#674) merged in through `2ac33123`; signed merge `84190512` | Related suites on an isolated Redis (6461): 200/200, 0 skipped (the 195 above, #674's 3 tests and 1 new). The new test fails with the corridor filter removed. Core verify: **passed** on the first attempt (08:36–08:41Z, load 8.4–13.6), `dirty: false`: agent 274/274; preview 4,165 passed, 1 skipped; server 921 passed, 225 Redis-only skips; desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo; secrets. Receipt `core.json` sha256 `fc901b154bf58ea8…`. |
+| Main `3df540ee` (#655 as `2d63637f`, #649 as `3df540ee`) merged in; the Heights rollback wiring (`465a209a…`) and its tests (`d6681aa3…`) applied; stop placement fixed (below) | Related, Heights and rollback suites on an isolated Redis (6461): **230/230**, 0 skipped. That includes the Gardens, Commons and Heights Redis fences, both Commons activation rehearsals, the Heights rehearsal, and the new open-ground stop test. Core verify: **passed** on the first attempt (2026-10-27 02:58–03:03Z): agent 281/281; preview 4,217 passed, 1 skipped; server 933 passed, 227 skipped (Redis cases); desktop 127 passed, 5 skipped. Receipt `a9c43f9cf91d504f…`. |
 
 ## Results
 
@@ -134,17 +135,23 @@ Rehearsed on the same scratch merge, kept as a patch in the session scratchpad:
   No resident stood in Heights during that run, so 0 is expected there.
 - **Order, agreed with river-oaks-91 (2026-10-25):** after the players are placed. The first agreement said before, but run first, `relocateResidents` would keep 0.9 m from the players' old Heights positions, and players placed afterwards could land beside a resident it had just moved.
 
+## Stop placement no longer searches routes (2026-10-27)
+
+With #649 on main, three Redis epoch-fence tests failed on this branch: the Gardens coordinator, the Commons rollout and the Heights rollout. Each switch's join returned `request_timeout`. On clean main they pass.
+
+The cause was this branch's Heights stops. Each candidate was proven reachable by route searches to and from the footbridge landing. Cold, those searches made the first Heights world in a process take 2.3 s (4.5 s under load), against about 0.2 s on main. Every district switch builds that world inside its request, as the Heights rollback is asked first. The world-object cache missed too: each migration builds a fresh world object.
+
+Every first candidate nearest the landing was reachable and clear all round. So stops are now chosen as open ground: clear at 0.6 m and 1.2 m all round, nearest the landing. `resident-locations.test.js` proves, with full routes, that the chosen bandstand, icehouse and hall stops reach the landing and back. A cold Heights world now takes about 0.3 s.
+
 ## Gaps
 
 - The reverse-search regression can only be shown on Heights: the Commons band (9,396 cells) never reaches the search limit. The test lands with the Heights rehearsal once #649 is on main.
-- The Heights rollback's resident handling is not wired yet; it waits for #649 (see Landing order).
 - No browser journey; Val's visual review of residents in Heights is open.
-- The first Heights world build in a process still pays about 1.3 s for stop placement, and a resident's first plan from the bandstand pays the forward search, about 0.6 s. The server simulation's warm-up maximum of 313 ms is consistent with that cost; I didn't attribute it call by call. A cheaper failing search in the shared grid planner would remove it, but would change District routes for police and carriages too, so it is out of scope here.
+- A resident's first plan from the bandstand still pays the forward search, about 0.6 s. Stop placement no longer does (above). The server simulation's warm-up maximum of 313 ms is consistent with that cost; I didn't attribute it call by call. A cheaper failing search in the shared grid planner would remove it, but would change District routes for police and carriages too, so it is out of scope here.
 
 ## Next step
 
-After #649 lands:
-1. Merge main into the branch (a rebase would need a force-push).
-2. Apply the prepared Heights rollback wiring and its tests (see above). Add a Heights case for re-planning: a resident on Commons ground walking to the bandstand, and one anchored at a Heights stop. Then rerun the Heights rehearsal.
-3. Run `verify full` with an isolated Redis.
-4. Mark the PR ready.
+#649 is on main (`3df540ee`), merged into this branch with the Heights rollback wiring.
+1. Wait for hosted checks on the merge.
+2. Run `verify full` with an isolated Redis.
+3. Mark the PR ready. Merging and landing are Val's.

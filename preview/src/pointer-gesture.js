@@ -1,5 +1,7 @@
 // Picking and camera movement share a dead zone and one owning pointer.
 // Returning a drag to its origin must never turn it back into a tap.
+// Picking needs the primary contact. A look drag (anyFinger) may also take a
+// later finger, because a thumb holding a walk button is the primary contact.
 export function createPointerGesture() {
   let pointer = null;
   const outsideTap = event => Math.hypot(event.clientX-pointer.x,event.clientY-pointer.y)>5;
@@ -7,8 +9,8 @@ export function createPointerGesture() {
   // ownership at use time as well as responding to lifecycle cancellation.
   const ownsCapture = () => !pointer.captureTarget || pointer.captureTarget.hasPointerCapture(pointer.id);
   return {
-    begin(event, {captureTarget=null} = {}) {
-      if(pointer || !event.isPrimary || event.button!==0)return false;
+    begin(event, {captureTarget=null, anyFinger=false} = {}) {
+      if(pointer || event.button!==0 || !event.isPrimary && !(anyFinger && event.pointerType==='touch'))return false;
       pointer={id:event.pointerId,x:event.clientX,y:event.clientY,lastX:event.clientX,lastY:event.clientY,dragged:false,captureTarget};
       return true;
     },

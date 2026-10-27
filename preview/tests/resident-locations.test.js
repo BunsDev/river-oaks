@@ -244,3 +244,18 @@ test('an object built on a keep-right lane leaves residents another row to cross
     assert.ok(searches<=2,`${lane}: ${searches} route searches`);
   }
 });
+
+test('every Heights stop stands in open ground the planner walks to and from the footbridge landing', async () => {
+  const { HEIGHTS_REVISION } = await import('../../shared/bayou-heights-layout.js');
+  const heights=await loadDistrictData({districtRevision:HEIGHTS_REVISION}),id=heights.eastGardenCommons.heights.id;
+  // Stops are chosen by open ground alone, so building Heights never waits on route searches.
+  const stops=createResidentLife(heights,createCommunity(heights,[],{carriage:false})).stops;
+  const landing=stops.find(stop=>stop.id===`${id}/footbridge`)?.position,placed=stops.filter(stop=>stop.id.startsWith(`${id}/`)&&stop.id!==`${id}/footbridge`);
+  assert.ok(landing,'the footbridge landing is a stop');
+  assert.deepEqual(placed.map(stop=>stop.id.slice(id.length+1)).sort(),['bandstand','hall','icehouse']);
+  const navigation=createResidentNavigation(heights,{locations:true});
+  for(const stop of placed) {
+    assert.ok(navigation.route(stop.position,landing),`${stop.name} reaches the landing`);
+    assert.ok(navigation.route(landing,stop.position),`the landing reaches ${stop.name}`);
+  }
+});
