@@ -202,7 +202,18 @@ The depth-layers journey on this tree (04:04Z, 37 s) passed:
   - The fixture town's top-down pick at the spot now hits asphalt where it hit terrain; before and after captures are in the session scratchpad.
 - **Tools.** The render-audit hooks gained `pick(x, y)` (what a screen pixel sees, nearest first) and `groundProbe([east, north])` (what a vertical ray meets on a small grid). Both are DEV-only, under `?render-audit=1`.
 
-## Remaining (`depth-layers-known.json`, 388 pairs)
+## Increment 3 (2026-10-27): district facades, 292 listed pairs to 204
+
+A Node scan of `buildDistrictBuildings` (no browser, about 3 s) found the facade pairs and checked each fix: 228 pairs to 81, no new pair. The record run then dropped 88 listed pairs and added none.
+
+- **Building mass pushed back (`district.js`; the Hermès pavilion in `reference-facades.js`).** The mass draws the mapped wall, and every facade part stands on it or in front of it. It now draws with a copy of its material at polygon offset +1/+2 (the finishes' rule in reverse), so loggia doors, storefronts and bays set a few centimetres off it win.
+- **Glass 8 cm off the wall (`reference-blocks.js`).** The loggia sliding doors, the Equinox bays and spandrel, and the Toulouse glazed storey moved from 2–6 cm to 8 cm, past the 5.7 cm the conservative model needs at 120 m. Royal glass is both a glazing and the Equinox mass, so a glazing-wide offset could not separate them.
+- **Display alcoves at corners (`district.js`).** An alcove that reached a building corner put its side wall, floor, ceiling and back wall 0–1 cm behind the next edge's wall or glass. It now stops 30 cm short, and its side wall fills back to 20 cm from the corner, clear of that edge's glass 11 cm in, so no gap behind the corner pier opens onto the empty building. Its side walls rise from inside the floor slab, and floor and ceiling end 5 mm inside the back wall's ends.
+- **Regression.** `preview/tests/district-depth.test.js` builds the district buildings in Node and runs `findDepthFights`. No fight may involve a mass except two named meetings of neighbours, and no alcove floor or wall may fight across more than 0.5 m. It fails on `3d666a29`'s sources and passes here.
+- **Checks.** Focused district, reference, depth and interior files: 104/104. `RIVER_OAKS_DEPTH_LAYERS_RECORD=1 pnpm run test:experience depth-layers`: passed, 204 listed; a normal run then passed. `pnpm run verify` (core, started 17:29Z): passed on the first attempt; agent 289/289, preview 4,289 passed and 1 skipped, server 1,036 passed and 278 skipped (Redis cases), desktop 127 passed and 5 skipped, build, Python, demo and secrets.
+- **Left on the list:** the Hermès mass flush with the block beside it; an upper window buried 1 cm inside a parking garage's wall; finish × finish pairs (both at the same offset); cladding joints at gap 0; and two alcove side walls flush with a rebuilt neighbour's stone end.
+
+## Remaining (`depth-layers-known.json`, 204 pairs)
 
 By source:
 
@@ -226,5 +237,5 @@ Hosted checks on `86afad18` (the third merge): 26 of 26 passed, including the `d
    - A larger walking near plane than 6 cm.
 
    Both touch every frame and the phone budgets, so neither is in this branch.
-2. **Landing with a known list.** This branch lands the planter, city-kit, the shader fixes and the journey, with 388 earlier pairs listed for burn-down. The alternative is holding it until the list is empty.
+2. **Landing with a known list.** This branch lands the planter, city-kit, the shader fixes and the journey, with 204 earlier pairs listed for burn-down (388 at increment 1). The alternative is holding it until the list is empty.
 3. **Merge order with #649.** The planter block's neighbours change in both branches.

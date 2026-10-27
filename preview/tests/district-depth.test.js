@@ -1,0 +1,30 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { findDepthFights } from '../src/depth-layer-audit.js';
+
+const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
+
+test('district facades keep glass off the building mass and display alcoves out of the next edge\'s wall', async () => {
+  // Node has no DOM: a 2D context that accepts any call and hands back blank pixels.
+  const pixels = (...args) => { const [w, h] = args.length > 2 ? args.slice(2) : typeof args[0] === 'object' ? [args[0].width, args[0].height] : args; return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) }; };
+  const sink = new Proxy(() => sink, { get: (_, key) => key === 'measureText' ? () => ({ width: 0 }) : key === 'getImageData' || key === 'createImageData' ? pixels : sink, apply: () => sink, set: () => true });
+  // Texture loads finish after the test, so the stub stays for this file's own process.
+  const element = () => ({ style: {}, classList: { add() {}, remove() {}, toggle() {} }, dataset: {}, append() {}, setAttribute() {}, remove() {}, appendChild() {}, addEventListener() {}, removeEventListener() {}, getContext: () => sink, width: 0, height: 0 });
+  globalThis.document = { createElement: element, createElementNS: element };
+  const { buildDistrictBuildings } = await import('../src/district.js');
+  const built = buildDistrictBuildings(world), group = built.group ?? built;
+  group.updateMatrixWorld(true);
+  const fights = findDepthFights(group);
+  const named = fight => `${fight.a} × ${fight.b} at ${fight.at.map(value => value.toFixed(1))}`;
+  // Every facade part stands on the mapped wall or in front of it, so the mass behind them all
+  // (glass in loggias, storefronts and bays a few centimetres off it) never shares their depth.
+  // Two meetings of neighbours remain: the Hermès pavilion's mass flush with the block beside it,
+  // and an upper window of the next building buried a centimetre inside a parking garage's wall.
+  const mass = fights.filter(fight => fight.faces.some(face => face.object.userData.districtBuilding));
+  assert.deepEqual([...new Set(mass.map(fight => `${fight.a} × ${fight.b}`))].sort(), ['Mesh|facade-roof × facade:facade-upperGlass|facade-upperGlass', 'Mesh|facade-stone × Mesh|reference-limestone'], mass.map(named).join('\n'));
+  // A ground-floor display alcove at a building corner once ran into the next edge's wall or
+  // glass, its floor, ceiling and side wall a centimetre behind them across the whole bay.
+  const alcoves = fights.filter(fight => /facade-(interior|floor)\|/.test(`${fight.a} ${fight.b}`) && fight.largest > 0.5);
+  assert.deepEqual(alcoves.map(named), []);
+});
