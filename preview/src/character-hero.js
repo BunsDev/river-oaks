@@ -19,7 +19,9 @@ export async function createCharacterHero({definition,ownerId,load=loadResidentA
   const value=validated.definition;
   realism??=isRealisticHumanRig(value.rig)?fidelityTierForQuality(characterQualitySnapshot()):'off';
   const scene=new THREE.Scene();scene.background=new THREE.Color('#cbd8d1');
-  const camera=new THREE.PerspectiveCamera(30,16/9,.05,30);camera.position.set(0,1.08,3.8);camera.lookAt(0,.9,0);
+  // Authored looks are framed for their 1.7 m figures; a recipe's height scales the frame.
+  const stature=value.schemaVersion===3?value.parameters.height/170:1;
+  const camera=new THREE.PerspectiveCamera(30,16/9,.05,30);camera.position.set(0,1.08*stature,3.8*stature);camera.lookAt(0,.9*stature,0);
   const key=new THREE.DirectionalLight('#fff0df',3.1),fill=new THREE.HemisphereLight('#f2f6ff','#64766d',2),rim=new THREE.DirectionalLight('#c5e6e5',2.2);
   key.position.set(3,4,4);rim.position.set(-3,3,-2);key.castShadow=true;key.shadow.mapSize.set(2048,2048);
   Object.assign(key.shadow.camera,{left:-1.5,right:1.5,top:2,bottom:-1.5,near:.1,far:12});key.shadow.normalBias=.012;key.shadow.bias=-.0001;scene.add(key,fill,rim);
@@ -27,7 +29,7 @@ export async function createCharacterHero({definition,ownerId,load=loadResidentA
   let avatar=null,costume=null,colors=null,effect=null,disposed=false;
   const dispose=renderer=>{if(disposed)return;disposed=true;if(renderer)releaseTransmissionTargets(renderer,scene);effect?.dispose();colors?.dispose();costume?.dispose();avatar?.object.removeFromParent();avatar?.dispose();pedestal.geometry.dispose();pedestal.material.dispose();key.shadow.dispose();};
   try{
-    avatar=await load(Math.max(0,AVATAR_PROFILES.indexOf(value.rig)),`remote-hero-${value.appearanceId}`,value.rig,{folk:false,appearanceId:value.appearanceId,faceRecipe:{},realism:'off'});
+    avatar=await load(Math.max(0,AVATAR_PROFILES.indexOf(value.rig)),`remote-hero-${value.appearanceId}`,value.rig,{folk:false,appearanceId:value.appearanceId,faceRecipe:{},realism:'off',...(value.schemaVersion===3?{recipe:value.parameters}:{})});
     if(sharedAppearance(value.appearanceId).costume==='jevica')costume=createPlayerCostume(avatar,'jevica');
     colors=createCharacterMaterials(avatar.object);colors.apply(value);
     if(realism!=='off'){effect=createCharacterFidelity(avatar.rig,{loadTextures:loadRealismTextures});await effect.setTier(realism);}

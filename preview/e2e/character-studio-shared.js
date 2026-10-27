@@ -126,7 +126,9 @@ async page => {
   check((await account()).character.published.revision===1,'Wearing the retained look again reuses its immutable publication');
   await dialog.locator('[data-close]').click();
 
-  await page.reload();await ready(page);await open();check(await dialog.getAttribute('data-palette')==='rose','Reconnect opens the canonical equipped customization');
+  // A new visit's first open starts from someone new; one Undo is the canonical equipped customization.
+  await page.reload();await ready(page);await open();check(await dialog.getAttribute('data-appearance')==='custom-human','Reconnect opens on a random person of your own');
+  await dialog.getByRole('button',{name:'Undo',exact:true}).click();check(await dialog.getAttribute('data-palette')==='rose','Undo after reconnect is the canonical equipped customization');
   await dialog.getByRole('radio',{name:'Midnight',exact:true}).click();await dialog.locator('[data-wear]').click();await waitWear('midnight');
   check((await account()).character.published.revision===2,'Editing and wearing appends an immutable revision');
   await dialog.locator('[data-close]').click();await framePeer();await peer.screenshot({path:'output/playwright/character-studio-peer-midnight.png'});

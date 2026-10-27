@@ -11,7 +11,11 @@ async page => {
   await open();const dialog=page.getByRole('dialog',{name:'Character studio'});
   check(await dialog.locator('[data-turntable]').isDisabled(),'Reduced motion disables turntable');check(await dialog.locator('[name=pose]').isDisabled(),'Reduced motion disables animated poses');
   await page.waitForFunction(()=>document.querySelector('.character-studio').dataset.accountPhase==='ready');
-  check(/current town look/.test(await dialog.locator('[data-account-status]').innerText()),'An unedited look is not reported as unsaved edits');
+  // A visit's first open starts from someone new, staged as an edit of the worn look.
+  check(await dialog.getAttribute('data-mode')==='create'&&await dialog.getAttribute('data-appearance')==='custom-human'&&await dialog.locator('[data-cs-create]').isVisible(),'The Studio opens on a random person of your own');
+  check(/unsaved edits/.test(await dialog.locator('[data-account-status]').innerText())&&await page.locator('#canvas-host').getAttribute('data-player-appearance')===before,'The random start is a draft; the town look is unchanged');
+  await dialog.getByRole('button',{name:'Undo',exact:true}).click();await ready(before);
+  check(await dialog.getAttribute('data-mode')==='characters'&&/current town look/.test(await dialog.locator('[data-account-status]').innerText()),'Undo returns to the worn look, which is not reported as unsaved edits');
   // Guided start: each choice group is one tab stop, and the summary says what this character can change.
   await dialog.locator('[data-close]').focus();const stops=[];
   for(let i=0;i<12;i++){await page.keyboard.press('Tab');stops.push(await page.evaluate(()=>document.activeElement.name||document.activeElement.dataset.close!==undefined&&'close'||document.activeElement.tagName));}

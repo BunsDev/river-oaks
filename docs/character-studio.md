@@ -733,6 +733,68 @@ but still needs hosted acceptance. Current exact
 test counts, completed full-profile receipt and later reopen verification belong
 in the task ledger.
 
+### Your own: player-made characters (2026-10-26)
+
+Val asked for the studio to start from a random character, with control down to the
+face (nose, mouth, eyes, cheeks, brows), skin, height, body and gender, hair, outfit,
+shoes and eye colour. This supersedes, for this feature only, the earlier rule to keep
+face and body controls unavailable. The other rules still hold:
+
+- exact validation;
+- pinned assets with receipts;
+- human, generic characters, with no uploads and no likeness;
+- graphics tier and quality never stored in the record;
+- the per-figure draw and resource budgets.
+
+Ledger: `docs/superpowers/plans/2026-10-26-character-recipes.md`.
+
+**The record.** A player-made character is a version 3 definition with
+`appearanceId: 'custom-human'`. Its `parameters` are a recipe (`character-recipe.js`,
+catalogue `river-oaks-recipes-v1`):
+
+- **body:** one of the six shipped CC0 bodies, a feminine or masculine frame with the
+  outfit made for it;
+- **height:** 150–200 cm;
+- **face:** sixteen sliders over the bodies' face targets, capped at a 0.7 weight, with
+  left and right moving together;
+- **colours:** skin tone, eye colour, hair colour, outfit colour and shoe colour;
+- **hairstyle:** one of the hairstyles.
+
+Every value is an integer or a catalogue key. The server accepts a publication only if
+rebuilding it from `(ownerId, recipe, revision)` gives exactly the same record, as it
+does for the authored looks. `rig` and `outfit` are the recipe's body, and the record
+carries no free text and no asset paths. No new assets were downloaded; the four bodies
+that were not pinned before are now pinned, with receipts.
+
+**The studio.**
+
+- "Your own" is the first chip in the character roster. On the first open in a visit,
+  the studio stages a random recipe as an unsaved draft; the town look changes only on
+  Wear.
+- In Your own, the recipe editor replaces the wardrobe and colour steps. "Surprise me"
+  re-rolls every category that isn't locked; each category has its own roll and its own
+  "Keep … when surprising" lock. Undo walks back through every edit, to the worn look.
+- Choosing an authored character returns to the authored steps, with its colours.
+
+**Rendering.** Players and peers build the same figure from the recipe:
+
+- `avatars.js`, `player-avatar.js` and `remote-players.js` render it in town, and the
+  hero and studio preview render it in the studio;
+- the face is baked from the targets at load, as for residents;
+- the hairstyle is moved onto the head and refitted;
+- skin, hair and garments are tinted, and an iris texture is drawn for the chosen eyes.
+
+Builds older than `custom-human` show the account's authored fallback.
+
+**Deletion.** A recipe lives in the same per-account character store as any other
+draft or selection. Account deletion removes it with the rest, as described below,
+and no deletion path changes.
+
+**Not yet available.**
+
+- Separate tops, bottoms, dresses and suits on any body, and more shoes, need the pinned
+  MakeHuman asset download and Blender rebuilds, which await authorization.
+- Body build (slim to broad) and two-tone outfits are planned next.
 
 ### Signed account deletion
 

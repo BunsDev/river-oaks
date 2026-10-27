@@ -67,3 +67,24 @@
 
 /* Let preview height follow the controls instead of overlapping taller native controls. */
 .cs-stage .cs-preview{position:relative;inset:auto;flex:1;min-height:0}
+
+/* Make your own: categories of the recipe, each with its own dice and lock. */
+.cs-create{display:grid;gap:18px;margin-bottom:20px}.cs-create[hidden]{display:none}
+.cs-category{position:relative}.cs-category>legend{padding-right:104px!important}
+.cs-tools{position:absolute;top:-12px;right:0;display:flex;gap:4px}
+.cs-tools button{width:44px;display:grid;place-items:center;padding:0;border:1px solid var(--cs-line);border-radius:10px;background:#e7eee4}
+.cs-tools svg{width:18px;height:18px;fill:currentColor}.cs-tools [data-lock][aria-pressed=true]{background:#31594e;border-color:#31594e;color:#fff}
+.cs-tools [data-lock][aria-pressed=false] [data-shackle]{transform:translateY(-2px)}
+.cs-segments label[hidden]{display:none}.cs-outfits{margin-top:6px}
+.cs-hairstyles{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:10px}
+.cs-face{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 18px}.cs-controls .cs-feature p{margin:8px 0 0;font-weight:700;color:var(--cs-ink)}
+.character-studio .cs-slider{display:grid;grid-template-columns:6.2em minmax(0,1fr) 2.8em;align-items:center;gap:8px;font-weight:500}
+.cs-slider output{font-variant-numeric:tabular-nums;text-align:right;font-size:11px;color:#567064}
+.character-studio .cs-slider input[type=range]{appearance:none;-webkit-appearance:none;width:100%;height:44px;min-height:44px;margin:0;background:transparent;cursor:pointer}
+.cs-slider input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:#93a99e}
+.cs-slider input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:22px;height:22px;margin-top:-9px;border:2px solid var(--cs-paper);border-radius:50%;background:#315c55}
+.cs-slider input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:#93a99e}
+.cs-slider input[type=range]::-moz-range-thumb{width:18px;height:18px;border:2px solid var(--cs-paper);border-radius:50%;background:#315c55}
+.cs-height{grid-template-columns:6.2em minmax(0,1fr) 3.6em!important}
+@media(min-width:1100px){.cs-controls>.cs-create{grid-column:1/-1}.cs-create{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px;margin:0}.cs-category[data-category=face]{grid-column:1/-1}.cs-face{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:700px){.cs-face{grid-template-columns:1fr}}
