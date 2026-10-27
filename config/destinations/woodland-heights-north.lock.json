@@ -1,0 +1,15 @@
+{
+  "id": "woodland-heights-north",
+  "kit": "city-kit-1",
+  "seed": 1935,
+  "hash": "b1ee6c57316e79cd",
+  "recipeHash": "609fbc386e92fd4e",
+  "overridesHash": "6d52f91c4a85c26e",
+  "stats": {
+    "pieces": 172,
+    "buildings": 12,
+    "solids": 61,
+    "materials": 16,
+    "triangles": 59688
+  }
+}
