@@ -20,10 +20,11 @@ test('district facades keep glass off the building mass, and display alcoves out
   const named = fight => `${fight.a} × ${fight.b} at ${fight.at.map(value => value.toFixed(1))}`;
   // Every facade part stands on the mapped wall or in front of it, so the mass behind them all
   // (glass in loggias, storefronts and bays a few centimetres off it) never shares their depth.
-  // Two meetings of neighbours remain: the Hermès pavilion's mass flush with the block beside it,
-  // and an upper window of the next building buried a centimetre inside a parking garage's wall.
+  // The Hermès pavilion's mass, flush with the block's own on the west wall, is pushed back one
+  // step less and wins. One meeting of neighbours remains: an upper window of the next building
+  // buried a centimetre inside a parking garage's wall.
   const mass = fights.filter(fight => fight.faces.some(face => face.object.userData.districtBuilding));
-  assert.deepEqual([...new Set(mass.map(fight => `${fight.a} × ${fight.b}`))].sort(), ['Mesh|facade-roof × facade:facade-upperGlass|facade-upperGlass', 'Mesh|facade-stone × Mesh|reference-limestone'], mass.map(named).join('\n'));
+  assert.deepEqual([...new Set(mass.map(fight => `${fight.a} × ${fight.b}`))], ['Mesh|facade-roof × facade:facade-upperGlass|facade-upperGlass'], mass.map(named).join('\n'));
   // A ground-floor display alcove at a building corner once ran into the next edge's wall or
   // glass, its floor, ceiling and side wall a centimetre behind them across the whole bay.
   const alcoves = fights.filter(fight => /facade-(interior|floor)\|/.test(`${fight.a} ${fight.b}`) && fight.largest > 0.5);

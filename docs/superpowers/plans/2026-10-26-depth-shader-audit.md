@@ -234,7 +234,18 @@ Node scan 142 to 124, none added; the record run dropped 8 listed pairs and adde
 - **Regression.** `district-depth.test.js` asserts no artwork × brass fight; it fails with the offset removed.
 - **Checks.** Same 30 focused files: 2,021 passed, 1 skipped. Record and normal journey runs passed (168 listed). `pnpm run verify` (core, 17:59Z): passed on the first attempt with the same counts as increment 4.
 
-## Remaining (`depth-layers-known.json`, 168 pairs)
+## Increment 6 (2026-10-27): Dolce & Gabbana and Hermès corners, 168 listed pairs to 164
+
+Node scan 124 to 113, none added.
+
+- **Dolce & Gabbana (`reference-blocks.js`).** Its sand cornice and its neighbours' white eaves overlapped flush at both corners (top, ends, front and underside). `eaves()` takes `grow`, and Dolce's cornice and soffit are 6 cm larger all round, burying the white eaves' faces where they meet. Its stone storeys and the band between them are likewise 6 cm deeper and longer than the tile storeys they meet.
+- **Hermès (`reference-facades.js`).** The stone cap on the pavilion stood exactly at its bronze roof (14.45 m); it now rises 7 cm above it. The pavilion's mass, flush with the block's own on the west wall, is pushed back one step less (+1/+1), so it wins there and every part in front of it still wins over it.
+- **Test.** `district-depth.test.js` no longer allows the Hermès mass pair; the parking-garage window is the one mass pair left.
+- **Tried and reverted:** lengthening Cartier's wall by 6 cm at each end added a pair and fixed none; the Cartier/IPIC stone joints stay listed.
+- **The record run dropped 6 listed pairs and listed 2 others.** Both 2 are undersides at the first-floor line (−2804.9, −1422.9 and −2899.6, −1284) that the Node scan already found before this increment. The journey keeps one entry per pair key (materials and gap), and these share their keys with the corner pairs fixed here, so they only surface now. They are not new faults.
+- **Checks.** Same 30 focused files: 2,021 passed, 1 skipped. Record and normal journey runs passed (164 listed). `pnpm run verify` (core, 20:16Z): passed on the first attempt with the same counts as increment 5.
+
+## Remaining (`depth-layers-known.json`, 164 pairs)
 
 By source:
 
@@ -258,5 +269,5 @@ Hosted checks on `86afad18` (the third merge): 26 of 26 passed, including the `d
    - A larger walking near plane than 6 cm.
 
    Both touch every frame and the phone budgets, so neither is in this branch.
-2. **Landing with a known list.** This branch lands the planter, city-kit, the shader fixes and the journey, with 168 earlier pairs listed for burn-down (388 at increment 1). The alternative is holding it until the list is empty.
+2. **Landing with a known list.** This branch lands the planter, city-kit, the shader fixes and the journey, with 164 earlier pairs listed for burn-down (388 at increment 1). The alternative is holding it until the list is empty.
 3. **Merge order with #649.** The planter block's neighbours change in both branches.
