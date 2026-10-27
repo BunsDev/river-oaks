@@ -167,7 +167,9 @@ export function createCafeGames({ players, changed = () => {}, now = Date.now, r
   }
   const load = item => { table = item ? plain(item) : null; };
   const clear = () => { if (table) { table = null; changed(); } };
+  // Account erasure: the table goes if the account played at it or was invited to it.
+  const forget = userId => { if (table && (table.players.includes(userId) || table.invite?.from === userId || table.invite?.to === userId || table.result?.left === userId)) clear(); };
   const snapshot = () => table && (table.kind || table.invite) ? [view()] : [];
 
-  return { command, prune, snapshot, checkpoint, validate, load, clear };
+  return { command, prune, forget, snapshot, checkpoint, validate, load, clear };
 }

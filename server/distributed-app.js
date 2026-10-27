@@ -530,7 +530,13 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
     } finally { heartbeatBusy = false; }
   }, heartbeatMs);
   heartbeat.unref();
-  return { server, disconnectUser, async close() {
+  // Account erasure (#292): this world forgets the account, through the room's one writer.
+  async function forgetAccount(userId) {
+    const result = await room.request({ type: 'forget', userId });
+    if (!result?.ok) throw new Error('World erasure did not complete');
+    if (voice) await voice.revokeUser(userId).catch(() => false);
+  }
+  return { server, disconnectUser, forgetAccount, async close() {
     stopped = true; clearInterval(loop); clearInterval(heartbeat);
     if (presence) await Promise.allSettled([...connections.values()].map(connection => presence.leave(connection.identity.userId, connection.connectionId)));
     await closeForUpdate([...connections.values()].map(({ ws }) => ws));

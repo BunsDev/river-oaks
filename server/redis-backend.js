@@ -1,6 +1,7 @@
 import { createRedisCharacterStore } from './character-store.js';
 import { accountPrefixFor } from './world-keys.js';
 import { createWorkOSDeletionHandler } from './workos-deletion.js';
+import { createAccountErasure, createErasureSweepRoute, createRedisPendingErasures } from './account-erasure.js';
 import { createChauffeurRoute, chauffeurDailyLimit } from './chauffeur.js';
 import Redis from 'ioredis';
 import { loadDistrictData } from './district-data.js';
@@ -58,13 +59,17 @@ export async function createRedisBackend(env = process.env) {
     });
     // Redis counts the daily budget in UTC-day windows across every gateway.
     const chauffeurRequest = createChauffeurRoute({auth,security,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env)});
-    const deletionRequest=createWorkOSDeletionHandler({secret:env.WORKOS_WEBHOOK_SECRET||null,
-      onDelete:async id=>{await characters.deleteAccount(id);await auth.revokeUser(id);}});
-    const handleRequest=async(req,res)=>await deletionRequest(req,res)||await chauffeurRequest(req,res);
+    let eraseAccount;
+    const deletionRequest=createWorkOSDeletionHandler({secret:env.WORKOS_WEBHOOK_SECRET||null,onDelete:(id,eventId)=>eraseAccount(id,{eventId})});
+    // Each erasure request is recorded until its second pass. A long-lived gateway sweeps
+    // the record on a timer; on Vercel the cron (/api/erasure-sweep) does it.
+    const erasureSweep=createErasureSweepRoute({sweep:()=>eraseAccount.sweep(),cronSecret:env.CRON_SECRET||null});
+    const handleRequest=async(req,res)=>await deletionRequest(req,res)||await erasureSweep(req,res)||await chauffeurRequest(req,res);
     // Shared voice rooms and the daily join budget count across every gateway of this namespace.
     // A long-lived gateway sweeps orphaned voice participants on a timer; on
     // Vercel the per-minute cron (/api/voice-sweep) does it.
-    const voice = configureVoice({ env, namespace, allow: (...args) => security.allow(...args), leases: createRedisVoiceLeases({ redis, prefix }), sweepMs: env.VERCEL !== '1' ? 30_000 : 0 });
+    const voiceLeases = createRedisVoiceLeases({ redis, prefix });
+    const voice = configureVoice({ env, namespace, allow: (...args) => security.allow(...args), leases: voiceLeases, sweepMs: env.VERCEL !== '1' ? 30_000 : 0 });
     gateway = createWorldGateway({handleRequest,redis,namespace,worldData,auth,security,waitlist,waitlistAdmins:admins,origin,configuredWorldId:worldId,voice,voiceCronSecret:env.CRON_SECRET||null,
       moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
       trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
@@ -87,7 +92,19 @@ export async function createRedisBackend(env = process.env) {
       // Signs the static-asset pass; the middleware verifies it with the same secret.
       assetGateSecret: env.WORKOS_COOKIE_PASSWORD,
     });
-    return { worldId, server: gateway.server, catalog:gateway.catalog, async close() {
+    // Account erasure (#292): the tombstone, sessions and sockets first, then every store.
+    eraseAccount = createAccountErasure({ tombstone: id => characters.deleteAccount(id), revoke: id => auth.revokeUser(id), steps: {
+      ...gateway.accountSteps, waitlist: id => waitlist.eraseUser(id),
+      // Live removal needs the lease, so it goes first; the lease store reports storage failures.
+      voice: async id => { if (voice) await voice.revokeUser(id); await voiceLeases.revoke(id); },
+    }, after: gateway.accountAfterSteps, pending: createRedisPendingErasures({ redis, prefix: accountPrefixFor(namespace) }) });
+    const erasureTimer = env.VERCEL !== '1' ? setInterval(() => { void eraseAccount.sweep().catch(() => {}); }, 30_000) : null;
+    // On Vercel only the cron sweeps. Without its secret no second run or retry happens,
+    // and each record keeps its account id; say so at every start.
+    if (env.VERCEL === '1' && env.WORKOS_WEBHOOK_SECRET && !env.CRON_SECRET) console.warn(JSON.stringify({ event: 'account_erasure_sweep_unscheduled' }));
+    erasureTimer?.unref();
+    return { worldId, server: gateway.server, catalog:gateway.catalog, eraseAccount, async close() {
+      clearInterval(erasureTimer);
       await gateway.close(); voice?.close(); auth.close(); security.close(); redis.disconnect();
     } };
   } catch {
