@@ -21,9 +21,9 @@ const inputEnd=inputSource.indexOf("  host.addEventListener('blur', clear);",inp
 assert.ok(inputStart>=0&&inputEnd>inputStart);
 const installInput=new Function('host','document','keys','isGameplayKey','transport','dialogueOpen','getVoice',`const active=true; ${inputSource.slice(inputStart,inputEnd)}`);
 const savedWindow=globalThis.window;
-const run=async(expression,latencyMs,fps,releaseDuringFast=false)=>{
+const run=async(expression,latencyMs,fps,releaseDuringFast=false,offset=null)=>{
   let clock=1000,frameClock=0,mouseX=0,mouseDown=false;
-  const start=[target[0]+(releaseDuringFast?8:.8),target[1]],yaw=Math.PI/2,keys=new Set(),physicalKeys=new Set();
+  const start=[target[0]+(offset??(releaseDuringFast?8:.8)),target[1]],yaw=Math.PI/2,keys=new Set(),physicalKeys=new Set();
   const host=new EventTarget(),doc=new EventTarget(),win=new EventTarget();
   installInput(host,doc,keys,isGameplayKey,{takeOver(){}},()=>false,()=>null);
   const keyEvent=(type,code,repeat=false)=>{const event=new Event(type,{cancelable:true});Object.defineProperties(event,{code:{value:code},repeat:{value:repeat}});return event;};
@@ -44,7 +44,8 @@ const run=async(expression,latencyMs,fps,releaseDuringFast=false)=>{
     waitForFunction:async(fn,arg,options)=>{const deadline=clock+(options?.timeout??10000);while(!fn(arg)){advance(1000/fps);if(clock>deadline)throw new Error('predicate timeout');}advance(latencyMs);},
   };
   const routes=[];
-  const walk=new Function('self','routes','Date','console',`return (${expression});`)(async()=>{const result=snapshot();advance(latencyMs);return result;},routes,{now:()=>clock},{log(){}});
+  // The journey's walks share one turn queue (both players walk at once).
+  const walk=new Function('self','routes','Date','console',`let turning=Promise.resolve();return (${expression});`)(async()=>{const result=snapshot();advance(latencyMs);return result;},routes,{now:()=>clock},{log(){}});
   let status='passed',error=null;
   try{await walk(tab,[target],'controlled slow observation');}catch(e){status='failed';error=e.message;}
   unbind();
@@ -65,5 +66,17 @@ for(const latencyMs of [100,150,200])test(`fast route resumes with a fresh press
     const result=await run(original,latencyMs,9,true);
     assert.equal(result.releaseInjections,1);assert.equal(result.status,'passed',result.error??'waypoint failed');
     assert.ok(result.remaining<=.15);assert.equal(result.routes,1);assert.ok(result.simulatedMs<120000);
+  }finally{globalThis.window=savedWindow;}
+});
+
+// A fast press near the waypoint can carry the walker through it at full speed; the
+// driver must let it stop and measure again rather than accept the pass and coast on
+// (a hosted run ended 0.9 m past its lantern, outside the town's 0.6 m arrival check).
+for(const [fps,latencyMs,offset] of [[9,150,3.2],[20,100,3.8],[37,100,3.9]])test(`a fast approach settles at the waypoint (${fps}fps, ${latencyMs}ms, ${offset}m)`,async()=>{
+  try{
+    const result=await run(original,latencyMs,fps,false,offset);
+    assert.equal(result.status,'passed',result.error??'waypoint failed');
+    assert.ok(result.remaining<=.15,`arrival beyond15cm: ${result.remaining}`);
+    assert.equal(result.routes,1);assert.ok(result.simulatedMs<120000);
   }finally{globalThis.window=savedWindow;}
 });
