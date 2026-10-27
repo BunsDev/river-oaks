@@ -21,6 +21,7 @@ on:
       - scripts/studio-skill-pack.js
       - package.json
       - pnpm-lock.yaml
+      - pnpm-workspace.yaml
       - .github/workflows/desktop.yml
   pull_request:
     paths:
@@ -29,6 +30,7 @@ on:
       - scripts/studio-skill-pack.js
       - package.json
       - pnpm-lock.yaml
+      - pnpm-workspace.yaml
       - .github/workflows/desktop.yml
 permissions:
   contents: read
@@ -41,9 +43,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
-  # Pull requests that change desktop/ get every platform and the installers. Ones
-  # that only reach this workflow through shared/, package.json or the lockfile
-  # get the Linux leg; main, tags and manual runs always get everything.
+  # Pull requests that change desktop/ or this workflow get every platform and the
+  # installers, and so do ones that change a line naming Electron in package.json,
+  # the lockfile or pnpm-workspace.yaml (see the step). Others that reach this
+  # workflow through shared/ or those files get the Linux leg; main, tags and manual
+  # runs always get everything.
   scope:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -62,8 +66,18 @@ jobs:
         run: |
           full=true
           if [ "$EVENT" = pull_request ]; then
-            files=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
-            grep -qE '^(desktop/|\.github/workflows/desktop\.yml$)' <<< "$files" || full=false
+            files=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[] | {filename, patch}')
+            # A changed line in package.json, the lockfile or pnpm-workspace.yaml that
+            # names electron, electron-winstaller or an @electron package counts as a
+            # desktop change, so an Electron bump is built and tested on every platform
+            # (#681). A bump to one of their own dependencies changes no such line and
+            # gets the Linux leg. GitHub leaves out a diff too big to show; that counts
+            # as a desktop change.
+            full=$(jq -s 'any(.[];
+              (.filename | test("^(desktop/|\\.github/workflows/desktop\\.yml$)")) or
+              ((.filename | IN("package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml")) and
+                (.patch == null or any(.patch | split("\n")[];
+                  test("^[-+](.*[^a-z0-9-])?(@electron(-[a-z]+)?/|electron(-winstaller)?([^a-z0-9-]|$))")))))' <<< "$files")
           fi
           if [ "$full" = true ]; then
             echo 'platforms=["windows-latest","ubuntu-latest","macos-latest"]' >> "$GITHUB_OUTPUT"

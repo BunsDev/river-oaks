@@ -51,8 +51,9 @@ test('Heights composes on the Commons exactly as the client does and detaches ex
 
 test('the manifest partitions the reserve without enlarging it, and loading checks the registration', () => {
   const validated = validateWorldManifest(manifest), byId = id => validated.locations.find(location => location.id === id);
-  const location = byId('bayou-heights'), reserve = byId('east-garden-reserve');
-  assert.equal(location.status, 'authored'); assert.equal(reserve.status, 'reserved');
+  // Studewood (heights-studewood-1) later authored the rest of the east reserve, unchanged in bounds.
+  const location = byId('bayou-heights'), reserve = byId('studewood');
+  assert.equal(location.status, 'authored'); assert.equal(reserve.status, 'authored');
   assert.deepEqual(location.bounds_m, heights.bounds);
   // The original east reserve, [-2551.336…, -1457.608…, -2158.447…, -1167.177…], split at Heights' east edge.
   assert.deepEqual([location.bounds_m[0], location.bounds_m[1], reserve.bounds_m[2], location.bounds_m[3]],
