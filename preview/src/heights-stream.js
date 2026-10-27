@@ -7,21 +7,25 @@ import { heightsBaseLayout } from '../../shared/studewood.js';
 import { validateStudewoodRegistration } from './studewood-world.js';
 import { studewoodBaseLayout } from '../../shared/bayou-terraces.js';
 import { validateTerracesRegistration } from './bayou-terraces-world.js';
+import { terracesBaseLayout } from '../../shared/woodland-heights.js';
+import { inWoodlandHeights } from '../../shared/woodland-heights-layout.js';
+import { validateWoodlandRegistration } from './woodland-heights-world.js';
 import { createSpatialChunkStream } from './spatial-chunk-stream.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
 import { cityKitLandscape } from './city-kit/render.js';
 
-// Loaded only for bayou-heights-1, heights-studewood-1 and bayou-terraces-1 (main.js), with the composition they need.
+// Loaded only for bayou-heights-1, heights-studewood-1, bayou-terraces-1 and woodland-heights-1 (main.js), with the composition they need.
 export { attachBayouHeights } from './bayou-heights-world.js';
 export { attachStudewood } from './studewood-world.js';
 export { attachBayouTerraces } from './bayou-terraces-world.js';
+export { attachWoodlandHeights } from './woodland-heights-world.js';
 
 /**
  * The Commons as Heights presents it: the restored Commons layout, bayou opened for the
  * footbridge. Its planted beds draw within 60 m, as Heights' own do (HEIGHTS_PLANTING_METRES):
  * seen across the bayou, the Commons' beds at every distance are about a million triangles.
  */
-const heightsOnly = layout => layout.terraces ? heightsOnly(studewoodBaseLayout(layout)) : layout.studewood ? heightsBaseLayout(layout) : layout;
+const heightsOnly = layout => layout.woodland ? heightsOnly(terracesBaseLayout(layout)) : layout.terraces ? heightsOnly(studewoodBaseLayout(layout)) : layout.studewood ? heightsBaseLayout(layout) : layout;
 export const heightsCommonsLayout = layout => ({ ...commonsBaseLayout(heightsOnly(layout)), destination: layout.destination,
   plantingMetres: KIT_CONVENTIONS.lod.treeMetres[1] });
 
@@ -49,6 +53,8 @@ export const HEIGHTS_CHUNK_BYTES = {
   'studewood-north': 3 * MiB, 'studewood-south': 2.6 * MiB,
   // The Bayou Terraces (bayou-terraces-1) in the luxury kit, measured headless at 2.76 and 2.01 MiB.
   'bayou-terrace-north': 2.9 * MiB, 'bayou-terrace-south': 2.15 * MiB,
+  // Woodland Heights (woodland-heights-1) in the luxury kit, measured headless at 1.77 and 1.34 MiB.
+  'woodland-heights-north': 1.9 * MiB, 'woodland-heights-south': 1.45 * MiB,
 };
 // Each neighborhood composed after Heights' own adds its street trees and planted beds to the
 // shared part. Allowances per placement err high, so the shared estimate grows with them.
@@ -73,9 +79,12 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
   loadModule = () => import('./bayou-heights.js') }) {
   const layout = validateHeightsRegistration(manifest, world.eastGardenCommons), { plans } = layout.heights;
   const location = manifest.locations.find(item => item.id === layout.heights.id);
-  // Studewood (heights-studewood-1) streams as two more Heights neighborhoods, east to its own edge.
+  // Studewood (heights-studewood-1) streams as two more Heights neighborhoods, east to its own edge,
+  // and Woodland Heights (woodland-heights-1) as two more, east to the edge beyond it.
   if (layout.studewood) validateStudewoodRegistration(manifest, layout);
-  const own = locationWorldBounds(location), bounds = layout.studewood ? [own[0], own[1], layout.studewood.bounds[2], own[3]] : own, [west, south, east, north] = bounds;
+  if (layout.woodland) validateWoodlandRegistration(manifest, layout);
+  const own = locationWorldBounds(location), easternmost = layout.woodland ?? layout.studewood;
+  const bounds = easternmost ? [own[0], own[1], easternmost.bounds[2], own[3]] : own, [west, south, east, north] = bounds;
   // The Bayou Terraces (bayou-terraces-1) stream as two more neighborhoods west of the bayou, gated like the rest.
   if (layout.terraces) validateTerracesRegistration(manifest, layout);
   const terraces = layout.terraces?.bounds ?? [], onTerrace = point => terraces.some(([w, s, e, n]) => point[0] >= w && point[0] <= e && point[1] >= s && point[1] <= n);
@@ -89,6 +98,7 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
   const terracePlans = new Set(layout.terraces?.plans.map(plan => plan.id) ?? []), onTerracePlan = point => gated(point) && terracePlans.has(planAt(point).id);
   // With the terraces at the District edge, District points must not stream them: from the District, Heights stays unloaded.
   const inDistrict = point => Boolean(layout.terraces) && point[0] < layout.edge;
+  const inWoodland = point => inWoodlandHeights(layout, point[0]);
   const sharedBytes = plans.slice(layout.studewood?.planStart ?? plans.length).reduce((bytes, plan) => {
     const { trees, planters } = cityKitLandscape(plan, { groundAt: () => layout.ground, ground: layout.ground });
     return bytes + trees.length * HEIGHTS_SHARED_PLACEMENT_BYTES.tree + planters.length * HEIGHTS_SHARED_PLACEMENT_BYTES.planter;
@@ -191,8 +201,11 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
       if (!gated(to) || presented(to)) return true;
       // As in the Commons: someone restored where Heights is not yet presented may step around
       // an obstacle or retreat west (on a terrace, back toward its footbridge); from presented
-      // ground, the next neighborhood waits to load.
-      return Boolean(from) && gated(from) && !presented(from) && (onTerracePlan(from) ? to[0] >= from[0] - 1e-9 : to[0] <= from[0] + 1e-9);
+      // ground, the next neighborhood waits to load. Woodland's gardens open east onto its lane,
+      // so a westward-only retreat would hold someone restored in one: on Woodland ground any
+      // step within Woodland stays allowed, and the way out is west along a cross street.
+      return Boolean(from) && gated(from) && !presented(from) && (onTerracePlan(from) ? to[0] >= from[0] - 1e-9
+        : inWoodland(from) && inWoodland(to) || to[0] <= from[0] + 1e-9);
     },
     debug: () => ({ ...stream.debug(), status, geometryBudgetBytes: HEIGHTS_MAX_BYTES, measuredBytes: { ...measured },
       estimatedBytes: Object.fromEntries(chunks.map(chunk => [chunk.id, chunk.estimatedBytes])) }),
