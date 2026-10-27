@@ -102,22 +102,70 @@ Each PR has exactly one lander.
     - The core run went first by agreement with 71, which held #655's `verify full` attempt 3 until it finished.
   - **Draft #686** at signed `ec0ce5a7`. Hosted CI is pending. It isn't a ticked row, so landing it needs Val's OK (Decision 2).
 
+### Round 2 (2026-10-26 22:00Z – 10-27 03:00Z)
+
+**Val's decisions in this session:**
+- **~22:01Z:** land #686 now. Land #661 once 0b's fixes pass an independent re-review and hosted CI, accepting that erasure goes live with the deploy.
+- **~22:25Z, a new request:** "commit push and merge to main and allow cars to drive off the road and drive anywhere they can physically fit, like foot traffic behavior allows" (#689).
+- **~01:28Z, the 3× gates:** land #662, #663 and #673 each on green hosted CI on an up-to-date head, citing 71's existing local journey receipts. Run the district journeys and the District ABBA once, on the final `main`, in the acceptance pass. (Val had already told river-oaks-91 directly to land #649 without round 6.)
+
+**Merged on `main`:**
+
+| PR | Merge | Lander | Retirement |
+| --- | --- | --- | --- |
+| #686 office-computer-embed race fix | `c6eba6a3` (22:54Z) | e9 | `retirement-TX54Tk`; 14 evidence files archived |
+| #689 vehicles drive off-road (Val's request) | `8bb3f04a` (00:22Z) | e9; the first lander process died silently during its rerun wait and was restarted | `retirement-ofeW7J`; 7 files |
+| #654, #659, #656 | `8b73888a`, `40f4e786`, `caa1a7ef` | 71 | owners |
+| #653 | `ba7418c6` | 7c | owner |
+| #649 Bayou Heights, 2.01× | `3df540ee` (~01:20Z) | 91 | owner |
+| #655 residents walk anywhere | `2d63637f` | 71 | owner |
+| #661 account erasure | `66756b19` (02:08Z) | e9 | `retirement-28WWp5`; 51 files |
+| #662 Studewood, 2.46× | `9ee35b4c` (02:50Z) | e9 | `retirement-FqyVMf`; 26 files |
+
+For each e9 landing:
+- the merge tree equals the head tree;
+- the task is `delivered` with evidence;
+- ignored evidence was archived with SHA-256 sums, verified by extraction and `chmod go-rwx`, under `~/worktree-backups/river-oaks/evidence-three-x-on-main-20261026/`;
+- caches went to the Trash;
+- the guarded prune ran: dry run, then `--apply`, then bundle verify.
+
+**#689, vehicles off-road:**
+- **Rule:** `vehicleCanOccupy` (`carriage-parking.js`) is the bicycle's: every footprint point must be `isFree` and not `roomAt`, plus the existing people and tree checks. The `road`/`crossing` clause is gone.
+- **Regression test:** red with main's rule (the car stops at the curb, centre at 1.34 m); green without it.
+- **Checks:** focused tests 49/49; core verify passed; a real-district probe drove 45 m and 7.5 m off the road.
+- **Not checked:** no browser or visual check.
+
+**#661 re-review at `10251056`: land-ready.**
+- **Fixes:**
+  - Finding 1: a settle pass about 60 s later, reproduced with four held POSTs.
+  - Finding 2: `eraseEach`, mutation-tested at each site.
+  - Finding 3: a durable pending record, retried by the `/api/erasure-sweep` cron, which authenticates and fails closed.
+  - Finding 4: mutations A, B, C and D now go red.
+- **New LOW:** the standalone town keeps its pending record in memory. 0b documents it in #666 and records persisting it as a follow-up.
+- **Precondition, not verified by e9:** `CRON_SECRET` set in Vercel production (Decision 3).
+
+**Reachable ground on `main` 9ee35b4c,** measured with `node preview/audit/world-expansion-footprint.js --reachable` from a scratch `git archive`:
+- 0.5 m: **2.4598×**, 114,323.75 m² against 46,477.75 m²;
+- 1 m: 2.4661×;
+- the 3× target is 139,433.25 m² at 0.5 m.
+
 ## Gaps
 
 | Item | Blocker | Owner | Next action |
 | --- | --- | --- | --- |
-| #649 | ABBA round 6 after 71's train | 71, 91 | 71 lands it if round 6 is within budget and hosted is green; otherwise it goes to Val |
-| #662 → #663 → #673 | #649 has to merge first | 71, then e9 | 71 updates and releases each; e9 lands each after its journey and District ABBA |
-| #670 | #655 and #649 have to merge first; its owner can't be reached by message | 3e | Comment on #670, or relay through 71, once they're on `main` |
-| #661 → #665 → #666 → #667 → #682 | review fixes by 0b; the deploy question to Val before #661 | 0b, Val | Re-review the fixed heads, then land in order |
+| #663 → #673 | Each lands after the one before it | 71, then e9 | 71 merges main, runs core and releases; e9 lands on green hosted CI |
+| #670 | 3e is finishing the wiring patch, rehearsal and `verify full` | 3e | 3e marks it ready and releases it (comment 6431515014); e9 lands it |
+| #665 → #666 → #667 → #682 | 0b is merging up and verifying | 0b | Re-review each fixed head, then land in order |
+| 3× acceptance pass | Waits for the last district to land | e9 | The journeys and District ABBA on final `main` (needs load ≤12), then the #638 and #587 comments |
 
 ## Decisions for Val
 
-1. **#661 erasure in production.** If `main` deploys automatically, landing #661 makes a WorkOS `user.deleted` event erase the account's data everywhere. Confirm before e9 lands it.
-2. **#686 (the office-computer-embed fix).** It isn't in the ticked rows, but the #292 row's gate needs #665's places failure fixed, and it unblocks every PR that hits the race. Authorize `pnpm run land 686` once hosted CI is green.
+1. **#661 erasure in production:** answered, "Land after fixes". It landed as `66756b19`.
+2. **#686:** answered, "Land it". It landed as `c6eba6a3`.
+3. **`CRON_SECRET` in Vercel production.** #661 is on `main`. Without the secret, the settle pass and retries never run on Vercel; a deletion still gets its first full pass. Set it, or confirm it's already set.
 
 ## Next action
 
-- Get #686's hosted CI green, then ask Val (Decision 2).
-- Wait for 71's train and round 6 on #649.
-- Wait for 0b's fixed #661 head.
+- Land #663 when 71 releases it, then #673. Measure reachable ground on `main` after each.
+- Land #670 when 3e releases it, and #665 → #666 → #667 → #682 after their re-reviews.
+- After the last district lands: run the 3× acceptance pass and post one comment each on #638 and #587.
