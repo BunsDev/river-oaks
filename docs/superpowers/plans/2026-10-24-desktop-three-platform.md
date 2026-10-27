@@ -145,6 +145,20 @@ Results:
 - **Head run 40396746242** (`d1eb78b6`): 10 of 10 passed, with no natural drop. Frames ranged 108–405.
 - **Comment posted:** [#371](https://github.com/BunsDev/river-oaks/issues/371#issuecomment-6427022352).
 
+**Revision at `9eca29d2`.** An independent review before landing found that `68c6fc55` retried after any Settings close, which would let a bug that closes Settings on its own pass up to twice. The lander was stopped before its turn (own pid). Each attempt now watches the town from its start:
+- a failed click with Settings shut is retried only if the town left `joined` during that attempt, and the retry records every state seen;
+- Settings already shut after Auto must likewise follow a drop.
+
+The comment's timing is also corrected: the drop came about 5 s after the reloaded game was ready, 37 s after the town rejoined.
+
+Results at `9eca29d2`:
+
+- **Local:** core `verify` passed on the exact diff (22:46–22:57Z).
+- **#683's runs:** Desktop 40416414479 and Verify 40416414550 both passed.
+- **Forced-drop run 40416580615** (`diag/…-forced-c-20261026` at `0e7df2b6`, signed): 10 of 10 passed. Each leg dropped twice, retried once with the town `joined → disconnected → joined`, and skipped the final close after the second drop. Frames ranged 113–260.
+- **Head run 40416489467** (`diag/…-forced-b-20261026` at `7158f551`): no drops. That branch name came from a quoting slip that pushed only the cherry-picked workflow commit, unsigned; it was not rewritten, because force-push is not allowed. All 10 legs passed the Graphics steps with no retries and 9 passed. Leg 43 failed only the render-loop check at 71 frames (7.1 fps) on the floor. Its scene matched main's: 1,008 calls, 3,821,461 triangles, 502 geometries, 162 textures.
+- **Recurrence on main:** Desktop after #653's merge (run 40422120869, `ba7418c6`) failed `desktop (macos-latest)` the same way. Its trail shows the town joined at 23.9 s, `setStatus` ← `show` closing `settings-dialog` at 51.9 s, `disconnected` at 51.9 s and `joined` at 52.7 s. Windows, Ubuntu and the installers passed.
+
 ## Increment 7: Electron bumps get every platform (#371, 2026-10-26)
 
 Task `desktop-ci-electron-scope-20261026`, branch `ci/desktop-electron-scope-20261026`, worktree `river-oaks-desktop-electron-scope`. Val authorized it on 2026-10-26, with landing.
@@ -162,6 +176,21 @@ Results:
 
 - **`scripts/tests/desktop-workflow-scope.test.js`:** runs the step's own script from `desktop.yml` with a stand-in `gh` that serves fixture patches. It needs bash and jq, as on ubuntu-latest. 5 of 5 pass; against `main`'s workflow, the three tests that need every platform from `package.json`, the lockfile or `pnpm-workspace.yaml` fail, and the other two pass.
 - **Real pull requests:** the step, run locally with the real `gh` against 11 merged or open pull requests, gives every platform to #681 and #619 where `main`'s rule gave Linux only. It keeps every platform for #554 and #652, and Linux only for #679, #628, #629, #621, #611, #548 and #671.
+- **Local core:** `verify` passed at `c7488b58` with the exact diff (23:00–23:10Z). An earlier run with the first draft failed in `agent-tests` on the known `land-pr.test.js` wake timing test at load about 60; the log is kept.
+- **[#690](https://github.com/BunsDev/river-oaks/pull/690) at `6de709c4`:** Desktop 40417965964 passed every platform and both installer legs. Verify failed once in `preview experience (campus-traversal)` ("One resident on B12 stands over the other on the street"). That journey is outside this change and passed on eight other pull requests that hour. No rerun was spent, because this ledger commit starts a fresh run.
+
+## Decisions (2026-10-26)
+
+Val replied to the handoff: "i authorize you to proceed with your recommendations please".
+
+- **Landing:** #653 (accepting the core-dump trade-off), #683 and the scope fix #690. #654 had already landed under Val's earlier decision, through river-oaks-71.
+- **#370:** keep all four identity defaults ([comment](https://github.com/BunsDev/river-oaks/issues/370#issuecomment-6430100201)).
+- **#372:** keep the `.deb` Maintainer and the desktop shortcut. The Azure setup remains Val's ([comment](https://github.com/BunsDev/river-oaks/issues/372#issuecomment-6429179934)).
+- **#373:** version 0.2.2 ([comment](https://github.com/BunsDev/river-oaks/issues/373#issuecomment-6429180182)). No bump, tag or release yet, because the release can't ship unsigned Windows.
+
+Not covered, because the handoff gave no recommendation: the slow-runner floor (see Gaps).
+
+**Lander incident.** All four landers on the machine (#689, #655, #649, #683) died at about 00:09Z on 2026-10-27, with exit 144 and no host sleep. #683's lander died holding the queue lock mid-write. The lock expired after 30 s, and its empty temp file was removed. The owners requeued in the original order.
 
 ## Pull requests
 
@@ -169,9 +198,10 @@ Results:
 | --- | --- | --- | --- |
 | [#651](https://github.com/BunsDev/river-oaks/pull/651) | `fix/desktop-macos-e2e-371-20261024` | `d0be556f` | merged 2026-10-25 00:32Z (see Delivery); 10 of 10 diag legs at `b3127a6b` and at `d0be556f`; independent review addressed |
 | [#652](https://github.com/BunsDev/river-oaks/pull/652) | `ci/desktop-electron-cache-371-20261024` | `04228bec` | merged 2026-10-25 01:55Z (see Delivery); the `-zip` keys missed and were saved by the explicit save step on all three runners, macOS included; independent review addressed |
-| [#653](https://github.com/BunsDev/river-oaks/pull/653) | `fix/desktop-linux-crash-370-20261024` | `2a2d9d11` | draft, review-ready; Desktop and Verify green on first attempt; Linux leg asserted `killed` with the pipe on (gone 815 ms, playable 7.5 s); independent review addressed; core-dump trade-off is Val's decision |
-| [#654](https://github.com/BunsDev/river-oaks/pull/654) | `docs/desktop-release-packet-373-20261024` | this branch | draft; docs; hosted green |
-| [#683](https://github.com/BunsDev/river-oaks/pull/683) | `fix/desktop-e2e-settings-town-drop-371-20261026` | `68c6fc55` | draft, review-ready; Desktop and Verify green; forced drops recovered in 10 of 10 legs; 10 of 10 legs green at the head |
+| [#653](https://github.com/BunsDev/river-oaks/pull/653) | `fix/desktop-linux-crash-370-20261024` | `2a2d9d11` | merged 2026-10-26 23:47Z (see Delivery); Linux leg asserted `killed` with the pipe on (gone 815 ms, playable 7.5 s); independent review addressed; Val accepted the core-dump trade-off |
+| [#654](https://github.com/BunsDev/river-oaks/pull/654) | `docs/desktop-release-packet-373-20261024` | `6d778b3c` | merged 2026-10-26 21:46Z (see Delivery); docs |
+| [#683](https://github.com/BunsDev/river-oaks/pull/683) | `fix/desktop-e2e-settings-town-drop-371-20261026` | `9eca29d2` | merged 2026-10-27 01:39Z (see Delivery); forced drops 10 of 10 green at the revised head; no-drop series 9 of 10, the miss being the slow-runner render-loop check; independent review addressed |
+| [#690](https://github.com/BunsDev/river-oaks/pull/690) | `ci/desktop-electron-scope-20261026` | this branch | landing; Desktop green on every platform at `6de709c4`; independent review addressed |
 
 ## Delivery
 
@@ -181,6 +211,11 @@ Val authorized landing #651 and #652; river-oaks-71 landed both through `pnpm ru
 | --- | --- | --- | --- | --- | --- |
 | #651 | `d0be556f` | `12ae37ac` (+ main `2da76e1f`) | `4122fe07` | `f390e64b` | 29 success, 2 skipped; `preview` success |
 | #652 | `04228bec` | `65aef4ac` (+ main `4122fe07`) | `7ad9ffc6` | `db531070` | 29 success, 2 skipped (Windows signing); installers and SHA256SUMS success; the first attempt at 01:06Z was refused as unstable while Windows installers ran, and the relanding waited for every check |
+| #654 | `6d778b3c` | `e2431d32` (+ main `09233cdd`) | `8b73888a` | `a2deaf2f` | 22 of 22 after one rerun of `preview experience (commons)`; landed by river-oaks-71 on Val's decision |
+| #653 | `2a2d9d11` | `c8b35b01` (+ main `caa1a7ef`) | `ba7418c6` | `60c36403` | 29 success, 2 skipped (Windows signing), including Desktop on all three platforms, both installer legs, SHA256SUMS and `preview`; landed by this session's `pnpm run land 653` |
+| #683 | `9eca29d2` | `59aee9f1` (+ main `3df540ee`) | `415a4064` | `379b00f1` | 30 success, 2 skipped (Windows signing), including Desktop on all three platforms (macOS green), both installer legs, SHA256SUMS and `preview`; landed by this session's `pnpm run land 683` after the 00:09Z lander incident and requeue |
+
+From 2026-10-26 this session lands its own pull requests under Val's authorization: it confirms each merge on freshly fetched `origin/main`, releases the task at its local tip and retires the worktree itself.
 
 Desktop on main after #651 (run 40147087966, `4122fe07`): all three e2e legs, both installer legs and SHA256SUMS passed; macOS passed on the first attempt.
 
@@ -190,23 +225,40 @@ Retirement archives (bundle restore-tested by the guard; ignored evidence verifi
 
 - #651: bundle `~/worktree-backups/river-oaks/retirement-T00qVG/history.bundle` (sha256 `0e1ddadc…093cb`, tag `archive/worktree-prune/c6baca16-…`); `.runtime/agent` receipts and `data/generated/demo` in `~/worktree-backups/river-oaks/evidence-landing-steward-20261024/desktop-macos-e2e/evidence.tar`.
 - #652: bundle `~/worktree-backups/river-oaks/retirement-M02i7C/history.bundle` (sha256 `0a0c88ad…cb533`, tag `archive/worktree-prune/d7802250-…`); four `.runtime/agent` receipts and `data/generated/demo` in `~/worktree-backups/river-oaks/evidence-landing-steward-20261024/desktop-electron-cache/evidence.tar`.
+- #654: bundle `~/worktree-backups/river-oaks/retirement-K4Tksp/history.bundle` (sha256 `aac2278f…05fb28`, tag `archive/worktree-prune/47652780-…`); `.runtime` and `data/generated/demo` in `~/worktree-backups/river-oaks/evidence-river-oaks-7c-20261026/desktop-release-packet/evidence.tar` (sha256 `bfcd346b…9f899b`).
+- #653: bundle `~/worktree-backups/river-oaks/retirement-dBF0d0/history.bundle` (sha256 `8da89e48…19601d`, tag `archive/worktree-prune/8a6eec21-…`); four `.runtime/agent` receipts and `data/generated/demo` in `~/worktree-backups/river-oaks/evidence-river-oaks-7c-20261026/desktop-linux-crash/evidence.tar` (sha256 `02fe1018…617524`).
+
+- #683: bundle `~/worktree-backups/river-oaks/retirement-JcCVDW/history.bundle` (sha256 `4e6c1847…b2c6d5`, tag `archive/worktree-prune/4f728647-…`); two `.runtime/agent` receipts and `data/generated/demo` in `~/worktree-backups/river-oaks/evidence-river-oaks-7c-20261026/desktop-settings-drop/evidence.tar` (sha256 `357ba446…2f1955`). The local `diag/desktop-e2e-settings-drop-371-*` refs stay with the diag task.
+
+The regenerable caches (`node_modules`, `.venv`, `dist`, Python caches) were removed only after the evidence archives verified.
+
+Desktop on main after #653 (run 40422120869, `ba7418c6`): Windows, Ubuntu (with #653's crash assertion), both installer legs and SHA256SUMS passed. macOS failed on the town-drop Settings close that #683 fixes (Increment 6).
 
 ## Results
 
-- **macOS e2e (#371):** both measured causes fixed and a third harness race found and fixed; 20 consecutive green legs across the two final heads. One Settings close (leg 5, 1 of 40) was unexplained then. The trail later showed the same failure caused by a town drop; #683 recovers from it.
+- **macOS e2e (#371):** both measured causes fixed and a third harness race found and fixed; 20 consecutive green legs across the two final heads. One Settings close (leg 5, 1 of 40) was unexplained then. The trail later showed the same failure caused by a town drop; #683 (merged `415a4064`) recovers from it, only when the town actually dropped.
+- **Electron bumps (#371):** #690 gives a pull request every platform and the installers when a `package.json`, lockfile or `pnpm-workspace.yaml` line names Electron or an `@electron` package.
 - **Windows packaging (#371):** the github.com fetch on every package run is gone (zip-only on a miss, nothing on a hit), proven on three runners in both states.
-- **Linux crash recovery (#370):** 218,431 ms to 153–815 ms on the CI runner with `systemd-coredump` active; asserted on every Linux leg from now on.
+- **Linux crash recovery (#370):** 218,431 ms to 153–815 ms on the CI runner with `systemd-coredump` active; asserted on every Linux leg; merged `ba7418c6` with Val's acceptance of the core-dump trade-off.
 - **Candidate and rehearsal (#373):** unsigned set from `67203a6a` verified; per-row human steps in [the rehearsal ledger](2026-10-24-desktop-release-rehearsal.md).
 - **Decisions packaged and evidence map posted:** [#370](https://github.com/BunsDev/river-oaks/issues/370#issuecomment-6389040777), [#372](https://github.com/BunsDev/river-oaks/issues/372#issuecomment-6389040987), [#373](https://github.com/BunsDev/river-oaks/issues/373#issuecomment-6389041177), [#369](https://github.com/BunsDev/river-oaks/issues/369#issuecomment-6389751828).
-- This session merged, tagged, released and deployed nothing; #651 and #652 were landed by river-oaks-71 under Val's authorization. No environment, variable or Azure change.
+- **Who landed what:** river-oaks-71 landed #651, #652 and #654 under Val's authorization. From 2026-10-26 this session landed #653 and #683 through `pnpm run land`, and lands #690 the same way. Nothing was tagged, released or deployed, and no environment, variable or Azure setting changed.
 
 ## Gaps
 
 - A CI pass is not a human matrix row.
 - The governor's frame-count windows still make Auto slow to shed load on a GPU below 10 fps; this goal does not change that decision rule.
-- Some macOS runners stay below 10 fps even at Auto's floor (`{0.6, AO off}`): forced-drop leg 43 drew 95 frames. The e2e's 100-frame check can therefore still fail on a slow runner. Lowering the floor or the threshold is Val's decision.
+- Some macOS runners stay below 10 fps even at Auto's floor (`{0.6, AO off}`). Two misses so far: forced-drop leg 43 drew 95 frames in run 40389088261, and no-drop leg 43 drew 71 in run 40416489467. Both had a scene matching main's. The e2e's `render loop keeps advancing` check (`samples > 100` in 10 s, unchanged since `b0ba02a2`) can therefore still fail on a slow runner. Lowering the floor or the threshold is Val's decision.
+- Pull-request Desktop runs still give Linux only to a bump of an Electron tool's own dependency (such as `postject`) and to a `package.json` `version` bump.
 - The Linux fix is proven on CI's unsandboxed e2e renderer; the sandboxed renderer on a real Ubuntu desktop is a rehearsal row.
 
 ## Next action
 
-#651 and #652 are delivered and their worktrees retired. Handed off to Val: review and, if authorized, land #683 and #654; decide #653's core-dump trade-off and the slow-runner floor; answer #370's four identity confirmations, #372's two decisions and the Azure setup, and #373's version. After those merges, retire the remaining three worktrees with `project:prune` (dry run, then `--apply`); the diag branches' local refs retire with them, and their remote branches stay unless Val authorizes deletion.
+#651, #652, #653, #654 and #683 are delivered and their worktrees retired. This session lands #690, confirms it on fresh `main`, and retires its worktree.
+
+Left for Val:
+- the slow-runner render-loop threshold or floor;
+- #372's Azure Artifact Signing setup, which blocks #373's 0.2.2 release (bump, macOS build, signed tag, human matrix);
+- whether to delete the push-only `diag/*` branches on GitHub. They stay until Val decides, and their local refs stay with task `desktop-diag-runs-370-371-20261024`.
+
+The unsigned rehearsal set from run 40125506138 expires 2026-11-23.
