@@ -922,13 +922,14 @@ Landing order: #654, #659, #656, #655, then #649 after round 6. Each decision is
   - **Fix (`fae70fe6`):** `tick()` runs the token-checked `RELEASE` on an "Invalid durable" refusal. A new regression test fails on the old code, and the existing epoch test now asserts the release after each refusal. Focused Redis files 20/20; full server suite with Redis 1,339/1,339; core passed in one run (twice).
   - **Independent review:** nothing HIGH or MEDIUM. On base it measured `request_timeout` while the refuser keeps ticking, and 9 of 10 commands timing out under a higher-generation refuser; with the fix, 10 of 10. LOW notes addressed.
   - **Landed:** #698 as `866ae90d` (26/26 checks on `fae70fe6`), then #696 as `525d9edd` (26/26 on lander-updated `ba75e923`). Both retired through `project:prune` from main's tooling, with evidence archived and restore-tested under `~/worktree-backups/river-oaks/evidence/` (`redis-refused-lease-698`, `crime-evade-timing-696`). Origin deleted both branches on merge.
-- **`east-garden-commons` hosted failures, 2 of the last 50 shard runs: draft #699 at `e1821eb1`** (task `commons-route-clearance-20261027`; the branch keeps its first name because the ref guard refuses renames).
+- **`east-garden-commons` hosted failures, 2 of the last 50 shard runs: draft #699 at `3ef3433b`** (task `commons-route-clearance-20261027`; the branch keeps its first name because the ref guard refuses renames).
   - **Route clearance dropped.** An independent review showed the #696-run stall never reached the 0.05 m corner: the owner was still 0.83 m from where "owner home" began.
   - **Stall (run 40447048333, owner page at 3 fps).**
-    - The CI input trace shows 100 drags in the 120 s window. Only 2 got `gotpointercapture`, and yaw changed only on those.
-    - Across the run, drags captured 1 of 115 times while the other page was mid-drag, against 26 of 33 otherwise. The split holds within each time window and for the first drag of each turn.
-    - No page errors, and nothing in the trace couples the pages through the server. The mechanism is not established: a headless SwiftShader repro captured 10/10, but CI runs headed Chromium under Xvfb.
-    - **Mitigation:** turn one page at a time, letting a frame pass after each drag. walk() reports `turns {drags, turned}` in the stall error and the route evidence, so the next failure shows whether it helped.
+    - In the 120 s window the owner made 100 drags; only 2 got pointer capture, and yaw changed only on those.
+    - **First reading, wrong:** overlap with the other page's drag. Its fix, `e1821eb1`, queued drags strictly one page at a time. Its hosted run (40465159738, 31 fps) stalled at the first walk with `turns {drags: 117, turned: 0}`.
+    - **Pattern across all three failing traces:** in headed Chromium (CI under Xvfb), the first drag in a page after the other page's press almost never captures (5 of 561), against 109 of 132 after the same page's press. When both players turn at once, main's driver alternates between pages and every drag fails until a deadline. The strict queue made every drag a switch.
+    - **Fix (`3ef3433b`):** a page keeps a shared turn until it faces its waypoint; the other page waits. `turns {drags, turned, waitedMs}` goes into the stall error and the route evidence.
+    - **Regression test:** a two-page harness test models the capture behaviour. Main's driver and `e1821eb1` stall both players; `3ef3433b` passes inside a 90 s bound.
   - **Overshoot (run 40459091182, 37 fps).**
     - A fast press about 2 m out carried the owner through the rain-garden lantern waypoint at 6.4 m/s.
     - The loop broke inside 0.15 m while the owner was still moving, and the owner coasted to 0.92 m out, beyond the town's 0.6 m arrival check.
