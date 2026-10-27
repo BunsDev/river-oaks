@@ -358,5 +358,17 @@ export function createCampusLeases({ enabled = true, worldId, operators = [], pl
     return { serial: saved.serial, leases: nextLeases, requests: nextRequests, receipts: structuredClone(saved.receipts) };
   }
   const load = state => { ({ serial, leases, requests, receipts } = state); };
-  return { enabled, command, prune, suiteAccess, entitlements, snapshot, checkpoint, validate, blank, load, units: () => [...UNITS.values()] };
+  // Account erasure: a lease the account holds ends (its guests are walked out),
+  // then its leases, requests, guest places and receipts are forgotten.
+  function forget(userId, time) {
+    for (const lease of live()) if (lease.tenantId === userId) end(lease, 'revoked', time);
+    for (const [id, lease] of [...leases]) {
+      if (lease.tenantId === userId) { leases.delete(id); continue; }
+      if (lease.guests.some(guest => guest.userId === userId)) Object.assign(lease, { guests: lease.guests.filter(guest => guest.userId !== userId), version: lease.version + 1 });
+    }
+    for (const [id, item] of [...requests]) if (item.userId === userId) requests.delete(id);
+    receipts = receipts.filter(item => { try { return JSON.parse(item.key)[0] !== userId; } catch { return true; } });
+    changed();
+  }
+  return { enabled, command, prune, forget, suiteAccess, entitlements, snapshot, checkpoint, validate, blank, load, units: () => [...UNITS.values()] };
 }

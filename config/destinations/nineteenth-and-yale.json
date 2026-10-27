@@ -1,10 +1,10 @@
 {
   "id": "nineteenth-and-yale",
-  "title": "Nineteenth & Yale (kit reuse sketch)",
+  "title": "Bayou Heights: Nineteenth & Yale crossroads",
   "kit": "city-kit-1",
   "seed": 77,
-  "inspiration": "Patterns only: a Heights-style crossroads of one- and two-storey storefronts with awnings and sawtooth workshop roofs, a garden-court corner and a quieter cross street. Preview and authoring evidence for kit reuse; not registered as playable content.",
-  "anchor": "east-garden-reserve-north (preview only)",
+  "inspiration": "Patterns only: a Heights-style crossroads of one- and two-storey storefronts with awnings and sawtooth workshop roofs, a garden-court corner and a quieter cross street. Promoted with unchanged geometry as the commercial heart of Bayou Heights (bayou-heights-1), placed 250 m east and 64 m south of the footbridge frame origin.",
+  "anchor": "bayou-heights/market-footbridge",
   "site": [
     0,
     0,

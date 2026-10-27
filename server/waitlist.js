@@ -20,6 +20,19 @@ const recordFor = (identity, admins, now, autoApprove = false) => ({
   requestedAt: new Date(now()).toISOString(),
 });
 const compare = (a, b) => a.requestedAt.localeCompare(b.requestedAt);
+// Account erasure leaves this in place of a deleted account named by someone
+// else's record (an approver, an inviter, an admin's audit entry).
+export const ERASED_ACCOUNT = 'erased-account';
+const erasedInvite = (invite, userId, at) => {
+  let next = invite;
+  if (invite.assignedUserId === userId) next = { ...next, assignedUserId: null, ...(next.status === 'active' ? { status: 'revoked', revokedAt: at } : {}) };
+  if (invite.redeemedBy === userId) next = { ...next, redeemedBy: null };
+  if (invite.createdBy === userId) next = { ...next, createdBy: ERASED_ACCOUNT };
+  return next;
+};
+const erasedAudit = (entries, userId) => entries.filter(entry => entry?.userId !== userId).map(entry =>
+  entry.actorId === userId || entry.assignedUserId === userId
+    ? { ...entry, ...(entry.actorId === userId ? { actorId: ERASED_ACCOUNT } : {}), ...(entry.assignedUserId === userId ? { assignedUserId: null } : {}) } : entry);
 
 // Usernames (resident-names.js). A waiting resident has one from their first request:
 // their GitHub login unless someone already holds a name that reads the same, else a
@@ -221,6 +234,26 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
         return { ok: true };
       });
     },
+    // Account erasure: the request (name, email, username holds), the account's
+    // invites, its audit entries and every mention of it in other records.
+    eraseUser(userId) {
+      // An id the waitlist would refuse can have no records here.
+      if (!validId(userId)) return Promise.resolve();
+      return serialize(async () => {
+        const at = new Date(now()).toISOString(), next = new Map(records), nextInvites = new Map();
+        next.delete(userId);
+        for (const [id, record] of next) if (record.decidedBy === userId) next.set(id, { ...record, decidedBy: ERASED_ACCOUNT });
+        for (const [id, invite] of invites) if (invite.ownerId !== userId) nextInvites.set(id, erasedInvite(invite, userId, at));
+        await persist(next, erasedAudit(audit, userId), nextInvites);
+        // The legacy mirror is rewritten too; a missing one stays missing.
+        const legacy = `${path}.audit.jsonl`;
+        let lines;
+        try { lines = (await readFile(legacy, 'utf8')).split('\n').filter(Boolean); } catch (error) { if (error.code === 'ENOENT') return; throw error; }
+        const kept = erasedAudit(lines.map(line => JSON.parse(line)), userId).map(entry => JSON.stringify(entry) + '\n').join('');
+        await writeFile(`${legacy}.tmp`, kept, { mode: 0o600 });
+        await rename(`${legacy}.tmp`, legacy);
+      });
+    },
   };
 }
 
@@ -320,6 +353,80 @@ if admin then
   redis.call('LTRIM', KEYS[3], 0, 9999)
 end
 return cjson.encode({ record = record })`;
+// Account erasure, in the access namespace's one slot. The account's own request
+// and holds go atomically (KEYS: users, pending, usernames, its invite index;
+// ARGV: userId). Mentions elsewhere go in bounded batches of named fields, each
+// re-read inside its script (KEYS: the hash; ARGV: userId, then the batch's own
+// arguments and fields), so no script holds Redis for a whole table.
+const ERASE_OWN = `
+local id = ARGV[1]
+local raw = redis.call('HGET', KEYS[1], id)
+if raw then
+  local record = cjson.decode(raw)
+  for _, key in ipairs({ record.usernameKey or false, record.nameKey or false }) do
+    if key and redis.call('HGET', KEYS[3], key) == id then redis.call('HDEL', KEYS[3], key) end
+  end
+  redis.call('HDEL', KEYS[1], id)
+end
+redis.call('ZREM', KEYS[2], id)
+redis.call('DEL', KEYS[4])
+return 1`;
+// ARGV: userId, marker, fields.
+const ERASE_DECIDERS = `
+for i = 3, #ARGV do
+  local raw = redis.call('HGET', KEYS[1], ARGV[i])
+  if raw then
+    local record = cjson.decode(raw)
+    if record.decidedBy == ARGV[1] then record.decidedBy = ARGV[2]; redis.call('HSET', KEYS[1], ARGV[i], cjson.encode(record)) end
+  end
+end
+return 1`;
+// ARGV: userId, name keys. A hold left by an earlier login is released too.
+const ERASE_HOLDS = `
+for i = 2, #ARGV do if redis.call('HGET', KEYS[1], ARGV[i]) == ARGV[1] then redis.call('HDEL', KEYS[1], ARGV[i]) end end
+return 1`;
+// ARGV: userId, marker, time, invite ids.
+const ERASE_INVITES = `
+local id, erased, at = ARGV[1], ARGV[2], ARGV[3]
+for i = 4, #ARGV do
+  local value = redis.call('HGET', KEYS[1], ARGV[i])
+  if value then
+    local invite = cjson.decode(value)
+    if invite.ownerId == id then redis.call('HDEL', KEYS[1], ARGV[i])
+    else
+      local changed = false
+      if invite.assignedUserId == id then
+        invite.assignedUserId = cjson.null; changed = true
+        if invite.status == 'active' then invite.status = 'revoked'; invite.revokedAt = at end
+      end
+      if invite.redeemedBy == id then invite.redeemedBy = cjson.null; changed = true end
+      if invite.createdBy == id then invite.createdBy = erased; changed = true end
+      if changed then redis.call('HSET', KEYS[1], ARGV[i], cjson.encode(invite)) end
+    end
+  end
+end
+return 1`;
+// The audit list is capped at 10,000 entries, so it is rewritten in one script. ARGV: userId, marker.
+const ERASE_AUDIT = `
+local id, erased = ARGV[1], ARGV[2]
+local kept, changed = {}, false
+for _, value in ipairs(redis.call('LRANGE', KEYS[1], 0, -1)) do
+  local entry = cjson.decode(value)
+  if entry.userId == id then changed = true
+  else
+    if entry.actorId == id or entry.assignedUserId == id then
+      if entry.actorId == id then entry.actorId = erased end
+      if entry.assignedUserId == id then entry.assignedUserId = cjson.null end
+      value = cjson.encode(entry); changed = true
+    end
+    table.insert(kept, value)
+  end
+end
+if changed then
+  redis.call('DEL', KEYS[1])
+  for i = 1, #kept, 500 do redis.call('RPUSH', KEYS[1], unpack(kept, i, math.min(i + 499, #kept))) end
+end
+return 1`;
 export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now, maxRequests = MAX_WAITLIST_REQUESTS, inviteCapacity = INVITE_CAPACITY } = {}) {
   if (!redis?.eval || typeof prefix !== 'string' || !/^[A-Za-z0-9:{}_-]{1,160}$/.test(prefix)) throw new Error('Invalid waitlist configuration');
   const adminIds = new Set(admins), users = `${prefix}:waitlist:users`, audit = `${prefix}:waitlist:audit`;
@@ -410,6 +517,31 @@ export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now
     async redeemInvite({ identity, code }) {
       if (!validId(identity?.userId) || !validInviteCode(code)) return { ok: false };
       return await transaction({ op: 'redeem', userId: identity.userId, id: inviteDigest(code) }) ?? { ok: false };
+    },
+    async eraseUser(userId) {
+      if (!validId(userId)) return;
+      const ownerIndex = `${prefix}:waitlist:invites:owner:${createHash('sha256').update(userId).digest('base64url')}`;
+      await redis.eval(ERASE_OWN, 4, users, pending, usernames, ownerIndex, userId);
+      const read = value => { try { return JSON.parse(value); } catch { return null; } };
+      const passes = [
+        [users, ERASE_DECIDERS, [ERASED_ACCOUNT], value => read(value)?.decidedBy === userId],
+        [usernames, ERASE_HOLDS, [], value => value === userId],
+        [invites, ERASE_INVITES, [ERASED_ACCOUNT, new Date(now()).toISOString()], value => {
+          const invite = read(value);
+          return Boolean(invite) && [invite.ownerId, invite.assignedUserId, invite.redeemedBy, invite.createdBy].includes(userId);
+        }],
+      ];
+      for (const [key, script, extra, mentions] of passes) {
+        let cursor = '0';
+        do {
+          const [next, entries] = await redis.hscan(key, cursor, 'COUNT', 250);
+          const fields = [];
+          for (let index = 0; index < entries.length; index += 2) if (mentions(entries[index + 1])) fields.push(entries[index]);
+          if (fields.length) await redis.eval(script, 1, key, userId, ...extra, ...fields);
+          cursor = next;
+        } while (cursor !== '0');
+      }
+      await redis.eval(ERASE_AUDIT, 1, audit, userId, ERASED_ACCOUNT);
     },
   };
 }

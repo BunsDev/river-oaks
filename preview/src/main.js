@@ -1,6 +1,8 @@
 import { bindPageLifecycle } from './background-lifecycle.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { attachEastGardenCommons } from './east-garden-commons-world.js';
+import { HEIGHTS_REVISION, inBayouHeights } from '../../shared/bayou-heights-layout.js';
+import { STUDEWOOD_REVISION } from '../../shared/studewood-layout.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
 import { createCommonsStream } from './commons-stream.js';
@@ -173,7 +175,8 @@ const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.sea
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 // East Garden Commons and its assembled destination, when the revision composes them.
-let commonsScene = null;
+// Bayou Heights (bayou-heights-1, and heights-studewood-1 with Studewood) streams as a second location; heights-stream.js loads with those revisions.
+let commonsScene = null, heightsScene = null, heightsStreams = null;
 const lanternWalk = createLanternWalkClient({ announceArrival: false, getLayout: () => world?.eastGardenCommons ?? null, getPose: () => walking?.getPose(), getScene: () => commonsScene,
   getSnapshot: () => multiplayer?.snapshot?.lanternWalk ?? null,
   send: message => multiplayer?.command(message) ?? Promise.resolve({ ok: false, message: 'Connect to the town to light the lanterns together.' }) });
@@ -181,7 +184,13 @@ let districtUI, environmentAssets = null, storefrontReflections = null, roomGrou
 let currentAtmosphere = null; // the time-of-day light updateAtmosphere last applied; an office visit reads it
 let placesUI = null, landmarks = null;
 let pendingSharedPlace = null, sharedPlaceInFlight = false;
-let commonsStream = null, commonsStreamStatus = null;
+let commonsStream = null, heightsStream = null, commonsStreamStatus = null;
+const streamNotices = { commons: '', heights: '' };
+function showStreamNotice(kind, text) {
+  streamNotices[kind] = text;
+  // A Heights notice (at the footbridge) takes precedence over the Commons one.
+  commonsStreamStatus.textContent = streamNotices.heights || streamNotices.commons; commonsStreamStatus.hidden = !commonsStreamStatus.textContent;
+}
 let worldPortal = null;
 let worldRegionSha256 = null;
 // The default district's revision once loaded (#507): null is the garage; undefined while loading.
@@ -358,7 +367,7 @@ function initializeRenderer() {
   });
   walking.addObstacle({contains:(...args)=>buildLayer?.colliders.some(collider=>collider.contains(...args))??false});
   // Presentation readiness gates only this player's own steps, never shared occupancy queries.
-  walking.addStepGuard((from, to) => commonsStream?.allowsStep(from, to) ?? true);
+  walking.addStepGuard((from, to) => (commonsStream?.allowsStep(from, to) ?? true) && (heightsStream?.allowsStep(from, to) ?? true));
   commonsStreamStatus = document.createElement('p');
   commonsStreamStatus.className = 'spatial-stream-status';
   commonsStreamStatus.setAttribute('role', 'status');
@@ -575,7 +584,7 @@ function initializeRenderer() {
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
-  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? [])]);
+  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? []), ...(heightsScene?.userData.shadowProxies ?? [])]);
   sun.shadow.bias = -0.00002;
   sun.shadow.normalBias = 0.018;
   sun.shadow.camera.near = 10;
@@ -716,6 +725,7 @@ function populateWorld(data) {
   storeIntros?.reset();
   walking?.exit();
   commonsStream?.dispose(); commonsStream = null;
+  heightsStream?.dispose(); heightsStream = null;
   generatedInteriors?.dispose(); generatedInteriors = null;
   storefrontReflections?.dispose(); storefrontReflections = null;
   if (worldGroup) {
@@ -776,8 +786,11 @@ function populateWorld(data) {
   worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
   worldGroup.add(sidewalks);
   worldGroup.add(furniture);
-  if (data.eastGardenCommons) commonsStream = createCommonsStream({ world: data, parent: worldGroup, onScene: scene => { commonsScene = scene; },
-    onStatus(text) { commonsStreamStatus.textContent = text; commonsStreamStatus.hidden = !text; } });
+  const heights = data.eastGardenCommons?.heights ? heightsStreams : null;
+  if (data.eastGardenCommons) commonsStream = createCommonsStream({ world: data, ...(heights ? { layout: heights.heightsCommonsLayout(data.eastGardenCommons) } : {}),
+    parent: worldGroup, onScene: scene => { commonsScene = scene; }, onStatus: text => showStreamNotice('commons', text) });
+  if (heights) heightsStream = heights.createHeightsStream({ world: data, parent: worldGroup, onScene: scene => { heightsScene = scene; },
+    onStatus: text => showStreamNotice('heights', text) });
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
   plazaSalon = buildPlazaSalon(data);
   plazaStage?.setWorld(data);
@@ -948,7 +961,7 @@ async function loadWorld() {
       :await jsonResponse(`/api/world-data?world=${encodeURIComponent(worldId)}`);
     worldRegionSha256=manifest.regionSha256??null;
     const districtRevision=manifest.districtRevision??null;
-    if(districtRevision!==null && ![DISTRICT_REVISION_GARDENS,COMMONS_REVISION].includes(districtRevision))throw new Error('This district revision is not supported by this client');
+    if(districtRevision!==null && ![DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION].includes(districtRevision))throw new Error('This district revision is not supported by this client');
     let data;
     if(manifest.template==='region-v1')data=manifest.world;
     else if(manifest.template==='river-oaks') {
@@ -958,8 +971,12 @@ async function loadWorld() {
       ]);
       district.vegetation=validateVegetation(district,vegetation);
       data=attachDistrictGalleryPlan(district,approved);
-      if([DISTRICT_REVISION_GARDENS,COMMONS_REVISION].includes(districtRevision))data=attachGardenCampus(data);
-      if(districtRevision===COMMONS_REVISION)data=attachEastGardenCommons(data);
+      if([DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION].includes(districtRevision))data=attachGardenCampus(data);
+      if([COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION].includes(districtRevision))data=attachEastGardenCommons(data);
+      // Bayou Heights loads its recipes and stream only for its own revision; the stream loads its scene.
+      if([HEIGHTS_REVISION,STUDEWOOD_REVISION].includes(districtRevision)){heightsStreams=await import('./heights-stream.js');data=heightsStreams.attachBayouHeights(data);}
+      // Studewood continues Heights east; Heights streams its two neighborhoods with its own.
+      if(districtRevision===STUDEWOOD_REVISION)data=heightsStreams.attachStudewood(data);
     } else throw new Error('This region format is not supported by this client');
     worldDistrictRevision=districtRevision;
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
@@ -1045,11 +1062,14 @@ function render(now) {
   community?.update(delta, now);
   renderAudit?.phase('community');
   const streamPosition = walking?.getPosition() ?? self?.position;
-  commonsStream?.update([...(streamPosition ? [streamPosition] : []), [camera.position.x, -camera.position.z]], camera);
+  const streamPoints = [...(streamPosition ? [streamPosition] : []), [camera.position.x, -camera.position.z]];
+  commonsStream?.update(streamPoints, camera);
+  heightsStream?.update(streamPoints, camera);
   generatedInteriors?.update(camera.position, now, self?.levelId);
   renderAudit?.phase('setup'); // phases accumulate: interior streaming counts as setup
   layers.trees?.userData.update?.(camera.position);
   commonsScene?.userData.update?.(camera.position);
+  heightsScene?.userData.update?.(camera.position);
   lanternWalk.update();
   renderAudit?.phase('trees');
   if (storePeople && interiorsLayer?.visible) storePeople.userData.update(camera, now, community?.state, walking?.getPosition(), community?.speakingId);
@@ -1432,6 +1452,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverIpicDarts = () => ipicDarts ? { ...ipicDarts.debug(), board: buildingMesh?.userData.interiors?.userData.dartboards?.[0]?.count() ?? null,
     steadyAt: release => ipicDarts.steadyAt(release), steadyOn: point => ipicDarts.steadyOn(point), open: () => ipicDarts.open() } : null;
   window.__riverLanternWalk = () => ({ ...lanternWalk.debug(), scene: commonsScene?.userData.stats?.() ?? null });
+  window.__riverBayouHeights = () => world?.eastGardenCommons?.heights ? ({ inside: inBayouHeights(world.eastGardenCommons, (walking?.getPosition() ?? [-Infinity])[0]),
+    revision: world.eastGardenCommons.revision, ready: heightsStream?.ready() ?? false, stream: heightsStream?.debug() ?? null, scene: heightsScene?.userData.stats?.() ?? null }) : null;
   window.__riverPlazaDarts = () => plazaDarts ? { ...plazaDarts.debug(), board: plazaSalon?.userData.darts?.count() ?? null,
     steadyAt: release => plazaDarts.steadyAt(release), steadyOn: point => plazaDarts.steadyOn(point), landingFor: (release, dart) => plazaDarts.landingFor(release, dart), reset: seed => plazaDarts.reset(seed),
     // Walk to the throwing line and face the board.
