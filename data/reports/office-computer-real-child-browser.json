@@ -1,0 +1,48 @@
+{
+  "createdAt": "2026-10-27T22:34:51.961Z",
+  "results": [
+    {
+      "name": "office-computer-real",
+      "status": "passed",
+      "seconds": 71.69,
+      "result": {
+        "checks": [
+          "Computer candidate feat/place-embed-33-20261027 @ 8c0240afae93c85e9de18f98e6fdcb201418a5cf on http://127.0.0.1:50196",
+          "Nothing loads from Computer before its tab opens",
+          "A fresh frame shows Computer’s real account gate, Continue and Switch, before any document",
+          "Exactly one Computer frame",
+          "Place shows the account save that Computer acknowledged",
+          "Typing in Computer cannot move, act or talk in the office",
+          "Leaving waits for Computer’s saved answer, then removes the frame",
+          "Reentry starts a fresh account gate with nothing behind it",
+          "The note comes back from the Computer account after the frame and this browser’s copy are gone",
+          "Escape closes Computer’s palette first",
+          "Escape at Computer’s top level closes the desk, removes the frame and restores office focus",
+          "An unsaved change asks for a decision in Computer instead of closing",
+          "Choosing Computer’s local copy is reported as local, not saved",
+          "The local copy is there in the next frame",
+          "…and reaches the account once it can",
+          "Ten visits load ten Computer documents, one per visit",
+          "Ten visits leave no frame or message listener behind",
+          "Ending the visit removes Computer at once (101 ms)",
+          "The journey drops the live town connection",
+          "A dropped connection removes Computer at once (59 ms)",
+          "Switch signs Computer out and Place offers its top-level sign-in, with no frame left",
+          "Computer sign-in happens in its own top-level tab",
+          "The other account’s desktop stays hidden while Computer asks what to do with it",
+          "The second Computer account sees only its own desktop",
+          "An expired Computer session removes the desktop and offers sign-in",
+          "Computer notes never reach Place task requests",
+          "Computer notes never appear in the public world snapshot",
+          "After every departure and forced teardown, no Computer frame or listener remains"
+        ],
+        "computer": {
+          "origin": "http://127.0.0.1:50196",
+          "head": "8c0240afae93c85e9de18f98e6fdcb201418a5cf",
+          "branch": "feat/place-embed-33-20261027",
+          "dirty": false
+        }
+      }
+    }
+  ]
+}
