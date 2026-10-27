@@ -78,6 +78,8 @@
 .cs-tools [data-lock][aria-pressed=false] [data-shackle]{transform:translateY(-2px)}
 .cs-segments label[hidden]{display:none}.cs-outfits{margin-top:6px}
 .cs-hairstyles{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:10px}
+/* Wardrobe pickers wrap like the hairstyles; a frame offers up to eight of each. */
+.cs-garments{grid-auto-flow:row;grid-template-columns:repeat(auto-fill,minmax(7rem,1fr));margin-bottom:10px}.cs-controls .cs-subhead{margin:8px 0 4px;font-weight:700;color:var(--cs-ink)}
 /* A face slider needs room to travel: four columns left each track 30-40 px beside its label and value. */
 .cs-face{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 18px}.cs-controls .cs-feature p{margin:8px 0 0;font-weight:700;color:var(--cs-ink)}
 .character-studio .cs-slider{display:grid;grid-template-columns:6.2em minmax(0,1fr) 2.8em;align-items:center;gap:8px;font-weight:500}

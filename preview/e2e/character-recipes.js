@@ -67,6 +67,17 @@ async page => {
     await dialog.locator('[name=framing]').selectOption('portrait'); await page.waitForTimeout(150);
     await page.locator('.cs-stage').screenshot({ path: `output/playwright/character-recipe-${i}-face.png` });
   }
+  // Mix and match: a top, a bottom from another suit and another pair of shoes, from the frame's wardrobe only.
+  const offered = name => dialog.locator(`[name=${name}]`).evaluateAll(inputs => inputs.filter(input => !input.closest('label').hidden).map(input => input.value));
+  const was = await recipe(), prefix = was.body.startsWith('woman') ? 'female_' : 'male_';
+  check([...await offered('cs-top'), ...await offered('cs-bottom')].every(id => id.startsWith(prefix)), `Only the ${prefix.slice(0, -1)} frame's tops and bottoms are offered`);
+  const top = (await offered('cs-top')).find(id => id !== was.top), bottom = (await offered('cs-bottom')).find(id => id !== was.bottom && id.split('-')[0] !== top.split('-')[0]);
+  const footwear = (await offered('cs-footwear')).find(id => id !== was.footwear);
+  for (const [name, value] of [['cs-top', top], ['cs-bottom', bottom], ['cs-footwear', footwear]]) { await dialog.locator(`[name=${name}][value="${value}"]`).click(); await shown(); }
+  const mixed = await recipe();
+  check(mixed.top === top && mixed.bottom === bottom && mixed.footwear === footwear && mixed.body === was.body && mixed.skin === was.skin && mixed.height === was.height, 'A top, a bottom from another suit and other shoes stage on the same person');
+  await dialog.locator('[name=framing]').selectOption('full'); await page.waitForTimeout(150);
+  await page.locator('.cs-stage').screenshot({ path: 'output/playwright/character-recipe-wardrobe.png' });
   check(await page.locator('#canvas-host').getAttribute('data-player-appearance') === before, 'Editing never changes the town appearance');
   // Wear it: the town confirms the recipe, the player reloads its body, and a peer sees the same look.
   const peerContext = await page.context().browser().newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });

@@ -1,0 +1,1426 @@
+{
+  "generator": "MPFB 2.0.17 / Blender 5.2.2 LTS",
+  "blenderBinarySha256": "f5c1f2a0c0bca3389ec772d355242b700975ea84e66cbb3f5257a7bce8e5adeb",
+  "license": "CC0-1.0",
+  "bodies": [
+    {
+      "body": "woman-casual",
+      "path": "/assets/characters/wardrobe/woman-casual.glb",
+      "bytes": 1970196,
+      "sha256": "a34cf7da7d7bc8a2824d5791ef855f7e554250282bf8c8b4a3dd635f2c32c941",
+      "garments": [
+        {
+          "id": "female_casualsuit01-top",
+          "kind": "top",
+          "suit": "female_casualsuit01",
+          "map": "textures/female_casualsuit01-map.webp",
+          "normalMap": "textures/female_casualsuit01-normalMap.webp",
+          "mean": [
+            118,
+            138,
+            161
+          ],
+          "slot": 0
+        },
+        {
+          "id": "female_casualsuit01-bottom",
+          "kind": "bottom",
+          "suit": "female_casualsuit01",
+          "map": "textures/female_casualsuit01-map.webp",
+          "normalMap": "textures/female_casualsuit01-normalMap.webp",
+          "mean": [
+            118,
+            138,
+            161
+          ],
+          "slot": 1
+        },
+        {
+          "id": "female_casualsuit02-top",
+          "kind": "top",
+          "suit": "female_casualsuit02",
+          "map": "textures/female_casualsuit02-map.webp",
+          "normalMap": "textures/female_casualsuit02-normalMap.webp",
+          "mean": [
+            128,
+            143,
+            168
+          ],
+          "slot": 2
+        },
+        {
+          "id": "female_casualsuit02-bottom",
+          "kind": "bottom",
+          "suit": "female_casualsuit02",
+          "map": "textures/female_casualsuit02-map.webp",
+          "normalMap": "textures/female_casualsuit02-normalMap.webp",
+          "mean": [
+            128,
+            143,
+            168
+          ],
+          "slot": 3
+        },
+        {
+          "id": "female_elegantsuit01-top",
+          "kind": "top",
+          "suit": "female_elegantsuit01",
+          "map": "textures/female_elegantsuit01-map.webp",
+          "normalMap": "textures/female_elegantsuit01-normalMap.webp",
+          "mean": [
+            69,
+            64,
+            62
+          ],
+          "slot": 4
+        },
+        {
+          "id": "female_elegantsuit01-bottom",
+          "kind": "bottom",
+          "suit": "female_elegantsuit01",
+          "map": "textures/female_elegantsuit01-map.webp",
+          "normalMap": "textures/female_elegantsuit01-normalMap.webp",
+          "mean": [
+            69,
+            64,
+            62
+          ],
+          "slot": 5
+        },
+        {
+          "id": "female_sportsuit01-top",
+          "kind": "top",
+          "suit": "female_sportsuit01",
+          "map": "textures/female_sportsuit01-map.webp",
+          "normalMap": "textures/female_sportsuit01-normalMap.webp",
+          "mean": [
+            113,
+            125,
+            141
+          ],
+          "slot": 6
+        },
+        {
+          "id": "female_sportsuit01-bottom",
+          "kind": "bottom",
+          "suit": "female_sportsuit01",
+          "map": "textures/female_sportsuit01-map.webp",
+          "normalMap": "textures/female_sportsuit01-normalMap.webp",
+          "mean": [
+            113,
+            125,
+            141
+          ],
+          "slot": 7
+        },
+        {
+          "id": "shoes01",
+          "kind": "shoes",
+          "map": "textures/shoes01-map.webp",
+          "normalMap": "textures/shoes01-normalMap.webp",
+          "mean": [
+            98,
+            62,
+            44
+          ],
+          "slot": 8
+        },
+        {
+          "id": "shoes02",
+          "kind": "shoes",
+          "map": "textures/shoes02-map.webp",
+          "mean": [
+            62,
+            60,
+            57
+          ],
+          "slot": 9
+        },
+        {
+          "id": "shoes03",
+          "kind": "shoes",
+          "map": "textures/shoes03-map.webp",
+          "mean": [
+            8,
+            7,
+            8
+          ],
+          "slot": 10
+        },
+        {
+          "id": "shoes04",
+          "kind": "shoes",
+          "map": "textures/shoes04-map.webp",
+          "normalMap": "textures/shoes04-normalMap.webp",
+          "mean": [
+            33,
+            33,
+            34
+          ],
+          "slot": 11
+        },
+        {
+          "id": "shoes05",
+          "kind": "shoes",
+          "map": "textures/shoes05-map.webp",
+          "mean": [
+            62,
+            60,
+            61
+          ],
+          "slot": 12
+        },
+        {
+          "id": "shoes06",
+          "kind": "shoes",
+          "map": "textures/shoes06-map.webp",
+          "mean": [
+            52,
+            55,
+            63
+          ],
+          "slot": 13
+        }
+      ]
+    },
+    {
+      "body": "man-casual",
+      "path": "/assets/characters/wardrobe/man-casual.glb",
+      "bytes": 3582936,
+      "sha256": "f365472dee62c2d8a735f63a07d6aa9fc1ba76ed6f4483a7c5749f76b68d6b28",
+      "garments": [
+        {
+          "id": "male_casualsuit01-top",
+          "kind": "top",
+          "suit": "male_casualsuit01",
+          "map": "textures/male_casualsuit01-map.webp",
+          "normalMap": "textures/male_casualsuit01-normalMap.webp",
+          "mean": [
+            63,
+            74,
+            96
+          ],
+          "slot": 0
+        },
+        {
+          "id": "male_casualsuit01-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit01",
+          "map": "textures/male_casualsuit01-map.webp",
+          "normalMap": "textures/male_casualsuit01-normalMap.webp",
+          "mean": [
+            63,
+            74,
+            96
+          ],
+          "slot": 1
+        },
+        {
+          "id": "male_casualsuit02-top",
+          "kind": "top",
+          "suit": "male_casualsuit02",
+          "map": "textures/male_casualsuit02-map.webp",
+          "normalMap": "textures/male_casualsuit02-normalMap.webp",
+          "mean": [
+            55,
+            90,
+            134
+          ],
+          "slot": 2
+        },
+        {
+          "id": "male_casualsuit02-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit02",
+          "map": "textures/male_casualsuit02-map.webp",
+          "normalMap": "textures/male_casualsuit02-normalMap.webp",
+          "mean": [
+            55,
+            90,
+            134
+          ],
+          "slot": 3
+        },
+        {
+          "id": "male_casualsuit03-top",
+          "kind": "top",
+          "suit": "male_casualsuit03",
+          "map": "textures/male_casualsuit03-map.webp",
+          "normalMap": "textures/male_casualsuit03-normalMap.webp",
+          "mean": [
+            45,
+            46,
+            56
+          ],
+          "slot": 4
+        },
+        {
+          "id": "male_casualsuit03-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit03",
+          "map": "textures/male_casualsuit03-map.webp",
+          "normalMap": "textures/male_casualsuit03-normalMap.webp",
+          "mean": [
+            45,
+            46,
+            56
+          ],
+          "slot": 5
+        },
+        {
+          "id": "male_casualsuit04-top",
+          "kind": "top",
+          "suit": "male_casualsuit04",
+          "map": "textures/male_casualsuit04-map.webp",
+          "normalMap": "textures/male_casualsuit04-normalMap.webp",
+          "mean": [
+            63,
+            95,
+            123
+          ],
+          "slot": 6
+        },
+        {
+          "id": "male_casualsuit04-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit04",
+          "map": "textures/male_casualsuit04-map.webp",
+          "normalMap": "textures/male_casualsuit04-normalMap.webp",
+          "mean": [
+            63,
+            95,
+            123
+          ],
+          "slot": 7
+        },
+        {
+          "id": "male_casualsuit05-top",
+          "kind": "top",
+          "suit": "male_casualsuit05",
+          "map": "textures/male_casualsuit05-map.webp",
+          "normalMap": "textures/male_casualsuit05-normalMap.webp",
+          "mean": [
+            30,
+            34,
+            38
+          ],
+          "slot": 8
+        },
+        {
+          "id": "male_casualsuit05-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit05",
+          "map": "textures/male_casualsuit05-map.webp",
+          "normalMap": "textures/male_casualsuit05-normalMap.webp",
+          "mean": [
+            30,
+            34,
+            38
+          ],
+          "slot": 9
+        },
+        {
+          "id": "male_casualsuit06-top",
+          "kind": "top",
+          "suit": "male_casualsuit06",
+          "map": "textures/male_casualsuit06-map.webp",
+          "normalMap": "textures/male_casualsuit06-normalMap.webp",
+          "mean": [
+            168,
+            177,
+            184
+          ],
+          "slot": 10
+        },
+        {
+          "id": "male_casualsuit06-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit06",
+          "map": "textures/male_casualsuit06-map.webp",
+          "normalMap": "textures/male_casualsuit06-normalMap.webp",
+          "mean": [
+            168,
+            177,
+            184
+          ],
+          "slot": 11
+        },
+        {
+          "id": "male_elegantsuit01-top",
+          "kind": "top",
+          "suit": "male_elegantsuit01",
+          "map": "textures/male_elegantsuit01-map.webp",
+          "mean": [
+            39,
+            39,
+            39
+          ],
+          "slot": 12
+        },
+        {
+          "id": "male_elegantsuit01-bottom",
+          "kind": "bottom",
+          "suit": "male_elegantsuit01",
+          "map": "textures/male_elegantsuit01-map.webp",
+          "mean": [
+            39,
+            39,
+            39
+          ],
+          "slot": 13
+        },
+        {
+          "id": "male_worksuit01-top",
+          "kind": "top",
+          "suit": "male_worksuit01",
+          "map": "textures/male_worksuit01-map.webp",
+          "normalMap": "textures/male_worksuit01-normalMap.webp",
+          "mean": [
+            66,
+            86,
+            116
+          ],
+          "slot": 14
+        },
+        {
+          "id": "male_worksuit01-bottom",
+          "kind": "bottom",
+          "suit": "male_worksuit01",
+          "map": "textures/male_worksuit01-map.webp",
+          "normalMap": "textures/male_worksuit01-normalMap.webp",
+          "mean": [
+            66,
+            86,
+            116
+          ],
+          "slot": 15
+        },
+        {
+          "id": "shoes01",
+          "kind": "shoes",
+          "map": "textures/shoes01-map.webp",
+          "normalMap": "textures/shoes01-normalMap.webp",
+          "mean": [
+            98,
+            62,
+            44
+          ],
+          "slot": 16
+        },
+        {
+          "id": "shoes02",
+          "kind": "shoes",
+          "map": "textures/shoes02-map.webp",
+          "mean": [
+            62,
+            60,
+            57
+          ],
+          "slot": 17
+        },
+        {
+          "id": "shoes03",
+          "kind": "shoes",
+          "map": "textures/shoes03-map.webp",
+          "mean": [
+            8,
+            7,
+            8
+          ],
+          "slot": 18
+        },
+        {
+          "id": "shoes04",
+          "kind": "shoes",
+          "map": "textures/shoes04-map.webp",
+          "normalMap": "textures/shoes04-normalMap.webp",
+          "mean": [
+            33,
+            33,
+            34
+          ],
+          "slot": 19
+        },
+        {
+          "id": "shoes05",
+          "kind": "shoes",
+          "map": "textures/shoes05-map.webp",
+          "mean": [
+            62,
+            60,
+            61
+          ],
+          "slot": 20
+        },
+        {
+          "id": "shoes06",
+          "kind": "shoes",
+          "map": "textures/shoes06-map.webp",
+          "mean": [
+            52,
+            55,
+            63
+          ],
+          "slot": 21
+        }
+      ]
+    },
+    {
+      "body": "woman-tailored",
+      "path": "/assets/characters/wardrobe/woman-tailored.glb",
+      "bytes": 1970344,
+      "sha256": "a1752d84de82ecd08f8645b871fc7ba13fff43e34079cb0e6741f604f6c9030e",
+      "garments": [
+        {
+          "id": "female_casualsuit01-top",
+          "kind": "top",
+          "suit": "female_casualsuit01",
+          "map": "textures/female_casualsuit01-map.webp",
+          "normalMap": "textures/female_casualsuit01-normalMap.webp",
+          "mean": [
+            118,
+            138,
+            161
+          ],
+          "slot": 0
+        },
+        {
+          "id": "female_casualsuit01-bottom",
+          "kind": "bottom",
+          "suit": "female_casualsuit01",
+          "map": "textures/female_casualsuit01-map.webp",
+          "normalMap": "textures/female_casualsuit01-normalMap.webp",
+          "mean": [
+            118,
+            138,
+            161
+          ],
+          "slot": 1
+        },
+        {
+          "id": "female_casualsuit02-top",
+          "kind": "top",
+          "suit": "female_casualsuit02",
+          "map": "textures/female_casualsuit02-map.webp",
+          "normalMap": "textures/female_casualsuit02-normalMap.webp",
+          "mean": [
+            128,
+            143,
+            168
+          ],
+          "slot": 2
+        },
+        {
+          "id": "female_casualsuit02-bottom",
+          "kind": "bottom",
+          "suit": "female_casualsuit02",
+          "map": "textures/female_casualsuit02-map.webp",
+          "normalMap": "textures/female_casualsuit02-normalMap.webp",
+          "mean": [
+            128,
+            143,
+            168
+          ],
+          "slot": 3
+        },
+        {
+          "id": "female_elegantsuit01-top",
+          "kind": "top",
+          "suit": "female_elegantsuit01",
+          "map": "textures/female_elegantsuit01-map.webp",
+          "normalMap": "textures/female_elegantsuit01-normalMap.webp",
+          "mean": [
+            69,
+            64,
+            62
+          ],
+          "slot": 4
+        },
+        {
+          "id": "female_elegantsuit01-bottom",
+          "kind": "bottom",
+          "suit": "female_elegantsuit01",
+          "map": "textures/female_elegantsuit01-map.webp",
+          "normalMap": "textures/female_elegantsuit01-normalMap.webp",
+          "mean": [
+            69,
+            64,
+            62
+          ],
+          "slot": 5
+        },
+        {
+          "id": "female_sportsuit01-top",
+          "kind": "top",
+          "suit": "female_sportsuit01",
+          "map": "textures/female_sportsuit01-map.webp",
+          "normalMap": "textures/female_sportsuit01-normalMap.webp",
+          "mean": [
+            113,
+            125,
+            141
+          ],
+          "slot": 6
+        },
+        {
+          "id": "female_sportsuit01-bottom",
+          "kind": "bottom",
+          "suit": "female_sportsuit01",
+          "map": "textures/female_sportsuit01-map.webp",
+          "normalMap": "textures/female_sportsuit01-normalMap.webp",
+          "mean": [
+            113,
+            125,
+            141
+          ],
+          "slot": 7
+        },
+        {
+          "id": "shoes01",
+          "kind": "shoes",
+          "map": "textures/shoes01-map.webp",
+          "normalMap": "textures/shoes01-normalMap.webp",
+          "mean": [
+            98,
+            62,
+            44
+          ],
+          "slot": 8
+        },
+        {
+          "id": "shoes02",
+          "kind": "shoes",
+          "map": "textures/shoes02-map.webp",
+          "mean": [
+            62,
+            60,
+            57
+          ],
+          "slot": 9
+        },
+        {
+          "id": "shoes03",
+          "kind": "shoes",
+          "map": "textures/shoes03-map.webp",
+          "mean": [
+            8,
+            7,
+            8
+          ],
+          "slot": 10
+        },
+        {
+          "id": "shoes04",
+          "kind": "shoes",
+          "map": "textures/shoes04-map.webp",
+          "normalMap": "textures/shoes04-normalMap.webp",
+          "mean": [
+            33,
+            33,
+            34
+          ],
+          "slot": 11
+        },
+        {
+          "id": "shoes05",
+          "kind": "shoes",
+          "map": "textures/shoes05-map.webp",
+          "mean": [
+            62,
+            60,
+            61
+          ],
+          "slot": 12
+        },
+        {
+          "id": "shoes06",
+          "kind": "shoes",
+          "map": "textures/shoes06-map.webp",
+          "mean": [
+            52,
+            55,
+            63
+          ],
+          "slot": 13
+        }
+      ]
+    },
+    {
+      "body": "man-tailored",
+      "path": "/assets/characters/wardrobe/man-tailored.glb",
+      "bytes": 3583264,
+      "sha256": "1b41025db7fae113bc1e8c5808d2d67c64808090ceafa145d359c821e4535379",
+      "garments": [
+        {
+          "id": "male_casualsuit01-top",
+          "kind": "top",
+          "suit": "male_casualsuit01",
+          "map": "textures/male_casualsuit01-map.webp",
+          "normalMap": "textures/male_casualsuit01-normalMap.webp",
+          "mean": [
+            63,
+            74,
+            96
+          ],
+          "slot": 0
+        },
+        {
+          "id": "male_casualsuit01-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit01",
+          "map": "textures/male_casualsuit01-map.webp",
+          "normalMap": "textures/male_casualsuit01-normalMap.webp",
+          "mean": [
+            63,
+            74,
+            96
+          ],
+          "slot": 1
+        },
+        {
+          "id": "male_casualsuit02-top",
+          "kind": "top",
+          "suit": "male_casualsuit02",
+          "map": "textures/male_casualsuit02-map.webp",
+          "normalMap": "textures/male_casualsuit02-normalMap.webp",
+          "mean": [
+            55,
+            90,
+            134
+          ],
+          "slot": 2
+        },
+        {
+          "id": "male_casualsuit02-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit02",
+          "map": "textures/male_casualsuit02-map.webp",
+          "normalMap": "textures/male_casualsuit02-normalMap.webp",
+          "mean": [
+            55,
+            90,
+            134
+          ],
+          "slot": 3
+        },
+        {
+          "id": "male_casualsuit03-top",
+          "kind": "top",
+          "suit": "male_casualsuit03",
+          "map": "textures/male_casualsuit03-map.webp",
+          "normalMap": "textures/male_casualsuit03-normalMap.webp",
+          "mean": [
+            45,
+            46,
+            56
+          ],
+          "slot": 4
+        },
+        {
+          "id": "male_casualsuit03-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit03",
+          "map": "textures/male_casualsuit03-map.webp",
+          "normalMap": "textures/male_casualsuit03-normalMap.webp",
+          "mean": [
+            45,
+            46,
+            56
+          ],
+          "slot": 5
+        },
+        {
+          "id": "male_casualsuit04-top",
+          "kind": "top",
+          "suit": "male_casualsuit04",
+          "map": "textures/male_casualsuit04-map.webp",
+          "normalMap": "textures/male_casualsuit04-normalMap.webp",
+          "mean": [
+            63,
+            95,
+            123
+          ],
+          "slot": 6
+        },
+        {
+          "id": "male_casualsuit04-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit04",
+          "map": "textures/male_casualsuit04-map.webp",
+          "normalMap": "textures/male_casualsuit04-normalMap.webp",
+          "mean": [
+            63,
+            95,
+            123
+          ],
+          "slot": 7
+        },
+        {
+          "id": "male_casualsuit05-top",
+          "kind": "top",
+          "suit": "male_casualsuit05",
+          "map": "textures/male_casualsuit05-map.webp",
+          "normalMap": "textures/male_casualsuit05-normalMap.webp",
+          "mean": [
+            30,
+            34,
+            38
+          ],
+          "slot": 8
+        },
+        {
+          "id": "male_casualsuit05-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit05",
+          "map": "textures/male_casualsuit05-map.webp",
+          "normalMap": "textures/male_casualsuit05-normalMap.webp",
+          "mean": [
+            30,
+            34,
+            38
+          ],
+          "slot": 9
+        },
+        {
+          "id": "male_casualsuit06-top",
+          "kind": "top",
+          "suit": "male_casualsuit06",
+          "map": "textures/male_casualsuit06-map.webp",
+          "normalMap": "textures/male_casualsuit06-normalMap.webp",
+          "mean": [
+            168,
+            177,
+            184
+          ],
+          "slot": 10
+        },
+        {
+          "id": "male_casualsuit06-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit06",
+          "map": "textures/male_casualsuit06-map.webp",
+          "normalMap": "textures/male_casualsuit06-normalMap.webp",
+          "mean": [
+            168,
+            177,
+            184
+          ],
+          "slot": 11
+        },
+        {
+          "id": "male_elegantsuit01-top",
+          "kind": "top",
+          "suit": "male_elegantsuit01",
+          "map": "textures/male_elegantsuit01-map.webp",
+          "mean": [
+            39,
+            39,
+            39
+          ],
+          "slot": 12
+        },
+        {
+          "id": "male_elegantsuit01-bottom",
+          "kind": "bottom",
+          "suit": "male_elegantsuit01",
+          "map": "textures/male_elegantsuit01-map.webp",
+          "mean": [
+            39,
+            39,
+            39
+          ],
+          "slot": 13
+        },
+        {
+          "id": "male_worksuit01-top",
+          "kind": "top",
+          "suit": "male_worksuit01",
+          "map": "textures/male_worksuit01-map.webp",
+          "normalMap": "textures/male_worksuit01-normalMap.webp",
+          "mean": [
+            66,
+            86,
+            116
+          ],
+          "slot": 14
+        },
+        {
+          "id": "male_worksuit01-bottom",
+          "kind": "bottom",
+          "suit": "male_worksuit01",
+          "map": "textures/male_worksuit01-map.webp",
+          "normalMap": "textures/male_worksuit01-normalMap.webp",
+          "mean": [
+            66,
+            86,
+            116
+          ],
+          "slot": 15
+        },
+        {
+          "id": "shoes01",
+          "kind": "shoes",
+          "map": "textures/shoes01-map.webp",
+          "normalMap": "textures/shoes01-normalMap.webp",
+          "mean": [
+            98,
+            62,
+            44
+          ],
+          "slot": 16
+        },
+        {
+          "id": "shoes02",
+          "kind": "shoes",
+          "map": "textures/shoes02-map.webp",
+          "mean": [
+            62,
+            60,
+            57
+          ],
+          "slot": 17
+        },
+        {
+          "id": "shoes03",
+          "kind": "shoes",
+          "map": "textures/shoes03-map.webp",
+          "mean": [
+            8,
+            7,
+            8
+          ],
+          "slot": 18
+        },
+        {
+          "id": "shoes04",
+          "kind": "shoes",
+          "map": "textures/shoes04-map.webp",
+          "normalMap": "textures/shoes04-normalMap.webp",
+          "mean": [
+            33,
+            33,
+            34
+          ],
+          "slot": 19
+        },
+        {
+          "id": "shoes05",
+          "kind": "shoes",
+          "map": "textures/shoes05-map.webp",
+          "mean": [
+            62,
+            60,
+            61
+          ],
+          "slot": 20
+        },
+        {
+          "id": "shoes06",
+          "kind": "shoes",
+          "map": "textures/shoes06-map.webp",
+          "mean": [
+            52,
+            55,
+            63
+          ],
+          "slot": 21
+        }
+      ]
+    },
+    {
+      "body": "woman-daywear",
+      "path": "/assets/characters/wardrobe/woman-daywear.glb",
+      "bytes": 1969968,
+      "sha256": "00bff761a6b21e8aa3130bad46ab02abafa2c286153be93e3ab8f99671cd0414",
+      "garments": [
+        {
+          "id": "female_casualsuit01-top",
+          "kind": "top",
+          "suit": "female_casualsuit01",
+          "map": "textures/female_casualsuit01-map.webp",
+          "normalMap": "textures/female_casualsuit01-normalMap.webp",
+          "mean": [
+            118,
+            138,
+            161
+          ],
+          "slot": 0
+        },
+        {
+          "id": "female_casualsuit01-bottom",
+          "kind": "bottom",
+          "suit": "female_casualsuit01",
+          "map": "textures/female_casualsuit01-map.webp",
+          "normalMap": "textures/female_casualsuit01-normalMap.webp",
+          "mean": [
+            118,
+            138,
+            161
+          ],
+          "slot": 1
+        },
+        {
+          "id": "female_casualsuit02-top",
+          "kind": "top",
+          "suit": "female_casualsuit02",
+          "map": "textures/female_casualsuit02-map.webp",
+          "normalMap": "textures/female_casualsuit02-normalMap.webp",
+          "mean": [
+            128,
+            143,
+            168
+          ],
+          "slot": 2
+        },
+        {
+          "id": "female_casualsuit02-bottom",
+          "kind": "bottom",
+          "suit": "female_casualsuit02",
+          "map": "textures/female_casualsuit02-map.webp",
+          "normalMap": "textures/female_casualsuit02-normalMap.webp",
+          "mean": [
+            128,
+            143,
+            168
+          ],
+          "slot": 3
+        },
+        {
+          "id": "female_elegantsuit01-top",
+          "kind": "top",
+          "suit": "female_elegantsuit01",
+          "map": "textures/female_elegantsuit01-map.webp",
+          "normalMap": "textures/female_elegantsuit01-normalMap.webp",
+          "mean": [
+            69,
+            64,
+            62
+          ],
+          "slot": 4
+        },
+        {
+          "id": "female_elegantsuit01-bottom",
+          "kind": "bottom",
+          "suit": "female_elegantsuit01",
+          "map": "textures/female_elegantsuit01-map.webp",
+          "normalMap": "textures/female_elegantsuit01-normalMap.webp",
+          "mean": [
+            69,
+            64,
+            62
+          ],
+          "slot": 5
+        },
+        {
+          "id": "female_sportsuit01-top",
+          "kind": "top",
+          "suit": "female_sportsuit01",
+          "map": "textures/female_sportsuit01-map.webp",
+          "normalMap": "textures/female_sportsuit01-normalMap.webp",
+          "mean": [
+            113,
+            125,
+            141
+          ],
+          "slot": 6
+        },
+        {
+          "id": "female_sportsuit01-bottom",
+          "kind": "bottom",
+          "suit": "female_sportsuit01",
+          "map": "textures/female_sportsuit01-map.webp",
+          "normalMap": "textures/female_sportsuit01-normalMap.webp",
+          "mean": [
+            113,
+            125,
+            141
+          ],
+          "slot": 7
+        },
+        {
+          "id": "shoes01",
+          "kind": "shoes",
+          "map": "textures/shoes01-map.webp",
+          "normalMap": "textures/shoes01-normalMap.webp",
+          "mean": [
+            98,
+            62,
+            44
+          ],
+          "slot": 8
+        },
+        {
+          "id": "shoes02",
+          "kind": "shoes",
+          "map": "textures/shoes02-map.webp",
+          "mean": [
+            62,
+            60,
+            57
+          ],
+          "slot": 9
+        },
+        {
+          "id": "shoes03",
+          "kind": "shoes",
+          "map": "textures/shoes03-map.webp",
+          "mean": [
+            8,
+            7,
+            8
+          ],
+          "slot": 10
+        },
+        {
+          "id": "shoes04",
+          "kind": "shoes",
+          "map": "textures/shoes04-map.webp",
+          "normalMap": "textures/shoes04-normalMap.webp",
+          "mean": [
+            33,
+            33,
+            34
+          ],
+          "slot": 11
+        },
+        {
+          "id": "shoes05",
+          "kind": "shoes",
+          "map": "textures/shoes05-map.webp",
+          "mean": [
+            62,
+            60,
+            61
+          ],
+          "slot": 12
+        },
+        {
+          "id": "shoes06",
+          "kind": "shoes",
+          "map": "textures/shoes06-map.webp",
+          "mean": [
+            52,
+            55,
+            63
+          ],
+          "slot": 13
+        }
+      ]
+    },
+    {
+      "body": "man-workwear",
+      "path": "/assets/characters/wardrobe/man-workwear.glb",
+      "bytes": 3583184,
+      "sha256": "3343fbf10c6de155ae5f84a67279d344c9d5c0753705e5c29dafdeebd070b708",
+      "garments": [
+        {
+          "id": "male_casualsuit01-top",
+          "kind": "top",
+          "suit": "male_casualsuit01",
+          "map": "textures/male_casualsuit01-map.webp",
+          "normalMap": "textures/male_casualsuit01-normalMap.webp",
+          "mean": [
+            63,
+            74,
+            96
+          ],
+          "slot": 0
+        },
+        {
+          "id": "male_casualsuit01-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit01",
+          "map": "textures/male_casualsuit01-map.webp",
+          "normalMap": "textures/male_casualsuit01-normalMap.webp",
+          "mean": [
+            63,
+            74,
+            96
+          ],
+          "slot": 1
+        },
+        {
+          "id": "male_casualsuit02-top",
+          "kind": "top",
+          "suit": "male_casualsuit02",
+          "map": "textures/male_casualsuit02-map.webp",
+          "normalMap": "textures/male_casualsuit02-normalMap.webp",
+          "mean": [
+            55,
+            90,
+            134
+          ],
+          "slot": 2
+        },
+        {
+          "id": "male_casualsuit02-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit02",
+          "map": "textures/male_casualsuit02-map.webp",
+          "normalMap": "textures/male_casualsuit02-normalMap.webp",
+          "mean": [
+            55,
+            90,
+            134
+          ],
+          "slot": 3
+        },
+        {
+          "id": "male_casualsuit03-top",
+          "kind": "top",
+          "suit": "male_casualsuit03",
+          "map": "textures/male_casualsuit03-map.webp",
+          "normalMap": "textures/male_casualsuit03-normalMap.webp",
+          "mean": [
+            45,
+            46,
+            56
+          ],
+          "slot": 4
+        },
+        {
+          "id": "male_casualsuit03-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit03",
+          "map": "textures/male_casualsuit03-map.webp",
+          "normalMap": "textures/male_casualsuit03-normalMap.webp",
+          "mean": [
+            45,
+            46,
+            56
+          ],
+          "slot": 5
+        },
+        {
+          "id": "male_casualsuit04-top",
+          "kind": "top",
+          "suit": "male_casualsuit04",
+          "map": "textures/male_casualsuit04-map.webp",
+          "normalMap": "textures/male_casualsuit04-normalMap.webp",
+          "mean": [
+            63,
+            95,
+            123
+          ],
+          "slot": 6
+        },
+        {
+          "id": "male_casualsuit04-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit04",
+          "map": "textures/male_casualsuit04-map.webp",
+          "normalMap": "textures/male_casualsuit04-normalMap.webp",
+          "mean": [
+            63,
+            95,
+            123
+          ],
+          "slot": 7
+        },
+        {
+          "id": "male_casualsuit05-top",
+          "kind": "top",
+          "suit": "male_casualsuit05",
+          "map": "textures/male_casualsuit05-map.webp",
+          "normalMap": "textures/male_casualsuit05-normalMap.webp",
+          "mean": [
+            30,
+            34,
+            38
+          ],
+          "slot": 8
+        },
+        {
+          "id": "male_casualsuit05-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit05",
+          "map": "textures/male_casualsuit05-map.webp",
+          "normalMap": "textures/male_casualsuit05-normalMap.webp",
+          "mean": [
+            30,
+            34,
+            38
+          ],
+          "slot": 9
+        },
+        {
+          "id": "male_casualsuit06-top",
+          "kind": "top",
+          "suit": "male_casualsuit06",
+          "map": "textures/male_casualsuit06-map.webp",
+          "normalMap": "textures/male_casualsuit06-normalMap.webp",
+          "mean": [
+            168,
+            177,
+            184
+          ],
+          "slot": 10
+        },
+        {
+          "id": "male_casualsuit06-bottom",
+          "kind": "bottom",
+          "suit": "male_casualsuit06",
+          "map": "textures/male_casualsuit06-map.webp",
+          "normalMap": "textures/male_casualsuit06-normalMap.webp",
+          "mean": [
+            168,
+            177,
+            184
+          ],
+          "slot": 11
+        },
+        {
+          "id": "male_elegantsuit01-top",
+          "kind": "top",
+          "suit": "male_elegantsuit01",
+          "map": "textures/male_elegantsuit01-map.webp",
+          "mean": [
+            39,
+            39,
+            39
+          ],
+          "slot": 12
+        },
+        {
+          "id": "male_elegantsuit01-bottom",
+          "kind": "bottom",
+          "suit": "male_elegantsuit01",
+          "map": "textures/male_elegantsuit01-map.webp",
+          "mean": [
+            39,
+            39,
+            39
+          ],
+          "slot": 13
+        },
+        {
+          "id": "male_worksuit01-top",
+          "kind": "top",
+          "suit": "male_worksuit01",
+          "map": "textures/male_worksuit01-map.webp",
+          "normalMap": "textures/male_worksuit01-normalMap.webp",
+          "mean": [
+            66,
+            86,
+            116
+          ],
+          "slot": 14
+        },
+        {
+          "id": "male_worksuit01-bottom",
+          "kind": "bottom",
+          "suit": "male_worksuit01",
+          "map": "textures/male_worksuit01-map.webp",
+          "normalMap": "textures/male_worksuit01-normalMap.webp",
+          "mean": [
+            66,
+            86,
+            116
+          ],
+          "slot": 15
+        },
+        {
+          "id": "shoes01",
+          "kind": "shoes",
+          "map": "textures/shoes01-map.webp",
+          "normalMap": "textures/shoes01-normalMap.webp",
+          "mean": [
+            98,
+            62,
+            44
+          ],
+          "slot": 16
+        },
+        {
+          "id": "shoes02",
+          "kind": "shoes",
+          "map": "textures/shoes02-map.webp",
+          "mean": [
+            62,
+            60,
+            57
+          ],
+          "slot": 17
+        },
+        {
+          "id": "shoes03",
+          "kind": "shoes",
+          "map": "textures/shoes03-map.webp",
+          "mean": [
+            8,
+            7,
+            8
+          ],
+          "slot": 18
+        },
+        {
+          "id": "shoes04",
+          "kind": "shoes",
+          "map": "textures/shoes04-map.webp",
+          "normalMap": "textures/shoes04-normalMap.webp",
+          "mean": [
+            33,
+            33,
+            34
+          ],
+          "slot": 19
+        },
+        {
+          "id": "shoes05",
+          "kind": "shoes",
+          "map": "textures/shoes05-map.webp",
+          "mean": [
+            62,
+            60,
+            61
+          ],
+          "slot": 20
+        },
+        {
+          "id": "shoes06",
+          "kind": "shoes",
+          "map": "textures/shoes06-map.webp",
+          "mean": [
+            52,
+            55,
+            63
+          ],
+          "slot": 21
+        }
+      ]
+    }
+  ],
+  "textures": {
+    "female_casualsuit01-map.webp": "c3d8771d5d4b8e419dcda4bd0985d4ea65970a9c7beda1918c22a0e585075fbe",
+    "female_casualsuit01-normalMap.webp": "7670a6039c5f54274dfc1ee5959bccfc7d5bc9d6fa4010e30ca29a11037b2695",
+    "female_casualsuit02-map.webp": "4bf1787dc29ba079831d2b6bb044086e596caf3d01e653e10b17f2b04c62156b",
+    "female_casualsuit02-normalMap.webp": "0a5d57b13f03e327b9474c42cbaadf33fbe9867f868fc7a28e9d5d82218b4083",
+    "female_elegantsuit01-map.webp": "96fa3090e712e9100d1a7c894af5b60bfa3abf999aa69c13cf5b0da09726f7b8",
+    "female_elegantsuit01-normalMap.webp": "9e8444f949b21cdc6202a05472d6e531e647fa41a691f5e04b035b1770a8e0a3",
+    "female_sportsuit01-map.webp": "8412b18879531d141e6361476f0910a520a4543533cbbdcb3b0da62f633debdf",
+    "female_sportsuit01-normalMap.webp": "b4dc427073715c1fc13d78673c134c18b5a87ee0c35c15da26467e771838194c",
+    "male_casualsuit01-map.webp": "1c71ce4c638f0653da4dc1b6862f0e984c2b4aca40f460141b646f29b580790d",
+    "male_casualsuit01-normalMap.webp": "63b143c3619612c78d74b7e7e939bdba474d5349512fab60c19435aed76ff637",
+    "male_casualsuit02-map.webp": "1452c1f615eca3c46e94e49dd4560f7c0057674b3a28e6fe35e78a5b30bef9a4",
+    "male_casualsuit02-normalMap.webp": "3579871a50094fe8331e5d6f8dcfed1e0638e62fdaf0e752d04e69aca1c2ca06",
+    "male_casualsuit03-map.webp": "c130fc135f31b0363c29b635deda9e0e3329d10ba0ed9fa17f473cb1d06d8c03",
+    "male_casualsuit03-normalMap.webp": "cf8e3c7e1ad696a61ce39447e622a9b2173ab7c24b6e98cd922b84ba4f8012df",
+    "male_casualsuit04-map.webp": "430430dc23e269512fbf94707bf256a07c8d0762b581356d95d4cac7ba0a959d",
+    "male_casualsuit04-normalMap.webp": "afe2b66f4316496d0de4c47e42b8b444d82381fb294b5959cef68693d488cf2a",
+    "male_casualsuit05-map.webp": "df026e32d43eb2410e67486c635fca4b326b2a60a7adfb2f0a96f554881d13e4",
+    "male_casualsuit05-normalMap.webp": "3a0ed2d316f9510a98f369a75525f11c65761c2f18e9855a6317fcdc8fabb791",
+    "male_casualsuit06-map.webp": "ae51ce53113e5aa97b77910661486537b88c2f541c470f39b90b3ed8ac2f632f",
+    "male_casualsuit06-normalMap.webp": "8b6258008e11fe8679ef9d5287e939296dacdb296dadf9b56a671eb9191e9a21",
+    "male_elegantsuit01-map.webp": "b1a28c13f9180425c7ab38b8eede136d2f253c4276d61a9698a6b343884ff5d8",
+    "male_worksuit01-map.webp": "a1b2e24e1e500f6f1fa5952435e0d19dbee30b54350f9e37693e70a235f7933d",
+    "male_worksuit01-normalMap.webp": "360c8e05b84d547e0d62871112ccc19b68133a21598ede00d194890a8384bb2e",
+    "shoes01-map.webp": "6085a3ff7a195bc413305c892fdc1ea0ec3ae933403cc99cb687e7098f7384b4",
+    "shoes01-normalMap.webp": "cac6ab9098ea1557f9126384b9038115ba1ca65cb2dde9321753a6e92855f2e6",
+    "shoes02-map.webp": "f07dcc891c969a99d43bdaa448c4a3b2a721bbc4eb33043a842b871817670b60",
+    "shoes03-map.webp": "6a83d2374d16ca9b59aad3afba5c03edb1cf549558de8f76fa13eb1aa3e8714f",
+    "shoes04-map.webp": "91334f6d1cab1cad6af408ef9bd90edf7cc845dacec5a1be6e0f6036dee5e00a",
+    "shoes04-normalMap.webp": "cac6ab9098ea1557f9126384b9038115ba1ca65cb2dde9321753a6e92855f2e6",
+    "shoes05-map.webp": "ddd1748e7650014bbf5f34f787881fe851b152caa926b3c558191874fcfb664d",
+    "shoes06-map.webp": "3f400754b149418c0d026c99f330cfb16ae27180594bf2051b884b4e2b758634"
+  }
+}

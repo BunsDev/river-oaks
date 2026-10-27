@@ -77,21 +77,24 @@ for (const look of SHARED_APPEARANCES) test(`${look.id}: the figure sphere conta
 
 // A player-made recipe scales its body and may wear another body's hairstyle, so
 // both height limits, the longest donor hair on every body and the strongest face
-// must still sit inside the figure sphere.
-test('player-made recipes: the figure sphere contains every skinned vertex at both height limits, with any hairstyle', async t => {
-  const { DEFAULT_RECIPE, FACE_CONTROLS, RECIPE_BODIES, RECIPE_HEIGHT } = await import('../src/character-recipe.js');
-  const rigs = new Map(), previousLoad = GLTFLoader.prototype.loadAsync, previousWindow = globalThis.window, previousDocument = globalThis.document;
+// must still sit inside the figure sphere, as must the bulkiest wardrobe clothes.
+test('player-made recipes: the figure sphere contains every skinned vertex at both height limits, with any hairstyle or wardrobe clothes', async t => {
+  const { DEFAULT_RECIPE, FACE_CONTROLS, RECIPE_BODIES, RECIPE_HEIGHT, bodyClothes } = await import('../src/character-recipe.js');
+  const rigs = new Map(), previousLoad = GLTFLoader.prototype.loadAsync, previousTexture = THREE.TextureLoader.prototype.loadAsync, previousWindow = globalThis.window, previousDocument = globalThis.document;
+  THREE.TextureLoader.prototype.loadAsync = async () => new THREE.Texture();
   GLTFLoader.prototype.loadAsync = async url => {
-    const rig = url.split('/').at(-1).replace('.glb', '');
+    const rig = url.split('/assets/characters/').at(-1).replace('.glb', '');
     if (!rigs.has(rig)) rigs.set(rig, await loadCharacterRig(rig));
     return { scene: rigs.get(rig).scene };
   };
   globalThis.window = { matchMedia: () => ({ matches: false }) };
   globalThis.document = { createElement: () => ({ getContext: () => new Proxy({}, { get: () => () => {} }) }) };
-  t.after(() => { GLTFLoader.prototype.loadAsync = previousLoad; globalThis.window = previousWindow; globalThis.document = previousDocument; });
+  t.after(() => { GLTFLoader.prototype.loadAsync = previousLoad; THREE.TextureLoader.prototype.loadAsync = previousTexture; globalThis.window = previousWindow; globalThis.document = previousDocument; });
   const face = Object.fromEntries(FACE_CONTROLS.map(control => [control.id, 100]));
-  for (const body of Object.keys(RECIPE_BODIES)) for (const [height, hairStyle] of [[RECIPE_HEIGHT.min, 'ponytail01'], [RECIPE_HEIGHT.max, 'bob02']]) {
-    const label = `${body} ${height} cm ${hairStyle}`, avatar = await loadResidentAvatar(0, 'remote-cull-recipe', body, { folk: false, recipe: { ...DEFAULT_RECIPE, body, height, hairStyle, face } });
+  // The longest jacket and the widest bottom of each frame, in boots.
+  const bulky = { feminine: { top: 'female_elegantsuit01-top', bottom: 'female_casualsuit02-bottom', footwear: 'shoes03' }, masculine: { top: 'male_elegantsuit01-top', bottom: 'male_casualsuit01-bottom', footwear: 'shoes03' } };
+  for (const body of Object.keys(RECIPE_BODIES)) for (const [height, hairStyle, clothes] of [[RECIPE_HEIGHT.min, 'ponytail01', bodyClothes(body)], [RECIPE_HEIGHT.max, 'bob02', bodyClothes(body)], [RECIPE_HEIGHT.max, 'ponytail01', bulky[RECIPE_BODIES[body].frame]]]) {
+    const label = `${body} ${height} cm ${hairStyle} ${clothes.top}`, avatar = await loadResidentAvatar(0, 'remote-cull-recipe', body, { folk: false, recipe: { ...DEFAULT_RECIPE, ...clothes, body, height, hairStyle, face } });
     try {
       const measured = figureHeight(avatar), meshes = cullAvatarMeshes(avatar.object, measured);
       assert.ok(Math.abs(measured - height / 100) < 1e-9, `${label}: standing height ${measured}`);

@@ -1,6 +1,6 @@
 import { CHARACTER_HAIR, CHARACTER_PALETTES, supportsCharacterColors } from './character-customization.js';
 import { CHARACTERS, SHARED_APPEARANCES, appearanceFor, canUseAppearance, sharedAppearance, sharedCharacter } from './shared-appearances.js';
-import { EYE_COLORS, HAIR_SHADES, HAIRSTYLE_OPTIONS, OUTFIT_COLORS, RECIPE_BODIES, RECIPE_FRAMES, SHOE_COLORS, SKIN_TONES } from './character-recipe.js';
+import { EYE_COLORS, HAIR_SHADES, HAIRSTYLE_OPTIONS, OUTFIT_COLORS, RECIPE_BODIES, RECIPE_BOTTOMS, RECIPE_FOOTWEAR, RECIPE_FRAMES, RECIPE_TOPS, SHOE_COLORS, SKIN_TONES, bodyClothes } from './character-recipe.js';
 
 // Guided-start copy is derived from the validated catalog, so the Studio never
 // suggests a form, wardrobe or color that the definition contract would reject.
@@ -23,6 +23,10 @@ export function studioChoices(ownerId,appearanceId){
 function describeRecipe(recipe){
   const body=RECIPE_BODIES[recipe.body],parts=['Your own',RECIPE_FRAMES[body.frame].label,body.outfit,`${recipe.height} cm`,`${SKIN_TONES[recipe.skin].label} skin`,`${EYE_COLORS[recipe.eyes].label} eyes`,
     `${HAIR_SHADES[recipe.hairColor].label} hair, ${HAIRSTYLE_OPTIONS[recipe.hairStyle].label.toLowerCase()}`];
+  // Clothes from the wardrobe are named; the body's own are its outfit's name.
+  const own=bodyClothes(recipe.body);
+  if(recipe.top!==own.top||recipe.bottom!==own.bottom)parts.push(`${RECIPE_TOPS[recipe.top].label} and ${RECIPE_BOTTOMS[recipe.bottom].label.toLowerCase()}`);
+  if(recipe.footwear!==own.footwear)parts.push(RECIPE_FOOTWEAR[recipe.footwear].label);
   if(OUTFIT_COLORS[recipe.outfitColor].color)parts.push(`${OUTFIT_COLORS[recipe.outfitColor].label} outfit`);
   if(SHOE_COLORS[recipe.shoeColor].color)parts.push(`${SHOE_COLORS[recipe.shoeColor].label} shoes`);
   return parts.join(', ');

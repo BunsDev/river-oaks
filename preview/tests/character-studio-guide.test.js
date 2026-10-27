@@ -43,13 +43,16 @@ test('look descriptions name what changed for announcements',()=>{
 
 test('your own look is guided by its recipe and described by what was chosen', async () => {
   const { recipeCharacterDefinition } = await import('../src/character-definition.js');
-  const { DEFAULT_RECIPE } = await import('../src/character-recipe.js');
+  const { DEFAULT_RECIPE, bodyClothes } = await import('../src/character-recipe.js');
   const choices=studioChoices(ownerId,'custom-human');
   assert.equal(choices.character,'custom');assert.equal(choices.colors,false);assert.deepEqual(choices.variants,[]);
   assert.match(choices.summary,/body, height, face, skin, eyes, hair, outfit and shoes/);
   const plain=describeLook(recipeCharacterDefinition(ownerId,DEFAULT_RECIPE));
   assert.equal(plain,'Your own, Feminine, Daywear, 166 cm, Warm beige skin, Brown eyes, Dark brown hair, ponytail');
-  const dressed=describeLook(recipeCharacterDefinition(ownerId,{...DEFAULT_RECIPE,body:'man-tailored',height:187,outfitColor:'navy',shoeColor:'tan'}));
+  const dressed=describeLook(recipeCharacterDefinition(ownerId,{...DEFAULT_RECIPE,...bodyClothes('man-tailored'),body:'man-tailored',height:187,outfitColor:'navy',shoeColor:'tan'}));
   assert.equal(dressed,'Your own, Masculine, Tailored suit, 187 cm, Warm beige skin, Brown eyes, Dark brown hair, ponytail, Navy outfit, Tan shoes');
+  // Clothes from the wardrobe are named by what was chosen.
+  const mixed=describeLook(recipeCharacterDefinition(ownerId,{...DEFAULT_RECIPE,top:'female_sportsuit01-top',bottom:'female_elegantsuit01-bottom',footwear:'shoes05'}));
+  assert.equal(mixed,'Your own, Feminine, Daywear, 166 cm, Warm beige skin, Brown eyes, Dark brown hair, ponytail, Crop top and pencil skirt, White trainers');
   assert.equal(studioRoster(ownerId).some(person=>person.id==='custom'),false,'the roster lists authored people; the Studio adds Your own itself');
 });
