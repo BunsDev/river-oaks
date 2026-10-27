@@ -1,4 +1,4 @@
-import { EYE_COLORS, FACE_CONTROLS, FACE_FEATURES, HAIR_SHADES, HAIRSTYLE_OPTIONS, OUTFIT_COLORS, RECIPE_BODIES, RECIPE_CATEGORIES, RECIPE_FRAMES, RECIPE_HEIGHT, SHOE_COLORS, SKIN_TONES } from './character-recipe.js';
+import { EYE_COLORS, FACE_CONTROLS, FACE_FEATURES, FACE_STEP, HAIR_SHADES, HAIRSTYLE_OPTIONS, OUTFIT_COLORS, RECIPE_BODIES, RECIPE_CATEGORIES, RECIPE_FRAMES, RECIPE_HEIGHT, SHOE_COLORS, SKIN_TONES } from './character-recipe.js';
 
 // The Studio's Make your own controls. Every control is generated from the
 // recipe catalogue, so it can only offer what the definition contract accepts.
@@ -10,8 +10,10 @@ const LOCK = '<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="9" widt
 const AS_MADE = 'repeating-conic-gradient(#d9d2c3 0 25%,#9fb3a7 0 50%) 50%/12px 12px';
 const tools = category => `<div class="cs-tools"><button type="button" data-roll="${category}" aria-label="Roll ${RECIPE_CATEGORY_LABELS[category].toLowerCase()}" title="Roll ${RECIPE_CATEGORY_LABELS[category].toLowerCase()}">${DICE}</button><button type="button" data-lock="${category}" aria-pressed="false" aria-label="Keep ${RECIPE_CATEGORY_LABELS[category].toLowerCase()} when surprising" title="Keep when surprising">${LOCK}</button></div>`;
 const swatches = (name, options, field) => `<div class="cs-swatches">${Object.entries(options).map(([id, item]) => `<label class="cs-swatch" data-${field}="${id}" title="${item.label}" style="--cs-swatch:${item.color ?? AS_MADE}"><input type="radio" name="cs-${name}" value="${id}" aria-label="${item.label}"></label>`).join('')}</div>`;
-const category = (id, body) => `<fieldset class="cs-category" data-category="${id}"><legend>${RECIPE_CATEGORY_LABELS[id]}</legend>${tools(id)}${body}</fieldset>`;
-const slider = control => `<label class="cs-slider"><span>${control.label}</span><input type="range" name="cs-face-${control.id}" min="${control.low ? -100 : 0}" max="100" step="5" aria-label="${FACE_FEATURES[control.feature]} ${control.label.toLowerCase()}"><output data-face-value="${control.id}"></output></label>`;
+// The dice and lock sit beside the legend but outside the fieldset: inside, absolute positions start below the
+// legend, over the category's first row; inside the legend, they would join the group's name.
+const category = (id, body) => `<div class="cs-category" data-category="${id}"><fieldset><legend>${RECIPE_CATEGORY_LABELS[id]}</legend>${body}</fieldset>${tools(id)}</div>`;
+const slider = control => `<label class="cs-slider"><span>${control.label}</span><input type="range" name="cs-face-${control.id}" min="${control.low ? -100 : 0}" max="100" step="${FACE_STEP}" aria-label="${FACE_FEATURES[control.feature]} ${control.label.toLowerCase()}"><output data-face-value="${control.id}"></output></label>`;
 
 export function recipeMarkup() {
   return `<div class="cs-create" data-cs-create hidden>

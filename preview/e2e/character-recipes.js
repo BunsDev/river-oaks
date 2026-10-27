@@ -22,6 +22,15 @@ async page => {
   await shown(); const start = await recipe();
   check(await dialog.locator('[data-character=custom] input').isChecked() && await dialog.locator('[data-cs-wardrobe-step]').isHidden(), 'Your own is chosen in the roster, with the recipe editor in place of authored wardrobes');
   await page.screenshot({ path: 'output/playwright/character-recipe-start.png' });
+  // Every category's dice and lock can be pressed: nothing in its category lies over them.
+  const covered = await dialog.evaluate(node => [...node.querySelectorAll('.cs-tools button')].filter(button => {
+    button.scrollIntoView({ block: 'center' }); const box = button.getBoundingClientRect();
+    return !button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+  }).map(button => button.getAttribute('aria-label')));
+  check(covered.length === 0, `Every roll and keep button is uncovered${covered.length ? `: ${covered.join(', ')}` : ''}`);
+  // Each face slider has room to travel beside its label and value.
+  const tracks = await dialog.evaluate(node => [...node.querySelectorAll('.cs-face input[type=range]')].map(input => Math.round(input.getBoundingClientRect().width)));
+  check(tracks.length === 16 && Math.min(...tracks) >= 120, `Face sliders are at least 120 px wide (${Math.min(...tracks)} px)`);
   // A face slider moves by keyboard and changes only its feature.
   const nose = dialog.getByRole('slider', { name: 'Nose width', exact: true });
   await nose.focus(); for (let i = 0; i < 4; i++) await page.keyboard.press(start.face.noseWidth >= 80 ? 'ArrowLeft' : 'ArrowRight');
@@ -43,7 +52,7 @@ async page => {
   await dialog.getByRole('button', { name: 'Keep skin when surprising', exact: true }).click();
   // The frame keeps the outfit style; height reaches its limit by keyboard.
   const frame = (await recipe()).body.startsWith('woman') ? 'Masculine' : 'Feminine', outfitBefore = (await recipe()).body;
-  await dialog.locator('[data-cs-frames]').getByText(frame, { exact: true }).click(); await shown();
+  await dialog.locator('[data-cs-frames]').getByRole('radio', { name: frame, exact: true }).click(); await shown();
   check((await recipe()).body !== outfitBefore && (await recipe()).body.startsWith(frame === 'Masculine' ? 'man' : 'woman'), `Switching to the ${frame.toLowerCase()} frame keeps an outfit of the same style`);
   await dialog.getByRole('slider', { name: 'Height', exact: true }).focus(); await page.keyboard.press('End'); await shown();
   check((await recipe()).height === 200, 'Height reaches 200 cm');

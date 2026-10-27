@@ -4,9 +4,10 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { loadCharacterRig } from './helpers/character-rig.js';
 import { loadResidentAvatar } from '../src/avatars.js';
-import { DEFAULT_RECIPE, EYE_COLORS, FACE_CONTROLS, RECIPE_BODIES, rollCharacterRecipe } from '../src/character-recipe.js';
+import { DEFAULT_RECIPE, EYE_COLORS, FACE_CONTROLS, RECIPE_BODIES, SKIN_TONES, rollCharacterRecipe } from '../src/character-recipe.js';
 import { SKIN_TEXTURES, irisTexture, recipeSkinSource } from '../src/character-recipe-look.js';
 import { HAIRSTYLES } from '../src/resident-hairstyle.js';
+import { textureGain } from '../src/resident-style.js';
 
 // Rigs as the browser loads them, with a stand-in texture per material named for
 // it (the node helper drops images), so map swaps can be told apart. Templates
@@ -87,6 +88,20 @@ test('each body wears a light or deep skin texture by tone, gained toward the to
       } finally { avatar.dispose(); }
     }
   });
+});
+
+// A tone is drawn as a gain of a real skin texture. A gain that differs much between channels tints the skin, and a
+// large one clips its highlights: Porcelain, a display colour, needed 2.9x in blue and rendered chalk-white.
+test('every skin tone is a near-uniform gain of the texture each body wears for it, light to dark in even steps', () => {
+  const luminance = color => .2126 * color.r + .7152 * color.g + .0722 * color.b;
+  const tones = Object.values(SKIN_TONES).map(tone => new THREE.Color(tone.color));
+  for (let i = 1; i < tones.length; i++) assert.ok(luminance(tones[i - 1]) / luminance(tones[i]) > 1.15, `tone ${i} is a distinct step darker`);
+  for (const body of Object.keys(RECIPE_BODIES)) for (const [skin, tone] of Object.entries(SKIN_TONES)) {
+    const source = recipeSkinSource({ ...DEFAULT_RECIPE, body, skin }), gain = textureGain(SKIN_TEXTURES[source].mean, new THREE.Color(tone.color), 4);
+    const label = `${body} ${skin} from ${source}: ${gain.map(value => value.toFixed(2)).join(' ')}`;
+    assert.ok(Math.max(...gain) / Math.min(...gain) < 1.4, `${label} keeps the texture's hue`);
+    assert.ok(Math.max(...gain) < 3.5 && Math.min(...gain) > .2, `${label} stays moderate`);
+  }
 });
 
 test('a generated iris keeps the shipped eye layout: a dark pupil, the chosen iris colour, and the sclera around it', () => {

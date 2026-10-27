@@ -755,8 +755,8 @@ catalogue `river-oaks-recipes-v1`):
 - **body:** one of the six shipped CC0 bodies, a feminine or masculine frame with the
   outfit made for it;
 - **height:** 150–200 cm;
-- **face:** sixteen sliders over the bodies' face targets, capped at a 0.7 weight, with
-  left and right moving together;
+- **face:** sixteen sliders over the bodies' face targets, in steps of 5, capped at a 0.7
+  weight, with left and right moving together;
 - **colours:** skin tone, eye colour, hair colour, outfit colour and shoe colour;
 - **hairstyle:** one of the hairstyles.
 
@@ -783,7 +783,11 @@ that were not pinned before are now pinned, with receipts.
   hero and studio preview render it in the studio;
 - the face is baked from the targets at load, as for residents;
 - the hairstyle is moved onto the head and refitted;
-- skin, hair and garments are tinted, and an iris texture is drawn for the chosen eyes.
+- skin, hair and garments are tinted, and an iris texture is drawn for the chosen eyes;
+- skin tones are albedos, stepped evenly from just above the shipped light skins to
+  just below the deep ones, so each is a near-uniform gain of a real skin texture. Used
+  as albedos, display colours needed nearly 3x in blue, and the lightest tone rendered
+  chalk-white.
 
 Builds older than `custom-human` show the account's authored fallback.
 

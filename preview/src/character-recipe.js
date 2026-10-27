@@ -26,6 +26,8 @@ export const RECIPE_HEIGHT = freeze({ min: 150, max: 200, typical: { feminine: 1
 // right targets move together. Full travel is a 0.7 weight: a different person,
 // not a caricature.
 export const FACE_LIMIT = 0.7;
+// Slider values move in steps of 5, so every stored face is exactly what its slider shows.
+export const FACE_STEP = 5;
 export const FACE_FEATURES = freeze({ head: 'Head', nose: 'Nose', mouth: 'Mouth', chin: 'Chin and jaw', cheeks: 'Cheeks', eyes: 'Eyes', brows: 'Brows' });
 export const FACE_CONTROLS = freeze([
   { id: 'head', feature: 'head', label: 'Shape', low: ['head-triangular'], high: ['head-square'], lowLabel: 'Tapered', highLabel: 'Square' },
@@ -48,17 +50,21 @@ export const FACE_CONTROLS = freeze([
 
 // Colours are targets: a skin's or hair's texture mean, an iris, or a garment tint.
 // `null` keeps the garment as it was made.
+// Skin tones are albedos, not display colours. They step evenly in luminance from
+// 1.45x the shipped light skins' mean to 0.75x the deep ones', with a hue between
+// theirs, so each is a near-uniform gain of a real texture (character-recipe-look.js).
+// Display colours needed up to 2.9x in blue, and Porcelain rendered chalk-white.
 export const SKIN_TONES = freeze({
-  porcelain: { label: 'Porcelain', color: '#f0d5c2' },
-  fair: { label: 'Fair', color: '#e6bf9f' },
-  light: { label: 'Light', color: '#d8aa86' },
-  beige: { label: 'Warm beige', color: '#c99872' },
-  olive: { label: 'Olive', color: '#b58a62' },
-  tan: { label: 'Tan', color: '#a07350' },
-  golden: { label: 'Golden brown', color: '#875c3c' },
-  brown: { label: 'Brown', color: '#6e4630' },
-  deep: { label: 'Deep brown', color: '#553624' },
-  ebony: { label: 'Ebony', color: '#3e281c' },
+  porcelain: { label: 'Porcelain', color: '#eeae8c' },
+  fair: { label: 'Fair', color: '#cd9679' },
+  light: { label: 'Light', color: '#b38066' },
+  beige: { label: 'Warm beige', color: '#9b6d56' },
+  olive: { label: 'Olive', color: '#875d48' },
+  tan: { label: 'Tan', color: '#754f3c' },
+  golden: { label: 'Golden brown', color: '#654232' },
+  brown: { label: 'Brown', color: '#573729' },
+  deep: { label: 'Deep brown', color: '#4b2e21' },
+  ebony: { label: 'Ebony', color: '#40261b' },
 });
 // Iris colours as painted on the eye texture (the authored brown is about #45100a).
 export const EYE_COLORS = freeze({
@@ -133,11 +139,12 @@ const exact = (value, keys) => record(value) && Object.keys(value).length === ke
 const key = (catalogue, value) => typeof value === 'string' && Object.hasOwn(catalogue, value);
 const within = (value, min, max) => Number.isSafeInteger(value) && value >= min && value <= max;
 const faceRange = control => control.low ? -100 : 0;
+const faceValue = (value, control) => within(value, faceRange(control), 100) && value % FACE_STEP === 0;
 
 // The canonical copy of a recipe, or a TypeError. Never repairs a malformed one.
 export function characterRecipe(value) {
   const valid = exact(value, FIELDS) && key(RECIPE_BODIES, value.body) && within(value.height, RECIPE_HEIGHT.min, RECIPE_HEIGHT.max)
-    && exact(value.face, FACE_CONTROLS.map(control => control.id)) && FACE_CONTROLS.every(control => within(value.face[control.id], faceRange(control), 100))
+    && exact(value.face, FACE_CONTROLS.map(control => control.id)) && FACE_CONTROLS.every(control => faceValue(value.face[control.id], control))
     && key(SKIN_TONES, value.skin) && key(EYE_COLORS, value.eyes) && key(HAIRSTYLE_OPTIONS, value.hairStyle) && key(HAIR_SHADES, value.hairColor)
     && key(OUTFIT_COLORS, value.outfitColor) && key(SHOE_COLORS, value.shoeColor);
   if (!valid) throw new TypeError('Invalid character recipe');
@@ -180,7 +187,7 @@ const rolls = {
   // About half the features differ from the base face, each by a moderate amount.
   face: random => ({ face: Object.fromEntries(FACE_CONTROLS.map(control => {
     if (random() < .5) return [control.id, 0];
-    const amount = 20 + Math.floor(random() * 61);
+    const amount = 20 + FACE_STEP * Math.floor(random() * 13);
     return [control.id, control.low && random() < .5 ? -amount : amount];
   })) }),
   skin: random => ({ skin: pick(random, Object.keys(SKIN_TONES)) }),

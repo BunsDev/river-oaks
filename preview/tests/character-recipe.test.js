@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CUSTOM_APPEARANCE_ID, DEFAULT_RECIPE, FACE_CONTROLS, FACE_LIMIT, HAIRSTYLE_OPTIONS, RECIPE_BODIES, RECIPE_CATEGORIES, RECIPE_HEIGHT, SKIN_TONES,
+import { CUSTOM_APPEARANCE_ID, DEFAULT_RECIPE, FACE_CONTROLS, FACE_LIMIT, FACE_STEP, HAIRSTYLE_OPTIONS, RECIPE_BODIES, RECIPE_CATEGORIES, RECIPE_HEIGHT, SKIN_TONES,
   characterRecipe, recipeFaceShapes, recipeFrame, rollCharacterRecipe } from '../src/character-recipe.js';
 import { characterAppearanceFor, characterDefinitionFor, migrateCharacterAppearance, recipeCharacterDefinition, validateCharacterDefinition } from '../src/character-definition.js';
 import { customizedCharacterDefinition } from '../src/character-customization.js';
@@ -71,6 +71,7 @@ test('malformed, forged and older-version recipe records fail closed', () => {
     { body: 'jevica' }, { body: 'woman-realistic-tailored' }, { skin: 'constructor' }, { skin: '__proto__' }, { eyes: 'violet' },
     { hairStyle: 'long01' }, { hairColor: '#ff00ff' }, { outfitColor: 'gold' }, { shoeColor: null }, { extra: true },
     { face: { ...recipe.face, noseLength: -10 } }, { face: { ...recipe.face, head: 101 } }, { face: { ...recipe.face, eyeSize: 1.5 } },
+    { face: { ...recipe.face, noseWidth: -49 } }, { face: { ...recipe.face, eyeSize: 33 } },
     { face: { ...recipe.face, smile: 10 } }, { face: Object.fromEntries(Object.entries(recipe.face).slice(1)) }, { face: [] },
   ];
   for (const change of tampered) {
@@ -104,6 +105,15 @@ test('rolls are seeded, valid, always change something, and leave other categori
   for (const category of Object.keys(RECIPE_CATEGORIES)) assert.notDeepEqual(rollCharacterRecipe({ from: DEFAULT_RECIPE, categories: [category], random: seeded(5) }), DEFAULT_RECIPE, category);
   assert.throws(() => rollCharacterRecipe({ categories: ['wings'] }), /Unknown recipe category/);
   assert.throws(() => rollCharacterRecipe({ from: { ...DEFAULT_RECIPE, height: 300 } }), /Invalid character recipe/);
+});
+
+// The Studio's sliders move in FACE_STEP steps. A rolled -49 showed as -50 on its slider, and four key presses
+// then moved the face by 19 instead of 20 (the character-recipes journey).
+test('every rolled face value is one its slider can show', () => {
+  for (let seed = 1; seed <= 400; seed++) {
+    const { face } = rollCharacterRecipe({ random: seeded(seed) });
+    for (const control of FACE_CONTROLS) assert.ok(Number.isInteger(face[control.id] / FACE_STEP), `seed ${seed} ${control.id} ${face[control.id]}`);
+  }
 });
 
 test('random starts reach every body, skin and hairstyle, with heights about each frame', () => {

@@ -13,7 +13,7 @@
     "preview/src/boot-fitting.js": "f4603d1e64bdeadc19f052a0fdf179a5bd04ff8a411958594ccb81dd60b50795",
     "preview/src/character-bodice-fit.js": "30f7e82818aeb9525a16c1b2d2c39f0fd111ca4c3aec2923f42d11ef59924321",
     "preview/src/character-recipe-look.js": "d9d585b06fde84e8d83485c7b181e23f9caee1cf37a759977d78dc3a25e701f5",
-    "preview/src/character-recipe.js": "6413753d719be5a8aa5bdec50ad7f486ebec3d00ae5c826474863bae84317327",
+    "preview/src/character-recipe.js": "bd23cfede8332049445a8e376d2df460ccce15c9236ce60e9eff3e359d69ec23",
     "preview/src/coat-back.js": "7c8d92ee10d801a396fa95897f08aeb9bc8227fbd5b67b53be276512a5a24955",
     "preview/src/coat-tail-geometry.js": "c332fef4f2663bc61c2e7cc60bc4197cab9de534a01c34cf24b67328857a0824",
     "preview/src/coat-tail-skinning.js": "7e32f0d52a80634154a5783ff180b8f0ed12fd0099f52793946217868d7ae939",

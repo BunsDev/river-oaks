@@ -223,6 +223,75 @@ Recorded on the uncommitted branch at base 8b73888a (2026-10-26).
     1 skipped; 928 pass, 227 skipped; 127 pass, 5 skipped. Studio and recipe tests:
     23 of 23.
 
+- **Experience journeys after the preview fix** (snapshot, 01:35–03:02Z;
+  `scratchpad/recipes-browser-4.log`):
+  - **Passed:** `character-studio`, `character-studio-layout`, `character-portrait`,
+    `character-studio-paused` and `character-fidelity`.
+  - **Failed:** `character-recipes`, again on "A face slider changes only its own
+    feature", from a second bug in this branch.
+    - Rolls drew face values on any integer, such as −49, while the slider steps by 5.
+      The browser showed −49 as −50 on its slider, and four key presses moved the face by
+      19.
+    - Fix: `FACE_STEP = 5` is shared by the rolls (20–80 in steps of 5), the slider and
+      validation, which rejects values off the step.
+    - New test: "every rolled face value is one its slider can show". Against the old
+      module, it and the extended tamper list (−49, 33) fail.
+    - Focused: 144 pass, 2 skipped (`.runtime/recipes/focused-step.log`).
+- **Journeys with the step fix** (03:04–03:06Z; `scratchpad/recipes-browser-5.log`):
+  - `character-studio` passed. `character-recipes` passed the face-slider checks, then
+    failed on a third bug in this branch: "Keep skin when surprising" could not be
+    clicked, because the Tan swatch lay over it.
+  - Each category's 44 px dice and lock sat at `top:-12px` beside a legend about 24 px
+    tall, so the category's first row of content covered their lower half. The first
+    capture shows the same overlap on Body's controls and on the face's "Chin and jaw"
+    heading.
+  - First fix (a 44 px legend row, with the tools at `top:0`) made it worse: the new check
+    found nearly every button covered (03:07–03:10Z; `scratchpad/recipes-browser-6.log`).
+    In a fieldset, absolute positions start below the legend, so `top:0` is the first row
+    of content.
+  - Fix: each category is a `div` holding its fieldset and, beside it, the tools, aligned
+    with a 44 px legend row. Inside the legend, the buttons would join the group's name.
+  - `character-recipes` now checks that every roll and keep button is the topmost
+    element at its centre.
+  - `character-recipe.js` is a garment-bake input, through `avatars.js`, so the five
+    receipts were rebaked. The morph data is byte-identical, and the bake and provenance
+    tests pass, 390 of 390.
+  - With the tools fixed, `character-recipes` reached its frame step for the first time
+    and failed there (03:13–03:16Z; `scratchpad/recipes-browser-7.log`). It clicked the
+    label text "Feminine", which the label's transparent radio covers by design. It now
+    clicks the radio by role, as the other Studio journeys do. The whole journey then
+    passed, 03:19–03:21Z (`scratchpad/recipes-browser-8.log`).
+  - The passing run's first capture showed the face sliders 30–40 px wide. At 1100 px and
+    up, the face had four fixed columns of about 154 px, beside a 6.2em label and a 2.8em
+    value. The columns are now at least 15rem: two in the Studio's pane, more on wider
+    screens. `character-recipes` checks that all 16 face sliders are at least 120 px wide.
+  - With the column fix, `character-recipes`, `character-studio-layout` and
+    `character-studio` passed (03:23–03:25Z; `scratchpad/recipes-browser-9.log`).
+- **Skin tones** (found by inspecting the random-person captures):
+  - The swatches were display colours used as albedos. Porcelain needed per-channel gains
+    of 1.3–1.6 in red and 2.8–3.3 in blue, so it and Fair rendered chalk-white.
+  - Brown brightened a deep texture 2.3x into saturated orange, and Golden brown on
+    `woman-casual` hit the gain cap (4.08).
+  - Captures of all ten tones on `woman-daywear` and `man-tailored`, before and after:
+    `scratchpad/skins-compare.png`, from the local tool `preview/e2e/recipe-skin-captures.js`
+    (not committed).
+  - Fix: the tones are albedos. They step evenly in luminance from 1.45x the shipped
+    light skins' mean to 0.75x the deep ones', with hue interpolated between them.
+    - Worst channel spread over the six bodies: 2.20 before, 1.37 after.
+    - Largest gain: 3.30 after, within the cap.
+  - New test: "every skin tone is a near-uniform gain of the texture each body wears for
+    it". It fails on the old palette (`woman-daywear porcelain … 1.46 2.15 2.87`).
+  - Receipts rebaked again, with byte-identical morph data. Focused tests: 167 pass, 2
+    skipped (`.runtime/recipes/focused-skin.log`). Bake tests: 381 of 381.
+  - Main 9ee35b4c is merged, bringing #693's queue-wake recheck. One more core run at
+    03:08Z failed only the land-PR wake test that #693 fixes
+    (`.runtime/recipes/verify-step-1-land-wake-flake.log`).
+- **Hosted checks on 1cb4d8fc:**
+  - `preview shared (worlds-and-creator)` passed, including `character-studio-worlds`.
+  - `preview shared (development)` failed in `crime-shared` ("A timed evade (U) beats the
+    rival's telegraphed counter"), as main's run 40420131202 does, before
+    `character-studio-shared` ran. That job was rerun.
+
 ## Gaps
 
 - Phase 2 and Phase 3 aren't started; Phase 3 waits for Val's authorization.
