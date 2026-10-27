@@ -65,6 +65,29 @@ test('the halls and the café offer real seats: free floor, approach clear, work
   assert.deepEqual(fitout.ground.map(room => room.roomId), ['T1-F1-hall', 'T2-F1-hall', 'T3-F1-hall', 'C-hall']);
 });
 
+// #510: a public seat's title is what the sit prompt and the seat list show. Every public seat
+// opens the sitter's own private desk and nothing shared, so its title names the furniture and
+// promises no review, demo, presentation or booking the seat does not run.
+test('every public seat is titled for the furniture it is, and promises no shared activity', () => {
+  const titles = fitout.ground.flatMap(room => room.seats.map(seat => [seat.id, seat.kind, seat.title]));
+  for (const [id, kind, title] of titles) {
+    assert.match(title, kind === 'stool' ? / workbench$/ : / table$/, `${id} is titled for its ${kind}`);
+    assert.doesNotMatch(title, /review|demo|present|collaborat|book|meeting|creator/i, `${id}: "${title}" promises an activity the seat does not run`);
+    assert.doesNotMatch(title, /(table|workbench)\b.*\b(table|workbench)/i, `${id}: "${title}" names its furniture once`);
+  }
+  assert.deepEqual([...new Set(titles.map(([, , title]) => title))].sort(),
+    ['Atelier work table', 'Atelier workbench', 'Garden café table', 'Shared project table', 'Shared project workbench', 'Shared work lounge table']);
+});
+
+// #510 Decision 2: a hall's use is its room name ("The Commons · …") on the street and in the
+// places list. The halls run no shared activity, so their names promise none either.
+test('every public hall is named for what it holds, and promises no shared activity', () => {
+  for (const tower of CAMPUS.towers) {
+    const use = tower.levels[0].hall.use;
+    assert.doesNotMatch(use, /review|demo|present|collaborat|book|meeting|creator/i, `${tower.id} hall: "${use}" promises an activity the hall does not run`);
+  }
+});
+
 test('the fit-out draws every desk with one neutral screen and every seat, and releases what it owns', async () => {
   assert.equal(buildGardenCampusFitout(await loadDistrictData()), null, 'nothing without the campus');
   const group = buildGardenCampusFitout(await loadDistrictData({ districtRevision: 'river-oaks-gardens-3' }));

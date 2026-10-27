@@ -20,7 +20,12 @@ export function createTownChatDock(section) {
     if (dock.open) {
       if (matchMedia('(max-width:900px)').matches) {
         document.querySelectorAll('.hud-space:not([hidden]) .hud-space-header button').forEach(button => button.click());
+        // Closing also cancels a person selection still in flight, so it always runs. It
+        // returns focus to the scene, though: with no conversation open, focus goes back
+        // where it was, as the Town chat command has just focused the chat field.
+        const conversationOpen = document.querySelector('#community-dialogue')?.hidden === false, focused = document.activeElement;
         document.querySelector('#community-close')?.click();
+        if (!conversationOpen && focused?.isConnected && document.activeElement !== focused) focused.focus({ preventScroll: true });
       }
     }
   });

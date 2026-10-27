@@ -50,6 +50,11 @@ export function createMemoryAvatarPreferences() {
         records.set(userId,{...preference,version:(old?.version??0)+1});
       return structuredClone(records.get(userId));
     },
+    // Account erasure: the stored look and movement.
+    async eraseUser(userId) {
+      if(!validId(userId))throw new Error('Invalid account');
+      records.delete(userId);
+    },
   };
 }
 
@@ -99,6 +104,7 @@ export function createRedisAvatarPreferences({redis,prefix}={}) {
       const preference=normalize(value,userId);
       return decode(await redis.eval(SAVE,1,key,id(userId),preference.appearance,preference.movement,MAX_ACCOUNTS,preference.character?JSON.stringify(preference.character):''),userId);
     },
+    async eraseUser(userId) {await redis.hdel(key,id(userId));},
   };
 }
 
@@ -112,7 +118,7 @@ export async function legacyDefaultAppearance(redis,stateKey,userId) {
   const room=JSON.parse(inflateSync(packed,{maxOutputLength:16*1024*1024}).toString('utf8'));
   const saved=room?.checkpoint;
   if(![1,2,3].includes(room?.version) || room.version>=2 && room.worldId!==DEFAULT_WORLD_ID
-    || !saved || ![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].includes(saved.version) || saved.version>=2 && saved.worldId!==DEFAULT_WORLD_ID)
+    || !saved || ![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17].includes(saved.version) || saved.version>=2 && saved.worldId!==DEFAULT_WORLD_ID)
     throw new Error('Invalid legacy account appearance checkpoint');
   const envelope=saved.version===1
     ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}

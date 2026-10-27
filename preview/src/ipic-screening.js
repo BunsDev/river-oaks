@@ -33,7 +33,15 @@ export function pickScreeningSource(media, element) {
 // Retry (a new attempt from the first encoding) instead of an endless spinner.
 export const SCREENING_LOAD = Object.freeze({ stallMs: 30_000 });
 // MediaError codes: 1 aborted (our own reload or switch), 2 network, 3 decode, 4 source not supported.
-const MEDIA_ERR = Object.freeze({ ABORTED: 1, NETWORK: 2 });
+const MEDIA_ERR = Object.freeze({ ABORTED: 1, NETWORK: 2, SRC_NOT_SUPPORTED: 4 });
+// A download that fails before any data (a 404, a server that is down) is reported as code 4, like a
+// file the browser cannot read. Once every encoding has failed that way, one request per file says which:
+// true when the server has the file. No answer, 404/410, a server error, or an HTML page (a single-page
+// fallback) mean it was not sent; any other refusal (a host that rejects HEAD) does not say so.
+export const probeScreeningSource = src => typeof fetch === 'function'
+  ? fetch(src, { method: 'HEAD', cache: 'no-store' }).then(reply => !([404, 410].includes(reply.status) || reply.status >= 500
+    || (reply.ok && /^text\/html/i.test(reply.headers.get('content-type') ?? ''))), () => false)
+  : Promise.resolve(true);
 
 // Server time estimate. A sync reply measured over a round trip is accurate to half that
 // trip; a snapshot frame only bounds it (its age and latency are unknown). The estimate
@@ -64,7 +72,7 @@ export function createServerClock({ now = () => performance.now() } = {}) {
 // Each element load (a new film, a fallback encoding, Retry, a stop) starts a new generation;
 // a play() promise or a frame callback from an earlier generation changes nothing (#498).
 // catalog is SCREENING_MEDIA; only test pages pass their own (preview/e2e/fixtures/ipic-screen.js).
-export function createScreeningPlayer({ media: element, clock, onChange = () => {}, now = () => performance.now(), catalog = SCREENING_MEDIA }) {
+export function createScreeningPlayer({ media: element, clock, onChange = () => {}, now = () => performance.now(), catalog = SCREENING_MEDIA, probe = probeScreeningSource }) {
   let shared = null, mediaId = null, state = 'idle', generation = 0, playing = null, rate = 1, drift = 0, measured = 0, captions = false;
   let attempt = null, failure = null, presented = null, frameRequest = 0, progressAt = now(), playAt = 0;
   const set = next => { if (state !== next) { state = next; progressAt = now(); onChange(stats()); } };
@@ -81,8 +89,8 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
       // A failed download is not the codec's fault: report it rather than trying another encoding.
       if (code === MEDIA_ERR.NETWORK || globalThis.navigator?.onLine === false) return fail('network');
       const blocked = state === 'blocked';
-      attempt.current.result = 'decode';
-      if (!next()) fail('decode');
+      attempt.current.result = 'decode'; attempt.current.code = code;
+      if (!next()) unplayable();
       // A genuine decode error may select another encoding, but cannot grant autoplay.
       else if (blocked) set('blocked');
     },
@@ -97,7 +105,8 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
     frameRequest = element.requestVideoFrameCallback((at, meta) => {
       if (token !== generation || state === 'disposed') return;
       frameRequest = 0;
-      if (meta) presented = { mediaTimeMs: Math.round(meta.mediaTime * 1000), frames: meta.presentedFrames, at, generation };
+      // shownAt: when the compositor expects the frame on the display (callback time where not reported).
+      if (meta) presented = { mediaTimeMs: Math.round(meta.mediaTime * 1000), frames: meta.presentedFrames, at, shownAt: meta.expectedDisplayTime ?? at, generation };
       watchFrames();
     });
   }
@@ -109,8 +118,23 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
     if (attempt?.current?.result === 'loading') attempt.current.result = reason;
     set(reason === 'autoplay' ? 'blocked' : 'error');
   }
+  // Every encoding failed: the film stops here at once, with Retry. Then, if a file may simply not have been
+  // sent, the answer to one request per file corrects the reason to network. Only the reason changes, and
+  // only for this failure: Retry, a switch or a stop starts a new generation first.
+  function unplayable() {
+    const unread = attempt.tried.filter(item => item.code === MEDIA_ERR.SRC_NOT_SUPPORTED);
+    fail('decode');
+    if (!unread.length) return;
+    const token = generation;
+    Promise.all(unread.map(item => probe(item.src).catch(() => false))).then(found => {
+      if (token !== generation || found.every(Boolean)) return;
+      unread.forEach((item, i) => { if (!found[i]) item.result = 'network'; });
+      failure = 'network'; onChange(stats());
+    });
+  }
   function reset() {
-    generation++; playing = null; presented = null; element.pause();
+    // Diagnostics belong to one source: a new one starts without the previous drift or rate.
+    generation++; playing = null; presented = null; drift = measured = 0; rate = 1; element.pause();
     // Ask for frames again under the new generation; the old request belongs to the previous source.
     if (frameRequest) element.cancelVideoFrameCallback?.(frameRequest);
     frameRequest = 0; watchFrames();
@@ -186,13 +210,17 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
       }
       const status = screeningStatusAt(shared, clock.serverNow()), at = target();
       // measured is the drift as sampled, before any correction; drift is reset after a seek request.
-      measured = drift = element.currentTime * 1000 - at;
+      // While a seek is in flight currentTime already reads the requested time, so it is not sampled.
+      drift = element.currentTime * 1000 - at;
+      if (!element.seeking) measured = drift;
       if (status === 'playing') {
         if (Math.abs(drift) > SCREENING_SYNC.seekMs) { element.currentTime = at / 1000; drift = 0; rate = 1; }
         else if (Math.abs(drift) > SCREENING_SYNC.deadBandMs) rate = 1 - Math.sign(drift) * Math.min(SCREENING_SYNC.maxRateChange, Math.abs(drift) * SCREENING_SYNC.rateGainPerMs);
         else rate = 1;
         element.playbackRate = rate;
-        if (element.paused && !playing) {
+        // A file a little shorter than the shared duration ends first: hold its last frame, because
+        // play() on ended media would restart it from the beginning.
+        if (element.paused && !playing && !element.ended) {
           if (state !== 'playing') element.currentTime = at / 1000;
           void play();
         }
@@ -207,8 +235,12 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
         set(status === 'ended' ? 'ended' : status === 'paused' ? 'paused' : 'ready');
       }
     },
-    // A user gesture: try again after autoplay was refused.
-    unlock() { if (state !== 'blocked' && state !== 'ready') return Promise.resolve(); failure = null; set('loading'); if (!frameRequest) watchFrames(); return play() ?? Promise.resolve(); },
+    // A user gesture: try again after autoplay was refused. A decoded frame stays on the screen (ready) until
+    // play() answers, also while a seek briefly lowers readiness; without one this viewer is still loading,
+    // under the same stall deadline.
+    unlock() {
+      if (state !== 'blocked' && state !== 'ready') return Promise.resolve();
+      failure = null; set(element.readyState >= 2 || (element.seeking && attempt?.current?.result === 'decoded') ? 'ready' : 'loading'); if (!frameRequest) watchFrames(); return play() ?? Promise.resolve(); },
     // A new bounded attempt: every encoding gets one more try, starting with the first.
     retry() { if (!mediaId || state === 'disposed') return; load(mediaId); },
     setMuted(value) { element.muted = Boolean(value); },
@@ -235,6 +267,6 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
   function stats() {
     return { state, sharedStatus: shared ? screeningStatusAt(shared, clock.serverNow()) : null, revision: shared?.revision ?? null, epoch: shared?.epoch ?? null,
       mediaId, generation, failure, source: attempt?.current ? { src: attempt.current.src, type: attempt.current.type } : null, attempts: attempt?.tried.map(item => ({ ...item })) ?? [],
-      driftMs: Math.round(drift), measuredDriftMs: Math.round(measured), presented: presented && { ...presented }, rate, offsetMs: Math.round(clock.offset) };
+      driftMs: Math.round(drift), measuredDriftMs: Math.round(measured), seeking: Boolean(element.seeking), presented: presented && { ...presented }, rate, offsetMs: Math.round(clock.offset) };
   }
 }

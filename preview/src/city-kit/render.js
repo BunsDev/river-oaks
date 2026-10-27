@@ -3,6 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { KIT_CONVENTIONS, KIT_MATERIALS, KIT_STYLES } from '../../../shared/city-kit/catalog.js';
 import { physicalSurface, paverSurface } from '../materials.js';
 import { buildMatureTrees, buildPlanterPlanting } from '../landscape-models.js';
+import { treeGrateTexture } from '../street-furniture.js';
 
 // Renders an assembled city-kit plan (shared/city-kit/assemble.js) in world
 // east/north metres. Static pieces merge into one mesh per material per block,
@@ -105,19 +106,28 @@ function faceFrame(rect, face) {
   return { origin: [w, n], along: [0, -1], out: [-1, 0], length: n - s, depth: e - w };
 }
 
-function signAtlas(names) {
-  const unique = [...new Set(names.filter(Boolean))], rows = Math.max(1, unique.length), uv = new Map();
-  unique.forEach((name, row) => uv.set(name, [row / rows, (row + 1) / rows]));
+// Sign palettes: the District's teal plate with ivory serif capitals, and `noir`,
+// spaced brass sans-serif capitals on black steel for the luxury styles.
+const SIGN_PALETTES = {
+  teal: { plate: '#1f454a', rule: '#bd9e66', ink: '#f5eee0', font: size => `600 ${size}px Georgia, 'Times New Roman', serif`, spacing: 0 },
+  noir: { plate: '#1b1d1f', rule: '#8c7550', ink: '#e4cb93', font: size => `500 ${size}px 'Helvetica Neue', Helvetica, Arial, sans-serif`, spacing: 10 },
+};
+const signKey = sign => `${sign.palette ?? 'teal'}|${sign.name}`;
+
+function signAtlas(keys) {
+  const unique = [...new Set(keys.filter(Boolean))], rows = Math.max(1, unique.length), uv = new Map();
+  unique.forEach((key, row) => uv.set(key, [row / rows, (row + 1) / rows]));
   const canvas = canvas2d(1024, 128 * rows);
   if (!canvas) return { texture: null, uv };
   const context = canvas.getContext('2d');
-  unique.forEach((name, row) => {
-    context.fillStyle = '#1f454a'; context.fillRect(0, row * 128, 1024, 128);
-    context.strokeStyle = '#bd9e66'; context.lineWidth = 6; context.strokeRect(10, row * 128 + 10, 1004, 108);
-    context.fillStyle = '#f5eee0'; context.textAlign = 'center'; context.textBaseline = 'middle';
-    let size = 74; context.font = `600 ${size}px Georgia, 'Times New Roman', serif`;
-    while (context.measureText(name.toUpperCase()).width > 940 && size > 30) { size -= 4; context.font = `600 ${size}px Georgia, 'Times New Roman', serif`; }
-    context.fillText(name.toUpperCase(), 512, row * 128 + 66);
+  unique.forEach((key, row) => {
+    const [palette, ...rest] = key.split('|'), name = rest.join('|').toUpperCase(), style = SIGN_PALETTES[palette] ?? SIGN_PALETTES.teal;
+    context.fillStyle = style.plate; context.fillRect(0, row * 128, 1024, 128);
+    context.strokeStyle = style.rule; context.lineWidth = palette === 'noir' ? 3 : 6; context.strokeRect(10, row * 128 + 10, 1004, 108);
+    context.fillStyle = style.ink; context.textAlign = 'center'; context.textBaseline = 'middle';
+    let size = 74; context.font = style.font(size); if ('letterSpacing' in context) context.letterSpacing = `${style.spacing}px`;
+    while (context.measureText(name).width > 940 && size > 30) { size -= 4; context.font = style.font(size); }
+    context.fillText(name, 512, row * 128 + 66);
   });
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 4;
   return { texture, uv };
@@ -171,6 +181,8 @@ function renderShell(piece, batch, detail, m, ground, signs) {
     put(batch, trim, f.length / 2, -.06, top + .93, f.length + .12, .08, .4);
     if (!faced.has(face)) continue;
     if (roofKind === 'cornice') { put(detail, trim, f.length / 2, .04, top - .1, f.length + .3, .22, .32); put(detail, trim, f.length / 2, .1, top + .08, f.length + .45, .14, .44); }
+    // A shadow reveal under a black-steel coping reads as a crisp modern parapet.
+    if (roofKind === 'reveal') put(detail, trim, f.length / 2, .012, top + .02, f.length + .02, .06, .05);
     if (roofKind === 'stepped') { put(batch, wall, f.length / 2, -.12, top + 1.35, Math.min(6, f.length * .4), .9, .24); put(batch, trim, f.length / 2, -.06, top + 1.83, Math.min(6, f.length * .4) + .12, .08, .4); }
     const bays = face === (piece.faces?.[0]) ? Math.max(1, piece.bays ?? 1) : Math.max(1, Math.round(f.length / 6)), bay = f.length / bays;
     // Piers at bay edges carry the upper storeys to the ground.
@@ -179,7 +191,20 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       put(batch, loggia ? trim : wall, u, -.05, ground + G / 2 - .2, loggia ? .5 : .55, G + .4, loggia ? .5 : recess + .1);
     }
     // Upper storeys: spandrels and piers on the face plane, glass in the reveal.
-    for (let storey = 1; storey < piece.storeys; storey++) {
+    for (let storey = 1; storey < piece.storeys && style.windows === 'ribbon'; storey++) {
+      // A continuous glass band between limestone spandrels, ruled by satin-bronze fins.
+      const floor = groundTop + (storey - 1) * U, sill = floor + .75, head = floor + 3.0, L = f.length;
+      put(batch, wall, L / 2, -inset / 2, (floor + sill) / 2, L, sill - floor, inset);
+      put(batch, wall, L / 2, -inset / 2, (head + floor + U) / 2, L, floor + U - head, inset);
+      for (const u of [.2, L - .2]) put(batch, wall, u, -inset / 2, (sill + head) / 2, .4, head - sill, inset);
+      put(detail, m('glass-dark'), L / 2, -inset + .03, (sill + head) / 2, L - .4, head - sill, .04);
+      for (let u = 1.4; u < L - .9; u += 1.6) put(detail, accent, u, .1, (sill + head) / 2, .06, head - sill + .12, .5);
+      put(detail, trim, L / 2, .02, sill - .03, L - .3, .06, .16);
+      put(detail, trim, L / 2, .012, head + .03, L - .3, .06, .1);
+      // Stone coursing: a fine reveal at each floor line.
+      put(detail, trim, L / 2, .004, floor + .3, L, .025, .02);
+    }
+    for (let storey = 1; storey < piece.storeys && style.windows !== 'ribbon'; storey++) {
       const floor = groundTop + (storey - 1) * U, sill = floor + .9, head = floor + (style.windows === 'tall' ? 3.15 : 2.75);
       put(batch, wall, f.length / 2, -inset / 2, (floor + sill) / 2, f.length, sill - floor, inset);
       put(batch, wall, f.length / 2, -inset / 2, (head + floor + U) / 2, f.length, floor + U - head, inset);
@@ -200,7 +225,33 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       }
     }
     // Storefronts: kickplate, glazing with mullions and transom, a warm interior, a door.
-    for (let i = 0; i < bays; i++) {
+    for (let i = 0; i < bays && piece.variant === 'gallery'; i++) {
+      // Gallery fronts: floor-to-head glass in slim black steel over a dark, warm
+      // interior, a limestone fascia, and a cantilevered bronze canopy hung on rods
+      // with a downlight strip along its edge.
+      const u0 = i * bay + .35, u1 = (i + 1) * bay - .35, width = u1 - u0, mid = (u0 + u1) / 2, glassMid = ground + 1.94, glassHeight = 3.62;
+      if (width < .8) continue;
+      put(detail, trim, mid, -recess + .08, ground + .06, width, .12, .12);
+      put(detail, glass, mid, -recess + .05, glassMid, width, glassHeight, .03);
+      put(detail, m('shop-interior'), mid, -recess + .015, glassMid, width, glassHeight, .01);
+      const panes = Math.max(2, Math.round(width / 1.6)), pane = width / panes;
+      // Dark glass reads deep when only small lights show: one slim brass display rail
+      // per bay and a pendant per pane, with nothing pale filling the glass.
+      put(detail, m('metal-brass'), mid, -recess + .03, ground + 1.05, width * .8, .04, .01);
+      for (let k = 0; k < panes; k++) {
+        if (i === Math.floor(bays / 2) && k === Math.floor(panes / 2)) continue;
+        put(detail, m('lamp-glow'), u0 + pane * (k + .5), -recess + .03, ground + 3.3, .22, .09, .01);
+      }
+      for (let k = 0; k <= panes; k++) put(detail, trim, u0 + width * k / panes, -recess + .08, glassMid, .05, glassHeight, .08);
+      put(detail, trim, mid, -recess + .08, ground + 3.77, width + .05, .07, .08);
+      if (i === Math.floor(bays / 2)) { put(detail, accent, mid + .32, -recess + .11, ground + 1.15, .035, 1.6, .05); put(detail, accent, mid - .32, -recess + .11, ground + 1.15, .035, 1.6, .05); }
+      put(batch, wall, mid, -.04, ground + 4.19, width + .7, .82, .2);
+      put(detail, accent, mid, .82, ground + 3.92, width + .3, .1, 1.62);
+      put(detail, accent, mid, 1.6, ground + 3.9, width + .3, .2, .05);
+      put(detail, m('lamp-glow'), mid, 1.48, ground + 3.85, width + .1, .02, .07);
+      for (const t of [-1, 1]) { const [hx, hy] = at(mid + t * width / 3, .78); detail.box(trim, hx, ground + 4.28, hy, .035, .035, 1.62, yaw, .4); }
+    }
+    for (let i = 0; i < bays && piece.variant !== 'gallery'; i++) {
       const u0 = i * bay + .35, u1 = (i + 1) * bay - .35, width = u1 - u0, mid = (u0 + u1) / 2;
       if (width < .8) continue;
       put(detail, trim, mid, -recess + .08, ground + .25, width, .5, .12);
@@ -227,12 +278,12 @@ function renderShell(piece, batch, detail, m, ground, signs) {
     if (piece.sign && face === piece.faces?.[0]) {
       const width = Math.min(f.length - 1, 7), [x, y] = at(f.length / 2, .09);
       // Above a canopy (3.6 m) and within the 3.6–4.3 m sign band.
-      signs.push({ name: piece.sign, width, height: Math.min(.6, width / 8), east: x, up: ground + 3.98, north: y, yaw });
+      signs.push({ name: piece.sign, palette: style.signPalette, width, height: Math.min(.6, width / 8), east: x, up: ground + (piece.variant === 'gallery' ? 4.3 : 3.98), north: y, yaw });
       if (style.signage === 'blade') {
         // A plate on a bracket, standing out from the facade, lettered top to bottom on both faces.
         put(detail, bronze, .8, .3, ground + 4.3, .05, .05, .6);
         put(detail, accent, .8, .4, ground + 2.95, .06, 2.6, .44);
-        for (const side of [1, -1]) { const [bx, by] = at(.8 + side * .035, .4); signs.push({ name: piece.sign, width: 2.4, height: .3, east: bx, up: ground + 2.95, north: by, yaw: yaw + side * Math.PI / 2, roll: side * Math.PI / 2 }); }
+        for (const side of [1, -1]) { const [bx, by] = at(.8 + side * .035, .4); signs.push({ name: piece.sign, palette: style.signPalette, width: 2.4, height: .3, east: bx, up: ground + 2.95, north: by, yaw: yaw + side * Math.PI / 2, roll: side * Math.PI / 2 }); }
       }
     }
   }
@@ -248,17 +299,24 @@ function renderFurniture(piece, batch, m, groundAt) {
   const part = (material, u, v, up, along, height, across) => { const [px, py] = local(u, v); batch.box(material, px, up, py, along, height, across, yaw); };
   switch (piece.piece) {
     case 'furniture/bench':
-      for (let i = 0; i < 4; i++) part(m('wood-bench'), 0, -.2 + i * .12, g + .45, 1.85, .04, .09);
-      for (let i = 0; i < 2; i++) part(m('wood-bench'), 0, .27, g + .62 + i * .14, 1.85, .09, .04);
-      for (const u of [-.75, .75]) { part(m('metal-bronze'), u, 0, g + .22, .06, .44, .5); part(m('metal-bronze'), u, .27, g + .6, .05, .5, .05); }
+      // Honed limestone plinths carrying a timber seat and a slatted back on bronze stays.
+      for (let i = 0; i < 5; i++) part(m('wood-bench'), 0, -.22 + i * .1, g + .45, 1.85, .045, .085);
+      for (let i = 0; i < 3; i++) part(m('wood-bench'), 0, .3, g + .6 + i * .11, 1.85, .075, .035);
+      for (const u of [-.72, .72]) { part(m('limestone'), u, 0, g + .21, .3, .42, .56); part(m('bronze-satin'), u, .29, g + .66, .04, .42, .04); }
       break;
-    case 'furniture/lamp':
-      part(m('metal-bronze'), 0, 0, g + .3, .32, .6, .32);
-      part(m('metal-bronze'), 0, 0, g + 2.4, .12, 4.2, .12);
-      part(m('metal-brass'), 0, 0, g + 4.35, .34, .12, .34);
-      part(m('lamp-glow'), 0, 0, g + 4.62, .3, .42, .3);
-      part(m('metal-bronze'), 0, 0, g + 4.9, .44, .1, .44);
+    case 'furniture/lamp': {
+      // The District's mid-century orbital lamp (street-furniture.js): a deep-teal
+      // column, a porcelain disc, an opal globe and a brass orbital ring.
+      const place = (material, geometry, up) => batch.place(material, geometry, x, up, y);
+      // Segment counts are sized for street distance; each lamp's geometry is merged per block.
+      place(m('lamp-teal'), new THREE.CylinderGeometry(.17, .17, .24, 10), g + .12);
+      place(m('lamp-teal'), new THREE.CylinderGeometry(.05, .06, 4.9, 8), g + 2.6);
+      place(m('metal-brass'), new THREE.CylinderGeometry(.075, .075, .065, 8), g + 4.7);
+      place(m('porcelain'), new THREE.SphereGeometry(1, 14, 6).scale(.61, .11, .61), g + 5.08);
+      place(m('opal-glow'), new THREE.SphereGeometry(1, 10, 6).scale(.28, .19, .28), g + 4.93);
+      place(m('metal-brass'), new THREE.TorusGeometry(.58, .023, 4, 28).rotateX(Math.PI / 2), g + 5.02);
       break;
+    }
     case 'furniture/bollard':
       part(m('metal-bronze'), 0, 0, g + .45, .2, .9, .2); part(m('metal-brass'), 0, 0, g + .82, .23, .06, .23);
       break;
@@ -266,10 +324,20 @@ function renderFurniture(piece, batch, m, groundAt) {
       for (const u of [-.6, 0, .6]) { part(m('metal-brass'), u, 0, g + .4, .05, .8, .05); part(m('metal-brass'), u, 0, g + .78, .05, .05, .32); }
       part(m('metal-brass'), 0, 0, g + .05, 1.6, .05, .05);
       break;
-    case 'furniture/cafe-set':
-      part(m('metal-bronze'), 0, 0, g + .37, .06, .74, .06); part(m('trim-ivory'), 0, 0, g + .75, .72, .03, .72);
-      for (const [u, v] of [[.62, 0], [-.62, 0], [0, .62], [0, -.62]]) { part(m('metal-brass'), u, v, g + .23, .4, .45, .4); part(m('canvas-teal'), u, v, g + .47, .42, .04, .42); }
+    case 'furniture/cafe-set': {
+      // A round marble bistro table on a bronze pedestal, with four timber chairs facing it.
+      batch.place(m('porcelain'), new THREE.CylinderGeometry(.38, .38, .03, 18), x, g + .75, y);
+      batch.place(m('bronze-satin'), new THREE.CylinderGeometry(.03, .03, .72, 8), x, g + .37, y);
+      batch.place(m('bronze-satin'), new THREE.CylinderGeometry(.2, .22, .03, 12), x, g + .015, y);
+      for (const [u, v] of [[.64, 0], [-.64, 0], [0, .64], [0, -.64]]) {
+        const out = Math.hypot(u, v), du = u / out, dv = v / out, chairYaw = Math.atan2(dv, du);
+        const [cx, cy] = local(u, v), [bx, by] = local(u + du * .2, v + dv * .2);
+        batch.box(m('wood-bench'), cx, g + .46, cy, .42, .045, .42, yaw + chairYaw);
+        batch.box(m('wood-bench'), bx, g + .7, by, .04, .34, .4, yaw + chairYaw);
+        for (const [a, b] of [[.18, .18], [.18, -.18], [-.18, .18], [-.18, -.18]]) { const [lx, ly] = local(u + a, v + b); batch.box(m('steel-black'), lx, g + .22, ly, .025, .44, .025, yaw); }
+      }
       break;
+    }
     case 'furniture/railing':
       batch.box(m('metal-bronze'), x, g + 1.02, y, piece.rect[2] - piece.rect[0], .06, piece.rect[3] - piece.rect[1]);
       for (let v = piece.rect[1]; v <= piece.rect[3]; v += 1.6) batch.box(m('metal-bronze'), x, g + .5, v, .05, 1.0, .05);
@@ -395,10 +463,70 @@ function renderWaterTower(piece, m, ground, batch) {
 }
 
 /**
- * Build the plan's scene. `groundAt(east, north)` returns walking ground height;
- * `ground` is the level site height for shells and edges.
+ * The plan's street trees and lane planting, as placements for buildMatureTrees and
+ * buildPlanterPlanting. The kit draws its own; a caller that streams several
+ * neighborhoods (bayou-heights.js) draws theirs once, with `landscape: false`.
  */
-export function buildCityKit(plan, { groundAt, ground }) {
+export function cityKitLandscape(plan, { groundAt, ground }) {
+  const trees = [], planters = [];
+  for (const piece of plan.pieces) {
+    if (piece.piece === 'landscape/hedge') {
+      // Planted along the length of the limestone planter wall.
+      const [w, s, e, n] = piece.rect;
+      for (let x = w + .9; x < e - .5; x += 1.6) planters.push([x, ground - .05, -(s + n) / 2, 0]);
+    }
+    else if (piece.piece === 'landscape/planter') {
+      const [w, s, e, n] = piece.rect;
+      // Planting fills the bed in rows; a narrow planter gets one row down its middle.
+      const rows = Math.max(1, Math.floor((n - s) / 1.4));
+      for (let row = 0; row < rows; row++) for (let x = w + .7; x < e - .3; x += 1.4) planters.push([x, ground - .12, -(s + (n - s) * (row + .5) / rows), (row % 2) * Math.PI]);
+    }
+    else if (piece.piece === 'landscape/bayou') {
+      const [, s, e, n] = piece.rect;
+      for (let v = s + 3; v < n; v += 7.5) trees.push({ position: [e - 3, ground + .2, -v], height: 10 + (Math.abs(Math.sin(v)) * 3), radius: 4.2, yaw: v });
+    }
+    else if (piece.piece === 'landscape/street-tree') {
+      const [x, y] = piece.at;
+      trees.push({ position: [x, groundAt(x, y), -y], height: piece.height, radius: piece.radius, yaw: piece.yaw });
+    }
+  }
+  return { trees, planters };
+}
+
+// Planting draws in 12 m and 24 m batches (spatial-instances.js, procedural-plants.js); only
+// the fine grass flower stems span a whole plan, and they stay drawn with the planting.
+const PLANTING_BATCH_RADIUS = 30;
+/** Hides planting batches (buildPlanterPlanting) farther than `metres`, and any `shown` rejects. */
+export function cullPlanting(planting, position, metres, shown = () => true) {
+  for (const mesh of planting.children) if (mesh.boundingSphere?.radius < PLANTING_BATCH_RADIUS)
+    mesh.visible = shown(mesh) && position.distanceTo(mesh.boundingSphere.center) - mesh.boundingSphere.radius < metres;
+}
+
+/** Dispose tree and planting groups (buildMatureTrees, buildPlanterPlanting). */
+export function disposeLandscape(groups) {
+  // Landscape meshes own cloned buffers/materials and instance storage. Their
+  // texture maps belong to the shared template cache and must survive eviction.
+  const landscapeGeometries = new Set(), landscapeMaterials = new Set();
+  for (const landscape of groups.filter(Boolean)) {
+    landscape.userData.cancelLandscapeLoad?.();
+    landscape.traverse(item => {
+      if (item.geometry) landscapeGeometries.add(item.geometry);
+      for (const material of [item.material].flat().filter(Boolean)) landscapeMaterials.add(material);
+      if (item.isInstancedMesh) item.dispose();
+    });
+    landscape.clear();
+  }
+  for (const geometry of landscapeGeometries) geometry.dispose();
+  for (const material of landscapeMaterials) material.dispose();
+}
+
+/**
+ * Build the plan's scene. `groundAt(east, north)` returns walking ground height;
+ * `ground` is the level site height for shells and edges. With `landscape: false`
+ * the caller draws the plan's trees and planting (cityKitLandscape). Planting draws at
+ * every distance unless `plantingMetres` limits it.
+ */
+export function buildCityKit(plan, { groundAt, ground, landscape = true, plantingMetres = Infinity }) {
   const group = new THREE.Group(); group.name = `City kit: ${plan.id}`;
   const materials = createMaterials(), m = materials.get, disposables = [];
   const blocks = new Map(), blockFor = piece => {
@@ -409,10 +537,13 @@ export function buildCityKit(plan, { groundAt, ground }) {
     block.center.add(new THREE.Vector3(x, ground, -y)); block.count.n++;
     return block;
   };
-  const flat = createBatch(), signs = [], lanterns = new Map(), trees = [], planters = [];
+  const flat = createBatch(), signs = [], lanterns = new Map(), { trees, planters } = cityKitLandscape(plan, { groundAt, ground });
   // Ground: draped paving and lawns; overlays use polygon offset instead of height.
   const overlay = name => { const material = m(name).clone(); material.polygonOffset = true; material.polygonOffsetFactor = -2; material.polygonOffsetUnits = -2; material.name = `${m(name).name}:overlay`; disposables.push(material); return material; };
-  const groundPiece = { 'street/shared-lane': ['lane-brick', 0], 'street/intersection': ['lane-brick', 0], 'street/crosswalk': ['lane-brick', 0], 'street/sidewalk': ['paver-sidewalk', 0], 'street/court': ['plaza-stone', 0], 'landscape/lawn': ['lawn', 1], 'street/flush-curb': ['curb-granite', 2], 'landscape/tree-pit': ['soil', 3] };
+  const groundPiece = { 'street/shared-lane': ['lane-brick', 0], 'street/intersection': ['lane-brick', 0], 'street/crosswalk': ['lane-brick', 0], 'street/sidewalk': ['paver-sidewalk', 0], 'street/court': ['plaza-stone', 0], 'landscape/lawn': ['lawn', 1], 'street/flush-curb': ['curb-granite', 2], 'street/band': ['porcelain', 2], 'street/channel': ['steel-black', 2], 'landscape/tree-pit': ['porcelain', 3] };
+  // Tree pits match the District's (street-furniture.js): a cast-iron grate in a pale stone surround.
+  const grateTexture = treeGrateTexture(), grate = new THREE.MeshStandardMaterial({ map: grateTexture, roughness: .55, metalness: .6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
+  grate.name = 'city-kit/tree-grate'; disposables.push(grate);
   const overlays = new Map();
   const clipStreet = plan.pieces.find(p => p.piece === 'street/court' && p.id.endsWith('/paving'))?.rect;
   for (const piece of plan.pieces) {
@@ -421,8 +552,14 @@ export function buildCityKit(plan, { groundAt, ground }) {
     let rect = piece.rect;
     // Street paving stops where the plaza paving begins; neither overlaps the other.
     if (clipStreet && piece.piece.startsWith('street/') && !piece.id.endsWith('/paving') && rect[2] > clipStreet[0] && rect[0] < clipStreet[0]) rect = [rect[0], rect[1], clipStreet[0], rect[3]];
-    const [name, layer] = spec, material = layer ? (overlays.get(name) ?? overlays.set(name, overlay(name)).get(name)) : m(name);
+    const name = piece.material ?? spec[0], layer = spec[1], material = layer ? (overlays.get(name) ?? overlays.set(name, overlay(name)).get(name)) : m(name);
     flat.add(material, drape(rect, groundAt, layer ? .004 * layer : 0, layer ? 4 : 2));
+    if (piece.piece === 'landscape/tree-pit') {
+      // The grate's texture spans the pit once, its round opening on the trunk.
+      const [w, s, e, n] = rect, inner = [w + .12, s + .12, e - .12, n - .12], plate = drape(inner, groundAt, .02, 4), uv = plate.attributes.uv;
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, (uv.getX(i) - inner[0]) / (inner[2] - inner[0]), (uv.getY(i) - inner[1]) / (inner[3] - inner[1]));
+      flat.add(grate, plate);
+    }
   }
   // A plinth under the whole site reads as ground behind the blocks and as a
   // bayou retaining wall at the east edge.
@@ -437,16 +574,23 @@ export function buildCityKit(plan, { groundAt, ground }) {
       for (let level = ground + 1; level < ground + piece.height - 2; level += 3.3) block.detail.box(m('glass-dark'), (w + e) / 2, level + 1.3, (s + n) / 2, e - w + .04, 1.6, n - s + .04);
     }
     else if (piece.piece === 'landscape/hedge') {
+      // A honed limestone planter wall under a porcelain cap, planted along its length.
       const [w, s, e, n] = piece.rect;
-      flat.box(m('curb-granite'), (w + e) / 2, ground + .15, (s + n) / 2, e - w, .3, n - s);
-      for (let x = w + .9; x < e - .5; x += 1.6) planters.push([x, ground - .32, -(s + n) / 2, 0]);
+      flat.box(m('limestone'), (w + e) / 2, ground + .275, (s + n) / 2, e - w, .55, n - s);
+      flat.box(m('porcelain'), (w + e) / 2, ground + .575, (s + n) / 2, e - w + .08, .05, n - s + .08);
+    }
+    else if (piece.piece === 'landscape/lawn') {
+      // Black steel edging keeps the lawn's line crisp against the paving.
+      const [w, s, e, n] = piece.rect, edge = (x0, y0, x1, y1) => flat.box(m('steel-black'), (x0 + x1) / 2, groundAt((x0 + x1) / 2, (y0 + y1) / 2) + .012, (y0 + y1) / 2, Math.max(.035, x1 - x0), .03, Math.max(.035, y1 - y0));
+      edge(w, s, e, s); edge(w, n, e, n); edge(w, s, w, n); edge(e, s, e, n);
     }
     else if (piece.piece === 'landscape/planter') {
+      // The District's planter: a porcelain body on a deep-teal base, a brass rim and dark mulch.
       const [w, s, e, n] = piece.rect;
-      flat.box(m('stucco-ivory'), (w + e) / 2, ground + .25, (s + n) / 2, e - w, .5, n - s);
-      // Planting fills the bed in rows; a narrow planter gets one row down its middle.
-      const rows = Math.max(1, Math.floor((n - s) / 1.4));
-      for (let row = 0; row < rows; row++) for (let x = w + .7; x < e - .3; x += 1.4) planters.push([x, ground - .12, -(s + (n - s) * (row + .5) / rows), (row % 2) * Math.PI]);
+      flat.box(m('lamp-teal'), (w + e) / 2, ground + .06, (s + n) / 2, e - w - .12, .12, n - s - .12);
+      flat.box(m('porcelain'), (w + e) / 2, ground + .36, (s + n) / 2, e - w, .48, n - s);
+      flat.box(m('metal-brass'), (w + e) / 2, ground + .6, (s + n) / 2, e - w + .02, .025, n - s + .02);
+      flat.box(m('soil'), (w + e) / 2, ground + .608, (s + n) / 2, e - w - .1, .012, n - s - .1);
     }
     else if (piece.piece === 'landscape/bayou') {
       const [w, s, e, n] = piece.rect, water = new THREE.MeshPhysicalMaterial({ color: '#3e5f55', roughness: .12, metalness: .1, clearcoat: 1, envMapIntensity: 1.2 });
@@ -454,11 +598,6 @@ export function buildCityKit(plan, { groundAt, ground }) {
       flat.box(m('lawn'), w + 2.4, ground - 1.5, (s + n) / 2, 4.8, .3, n - s, 0, 0);
       flat.add(water, drape([w + 3, s, e - 6, n], () => ground - 2.6, 0, 6));
       flat.box(m('lawn'), e - 3, ground - 1.2, (s + n) / 2, 6, 2.8, n - s);
-      for (let v = s + 3; v < n; v += 7.5) trees.push({ position: [e - 3, ground + .2, -v], height: 10 + (Math.abs(Math.sin(v)) * 3), radius: 4.2, yaw: v });
-    }
-    else if (piece.piece === 'landscape/street-tree') {
-      const [x, y] = piece.at;
-      trees.push({ position: [x, groundAt(x, y), -y], height: piece.height, radius: piece.radius, yaw: piece.yaw });
     }
     else if (piece.piece === 'furniture/lantern') lanterns.set(piece.id, renderLantern(piece, m, groundAt, flat));
     else if (piece.piece === 'furniture/market-stall') renderMarketStall(piece, flat, m, groundAt, signs);
@@ -473,27 +612,30 @@ export function buildCityKit(plan, { groundAt, ground }) {
     group.add(massing, detail); levels.push({ center: block.center.divideScalar(block.count.n), detail });
   }
   // Shop signs share one atlas texture and one material.
-  const atlas = signAtlas(signs.map(sign => sign.name)), signMaterial = new THREE.MeshStandardMaterial({ map: atlas.texture, color: atlas.texture ? '#ffffff' : '#1f454a', roughness: .55 }); signMaterial.name = 'city-kit/signs';
+  const atlas = signAtlas(signs.map(signKey)), signMaterial = new THREE.MeshStandardMaterial({ map: atlas.texture, color: atlas.texture ? '#ffffff' : '#1f454a', roughness: .55 }); signMaterial.name = 'city-kit/signs';
   const signBatch = createBatch();
   for (const sign of signs) {
-    const quad = signQuad(atlas, sign.name, sign.width, sign.height);
+    const quad = signQuad(atlas, signKey(sign), sign.width, sign.height);
     if (sign.roll) quad.rotateZ(sign.roll);
     signBatch.mesh(signMaterial, quad, sign.east, sign.up, sign.north, sign.yaw);
   }
   geometries.push(...signBatch.build(group, 'shop signs', { shadows: false }));
   for (const lantern of lanterns.values()) group.add(lantern);
   // Tree and planting models stream from /assets; headless builds count placements only.
-  const treeGroup = headless ? Object.assign(new THREE.Group(), { userData: { shadowProxies: [] } }) : buildMatureTrees({}, trees);
+  const drawn = landscape && !headless;
+  const treeGroup = drawn ? buildMatureTrees({}, trees) : Object.assign(new THREE.Group(), { userData: { shadowProxies: [] } });
   treeGroup.name = `${plan.id} trees`; treeGroup.userData.placements = trees.length; group.add(treeGroup);
-  const planting = planters.length && !headless ? buildPlanterPlanting(planters) : null; if (planting) group.add(planting);
+  const planting = planters.length && drawn ? buildPlanterPlanting(planters) : null; if (planting) group.add(planting);
   group.userData.ready = Promise.all([treeGroup.userData.ready, planting?.userData.ready]);
   group.userData.plantingModules = planters.length;
   group.userData.shadowProxies = treeGroup.userData.shadowProxies;
   group.userData.lanterns = lanterns;
   group.userData.stats = () => { let meshes = 0, triangles = 0; group.traverse(item => { if (item.isMesh && item.visible) { meshes++; triangles += (item.geometry.index?.count ?? item.geometry.attributes.position.count) / 3 * (item.count ?? 1); } }); return { meshes, triangles: Math.round(triangles), materials: materials.made.size + disposables.length }; };
+  group.userData.plantingMetres = plantingMetres;
   group.userData.update = position => {
     treeGroup.userData.update?.(position);
     for (const level of levels) level.detail.visible = position.distanceTo(level.center) < KIT_CONVENTIONS.lod.detailMetres;
+    if (planting && plantingMetres < Infinity) cullPlanting(planting, position, plantingMetres);
   };
   group.userData.setLanterns = (lit, complete) => {
     for (const [id, lantern] of lanterns) lantern.userData.setLit(lit.has(id));
@@ -502,25 +644,12 @@ export function buildCityKit(plan, { groundAt, ground }) {
   let disposed = false;
   group.userData.dispose = () => {
     if (disposed) return; disposed = true;
-    // Landscape meshes own cloned buffers/materials and instance storage. Their
-    // texture maps belong to the shared template cache and must survive eviction.
-    const landscapeGeometries = new Set(), landscapeMaterials = new Set();
-    for (const landscape of [treeGroup, planting].filter(Boolean)) {
-      landscape.userData.cancelLandscapeLoad?.();
-      landscape.traverse(item => {
-        if (item.geometry) landscapeGeometries.add(item.geometry);
-        for (const material of [item.material].flat().filter(Boolean)) landscapeMaterials.add(material);
-        if (item.isInstancedMesh) item.dispose();
-      });
-      landscape.clear();
-    }
-    for (const geometry of landscapeGeometries) geometry.dispose();
-    for (const material of landscapeMaterials) material.dispose();
+    disposeLandscape([treeGroup, planting]);
     treeGroup.userData.shadowProxies.length = 0;
     for (const geometry of geometries) geometry.dispose();
     for (const lantern of lanterns.values()) lantern.userData.dispose();
     group.userData.tower?.userData.dispose();
-    atlas.texture?.dispose(); signMaterial.dispose();
+    atlas.texture?.dispose(); signMaterial.dispose(); grateTexture.dispose();
     // Shared PBR textures stay cached in materials.js; only the materials go.
     for (const material of [...disposables, ...materials.made.values()]) material.dispose();
     group.clear();
