@@ -234,13 +234,15 @@ ABBA detail:
 5. **#292 lane:** complete.
 6. **Handoff:** this ledger and the Decisions below.
 
+**Verification note.** Ledger commit `990d29d7` was pushed after a tooling run that failed 275/276, on the known `land-pr.test.js` lander-wake test at load 15–18. The commit had been chained with `;` instead of `&&`. A rerun on the same clean tree passed 276/276 (`scratchpad/tooling-3x-5.log` and `-6.log`). The change is docs only; this records the order honestly.
+
 ## Gaps
 
 | Item | Blocker | Owner | Next action |
 | --- | --- | --- | --- |
 | #670 | MEDIUM: rollback stranding (comment 6439566536) | 3e | 3e fixes it, then e9 or another lander lands it; or Val accepts it as a follow-up (Decision 6) |
 | Acceptance snapshots `scratchpad/accept-pre`, `accept-final`, `accept-ws` (task `three-x-acceptance-snapshots-20261027`) | Detached; retiring needs `--cancel-stale` | e9 | Decision 5. Receipts are already archived |
-| world-streaming lap-12 cause | Mechanism reproduced by 71: facing the Commons at the far point keeps it resident; lap 12 itself wasn't observed | 71 | Decision 7 (land the guard) |
+| world-streaming lap-12 cause | Mechanism reproduced by 71: facing the Commons at the far point keeps it resident; lap 12 itself wasn't observed | 71 | The guard (`e89b1505`) is in flight under 71's authority |
 
 ## Decisions for Val
 
@@ -257,7 +259,10 @@ ABBA detail:
      - facing east again, it reloads within 15 s.
    - So the eviction check depends on the walk ending up facing west, and a turn-back after an overshoot fails it.
    - This wasn't observed on lap 12 itself. Evidence: `.runtime/evict-facing-probe/` in 71's parked worktree.
-   - **Recommended:** land the guard. It changes what the check requires, which is why it is Val's decision.
+   - **Update:** after the reproduction, river-oaks-71 is taking the guard forward under its own Phase 3 authority (fix recurring flakes without loosening checks): a draft PR, an independent review, the hosted world-streaming shard, then the land queue.
+     - The waits, the 120 s timeout and every assertion are unchanged. Only the walk's incidental final facing becomes the precondition the stream needs.
+     - e9 agrees it doesn't loosen the check.
+     - No longer waiting on Val unless 71 holds it.
 8. **Activation:** #587 conditions 4 (visual and device sign-off) and 5 (production state) for the 3× world.
 
 ## Next action
