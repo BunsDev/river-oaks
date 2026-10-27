@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { customizedCharacterDefinition } from '../src/character-customization.js';
 import { createCharacterHero } from '../src/character-hero.js';
+import { DEFAULT_APPEARANCE_REALISM, defaultAppearanceRealism } from '../src/default-appearance-realism.js';
 
 const definition=()=>customizedCharacterDefinition('fixture','sable-human',{palette:'rose',hair:'espresso'});
 test('hero loads the canonical identity and uses a fixed camera, pose and lighting',async()=>{
   const calls=[],object=new THREE.Group();let disposed=0;
   const hero=await createCharacterHero({definition:definition(),ownerId:'fixture',load:async(...args)=>{
-    calls.push(args);return {object,update:(...pose)=>calls.push(pose),dispose:()=>disposed++};
+    calls.push(args);return {object,rig:{model:object,materials:new Map()},update:(...pose)=>calls.push(pose),dispose:()=>disposed++};
   }});
   assert.equal(calls[0][2],'jevica');assert.equal(calls[0][3].appearanceId,'sable-human');assert.deepEqual(calls[0][3].faceRecipe,{});
   assert.equal(calls[1][0],0);assert.equal(calls[1][1],'idle');assert.equal(calls[1][3].speed,0);
@@ -19,7 +20,7 @@ test('hero loads the canonical identity and uses a fixed camera, pose and lighti
 test('foreign owner fails before loading and failed preparation releases the loaded avatar',async()=>{
   let loads=0,disposed=0;
   await assert.rejects(createCharacterHero({definition:definition(),ownerId:'foreign',load:async()=>{loads++;}}));assert.equal(loads,0);
-  await assert.rejects(createCharacterHero({definition:definition(),ownerId:'fixture',load:async()=>({object:new THREE.Group(),update(){throw new Error('pose failed');},dispose:()=>disposed++})}),/pose failed/);
+  await assert.rejects(createCharacterHero({definition:definition(),ownerId:'fixture',load:async()=>{const object=new THREE.Group();return {object,rig:{model:object,materials:new Map()},update(){throw new Error('pose failed');},dispose:()=>disposed++};}}),/pose failed/);
   assert.equal(disposed,1);
 });
 
@@ -29,7 +30,7 @@ test('hero teardown releases renderer transmission targets before disposing mate
   const target = new THREE.WebGLRenderTarget(4, 4); let released = 0;
   target.addEventListener('dispose', () => released++);
   const renderer = {properties: {get: () => ({uniforms: {transmissionSamplerMap: {value: target.texture}}})}};
-  const hero = await createCharacterHero({definition: definition(), ownerId: 'fixture', load: async () => ({object, update() {}, dispose() {assert.equal(released, 1);}})});
+  const hero = await createCharacterHero({definition: definition(), ownerId: 'fixture', load: async () => ({object, rig: {model: object, materials: new Map()}, update() {}, dispose() {assert.equal(released, 1);}})});
   hero.dispose(renderer); hero.dispose(renderer);
   assert.equal(released, 1);
 });
@@ -40,9 +41,9 @@ test('an explicit realism tier reaches the hero rig and is removed before avatar
   const rig = {model, materials:new Map([[original, material]])};
   const hero = await createCharacterHero({definition:definition(), ownerId:'fixture', realism:'high',
     loadRealismTextures:async () => ({roughness:new THREE.Texture()}),
-    load:async () => ({object:model, rig, update(){}, dispose(){assert.ok(material.normalMap === null, 'tier removed first');}})});
+    load:async () => ({object:model, rig, update(){}, dispose(){assert.ok(material.roughnessMap === null, 'tier removed first');}})});
   assert.equal(hero.realismReport?.skin, 1);
-  assert.ok(material.normalMap);
+  assert.ok(material.roughnessMap);
   hero.dispose();
 });
 
@@ -50,4 +51,21 @@ test('hero preserves material fallback when optional roughness loading fails',as
  const original=new THREE.MeshPhysicalMaterial({name:'young_asian_female'}),material=original.clone(),model=new THREE.Group();model.add(new THREE.Mesh(new THREE.BoxGeometry(),material));
  const hero=await createCharacterHero({definition:definition(),ownerId:'fixture',realism:'high',loadRealismTextures:async()=>{throw new Error('roughness unavailable');},load:async()=>({object:model,rig:{model,materials:new Map([[original,material]])},update(){},dispose(){assert.equal(material.normalMap,null);}})});
  assert.equal(hero.realismReport.tier,'standard');assert.equal(hero.realismReport.fallback,'roughness_unavailable');hero.dispose();
+});
+
+test('a named default hero stays off while the trial is switched off, takes only its trial components when on, and a caller can choose others',async()=>{
+ const scene=()=>{const original=new THREE.MeshPhysicalMaterial({name:'young_asian_female',roughness:.62}),material=original.clone(),model=new THREE.Group();model.add(new THREE.Mesh(new THREE.BoxGeometry(),material));return {model,material,rig:{model,materials:new Map([[original,material]])}};};
+ const textures=async()=>({roughness:new THREE.Texture()});
+ let figure=scene();
+ const shipped=await createCharacterHero({definition:definition(),ownerId:'fixture',loadRealismTextures:textures,load:async()=>({object:figure.model,rig:figure.rig,update(){},dispose(){}})});
+ assert.equal(shipped.realismReport.tier,'off');assert.equal(figure.material.roughnessMap,null);shipped.dispose();
+ figure=scene();
+ // Switched on, the hero passes the policy's components, as this caller does.
+ const trial=defaultAppearanceRealism('sable-human',{...DEFAULT_APPEARANCE_REALISM,enabled:true});
+ const hero=await createCharacterHero({definition:definition(),ownerId:'fixture',components:trial,loadRealismTextures:textures,load:async()=>({object:figure.model,rig:figure.rig,update(){},dispose(){}})});
+ assert.equal(hero.realismReport.tier,'high');assert.deepEqual(hero.realismReport.components,['roughness']);
+ assert.ok(figure.material.roughnessMap);assert.equal(figure.material.sheen,0,'sheen is not part of the trial');hero.dispose();
+ figure=scene();
+ const chosen=await createCharacterHero({definition:definition(),ownerId:'fixture',realism:'standard',components:['coverage'],loadRealismTextures:textures,load:async()=>({object:figure.model,rig:figure.rig,update(){},dispose(){}})});
+ assert.deepEqual(chosen.realismReport.components,['coverage']);assert.equal(figure.material.roughnessMap,null);chosen.dispose();
 });

@@ -219,6 +219,9 @@ jobs:
             journeys: garden-campus-traversal
           - id: commons
             journeys: east-garden-commons
+          # Bayou Heights over the Lantern Footbridge (#586 continuation), in its own shard.
+          - id: heights
+            journeys: bayou-heights
           # Surfaces that fight for depth in the composed town, and the shared shader patches
           # on instanced, batched and unmapped meshes (preview/src/depth-layer-audit.js).
           - id: depth

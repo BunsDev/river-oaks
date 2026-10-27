@@ -101,6 +101,8 @@ function createBatch() {
 }
 
 // Face frames: start corner, unit direction along the face, outward normal.
+// The rectangle sides each face starts and ends on, in faceFrame's `along` direction.
+const FACE_ENDS = { south: ['west', 'east'], north: ['east', 'west'], east: ['south', 'north'], west: ['north', 'south'] };
 function faceFrame(rect, face) {
   const [w, s, e, n] = rect;
   if (face === 'south') return { origin: [w, s], along: [1, 0], out: [0, -1], length: e - w, depth: n - s };
@@ -157,7 +159,8 @@ function drape(rect, groundAt, lift, step = 2) {
   return geometry;
 }
 
-function renderShell(piece, batch, detail, m, ground, signs) {
+// `shared` names the sides this shell shares with a neighbouring shell (a party wall).
+function renderShell(piece, batch, detail, m, ground, signs, shared = new Set()) {
   const [w, s, e, n] = piece.rect, style = KIT_STYLES[piece.style] ?? KIT_STYLES['market-row'];
   const wall = m(piece.wall), trim = m(piece.trim), accent = m(style.accent), glass = m('glass'), bronze = m('metal-bronze');
   const top = ground + piece.height, bottom = ground - .4;
@@ -177,8 +180,10 @@ function renderShell(piece, batch, detail, m, ground, signs) {
   const deck = Math.max(top, groundTop + .28);
   solid([w + .24, s + .24, e - .24, n - .24], deck - .02, deck + .08, m('roof-membrane'));
   // Floor plate between storefront and upper facade, and the loggia soffit: a slab edge standing
-  // proud of the walls and parapets on every side.
-  solid([w - .04, s - .04, e + .04, n + .04], groundTop - .02, groundTop + .28, trim);
+  // proud of the walls and parapets, except at a party wall, where it stops inside its own wall
+  // rather than overlapping the neighbour's plate.
+  const plate = side => shared.has(side) ? -.04 : .04;
+  solid([w - plate('west'), s - plate('south'), e + plate('east'), n + plate('north')], groundTop - .02, groundTop + .28, trim);
   const roofKind = piece.roof;
   for (const face of ['north', 'south', 'east', 'west']) {
     const f = faceFrame(piece.rect, face), at = (u, o) => [f.origin[0] + f.along[0] * u + f.out[0] * o, f.origin[1] + f.along[1] * u + f.out[1] * o];
@@ -186,7 +191,13 @@ function renderShell(piece, batch, detail, m, ground, signs) {
     const put = (target, material, u, o, y, along, height, across) => { const [x, yy] = at(u, o); target.box(material, x, y, yy, along, height, across, yaw); };
     // Parapet and coping on every side; profiled cornice on faced sides.
     put(batch, wall, f.length / 2, -.12, top + .45, f.length, .9, .24);
-    put(batch, trim, f.length / 2, -.06, top + .93, f.length + .12, .08, .4);
+    // Copings overhang a free corner by 6 cm. Where a corner's other side is a party wall the
+    // facade runs on into the neighbour's, so the coping stops 2 cm short: a joint, clear of the
+    // neighbour's coping (perhaps another trim) and of its wall where it rises higher. On the
+    // party wall itself the coping stays on its own parapet, short of the corners.
+    const [startSide, endSide] = FACE_ENDS[face], o0 = shared.has(startSide) ? -.02 : .06, o1 = shared.has(endSide) ? -.02 : .06;
+    if (shared.has(face)) put(batch, trim, f.length / 2, -.12, top + .93, Math.max(0, f.length - .5), .08, .2);
+    else put(batch, trim, f.length / 2 + (o1 - o0) / 2, -.06, top + .93, f.length + o0 + o1, .08, .4);
     if (!faced.has(face)) continue;
     if (roofKind === 'cornice') { put(detail, trim, f.length / 2, .04, top - .1, f.length + .3, .22, .32); put(detail, trim, f.length / 2, .1, top + .08, f.length + .45, .14, .44); }
     // A shadow reveal under a black-steel coping reads as a crisp modern parapet.
@@ -482,10 +493,70 @@ function renderWaterTower(piece, m, ground, batch) {
 }
 
 /**
- * Build the plan's scene. `groundAt(east, north)` returns walking ground height;
- * `ground` is the level site height for shells and edges.
+ * The plan's street trees and lane planting, as placements for buildMatureTrees and
+ * buildPlanterPlanting. The kit draws its own; a caller that streams several
+ * neighborhoods (bayou-heights.js) draws theirs once, with `landscape: false`.
  */
-export function buildCityKit(plan, { groundAt, ground }) {
+export function cityKitLandscape(plan, { groundAt, ground }) {
+  const trees = [], planters = [];
+  for (const piece of plan.pieces) {
+    if (piece.piece === 'landscape/hedge') {
+      // Planted along the length of the limestone planter wall.
+      const [w, s, e, n] = piece.rect;
+      for (let x = w + .9; x < e - .5; x += 1.6) planters.push([x, ground - .05, -(s + n) / 2, 0]);
+    }
+    else if (piece.piece === 'landscape/planter') {
+      const [w, s, e, n] = piece.rect;
+      // Planting fills the bed in rows; a narrow planter gets one row down its middle.
+      const rows = Math.max(1, Math.floor((n - s) / 1.4));
+      for (let row = 0; row < rows; row++) for (let x = w + .7; x < e - .3; x += 1.4) planters.push([x, ground - .12, -(s + (n - s) * (row + .5) / rows), (row % 2) * Math.PI]);
+    }
+    else if (piece.piece === 'landscape/bayou') {
+      const [, s, e, n] = piece.rect;
+      for (let v = s + 3; v < n; v += 7.5) trees.push({ position: [e - 3, ground + .2, -v], height: 10 + (Math.abs(Math.sin(v)) * 3), radius: 4.2, yaw: v });
+    }
+    else if (piece.piece === 'landscape/street-tree') {
+      const [x, y] = piece.at;
+      trees.push({ position: [x, groundAt(x, y), -y], height: piece.height, radius: piece.radius, yaw: piece.yaw });
+    }
+  }
+  return { trees, planters };
+}
+
+// Planting draws in 12 m and 24 m batches (spatial-instances.js, procedural-plants.js); only
+// the fine grass flower stems span a whole plan, and they stay drawn with the planting.
+const PLANTING_BATCH_RADIUS = 30;
+/** Hides planting batches (buildPlanterPlanting) farther than `metres`, and any `shown` rejects. */
+export function cullPlanting(planting, position, metres, shown = () => true) {
+  for (const mesh of planting.children) if (mesh.boundingSphere?.radius < PLANTING_BATCH_RADIUS)
+    mesh.visible = shown(mesh) && position.distanceTo(mesh.boundingSphere.center) - mesh.boundingSphere.radius < metres;
+}
+
+/** Dispose tree and planting groups (buildMatureTrees, buildPlanterPlanting). */
+export function disposeLandscape(groups) {
+  // Landscape meshes own cloned buffers/materials and instance storage. Their
+  // texture maps belong to the shared template cache and must survive eviction.
+  const landscapeGeometries = new Set(), landscapeMaterials = new Set();
+  for (const landscape of groups.filter(Boolean)) {
+    landscape.userData.cancelLandscapeLoad?.();
+    landscape.traverse(item => {
+      if (item.geometry) landscapeGeometries.add(item.geometry);
+      for (const material of [item.material].flat().filter(Boolean)) landscapeMaterials.add(material);
+      if (item.isInstancedMesh) item.dispose();
+    });
+    landscape.clear();
+  }
+  for (const geometry of landscapeGeometries) geometry.dispose();
+  for (const material of landscapeMaterials) material.dispose();
+}
+
+/**
+ * Build the plan's scene. `groundAt(east, north)` returns walking ground height;
+ * `ground` is the level site height for shells and edges. With `landscape: false`
+ * the caller draws the plan's trees and planting (cityKitLandscape). Planting draws at
+ * every distance unless `plantingMetres` limits it.
+ */
+export function buildCityKit(plan, { groundAt, ground, landscape = true, plantingMetres = Infinity }) {
   const group = new THREE.Group(); group.name = `City kit: ${plan.id}`;
   const materials = createMaterials(), m = materials.get, disposables = [];
   const blocks = new Map(), blockFor = piece => {
@@ -496,7 +567,21 @@ export function buildCityKit(plan, { groundAt, ground }) {
     block.center.add(new THREE.Vector3(x, ground, -y)); block.count.n++;
     return block;
   };
-  const flat = createBatch(), signs = [], lanterns = new Map(), trees = [], planters = [];
+  // Sides of a shell that touch another shell along a stretch of wall.
+  const shells = plan.pieces.filter(piece => piece.piece === 'building/shell');
+  const partyWalls = piece => {
+    const [w, s, e, n] = piece.rect, sides = new Set(), near = (a, b) => Math.abs(a - b) < .01, along = (a0, a1, b0, b1) => Math.min(a1, b1) - Math.max(a0, b0) > .1;
+    for (const other of shells) {
+      if (other === piece) continue;
+      const [w2, s2, e2, n2] = other.rect;
+      if (near(e, w2) && along(s, n, s2, n2)) sides.add('east');
+      if (near(w, e2) && along(s, n, s2, n2)) sides.add('west');
+      if (near(n, s2) && along(w, e, w2, e2)) sides.add('north');
+      if (near(s, n2) && along(w, e, w2, e2)) sides.add('south');
+    }
+    return sides;
+  };
+  const flat = createBatch(), signs = [], lanterns = new Map(), { trees, planters } = cityKitLandscape(plan, { groundAt, ground });
   // Ground: draped paving and lawns; overlays use polygon offset instead of height.
   // Each overlay layer sits 4 mm above the one below and is pulled further forward than it.
   const overlay = (name, layer) => { const material = m(name).clone(); material.polygonOffset = true; material.polygonOffsetFactor = -layer; material.polygonOffsetUnits = -2 * layer; material.name = `${m(name).name}:overlay`; disposables.push(material); return material; };
@@ -526,7 +611,7 @@ export function buildCityKit(plan, { groundAt, ground }) {
   const [sw, ss, se, sn] = plan.site;
   flat.box(m('curb-granite'), (sw + se) / 2, ground - 1.9, (ss + sn) / 2, se - sw, 3.4, sn - ss + 30);
   for (const piece of plan.pieces) {
-    if (piece.piece === 'building/shell') { const block = blockFor(piece); renderShell(piece, block.massing, block.detail, m, ground, signs); }
+    if (piece.piece === 'building/shell') { const block = blockFor(piece); renderShell(piece, block.massing, block.detail, m, ground, signs, partyWalls(piece)); }
     else if (piece.piece === 'building/context') {
       const [w, s, e, n] = piece.rect, block = blockFor(piece);
       block.massing.box(m(piece.wall ?? 'stucco-ivory'), (w + e) / 2, ground - 1.5 + (piece.height + 1.5) / 2, (s + n) / 2, e - w, piece.height + 1.5, n - s);
@@ -539,7 +624,6 @@ export function buildCityKit(plan, { groundAt, ground }) {
       const [w, s, e, n] = piece.rect;
       flat.box(m('limestone'), (w + e) / 2, ground + .25, (s + n) / 2, e - w, .5, n - s);
       flat.box(m('porcelain'), (w + e) / 2, ground + .55, (s + n) / 2, e - w + .08, .1, n - s + .08);
-      for (let x = w + .9; x < e - .5; x += 1.6) planters.push([x, ground - .05, -(s + n) / 2, 0]);
     }
     else if (piece.piece === 'landscape/lawn') {
       // Black steel edging keeps the lawn's line crisp against the paving.
@@ -558,9 +642,6 @@ export function buildCityKit(plan, { groundAt, ground }) {
         flat.box(m('metal-brass'), (x0 + x1) / 2, ground + .6125, (y0 + y1) / 2, x1 - x0 + .02, .025, y1 - y0 + .02);
       }
       flat.box(m('soil'), x, ground + .535, y, e - w - 2 * lip, .11, n - s - 2 * lip);
-      // Planting fills the bed in rows; a narrow planter gets one row down its middle.
-      const rows = Math.max(1, Math.floor((n - s) / 1.4));
-      for (let row = 0; row < rows; row++) for (let x = w + .7; x < e - .3; x += 1.4) planters.push([x, ground - .12, -(s + (n - s) * (row + .5) / rows), (row % 2) * Math.PI]);
     }
     else if (piece.piece === 'landscape/bayou') {
       const [w, s, e, n] = piece.rect, water = new THREE.MeshPhysicalMaterial({ color: '#3e5f55', roughness: .12, metalness: .1, clearcoat: 1, envMapIntensity: 1.2 });
@@ -568,11 +649,6 @@ export function buildCityKit(plan, { groundAt, ground }) {
       flat.box(m('lawn'), w + 2.4, ground - 1.5, (s + n) / 2, 4.8, .3, n - s, 0, 0);
       flat.add(water, drape([w + 3, s, e - 6, n], () => ground - 2.6, 0, 6));
       flat.box(m('lawn'), e - 3, ground - 1.2, (s + n) / 2, 6, 2.8, n - s);
-      for (let v = s + 3; v < n; v += 7.5) trees.push({ position: [e - 3, ground + .2, -v], height: 10 + (Math.abs(Math.sin(v)) * 3), radius: 4.2, yaw: v });
-    }
-    else if (piece.piece === 'landscape/street-tree') {
-      const [x, y] = piece.at;
-      trees.push({ position: [x, groundAt(x, y), -y], height: piece.height, radius: piece.radius, yaw: piece.yaw });
     }
     else if (piece.piece === 'furniture/lantern') lanterns.set(piece.id, renderLantern(piece, m, groundAt, flat));
     else if (piece.piece === 'furniture/market-stall') renderMarketStall(piece, flat, m, groundAt, signs);
@@ -599,17 +675,20 @@ export function buildCityKit(plan, { groundAt, ground }) {
   geometries.push(...signBatch.build(group, 'shop signs', { shadows: false }));
   for (const lantern of lanterns.values()) group.add(lantern);
   // Tree and planting models stream from /assets; headless builds count placements only.
-  const treeGroup = headless ? Object.assign(new THREE.Group(), { userData: { shadowProxies: [] } }) : buildMatureTrees({}, trees);
+  const drawn = landscape && !headless;
+  const treeGroup = drawn ? buildMatureTrees({}, trees) : Object.assign(new THREE.Group(), { userData: { shadowProxies: [] } });
   treeGroup.name = `${plan.id} trees`; treeGroup.userData.placements = trees.length; group.add(treeGroup);
-  const planting = planters.length && !headless ? buildPlanterPlanting(planters) : null; if (planting) group.add(planting);
+  const planting = planters.length && drawn ? buildPlanterPlanting(planters) : null; if (planting) group.add(planting);
   group.userData.ready = Promise.all([treeGroup.userData.ready, planting?.userData.ready]);
   group.userData.plantingModules = planters.length;
   group.userData.shadowProxies = treeGroup.userData.shadowProxies;
   group.userData.lanterns = lanterns;
   group.userData.stats = () => { let meshes = 0, triangles = 0; group.traverse(item => { if (item.isMesh && item.visible) { meshes++; triangles += (item.geometry.index?.count ?? item.geometry.attributes.position.count) / 3 * (item.count ?? 1); } }); return { meshes, triangles: Math.round(triangles), materials: materials.made.size + disposables.length }; };
+  group.userData.plantingMetres = plantingMetres;
   group.userData.update = position => {
     treeGroup.userData.update?.(position);
     for (const level of levels) level.detail.visible = position.distanceTo(level.center) < KIT_CONVENTIONS.lod.detailMetres;
+    if (planting && plantingMetres < Infinity) cullPlanting(planting, position, plantingMetres);
   };
   group.userData.setLanterns = (lit, complete) => {
     for (const [id, lantern] of lanterns) lantern.userData.setLit(lit.has(id));
@@ -618,20 +697,7 @@ export function buildCityKit(plan, { groundAt, ground }) {
   let disposed = false;
   group.userData.dispose = () => {
     if (disposed) return; disposed = true;
-    // Landscape meshes own cloned buffers/materials and instance storage. Their
-    // texture maps belong to the shared template cache and must survive eviction.
-    const landscapeGeometries = new Set(), landscapeMaterials = new Set();
-    for (const landscape of [treeGroup, planting].filter(Boolean)) {
-      landscape.userData.cancelLandscapeLoad?.();
-      landscape.traverse(item => {
-        if (item.geometry) landscapeGeometries.add(item.geometry);
-        for (const material of [item.material].flat().filter(Boolean)) landscapeMaterials.add(material);
-        if (item.isInstancedMesh) item.dispose();
-      });
-      landscape.clear();
-    }
-    for (const geometry of landscapeGeometries) geometry.dispose();
-    for (const material of landscapeMaterials) material.dispose();
+    disposeLandscape([treeGroup, planting]);
     treeGroup.userData.shadowProxies.length = 0;
     for (const geometry of geometries) geometry.dispose();
     for (const lantern of lanterns.values()) lantern.userData.dispose();

@@ -96,6 +96,17 @@ The development-only hooks are `window.__riverRenderAudit.depthFights()` and `de
 | `pnpm run verify` (core), Python 3.12 | **Passed on attempt 5** (2026-10-27 02:10–02:17Z, load 17–19): agent 276/276; preview 4,179 passed, 1 skipped; server 915 passed, 225 skipped (Redis cases); desktop 120 passed, 3 skipped; build; Python lint, format and tests; demo, demo-verify; secrets. Receipt `9c785d456f59b69a…`. Attempts 1, 2: the `land-pr` queued-lander wake test (30 s; the file alone passes). Attempt 3: the Garden Office asset manifest still held `materials.js`'s old hash; refreshed with `node scripts/garden-office-manifest.mjs --write` (only that hash, in its 9 records). Attempt 4: five server tests timed out (`request_timeout`, "Campus command timed out") at load 20–75; none touch this branch. All logs kept. |
 | Depth reach, Apple M-series, ANGLE Metal | Worst slack 1.57. 1.5 mm separates out to 40 m at 10° elevation and 80 m at 30°/60°. 5 cm holds to 320 m. |
 
+## Main merged (`96ec9e10`, 2026-10-27)
+
+- **Conflicts.** #649 moved city-kit's planting placement into `cityKitLandscape()`. This branch keeps its planter and hedge geometry and drops the old planting lines.
+- **New neighbourhoods.** #649 added six Heights neighbourhoods, and scanning them found fights only on party walls. Floor plates stood 4 cm proud into the neighbour's, and copings overhung each other on one plane, in different trims.
+- **Party-wall fix.** `buildCityKit` now finds each shell's party walls:
+  - the plate stops inside its own wall there;
+  - the coping stays on its own parapet, short of the corners;
+  - copings stop 2 cm short of a party corner instead of overhanging it.
+- **Result.** All eight city-kit neighbourhoods have no fights. The city-kit test now builds every kit recipe in `config/destinations`.
+- **Checks.** City-kit, depth-audit, Bayou Market Commons and Bayou Heights tests: 39/39. The journey on the merged tree passed, with 388 listed pairs and none new. Core verify passed on the first attempt (2026-10-27 03:09–03:14Z): agent 284/284; preview 4,221 passed, 1 skipped; server 965 passed, 250 skipped (Redis cases); desktop 127 passed, 5 skipped. Receipt `f0bdc45eadf020dc…`.
+
 ## Remaining (`depth-layers-known.json`, 388 pairs)
 
 By source:
@@ -108,7 +119,6 @@ By source:
 
 ## Next step
 
-1. Merge main (`3df540ee`, with #649's city-kit edits beside the planter block) and reverify.
 2. Increment 2, already measured in a scratch checkout (378 pairs to 318):
    - building masses draw walls only (no cap 2 cm under each roof sheet);
    - finish batches are named after the materials they draw;

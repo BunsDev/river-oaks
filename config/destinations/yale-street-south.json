@@ -1,0 +1,145 @@
+{
+  "id": "yale-street-south",
+  "title": "Bayou Heights: Yale Street south and Eighteenth Street",
+  "kit": "city-kit-1",
+  "seed": 1930,
+  "inspiration": "Patterns only, no copied buildings: a Houston Heights-style east bank across the bayou from Bayou Market, with a greenway trail along the water (Buffalo Bayou), a neighborhood green with a bandstand, an icehouse patio, and a boulevard with a walking esplanade (Heights Boulevard). All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    250,
+    -122.5,
+    364,
+    -64
+  ],
+  "streets": [
+    {
+      "id": "yale-south",
+      "from": [
+        307,
+        -118
+      ],
+      "to": [
+        307,
+        -63
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 5,
+        "spacing": 10
+      },
+      "lamps": {
+        "offset": 9,
+        "spacing": 16
+      }
+    },
+    {
+      "id": "eighteenth-east",
+      "from": [
+        249.5,
+        -71
+      ],
+      "to": [
+        365,
+        -71
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 6,
+        "spacing": 10
+      },
+      "lamps": {
+        "offset": 11,
+        "spacing": 16
+      }
+    }
+  ],
+  "plazas": [],
+  "blocks": [
+    {
+      "id": "eighteenth-south-w",
+      "style": "heights-row",
+      "rect": [
+        250,
+        -118,
+        300.5,
+        -77.5
+      ],
+      "front": "north",
+      "sides": [
+        "west",
+        "east"
+      ],
+      "depth": [
+        12,
+        16
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        4.5,
+        6.5
+      ],
+      "names": [
+        "Sweetgum Market",
+        "Ironwood Joinery",
+        "Dewberry Pies",
+        "Low Water Cafe",
+        "Chicory & Sage"
+      ]
+    },
+    {
+      "id": "eighteenth-south-e",
+      "style": "market-row",
+      "rect": [
+        313.5,
+        -118,
+        364,
+        -77.5
+      ],
+      "front": "north",
+      "sides": [
+        "west",
+        "east"
+      ],
+      "depth": [
+        12,
+        16
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        4.5,
+        6.5
+      ],
+      "names": [
+        "Tumbleweed Toys",
+        "Firefly Lamps",
+        "Silver Bell Dry Goods",
+        "Okra & Fig",
+        "Bayside Bindery"
+      ]
+    }
+  ],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "yale-south-end",
+      "piece": "landscape/hedge",
+      "rect": [
+        301,
+        -118,
+        313,
+        -116.8
+      ]
+    }
+  ],
+  "context": [],
+  "overrides": {},
+  "additions": []
+}

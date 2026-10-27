@@ -55,6 +55,11 @@ export function createDevAuth({ origin, env = process.env, now = Date.now, onLog
   return {
     development: true,
     isAdmin: userId => userId === ownerUserId,
+    // Account deletion: every session of the account, then its sockets.
+    async revokeUser(userId) {
+      for (const [key, record] of sessions) if (record.userId === userId) sessions.delete(key);
+      await onLogout(userId);
+    },
     authenticate: async req => current(req),
     async handle(req, res) {
       const path = new URL(req.url, origin).pathname;

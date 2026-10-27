@@ -51,7 +51,8 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
     clientId, timeout: 10_000, maxRetries: 1,
   }) : null;
   const secure = base?.startsWith('https:');
-  const github = sdk && createGitHubNames({ userManagement: sdk.userManagement, store: createMemoryGitHubNameStore(), token: githubToken, fetcher: githubFetch, now });
+  const githubStore = createMemoryGitHubNameStore();
+  const github = sdk && createGitHubNames({ userManagement: sdk.userManagement, store: githubStore, token: githubToken, fetcher: githubFetch, now });
   // Residents are shown by GitHub username; only an admin account is Jevica.
   const nameOf = (userId, account) => residentName({ admin: isJevicaAdmin(userId), login: account?.login, userId });
   // A session whose lookup failed is renamed once GitHub answers again.
@@ -352,9 +353,11 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
       if(!enabled)return false;
       try{if(!await accountActive(userId))return false;const record=sessions.get(sessionId);return enabled&&record?.userId===userId&&record.expiresAt>now();}catch{return false;}
     },
+    // Account deletion: every session and the stored GitHub name.
     async revokeUser(userId){
       if(typeof userId!=='string'||!userId.length||userId.length>200)throw new TypeError('Invalid account');
       for(const record of sessions.values())if(record.userId===userId)removeSession(record);
+      await githubStore.delete(userId);
       // Retry cleanup even when an earlier delivery already removed the sessions.
       await onLogout(userId);
     },
