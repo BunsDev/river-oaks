@@ -1356,6 +1356,16 @@ try {
 // Explicit diagnostic timing; normal production builds omit this API.
 // The crowd camera remains development-only.
 if (renderAudit) {
+  // Visible meshes only: sprites need a camera to raycast, and hidden layers are not what was seen.
+  const auditMeshes = () => { const meshes = []; scene.traverseVisible(object => { if (object.isMesh) meshes.push(object); }); return meshes; };
+  // A raycast hit as [east, up, north] with the mesh, its named ancestors and material.
+  const auditHit = hit => {
+    const material = [hit.object.material].flat()[hit.face?.materialIndex ?? 0], path = [];
+    for (let node = hit.object.parent; node && path.length < 3; node = node.parent) if (node.name) path.push(node.name);
+    return { object: hit.object.name || hit.object.type, path: path.join(' < '), id: hit.object.id, material: material?.name ?? null,
+      color: material?.color?.getHexString?.() ?? null, offset: material?.polygonOffset ? [material.polygonOffsetFactor, material.polygonOffsetUnits] : null,
+      at: [+hit.point.x.toFixed(2), +hit.point.y.toFixed(4), +(-hit.point.z).toFixed(2)], distance: +hit.distance.toFixed(3) };
+  };
   window.__riverRenderAudit = {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
     // Toggles and camera controls stay development-only: the ios-probe
@@ -1405,6 +1415,22 @@ if (renderAudit) {
         return { faces: found.faces, truncated: found.truncated, fights: found.map(({ faces, centre2d, ...pair }) => pair) };
       },
       depthPrecision: options => measureDepthPrecision(renderer, options),
+      // What the camera sees through a screen pixel (CSS px in the canvas): the first few surfaces.
+      pick(x, y, hits = 4) {
+        const rect = renderer.domElement.getBoundingClientRect(), ray = new THREE.Raycaster();
+        ray.setFromCamera(new THREE.Vector2((x - rect.left) / rect.width * 2 - 1, -((y - rect.top) / rect.height) * 2 + 1), camera);
+        return ray.intersectObjects(auditMeshes(), false).slice(0, hits).map(auditHit);
+      },
+      // What a vertical ray meets at each point of a small grid around [east, north], top down,
+      // to read a spot of ground (a hole, a fight, a seam).
+      groundProbe([east, north], { radius = 1, step = .5, hits = 4 } = {}) {
+        const ray = new THREE.Raycaster(), down = new THREE.Vector3(0, -1, 0), meshes = auditMeshes(), probes = [];
+        for (let de = -radius; de <= radius + 1e-6; de += step) for (let dn = -radius; dn <= radius + 1e-6; dn += step) {
+          ray.set(new THREE.Vector3(east + de, 400, -(north + dn)), down);
+          probes.push({ at: [+(east + de).toFixed(2), +(north + dn).toFixed(2)], hits: ray.intersectObjects(meshes, false).slice(0, hits).map(auditHit) });
+        }
+        return probes;
+      },
     } : {}),
     graphics() {
       const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');

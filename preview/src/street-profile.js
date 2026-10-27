@@ -89,6 +89,12 @@ export function streetStations(segment, crossings) {
 // Continuous polygon strips share one cross-section at each bend, including
 // compatible roads split into separate source records. Junctions keep their
 // own profiles; a bounded miter prevents acute corners from growing spikes.
+// Where a road bends gently through a junction, square ends open a wedge of
+// bare ground on the side no other street meets. One of the two segments
+// (`startOpen`/`endOpen`) carries that side to its neighbour's square end, so
+// every band meets its neighbour exactly and the curb returns at the junction
+// and at the far ends keep their profiles. A segment ending at another
+// junction stays square: its interpolated profile would move that curb return.
 export function joinStreetSegments(segments) {
   const nodes=new Map();
   const add=(point,entry)=>{const key=`${point[0]},${point[1]}`;if(!nodes.has(key))nodes.set(key,[]);nodes.get(key).push(entry);};
@@ -112,10 +118,34 @@ export function joinStreetSegments(segments) {
       current.segment[current.end?'endAcross':'startAcross']=across.map(v=>v/scale);
     }
   }
+  const heading=entry=>Math.atan2(entry.away[1],entry.away[0]);
+  const sweep=(from,to)=>{const angle=heading(to)-heading(from);return angle<0?angle+Math.PI*2:angle;};
+  const span=({segment})=>Math.hypot(segment.b[0]-segment.a[0],segment.b[1]-segment.a[1]);
+  const junction=({segment,end})=>{const far=end?segment.a:segment.b;return nodes.get(`${far[0]},${far[1]}`).length>=3;};
+  for(const entries of nodes.values()) {
+    if(entries.length<3)continue;
+    for(const road of new Set(entries.map(entry=>entry.segment.road))) {
+      const pair=entries.filter(entry=>entry.segment.road===road);
+      if(pair.length!==2||pair[0].segment.width!==pair[1].segment.width||pair[0].segment.walkway!==pair[1].segment.walkway)continue;
+      // The open side runs anticlockwise from `from` to `to` with no other arm
+      // inside it; it only gapes when that side is reflex, by the bend angle.
+      const [from,to]=[pair,[pair[1],pair[0]]].find(([p,q])=>!entries.some(entry=>!pair.includes(entry)&&sweep(p,entry)<sweep(p,q)))??[];
+      if(!from||sweep(from,to)<=Math.PI+1e-6||sweep(from,to)>Math.PI*10/9)continue;
+      const current=[from,to].filter(entry=>!junction(entry)).sort((p,q)=>span(q)-span(p))[0];
+      if(!current)continue;
+      // Lateral +1 is anticlockwise of a→b; the open side is anticlockwise of
+      // `from`'s away direction and clockwise of `to`'s.
+      const other=current===from?to:from,side=entry=>entry===from?(from.end?-1:1):(to.end?1:-1);
+      const {segment}=other,length=span(other),flip=side(current)*side(other);
+      current.segment[current.end?'endOpen':'startOpen']={side:side(current),across:[-(segment.b[1]-segment.a[1])/length*flip,(segment.b[0]-segment.a[0])/length*flip]};
+    }
+  }
 }
 
 export function streetPoint(segment,station,lateral) {
-  const dx=segment.b[0]-segment.a[0],dy=segment.b[1]-segment.a[1],t=station/Math.hypot(dx,dy);
-  return [segment.a[0]+dx*t+lateral*(segment.startAcross[0]*(1-t)+segment.endAcross[0]*t),
-    segment.a[1]+dy*t+lateral*(segment.startAcross[1]*(1-t)+segment.endAcross[1]*t)];
+  const dx=segment.b[0]-segment.a[0],dy=segment.b[1]-segment.a[1],t=station/Math.hypot(dx,dy),side=Math.sign(lateral);
+  const start=segment.startOpen?.side===side?segment.startOpen.across:segment.startAcross;
+  const end=segment.endOpen?.side===side?segment.endOpen.across:segment.endAcross;
+  return [segment.a[0]+dx*t+lateral*(start[0]*(1-t)+end[0]*t),
+    segment.a[1]+dy*t+lateral*(start[1]*(1-t)+end[1]*t)];
 }

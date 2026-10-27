@@ -107,6 +107,21 @@ The development-only hooks are `window.__riverRenderAudit.depthFights()` and `de
 - **Result.** All eight city-kit neighbourhoods have no fights. The city-kit test now builds every kit recipe in `config/destinations`.
 - **Checks.** City-kit, depth-audit, Bayou Market Commons and Bayou Heights tests: 39/39. The journey on the merged tree passed, with 388 listed pairs and none new. Core verify passed on the first attempt (2026-10-27 03:09–03:14Z): agent 284/284; preview 4,221 passed, 1 skipped; server 965 passed, 250 skipped (Redis cases); desktop 127 passed, 5 skipped. Receipt `f0bdc45eadf020dc…`.
 
+## Val's triangle at (−2907.95, −1401.08)
+
+- **What it was.** A hole, not a fight. A vertical-ray probe and a camera pick found nothing but the pale terrain under a 12 cm wedge: Westcreek Lane bends 1.7° where the District access lane meets it from the west. `joinStreetSegments` mitred only two-way bends, so both segments ended square at the junction, and on the east side (no other street) the asphalt, gutter, curb and pavers all left a wedge of bare ground.
+- **First attempt, rejected.** Mitring a road's own pair through junctions closed the hole, but every junction end is interpolated along its whole segment. That moved the side streets' curb returns: tangent kinks of >1 cm went from 10 to 19 of 44, the worst from 0.64 m to 3.79 m.
+- **Fix.** `street-profile.js` mitres only the open side, and on only one segment:
+  - It applies where a road bends at most 20° through a junction and the outer side, the one no other street meets, is reflex.
+  - The segment whose far end is not a junction (the longer, if both qualify) carries that side's cross-section to its neighbour's square end (`startOpen`/`endOpen`, read by `streetPoint` for that lateral sign only), so every band meets its neighbour exactly.
+  - Of 11 such wedges in the Commons and Heights revisions, 9 close, at bends of 0.0–2.8°. Two stay square because both ends meet junctions; their bends are 0.04° and 0.00°.
+  - All 44 curb tangents are byte-identical to main in both revisions.
+- **Checks.**
+  - The new street-profile test asserts the junction asphalt is whole and every curb return still meets its straight curb. It fails on square ends (800 bare points) and on the blanket mitre (a curb return moved), and passes with this fix.
+  - 35 street, sidewalk, corner, ground and walking files: 226/226.
+  - The fixture town's top-down pick at the spot now hits asphalt where it hit terrain; before and after captures are in the session scratchpad.
+- **Tools.** The render-audit hooks gained `pick(x, y)` (what a screen pixel sees, nearest first) and `groundProbe([east, north])` (what a vertical ray meets on a small grid). Both are DEV-only, under `?render-audit=1`.
+
 ## Remaining (`depth-layers-known.json`, 388 pairs)
 
 By source:
