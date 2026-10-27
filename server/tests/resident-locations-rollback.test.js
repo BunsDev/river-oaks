@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { loadDistrictData } from '../district-data.js';
 import { createSharedWorld } from '../world.js';
-import { recoverDistrictCommonsCheckpoint } from '../district-commons-checkpoint-migration.js';
+import { recoverDistrictCommonsCheckpoint, relocateResidents } from '../district-commons-checkpoint-migration.js';
 import { createResidentNavigation } from '../../preview/src/navigation.js';
 import { createResidentLife } from '../../preview/src/resident-life.js';
 import { createCommunity } from '../../preview/src/community.js';
@@ -169,4 +169,61 @@ test('rollback leaves residents alone when none wandered out of the District',()
   const result=recoverDistrictCommonsCheckpoint({worldData:gardens,checkpoint:before.checkpoint(),now:()=>1000});
   assert.equal(result.ok,true);assert.deepEqual(result.movedResidents,[]);assert.deepEqual(result.reroutedResidents,[]);
   assert.deepEqual(result.checkpoint.payload.state.locals,before.checkpoint().payload.state.locals);
+});
+
+test('relocateResidents moves only residents on dropped land, leaves the source checkpoint alone and can search from a fallback point',()=>{
+  const time=1000,before=createSharedWorld(commons,{now:()=>time});
+  const composed=createResidentNavigation(commons,{locations:true});
+  const original=before.checkpoint(),{checksum:_checksum,...envelope}=structuredClone(original);
+  const [near,far]=envelope.payload.state.locals.filter(local=>!local.indoor&&!local.stationary);
+  const inCommons=[edge+60,-1335];
+  near.position=[...inCommons,composed.ground(inCommons)];
+  const snapshot=structuredClone(envelope);
+  const result=relocateResidents({fromData:commons,toData:gardens,checkpoint:envelope,inside:east=>east>gardens.bounds_m[2]});
+  assert.deepEqual(result.moved,[near.id]);
+  assert.deepEqual(envelope,snapshot,'the input envelope is not modified');
+  const navigation=createResidentNavigation(gardens),moved=result.checkpoint.payload.state.locals.find(local=>local.id===near.id);
+  assert.ok(navigation.free(moved.position));
+  assert.deepEqual(result.checkpoint.payload.state.locals.find(local=>local.id===far.id).position,far.position);
+  // A resident far from any ground the target keeps (deep in dropped land north of
+  // the Commons band, as in Bayou Heights) needs the fallback point.
+  const deep=structuredClone(envelope),lost=deep.payload.state.locals.find(local=>local.id===near.id);
+  lost.position=[edge+110,-1200,0];
+  const dropped=(east,north)=>east>edge+100&&north>-1290;
+  assert.equal(relocateResidents({fromData:commons,toData:commons,checkpoint:deep,inside:dropped}),null,'nothing clear within 40 m and no fallback');
+  const toward=createResidentLife(commons,createCommunity(commons,[],{carriage:false})).stops.find(stop=>stop.id.endsWith('lantern-tower')).position;
+  const found=relocateResidents({fromData:commons,toData:commons,checkpoint:deep,inside:dropped,toward});
+  assert.deepEqual(found.moved,[near.id]);
+  const placed=found.checkpoint.payload.state.locals.find(local=>local.id===near.id).position;
+  assert.ok(composed.free(placed)&&distance(placed,toward)<=40);
+});
+
+test('relocateResidents re-plans walks into dropped land or to a dropped stop, not across corridors the target keeps',()=>{
+  const before=createSharedWorld(commons,{now:()=>1000});
+  const {checksum:_checksum,...envelope}=structuredClone(before.checkpoint());
+  const walker=envelope.payload.state.locals.find(local=>!local.indoor&&!local.stationary);
+  const home={anchorId:walker.anchorId,anchorName:walker.anchorName};
+  let at=null;
+  for(let dx=18;dx<60&&!at;dx+=0.5){const point=[portal.from[0]-dx,portal.from[1]];if(composed.free(point)&&gardensNavigation.free(point))at=point;}
+  walker.position=[...at,composed.ground(at)];
+  Object.assign(walker,{anchorId:tower.id,anchorName:tower.name});walker.persona.anchorName=tower.name;
+  Object.assign(walker.life,{route:composed.route(at,tower.position),destination:{id:tower.id,name:tower.name,shelter:false}});
+  assert.ok(walker.life.route.some(point=>point[0]>edge),'the walk crosses the corridor into the Commons');
+  const after=(result,id=walker.id)=>result.checkpoint.payload.state.locals.find(local=>local.id===id);
+  // Rolling back to a target that keeps the corridor and the Commons (as Heights to
+  // the Commons does) drops only land north of the band: the walk goes on.
+  const dropped=(east,north)=>east>edge+100&&north>-1290;
+  const kept=relocateResidents({fromData:commons,toData:commons,checkpoint:envelope,inside:dropped});
+  assert.deepEqual([kept.moved,kept.rerouted],[[],[]]);
+  assert.deepEqual(after(kept).life.route,walker.life.route);
+  assert.equal(after(kept).anchorId,tower.id);
+  // The caller dropping the stop it heads for re-plans it, and gives back the home stop.
+  const stop=relocateResidents({fromData:commons,toData:commons,checkpoint:envelope,inside:dropped,gone:id=>id===tower.id});
+  assert.deepEqual([stop.moved,stop.rerouted],[[],[walker.id]]);
+  assert.deepEqual([after(stop).life.route,after(stop).life.destination],[[],null]);
+  assert.deepEqual({anchorId:after(stop).anchorId,anchorName:after(stop).anchorName,persona:after(stop).persona.anchorName},{...home,persona:home.anchorName});
+  // A target without the corridor (Gardens) re-plans the walk without being told about stops.
+  const gardensResult=relocateResidents({fromData:commons,toData:gardens,checkpoint:envelope,inside:east=>east>gardens.bounds_m[2]});
+  assert.deepEqual([gardensResult.moved,gardensResult.rerouted],[[],[walker.id]]);
+  assert.equal(after(gardensResult).anchorId,tower.id,'stops are the caller\'s to name');
 });
