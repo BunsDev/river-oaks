@@ -86,3 +86,41 @@ The receipt lists each phase's revision, epoch and durable view, every check, an
 - hosted multiplayer load.
 
 Those are why the switch still needs a monitored window.
+
+# Activating Bayou Heights
+
+Bayou Heights (`bayou-heights-1`, [place doc](level-design/expansion/bayou-heights.md)) composes on the Commons. It is switched on, watched and rolled back the same way as the Commons above, with these differences. Nothing here has been run against production either, and it needs Val's explicit go.
+
+## Go/no-go
+
+- Everything in [Go/no-go before the switch](#gono-go-before-the-switch) for its own release commit. This includes the #587 gate for Heights, measured against the District baseline under the #626 paired protocol.
+- **Production state:** production is on `east-garden-commons-market-1` and has settled. Heights rolls back to the Commons, so starting from the Commons keeps a rollback to the town residents already know.
+- `server/tests/heights-activation-rehearsal.test.js` passes on the release commit against an isolated Redis.
+
+## Switch and verify
+
+- Set `RIVER_OAKS_DISTRICT_REVISION=bayou-heights-1` with the epoch raised, then replace the processes. The first coordinator logs exactly one `{"event":"district_heights_checkpoint_migrated","from":"commons","to":"heights","moved":0}`. A Gardens or garage checkpoint also restores, logged with `"from"` naming the Commons migration's source, but the Commons precondition above avoids it.
+- `GET /api/world-data?world=river-oaks` returns `"districtRevision":"bayou-heights-1"`.
+- Two accounts walk from the District over Market Street and the Lantern Footbridge onto Nineteenth Street and back. Each crossing names the place in the walking notice.
+- The overlap and rollback triggers are the same as for the Commons.
+
+## Rollback
+
+- **To the Commons** (the default): set `RIVER_OAKS_DISTRICT_REVISION=east-garden-commons-market-1` with another epoch raise. The first coordinator logs `{"event":"district_heights_checkpoint_migrated","from":"heights","to":"commons","moved":N}`.
+  - N counts players moved: anyone east of the footbridge, or airborne where the Commons cannot fly them, onto clear Commons ground by the bridge.
+  - Players seated at the icehouse table stand first, following ordinary departure rules, and that table's game ends. Other tables, accounts, chat, creations and positions elsewhere are unchanged.
+- **Straight to Gardens:** set `river-oaks-gardens-3` with an epoch raise. The migration chains through the Commons and logs `"from":"heights","to":"gardens"`. Everyone east of the District edge ends on District ground.
+- `moved` counts players only. Residents do not route into Heights yet. When they do, the Heights rollback must relocate them too.
+
+## Evidence
+
+`server/tests/heights-activation-rehearsal.test.js` rehearses:
+- activation from the Commons;
+- standing, seated and airborne occupants in Heights;
+- a stale Commons deployment, both relaying and refusing alone;
+- rollback to the Commons;
+- refusal of the superseded Heights deployment;
+- re-activation;
+- the chained rollback to Gardens.
+
+Run it like the Commons rehearsal above, against a disposable loopback Redis. The same limits apply.
