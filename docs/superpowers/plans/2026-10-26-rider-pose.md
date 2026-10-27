@@ -106,6 +106,27 @@ Recorded on the uncommitted branch at base a13c853b (2026-10-26).
   - Each time the bike stands at speed 0 on full right lock, after 19.6 m and 17.2 m here
     and 17.3 m on main, short of the 20 m the journey needs.
   - The bike's occupancy guard is unchanged here.
+- **Merge of main 52c43c7a (f4b69767, 2026-10-27).** #691 had become unmergeable.
+  - Only the five garment receipts conflicted, on their input hashes. They were rebaked on
+    the merged tree, and all `*-morph-data.js` are byte-identical.
+  - Focused rider suites: 83 of 83. Bake and receipt tests: 380 of 380.
+  - Core gate: passed, 03:23–03:28Z, on the staged merge (`.runtime/rider/verify-merge.log`;
+    its label says 9ee35b4c, which differs from 52c43c7a only in CI-scope files):
+    - 289 of 289;
+    - 4229 pass, 1 skip;
+    - 970 pass, 251 skips;
+    - 127 pass, 5 skips.
+  - `cycling-rack` is intermittent on both trees, with one stall. The bike stands at speed
+    0 against the plaza's long white table at about (−2795.2, 1295.5), after 17–19 m, in
+    the final due-west hold (failure capture in `scratchpad/rider-snap-merge/output`).
+    - On main 52c43c7a it passed twice and failed once. Including 40f4e786: 2 of 4.
+    - On this branch, before and after the merge, it passed once in 6 runs.
+    - The last four runs alternated main, branch, branch, main
+      (`scratchpad/cycling-abba.log`): pass, fail, pass, fail.
+  - A frame probe (local, `scratchpad/rider-frame-probe.js`) ran in the same alternating
+    order. Every run held 60 fps standing and riding (median and p95 16.7 ms, max 16.8 ms)
+    and rode 5.7 m in 4 s, so the rider pose costs no frames and doesn't change the ride
+    (`scratchpad/frame-probe-abba.log`).
 - **Core gate:** `pnpm run verify` (core, Python 3.12) passed on 2026-10-26, 23:06–23:14Z, at a 1-minute
   load of 57 (receipt `.runtime/agent/core.json`):
   - 276 of 276;
@@ -117,12 +138,13 @@ Recorded on the uncommitted branch at base a13c853b (2026-10-26).
 
 ## Gaps
 
-- `cycling-rack` needs its own investigation on main: something in the plaza (static or
-  a resident, `plaza-bicycle.js` `canOccupy`) now blocks the westward leg. It is not fixed
-  here.
+- `cycling-rack` needs its own investigation on main. Its heading controller sometimes
+  turns west too late and pins the bike against the plaza's long white table. Once
+  stopped, the bike can't turn. It is not fixed here.
 - A long gown still covers the legs and clips the frame while riding.
 - The pose is not checked on phone or WebKit renders.
 
 ## Next
 
-Open the draft PR, update the register, and report the `cycling-rack` failure on main.
+Hosted checks on #691's merged head. Merging awaits Val. `cycling-rack` belongs to a
+separate task on main.
