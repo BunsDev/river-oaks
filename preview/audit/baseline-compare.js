@@ -30,7 +30,7 @@ const SAMPLE_METRICS = [
 
 function workloads(report) {
   if (report?.status !== 'passed' || !Array.isArray(report.profiles)) throw new Error('Only passed baseline reports can be compared');
-  const result = new Map();
+  const result = new Map(), reconnect = new Map();
   for (const profile of report.profiles) {
     for (const players of [1, 2]) {
       const samples = profile.samples.filter(sample => sample.players === players);
@@ -42,9 +42,13 @@ function workloads(report) {
       }
       result.set(`${profile.name}/${players}p`, values);
     }
-    if (Number.isFinite(profile.reconnectMs)) result.set(`${profile.name}/reconnect`, { reconnectMs: profile.reconnectMs });
+    if (Number.isFinite(profile.reconnectMs)) {
+      result.set(`${profile.name}/reconnect`, { reconnectMs: profile.reconnectMs });
+      // Reports written before these options existed took one rejoin and waited out the backoff.
+      reconnect.set(`${profile.name}/reconnect`, `${profile.reconnectBackoff ?? report.options?.reconnectBackoff ?? 'keep'}×${profile.reconnectSamplesMs?.length ?? 1}`);
+    }
   }
-  return { vsync: report.vsync ?? 'on', head: report.head, result };
+  return { vsync: report.vsync ?? 'on', reconnect, head: report.head, result };
 }
 
 export function compareBaselines(base, candidate) {
@@ -65,13 +69,20 @@ export function compareBaselines(base, candidate) {
       // A vsync-locked frame mean is capped at the refresh rate; only uncapped
       // runs (or two-player runs below the cap) carry frame-cost information.
       const budget = kind ? BUDGETS[kind] : null;
+      // A rejoin that waits out the client's random backoff and one that skips it, or a
+      // median of five and a single rejoin, measure different things, so such a pair
+      // decides nothing. The rejoins run after the frame and CPU samples, which still compare.
+      const settings = name === 'reconnectMs' ? arms.map(reports => [...new Set(reports.map(item => item.reconnect.get(key)))]) : null;
+      const unmatched = settings && (settings.flat().length !== 2 || settings[0][0] !== settings[1][0]);
       rows.push({ workload: key, metric: name, base: round(baseValue), candidate: round(candidateValue), change: round(change),
-        ...budget === null ? { decision: 'informational' } : { budget, decision: change <= budget ? 'within' : 'over' } });
+        ...settings ? { settings: unmatched ? { base: settings[0], candidate: settings[1] } : settings[0][0] } : {},
+        ...unmatched ? { decision: 'unmatched' } : budget === null ? { decision: 'informational' } : { budget, decision: change <= budget ? 'within' : 'over' } });
     }
   }
   return { vsync: [...vsync][0], heads: { base: [...new Set(arms[0].map(item => item.head))], candidate: [...new Set(arms[1].map(item => item.head))] },
     reports: { base: base.length, candidate: candidate.length }, rows,
-    over: rows.filter(row => row.decision === 'over').map(row => `${row.workload} ${row.metric}`) };
+    over: rows.filter(row => row.decision === 'over').map(row => `${row.workload} ${row.metric}`),
+    unmatched: rows.filter(row => row.decision === 'unmatched').map(row => `${row.workload} ${row.metric}`) };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -86,5 +97,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (args.output) await writeFile(args.output, JSON.stringify(result, null, 2) + '\n');
   for (const row of result.rows) if (row.decision !== 'informational' || row.metric === 'frameP95Ms')
     console.log(`${row.workload.padEnd(22)} ${row.metric.padEnd(20)} ${String(row.base).padStart(9)} → ${String(row.candidate).padEnd(9)} ${(row.change * 100).toFixed(1).padStart(6)}%  ${row.decision}`);
+  if (result.unmatched.length) console.log(`Not compared (reconnect settings differ): ${result.unmatched.join(', ')}`);
   console.log(result.over.length ? `Over budget: ${result.over.join(', ')}` : 'All budgeted metrics within allowance.');
 }
