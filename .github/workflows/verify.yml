@@ -95,13 +95,28 @@ jobs:
       # packages and skips browsers that are already present.
       - name: Playwright version
         id: playwright
-        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+          echo "image=${ImageOS:-unknown}-${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
       - name: Playwright browser cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
-      - run: pnpm exec playwright install --with-deps chromium
+      # The system packages come from the runner's Ubuntu mirror, which some runs serve at
+      # about 45 kB/s: a 26 MB install took 9.5 min and pushed shards past their 20 min.
+      # Reuse the downloaded .deb files per runner image; apt still verifies and installs
+      # them, and downloads anything missing or newer.
+      - name: Playwright system package cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/playwright-apt
+          key: playwright-apt-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
+      - run: |
+          if compgen -G "$HOME/.cache/playwright-apt/*.deb" > /dev/null; then sudo cp "$HOME"/.cache/playwright-apt/*.deb /var/cache/apt/archives/; fi
+          pnpm exec playwright install --with-deps chromium
+          mkdir -p "$HOME/.cache/playwright-apt"
+          cp /var/cache/apt/archives/*.deb "$HOME/.cache/playwright-apt/" 2>/dev/null || true
       - run: pnpm run build
       - name: Email access and content security browser regressions
         id: security_browser
@@ -168,13 +183,28 @@ jobs:
       # packages and skips browsers that are already present.
       - name: Playwright version
         id: playwright
-        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+          echo "image=${ImageOS:-unknown}-${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
       - name: Playwright browser cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
-      - run: pnpm exec playwright install --with-deps chromium
+      # The system packages come from the runner's Ubuntu mirror, which some runs serve at
+      # about 45 kB/s: a 26 MB install took 9.5 min and pushed shards past their 20 min.
+      # Reuse the downloaded .deb files per runner image; apt still verifies and installs
+      # them, and downloads anything missing or newer.
+      - name: Playwright system package cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/playwright-apt
+          key: playwright-apt-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
+      - run: |
+          if compgen -G "$HOME/.cache/playwright-apt/*.deb" > /dev/null; then sudo cp "$HOME"/.cache/playwright-apt/*.deb /var/cache/apt/archives/; fi
+          pnpm exec playwright install --with-deps chromium
+          mkdir -p "$HOME/.cache/playwright-apt"
+          cp /var/cache/apt/archives/*.deb "$HOME/.cache/playwright-apt/" 2>/dev/null || true
       - run: pnpm run build
       - name: Shared town journeys (local identities and authenticated fixtures)
         id: shared
@@ -250,13 +280,28 @@ jobs:
       # packages and skips browsers that are already present.
       - name: Playwright version
         id: playwright
-        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+          echo "image=${ImageOS:-unknown}-${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
       - name: Playwright browser cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
-      - run: pnpm exec playwright install --with-deps chromium
+      # The system packages come from the runner's Ubuntu mirror, which some runs serve at
+      # about 45 kB/s: a 26 MB install took 9.5 min and pushed shards past their 20 min.
+      # Reuse the downloaded .deb files per runner image; apt still verifies and installs
+      # them, and downloads anything missing or newer.
+      - name: Playwright system package cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/playwright-apt
+          key: playwright-apt-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
+      - run: |
+          if compgen -G "$HOME/.cache/playwright-apt/*.deb" > /dev/null; then sudo cp "$HOME"/.cache/playwright-apt/*.deb /var/cache/apt/archives/; fi
+          pnpm exec playwright install --with-deps chromium
+          mkdir -p "$HOME/.cache/playwright-apt"
+          cp /var/cache/apt/archives/*.deb "$HOME/.cache/playwright-apt/" 2>/dev/null || true
       - run: pnpm run build
       - name: Contextual action, photo and command journeys
         id: experience
