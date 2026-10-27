@@ -14,11 +14,13 @@ async function freePort(){
   const server=createServer();await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;
 }
-async function town(t,flag){
+const LOCAL={RIVER_OAKS_DEV_AUTH:'local',RIVER_OAKS_ACCEPTANCE_FIXTURE:'1'};
+async function town(t,flag,auth=LOCAL){
   const port=await freePort(),origin=`http://127.0.0.1:${port}`;
   const temporary=await mkdtemp(join(tmpdir(),'river-oaks-deletion-'));
-  const app=await createTown({origin,env:{RIVER_OAKS_DEV_AUTH:'local',RIVER_OAKS_ACCEPTANCE_FIXTURE:'1',RIVER_OAKS_ACCOUNT_DELETION:flag,
-    MODERATION_FILE:join(temporary,'moderation.json'),WAITLIST_FILE:join(temporary,'waitlist.json'),BLOCKS_FILE:join(temporary,'blocks.json')},devAuth:'local',staticRoot:null});
+  const app=await createTown({origin,env:{...auth,RIVER_OAKS_ACCOUNT_DELETION:flag,
+    MODERATION_FILE:join(temporary,'moderation.json'),WAITLIST_FILE:join(temporary,'waitlist.json'),BLOCKS_FILE:join(temporary,'blocks.json')},
+    ...(auth===LOCAL?{devAuth:'local'}:{}),staticRoot:null});
   await new Promise(resolve=>app.server.listen(port,'127.0.0.1',resolve));
   t.after(async()=>{await app.close();await rm(temporary,{recursive:true,force:true});});
   return {origin,temporary,app};
@@ -77,4 +79,28 @@ test('with the flag off the standalone town has no deletion route',{timeout:3000
   assert.deepEqual(await erin.status(),{available:false});
   assert.equal((await erin.post('/api/account/delete',{confirm:DELETION_PHRASE})).status,404);
   assert.equal((await erin.post('/api/profile/save',{tagline:'still here',bio:'',pronouns:'',interests:[],expectedVersion:0})).status,200);
+});
+
+// With WorkOS, the flag takes effect only with the webhook secret, whose user.deleted
+// webhook retries a failed erasure. The credentials are fake, and nothing here reaches WorkOS.
+test('with WorkOS the standalone town turns deletion on only with the webhook secret',{timeout:30000},async t=>{
+  const real=globalThis.fetch,outside=[];
+  t.mock.method(globalThis,'fetch',(url,...rest)=>{
+    const href=String(url instanceof Request?url.url:url);
+    if(href.startsWith('http://127.0.0.1:'))return real(url,...rest);
+    outside.push(href);return Promise.reject(new Error('no network in this test'));
+  });
+  const warn=t.mock.method(console,'warn',()=>{});
+  const workos={WORKOS_API_KEY:'sk_test_fixture',WORKOS_CLIENT_ID:'client_fixture',WORKOS_COOKIE_PASSWORD:'x'.repeat(32)};
+  const ask=(origin,method)=>fetch(origin+'/api/account/delete',{method,headers:{Origin:origin,'Content-Type':'application/json'},
+    ...(method==='POST'?{body:JSON.stringify({confirm:DELETION_PHRASE})}:{})});
+  const off=await town(t,'1',workos);
+  assert.equal(off.app.auth,'workos');
+  assert.deepEqual(warn.mock.calls.map(call=>String(call.arguments[0])).filter(line=>line.includes('account_deletion_off')).map(line=>JSON.parse(line)),
+    [{event:'account_deletion_off',reason:'webhook_secret_missing'}]);
+  assert.deepEqual(await (await ask(off.origin,'GET')).json(),{available:false});
+  assert.equal((await ask(off.origin,'POST')).status,404,'no deletion route');
+  const on=await town(t,'1',{...workos,WORKOS_WEBHOOK_SECRET:'whsec_fixture'});
+  assert.equal((await ask(on.origin,'POST')).status,401,'the route answers and asks for a sign-in');
+  assert.deepEqual(outside,[]);
 });

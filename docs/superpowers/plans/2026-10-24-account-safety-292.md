@@ -269,7 +269,8 @@ Each guard was checked by removing it and watching its test fail:
 - the Redis scope;
 - the flag, in the hosted backend and the town;
 - the client's refresh fence, saved looks and world drafts, the exact phrase and the
-  CSRF header.
+  CSRF header. (The refresh fence's test passed without it; see the lander review
+  below.)
 
 Independent review (2026-10-24). It found no way around CSRF, the origin, the flag, the
 phrase or the limit, and nothing erased before WorkOS deletes the user.
@@ -277,7 +278,7 @@ phrase or the limit, and nothing erased before WorkOS deletes the user.
 | Finding | Severity | Outcome |
 | --- | --- | --- |
 | The status check didn't refresh an expired access token, so the control vanished about five minutes after sign-in | High | The page asks `/auth/session` first. Server test pins that the route alone doesn't refresh; client test pins the order. Red without either |
-| With the flag on and no webhook secret, "finishes on its own" could be false | Medium | With WorkOS the flag takes effect only with `WORKOS_WEBHOOK_SECRET`, otherwise it logs `account_deletion_off`. Tested in the helper, the hosted backend and the town |
+| With the flag on and no webhook secret, "finishes on its own" could be false | Medium | With WorkOS the flag takes effect only with `WORKOS_WEBHOOK_SECRET`, otherwise it logs `account_deletion_off`. Tested in the helper, the hosted backend and the town (the town's WorkOS rule only since the lander review below) |
 | A lost answer or a timeout misled the resident | Low | A lost answer or a sign-out triggers a session re-check; 502 says "couldn't delete right now"; client test |
 | `GET` answers with the flag off | Low | Kept on purpose: a 404 would log a failed request each time Account opens. It reveals only that deletion is off. Documented |
 | Stale inventory row and line references | Low | Fixed |
@@ -311,6 +312,24 @@ above and the webhook gap below.
 | Check | Result |
 | --- | --- |
 | Deletion, erasure, town deletion and webhook files with `REDIS_URL` | 76/77, then 1/1: the Redis erasure test (`account-erasure.test.js`, unchanged here) timed out at 10 s at load 68 and passed alone |
+
+Lander review of C (river-oaks-e9, 2026-10-27, at `bf835443`): land-ready, with no high
+or medium findings. It checked authorization, CSRF, the limit, the flag on every path,
+WorkOS first with a 404 counted as deleted, the erasure wiring, the blocking mark (which
+can't be forged) and the logs. e9 marked C ready and started its lander; the fixes
+below are on D's branch. An independent review of the fixes confirmed each mutation,
+found no high or medium issue, and its notes are folded in (two more staff roles,
+wording, a test name).
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| The hosted recheck's conflict arm was untested: removing it stayed green | Low | Test: the room answers a grant as a conflict while that grant is still queued (the server can't tell it from a retry); one separation. Red without the arm |
+| The client's refresh fence was untested, though listed above as checked: the replaced answer was in place before the earlier refresh asked for it | Low | Each refresh now gets its own answer, and the earlier one's arrives last. Red with the fence reduced to `busy` |
+| The town's WorkOS rule was untested, though the table above says it was: `{development:true}` stayed green | Low | A WorkOS-mode town with fake credentials, where no request leaves the test. Without the secret it logs `account_deletion_off` (`webhook_secret_missing`) and has no route (404); with it the route asks for a sign-in (401). Red with `{development:true}` |
+| A staff account can delete itself and lose its role | Low | Decision 4 in `docs/account-deletion.md`: owner, moderator, waitlist-admin, campus-operator and screening-host ids. e9 is raising it with Val |
+| Decision 1 overstated the ten-minute rule | Low | Reworded: once ten minutes have passed it stops a stolen cookie used elsewhere, not an unattended device still signed in to GitHub |
+| `account_deletion_unavailable` didn't say what WorkOS answered | Nit | It logs the status the WorkOS SDK reports (408 for a local timeout, none for a network failure), and nothing else about the error. Red first |
+| No test for a sign-in time in the future | Nit | Added: not recent, and refused. Red without the `>= 0` guard |
 
 ## Increment D: reports, support contact, App Review map
 

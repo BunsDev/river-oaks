@@ -46,8 +46,8 @@ test('the phrase is the one the server asks for', () => assert.equal(DELETION_PH
 
 test('the control stays hidden until the server offers deletion, and asks for a recent sign-in', async t => {
   withDocument(t);
-  let answer = { available: false }, signedIn = false;
-  const { fetcher, calls } = server({ status: () => answer, signedIn: () => signedIn });
+  let answer = { available: false }, signedIn = false;const queued = [];
+  const { fetcher, calls } = server({ status: () => queued.length ? queued.shift() : answer, signedIn: () => signedIn });
   const root = createAccountDeletionSettings({ fetcher }), view = parts(root);
   assert.equal(root.hidden, true, 'hidden before the server is asked');
   answer = { available: true, recent: true };await root.refresh();
@@ -60,11 +60,13 @@ test('the control stays hidden until the server offers deletion, and asks for a 
   assert.deepEqual([root.hidden, view.signInAgain.hidden, view.open.hidden], [false, false, true]);
   answer = { available: true, recent: true };await root.refresh();
   assert.deepEqual([view.signInAgain.hidden, view.open.hidden, view.form.hidden], [true, false, true]);
-  // A slower answer from an earlier refresh does not replace a later one.
-  let release;answer = new Promise(resolve => { release = resolve; });
-  const earlier = root.refresh();answer = { available: true, recent: true };await root.refresh();
+  // A slower answer from an earlier refresh does not replace a later one. Each refresh
+  // gets its own answer, and the earlier one's arrives last.
+  let release;queued.push(new Promise(resolve => { release = resolve; }), { available: true, recent: false });
+  const earlier = root.refresh();await root.refresh();
+  assert.deepEqual([root.hidden, view.signInAgain.hidden], [false, false], 'the later answer is shown');
   release({ available: false });await earlier;
-  assert.equal(root.hidden, false);
+  assert.deepEqual([root.hidden, view.signInAgain.hidden, queued.length], [false, false, 0]);
   // A server that fails hides the control.
   answer = Promise.reject(new Error('offline'));await root.refresh();assert.equal(root.hidden, true);
 });

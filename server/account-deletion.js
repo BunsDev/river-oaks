@@ -62,10 +62,11 @@ export function createAccountDeletionRoute({ enabled = false, auth, security, or
     if (body?.confirm !== DELETION_PHRASE) { json(res, 400, { error: `Type “${DELETION_PHRASE}” to confirm.` }); return true; }
     if (!recent(user)) { json(res, 403, { error: 'Sign in again, then delete your account within ten minutes.', reason: 'sign_in_again' }); return true; }
     try { await auth.deleteProviderUser(user.userId); }
-    catch {
+    catch (error) {
       // Nothing is erased while the account may still sign in. If WorkOS deleted the user
-      // but the answer was lost, its user.deleted webhook erases the account.
-      console.warn(JSON.stringify({ event: 'account_deletion_unavailable' }));
+      // but the answer was lost, its user.deleted webhook erases the account. Only WorkOS's
+      // HTTP status is logged.
+      console.warn(JSON.stringify({ event: 'account_deletion_unavailable', status: Number.isInteger(error?.status) ? error.status : null }));
       json(res, 502, { error: 'We couldn’t delete your account right now. Try again later.' }); return true;
     }
     auth.clearSession(res);
