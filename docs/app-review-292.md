@@ -1,7 +1,11 @@
 # App Review readiness (#292)
 
 Recorded 2026-10-24, at the revision that adds report confirmation and the support
-contact. It is stacked on in-app deletion (#666), blocking (#665) and erasure (#661).
+contact; refreshed 2026-10-27 at the revision that adds the content filter (#713),
+moderation routing (#715) and the contact under the gate (#716), with the native
+sign-in design on #714. It is stacked on in-app deletion (#666), blocking (#665) and
+erasure (#661). Every row below is either met in source or a named decision for Val,
+apart from the Block button, which has a named owner.
 It compares what River Oaks does today with the App Review guidelines that #292 names.
 Apple's text was read on 2026-10-24 from the
 [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/) and
@@ -17,15 +21,15 @@ the binary is marked **native**.
 | --- | --- | --- | --- |
 | 1.2 | Filter objectionable content | A server-side filter screens town chat, direct messages, groups, events, profiles and usernames before they're stored, on both servers (this change). Voice isn't filtered | Met in source; the list and the mode are Decision 1 |
 | 1.2 | Report offensive content, respond in time | Residents can be reported from the roster, including one who has left. A report keeps the quoted text and the reported account's last chat lines, records when it should be answered by, is posted to the moderators' inbox (`MODERATION_NOTIFY_URL`), and stays listed in Settings → Account → Reports until a moderator closes it (this change). Messages, events and groups can't be reported | Met in source; the inbox, its owner and the response time are Decision 2 |
-| 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The Block button is built but not wired into the client | **Gap, blocking** (client owner) |
+| 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The Block button is built but not wired into the client | **Gap, blocking**: claimed by `fix/player-blocking-ui-292-20261027` on 2026-10-27 |
 | 1.2 | Published contact information | Under the sign-in and waitlist gate in every state, and in Settings → Account → Support, once `VITE_SUPPORT_CONTACT` is set (this change) | Met in source; the value is Decision 3 |
-| 5.1.1(v) | Delete the account in the app | In-app deletion behind a default-off flag (#666), webhook erasure (#661) | Met in source, off |
-| 5.1.1(v) | Revoke social credentials; no social tokens kept off the device | WorkOS can return the resident's GitHub token, which the server then uses | **Decision** |
-| 5.1.2 | Consent before sharing personal data, including with third-party AI | No resident data reaches an AI provider in the hosted game; processors listed | Met in source, disclosures pending |
-| 4.8 | An equivalent sign-in beside a third-party one | GitHub and email codes; no option that keeps the email private | **Decision, blocking** (#287) |
-| 4.2 | More than a repackaged website | A 3D multiplayer game, but the iOS probe loads the hosted page | Unknown, **native** (#286) |
-| 2.5.2 | No downloaded code that changes features | The hosted page supplies the game's code today | Unknown, **native** (#286) |
-| 4.7 | Hosted mini apps and plug-ins meet 1.2, 5.1 and age rules | TypeSafe Computer embed (off); World Studio agent (desktop only) | Keep both out of iOS v1 |
+| 5.1.1(v) | Delete the account in the app | In-app deletion behind a default-off flag (#666), webhook erasure (#661) | Met in source; turning it on in production is in the table below |
+| 5.1.1(v) | Revoke social credentials; no social tokens kept off the device | WorkOS can return the resident's GitHub token, which the server then uses | **Decision 7** (a WorkOS setting) |
+| 5.1.2 | Consent before sharing personal data, including with third-party AI | No resident data reaches an AI provider in the hosted game; processors listed | Met in source; the privacy answers are Val's, from the inventory |
+| 4.8 | An equivalent sign-in beside a third-party one | GitHub and email codes; no option that keeps the email private. The native exchange is designed and tested host-independently on #714 (`docs/ios-auth.md`), which recommends adding Sign in with Apple through WorkOS, staged | **Decision 4** |
+| 4.2 | More than a repackaged website | A 3D multiplayer game, but the iOS probe loads the hosted page | **Native** (#286); bundling the client is Decision 5 |
+| 2.5.2 | No downloaded code that changes features | The hosted page supplies the game's code today | **Native** (#286); bundling the client is Decision 5 |
+| 4.7 | Hosted mini apps and plug-ins meet 1.2, 5.1 and age rules | TypeSafe Computer embed (off); World Studio agent (desktop only) | **Decision 5**: keep both out of iOS v1 |
 
 ## 1.2 User-generated content
 
@@ -184,7 +188,7 @@ account is deleted at once, and that anything left is removed by the erasure's
 second run and retries, within minutes when every store answers. The policy has to say what stays: reports, bans and the moderation audit
 (inventory Decision 3).
 
-**Social credentials. Decision.** Apple says an app must let people revoke
+**Social credentials. Decision 7.** Apple says an app must let people revoke
 social-network credentials from inside it, must not keep social-network tokens off
 the device, and may use them only to connect from the app while it's in use. With
 WorkOS's "Return GitHub OAuth tokens" setting on, WorkOS hands the resident's GitHub
@@ -242,7 +246,11 @@ private. Two readings:
 - **Offer only email codes on iOS.** River Oaks' own account system may then fall
   under the exception for apps that use only the company's own sign-in.
 
-Decision 4, owned by #287.
+Decision 4. The sign-in design for the native host, the exchange contract and its
+host-independent server tests are on #714 ([iOS auth](ios-auth.md)); its 4.8 note
+weighs both readings and recommends adding Sign in with Apple through WorkOS, staged
+(Staging first), keeping GitHub and email codes. Enabling Apple in WorkOS is a
+configuration change for Val, not a code change.
 
 ## 4.2 Minimum functionality and 2.5.2 downloaded code
 
@@ -307,6 +315,8 @@ Recommended: leave Computer out of iOS v1 (Decision 5).
    Recommended: one mailbox more than one person reads (a group address on the
    district's domain), used for both, so a safety concern never waits on one inbox.
 4. **Sign-in on iOS (4.8).** Add Sign in with Apple, or offer only email codes there.
+   [iOS auth](ios-auth.md) (#714) recommends Apple through WorkOS, staged; the WorkOS
+   configuration is Val's to change.
 5. **Hosted software on iOS.** Bundled or hosted game code (2.5.2, 4.2), and
    whether Computer ships in v1. Recommended: bundle, and leave Computer out.
 6. **Age rating and business model.** The rating answers, and whether v1 is free.
