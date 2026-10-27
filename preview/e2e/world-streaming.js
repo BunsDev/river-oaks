@@ -40,6 +40,19 @@ async page => {
   const probe = await probeContext.newPage();
   let probeOpen = true;
   const tabs = [page, peer];
+  // Waits for the Commons to evict. On a timeout, report what keeps it resident: whether the tab
+  // still renders (stream.update runs once per frame) and the stream points it would use (the
+  // walking position and the camera's ground point, unloaded beyond 120 m of the chunk).
+  const evicted = (tab, label) => tab.waitForFunction(() => window.__riverSpatialStream().residentBytes === 0).catch(async error => {
+    const state = await tab.evaluate(async () => {
+      const before = window.__streamGraphicsProbe?.().frames;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const stream = window.__riverSpatialStream(), camera = window.__riverTravelView?.().camera;
+      return { frames: [before, window.__streamGraphicsProbe?.().frames], hidden: document.hidden, residentBytes: stream.residentBytes, pending: stream.pending,
+        loads: stream.loads, unloads: stream.unloads, chunks: stream.chunks, pose: window.__riverCarriage?.()?.pose?.position, cameraGround: camera && [camera[0], -camera[2]] };
+    }).catch(failure => ({ unavailable: failure.message }));
+    throw new Error(`${label}: the Commons stayed resident ${JSON.stringify(state)} (${error.message.split('\n')[0]})`);
+  });
   const self = tab => tab.evaluate(() => { const town = window.__riverMultiplayer(); return town.snapshot.players.find(p => p.id === town.selfId); });
   const point = tab => tab.evaluate(() => window.__riverCarriage().pose);
   let failLoads = true, failedRequests = 0, deferModule = true, pendingModuleRequested;
@@ -215,7 +228,7 @@ async page => {
     // restored client registers resources again whenever it next draws them.
     await walk(probe, [[edge - 8, -1335], approach[0]], 'Probe client returns after the restore');
     await walk(probe, clearRoute((await self(probe)).position.slice(0, 2), far), 'Probe client walks away from the Commons');
-    await probe.waitForFunction(() => window.__riverSpatialStream().residentBytes === 0);
+    await evicted(probe, 'Probe client eviction');
     const probeEvicted = await probe.evaluate(() => window.__riverSpatialStream());
     check(probeEvicted.pending === 0 && probeEvicted.chunks[0].state === 'absent' && commonsGroups(probeEvicted) === 0, 'After a restore the Commons evicts with no pending loads or groups');
     await walk(probe, [...clearRoute((await self(probe)).position.slice(0, 2), approach[0]), gates[0]], 'Probe client returns to the gateway');
@@ -284,7 +297,7 @@ async page => {
         check(Boolean(path?.length), `Eviction ${lap + 1} player ${i} has a walkable route`);
         await walk(tab, path, `Eviction ${lap + 1} player ${i}`);
       }));
-      await Promise.all(tabs.map(tab => tab.waitForFunction(() => window.__riverSpatialStream().residentBytes === 0)));
+      await Promise.all(tabs.map((tab, i) => evicted(tab, `Eviction ${lap + 1} player ${i}`)));
       const unloaded = await measure(`Evicted ${lap + 1}`);
       check(unloaded.every(state => state.pending === 0 && state.chunks[0].state === 'absent' && commonsGroups(state) === 0), `Eviction ${lap + 1}: no pending loads, resident expansion buffers or Commons groups`);
       const districtPlayers = await mutuallyVisible();
