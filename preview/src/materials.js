@@ -66,6 +66,8 @@ export function physicalSurface(name, { tileSize = 4, instanced = false, variati
     aoMapIntensity: 0.65, ...options,
   });
   material.userData.sharedTextures = true;
+  // Read-only audit metadata; this describes the vertex patch below and changes no shading.
+  material.userData.depthAuditMetricUv = {instanced,tileSize};
   material.onBeforeCompile = (shader) => {
     if (variation > 0) shader.fragmentShader = shader.fragmentShader
       .replace('void main() {', `float roHash(vec2 cell) { return fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453); }

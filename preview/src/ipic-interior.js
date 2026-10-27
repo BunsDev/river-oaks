@@ -61,7 +61,7 @@ export function buildIpicInterior(room, options = {}) {
   }
   const label = (text, a, y, d, w, h, more = {}) => panel(finishes.label(text, Array.isArray(text) ? text : [text], more), a, y, d, w, h, more.yaw ?? 0);
   const floor = (mat, d0, d1, y) => box(mat, room.center, y - .12, (d0 + d1) / 2, room.width, .24, d1 - d0);
-  const ceiling = (d0, d1, y, material = m.timber) => box(material, room.center, y, (d0 + d1) / 2, room.width, .18, d1 - d0);
+  const ceiling = (d0, d1, y, material = m.timber, inset = 0) => box(material, room.center, y, (d0 + d1) / 2, room.width - 2*inset, .18, d1 - d0);
   function downlight(a, y, d) {
     box(m.bronze, a, y, d, .16, .045, .16, { shape: cylinder });
     box(m.glow, a, y - .035, d, .11, .025, .11, { shape: cylinder });
@@ -112,14 +112,16 @@ export function buildIpicInterior(room, options = {}) {
   }
 
   // Reception from IMG_9738 (photo review P3, P4, P6; Val, 2026-10-18).
-  section('Reception'); floor(m.receptionStone, 0, 6, 0); ceiling(0, 6, 3.9, m.plaster);
+  section('Reception'); floor(m.receptionStone, 0, 6, 0); ceiling(0, 6, 3.9, m.plaster,.075);
   for (const a of [room.aMin, room.aMax]) box(a === room.aMin ? m.timber : m.plaster, a, 1.95, 3, .15, 3.9, 6);
   // Large-format stone, its joints a shade darker than the stone rather than dark grout.
   for (let d = 0; d < 6; d += 1.2) box(m.stoneJoint, room.center, .006, d, room.width, .008, .008);
   for (let a = room.aMin; a < room.aMax; a += 1.2) box(m.stoneJoint, a, .006, 3, .008, .008, 6);
   // A coffered ceiling: a dropped perimeter band, its inner edge lit as a cove.
-  for (const a of [room.aMin + .35, room.aMax - .35]) box(m.plaster, a, 3.7, 3, .7, .18, 6);
-  for (const d of [.35, 5.65]) box(m.plaster, room.center, 3.7, d, room.width, .18, .7);
+  // Butt the plaster against the inner faces of the 15 cm side walls. The old slabs
+  // continued into the timber wall, leaving coincident visible end caps at the entrance.
+  for (const a of [room.aMin + .3875, room.aMax - .3875]) box(m.plaster, a, 3.7, 3, .625, .18, 6);
+  for (const d of [.35, 5.65]) box(m.plaster, room.center, 3.7, d, room.width-.15, .18, .7);
   for (const a of [room.aMin + .72, room.aMax - .72]) box(m.glow, a, 3.62, 3, .03, .02, 4.5);
   // The desk steps down to a lower counter at its west end, inside the same footprint (and collider).
   soft(m.bronze, 3.4, .12, 3.5, 3.55, .24, .82);
