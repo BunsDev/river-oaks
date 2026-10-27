@@ -19,7 +19,7 @@ import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
 import { groupAction } from './groups-api.js';
-import { grantedPeer, loadHidden, screenCommand, viewFor } from './blocks.js';
+import { loadHidden, screenCommand, viewFor } from './blocks.js';
 import { blockAction } from './blocks-api.js';
 import { profileAction } from './profile-api.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
@@ -489,16 +489,25 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             if (screened.refusal) { send(ws, { type: 'result', requestId, ...screened.refusal }); return; }
             const resolved = await accountDesignCommand({ command: screened.command, userId: identity.userId, connectionId, worldId,
               room, library: designLibrary, security, isAdmin });
-            const result = resolved.result ?? await room.request({ type: 'command', userId: identity.userId, connectionId, message: resolved.command, ...(selection!==undefined?{selection}:{}) });
-            equipObservation?.result(result);
-            if (result.error === 'stale_connection') { ws.close(4009, 'This account joined in another tab.'); return; }
-            // A grant checked just before a block was stored is ended once it lands. Without a
-            // known block nothing is separated; a failed check is logged.
-            if (result.ok && grantedPeer(command) && await blocks?.between(identity.userId, command.peerId)
-              .catch(() => { console.warn(JSON.stringify({ event: 'block_recheck_failed', worldId }));return false; })) {
+            // A grant checked just before a block was stored is ended once it lands. The room's
+            // queue is durable, so a timed-out answer, a failed request, or a conflict for a
+            // retry the screen also passed can still mean it landed; the separation is queued
+            // after it. Only a grant the screen checked and found unblocked is checked again,
+            // so the answer takes no longer toward a blocker. Without a known block nothing is
+            // separated; a failed check is logged.
+            const endLateGrant = async () => {
+              if (!await blocks.between(identity.userId, command.peerId)
+                .catch(() => { console.warn(JSON.stringify({ event: 'block_recheck_failed', worldId }));return false; })) return;
               const ended = await room.request({ type: 'separate', a: identity.userId, b: command.peerId }).catch(() => null);
               if (!ended?.ok) console.warn(JSON.stringify({ event: 'block_separation_incomplete', worldId }));
-            }
+            };
+            let result;
+            try {
+              result = resolved.result ?? await room.request({ type: 'command', userId: identity.userId, connectionId, message: resolved.command, ...(selection!==undefined?{selection}:{}) });
+            } catch (error) { if (screened.recheck) await endLateGrant(); throw error; }
+            equipObservation?.result(result);
+            if (result.error === 'stale_connection') { ws.close(4009, 'This account joined in another tab.'); return; }
+            if (screened.recheck && (result.ok || ['request_timeout', 'campus_operation_conflict'].includes(result.error))) await endLateGrant();
             const earlyAck = result.ok && command.type === 'travel' && requestId !== undefined;
             if (earlyAck) send(ws, { type: 'result', requestId, ...result });
             // The sender sees its result at once; everyone else gets it on the next

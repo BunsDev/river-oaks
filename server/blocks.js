@@ -55,14 +55,17 @@ export async function screenCommand(blocks, userId, command, isAdmin) {
   const aimed = command.type === 'travel' || ['interaction', 'darts', 'axes'].includes(command.type) && command.action === 'invite';
   const grant = command.type === 'campus' && command.action === 'grant';
   const refusal = invitation(command);
-  if (!aimed && !grant && !(refusal && isAdmin(userId)) || !await blocks.between(userId, command.peerId)) return { command };
+  if (!aimed && !grant && !(refusal && isAdmin(userId))) return { command };
+  // A grant checked and found unblocked is checked again once it reaches the world.
+  if (!await blocks.between(userId, command.peerId)) return grantedPeer(command) ? { command, recheck: true } : { command };
   if (grant) return { command: { ...command, peerId: userId } };
   return aimed ? { command: { ...command, peerId: ABSENT_RESIDENT } } : { refusal: { ok: false, error: refusal, message: refusal } };
 }
 
 // Access a command gives another account: a campus guest grant, or Jevica's office and
 // home invitations. One checked just before a block was stored can land after the
-// block's separation, so once it succeeds the server checks again and ends it.
+// block's separation, so `screenCommand` marks it, and once it may have landed the
+// server checks again and ends it.
 export const grantedPeer = command => typeof command?.peerId === 'string'
   && (command.type === 'campus' && command.action === 'grant' || invitation(command)) ? command.peerId : null;
 

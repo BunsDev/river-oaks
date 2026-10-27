@@ -218,6 +218,27 @@ a failed recheck was silent (now logged as `block_recheck_failed`), the sender's
 still shows a grant ended by the recheck (documented), and the `Math.max` clamp had no
 test (added, red with the raw time).
 
+river-oaks-e9's re-review of B at `1f507f2c` (2026-10-27) found it land-ready, with one
+new LOW: the hosted recheck ran only on an ok answer, but a grant whose room answer
+timed out (7 s) stays queued and can land after the separation, and its retry is a
+conflict, so the guest kept access; office and home invitations the same. Fixed in C's
+branch, since B was landing. A first fix rechecked after every grant command; an
+independent review found that this made answers toward a blocker measurably slower
+(about 400 ms against 210 ms, one extra room operation), which would tell the sender.
+Now `screenCommand` marks only a grant it checked and found unblocked. The hosted server
+rechecks a marked grant on an ok answer, on `request_timeout`, on a conflict (a retry the
+screen also passed), and when the request throws once the grant may be queued (the
+reviewer's second pass: the socket closed with no recheck), then rethrows. The town,
+whose commands answer at once, rechecks on an ok answer. Tests, with a room that answers
+each grant at once while it is still queued: answered `request_timeout` (the separation
+is queued after it and ends it; red before, the guest stayed), a failed request (red
+without the recheck on the error path), and a block the screen saw (no separation; red
+with every grant rechecked); plus which commands the screen marks. Mutations red: no
+screen gate, ok answers only, no recheck on a failed request, never or always marked,
+and no town recheck. The second pass found the timing difference closed and the queue
+order sound: the grant's enqueue goes out before the separation's on the same
+connection, and the client doesn't resend after a reconnect.
+
 ## Increment C: in-app account deletion
 
 Branch `feat/account-deletion-292-20261024` in worktree `river-oaks-deletion-292`,
