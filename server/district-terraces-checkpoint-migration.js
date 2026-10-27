@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { createSharedWorld } from './world.js';
 import { recoverDistrictStudewoodCheckpoint } from './district-studewood-checkpoint-migration.js';
+import { relocateResidents } from './district-commons-checkpoint-migration.js';
 import { attachEastGardenCommons } from '../preview/src/east-garden-commons-world.js';
 import { attachBayouHeights } from '../preview/src/bayou-heights-world.js';
 import { attachStudewood } from '../preview/src/studewood-world.js';
@@ -45,7 +46,7 @@ export function recoverDistrictTerracesCheckpoint({worldData,checkpoint,worldId=
       }
       const {checksum:_checksum,...envelope}=source.checkpoint();
       const result=seal(worldData,envelope,settings);
-      return result?{ok:true,checkpoint:result,from,to:'terraces',moved:[]}:rejected();
+      return result?{ok:true,checkpoint:result,from,to:'terraces',moved:[],movedResidents:[],reroutedResidents:[]}:rejected();
     }
     if(revision!==STUDEWOOD_REVISION){
       // The terraces to Heights, the Commons or Gardens: back to Studewood first, then its rollback.
@@ -55,7 +56,8 @@ export function recoverDistrictTerracesCheckpoint({worldData,checkpoint,worldId=
       const studewood=recoverDistrictTerracesCheckpoint({worldData:studewoodData,checkpoint,...settings});
       if(!studewood.ok)return rejected();
       const earlier=recoverDistrictStudewoodCheckpoint({worldData,checkpoint:studewood.checkpoint,...settings});
-      return earlier.ok?{...earlier,from:'terraces',moved:[...new Set([...studewood.moved,...earlier.moved])]}:rejected();
+      return earlier.ok?{...earlier,from:'terraces',moved:[...new Set([...studewood.moved,...earlier.moved])],
+        movedResidents:[...new Set([...studewood.movedResidents??[],...earlier.movedResidents??[]])],reroutedResidents:[...new Set([...studewood.reroutedResidents??[],...earlier.reroutedResidents??[]])]}:rejected();
     }
     const sourceData=attachBayouTerraces(worldData),source=createSharedWorld(sourceData,settings);
     if(!source.restore(checkpoint).ok)return rejected();
@@ -85,7 +87,13 @@ export function recoverDistrictTerracesCheckpoint({worldData,checkpoint,worldId=
       Object.assign(player,{position:destination,altitude:0,buildingId:null,levelId:null,vehicle:null,sitting:null,cycling:null,gesture:null,gestureUntil:0});
       placed.push(destination);moved.push(player.id);
     }
-    const result=seal(worldData,envelope,settings);
-    return result?{ok:true,checkpoint:result,from:'terraces',to:'studewood',moved}:rejected();
+    // Residents on the terraces or their footbridges walk home too: the Heights strips cover the
+    // decks, so without this they stood on removed ground or waited for space at its edge.
+    const residents=relocateResidents({fromData:sourceData,toData:worldData,checkpoint:envelope,
+      inside:(east,north)=>[...terraces.bounds,...terraces.bridges].some(rect=>inside(rect,[east,north])),
+      toward:[edge+GREENWAY,terraces.entries[0][1]]});
+    if(!residents)return rejected();
+    const result=seal(worldData,residents.checkpoint,settings);
+    return result?{ok:true,checkpoint:result,from:'terraces',to:'studewood',moved,movedResidents:residents.moved,reroutedResidents:residents.rerouted}:rejected();
   } catch {return rejected();}
 }

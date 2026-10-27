@@ -4,6 +4,8 @@ import { createWalkingEnvironment } from './walking.js';
 import { COMMONS_ID } from '../../shared/east-garden-commons-layout.js';
 
 const distance = (a,b) => Math.hypot(a[0]-b[0],a[1]-b[1]);
+// Each route grid stays at or under 80,000 one-metre cells.
+const GRID_CELLS=80000;
 const finite = point => Array.isArray(point) && point.length>=2 && Number.isFinite(point[0]) && Number.isFinite(point[1]);
 function inside(point,ring) {
   let result=false;
@@ -18,14 +20,15 @@ function inside(point,ring) {
 // survey of pedestrian access. Large neighborhood scenes stay outside this budget.
 // `locations` lets a planner cross into composed locations (the Commons) through
 // their own bounded grids; without it the District grid is all there is.
-export function createResidentNavigation(world,{allowRoads=false,placedObjects=[],locations=false}={}) {
+// A location larger than `locationCells` is split into east/west strips under it.
+export function createResidentNavigation(world,{allowRoads=false,placedObjects=[],locations=false,locationCells=GRID_CELLS}={}) {
   // Preserve the District grid budget while each adjacent location gets its own grid.
   const bounds=world.eastGardenCommons?.districtBounds ?? world.bounds_m;
   if(world.scene!=='district' || !bounds?.every(Number.isFinite)) return null;
   const geography=createGeography(world);
   const district=createGridNavigation(world,bounds,{allowRoads,placedObjects,ring:world.site_ring,geography});
   if(!district || !locations || !world.eastGardenCommons) return district;
-  return composeLocations(world,district,{allowRoads,placedObjects,geography}) ?? district;
+  return composeLocations(world,district,{allowRoads,placedObjects,geography,locationCells:Math.min(locationCells,GRID_CELLS)}) ?? district;
 }
 
 // The walking environment, pedestrian network and trunk index serve every grid in a town.
@@ -50,7 +53,7 @@ function createGridNavigation(world,bounds,{allowRoads,placedObjects,ring,geogra
   if(!bounds?.every(Number.isFinite)) return null;
   const [west,south,east,north]=bounds, cell=1;
   const width=Math.floor((east-west)/cell)+1,height=Math.floor((north-south)/cell)+1,size=width*height;
-  if(width<2 || height<2 || size>80000) return null;
+  if(width<2 || height<2 || size>GRID_CELLS) return null;
   const {environment,trunks,wideTrunks,pedestrian}=geography;
   const clearOfTrunks = point => {
     const blocked=stem=>(point[0]-stem[0])**2+(point[1]-stem[1])**2<stem[2];
@@ -274,19 +277,31 @@ function createGridNavigation(world,bounds,{allowRoads,placedObjects,ring,geogra
 
 const insideBounds=(bounds,point)=>point[0]>=bounds[0] && point[0]<=bounds[2] && point[1]>=bounds[1] && point[1]<=bounds[3];
 
+// The fewest equal east/west strips of `bounds` whose 1 m grids fit in `cells`.
+function strips(bounds,cells) {
+  const [west,south,east,north]=bounds,height=Math.floor(north-south)+1;
+  let count=1;
+  while((Math.floor((east-west)/count)+1)*height>cells && count<64) count++;
+  const width=(east-west)/count;
+  return Array.from({length:count},(_,index)=>[index,[west+index*width,south,index===count-1 ? east : west+(index+1)*width,north],count]);
+}
+
 // Each composed location keeps its own bounded grid; seam corridors join
 // neighbours that share an east/west edge. Corridors are found, not authored:
 // perpendicular crossings of the shared edge whose ground is open, off the road
 // and within the step limit, grouped into runs at least a metre wide.
-function composeLocations(world,district,{allowRoads,placedObjects,geography}) {
+function composeLocations(world,district,{allowRoads,placedObjects,geography,locationCells}) {
   const layout=world.eastGardenCommons;
   const plaza=layout.surfaces?.find(surface=>surface.id===`${COMMONS_ID}/plaza`)?.rect;
   // The layout's own bounds span the District too; the location is edge to plaza.
   const commons=plaza && [layout.edge,plaza[1],plaza[2],plaza[3]];
   const regions=[{id:'district',bounds:layout.districtBounds,nav:district}];
-  for(const [id,bounds] of [[COMMONS_ID,commons],['heights',layout.heights?.bounds]]) {
-    const nav=bounds && createGridNavigation(world,bounds,{allowRoads,placedObjects:[...placedObjects],ring:null,geography});
-    if(nav) regions.push({id,bounds,nav});
+  for(const [id,bounds] of [[COMMONS_ID,commons],[layout.heights?.id ?? 'heights',layout.heights?.bounds]]) {
+    // Bayou Heights (308 × 291 cells) is over the cap: its strips meet at seams like any other.
+    for(const [index,strip,count] of bounds?.every(Number.isFinite) ? strips(bounds,locationCells) : []) {
+      const nav=createGridNavigation(world,strip,{allowRoads,placedObjects:[...placedObjects],ring:null,geography});
+      if(nav) regions.push({id:count>1 ? `${id}#${index+1}` : id,bounds:strip,nav});
+    }
   }
   if(regions.length<2) return null;
   const {pedestrian,environment}=geography;
@@ -388,6 +403,17 @@ function composeLocations(world,district,{allowRoads,placedObjects,geography}) {
       .sort((a,b)=>Math.abs(a[0][1]-preferred[0][1])-Math.abs(b[0][1]-preferred[0][1]))
       .find(([near,far])=>canWalk(near,far)) ?? null;
   };
+  // A grid search gives up after a bounded number of cells. Leaving an enclosure
+  // whose exits face away from the goal (Heights Green, from the bandstand) can
+  // take longer than finding the way in, so a location leg that fails is searched
+  // in reverse; every leg a route returns is walkable either way. District legs
+  // keep the District grid's own answers.
+  const legRoute=(region,a,b)=>{
+    const path=region.nav.route(a,b);
+    if(path || region===regions[0]) return path;
+    const back=region.nav.route(b,a);
+    return back && [...back.slice(0,-1).reverse(),[...b]];
+  };
   const route=(start,end)=>{
     if(!finite(start) || !finite(end)) return null;
     const from=settle(start,end),to=settle(end,start);
@@ -404,13 +430,13 @@ function composeLocations(world,district,{allowRoads,placedObjects,geography}) {
       for(const choice of choices) {
         const crossing=lane(choice.portal,choice.eastward);
         if(!crossing) continue;
-        const [near,far]=crossing,leg=distance(current,near)<1e-9 ? [] : chain[i].nav.route(current,near);
+        const [near,far]=crossing,leg=distance(current,near)<1e-9 ? [] : legRoute(chain[i],current,near);
         if(!leg) continue;
         path.push(...leg,[...far]);current=far;crossed=true;break;
       }
       if(!crossed) return null;
     }
-    const last=distance(current,goal)<1e-9 ? [] : chain.at(-1).nav.route(current,goal);
+    const last=distance(current,goal)<1e-9 ? [] : legRoute(chain.at(-1),current,goal);
     if(!last) return null;
     path.push(...last);
     if(to.at) path.push([...end]);

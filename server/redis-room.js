@@ -233,7 +233,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         districtMigration = woodland.ok ? { kind: 'woodland', from: woodland.from, to: woodland.to, moved: woodland.moved.length }
           : terraces.ok ? { kind: 'terraces', from: terraces.from, to: terraces.to, moved: terraces.moved.length }
           : studewood.ok ? { kind: 'studewood', from: studewood.from, to: studewood.to, moved: studewood.moved.length }
-          : heights.ok ? { kind: 'heights', from: heights.from, to: heights.to, moved: heights.moved.length }
+          : heights.ok ? { kind: 'heights', from: heights.from, to: heights.to, moved: heights.moved.length, movedResidents: heights.movedResidents.length }
           : commons.ok ? { kind: 'commons', from: commons.from, to: commons.to, moved: commons.moved.length }
           : gardens.ok ? { kind: 'gardens', from: gardens.from, to: gardens.to, moved: gardens.moved.length }
           : tower.ok ? { kind: 'tower', from: tower.from }
@@ -503,7 +503,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       : districtMigration.kind === 'studewood'
       ? { event: 'district_studewood_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
       : districtMigration.kind === 'heights'
-      ? { event: 'district_heights_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      ? { event: 'district_heights_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved, movedResidents: districtMigration.movedResidents }
       : districtMigration.kind === 'commons'
       ? { event: 'district_commons_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
       : districtMigration.kind === 'gardens'
