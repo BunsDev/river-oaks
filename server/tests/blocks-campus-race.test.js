@@ -94,9 +94,10 @@ test('hosted: a campus grant that passed the block check before the block was st
 });
 
 // The room's answer can time out, or its request fail, while the grant stays in its
-// durable queue. This room answers every grant that way at once, while the grant is still
-// queued, and records the separations the server asks for.
-async function timingOut(t, { fail = false } = {}) {
+// durable queue; a retry is then answered as a conflict. This room answers every grant
+// one of those ways at once, while that same grant is still queued (the server can't
+// tell it from a retry), and records the separations the server asks for.
+async function timingOut(t, { fail = false, answer = 'request_timeout' } = {}) {
   const redis = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1 });redis.on('error', () => {});
   const prefix = `{river-oaks:test-blocks-race:${randomUUID()}}`, security = createRedisSecurity({ redis, prefix });
   const room = createRedisRoom({ redis, prefix, worldId: 'river-oaks', worldData: data, campusOperators: [OP], authorize: async () => true });
@@ -106,7 +107,7 @@ async function timingOut(t, { fail = false } = {}) {
     if (operation.type !== 'command' || operation.message?.action !== 'grant') return room.request(operation);
     landing.push(room.request(operation));
     return fail ? Promise.reject(new Error('room unavailable'))
-      : Promise.resolve({ ok: false, error: 'request_timeout', message: 'Request outcome is pending. Refresh the town before retrying.' });
+      : Promise.resolve({ ok: false, error: answer, message: 'Request outcome is pending. Refresh the town before retrying.' });
   } };
   const blocks = lagging(createRedisBlocks({ redis, prefix }));
   const app = createDistributedServer({ auth, security, room: slow, waitlist: approvedWaitlist, blocks, origin, moderators: [] });
@@ -119,6 +120,12 @@ test('hosted: a campus grant whose answer timed out is still ended once it lands
   const f = await timingOut(t);
   await raceGrant(t, f.base, f.blocks, { answered: false });
   assert.equal(f.separations.length, 1, 'the separation was queued after the grant');
+});
+
+test('hosted: a campus grant answered as a conflict is still ended once it lands', { skip: !process.env.REDIS_URL, timeout: 30_000 }, async t => {
+  const f = await timingOut(t, { answer: 'campus_operation_conflict' });
+  await raceGrant(t, f.base, f.blocks, { answered: false });
+  assert.equal(f.separations.length, 1);
 });
 
 test('hosted: a campus grant whose request failed once it was queued is still ended once it lands', { skip: !process.env.REDIS_URL, timeout: 30_000 }, async t => {

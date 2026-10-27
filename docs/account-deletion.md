@@ -45,8 +45,12 @@ Then:
 
 1. WorkOS deletes the user (`deleteUser`). A user WorkOS no longer has counts as
    deleted. Any other failure answers 502 ("We couldn't delete your account right
-   now"), and nothing is erased; the session stays. If WorkOS did delete the user and
-   only its answer was lost, its `user.deleted` webhook erases the account.
+   now"), and nothing is erased; the session stays. The log line
+   `account_deletion_unavailable` carries only the status the WorkOS SDK reports: 408
+   for a timeout on this side, and none for a network failure or an error page that
+   isn't JSON. If WorkOS did
+   delete the user and only its answer was lost, its `user.deleted` webhook erases the
+   account.
 2. The session cookie is cleared.
 3. Account erasure runs ([privacy data inventory](privacy-data-inventory.md)): the
    tombstone, every session and socket, then every store and world. The request is
@@ -103,7 +107,8 @@ desktop shell's user-data folder is outside this change.
 ## Tests
 
 - `server/tests/account-deletion.test.js`:
-  - every refusal, the order (provider, sign-out, erasure) and both failure paths;
+  - every refusal, including a sign-in time in the future, the order (provider,
+    sign-out, erasure) and both failure paths, with the status in the failure's log;
   - the limit;
   - both WorkOS session stores with a fake WorkOS: sign-in time through refreshes and
     the desktop exchange, an expired access token, a 404 user and a failing provider;
@@ -118,11 +123,14 @@ desktop shell's user-data folder is outside this change.
   WebSocket. A resident deletes their account, their socket closes, and their contact,
   block and profile are gone while the peer keeps their own; the request then waits for
   its second pass. The town sweeps every 30 seconds. With the flag off there's no route.
+  With WorkOS (fake credentials, and no request leaves the test), the flag takes effect
+  only with the webhook secret.
 - `preview/tests/account-deletion.test.js`:
   - visibility;
   - the exact phrase and the security token;
   - device clearing, with keys written by the real voice and reload modules;
-  - refusals, a lost answer, the stale sign-in path, and where focus goes.
+  - refusals, a lost answer, the stale sign-in path, and where focus goes;
+  - a slower answer to an earlier status check doesn't replace a later one.
   `preview/src/sidebar.js` asks for the status when Account opens; no unit test covers
   that call.
 
@@ -149,8 +157,11 @@ desktop shell's user-data folder is outside this change.
    ([Offering account deletion](https://developer.apple.com/support/offering-account-deletion-in-your-app/),
    read 2026-10-24). Signing out and in again is a common check; with an email-code
    sign-in it takes one email. The alternative is the typed phrase alone. Recommended:
-   keep the window, because it stops a borrowed or left-open session from deleting the
-   account. Make sure App Review's demo account can sign in without a live inbox (#293).
+   keep the window. Once ten minutes have passed since sign-in, it stops a stolen
+   session cookie, used in another browser, from deleting the account. It doesn't
+   protect an unattended device: where the browser is
+   still signed in to GitHub, signing in again takes a click and no password. Make sure
+   App Review's demo account can sign in without a live inbox (#293).
 2. **Waitlisted and banned residents can delete.** Their reports, bans and the
    moderation audit stay (inventory Decision 3). A banned resident can delete the
    account, then sign up again with the same GitHub account. WorkOS then gives them a
@@ -159,3 +170,12 @@ desktop shell's user-data folder is outside this change.
 3. **Drafts on the device.** World Studio and region drafts aren't stored per
    account, but they're the resident's own work, so deletion clears them on that
    device. Recommended: keep.
+4. **Staff accounts can delete themselves.** An account granted a role by its id loses
+   that role when it's deleted. Signing in again creates a new WorkOS account, whose id
+   isn't on the list. Jevica's owner ids are fixed in code
+   (`preview/src/jevica-accounts.js`), so restoring one takes a code change. The others
+   take a configuration change and a redeploy: `MODERATOR_USER_IDS`,
+   `WAITLIST_ADMIN_USER_IDS`, `RIVER_OAKS_CAMPUS_OPERATOR_IDS` (the only operator gone
+   means nobody issues campus leases) and `RIVER_OAKS_SCREENING_HOSTS`. Recommended:
+   refuse deletion for every one of those ids, and say to remove the role first. Not
+   built; river-oaks-e9 is raising it with Val (2026-10-27).
