@@ -838,3 +838,72 @@ After Val merges #649, this task prepares #662 and then #663 as before: merge ma
   - from earlier: `rc-0b9a97c4`, `bisect-15334aad`, `heights-8f3c94fd`, `studewood-snap`, `terraces-snap`, `terraces-b5016d29` and `diag-0b9a97c4`;
   - added tonight: `ws-rc-0b9a97c4`, `ws-main-e8207b2b`, `rc-cb83c7cd`, `ws2-cb83c7cd`, `ws-route-cb83c7cd` and `ws-route2-cb83c7cd`.
   - They hold the receipts cited above. Retire them only once nobody needs those receipts.
+
+## Val's decisions, 2026-10-26 (about 16:40–20:00Z, answered directly in this session)
+
+Val asked to continue. This task asked the open decisions directly, then put a second question round after river-oaks-a3 relayed answers from Val's session there that conflicted with them. These are Val's confirmed answers:
+
+| PR | Decision | Who acts |
+| --- | --- | --- |
+| #649 Bayou Heights | Rerun the gated ABBA (round 6, five-rejoin protocol). Land #649 only if it's within budget | This task lands it last, after the PRs below, so the gate is measured on the main it lands on. 91 and 3e were told through a3; 3e may run round 6 |
+| #662, #663 | Wait for Val's word | — |
+| #673 Woodland Heights | Land proposal A′ approved; it lands after #663 | Waits on #663 |
+| #659 network drops | `66134f27` approved (also relayed by a3: "Approve 66134f27"). It lands whole | This task |
+| #656 default looks | Lands with the trial switched off | This task |
+| #654 desktop docs | Lands | This task |
+| #655 resident locations | Go | This task, with verify full after the main merge, per 3e's note |
+| #653 Linux crash recovery | Hold | — |
+
+Landing order: #654, #659, #656, #655, then #649 after round 6. Each decision is also recorded on its register task as `valDecision20261026`.
+
+### Results of the 2026-10-26 decisions (to about 01:20Z on 10-27)
+
+| PR | Result |
+| --- | --- |
+| #654 | Landed as `8b73888a`, 21:46Z. 22/22 after one rerun of the Commons job |
+| #659 | Landed as `40f4e786`, 22:37Z, with `66134f27`. Task delivered. Branch retirement left to river-oaks-f1, whose reports are in the worktree |
+| #656 | Landed as `caa1a7ef`, 23:29Z, switched off. Delivery and retirement left to river-oaks-32 |
+| #655 | Landed as `2d63637f`, 00:53Z. 22/22 after one rerun: the runner's `playwright install` took 9 min 14 s and cut off the Commons job. Merge SHA posted for river-oaks-3e (#670); a direct message expired, held |
+| #649 | **Superseded.** river-oaks-91 reports Val told it directly at about 23:3xZ to "commit push and merge to main" without round 6. This task stood down, recorded it on #649 and the register, and 91 lands #649 as owner. After that, this task prepares #662, #663 and #673 for river-oaks-e9 to land; e9 reports Val's authorization at about 20:40Z |
+| #653 | Held on Val's answer in this session, then landed by river-oaks-7c as `ba7418c6`, presumably on Val's word in that session |
+
+**#655 pre-landing verification** (#655 issuecomment-6429702334), on a scratch merge with main:
+- `verify full` didn't pass as one command:
+  - attempt 1 was SIGKILLed at the 1,200 s experience limit;
+  - attempts 2 and 3 failed on the tooling timing flakes, at loads up to 169;
+  - attempt 4 was SIGKILLed again, at load 35–73 from other projects.
+- Run directly, the four remaining stages all passed: 16 experience journeys in 23.9 min, experience-commons, shared 27/27, and ipic-screening.
+- river-oaks-e9's #660 (`a13c853b`) moved the Commons journey into its own stage.
+
+**Landers that died at about 00:09Z.** Every lander on the machine, #655's included, died at about 00:09Z, with no sleep in the power log. #655's lander was requeued and landed. river-oaks-7c held #683 back to keep #655's place.
+
+## Phase 3: recurring flakes (2026-10-27)
+
+- **#693, the queue wake and admission timing** (task `queue-wake-recheck-20261026`). See the PR for the cause and probe data.
+  - On macOS, a directory watch starts its FSEvents stream asynchronously. So a queue release in the same tick as `watch()` is never reported, and the waiter sleeps until its fallback timer. That's the `land-pr` wake flake, exactly 30 s every time.
+  - `waitForTurn` now rechecks every 1 s, and a held lock during a recheck skips that tick.
+  - The admission test's queue wait now exceeds its timeout (2.5 s against 2 s), so the property is kept with a realistic start-up budget.
+  - **Checks:**
+    - on the old code, three tests fail, including the original at 30 s;
+    - with the fix, 32/32;
+    - `verify tooling` 9/9 runs;
+    - core passed;
+    - hosted 22/22 on the first attempt.
+  - Independent review: no HIGH; all findings addressed.
+  - **Landed** as `96ec9e10` at 02:29Z, with 23/23 complete on the lander's head `48ca24ed`. The ready mark first failed on the GraphQL limit and was retried. Task delivered; branch retired (manifest `~/worktree-backups/river-oaks/retirement-tB4rM0/manifest.json`).
+- **The district stack after #649 landed** (`3df540ee`, 01:20Z, by river-oaks-91).
+  - **Val's gate**, reported by e9 at about 01:28Z: each step lands once hosted CI is green on an up-to-date head, citing the existing local journey receipts. The journeys and the District ABBA run at final main in e9's 3× acceptance pass.
+  - **#662:** GitHub retargeted it to main. Signed merge of main `36382dfe`; tests 17/17; recipe locks clean; core passed in one run. Released to river-oaks-e9, who claimed it and is landing it.
+  - **#663:** signed merge of #662's head, `adb2baa2`; tests 48/48; core passed in one run. Pushed; released to e9 once #662 merges.
+  - **#673:** signed merge of #663's head, `e0b2d293`; tests 60/60; core passed in one run. Pushed; released once #663 merges.
+- **`crime-shared` comparison so far:** old-1, under 6× CPU throttling, **failed "A timed evade (U) beats the rival's telegraphed counter"**, which reproduces the hosted flake locally. The new-timing runs are queued for the browser lock.
+- **`crime-shared` timed evade** (task `crime-evade-timing-20261027`, uncommitted). Snapshots arrive every 200 ms, so the U press keyed off a possibly stale `remainingMs`. The journey now notes contact time by the page's clock as soon as the counter appears, and presses 230 ms before it.
+  - An old-against-new comparison under 6× CPU throttling (scratch `crime-old` and `crime-new`) is queued for the browser lock.
+- **`office-computer-embed` account-switch race:** river-oaks-e9's journey-only fix. Whether access-entry should reload at all stays a product question.
+- **garden-campus-traversal "phone back on the street":** one hosted failure (#675 attempt 1). Its artifact doesn't show the phone's state, so a fix would be a guess. **Proposal for the journey's owner:** make `onLevel`'s failure message include the server's `levelId` and position.
+- **Hosted `playwright install --with-deps` mirror stalls** (proposal for Val, not a change). Tonight the step took 9–10.7 min, against 6 s normally, on #649, #676 and #655's runs. That pushed `preview checks`, `preview experience (commons)` and `worlds-and-creator` past their 20 min job limit. Options:
+  - cache the apt archives the step downloads;
+  - run the browser jobs in the pinned Playwright container image;
+  - give the install its own step timeout, with a retry against another mirror.
+
+  The first two change the workflow, so this is Val's call.
