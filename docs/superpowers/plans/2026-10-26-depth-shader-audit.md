@@ -107,6 +107,20 @@ The development-only hooks are `window.__riverRenderAudit.depthFights()` and `de
 - **Result.** All eight city-kit neighbourhoods have no fights. The city-kit test now builds every kit recipe in `config/destinations`.
 - **Checks.** City-kit, depth-audit, Bayou Market Commons and Bayou Heights tests: 39/39. The journey on the merged tree passed, with 388 listed pairs and none new. Core verify passed on the first attempt (2026-10-27 03:09–03:14Z): agent 284/284; preview 4,221 passed, 1 skipped; server 965 passed, 250 skipped (Redis cases); desktop 127 passed, 5 skipped. Receipt `f0bdc45eadf020dc…`.
 
+## Main merged again (`52c43c7a`, 2026-10-27)
+
+- **verify.yml.** Main's `studewood` shard and this branch's `depth` shard both stay. The workflow parses, with shards streets, places, campus, campus-traversal, commons, heights, studewood, depth, access, playwright and experience.
+- **Studewood's kit recipes.** #662's two recipes brought three pairs into the all-recipes city-kit test.
+  - Two street sidewalks overlapped plaza paving by 1 m. The kit clipped street paving only at the west edge of the first plaza; Studewood has several plazas, met on any side.
+  - A hedge ran 5 cm into a recessed shell's corner pier along the pier's north face. Piers stand 45 cm proud of a recessed face.
+- **Fix.**
+  - Street paving now yields to every plaza (`yieldTo`). Where a plaza overlaps only part of a street piece, the plaza yields instead. A piece only yields where the other covers that whole end, so no gap opens.
+  - Hedges stop at a shell's proud piers (`pierProud`, shared with `renderShell`).
+- **Result.** All ten kit neighbourhoods have no fights.
+  - Geometry is unchanged in bayou-market-commons, both heights-boulevard recipes, nineteenth-and-yale and yale-street-south.
+  - bayou-greenway, yale-icehouse and yale-street-north each lose a 1 m overlap that a lawn strip already covered, so the visible result doesn't change.
+- **Checks.** 63 street, ground, kit, depth-audit, Studewood and destination files: 2,352 passed, 0 failed, 15 skipped. Core verify passed on the first attempt (03:39–03:44Z): agent 289/289; preview 4,233 passed, 1 skipped; server 970 passed, 251 skipped (Redis cases); desktop 127 passed, 5 skipped. Receipt `acc85ac49db62c7b…`.
+
 ## Val's triangle at (−2907.95, −1401.08)
 
 - **What it was.** A hole, not a fight. A vertical-ray probe and a camera pick found nothing but the pale terrain under a 12 cm wedge: Westcreek Lane bends 1.7° where the District access lane meets it from the west. `joinStreetSegments` mitred only two-way bends, so both segments ended square at the junction, and on the east side (no other street) the asphalt, gutter, curb and pavers all left a wedge of bare ground.

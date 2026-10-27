@@ -160,12 +160,32 @@ function drape(rect, groundAt, lift, step = 2) {
 }
 
 // `shared` names the sides this shell shares with a neighbouring shell (a party wall).
+const storefrontRecess = piece => piece.variant === 'loggia' ? 2.2 : piece.variant === 'recessed' ? .9 : .45;
+// A shell's piers are centred 5 cm behind its faced sides, so they stand this far proud of them.
+const pierProud = piece => (piece.variant === 'loggia' ? .5 : storefrontRecess(piece) + .1) / 2 - .05;
+
+// `rect` less the part `by` covers, when that part spans `rect` across one whole end; null when
+// it does not (cutting it out would leave an L), and `rect` itself when they do not overlap.
+function yieldTo(rect, by) {
+  const o = [Math.max(rect[0], by[0]), Math.max(rect[1], by[1]), Math.min(rect[2], by[2]), Math.min(rect[3], by[3])], eps = 1e-6;
+  if (o[2] - o[0] <= eps || o[3] - o[1] <= eps) return rect;
+  if (o[0] <= rect[0] + eps && o[2] >= rect[2] - eps) {
+    if (o[3] >= rect[3] - eps) return [rect[0], rect[1], rect[2], o[1]];
+    if (o[1] <= rect[1] + eps) return [rect[0], o[3], rect[2], rect[3]];
+  }
+  if (o[1] <= rect[1] + eps && o[3] >= rect[3] - eps) {
+    if (o[2] >= rect[2] - eps) return [rect[0], rect[1], o[0], rect[3]];
+    if (o[0] <= rect[0] + eps) return [o[2], rect[1], rect[2], rect[3]];
+  }
+  return null;
+}
+
 function renderShell(piece, batch, detail, m, ground, signs, shared = new Set()) {
   const [w, s, e, n] = piece.rect, style = KIT_STYLES[piece.style] ?? KIT_STYLES['market-row'];
   const wall = m(piece.wall), trim = m(piece.trim), accent = m(style.accent), glass = m('glass'), bronze = m('metal-bronze');
   const top = ground + piece.height, bottom = ground - .4;
   const faced = new Set(piece.faces ?? []);
-  const loggia = piece.variant === 'loggia', recess = loggia ? 2.2 : piece.variant === 'recessed' ? .9 : .45, inset = .25;
+  const loggia = piece.variant === 'loggia', recess = storefrontRecess(piece), inset = .25;
   // Ground-floor core sits behind the storefront recess; upper storeys sit behind the window reveal.
   const cut = (amount) => [w + (faced.has('west') ? amount : 0), s + (faced.has('south') ? amount : 0), e - (faced.has('east') ? amount : 0), n - (faced.has('north') ? amount : 0)];
   const core = cut(recess), upper = cut(inset), groundTop = ground + G;
@@ -591,12 +611,26 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
   grate.name = 'city-kit/tree-grate'; disposables.push(grate);
   const overlays = new Map(), paint = overlay('trim-ivory', 3);
   const clipStreet = plan.pieces.find(p => p.piece === 'street/court' && p.id.endsWith('/paving'))?.rect;
+  const courts = plan.pieces.filter(p => p.piece === 'street/court' && p.id.endsWith('/paving')), paved = new Map();
   for (const piece of plan.pieces) {
-    const spec = groundPiece[piece.piece];
-    if (!spec) continue;
+    if (!groundPiece[piece.piece]) continue;
     let rect = piece.rect;
     // Street paving stops where the plaza paving begins; neither overlaps the other.
     if (clipStreet && piece.piece.startsWith('street/') && !piece.id.endsWith('/paving') && rect[2] > clipStreet[0] && rect[0] < clipStreet[0]) rect = [rect[0], rect[1], clipStreet[0], rect[3]];
+    paved.set(piece, rect);
+  }
+  // A neighbourhood may have several plazas, met by streets on any side (Studewood): street paving
+  // still yields to each one, and where a plaza overlaps only part of a street piece, the plaza
+  // stops at the street instead. Same-plane paving in two materials fights for depth.
+  for (const street of plan.pieces.filter(p => paved.has(p) && p.piece.startsWith('street/') && !p.id.endsWith('/paving'))) for (const court of courts) {
+    const kept = yieldTo(paved.get(street), paved.get(court));
+    if (kept) paved.set(street, kept); else paved.set(court, yieldTo(paved.get(court), paved.get(street)) ?? paved.get(court));
+  }
+  for (const piece of plan.pieces) {
+    const spec = groundPiece[piece.piece];
+    if (!spec) continue;
+    const rect = paved.get(piece);
+    if (rect[2] - rect[0] <= 1e-6 || rect[3] - rect[1] <= 1e-6) continue;
     const name = piece.material ?? spec[0], layer = spec[1], material = layer ? (overlays.get(`${name}|${layer}`) ?? overlays.set(`${name}|${layer}`, overlay(name, layer)).get(`${name}|${layer}`)) : m(name);
     flat.add(material, drape(rect, groundAt, layer ? .004 * layer : 0, layer ? 4 : 2));
     if (piece.piece === 'landscape/tree-pit') {
@@ -620,8 +654,15 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
       for (let level = ground + 1; level < ground + piece.height - 2; level += 3.3) block.detail.box(m('glass-dark'), (w + e) / 2, level + 1.3, (s + n) / 2, e - w + .14, 1.6, n - s + .14);
     }
     else if (piece.piece === 'landscape/hedge') {
-      // A honed limestone planter wall under a porcelain cap, planted along its length.
-      const [w, s, e, n] = piece.rect;
+      // A honed limestone planter wall under a porcelain cap, planted along its length. It stops at
+      // a shell's proud piers rather than running into one along the plane of its face.
+      let rect = piece.rect;
+      for (const shell of plan.pieces.filter(p => p.piece === 'building/shell')) {
+        const [sw, ss, se, sn] = shell.rect, out = pierProud(shell);
+        const strips = { west: [sw - out, ss, sw, sn], east: [se, ss, se + out, sn], south: [sw, ss - out, se, ss], north: [sw, sn, se, sn + out] };
+        for (const face of shell.faces ?? []) rect = yieldTo(rect, strips[face]) ?? rect;
+      }
+      const [w, s, e, n] = rect;
       flat.box(m('limestone'), (w + e) / 2, ground + .25, (s + n) / 2, e - w, .5, n - s);
       flat.box(m('porcelain'), (w + e) / 2, ground + .55, (s + n) / 2, e - w + .08, .1, n - s + .08);
     }

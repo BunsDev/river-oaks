@@ -222,6 +222,9 @@ jobs:
           # Bayou Heights over the Lantern Footbridge (#586 continuation), in its own shard.
           - id: heights
             journeys: bayou-heights
+          # Studewood beyond Heights Boulevard (toward 3x), in its own shard.
+          - id: studewood
+            journeys: studewood
           # Surfaces that fight for depth in the composed town, and the shared shader patches
           # on instanced, batched and unmapped meshes (preview/src/depth-layer-audit.js).
           - id: depth
