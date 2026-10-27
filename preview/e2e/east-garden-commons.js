@@ -30,14 +30,19 @@ async page => {
     if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await tab.locator('#panel-toggle').click();
     if(await tab.locator('.visit-tools').evaluate(node=>node.open))await tab.locator('.visit-tools-toggle').click();
   };
-  // Both players walk at once in one browser. A drag in one page while the other page drags
-  // rarely gets pointer capture, so it does not turn: in a hosted run that stalled, the owner's
-  // drags captured 1 of 115 times while alice dragged and 26 of 33 times otherwise. Turn one page
-  // at a time, and let a frame pass (about 333 ms at 3 fps) before the other page drags.
+  // Both players walk at once in one browser. In headed Chromium the first drag in a page after
+  // the other page's drag rarely gets pointer capture, so it does not turn: across three hosted
+  // runs such drags captured 5 of 561 times, against 109 of 132 after the same page's drag. When
+  // both players turned at once they kept failing in turn until a waypoint deadline. A page keeps
+  // the turn until it faces its waypoint; the other page waits.
   let turning=Promise.resolve();
   const walk=async(tab,points,label)=>{
-    const started=Date.now(),start=await self(tab),samples=[],turns={drags:0,turned:0};let dragYaw=null;
+    const started=Date.now(),start=await self(tab),samples=[],turns={drags:0,turned:0,waitedMs:0};let dragYaw=null,holding=false,endTurn=()=>{};
     const releaseKeys=async()=>{await tab.keyboard.up('KeyW');await tab.keyboard.up('ShiftLeft');};
+    const holdTurn=async()=>{
+      const previous=turning;let release;turning=new Promise(resolve=>{release=resolve;});
+      endTurn=()=>{release();endTurn=()=>{};};const since=Date.now();await previous;turns.waitedMs+=Date.now()-since;
+    };
     try{for(const target of points){
       const deadline=Date.now()+120000;
       for(;;){
@@ -51,15 +56,13 @@ async page => {
         const heading=Math.atan2(-dx,-dz),difference=Math.atan2(Math.sin(heading-pose.yaw),Math.cos(heading-pose.yaw));
         if(Math.abs(difference)>.035){
           await releaseKeys();
-          const turn=turning.then(async()=>{
-            const box=await tab.locator('#canvas-host').boundingBox(),x=box.x+box.width*.5,y=box.y+box.height*.4;
-            const drag=Math.max(-box.width*.35,Math.min(box.width*.35,-difference/.003));
-            await tab.mouse.move(x,y);await tab.mouse.down();await tab.mouse.move(x+drag,y,{steps:3});await tab.mouse.up();
-            await tab.waitForTimeout(350);
-          });
-          turning=turn.catch(()=>{});
-          await turn;turns.drags++;dragYaw=pose.yaw;continue;
+          if(!holding){holding=true;await holdTurn();}
+          const box=await tab.locator('#canvas-host').boundingBox(),x=box.x+box.width*.5,y=box.y+box.height*.4;
+          const drag=Math.max(-box.width*.35,Math.min(box.width*.35,-difference/.003));
+          await tab.mouse.move(x,y);await tab.mouse.down();await tab.mouse.move(x+drag,y,{steps:3});await tab.mouse.up();
+          turns.drags++;dragYaw=pose.yaw;continue;
         }
+        if(holding){holding=false;endTurn();}
         // A lifecycle release clears runtime input; repeat keydown cannot resume it.
         if(pose.speed<.05)await releaseKeys();
         await tab.locator('#canvas-host').focus();
@@ -77,7 +80,7 @@ async page => {
         samples.push((await self(tab)).position);
       }
     }
-    }finally{await releaseKeys();}
+    }finally{if(holding)endTurn();await releaseKeys();}
     const target=points.at(-1);
     try{await tab.waitForFunction(target=>{const town=window.__riverMultiplayer(),p=town.snapshot.players.find(p=>p.id===town.selfId);return Math.hypot(p.position[0]-target[0],p.position[1]-target[1])<.6;},target,{timeout:10000});}
     catch(error){throw new Error(`${label}: the town did not confirm arrival ${JSON.stringify(await tab.evaluate(()=>{const town=window.__riverMultiplayer();

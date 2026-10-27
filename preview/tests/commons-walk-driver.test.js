@@ -80,3 +80,43 @@ for(const [fps,latencyMs,offset] of [[9,150,3.2],[20,100,3.8],[37,100,3.9]])test
     assert.equal(result.routes,1);assert.ok(result.simulatedMs<120000);
   }finally{globalThis.window=savedWindow;}
 });
+
+// Both players walk at once from one browser. In headed Chromium the first drag in a page after
+// the other page's drag rarely gets pointer capture (5 of 561 across three hosted runs). Model that:
+// a press turns its page only when the previous press was in the same page.
+const runPair=async(expression,latencyMs,fps)=>{
+  let clock=1000,lastPress=null;const pages=[];
+  const advance=ms=>{clock+=ms;for(const page of pages){page.frameClock+=ms;while(page.frameClock>=1000/fps){stepWalking(page.state,env,{forward:page.keys.has('KeyW')?1:0,fast:page.keys.has('ShiftLeft')},1/fps);page.frameClock-=1000/fps;}}};
+  const keyEvent=(type,code,repeat=false)=>{const event=new Event(type,{cancelable:true});Object.defineProperties(event,{code:{value:code},repeat:{value:repeat}});return event;};
+  const open=(name,offset)=>{
+    const page={name,frameClock:0,keys:new Set(),physicalKeys:new Set(),host:new EventTarget(),doc:new EventTarget(),mouseX:0,mouseDown:false,captured:false};
+    installInput(page.host,page.doc,page.keys,isGameplayKey,{takeOver(){}},()=>false,()=>null);
+    const start=[target[0]+offset,target[1]];assert.ok(env.isFree(start[0],-start[1]));
+    page.state=createWalkingState(env,start,-Math.PI/2);
+    page.snapshot=()=>({id:'fixture',position:[page.state.position[0],-page.state.position[2],env.groundAt(page.state.position[0],page.state.position[2])],yaw:page.state.yaw});
+    const window={__riverCarriage:()=>({pose:page.state}),__riverMultiplayer:()=>({selfId:'fixture',snapshot:{players:[page.snapshot()]}})};
+    const inPage=fn=>{globalThis.window=window;return fn();};
+    page.tab={
+      keyboard:{down:async code=>{const repeat=page.physicalKeys.has(code);page.physicalKeys.add(code);page.host.dispatchEvent(keyEvent('keydown',code,repeat));advance(latencyMs);},up:async code=>{page.physicalKeys.delete(code);page.doc.dispatchEvent(keyEvent('keyup',code));advance(latencyMs);}},
+      mouse:{move:async x=>{if(page.mouseDown&&page.captured)page.state.yaw-=(x-page.mouseX)*.003;page.mouseX=x;advance(latencyMs);},down:async()=>{page.mouseDown=true;page.captured=lastPress===null||lastPress===name;lastPress=name;advance(latencyMs);},up:async()=>{page.mouseDown=false;advance(latencyMs);}},
+      locator:()=>({focus:async()=>advance(latencyMs),boundingBox:async()=>{advance(latencyMs);return{x:0,y:0,width:1280,height:900};}}),
+      evaluate:async fn=>{const result=structuredClone(inPage(fn));advance(latencyMs);return result;},
+      waitForTimeout:async ms=>advance(ms),
+      waitForFunction:async(fn,arg,options)=>{const deadline=clock+(options?.timeout??10000);while(!inPage(()=>fn(arg))){advance(1000/fps);if(clock>deadline)throw new Error('predicate timeout');}advance(latencyMs);},
+    };
+    pages.push(page);return page;
+  };
+  const owner=open('owner',3),peer=open('alice',5),routes=[];
+  const self=async tab=>{const result=pages.find(page=>page.tab===tab).snapshot();advance(latencyMs);return result;};
+  const walk=new Function('self','routes','Date','console',`let turning=Promise.resolve();return (${expression});`)(self,routes,{now:()=>clock},{log(){}});
+  const results=await Promise.allSettled([walk(owner.tab,[target],'owner'),walk(peer.tab,[target],'alice')]);
+  return{results:results.map(result=>result.status==='fulfilled'?'passed':result.reason.message.slice(0,160)),routes:routes.length,simulatedMs:clock-1000};
+};
+for(const latencyMs of [60,150])test(`two pages turning at once each get a working drag (${latencyMs}ms latency)`,async()=>{
+  try{
+    const result=await runPair(original,latencyMs,9);
+    assert.deepEqual(result.results,['passed','passed']);assert.equal(result.routes,2);
+    // Both walks share the clock; keep well inside the 120 s waypoint deadline (about 55 s at 150 ms).
+    assert.ok(result.simulatedMs<90000,`both walks took ${result.simulatedMs} ms`);
+  }finally{globalThis.window=savedWindow;}
+});
