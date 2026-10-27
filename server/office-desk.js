@@ -12,7 +12,7 @@ function decode(raw){
   ||(d.activeId!==null&&!d.tasks.some(t=>t.id===d.activeId)))throw new Error('Invalid desk record');
  return d;
 }
-function service({read,commit,now}){
+function service({read,commit,drop,now}){
  async function change(userId,data,remove){
   if(!validUser(userId)||!deskFields(data,remove?['expectedVersion','id','operationId']:['expectedVersion','task','operationId'])||!validDeskVersion(data.expectedVersion)
    ||(data.operationId!==undefined&&!deskId(data.operationId))||(remove?!deskId(data.id):!validDeskTask(data.task)))return {ok:false,reason:'invalid_desk'};
@@ -39,7 +39,9 @@ function service({read,commit,now}){
   }
   return {ok:false,reason:'desk_conflict'};
  }
- return {async read(id){if(!validUser(id))throw new Error('Invalid account');return publicDesk(await read(id));},save:(id,data)=>change(id,data,false),remove:(id,data)=>change(id,data,true)};
+ // Account erasure: the whole desk, receipts included.
+ return {async read(id){if(!validUser(id))throw new Error('Invalid account');return publicDesk(await read(id));},save:(id,data)=>change(id,data,false),remove:(id,data)=>change(id,data,true),
+  async eraseUser(id){if(!validUser(id))throw new Error('Invalid account');await drop(id);}};
 }
 export function createMemoryOfficeDesk({now=Date.now}={}){
  const records=new Map();
@@ -47,7 +49,7 @@ export function createMemoryOfficeDesk({now=Date.now}={}){
   if((records.get(id)?.version??0)!==version)return 'desk_conflict';
   if(!records.has(id)&&records.size>=MAX_ACCOUNTS)return 'desk_limit';
   records.set(id,structuredClone(desk));return 'ok';
- }});
+ },drop:async id=>{records.delete(id);}});
 }
 const SAVE=`
  local raw=redis.call('HGET',KEYS[1],ARGV[1])
@@ -60,5 +62,6 @@ const SAVE=`
 export function createRedisOfficeDesk({redis,prefix,now=Date.now}){
  if(!redis?.eval||typeof prefix!=='string'||!/^\{[^{}]+\}$/.test(prefix))throw new Error('Invalid desk storage');
  const key=`${prefix}:office-desk:v1`,id=user=>createHash('sha256').update(user).digest('hex');
- return service({now,read:async user=>decode(await redis.hget(key,id(user))),commit:(user,version,desk)=>redis.eval(SAVE,1,key,id(user),version,JSON.stringify(desk),MAX_ACCOUNTS)});
+ return service({now,read:async user=>decode(await redis.hget(key,id(user))),commit:(user,version,desk)=>redis.eval(SAVE,1,key,id(user),version,JSON.stringify(desk),MAX_ACCOUNTS),
+  drop:async user=>{await redis.hdel(key,id(user));}});
 }
