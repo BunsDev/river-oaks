@@ -151,3 +151,14 @@ test('a dart that brings the score to exactly zero on a double finishes the matc
   assert.deepEqual(f.line().result, { winner: 0, reason: 'checkout' });
   assert.ok(f.changes() > 0);
 });
+
+test('a block ends an open invitation between the two at the line, and only theirs', () => {
+  const f = fixture();
+  f.join('alice');f.join('bob');f.join('carol');
+  assert.equal(f.send('alice', { action: 'invite', peerId: 'bob' }).ok, true);
+  assert.equal(f.games.separate('alice', 'carol'), false);
+  assert.deepEqual(f.line().invite, { from: 'alice', to: 'bob' });
+  assert.equal(f.games.separate('bob', 'alice'), true);
+  assert.equal(f.line(), null);
+  assert.equal(f.send('bob', { action: 'accept' }).ok, false, 'nothing is left to accept');
+});

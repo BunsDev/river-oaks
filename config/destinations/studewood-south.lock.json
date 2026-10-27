@@ -1,0 +1,15 @@
+{
+  "id": "studewood-south",
+  "kit": "city-kit-1",
+  "seed": 1932,
+  "hash": "f50b220b46f2402d",
+  "recipeHash": "4d446e5e3c776a3c",
+  "overridesHash": "174b1d836bafee25",
+  "stats": {
+    "pieces": 146,
+    "buildings": 16,
+    "solids": 65,
+    "materials": 13,
+    "triangles": 74164
+  }
+}
