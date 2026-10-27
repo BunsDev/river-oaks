@@ -71,9 +71,10 @@ async page => {
   // The Commons stream keeps a visible destination resident at any distance (commons-stream.js),
   // and a walker that overshoots the far point turns back east, toward it, to arrive. Before an
   // eviction wait each player faces west, away from the Commons; where it stands is unchanged.
-  // face() shares one turn between the pages (walk-driver.js).
+  // The faces of different pages take turns (walk-driver.js); this journey's walk turns itself.
+  // Walking yaw: 0 faces north and +π/2 west (stepWalking in walking.js).
   const { createWalkDriver } = await import('./walk-driver.js');
-  const { face } = createWalkDriver({ self, routes: [], refusals: '__commonsRefusals' }), WEST = Math.PI / 2;
+  const { face } = createWalkDriver({ self, routes: [] }), WEST = Math.PI / 2;
   const point = tab => tab.evaluate(() => window.__riverCarriage().pose);
   let failLoads = true, failedRequests = 0, deferModule = true, pendingModuleRequested;
   const moduleRequested = new Promise(resolve => { pendingModuleRequested = resolve; }), pendingModules = [];
