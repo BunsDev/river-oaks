@@ -85,12 +85,18 @@ Still missing:
 **Moderators read reports in the app.** `GET /api/moderation/reports` reads where each
 server already saves reports: the town's audit log and the log it rotated at 5 MB, or
 the hosted Redis audit list. It returns the newest 200, with both accounts' shown
-names and whether the reported account is banned. Settings → Account → Reports shows
+names, the reported account's id, and whether that account is banned or is staff. The
+reporter is sent only as a shown name, which for an account without a username includes
+its id. A report about the moderator reading is left out before the newest 200 are
+taken, so it doesn't push a row off their list; any other moderator sees it.
+Settings → Account → Reports shows
 them to approved accounts in `MODERATOR_USER_IDS`, up to 30 reads a minute each;
 anyone else gets `{ moderator: false }` and sees nothing, even when a request fails. Each
 row offers Ban…, which asks once, or Lift ban, through the existing
 `/api/moderation/ban`. The route only reads: it marks nothing as handled and keeps
-nothing new. A moderator can't ban their own account from the list. Tests:
+nothing new. A moderator can't ban their own account, and the ban route refuses to ban
+a moderator, a waitlist admin or one of Jevica's owner accounts, so the list offers no
+Ban for them; lifting a ban on one still works. Tests:
 `server/tests/moderation-reports.test.js` (both servers, Redis for the hosted one),
 `preview/tests/moderation-reports.test.js` and the routing cases in
 `server/tests/vercel-routing.test.js` and `server/tests/hardening-router-admission.test.js`.
@@ -246,7 +252,9 @@ Recommended: leave Computer out of iOS v1 (Decision 5).
 2. **Moderation.** Who reads reports, how fast, and where a threat or child-safety
    report goes. In the US, a provider that finds apparent child sexual abuse material
    must report it to NCMEC. Recommended: name an owner and a 24-hour target, and
-   build the moderator Reports list proposed above.
+   build the moderator Reports list proposed above. Name at least two moderators: a
+   report about a moderator is shown only to the others, so with one, nobody sees it
+   in the app.
 3. **Support contact.** The address or page for `VITE_SUPPORT_CONTACT` and App Store
    Connect.
 4. **Sign-in on iOS (4.8).** Add Sign in with Apple, or offer only email codes there.

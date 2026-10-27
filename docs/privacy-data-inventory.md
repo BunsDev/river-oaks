@@ -76,7 +76,7 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 | Voice leases | `server/voice.js:57` · `:162` | While in a call | Revoked and removed from the room (`:95`, `:196`) |
 | Workplace tasks and drafts | `server/workplace.js:25` · `:81` | Workplace retention limit | Erased (`:477`); a busy workplace fails the step so it is retried |
 | World state: player, chat lines, builds, inventory, wishes, home guests, office grants, campus leases, wanted stars, screenings, lantern walk, game tables | `server/world.js:117`, checkpointed by each room | Chat: last 40 lines (`:49`); builds until removed | Forgotten in every world (`server/world.js:591`). Builds others sit on are anonymized |
-| Moderation bans, reports and audit | `server/moderation.js:6` · `server/redis-security.js:114`, `:122` | Bans until lifted. Moderators see the newest 200 reports, with both accounts' shown names, in Settings → Account → Reports (`server/moderation-reports.js`). Reports and the audit: in the town, until the log passes 5 MB a second time (it's renamed to `.previous`, replacing the one before); hosted, the newest 10,000 bans, unbans and reports | Kept (Decision 3) |
+| Moderation bans, reports and audit | `server/moderation.js:6` · `server/redis-security.js:114`, `:122` | Bans until lifted. Moderators see the newest 200 reports, with both accounts' shown names, in Settings → Account → Reports (`server/moderation-reports.js`), except reports about themselves. A report keeps its reporter's account id after the reporter's erasure; the list then names them `Visitor #` and that id (Decision 3). Reports and the audit: in the town, until the log passes 5 MB a second time (it's renamed to `.previous`, replacing the one before); hosted, the newest 10,000 bans, unbans and reports | Kept (Decision 3) |
 | Rate-limit buckets and join tickets | `server/redis-security.js:83`, `:102` | At most 24 hours; tickets 60 s (`server/ticket-policy.js:7`) | Lapse |
 | Crime cooldowns, attack receipts, strikes, fights and evades; police pursuits, surrenders and holds, per world | `server/crime.js:75`, `server/police.js:29` | Receipts 60 s (`server/crime.js:12`); cooldowns, finished strikes and evades within seconds (`:11`, `:16`) | Forgetting the account first runs its departure, which ends its fight and every police pursuit or hold at once. Wanted stars are cleared at once; the cooldown and a cancelled strike lapse within seconds |
 | Room replies | `server/redis-room.js:18` | 15 seconds | Lapse |
@@ -160,7 +160,12 @@ There is no analytics or error-reporting service, and no other email sender.
 3. **Bans and the moderation audit.** They are kept so that a report or ban
    survives the reported account's deletion. A new sign-up gets a new WorkOS id,
    so a deleted and banned account can return. Recommended: keep the audit, and
-   decide whether to add a hashed ban list keyed by email.
+   decide whether to add a hashed ban list keyed by email. The audit also keeps an
+   erased reporter's account id, which the moderators' Reports list shows as
+   `Visitor #` and the id. A ban from the list on an erased account writes an
+   `invites-revoked` entry with its id back into the waitlist audit. Recommended
+   follow-up: on erasure, replace the reporter's id with `erased-account` in both
+   audits, and skip the invite revocation and hide Ban for an erased account.
 4. **Builds of an erased account.** Erasure deletes every build the account placed,
    in every world, unless someone is sitting on it (`server/world.js:595`). For a
    resident that is their own content. For one of Jevica's owner accounts it would

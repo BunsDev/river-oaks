@@ -12,9 +12,16 @@ possible attacks have been eliminated or a deployed penetration test.
   the configured world like `/api/moderation/ban`. It needs a signed-in session.
   A banned account gets 403. Anyone outside `MODERATOR_USER_IDS`, or without waitlist
   approval (as the ban route requires), gets `{ moderator: false }` before anything is
-  read. Anything but GET gets 405. A moderator may read 30 times a minute. It returns
-  the newest 200 saved reports with reporter and reported ids, shown names, reason,
-  time and the reported account's ban state; it never returns other audit entries.
+  read. Anything but GET gets 405. A moderator may read 30 times a minute, counted per
+  moderator. It returns the newest 200 saved reports with the reported account's id,
+  both shown names, reason, time, and the reported account's ban state and whether it
+  is staff; it never returns other audit entries. A report about the reader is left
+  out inside each store, before the newest 200 are taken, so it neither shows nor
+  pushes a row off the reader's list. The reporter is sent only as a shown name; for
+  an account without a username that name is `Visitor #` and its id.
+  `/api/moderation/ban` now refuses (403) to ban `MODERATOR_USER_IDS`,
+  `WAITLIST_ADMIN_USER_IDS` and Jevica's owner accounts, on both servers; lifting a ban
+  on one still works (a banned moderator couldn't lift their own).
   Damaged log lines and unknown reasons are skipped. The hosted list is read 500
   entries at a time, only as far as needed; the town reads its two logs, up to about
   5 MB each, in the moderation queue. Names reach the page as text only, and the page

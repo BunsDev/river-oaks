@@ -26,13 +26,13 @@ export async function createModeration(path) {
     });},
     report(reporterId,userId,reason){return serialize(()=>audit({type:'report',reporterId,userId,reason}));},
     // Saved reports, newest first (moderation-reports.js): the current log, then the one
-    // rotated at 5 MB. Reading never changes either.
-    reports(limit=REPORT_LIST_LIMIT){return serialize(async()=>{
+    // rotated at 5 MB. Reading never changes either. Reports about `except` don't count.
+    reports(limit=REPORT_LIST_LIMIT,except=null){return serialize(async()=>{
       const found=[];
       for(const log of [path+'.audit.jsonl',path+'.audit.jsonl.previous']){
         const text=await readFile(log,'utf8').catch(error=>{if(error.code==='ENOENT')return '';throw error;});
         const lines=text.split('\n').filter(Boolean).reverse();
-        for(const line of lines){let entry=null;try{entry=normalizeReport(JSON.parse(line));}catch{}if(entry)found.push(entry);if(found.length>=limit)return found;}
+        for(const line of lines){let entry=null;try{entry=normalizeReport(JSON.parse(line));}catch{}if(entry&&entry.reportedId!==except)found.push(entry);if(found.length>=limit)return found;}
       }
       return found;
     });},

@@ -22,10 +22,12 @@ export function createModerationReports({ fetcher = (...args) => fetch(...args),
   const when = at => { try { return new Date(at).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' }); } catch { return at; } };
 
   // `known`: the last answer said this account moderates, so a failure since is theirs.
-  let asked = 0, self = null, busy = false, known = false;
+  // `shown`: the reports in the list now.
+  let asked = 0, self = null, busy = false, known = false, shown = [];
   // Every action button in the list, so a ban in flight can hold them all.
   const buttons = new Set();
   const hold = held => { for (const button of buttons) button.disabled = held; };
+  const draw = reports => { shown = reports; buttons.clear(); list.replaceChildren(...reports.map(row)); };
   const setBan = async (account, banned) => {
     if (busy) return;
     busy = true; hold(true);
@@ -42,8 +44,12 @@ export function createModerationReports({ fetcher = (...args) => fetch(...args),
       }
     } catch { /* NOT_CHANGED: no answer, or one that isn't JSON */ }
     busy = false;
-    if (changed) await refresh(); else hold(false);
-    status.textContent = message;
+    // A refresh that fails keeps the last list: it shows this change, under both messages.
+    // The buttons work again unless another ban started meanwhile.
+    const failure = changed ? await refresh() : null;
+    if (failure) draw(shown.map(item => item.reported.id === account.id ? { ...item, reported: { ...item.reported, banned } } : item));
+    hold(busy);
+    status.textContent = failure ? `${message} ${failure}` : message;
     // A refresh can hide the group (the session ended); focus then stays in the pane.
     (root.hidden ? root.closest?.('[role="tabpanel"]') : status)?.focus?.();
   };
@@ -59,6 +65,8 @@ export function createModerationReports({ fetcher = (...args) => fetch(...args),
     const idle = () => {
       if (item.reported.id === self) return actions.replaceChildren();
       if (item.reported.banned) return actions.replaceChildren(button(`Lift ${item.reported.name}’s ban`, () => setBan(item.reported, false)));
+      // The server refuses to ban a moderator, a waitlist admin or an owner.
+      if (item.reported.staff) return actions.replaceChildren();
       const start = button(`Ban ${item.reported.name}…`, () => {
         const confirm = button(`Ban ${item.reported.name}`, () => setBan(item.reported, true), 'moderation-report-action moderation-report-confirm');
         actions.replaceChildren(confirm, button('Cancel', () => { idle(); actions.children[0]?.focus?.(); }));
@@ -70,6 +78,7 @@ export function createModerationReports({ fetcher = (...args) => fetch(...args),
     node.append(summary, meta, actions);
     return node;
   };
+  // Answers the failure it shows, if any.
   async function refresh() {
     const mine = ++asked;
     let session = null, response = null, value = null, threw = false;
@@ -77,20 +86,21 @@ export function createModerationReports({ fetcher = (...args) => fetch(...args),
       session = await signedIn();
       if (session) { response = await fetcher(LIST_PATH, { credentials: 'same-origin', cache: 'no-store' }); value = await response.json().catch(() => null); }
     } catch { threw = true; }
-    if (mine !== asked) return;
+    if (mine !== asked) return null;
     self = session?.user?.id ?? null;
     if (response?.ok && value?.moderator === true && Array.isArray(value.reports)) {
       known = true; root.hidden = false;
-      buttons.clear(); list.replaceChildren(...value.reports.map(row));
+      draw(value.reports);
       status.textContent = value.reports.length ? '' : 'No reports yet.';
-      return;
+      return null;
     }
     // Rate limits and outages answer before the route knows who is asking, so a failure
     // is shown only when the route says it is a moderator's, or this account just was one.
     // The last list stays under it.
     const failed = (threw || (session && response && !response.ok && response.status !== 401 && response.status !== 403)) && (value?.moderator === true || known);
-    if (failed) { root.hidden = false; status.textContent = value?.moderator === true && sentence(value.error) ? value.error : UNAVAILABLE; return; }
-    known = false; root.hidden = true; status.textContent = ''; buttons.clear(); list.replaceChildren();
+    if (failed) { root.hidden = false; status.textContent = value?.moderator === true && sentence(value.error) ? value.error : UNAVAILABLE; return status.textContent; }
+    known = false; root.hidden = true; status.textContent = ''; draw([]);
+    return null;
   }
   return Object.assign(root, { refresh });
 }

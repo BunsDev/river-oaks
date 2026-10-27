@@ -19,7 +19,7 @@ function withDocument(t) {
   globalThis.document = { createElement: tag => new Element(tag) };
 }
 const reply = (value, status = 200) => ({ ok: status < 400, status, json: async () => value });
-const report = (at, reason, reporter, reported, banned = false) => ({ at, reason, reporter: { id: `user-${reporter}`, name: reporter }, reported: { id: `user-${reported}`, name: reported, banned } });
+const report = (at, reason, reporter, reported, banned = false, staff = false) => ({ at, reason, reporter: { name: reporter }, reported: { id: `user-${reported}`, name: reported, banned, staff } });
 // Answers like /auth/session, /api/moderation/reports and /api/moderation/ban, recording each call.
 function server({ moderator = true, reports = [report('2026-10-26T10:00:00.000Z', 'harassment', 'pat', 'erin')], signedIn = true, list = null, ban = null } = {}) {
   const calls = [], banned = new Set();
@@ -91,6 +91,79 @@ test('a ban asks first, then goes through the server with the session token', as
   assert.equal(parts(root).status.textContent, 'erin’s ban is lifted.');
 });
 
+test('no ban is offered for a moderator, a waitlist admin or an owner; a ban already on one can be lifted', async t => {
+  withDocument(t);
+  const { fetcher } = server({ reports: [report('2026-10-26T10:00:00.000Z', 'harassment', 'pat', 'mod2', false, true),
+    report('2026-10-25T10:00:00.000Z', 'cheating', 'kim', 'admin', true, true)] });
+  const root = createModerationReports({ fetcher });
+  await root.refresh();
+  assert.deepEqual(rows(root).map(item => item.actions.map(button => button.textContent)), [[], ['Lift admin’s ban']]);
+});
+
+test('when the list can\'t refresh after a ban, the row shows the change, both messages show and every button works again', async t => {
+  withDocument(t);
+  let limited = false;
+  const api = server({ list: () => limited ? reply({ moderator: true, error: 'Please wait a moment before refreshing reports.' }, 429)
+    : reply({ moderator: true, reports: [report('2026-10-26T10:00:00.000Z', 'harassment', 'pat', 'erin'), report('2026-10-25T10:00:00.000Z', 'cheating', 'kim', 'sam')] }),
+  ban: () => { limited = true;return reply({ ok: true }); } });
+  const root = createModerationReports({ fetcher: api.fetcher });
+  await root.refresh();
+  rows(root)[0].actions[0].click();
+  await rows(root)[0].actions[0].click();
+  assert.equal(parts(root).status.textContent, 'erin is banned. Please wait a moment before refreshing reports.');
+  assert.deepEqual(rows(root).map(item => [item.summary, item.actions.map(button => [button.textContent, button.disabled])]),
+    [['erin: harassment (banned)', [['Lift erin’s ban', false]]], ['sam: cheating', [['Ban sam…', false]]]]);
+});
+
+test('every button stays held until the list after a ban has loaded', async t => {
+  withDocument(t);
+  let release, waiting = false;
+  const pending = new Promise(resolve => { release = resolve; });
+  // The server() fake marks erin banned once the ban arrives; the list after it waits.
+  const api = server(), fetcher = async (path, options) => {
+    if (path === '/api/moderation/reports' && waiting) await pending;
+    return api.fetcher(path, options);
+  };
+  const root = createModerationReports({ fetcher });
+  await root.refresh();
+  rows(root)[0].actions[0].click();
+  const [confirm, cancel] = rows(root)[0].actions;
+  waiting = true;
+  const sent = confirm.click();
+  for (let i = 0; i < 10; i++) await new Promise(resolve => setImmediate(resolve));
+  assert.equal(api.calls.filter(call => call[1] === '/api/moderation/ban').length, 1);
+  assert.deepEqual([confirm.disabled, cancel.disabled], [true, true], 'held while the list reloads');
+  release();await sent;
+  assert.deepEqual(rows(root)[0].actions.map(button => [button.textContent, button.disabled]), [['Lift erin’s ban', false]]);
+});
+
+test('a ban that finishes while another is on its way leaves the buttons held', async t => {
+  withDocument(t);
+  let releaseList, releaseBan;
+  const slowList = new Promise(resolve => { releaseList = resolve; }), slowBan = new Promise(resolve => { releaseBan = resolve; });
+  let lists = 0, bans = 0;
+  const two = [report('2026-10-26T10:00:00.000Z', 'harassment', 'pat', 'erin'), report('2026-10-25T10:00:00.000Z', 'cheating', 'kim', 'sam')];
+  const { fetcher } = server({ list: async () => {
+    // The second list, after the first ban, waits; the Account pane reopening asks a third time.
+    if (++lists === 2) await slowList;
+    return reply({ moderator: true, reports: two });
+  }, ban: async () => { if (++bans === 2) await slowBan;return reply({ ok: true }); } });
+  const root = createModerationReports({ fetcher });
+  const settle = async () => { for (let i = 0; i < 10; i++) await new Promise(resolve => setImmediate(resolve)); };
+  await root.refresh();
+  rows(root)[0].actions[0].click();
+  const first = rows(root)[0].actions[0].click();
+  await settle();
+  await root.refresh();
+  rows(root)[1].actions[0].click();
+  const second = rows(root)[1].actions[0].click();
+  await settle();
+  releaseList();await first;
+  assert.ok(rows(root).flatMap(item => item.actions).every(button => button.disabled), 'the second ban is still on its way');
+  releaseBan();await second;
+  assert.ok(rows(root).flatMap(item => item.actions).every(button => !button.disabled));
+});
+
 test('a refused ban says why and keeps the list', async t => {
   withDocument(t);
   const root = createModerationReports({ fetcher: server({ ban: () => reply({ error: 'Moderator access required.' }, 403) }).fetcher });
@@ -100,6 +173,7 @@ test('a refused ban says why and keeps the list', async t => {
   assert.equal(parts(root).status.textContent, 'Moderator access required.');
   assert.equal(focused, parts(root).status);
   assert.deepEqual(rows(root).map(item => item.summary), ['erin: harassment']);
+  assert.ok(rows(root)[0].actions.every(button => !button.disabled), 'its buttons work again');
 });
 
 test('empty and unavailable lists say so; a late answer never replaces a newer one', async t => {

@@ -128,14 +128,15 @@ export function createRedisSecurity({ redis, prefix, now = Date.now }) {
     async audit(kind, record) { await execute(AUDIT, ['audit'], [event(kind, record)]); },
     // Saved reports, newest first (moderation-reports.js). The list is newest first
     // already; it's read 500 entries at a time, and only as far as `limit` needs.
-    async reports(limit = REPORT_LIST_LIMIT) {
+    // Reports about `except` don't count.
+    async reports(limit = REPORT_LIST_LIMIT, except = null) {
       const found = [];
       for (let start = 0; start < 10_000 && found.length < limit; start += 500) {
         const lines = await execute(READ_AUDIT, ['audit'], [start, start + 499]);
         for (const line of lines) {
           let entry = null;
           try { entry = normalizeReport(JSON.parse(line)); } catch { /* not a report */ }
-          if (entry) found.push(entry);
+          if (entry && entry.reportedId !== except) found.push(entry);
           if (found.length >= limit) break;
         }
         if (lines.length < 500) break;

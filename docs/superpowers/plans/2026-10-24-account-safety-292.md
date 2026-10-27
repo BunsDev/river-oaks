@@ -433,6 +433,30 @@ Independent review (2026-10-26):
 | The sidebar wiring has no test | Low | As for deletion and support, no sidebar unit test exists. Recorded |
 | Found after the review: Account refreshes the list each time it opens, so the new limit's 429 could empty the list a moderator was reading | Low | The last list stays under any moderator failure. Test red first |
 
+Lander review of E (river-oaks-e9, 2026-10-27, at `5dac5cd3`): land after fixes, no
+high findings. It confirmed authorization on both servers (env parsing, 401/403/405,
+path variants 404, the exact Vercel rewrite and allowlist), no emails or free text,
+text-only rendering, the 200 cap, and the 429 fix and the moderator and limit guards by
+mutation.
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| A moderator saw reports about themself, with the reporter's identity, and could ban the reporter | Medium | Reports about the reader are left out inside each store, before the newest 200 are taken, so they don't push a row off the list either; any other moderator sees them. The reporter is sent only as a shown name (for an account without a username, `Visitor #` and its id). Town and hosted tests; red without the filter, with the id sent, and with the filter after the cap |
+| A moderator could ban another moderator or an owner, who then couldn't lift it | Low | Both ban routes refuse (403) to ban moderators, waitlist admins and the server's owner accounts (its `isAdmin`: Jevica's ids, or the local development owner), before revoking invites or anything else; lifting a ban on one still works. The list marks them `staff` and offers no Ban. Tests on both servers and the client; red without each check, when invites are revoked first, and when unbanning is refused too |
+| An erased reporter's id stays in both audits and now shows in the app; a ban on an erased account writes `invites-revoked` back into the waitlist audit | Low | Recorded in the inventory (Decision 3) with the follow-up: replace the reporter's id on erasure, skip the revocation and hide Ban for erased accounts. Not built: it needs a tombstone read per account and changes erasure's audit steps |
+| A refresh 429 after a ban left every button disabled and overwrote the 429 message | Low | When the refresh fails, the list shows the change (banned, or lifted), both messages show, and the buttons work again unless another ban started meanwhile. Buttons stay held until the list after a ban loads, and after a refused ban they work again. Red with each part removed |
+| A ban was looked up for every reporter; every resident's Account opens the list route | Low | Bans are looked up only for reported accounts (test; red when reporters are looked up). The call stays: the ticket that says who moderates is held by `main.js` and `multiplayer-client.js`, owned elsewhere, and a resident's answer costs a session check and a ban lookup, before any read |
+| A shared hosted limit key and an extra response field survived mutation | Low | A second hosted moderator reads after the first is limited, and both servers' tests compare whole report objects and the response's keys. Both mutations red |
+
+An independent review of these fixes found no high or medium issue and confirmed the
+reader filter, the staff checks' order and both servers' limits by mutation. Folded in:
+the cap came before the filter, so a report about the reader still pushed their oldest
+row off a full list; the docs said the reporter was not identified; a failed refresh
+left the changed row offering the old action; releasing the buttons ignored a second
+ban; the local development owner wasn't staff; and five mutations that survived are
+now pinned. Not changed: the in-world Ban button (`multiplayer-client.js`, owned
+elsewhere) still shows for staff, and the server's refusal is shown there.
+
 ## Gaps and decisions
 
 - The lantern walk's record round keeps lamplighter display names with no account
