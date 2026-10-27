@@ -401,6 +401,12 @@ Independent review (2026-10-26):
   missing `CRON_SECRET`. It matters only if WorkOS delivers to a preview. Follow-up on
   increment A: warn when not production too, and say so in the inventory. In-app
   deletion stays off on previews.
+- The standalone town keeps erasure records in memory, while some of its stores are on
+  disk. Example from river-oaks-e9's re-review of A: an `invite-redeem` let in before
+  the deletion lands after the first run, and the town restarts inside the 60 to 90 s
+  before the second run; the name and email stay in `WAITLIST_FILE`. Documented in
+  `town.js` and the inventory; the follow-up is a file-backed record beside
+  `BLOCKS_FILE`.
 - Bans, the moderation audit and the Redis security audit are kept (Decision 3).
   Deleting an account and signing up again gets a new WorkOS id and so evades a
   ban; a hashed tombstone is a Decision for Val, not implemented.
