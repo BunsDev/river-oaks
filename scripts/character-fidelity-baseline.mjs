@@ -15,8 +15,9 @@ import {HERO_IMAGE_LIMITS} from '../preview/audit/character-image-comparison.js'
 //
 //   node scripts/character-fidelity-baseline.mjs [--out <dir>] [--against <earlier-run>]
 //     [--appearances jevica,sable-human,...] [--realism off,high] [--crowd 1,8,24] [--repeats 2] [--samples 240]
-//     [--quiet gpu=10,load=8,browsers=0] [--quiet-timeout 900] [--no-isolate]
+//     [--seconds 30] [--quiet gpu=10,load=8,browsers=0] [--quiet-timeout 900] [--no-isolate]
 //
+// --seconds times each crowd for that long after warmup instead of --samples frames.
 // Each appearance runs once per realism tier; results and files are keyed by
 // the appearance id, with ".<tier>" appended for tiers other than off.
 //
@@ -34,6 +35,8 @@ const args = process.argv.slice(2), option = (name, fallback) => { const i = arg
 const appearances = option('--appearances', 'jevica,sable-human,man-tailored,rowan-human').split(',');
 const tiers = option('--realism', 'off').split(','), cases = appearances.flatMap(appearanceId => tiers.map(tier => ({appearanceId, tier, key: tier === 'off' ? appearanceId : `${appearanceId}.${tier}`})));
 const crowd = option('--crowd', '1,8,24').split(',').map(Number), repeats = Number(option('--repeats', 2)), samples = Number(option('--samples', 240));
+const seconds = args.includes('--seconds') ? Number(option('--seconds')) : undefined;
+if (seconds !== undefined && !(seconds > 0)) throw new Error('--seconds must be positive');
 const output = resolve(option('--out', join(root, '.runtime/character-fidelity', new Date().toISOString().replaceAll(':', '-'))));
 const expressions = args.includes('--expressions'), qualityCycles = args.includes('--quality-cycles');
 const timingCycles = args.includes('--timing-cycles');
@@ -48,7 +51,7 @@ const git = (...command) => execFileSync('git', command, {cwd: root, encoding: '
 await mkdir(output, {recursive: true});
 const report = {version: 1, kind: 'character-fidelity-baseline', status: 'running', startedAt: new Date().toISOString(),
   revision: git('rev-parse', 'HEAD'), provenance: await captureProvenance(root),
-  options: {appearances, realism: tiers, crowd, repeats, samples, expressions, qualityCycles, timingCycles, quiet: quietLimits, quietTimeoutMs: quietTimeout, isolate}, machine: {platform: platform(), osRelease: release(), architecture: arch(), cpus: cpus().length, cpuModel: cpus()[0]?.model},
+  options: {appearances, realism: tiers, crowd, repeats, samples, seconds, expressions, qualityCycles, timingCycles, quiet: quietLimits, quietTimeoutMs: quietTimeout, isolate}, machine: {platform: platform(), osRelease: release(), architecture: arch(), cpus: cpus().length, cpuModel: cpus()[0]?.model},
   method: 'Chromium headless, --use-angle=metal --ignore-gpu-blocklist --disable-gpu-vsync --disable-frame-rate-limit, 1920x1080 at DPR 1. Captures: native 3840x2160 MSAA 4 through character-portrait.js with reduced motion. Timing: rAF intervals and update+render CPU per frame, GPU TIME_ELAPSED every 4th frame where exposed; cases alternate order between repeats. Timing pages are cross-origin isolated unless options.isolate is false; each sample records host conditions (load average, other GPU clients\' device utilization, foreign automation browsers).',
   results: {}, errors: []};
 report.dirty = report.provenance.dirty;
@@ -69,16 +72,12 @@ try {
   const page = async reducedMotion => {
     const context = await browser.newContext({viewport: {width: 1920, height: 1080}, deviceScaleFactor: 1, colorScheme: 'light', reducedMotion});
     await context.addCookies([{name: 'fixture_session', value: 'owner', url: fixture.origin}]);
-    // Only the document needs the headers; same-origin assets stay on the normal path.
-    if (isolate) await context.route(fixture.origin + '/e2e/fixtures/character-fidelity.html', async route => {
-      const response = await route.fetch();
-      await route.fulfill({response, headers: {...response.headers(), 'cross-origin-opener-policy': 'same-origin', 'cross-origin-embedder-policy': 'require-corp'}});
-    });
     const tab = await context.newPage(); tab.setDefaultTimeout(180000);
     tab.on('pageerror', error => report.errors.push(error.message));
     tab.on('console', message => { if (message.type() === 'error') report.errors.push(message.text()); });
     tab.on('response', response => { if (response.status() >= 400) report.errors.push(`HTTP ${response.status()} ${new URL(response.url()).pathname}`); });
-    await tab.goto(fixture.origin + '/e2e/fixtures/character-fidelity.html');
+    // The fixture server isolates the document itself (server/tests/isolated-fixture.js).
+    await tab.goto(fixture.origin + `/e2e/fixtures/character-fidelity.html${isolate ? '?isolate=1' : ''}`);
     await tab.waitForFunction(() => document.body.dataset.ready === 'true');
     if (isolate && !await tab.evaluate(() => crossOriginIsolated)) throw new Error('Timing page is not cross-origin isolated');
     return {tab, close: async () => { await tab.evaluate(() => window.fidelityFixture.dispose()).catch(() => {}); await context.close(); }};
@@ -112,7 +111,7 @@ try {
         assertLifecycle(result);
       }
       if (qualityCycles && tier === tiers[0]) {
-        const result = await tab.evaluate(id => window.fidelityFixture.qualityCycles(id), appearanceId);
+        const result = await tab.evaluate(id => window.fidelityFixture.qualityCycles(id, 10), appearanceId);
         report.results[key].qualityCycles = result;
         assertLifecycle(result);
         if (!result.checks.every(check => check.passed)) throw new Error('Quality changed character identity');
@@ -129,7 +128,7 @@ try {
         const before = load(), cold = await tab.evaluate(([id, realism]) => window.fidelityFixture.load(id, {realism}), [appearanceId, tier]);
         report.results[key].load.push({repeat, loadavg: before, ...cold});
         for (const count of crowd) {
-          const host = await settle(), start = host.loadavg, result = await tab.evaluate(([id, options]) => window.fidelityFixture.frames(id, options), [appearanceId, {count, samples, realism: tier}]);
+          const host = await settle(), start = host.loadavg, result = await tab.evaluate(([id, options]) => window.fidelityFixture.frames(id, options), [appearanceId, {count, samples, seconds, realism: tier}]);
           report.results[key].frames.push({repeat, loadavg: start, host, ...result});
           console.log(`${key} x${count} r${repeat}: frame p50 ${result.frameIntervalMs.p50} p95 ${result.frameIntervalMs.p95} ms, cpu p95 ${result.cpuMs.p95} ms, gpu p50 ${result.gpuMs?.p50 ?? 'n/a'} ms, load ${start[0]}, other gpu ${host.gpuUtilization ?? 'n/a'}%, quiet ${host.quiet}`);
         }
