@@ -921,7 +921,21 @@ Landing order: #654, #659, #656, #655, then #649 after round 6. Each decision is
   - **Cause:** `runTick` takes the lease, refuses the stored state ("Invalid durable town district/region/checkpoint/..."), and never releases it. The next room waited the 5 s lease out (5,507 ms measured locally), and the longer recovery chain pushed it past `REQUEST_MS` (7 s) on hosted runners. A refuser that keeps ticking renews the lease indefinitely. 32 parallel local runs at load 6–7 did not reproduce the timeout, but the timing gap was measured directly.
   - **Fix (`fae70fe6`):** `tick()` runs the token-checked `RELEASE` on an "Invalid durable" refusal. A new regression test fails on the old code, and the existing epoch test now asserts the release after each refusal. Focused Redis files 20/20; full server suite with Redis 1,339/1,339; core passed in one run (twice).
   - **Independent review:** nothing HIGH or MEDIUM. On base it measured `request_timeout` while the refuser keeps ticking, and 9 of 10 commands timing out under a higher-generation refuser; with the fix, 10 of 10. LOW notes addressed.
-  - PR #698 open; landing through `land-wait-checks.mjs`. #696 lands after it.
+  - **Landed:** #698 as `866ae90d` (26/26 checks on `fae70fe6`), then #696 as `525d9edd` (26/26 on lander-updated `ba75e923`). Both retired through `project:prune` from main's tooling, with evidence archived and restore-tested under `~/worktree-backups/river-oaks/evidence/` (`redis-refused-lease-698`, `crime-evade-timing-696`). Origin deleted both branches on merge.
+- **`east-garden-commons` hosted failures, 2 of the last 50 shard runs: draft #699 at `e1821eb1`** (task `commons-route-clearance-20261027`; the branch keeps its first name because the ref guard refuses renames).
+  - **Route clearance dropped.** An independent review showed the #696-run stall never reached the 0.05 m corner: the owner was still 0.83 m from where "owner home" began.
+  - **Stall (run 40447048333, owner page at 3 fps).**
+    - The CI input trace shows 100 drags in the 120 s window. Only 2 got `gotpointercapture`, and yaw changed only on those.
+    - Across the run, drags captured 1 of 115 times while the other page was mid-drag, against 26 of 33 otherwise. The split holds within each time window and for the first drag of each turn.
+    - No page errors, and nothing in the trace couples the pages through the server. The mechanism is not established: a headless SwiftShader repro captured 10/10, but CI runs headed Chromium under Xvfb.
+    - **Mitigation:** turn one page at a time, letting a frame pass after each drag. walk() reports `turns {drags, turned}` in the stall error and the route evidence, so the next failure shows whether it helped.
+  - **Overshoot (run 40459091182, 37 fps).**
+    - A fast press about 2 m out carried the owner through the rain-garden lantern waypoint at 6.4 m/s.
+    - The loop broke inside 0.15 m while the owner was still moving, and the owner coasted to 0.92 m out, beyond the town's 0.6 m arrival check.
+    - **Fix:** at a waypoint, release the keys and, if still moving, wait to stop and measure again.
+    - **Reproduced** by the `commons-walk-driver` harness: main's driver fails 11 of 276 fast approaches, this one none. Three of those cases became regression tests that fail on main.
+  - The 0.15 m break, 0.6 m confirm and 120 s deadline are unchanged.
+  - **Follow-up for the input-trace owner:** record `hasPointerCapture` after the host's own handler, to tell "capture never requested" apart from "requested but never granted".
 - **`office-computer-embed` account-switch race:** river-oaks-e9's journey-only fix. Whether access-entry should reload at all stays a product question.
 - **garden-campus-traversal "phone back on the street":** one hosted failure (#675 attempt 1). Its artifact doesn't show the phone's state, so a fix would be a guess. **Proposal for the journey's owner:** make `onLevel`'s failure message include the server's `levelId` and position.
 - **Hosted `playwright install --with-deps` mirror stalls** (proposal for Val, not a change). Tonight the step took 9–10.7 min, against 6 s normally, on #649, #676 and #655's runs. That pushed `preview checks`, `preview experience (commons)` and `worlds-and-creator` past their 20 min job limit. Options:
