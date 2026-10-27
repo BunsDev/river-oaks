@@ -79,10 +79,11 @@ async page => {
     // the 350 ms before contact. Snapshots arrive every 200 ms, so the page notes when contact
     // falls by its own clock as soon as the counter appears, and U is pressed `lead` ms before
     // that. Every delay (the snapshot's delivery, polling, the key's round trip) only makes the
-    // evade later, so the lead sits near the window's early edge. A counter that can't be timed
-    // lands; the rival telegraphs again after its cooldown.
+    // evade later, so the lead sits just inside the window's early edge: a press with no delay
+    // still counts, and up to 340 ms of delay is absorbed. A counter that can't be timed lands;
+    // the rival telegraphs again after its cooldown.
     await visitor.waitForFunction(() => window.__crimeLines.some(text => /winding up to strike back/.test(text)));
-    const lead = 320, attempts = [];
+    const lead = 340, attempts = [];
     let evadedCounter = null;
     for (let attempt = 0; attempt < 3 && !evadedCounter; attempt++) {
       const counter = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), counter = m.snapshot?.crime?.actions?.find(item => item.kind === 'counter' && item.targetId === m.selfId && item.outcome === null && item.phase === 'windup');
