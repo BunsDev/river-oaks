@@ -45,6 +45,7 @@ Until then, nothing here changes behaviour on main: Heights code paths run only 
 | Main `0b9a97c4` merged in through #655 (`03381365`); signed merge `ff46d99e`, clean | Related suites on an isolated Redis: 195/195, 0 skipped (the 95 above plus Gardens, District and world migrations, police and crime, Commons games and transport, and the Redis room). `nice -n 10 pnpm run verify` (core), Python 3.12: **passed** on the third attempt (10:41–10:46Z, load 7.8): agent 274/274; preview 4,163 passed, 1 skipped; server 918 passed, 225 Redis-only skips; desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo; secrets. Attempts 1 and 2 (10:36Z and 10:38Z, load 7.1–7.8) each failed only the `land-pr` queued-lander timing test (30 s timeout), which passed 29/29 alone; `scripts/` is identical to main and both logs are kept. Hosted checks at `ff46d99e`: 15/15 green. |
 | #655's review fixes (#674) merged in through `2ac33123`; signed merge `84190512` | Related suites on an isolated Redis (6461): 200/200, 0 skipped (the 195 above, #674's 3 tests and 1 new). The new test fails with the corridor filter removed. Core verify: **passed** on the first attempt (08:36–08:41Z, load 8.4–13.6), `dirty: false`: agent 274/274; preview 4,165 passed, 1 skipped; server 921 passed, 225 Redis-only skips; desktop 120 passed, 3 skipped; build; Python lint, format and 170 tests; demo; secrets. Receipt `core.json` sha256 `fc901b154bf58ea8…`. |
 | Main `3df540ee` (#655 as `2d63637f`, #649 as `3df540ee`) merged in; the Heights rollback wiring (`465a209a…`) and its tests (`d6681aa3…`) applied; stop placement fixed (below) | Related, Heights and rollback suites on an isolated Redis (6461): **230/230**, 0 skipped. That includes the Gardens, Commons and Heights Redis fences, both Commons activation rehearsals, the Heights rehearsal, and the new open-ground stop test. Core verify: **passed** on the first attempt (2026-10-27 02:58–03:03Z): agent 281/281; preview 4,217 passed, 1 skipped; server 933 passed, 227 skipped (Redis cases); desktop 127 passed, 5 skipped. Receipt `a9c43f9cf91d504f…`. |
+| Main `52c43c7a` and `74f12d76` merged in (`ce1ba42f`, `cc76bca5`; Studewood and Terraces) | Core verify passed on the first attempt on each merge (see the merge sections below). Hosted checks at `cc76bca5`: 25/25 green. `pnpm run verify full` with an isolated Redis (6461), Python 3.12, clean tree at `cc76bca5`: **passed** on the first attempt (2026-10-27 04:10–06:20Z, including the browser-lock wait). All 19 stages passed: dependency audit; agent 289/289; preview 4,239 passed, 1 skipped; server with Redis 1,277/1,277, 0 skipped; desktop 127 passed, 5 skipped; build; Python; demo; secrets and secret history; browser security; reflections; experience (882 s); Commons experience (237 s); shared (875 s); iPic screening (88 s). Receipt `full.json` sha256 `36e2b88a2c023e82…`. The run's rewritten `data/reports/experience.json` and `shared-experience.json` were restored, not committed. |
 
 ## Results
 
@@ -165,7 +166,6 @@ Main moved to #663 while `ce1ba42f` was being pushed, and `redis-room.js` confli
 
 ## Next step
 
-Main `74f12d76` (with #649, #662 and #663) is merged into this branch, with the Heights rollback wiring.
-1. Wait for hosted checks on the merge.
-2. Run `verify full` with an isolated Redis.
-3. Mark the PR ready. Merging and landing are Val's.
+Main `74f12d76` (with #649, #662 and #663) is merged into this branch, with the Heights rollback wiring. Hosted checks (25/25) and `verify full` with an isolated Redis passed at `cc76bca5`.
+1. Mark the PR ready for review.
+2. Merging and landing are Val's. If main moves again, merge it in and rerun core verify and the hosted checks first.

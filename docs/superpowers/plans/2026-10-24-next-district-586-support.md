@@ -23,7 +23,7 @@ This session also delivered Val's separate request of 2026-10-24, "let residents
 | PR | Head | CI | What it is |
 | --- | --- | --- | --- |
 | #655 | `462928015e58b2aaf37da311767ec18d02613dee`, a merge of main `cb403ba2` | Hosted 22/22 at `46292801` on the first attempt; `verify full` there did not pass in six attempts (see "Complete, blocked, not started"). Hosted 22/22 at `2ac33123` after one rerun. `preview experience (campus)` attempt 1 failed a keyboard walk in `garden-campus-suite`, "could not walk to stranger to the T1 lift"; it passed on attempt 2, and the log and artifact are kept. Core verify passed on the first attempt at `f3f8085c`, related suites 196/196. `verify full` 18/18 was on `03381365`, before the review fixes. | Residents walk anywhere in town, the Commons included (Val's request). `f3f8085c` merges #674, river-oaks-71's fixes for an independent review. Ledger `2026-10-24-resident-locations.md`. Main `cb83c7cd` merges cleanly. |
-| #670 | `e5481b0ffad603ab57a457914208d7ecf42f26ab` (ledger only since `84190512`) | Hosted 15/15 at `e5481b0f` after one rerun: in attempt 1, `preview experience (commons)` lost the second player's town updates on a CPU-rendered runner ("The town went quiet"); log `e7648e1e…`, report `903b970f…`. Hosted 15/15 at `760d8eda`, as at every earlier head. Core verify passed on the first attempt at `84190512`, related suites 200/200. | Piece B: residents walk on into Bayou Heights. `84190512` merges #655 `2ac33123` and carries #674's rollback fixes into `relocateResidents`. Ledger `2026-10-25-resident-heights.md`. Lands after #649. |
+| #670 | `cc76bca5`, a merge of main `74f12d76` (with #655, #649, #662 and #663) | Hosted 25/25 at `cc76bca5`. Core verify passed on the first attempt on each main merge (`3df540ee`, `52c43c7a`, `74f12d76`). `verify full` with an isolated Redis passed on the first attempt at `cc76bca5` (19 stages; server with Redis 1,277/1,277). Earlier: hosted 15/15 at `e5481b0f` and `760d8eda`; see #670's ledger. | Residents in Bayou Heights: Heights stops on open ground, `relocateResidents` shared by the Commons and Heights rollbacks, and the Heights → Commons resident wiring. |
 | #649 (river-oaks-91) | `1c51fa3921388c1dfc074812cb8476894a33f247`; round 5 measured `ba942859708cfec355c134c90b713adb9b3ef9e0`, a merge of main `cb83c7cd` (tree `85794d04`), and the product patch is unchanged since, per its owner | Owner's record: at `1c51fa39`, 25 checks passed and 5 installer or signing jobs were skipped | The district itself. After round 5, its owner's register records item 5 (District budgets) as **not met** on `ba942859`; see Piece D. |
 | #674 (river-oaks-71) | `d5666034`, merged into #655's branch as `f3f8085c` | Hosted, all green | Fixes for the independent review of #655: rollback re-plans residents walking toward removed land, crossings step past placed objects, lantern home stops come back. |
 
@@ -119,7 +119,7 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
 - **#655:** Commons → Gardens moves residents standing on removed land to clear District ground. Tested in `server/tests/resident-locations-rollback.test.js`.
 - **#655 after #674:** residents still on District ground re-plan where they stand when their route enters removed land or they head for a Commons lantern; a lantern home stop gives way to the resident's home stop.
 - **#670:** `relocateResidents` is extracted, and Commons → Gardens uses it. It carries #674's fixes. Its caller names the dropped stops (`gone`), and only corridors the target lacks count as dropped land.
-- **Heights → Commons:** player-only on #649. The resident wiring is prepared as `heights-rollback-wiring-server.patch` (`465a209a…`) and `resident-heights-rollback.test.js.pending` (`d6681aa3…`). It lands on #670 after #649 is on main.
+- **Heights → Commons:** player-only on main since #649. #670 adds the resident wiring (the patch `465a209a…` and its tests `d6681aa3…`, applied in `01db203c`). The Studewood and Terraces rollbacks to the Commons chain through it.
   - Rehearsed again on scratch `ae7d3150`, which is #649 `ba942859` + #670 `760d8eda` + the patch: 12/12 (`heights-wiring-ae7d3150.log`, `a21f9d81…`).
   - That run covered the Heights activation rehearsal, the 5 Heights rollback tests and the 6 Commons rollback tests.
   - The new Heights case re-plans a walk to the bandstand, leaves a walk into the Commons alone, and restores a Heights Hall home stop. It fails if the Heights rollback doesn't name its stops.
@@ -130,7 +130,8 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
 - **Complete:**
   - pieces A and C for #649; piece D rounds 1–5, with round 5's reconnect diagnostic;
   - #655 verified on main `0b9a97c4`, with #674's review fixes verified at `f3f8085c` (core, related suites, hosted);
-  - #670 verified at `84190512`, with its Heights activation fix and #674's fixes carried into `relocateResidents`;
+  - #655 delivered: on main as `2d63637f`; #649 on main as `3df540ee`;
+  - #670 verified at `cc76bca5` (main `74f12d76` merged): core, hosted 25/25 and `verify full` with an isolated Redis, with the Heights rollback wiring and open-ground stops;
   - the Heights rollback wiring, rehearsed against #649's current head;
   - #649's revision checks: a revision switch under an open page (R, V), five loops on foot (F), and a page behind the town (O, U).
 - **Handed over:** on 2026-10-26 at about 20:20Z, river-oaks-71 relayed through river-oaks-a3 that Val gave #655 its go and chose to rerun the gated ABBA for #649 (Decision 12). This session hasn't confirmed either with Val. river-oaks-71 lands #655 with its lander, then merges main into #649 and runs round 6 with this ledger's round-5 protocol. This session stopped its checks on #655 and doesn't push its branch.
@@ -140,8 +141,7 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
   - A quiet pass needs about 1,082 of the 1,200 s.
   - Logs, receipts and journey reports are in the scratchpad, as `verify-full-655-46292801-attempt{1..6}`.
 - **Blocked:**
-  - #649 waits for round 6 and Val's merge;
-  - #670 waits for #655 (merge main into it) and #649 (the Heights wiring).
+  - #670 waits for review and Val's merge decision. If main moves first, it needs another merge, core verify and hosted checks.
 - **Not started:**
   - land for 3× (see Decisions).
 
@@ -174,14 +174,8 @@ Composed-world sha256: Gardens `df44715b…`, Commons `b78b24dd…`, Heights `19
 
 ## Next-session prompt
 
-> Continue `next-district-586-support-20261024` as its owner. Read `pnpm run --silent register show next-district-586-support-20261024`, this ledger, and the ledgers of #655 and #670.
-> - Round 6 for #649 is river-oaks-71's, per its relay. Send the protocol or receipts if it asks.
-> - When #655 is on main: #670 retargets to main. Merge main into `feat/resident-heights-20261025`, rerun its related suites and core, push, and wait for hosted checks.
-> - When #649 is on main:
->   1. Merge main into `feat/resident-heights-20261025` (no rebase, no force-push).
->   2. Apply the Heights rollback wiring: the scratchpad patch (`465a209a…`), or rebuild it from #670's ledger. It names the Heights stops as `gone` and returns `reroutedResidents`.
->   3. Add `server/tests/resident-heights-rollback.test.js` (pending file `d6681aa3…`, 5 tests).
->   4. Run it and the Heights activation rehearsal with an isolated Redis.
->   5. Run `verify full`, then mark #670 ready.
+> Continue `next-district-586-support-20261024` as its owner. Read `pnpm run --silent register show next-district-586-support-20261024`, this ledger, and #670's ledger (`2026-10-25-resident-heights.md`).
+> - #655 and #649 are on main. #670 is verified at `cc76bca5` and is ready for review.
+> - If main moves before #670 lands, merge main into `feat/resident-heights-20261025` (no rebase, no force-push). Each new district so far adds its checkpoint recovery ahead of Heights' in `server/redis-room.js`, so keep the Heights record's `movedResidents`. Then rerun the resident, Heights and Redis-room suites with an isolated Redis, core verify, push, and wait for hosted checks.
 >
 > Never merge, land or deploy. Sign every commit. Use REST and `pnpm run pr:wait`.
