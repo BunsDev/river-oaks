@@ -42,7 +42,7 @@ The two plans hold 327 pieces, 23 building shells and 162 solids. North is 45,72
 Studewood extends the composed Heights layout in place (`shared/studewood.js`). The browser and the server therefore read the same surfaces and solids, with no new movement code. Heights surfaces, solids and plans keep their indices, and Studewood's are appended after them.
 
 - **Seams.** Only the two cross streets, plus a 3 m ground-only seam at each, reach back into the Heights location. Each seam overlaps the end of the Heights street by a metre, so the walking radius does not wall the two off, and the kit paving of the two streets meets without overlapping. Composition refuses any seam that crosses a Heights building.
-- **Manifest.** The rest of the original east reserve becomes the authored `studewood` location, with unchanged bounds: x 422.5 to the reserve's east edge, over the District's whole north/south span. Its entry is Twentieth Street at its west edge. No reserved land remains east of the bayou, and the strips north and south of the Commons stay reserved.
+- **Manifest.** The rest of the original east reserve becomes the authored `studewood` location, with unchanged bounds: x 422.5 to the reserve's east edge, over the District's whole north/south span. Its entry is Twentieth Street at its west edge. No reserved land remains east of the bayou. The strips north and south of the Commons stay reserved in this revision; [the Bayou Terraces](bayou-terraces.md) author them next.
 - **Creations.** These stay inside the District's build bounds, so Studewood refuses durable creations, as Heights does.
 
 ## Streaming

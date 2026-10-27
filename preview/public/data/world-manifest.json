@@ -36,8 +36,8 @@
       ],
       "adjacent": [
         "east-garden-commons",
-        "east-garden-reserve-north",
-        "east-garden-reserve-south"
+        "bayou-terrace-north",
+        "bayou-terrace-south"
       ]
     },
     {
@@ -68,8 +68,8 @@
       "adjacent": [
         "river-oaks-district",
         "bayou-heights",
-        "east-garden-reserve-north",
-        "east-garden-reserve-south"
+        "bayou-terrace-north",
+        "bayou-terrace-south"
       ]
     },
     {
@@ -100,8 +100,8 @@
       "adjacent": [
         "east-garden-commons",
         "studewood",
-        "east-garden-reserve-north",
-        "east-garden-reserve-south"
+        "bayou-terrace-north",
+        "bayou-terrace-south"
       ]
     },
     {
@@ -134,8 +134,8 @@
       ]
     },
     {
-      "id": "east-garden-reserve-north",
-      "status": "reserved",
+      "id": "bayou-terrace-north",
+      "status": "authored",
       "bounds_m": [
         -2666.336078522973,
         -1295,
@@ -147,8 +147,17 @@
         0,
         0
       ],
-      "content_revision": "empty-v2",
-      "entries": [],
+      "content_revision": "bayou-terraces-1",
+      "entries": [
+        {
+          "id": "twentieth-footbridge",
+          "position_m": [
+            -2551.336078522973,
+            -1224,
+            18.37222868285045
+          ]
+        }
+      ],
       "adjacent": [
         "river-oaks-district",
         "east-garden-commons",
@@ -156,8 +165,8 @@
       ]
     },
     {
-      "id": "east-garden-reserve-south",
-      "status": "reserved",
+      "id": "bayou-terrace-south",
+      "status": "authored",
       "bounds_m": [
         -2666.336078522973,
         -1457.6085898216527,
@@ -169,8 +178,17 @@
         0,
         0
       ],
-      "content_revision": "empty-v2",
-      "entries": [],
+      "content_revision": "bayou-terraces-1",
+      "entries": [
+        {
+          "id": "eighteenth-footbridge",
+          "position_m": [
+            -2551.336078522973,
+            -1406,
+            18.37222868285045
+          ]
+        }
+      ],
       "adjacent": [
         "river-oaks-district",
         "east-garden-commons",

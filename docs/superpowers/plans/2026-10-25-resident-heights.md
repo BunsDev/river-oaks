@@ -153,6 +153,10 @@ Every first candidate nearest the landing was reachable and clear all round. So 
   - The 147 resident, Heights, Studewood, Redis-room and checkpoint-migration files: 1,042 passed, 0 failed, 133 skipped (Redis cases).
   - Core verify on the merged tree: passed on the first attempt (03:47–03:51Z): agent 289/289; preview 4,228 passed, 1 skipped; server 977 passed, 251 skipped (Redis cases); desktop 127 passed, 5 skipped. Receipt `1060ec6405e37f87…`.
 
+## Main merged again (`74f12d76`, Bayou Terraces, 2026-10-27)
+
+Main moved to #663 while `ce1ba42f` was being pushed, and `redis-room.js` conflicted the same way. The Terraces recovery runs first, then Studewood's, then Heights', which keeps `movedResidents`. Against main, this branch's `redis-room.js` diff is still only the Heights record and its log line. A Terraces rollback chains through Studewood and spreads its result, so resident moves carry through. The 151 resident, Heights, Studewood, Terraces, Redis-room and migration files: 1,083 passed, 0 failed, 134 skipped (Redis cases). Core verify passed on the first attempt (03:55–03:59Z): agent 289/289; preview 4,239 passed, 1 skipped; server 983 passed, 252 skipped (Redis cases); desktop 127 passed, 5 skipped.
+
 ## Gaps
 
 - The reverse-search regression can only be shown on Heights: the Commons band (9,396 cells) never reaches the search limit. The test lands with the Heights rehearsal once #649 is on main.
@@ -161,7 +165,7 @@ Every first candidate nearest the landing was reachable and clear all round. So 
 
 ## Next step
 
-Main `52c43c7a` (with #649 and #662) is merged into this branch, with the Heights rollback wiring.
+Main `74f12d76` (with #649, #662 and #663) is merged into this branch, with the Heights rollback wiring.
 1. Wait for hosted checks on the merge.
 2. Run `verify full` with an isolated Redis.
 3. Mark the PR ready. Merging and landing are Val's.
