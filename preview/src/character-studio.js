@@ -37,7 +37,10 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
   const $=selector=>dialog.querySelector(selector),status=$('.cs-status'),stage=$('.cs-preview');
   let draft=null,preview=null,retained=null,baseline=null,comparing=false,spinning=false,returnFocus=null,closed=false;
   // Categories kept by Surprise me, and whether this visit has had its random start.
-  const locked=new Set();let randomStarted=false;
+  // A visit (this tab's session) starts from someone new once. Reloads and world travel keep the worn look, so
+  // reopening after a reconnect or a trip shows the saved customization.
+  const RANDOM_START='river-oaks-studio-random-start';
+  const locked=new Set();let randomStarted=false;try{randomStarted=sessionStorage.getItem(RANDOM_START)==='1';}catch{/* Storage may be disabled. */}
   let portraitGeneration=0,portraitPending=false,portraitURL=null,portraitKey='';
   const releasePortrait=()=>{portraitGeneration++;if(portraitURL)URL.revokeObjectURL(portraitURL);portraitURL=null;$('[data-download]').hidden=true;$('[data-download]').removeAttribute('href');$('[data-portrait]').disabled=portraitPending||stage.dataset.ready!=='true';};
   let favorites=[],storageUnavailable=false;const storageKey=`river-oaks-character-favorites-v2:${encodeURIComponent(ownerId)}`;
@@ -137,7 +140,7 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     if(retained&&sameLook(retained,baseline))retained=null;baseline=confirmedDraft;
     draft=createCharacterDraft({ownerId,definition:retained??confirmedDraft});comparing=false;spinning=false;
     // A visit's first open starts from someone new; the worn look stays the original.
-    if(!retained&&!randomStarted&&!draft.custom)draft.create();randomStarted=true;
+    if(!retained&&!randomStarted&&!draft.custom)draft.create();randomStarted=true;try{sessionStorage.setItem(RANDOM_START,'1');}catch{/* Storage may be disabled. */}
     // Safari does not focus buttons on pointer/touch activation. Return to the
     // actual entry control rather than the previously focused page element.
     returnFocus=event?.currentTarget===trigger?trigger:document.activeElement;

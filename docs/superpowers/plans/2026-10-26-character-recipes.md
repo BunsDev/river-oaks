@@ -89,7 +89,8 @@ left and right are driven together.
 ### Random starting point
 
 The first time the Studio opens in a visit, it starts from a random recipe, staged as an
-unsaved draft; the town look doesn't change until Wear. "Your own" is the first chip in
+unsaved draft; the town look doesn't change until Wear. A visit is the tab's session
+(`sessionStorage`): a reload, a reconnect or world travel reopens on the worn look. "Your own" is the first chip in
 the character roster:
 - choosing it shows the recipe editor in place of the wardrobe and colour steps;
 - choosing an authored character goes back to the authored steps, and the character
@@ -193,9 +194,8 @@ Recorded on the uncommitted branch at base 8b73888a (2026-10-26).
     because they belong to `shared-runner.js` (development mode).
     - Under the experience runner, garden-2 doesn't exist ("World not found."), so the
       worlds failure says nothing about this branch.
-    - The shared reconnect check did conflict with the random start: a new visit's
-      first open is a random person. The journey now expects that, and reaches the
-      equipped `rose` customization with one Undo.
+    - The shared reconnect check did conflict with the random start, which was then
+      per page load. See "Hosted checks on #694" below.
     - Hosted `preview shared (development)` runs both, with `character-studio-tiers`.
 - **After the fix:** focused character, studio, culling and server character tests pass,
   137 pass and 2 skipped (`.runtime/recipes/focused-2.log`). The six experience-runner
@@ -207,6 +207,21 @@ Recorded on the uncommitted branch at base 8b73888a (2026-10-26).
     (01:48–01:55Z, load 13.7; `.runtime/recipes/verify.log`, `.runtime/agent/core.json`):
     276 of 276; 4184 pass, 1 skipped; 917 pass, 225 Redis-gated skips; 120 pass,
     3 skipped.
+
+- **Hosted checks on #694 at 2f5cefd0:** 21 of 23 green.
+  - `preview shared (development)` passed, including `character-studio-shared`, which then
+    expected a random start after the reload, with one Undo back to `rose`.
+  - `preview shared (worlds-and-creator)` failed in `character-studio-worlds`: "Reopened
+    Studio retains the saved look after travel and retry". The aggregate `preview` failed
+    with it.
+  - Both journeys require a reopened Studio to show the saved look after a reconnect or
+    world travel. A random start on every page load discarded that.
+  - Fix: the random start happens once per tab session (`sessionStorage`), so reloads and
+    world travel reopen on the worn look. `character-studio-shared` is back to main's
+    version, and the two hosted journeys are its regression.
+  - Core gate on the fix: passed, 02:28–02:35Z at load 13.3. 281 of 281; 4226 pass,
+    1 skipped; 928 pass, 227 skipped; 127 pass, 5 skipped. Studio and recipe tests:
+    23 of 23.
 
 ## Gaps
 

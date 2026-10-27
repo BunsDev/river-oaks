@@ -770,7 +770,8 @@ that were not pinned before are now pinned, with receipts.
 
 - "Your own" is the first chip in the character roster. On the first open in a visit,
   the studio stages a random recipe as an unsaved draft; the town look changes only on
-  Wear.
+  Wear. A visit is the browser tab's session: after a reload, a reconnect or travel to
+  another world, the studio reopens on the worn look.
 - In Your own, the recipe editor replaces the wardrobe and colour steps. "Surprise me"
   re-rolls every category that isn't locked; each category has its own roll and its own
   "Keep … when surprising" lock. Undo walks back through every edit, to the worn look.
