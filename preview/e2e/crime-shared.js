@@ -72,11 +72,11 @@ async page => {
     await page.waitForFunction(id => { const crime = window.__riverMultiplayer().snapshot.crime;
       return crime.targets.find(item => item.id === 'rival:westcreek').health === 75 && crime.wanted.some(([who, stars]) => who === id && stars === 1); }, after.selfId);
     check(true, 'The owner\'s browser sees the same hit and star');
-    // Best effort: the shove gesture is brief and the owner's page can miss it. Don't wait out the
-    // default 60 s for it. The rival counters every few seconds meanwhile, and five landed counters
-    // put the visitor down, which ends the rival's engagement before the evade below (hosted: a 112 s
-    // run whose three attempts never saw a counter).
-    await page.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === id && item.gesture === 'shove'), after.selfId, { timeout: 3000 }).catch(() => {});
+    // Best effort: the shove shows for 600 ms and the owner's page can miss it, after which it never
+    // appears. Don't wait out the default 60 s for it: the rival counters every 2.5 s meanwhile, five
+    // landed counters put the visitor down, and that ends the rival's engagement before the evade
+    // below (hosted: a 112 s run whose three attempts never saw a counter).
+    await page.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === id && item.gesture === 'shove'), after.selfId, { timeout: 1000 }).catch(() => {});
 
     // The rival answers with a telegraphed counter (#640). U, timed against the town's own
     // remaining windup, evades it: no damage, said in words. The evade must reach the town in
@@ -92,7 +92,7 @@ async page => {
     for (let attempt = 0; attempt < 3 && !evadedCounter; attempt++) {
       const counter = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), counter = m.snapshot?.crime?.actions?.find(item => item.kind === 'counter' && item.targetId === m.selfId && item.outcome === null && item.phase === 'windup');
         return counter && { id: counter.id, remainingMs: counter.remainingMs, contactAt: performance.now() + counter.remainingMs, health: m.snapshot.players.find(p => p.id === m.selfId).health }; }, null, { polling: 16, timeout: 10000 }).then(handle => handle.jsonValue()).catch(() => null);
-      if (!counter) { const { self, rival } = await town(visitor); attempts.push({ attempt, seen: null, health: self.health, engagedId: rival.engagedId }); continue; }
+      if (!counter) { const state = await town(visitor).catch(() => null); attempts.push({ attempt, seen: null, engagedId: state?.rival?.engagedId, health: state?.self?.health }); continue; }
       if (counter.remainingMs < lead + 30) { // Seen too late to time: let it land, then wait for the next.
         attempts.push({ attempt, remainingMs: counter.remainingMs, late: true });
         await visitor.waitForFunction(id => window.__riverMultiplayer().snapshot?.crime?.actions?.find(item => item.id === id && item.outcome !== null), counter.id);
