@@ -130,7 +130,8 @@
         }
       ],
       "adjacent": [
-        "bayou-heights"
+        "bayou-heights",
+        "woodland-heights"
       ]
     },
     {
@@ -193,6 +194,35 @@
         "river-oaks-district",
         "east-garden-commons",
         "bayou-heights"
+      ]
+    },
+    {
+      "id": "woodland-heights",
+      "status": "authored",
+      "bounds_m": [
+        -2158.4479977351207,
+        -1457.6085898216527,
+        -2113.4479977351207,
+        -1167.1779702985634
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "content_revision": "woodland-heights-1",
+      "entries": [
+        {
+          "id": "twentieth-street",
+          "position_m": [
+            -2158.4479977351207,
+            -1224,
+            18.37222868285045
+          ]
+        }
+      ],
+      "adjacent": [
+        "studewood"
       ]
     }
   ]

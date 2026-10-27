@@ -56,7 +56,7 @@ The district epoch still fences writers.
 
 ## Reachable ground
 
-The terraces add 16,945.75 m² at 0.5 m, for a total of 131,269.5 m²: 2.8244× the Gardens baseline (2.8294× at 1 m). The figures are in [world expansion](../../world-expansion.md#bayou-terraces). The original east envelope is now fully authored. The 3× floor needs about 8,200 m² more reachable ground, which means new land: the [convergence ledger](../../superpowers/plans/2026-10-24-convergence-3x.md) carries the proposal for Val.
+The terraces add 16,945.75 m² at 0.5 m, for a total of 131,269.5 m²: 2.8244× the Gardens baseline (2.8294× at 1 m). The figures are in [world expansion](../../world-expansion.md#bayou-terraces). The original east envelope is now fully authored. The 3× floor needed about 8,200 m² more reachable ground, which meant new land: [Woodland Heights](woodland-heights.md) (proposal A′) adds it east of Studewood.
 
 ## Evidence and remaining acceptance
 
