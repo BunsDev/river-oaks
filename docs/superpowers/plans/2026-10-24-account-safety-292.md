@@ -379,6 +379,16 @@ Independent review (2026-10-24):
 | `pnpm test` (preview unit), after review fixes | 4111/4112, the same 1 skip that predates this work |
 | `pnpm run verify` (core) | passed |
 
+Lander review of D (river-oaks-e9, 2026-10-27, at `331bc542`): land-ready. This was the
+lander's first review of D's own change; its earlier reviews covered #661, #665 and
+#666. The handoff message wrongly said it had seen D before. It read `support-contact.js`
+(text only, `noopener noreferrer`), the sidebar wiring, the report copy on both servers
+and the status-only deletion log. Its focused run passed 24/24, with the 9 Redis cases
+skipped; the Redis run above covers those. It probed `supportLink`: a real address and an
+https path are accepted; http, credentials, IP hosts, example domains, `javascript:` and
+a `mailto` with fields are refused; a U+202E in the path is percent-encoded. #667 landed
+as `51e00c24` (2026-10-27 07:11Z).
+
 ## Increment E: moderators read reports
 
 Branch `feat/moderation-reports-292-20261026` in worktree `river-oaks-moderation-292`,
@@ -473,12 +483,11 @@ Independent review (2026-10-26):
 
 ## Next action
 
-Status, 2026-10-26. river-oaks-e9 lands the stack in order (#661, #665, #666, #667,
-#682), each after its own re-review and hosted CI; Val authorized that in e9's session.
-The lander's reviews of #661 and #665 are fixed, each followed by two independent
-reviews, and each increment carries the one below it. C now runs the erasure once and
-relies on its recorded second pass. Each PR goes back to e9 after verify, push and
-hosted CI.
+Status, 2026-10-27. river-oaks-e9 landed #661 (`66756b19`), #665 (`f403dc33`), #666
+(`d70f4d87`) and #667 (`51e00c24`), each after its own review and hosted CI; Val
+authorized that in e9's session. Each landed branch was split into its own register task,
+released, and retired by e9. #682 (E) is the last: main merged in, then verify, push and
+hosted CI, then e9's review.
 
 Still open from the earlier handoffs (the 2026-10-26 one, before the lander's reviews, recorded
 the merged heads and their evidence; see git history):
@@ -490,5 +499,4 @@ the merged heads and their evidence; see git history):
    - a content filter;
    - keeping reported content with the report, and keeping reports until a moderator closes them;
    - notifying a moderator.
-4. At retirement, after the merges: split the register task into one task per PR branch, as `project:prune` needs.
-5. Native work stays with #286, #287 and #293.
+4. Native work stays with #286, #287 and #293.
