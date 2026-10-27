@@ -35,14 +35,21 @@ sender instead, so it gets the world's answer for that, after the world's own le
 tenant, status and version checks: a tenant is told that resident can't be their guest,
 and anyone else gets the refusal they would get anyway. A retry of a grant first sent
 before the block is answered as a conflicting operation. A grant or invitation checked
-just before a block was stored can reach the world after the block ended access; once
-it succeeds the server checks again and ends it (`grantedPeer` in `server/blocks.js`,
-`server/tests/blocks-campus-race.test.js`). Its sender's reply still shows the grant;
-the next view doesn't. A failed check is logged as `block_recheck_failed`, and the grant
-stands: without a known block nothing is separated. `server/tests/blocks-api.test.js` and
-`server/tests/blocks-world.test.js` compare the two answers. The resident who made the
-block sees it in their blocked list (`POST /api/blocks/list`). There is no separate
-whisper: private messages are contact messages, covered above.
+just before a block was stored can reach the world after the block ended access. The
+screen marks each grant it checked and found unblocked (`screenCommand` and
+`grantedPeer` in `server/blocks.js`), and once that grant may have landed the server
+checks again and ends it (`server/tests/blocks-campus-race.test.js`). On the hosted path
+that includes an answer that timed out and a request that failed, since the room's queue
+is durable and the grant can still land; the separation is queued after it. A retry that
+the screen also passed, answered as a conflict, is checked again too. Grants the screen
+already refused or rewrote, like the conflicting retry above, or never checked, aren't
+checked again, so the answer takes no longer toward a blocker. When the grant succeeded,
+its sender's reply still shows it; the next view doesn't. A failed check is logged as
+`block_recheck_failed`, and the grant stands: without a known block nothing is separated.
+`server/tests/blocks-api.test.js` and `server/tests/blocks-world.test.js` compare the two
+answers. The resident who made the block sees it in their blocked list
+(`POST /api/blocks/list`). There is no separate whisper: private messages are contact
+messages, covered above.
 
 Not covered: public event listings, landmarks and builds stay visible to everyone. A
 table game already in progress between them continues until one stands up. A campus
