@@ -21,7 +21,7 @@ async function town(t,flag){
     MODERATION_FILE:join(temporary,'moderation.json'),WAITLIST_FILE:join(temporary,'waitlist.json'),BLOCKS_FILE:join(temporary,'blocks.json')},devAuth:'local',staticRoot:null});
   await new Promise(resolve=>app.server.listen(port,'127.0.0.1',resolve));
   t.after(async()=>{await app.close();await rm(temporary,{recursive:true,force:true});});
-  return {origin,temporary};
+  return {origin,temporary,app};
 }
 async function resident(t,origin){
   const response=await fetch(origin+'/auth/session'),session=await response.json(),cookie=response.headers.get('set-cookie').split(';')[0];
@@ -37,7 +37,7 @@ async function resident(t,origin){
 }
 
 test('a resident deletes their own account in the standalone town, and the peer keeps their own',{timeout:30000},async t=>{
-  const {origin,temporary}=await town(t,'1');
+  const {origin,temporary,app}=await town(t,'1');
   const pat=await resident(t,origin),erin=await resident(t,origin);
   const json=response=>response.json(),text='erin-private-words';
   assert.equal((await erin.post('/api/profile/save',{tagline:text,bio:text,pronouns:'',interests:[],expectedVersion:0})).status,200);
@@ -59,6 +59,16 @@ test('a resident deletes their own account in the standalone town, and the peer 
   assert.equal((await readFile(join(temporary,'blocks.json'),'utf8')).includes(erin.id),false);
   assert.equal((await pat.post('/api/profile/view',{peerId:erin.id})).status,404,'the profile is gone');
   assert.equal((await pat.post('/api/profile/save',{tagline:'pat',bio:'',pronouns:'',interests:[],expectedVersion:0})).status,200,'the peer is untouched');
+  assert.deepEqual(await app.eraseAccount.sweep(),{finished:0,failed:0,waiting:1},'the request waits for its second pass');
+});
+
+test('the standalone town sweeps recorded erasures every 30 seconds',{timeout:30000},async t=>{
+  const intervals=[],real=globalThis.setInterval;
+  const spy=t.mock.method(globalThis,'setInterval',(fn,ms,...rest)=>{intervals.push([fn,ms]);return real(fn,ms,...rest);});
+  const {app}=await town(t,'1');spy.mock.restore();
+  let sweeps=0;app.eraseAccount.sweep=async()=>{sweeps++;return {finished:0,failed:0,waiting:0};};
+  for(const [fn,ms] of intervals)if(ms===30_000)try{fn();}catch{}
+  assert.equal(sweeps,1);
 });
 
 test('with the flag off the standalone town has no deletion route',{timeout:30000},async t=>{

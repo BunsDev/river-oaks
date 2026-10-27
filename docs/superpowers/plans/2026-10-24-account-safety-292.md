@@ -272,6 +272,25 @@ phrase or the limit, and nothing erased before WorkOS deletes the user.
 | `pnpm run test:server` with `REDIS_URL`, after review fixes | 1236/1236, 0 skipped |
 | `pnpm test` (preview unit), after review fixes | 4109/4110, the same 1 skip |
 
+Erasure's recorded second pass (2026-10-26, `9dfe0497` and the fix after it). With
+increment A's pending record and sweep, deletion runs the erasure once; the sweep runs it
+again and retries a failure. An independent review found:
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| A Vercel preview could turn deletion on, but Vercel calls the cron only on production, so no second run or retry would happen | Medium | On Vercel the flag also needs `VERCEL_ENV=production`, else `account_deletion_off` with `cron_not_scheduled`. Helper and hosted-backend tests; red without the clause |
+| Nothing tested that the second pass is wired | Medium | The town test asserts the request waits for its second pass; new tests capture the 30 s sweep timer in the town and the hosted backend, and none on Vercel. Red with no town timer, no town record, no Redis timer, and a Redis timer on Vercel |
+| The docs claimed a hosted-backend test of the Vercel rule that didn't exist | Low | Added (no `CRON_SECRET`, preview, production) |
+| "A minute later", and step 4 said WorkOS always sends `user.deleted` | Low | Wording fixed; the 404 case without a recorded request is named as the one gap |
+| The town keeps its records in memory | Low | Documented: a restart skips the second run, and a failed run's retry unless a webhook covers it |
+
+The reviewer's second pass found no regressions; its two notes are the town wording
+above and the webhook gap below.
+
+| Check | Result |
+| --- | --- |
+| Deletion, erasure, town deletion and webhook files with `REDIS_URL` | 76/77, then 1/1: the Redis erasure test (`account-erasure.test.js`, unchanged here) timed out at 10 s at load 68 and passed alone |
+
 ## Increment D: reports, support contact, App Review map
 
 Branch `feat/account-safety-review-292-20261024` in worktree `river-oaks-review-292`,
@@ -332,6 +351,12 @@ Independent review (2026-10-24):
   that cannot load) reruns every 30 s on each, logging each time. Erasure is
   idempotent, so this costs load and log volume, not correctness. Adding a per-record
   lease and an attempt count is the follow-up.
+- A Vercel preview with `WORKOS_WEBHOOK_SECRET` and `CRON_SECRET` would record webhook
+  erasures that no cron sweeps (Vercel calls it only on production), keeping their
+  account ids, with no warning; `account_erasure_sweep_unscheduled` covers only a
+  missing `CRON_SECRET`. It matters only if WorkOS delivers to a preview. Follow-up on
+  increment A: warn when not production too, and say so in the inventory. In-app
+  deletion stays off on previews.
 - Bans, the moderation audit and the Redis security audit are kept (Decision 3).
   Deleting an account and signing up again gets a new WorkOS id and so evades a
   ban; a hashed tombstone is a Decision for Val, not implemented.
