@@ -240,7 +240,7 @@ ABBA detail:
 | --- | --- | --- | --- |
 | #670 | MEDIUM: rollback stranding (comment 6439566536) | 3e | 3e fixes it, then e9 or another lander lands it; or Val accepts it as a follow-up (Decision 6) |
 | Acceptance snapshots `scratchpad/accept-pre`, `accept-final`, `accept-ws` (task `three-x-acceptance-snapshots-20261027`) | Detached; retiring needs `--cancel-stale` | e9 | Decision 5. Receipts are already archived |
-| world-streaming lap-12 cause | Unconfirmed; the rerun passed | 71 | Decision 7 |
+| world-streaming lap-12 cause | Mechanism reproduced by 71: facing the Commons at the far point keeps it resident; lap 12 itself wasn't observed | 71 | Decision 7 (land the guard) |
 
 ## Decisions for Val
 
@@ -250,7 +250,14 @@ ABBA detail:
 4. **Owner and admin self-deletion (#666, Decision 4 in `docs/account-deletion.md`).** Deletion is off by default. If it's turned on, an owner, moderator, waitlist-admin, campus-operator or screening-host account that deletes itself loses its role until a code or config change. 0b recommends refusing those ids.
 5. **Acceptance snapshots.** Authorize `pnpm run project:prune --cancel-stale --detached-path <path> --expected-head <sha>` for `scratchpad/accept-pre` (2d63637f), `accept-final` (a5857cf4) and `accept-ws` (95882097) once they've been untouched 12 h, or keep them.
 6. **#670.** Either wait for 3e's rollback fix (recommended), or accept the MEDIUM as a tracked follow-up that must land before any Studewood or Terraces rollback runs, and let #670 land now.
-7. **world-streaming facing guard** (71's `test/streaming-evict-facing-20261027`). Land it as a defensive journey change, which changes what the eviction check requires, or wait for a reproduced failure with #700's diagnostics.
+7. **world-streaming facing guard** (71's `test/streaming-evict-facing-20261027`, `e89b1505`). It turns both players west before the eviction waits.
+   - **Evidence:** 71 reproduced the mechanism deterministically on `main` 95882097, in a one-page probe (15:34–15:36Z). At the far point, with the chunk 116.3 m away (past the 110 m unload):
+     - facing east, toward the Commons, it stays resident (8.24 MB, chunk distance 0) for 15 s;
+     - facing west, it evicts within 30 s;
+     - facing east again, it reloads within 15 s.
+   - So the eviction check depends on the walk ending up facing west, and a turn-back after an overshoot fails it.
+   - This wasn't observed on lap 12 itself. Evidence: `.runtime/evict-facing-probe/` in 71's parked worktree.
+   - **Recommended:** land the guard. It changes what the check requires, which is why it is Val's decision.
 8. **Activation:** #587 conditions 4 (visual and device sign-off) and 5 (production state) for the 3× world.
 
 ## Next action
