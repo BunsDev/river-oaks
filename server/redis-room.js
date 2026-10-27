@@ -521,7 +521,17 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   }
   function tick() {
     if(closed)return Promise.resolve(null);
-    if(!pendingTick)pendingTick=runTick().catch(error=>{cached=null;throw error;}).finally(()=>{pendingTick=null;});
+    // runTick refuses a durable state this process can't serve (another region; an invalid
+    // checkpoint, presence, roster or character selection; a newer district epoch, or the same
+    // epoch under another revision) after taking the lease and before writing anything. Let the
+    // lease go: a refusing room that kept ticking would renew it indefinitely and lock out the
+    // deployment that can serve the town. RELEASE checks the token, so this is the same as the
+    // lease expiring early.
+    if(!pendingTick)pendingTick=runTick().catch(async error=>{
+      cached=null;
+      if(/^Invalid durable /.test(error?.message))await redis.eval(RELEASE,1,keys.lease,token).catch(()=>{});
+      throw error;
+    }).finally(()=>{pendingTick=null;});
     return pendingTick;
   }
   async function request(operation) {
