@@ -120,7 +120,11 @@ Messages: the owner names from the register are not reachable by `SendMessage` (
 | 4. Crime Feel | Owned by river-oaks-d1 (#708 inc3, #710 inc4, inc5 claimed). The #599 scope question is quoted verbatim in Round 4 and is Decision 1. #708's body is a broken file path; commented once. |
 | 5. Decisions for Val | Below. |
 
-Production: Vercel status success on `7bfac6f6` and `f3b01149`; `18222a6d` pending at 22:54Z.
+Production: Vercel status success on `7bfac6f6`, `f3b01149` and `18222a6d` (checked 22:55Z).
+
+Ledger PR #717: hosted Verify green, 26/26 checks on `53ce8d8b` (run 40601815113). Its first push lost only the heights shard to the 20-minute timeout above.
+
+Handoff 2026-10-27 23:45Z. The world-streaming rerun on the `ws-703` snapshot passed its load gate at 23:34Z (load 8.7) and is queued behind two other sessions' browser runs; it runs unattended under `caffeinate -s` and writes `data/reports/experience-world-streaming-703-rerun.json` and `ws-703-run-2.log` in the scratchpad. Nothing depends on it: #703 is merged.
 
 ## Next action
 - Read the world-streaming rerun result when it lands and append it here; then retire the two snapshot worktrees (`land-activate-crime-snapshot-wt-688`, `-ws-703`) with `project:prune --cancel-stale --detached-path` once the touch cutoff passes.
