@@ -247,7 +247,7 @@ private. Two readings:
   under the exception for apps that use only the company's own sign-in.
 
 Decision 4. The sign-in design for the native host, the exchange contract and its
-host-independent server tests are on #714 ([iOS auth](ios-auth.md)); its 4.8 note
+host-independent server tests are on #714 (`docs/ios-auth.md`, on that branch until it lands); its 4.8 note
 weighs both readings and recommends adding Sign in with Apple through WorkOS, staged
 (Staging first), keeping GitHub and email codes. Enabling Apple in WorkOS is a
 configuration change for Val, not a code change.
@@ -315,7 +315,7 @@ Recommended: leave Computer out of iOS v1 (Decision 5).
    Recommended: one mailbox more than one person reads (a group address on the
    district's domain), used for both, so a safety concern never waits on one inbox.
 4. **Sign-in on iOS (4.8).** Add Sign in with Apple, or offer only email codes there.
-   [iOS auth](ios-auth.md) (#714) recommends Apple through WorkOS, staged; the WorkOS
+   `docs/ios-auth.md` (#714) recommends Apple through WorkOS, staged; the WorkOS
    configuration is Val's to change.
 5. **Hosted software on iOS.** Bundled or hosted game code (2.5.2, 4.2), and
    whether Computer ships in v1. Recommended: bundle, and leave Computer out.
