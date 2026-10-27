@@ -18,7 +18,7 @@ the binary is marked **native**.
 | 1.2 | Filter objectionable content | A server-side filter screens town chat, direct messages, groups, events, profiles and usernames before they're stored, on both servers (this change). Voice isn't filtered | Met in source; the list and the mode are Decision 1 |
 | 1.2 | Report offensive content, respond in time | Residents can be reported from the roster, including one who has left. A report keeps the quoted text and the reported account's last chat lines, records when it should be answered by, is posted to the moderators' inbox (`MODERATION_NOTIFY_URL`), and stays listed in Settings → Account → Reports until a moderator closes it (this change). Messages, events and groups can't be reported | Met in source; the inbox, its owner and the response time are Decision 2 |
 | 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The Block button is built but not wired into the client | **Gap, blocking** (client owner) |
-| 1.2 | Published contact information | Settings → Account → Support, once `VITE_SUPPORT_CONTACT` is set (this change). Not on the sign-in or waitlist pages | Needs a value; **gap** before approval |
+| 1.2 | Published contact information | Under the sign-in and waitlist gate in every state, and in Settings → Account → Support, once `VITE_SUPPORT_CONTACT` is set (this change) | Met in source; the value is Decision 3 |
 | 5.1.1(v) | Delete the account in the app | In-app deletion behind a default-off flag (#666), webhook erasure (#661) | Met in source, off |
 | 5.1.1(v) | Revoke social credentials; no social tokens kept off the device | WorkOS can return the resident's GitHub token, which the server then uses | **Decision** |
 | 5.1.2 | Consent before sharing personal data, including with third-party AI | No resident data reaches an AI provider in the hosted game; processors listed | Met in source, disclosures pending |
@@ -153,15 +153,18 @@ calls listed in that page, a block can only be made through `/api/blocks/*`. Voi
 isn't covered: the device mute is the only control today
 ([Decision 1 there](player-blocking.md)).
 
-**Contact. Needs a value, and a gap before approval.** `VITE_SUPPORT_CONTACT`, set at
-build time, is an email address or an https link (`preview/src/support-contact.js`).
-It's shown in Settings → Account → Support. Without a value, or with an example
-domain, nothing is shown. Settings exists only once a resident is approved and
-in the world, so signed-out, waitlisted, rejected and banned residents can't see it.
-A rejected resident reads "Contact the district team if you think this is a mistake."
-with no contact given. Those pages are in `preview/src/access-entry.js`, owned by
-`touch-network-288-290`, which can call `createSupportContact` there. App Store
-Connect needs a support URL too (Decision 3).
+**Contact. Met in source; needs a value.** `VITE_SUPPORT_CONTACT`, set at build
+time, is an email address or an https link (`preview/src/support-contact.js`). It's
+shown in two places: under the sign-in and waitlist gate's footer in every gate state
+(`createGateSupport`, mounted by `preview/src/access-entry.js`), so a visitor who is
+signed out, waiting, refused or banned can reach someone before they are ever in the
+world, and in Settings → Account → Support once they are
+(`preview/src/settings-support.js`, which copies the gate's link: the sign-in page's
+modules can't be shared with game code, or the asset gate refuses them before sign-in). A rejected resident reads
+"Contact the district team if you think this is a mistake." with the contact right
+below. Without a value, or with an example domain, nothing is shown anywhere. Test:
+`preview/tests/support-contact.test.js`. App Store Connect needs a support URL too;
+the value is Decision 3.
 
 ## 5.1.1(v) Account deletion
 
@@ -278,7 +281,7 @@ Recommended: leave Computer out of iOS v1 (Decision 5).
 | Age rating: chat and voice with other residents | Val | Not answered |
 | Reviewer access: an approved waitlist account that signs in without a live inbox, with no public bypass | #293 | Not started |
 | Review notes: where Delete account, Report, Support and the moderators' Reports list are, and Block once it's wired in | #293 | This page lists them |
-| Support URL in App Store Connect | Val | Needs the contact |
+| Support URL in App Store Connect | Val | Needs the contact (Decision 3) |
 | Deletion on in production, with `user.deleted` delivery checked | Val | Off |
 | Business model | Val | No purchase code exists; record that v1 is free, if it is |
 
@@ -300,7 +303,9 @@ Recommended: leave Computer out of iOS v1 (Decision 5).
    24-hour target. Name at least two moderators: a report about a moderator is shown
    only to the others, so with one, nobody sees it in the app.
 3. **Support contact.** The address or page for `VITE_SUPPORT_CONTACT` and App Store
-   Connect.
+   Connect. Both places that show it are built; the value is all that is missing.
+   Recommended: one mailbox more than one person reads (a group address on the
+   district's domain), used for both, so a safety concern never waits on one inbox.
 4. **Sign-in on iOS (4.8).** Add Sign in with Apple, or offer only email codes there.
 5. **Hosted software on iOS.** Bundled or hosted game code (2.5.2, 4.2), and
    whether Computer ships in v1. Recommended: bundle, and leave Computer out.

@@ -4,7 +4,7 @@ import { createVoiceSettings } from './voice-ui.js';
 import { sharedVoicePreferences } from './voice-preferences.js';
 import { createAccountDeletionSettings } from './account-deletion.js';
 import { createModerationReports } from './moderation-reports.js';
-import { createSupportContact } from './support-contact.js';
+import { createSupportContact } from './settings-support.js';
 
 // Keep the navigation API shared by Commands and the HUD launchers.
 export function setupSidebar() {
@@ -123,8 +123,8 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
   const deletion = createAccountDeletionSettings();
   // Saved player reports, for moderators only (#292); it asks each time Account opens too.
   const reports = createModerationReports();
-  // The published support contact (#292), from VITE_SUPPORT_CONTACT; nothing when unset.
-  const support = createSupportContact(import.meta.env?.VITE_SUPPORT_CONTACT);
+  // The published support contact (#292), as the sign-in gate shows it; nothing when unset.
+  const support = createSupportContact();
   const groups = [
     ['Appearance', 'Light or dark, or follow your device.', [appearance]],
     ['Graphics', 'Sharper or smoother. Auto adjusts as you play.', graphics ? [graphics] : []],
