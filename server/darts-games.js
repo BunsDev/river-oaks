@@ -159,7 +159,13 @@ export function createDartsGames({ players, lineIds = [], atLine = () => null, c
   }
   const load = list => { lines = new Map(list.map(line => [line.id, line])); };
   const clear = () => { if (lines.size) { lines.clear(); changed(); } };
+  // Account erasure: a match or an invitation the account was part of is cleared.
+  const forget = userId => {
+    let touched = false;
+    for (const item of [...lines.values()]) if (item.players?.includes(userId) || item.invite?.from === userId || item.invite?.to === userId) { lines.delete(item.id); touched = true; }
+    if (touched) changed();
+  };
   const snapshot = () => [...lines.values()].map(view);
 
-  return { command, prune, snapshot, checkpoint, validate, load, clear };
+  return { command, prune, forget, snapshot, checkpoint, validate, load, clear };
 }

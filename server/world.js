@@ -47,6 +47,8 @@ const CYCLE_GRACE_MS = 1500;
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, GESTURE_COOLDOWN_MS = 1500, GESTURE_DURATION_MS = 3200, FOCUS_MS = 30000;
 const LEDGER_TTL_MS = 60000, MAX_LEDGERS = 4096, MAX_ACTIVE_WISHES = 3;
 const MAX_CHAT_HISTORY = 40, MAX_CHAT_LENGTH = 280;
+// A creation still in use when its owner's account is erased is kept, unattributed.
+const ERASED_OWNER = 'erased-account';
 const MAX_APPEARANCES = 4096, MAX_BUILDS = 192, MAX_BUILDS_PER_USER = 24;
 const MAX_DESIGNS = 4096;
 const MAX_HOME_GUESTS = 16;
@@ -580,6 +582,33 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (ledger) ledger.seen = now();
     // Transport calls leave after its reconnect grace, releasing abandoned wishes.
     for (const local of state.locals) if (local.wish?.ownerId === userId) undoWish(state,local.id,'jevica');
+    revision++;
+    return true;
+  }
+  // Account erasure (#292): everything this world keeps for the account. The
+  // player leaves first, so visits, seats, games and wishes end the usual way;
+  // then its records, chat lines, creations and names in the wish log go.
+  function forgetAccount(userId) {
+    const time=now(),names=new Set([players.get(userId)?.name,...chat.filter(entry=>entry.authorId===userId).map(entry=>entry.authorName),
+      ...[...builds.values()].filter(item=>item.ownerId===userId).map(item=>item.ownerName)].filter(Boolean));
+    leave(userId);
+    for(const [id,item] of [...builds])if(item.ownerId===userId){
+      for(const player of players.values())if(player.sitting?.buildId===id)stand(player,{type:'stand'},time);
+      if(!buildOccupied(id))builds.delete(id);
+      else Object.assign(item,{ownerId:ERASED_OWNER,ownerName:'Resident'});
+    }
+    syncColliders();
+    const kept=chat.filter(entry=>entry.authorId!==userId);chat.splice(0,chat.length,...kept);
+    ledgers.delete(userId);focus.delete(userId);rides.delete(userId);inventory.delete(userId);
+    appearanceByUser.delete(userId);characterByUser.delete(userId);movementByUser.delete(userId);
+    for(const [storeId,guests] of [...homeGuests]){
+      const rest=guests.filter(id=>id!==userId);
+      if(!rest.length)homeGuests.delete(storeId);else if(rest.length!==guests.length)homeGuests.set(storeId,rest);
+    }
+    if(state.wishes)state.wishes.events=state.wishes.events.filter(event=>![...names].some(name=>event.message.includes(`Thank you, ${name}.`)));
+    offices.forget(userId);campus.forget(userId,time);crime.arrest(userId);screenings.forget(userId,time);lanternWalk.forget(userId);
+    tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();
+    tableGames.forget(userId);cafeGames.forget(userId);dartsGames.forget(userId);axeGames.forget(userId);
     revision++;
     return true;
   }
@@ -1331,7 +1360,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           || Math.abs(item.yaw-Math.round(item.yaw/(Math.PI/8))*(Math.PI/8))>1e-6
           || !Number.isFinite(item.createdAt) || Math.abs((buildSite(item.position,kind,nextBuilds)??Infinity)-item.ground)>.02)throw new Error('Invalid build');
         const count=(ownerCounts.get(item.ownerId)??0)+1;
-        if(count>MAX_BUILDS_PER_USER)throw new Error('Invalid build owner limit');
+        // Creations kept from erased accounts share one owner and fall under the town's limit only.
+        if(count>MAX_BUILDS_PER_USER && item.ownerId!==ERASED_OWNER)throw new Error('Invalid build owner limit');
         ownerCounts.set(item.ownerId,count);nextBuilds.set(item.id,item);
       }
       const designIds=new Set();let designCount=0;
@@ -1586,7 +1616,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
   const listPlaces = () => placesOf(worldData);
-  return {worldId,protocolVersion,approvedSpaceRoutesBlocked:()=>approvedSpaceRoutesBlocked(),join,rename,leave,command,step,snapshot,checkpoint,restore,reset,
+  return {worldId,protocolVersion,approvedSpaceRoutesBlocked:()=>approvedSpaceRoutesBlocked(),join,rename,leave,forgetAccount,command,step,snapshot,checkpoint,restore,reset,
     // World rules (#596): the public rule and the one violence decision for #597's attacks.
     worldPolicy:publicWorldPolicy,violenceFor,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.

@@ -50,6 +50,11 @@ export function createMemoryAvatarPreferences() {
         records.set(userId,{...preference,version:(old?.version??0)+1});
       return structuredClone(records.get(userId));
     },
+    // Account erasure: the stored look and movement.
+    async eraseUser(userId) {
+      if(!validId(userId))throw new Error('Invalid account');
+      records.delete(userId);
+    },
   };
 }
 
@@ -99,6 +104,7 @@ export function createRedisAvatarPreferences({redis,prefix}={}) {
       const preference=normalize(value,userId);
       return decode(await redis.eval(SAVE,1,key,id(userId),preference.appearance,preference.movement,MAX_ACCOUNTS,preference.character?JSON.stringify(preference.character):''),userId);
     },
+    async eraseUser(userId) {await redis.hdel(key,id(userId));},
   };
 }
 

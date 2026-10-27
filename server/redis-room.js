@@ -105,6 +105,7 @@ function validOperation(operation) {
   if(!record(operation))return false;
   if(operation.type==='join')return validIdentity(operation.identity) && id(operation.connectionId);
   if(operation.type==='kick')return id(operation.userId) && (operation.sessionId===undefined || id(operation.sessionId));
+  if(operation.type==='forget')return id(operation.userId) && Object.keys(operation).length===2;
   if(operation.type==='revise')return id(operation.actorId) && Number.isSafeInteger(operation.expectedDraftVersion)
     && operation.expectedDraftVersion>=1 && operation.expectedDraftVersion<=100001;
   return ['command','heartbeat','leave'].includes(operation.type) && id(operation.userId) && id(operation.connectionId)
@@ -376,6 +377,17 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       const connection=connections.get(operation.userId);
       if(operation.type==='kick') {
         if(connection && (!operation.sessionId || operation.sessionId===connection.identity.sessionId))remove(operation.userId);
+        return {ok:true};
+      }
+      // Account erasure (#292): the connection, any pending selection, then the world's records.
+      // Metres this tick drained, or this owner has yet to bank, go too; the reply waits for a
+      // bank already in progress, so the ride store's erasure comes after it.
+      if(operation.type==='forget') {
+        if(connection)remove(operation.userId);
+        pendingSelections.delete(operation.userId);selectionVersions.delete(operation.userId);
+        world.forgetAccount(operation.userId);
+        for(let index=drained.length-1;index>=0;index--)if(drained[index].userId===operation.userId)drained.splice(index,1);
+        await rides?.forget(operation.userId);
         return {ok:true};
       }
       if(!connection || connection.connectionId!==operation.connectionId || connection.leftAt!==null)return rejected('stale_connection');
