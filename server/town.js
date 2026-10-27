@@ -1,5 +1,6 @@
 import {createCharacterMetrics} from './character-metrics.js';
 import { createWorkOSDeletionHandler } from './workos-deletion.js';
+import { createAccountErasure, createMemoryPendingErasures, eraseEach } from './account-erasure.js';
 import { createMemoryCharacterStore } from './character-store.js';
 import { createMemoryOfficeDesk } from './office-desk.js';
 import { createChauffeurRoute, createLocalChauffeurSecurity, chauffeurDailyLimit } from './chauffeur.js';
@@ -21,6 +22,7 @@ import { createWorldLandmarks } from './world-landmarks.js';
 import { APPROVED_SPACES_OFF, createMemoryWorldCatalog } from './world-catalog.js';
 import { createWorldRouter } from './world-router.js';
 import { createMemorySocial } from './social.js';
+import { createFileBlocks } from './blocks.js';
 import { createMemoryGroups } from './groups.js';
 import { createMemoryProfiles } from './profiles.js';
 import { createMemoryEvents } from './events.js';
@@ -69,6 +71,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const districtRevision=configuredDistrictRevision(env.RIVER_OAKS_DISTRICT_REVISION,{onInvalid:()=>console.warn(JSON.stringify({event:'district_revision_ignored'}))});
   const data = await loadDistrictData({ districtRevision });
   const moderation = await createModeration(resolve(env.MODERATION_FILE ?? '.runtime/moderation.json'));
+  const blocks = await createFileBlocks(resolve(env.BLOCKS_FILE ?? '.runtime/blocks.json'));
   const mode = chooseAuth({ env, origin, devAuth });
   const admins = (env.WAITLIST_ADMIN_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean);
   const waitlist = await createFileWaitlist(resolve(env.WAITLIST_FILE ?? '.runtime/waitlist.json'), {
@@ -93,7 +96,8 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const worldDirectory=async()=>(await catalog.list()).map(entry=>({...entry,visitors:games.get(entry.id)?.game.playerCount??0}));
   const localSecurity=createLocalChauffeurSecurity({isBanned:id=>moderation.isBanned(id)});
   // One voice service for every world of this town; rooms are named per world and interior.
-  const voice=configureVoice({env,namespace:'river-oaks:local:v1',allow:(...args)=>localSecurity.allow(...args),leases:createMemoryVoiceLeases(),sweepMs:30_000});
+  const voiceLeases=createMemoryVoiceLeases();
+  const voice=configureVoice({env,namespace:'river-oaks:local:v1',allow:(...args)=>localSecurity.allow(...args),leases:voiceLeases,sweepMs:30_000});
   const onLogout = userId => {for(const {game} of games.values())game.disconnectUser(userId);};
   const auth = mode === 'local'
     ? createDevAuth({ origin, env, onLogout })
@@ -132,7 +136,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
       const worldData=meta?.template==='region-v1'?await catalog.getRegion(id)
         :id===DEFAULT_WORLD_ID?data:{...data,title:meta?.title??data.title};
       const world=createSharedWorld(worldData,mode==='local'?{isAdmin:auth.isAdmin,...devGuests,worldId:id,screeningHosts,officeLayout,campusOperators}:{worldId:id,screeningHosts,officeLayout,campusOperators});
-      const game=createGameServer({characterMetrics,characterStudioEnabled:env.RIVER_OAKS_CHARACTER_STUDIO==='1',auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,groups,profiles,events,workplace,officeDesk,avatarPreferences,characters,cyclingMiles,presence,worldDirectory,moderation,origin,staticRoot,
+      const game=createGameServer({characterMetrics,characterStudioEnabled:env.RIVER_OAKS_CHARACTER_STUDIO==='1',auth:sharedAuth,world,worldTitle:meta?.title??worldData.title,waitlist,waitlistAdmins:admins,debugReports,landmarks:createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??worldData.title}),social,blocks,onBlocked:separateEverywhere,groups,profiles,events,workplace,officeDesk,avatarPreferences,characters,cyclingMiles,presence,worldDirectory,moderation,origin,staticRoot,
         ...(id===worldId?{worldCatalog:catalog}:{}),...(mode==='local'?{isAdmin:auth.isAdmin}:{}),
         ...(id===worldId?{onApplyRegion:applyRegion}:{}),regionSha256:meta?.regionSha256,
         onBan:userId=>{for(const [otherId,other] of games)if(otherId!==id)other.game.disconnectUser(userId,4003,'This account cannot join the town.');},
@@ -145,14 +149,34 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   }
   const chauffeurRequest=createChauffeurRoute({auth,waitlist,origin,apiKey:env.TYPESAFE_API_KEY,model:env.JEV_AUTO_MODEL,dailyLimit:chauffeurDailyLimit(env),
     security:localSecurity,...(mode==='local'?{isAdmin:auth.isAdmin}:{})});
-  const deletionRequest=createWorkOSDeletionHandler({secret:mode==='workos'?(env.WORKOS_WEBHOOK_SECRET||null):null,
-    onDelete:async id=>{await characters.deleteAccount(id);await auth.revokeUser(id);}});
+  // Player blocking (#292): a block ends invitations, and reaches sockets, in every world this
+  // town has loaded; one that fails is logged and skipped.
+  async function separateEverywhere(a,b,blocked){
+    for(const [id,{game}] of [...games]) try {await game.separateAccounts(a,b,blocked);}
+    catch {console.warn(JSON.stringify({event:'block_separation_incomplete',worldId:id}));}
+  }
+  // Account erasure (#292): the tombstone, sessions and sockets first, then every store and world.
+  const eraseAccount=createAccountErasure({tombstone:id=>characters.deleteAccount(id),revoke:id=>auth.revokeUser(id),steps:{
+    worlds:id=>eraseEach([...games.values()],({game})=>game.forgetAccount(id)),
+    landmarks:id=>eraseEach([...landmarkStores.values()],store=>store.eraseUser(id)),
+    social:id=>social.eraseUser(id),blocks:id=>blocks.eraseUser(id),groups:id=>groups.eraseUser(id),profiles:id=>profiles.eraseUser(id),events:id=>events.eraseUser(id),
+    presence:id=>presence.eraseUser(id),debugReports:id=>debugReports.eraseUser(id),officeDesk:id=>officeDesk.eraseUser(id),
+    waitlist:id=>waitlist.eraseUser(id),
+    workplace:async id=>{if(workplace&&(await workplace.erase({userId:id}))?.ok===false)throw new Error('Workplace erasure busy');},
+    // Live removal needs the lease, so it goes first.
+    voice:async id=>{if(voice)await voice.revokeUser(id);await voiceLeases.revoke(id);},
+  },after:{avatarPreferences:id=>avatarPreferences.eraseUser(id),cyclingMiles:id=>cyclingMiles.eraseUser(id)},
+  // This town's stores live in memory, so its record of each request does too; WorkOS
+  // retries a request that a restart interrupted.
+  pending:createMemoryPendingErasures()});
+  const erasureSweep=setInterval(()=>{void eraseAccount.sweep().catch(()=>{});},30_000);erasureSweep.unref();
+  const deletionRequest=createWorkOSDeletionHandler({secret:mode==='workos'?(env.WORKOS_WEBHOOK_SECRET||null):null,onDelete:(id,eventId)=>eraseAccount(id,{eventId})});
   const handleRequest=async(req,res)=>await deletionRequest(req,res)||await chauffeurRequest(req,res);
   const router=createWorldRouter({worldFor,configuredWorldId:worldId,handleRequest});
   const characterMetrics=createCharacterMetrics({enabled:env.RIVER_OAKS_CHARACTER_STUDIO_METRICS==='1'});
-  return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,close(){
+  return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,eraseAccount,close(){
     if(closing)return closing;
-    closed=true;workplace?.close();voice?.close();
+    closed=true;clearInterval(erasureSweep);workplace?.close();voice?.close();
     closing=(async()=>{
       try{
       await Promise.allSettled([...pending.values()]);

@@ -140,7 +140,23 @@ export function createTableGames({ players, tableIds = [], changed = () => {} })
   }
   const load = list => { tables = new Map(list.map(table => [table.id, table])); };
   const clear = () => { if (tables.size) { tables.clear(); changed(); } };
+  // Account erasure: a table the account played at, or was invited to, is cleared.
+  const forget = userId => {
+    let touched = false;
+    for (const table of [...tables.values()]) if (table.seats.includes(userId) || table.invite?.from === userId || table.invite?.to === userId || table.result?.left === userId) { tables.delete(table.id); touched = true; }
+    if (touched) changed();
+  };
+  // Player blocking (#292): an open invitation between the two ends; a game stays.
+  const separate = (a, b) => {
+    let touched = false;
+    for (const item of [...tables.values()]) if (item.invite && [a, b].includes(item.invite.from) && [a, b].includes(item.invite.to)) {
+      if (item.kind) item.invite = null; else tables.delete(item.id);
+      touched = true;
+    }
+    if (touched) changed();
+    return touched;
+  };
   const snapshot = () => [...tables.values()].filter(table => table.kind || table.invite).map(view);
 
-  return { command, prune, snapshot, checkpoint, validate, load, clear };
+  return { command, prune, forget, separate, snapshot, checkpoint, validate, load, clear };
 }

@@ -197,6 +197,7 @@ test('authored Commons partitions the original reservation without overlaps or t
   assert.equal(commons.entries[0].position_m[1],-1335);
   const area=location=>{const [w,s,e,n]=locationWorldBounds(location);return (e-w)*(n-s);};
   assert.ok(Math.abs(value.locations.reduce((sum,location)=>sum+area(location),0)-area(district)*3)<1e-8);
-  assert.equal(value.locations.filter(location=>location.status==='reserved').length,3);
+  // Bayou Heights and Studewood authored the east reserve, and the Bayou Terraces the strips beside the Commons: none remains reserved.
+  assert.equal(value.locations.filter(location=>location.status==='reserved').length,0);
   assert.ok(value.locations.filter(location=>location.status==='reserved').every(location=>location.entries.length===0));
 });

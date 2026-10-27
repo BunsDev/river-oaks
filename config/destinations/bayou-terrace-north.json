@@ -1,0 +1,371 @@
+{
+  "id": "bayou-terrace-north",
+  "title": "Bayou Terraces: the north bank gardens and the Twentieth Street footbridge",
+  "kit": "city-kit-1",
+  "seed": 1933,
+  "inspiration": "Patterns only, no copied buildings: the west bank of a Houston bayou across from Bayou Heights, with a riverside walk, footbridges to the far-bank greenway, community gardens and a short lane of studios. All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    0,
+    40,
+    153,
+    167.5
+  ],
+  "streets": [
+    {
+      "id": "terrace-lane",
+      "from": [
+        31.5,
+        41
+      ],
+      "to": [
+        31.5,
+        163
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 6,
+        "spacing": 14
+      },
+      "lamps": {
+        "offset": 12,
+        "spacing": 28
+      }
+    },
+    {
+      "id": "west-bank-walk",
+      "from": [
+        108,
+        41
+      ],
+      "to": [
+        108,
+        163
+      ],
+      "lane": 4,
+      "sidewalk": 2.5,
+      "trees": {
+        "offset": 7,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 13,
+        "spacing": 24
+      }
+    }
+  ],
+  "plazas": [
+    {
+      "id": "bank-gardens",
+      "rect": [
+        37,
+        41,
+        104.5,
+        163
+      ],
+      "lawns": [
+        [
+          44,
+          47,
+          74,
+          102
+        ],
+        [
+          44,
+          120,
+          74,
+          157
+        ],
+        [
+          80,
+          47,
+          98,
+          105
+        ],
+        [
+          80,
+          117,
+          98,
+          157
+        ]
+      ],
+      "hedges": [],
+      "treeRows": [
+        {
+          "y": 44,
+          "from": 44,
+          "to": 98,
+          "spacing": 13.5
+        },
+        {
+          "y": 160,
+          "from": 44,
+          "to": 98,
+          "spacing": 13.5
+        }
+      ]
+    },
+    {
+      "id": "footbridge",
+      "rect": [
+        111.5,
+        108.5,
+        153,
+        113.5
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "id": "studio-row",
+      "style": "garden-court",
+      "rect": [
+        3.5,
+        41,
+        24.5,
+        163
+      ],
+      "front": "east",
+      "sides": [
+        "north",
+        "south"
+      ],
+      "depth": [
+        12,
+        16
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        4.5,
+        6.5
+      ],
+      "names": [
+        "Bayou Kayak Rental",
+        "Cypress Knee Ceramics",
+        "Water Oak Woodshop",
+        "Egret Print Studio",
+        "Lily Pad Plants",
+        "Riverbend Frames",
+        "Tadpole Art Club"
+      ]
+    }
+  ],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "walk-bench-53",
+      "piece": "furniture/bench",
+      "at": [
+        101.8,
+        53
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "walk-bench-73",
+      "piece": "furniture/bench",
+      "at": [
+        101.8,
+        73
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "walk-bench-93",
+      "piece": "furniture/bench",
+      "at": [
+        101.8,
+        93
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "walk-bench-133",
+      "piece": "furniture/bench",
+      "at": [
+        101.8,
+        133
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "walk-bench-153",
+      "piece": "furniture/bench",
+      "at": [
+        101.8,
+        153
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "garden-lamp-0",
+      "piece": "furniture/lamp",
+      "at": [
+        48,
+        56
+      ]
+    },
+    {
+      "id": "garden-lamp-1",
+      "piece": "furniture/lamp",
+      "at": [
+        48,
+        148
+      ]
+    },
+    {
+      "id": "garden-lamp-2",
+      "piece": "furniture/lamp",
+      "at": [
+        98,
+        56
+      ]
+    },
+    {
+      "id": "garden-lamp-3",
+      "piece": "furniture/lamp",
+      "at": [
+        98,
+        148
+      ]
+    },
+    {
+      "id": "garden-cafe-0",
+      "piece": "furniture/cafe-set",
+      "at": [
+        60,
+        107
+      ]
+    },
+    {
+      "id": "garden-cafe-1",
+      "piece": "furniture/cafe-set",
+      "at": [
+        68,
+        107
+      ]
+    },
+    {
+      "id": "garden-cafe-2",
+      "piece": "furniture/cafe-set",
+      "at": [
+        60,
+        115
+      ]
+    },
+    {
+      "id": "garden-cafe-3",
+      "piece": "furniture/cafe-set",
+      "at": [
+        68,
+        115
+      ]
+    },
+    {
+      "id": "garden-stall-0",
+      "piece": "furniture/market-stall",
+      "at": [
+        78,
+        111
+      ],
+      "sign": "Bayou Lemonade",
+      "awning": "canvas-teal"
+    },
+    {
+      "id": "garden-stall-1",
+      "piece": "furniture/market-stall",
+      "at": [
+        88,
+        111
+      ],
+      "sign": "Pecan Pralines",
+      "awning": "canvas-apricot"
+    },
+    {
+      "id": "lane-bike-rack",
+      "piece": "furniture/bike-rack",
+      "at": [
+        36.5,
+        102.0
+      ],
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "bank-railing-a",
+      "piece": "furniture/railing",
+      "rect": [
+        115.05,
+        41,
+        115.2,
+        108.5
+      ]
+    },
+    {
+      "id": "bank-railing-b",
+      "piece": "furniture/railing",
+      "rect": [
+        115.05,
+        113.5,
+        115.2,
+        163
+      ]
+    },
+    {
+      "id": "bridge-railing-s",
+      "piece": "furniture/railing",
+      "rect": [
+        115.2,
+        108.5,
+        152,
+        108.65
+      ]
+    },
+    {
+      "id": "bridge-railing-n",
+      "piece": "furniture/railing",
+      "rect": [
+        115.2,
+        113.35,
+        152,
+        113.5
+      ]
+    },
+    {
+      "id": "end-hedge-0",
+      "piece": "landscape/hedge",
+      "rect": [
+        25.4,
+        161.8,
+        37.6,
+        163
+      ]
+    },
+    {
+      "id": "end-hedge-1",
+      "piece": "landscape/hedge",
+      "rect": [
+        38.2,
+        161.8,
+        104.3,
+        163
+      ]
+    },
+    {
+      "id": "end-hedge-2",
+      "piece": "landscape/hedge",
+      "rect": [
+        104.7,
+        161.8,
+        112.1,
+        163
+      ]
+    }
+  ],
+  "context": [],
+  "overrides": {},
+  "additions": []
+}

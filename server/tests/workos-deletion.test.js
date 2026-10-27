@@ -26,7 +26,7 @@ test('signed user deletion erases only its character account; duplicate delivery
  assert.equal(deleted.deleted,true);assert.equal(deleted.draft,null);assert.equal(deleted.published,null);
  assert.equal((await f.send()).status,200);assert.deepEqual(await store.get('user_alice'),deleted);
  assert.equal((await store.get('user_bob')).deleted,false);
- assert.deepEqual(f.calls,[['user_alice'],['user_alice']],'only the owner ID crosses the trusted callback boundary');
+ assert.deepEqual(f.calls,[['user_alice','event_deleted123'],['user_alice','event_deleted123']],'only the owner ID and the event ID cross the trusted callback boundary; never the email');
 });
 test('signature validation uses exact raw bytes and rejects stale, future, forged or ambiguous headers',async t=>{
  const f=await fixture(t),body=JSON.stringify(event());

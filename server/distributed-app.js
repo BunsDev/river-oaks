@@ -19,6 +19,8 @@ import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
 import { groupAction } from './groups-api.js';
+import { grantedPeer, loadHidden, screenCommand, viewFor } from './blocks.js';
+import { blockAction } from './blocks-api.js';
 import { profileAction } from './profile-api.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
 import { eventAction } from './events-api.js';
@@ -42,7 +44,7 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, protocolVersion: worldProtocol = WORLD_PROTOCOL_VERSION, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, characters = null, characterStudioEnabled = true, characterMetrics = null, events = null, workplace = null, officeDesk = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+export function createDistributedServer({ auth, room, protocolVersion: worldProtocol = WORLD_PROTOCOL_VERSION, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, blocks = null, onBlocked = null, blockSyncMs = 5000, groups = null, profiles = null, characters = null, characterStudioEnabled = true, characterMetrics = null, events = null, workplace = null, officeDesk = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000, rotateNoticeMs = ROTATE_NOTICE_MS, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
   // cyclingMiles: accepted for the leaderboard route (PR 2); the room owner flushes rides.
@@ -140,7 +142,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
         continue;
       }
       if (active.connectionId !== connectionId) { ws.close(4009, 'This account joined in another tab.'); continue; }
-      send(ws, frame ??= JSON.stringify(withVoice(view.snapshot)), { snapshot: true });
+      send(ws, connection.hidden.size ? JSON.stringify(withVoice(viewFor(view.snapshot, connection.hidden, identity.userId))) : frame ??= JSON.stringify(withVoice(view.snapshot)), { snapshot: true });
     }
   }
   const server = createServer(async (req, res) => {
@@ -263,14 +265,26 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             const place=await room.resolvePlace(placeId);
             return place?{world:{id:worldId,title:worldTitle},place}:null;
           },
-          allowWrite: id => security.allow('social', id, 12, 60_000) });
+          allowWrite: id => security.allow('social', id, 12, 60_000), blocks });
+        return json(res, result.status, result.value);
+      }
+      if (path.startsWith('/api/blocks/') && req.method === 'POST') {
+        const identity = await authorized(req, res); if (!identity) return;
+        if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
+        const result = await blockAction({ action: path.slice('/api/blocks/'.length), identity, blocks, social, readBody: () => body(req),
+          visiblePlayer: async (user, peerId) => {
+            const view = await room.read();
+            return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
+              ? view.snapshot.players.find(player => player.id === peerId) : null;
+          },
+          allowWrite: id => security.allow('blocks', id, 12, 60_000), separated: (a, b, blocked) => (onBlocked ?? separateAccounts)(a, b, blocked) });
         return json(res, result.status, result.value);
       }
       if (path.startsWith('/api/groups/') && req.method === 'POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
         const result=await groupAction({action:path.slice('/api/groups/'.length),identity,groups,social,
-          readBody:()=>body(req),allowWrite:id=>security.allow('groups',id,24,60_000)});
+          readBody:()=>body(req),allowWrite:id=>security.allow('groups',id,24,60_000),blocks});
         return json(res,result.status,result.value);
       }
       if (path.startsWith('/api/events/') && req.method==='POST') {
@@ -322,7 +336,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
               ? view.snapshot.players.find(player => player.id === peerId) : null;
           },
-          allowWrite: id => security.allow('profile', id, 6, 60_000) });
+          allowWrite: id => security.allow('profile', id, 6, 60_000), blocks });
         return json(res, result.status, result.value);
       }
       if (path === '/api/moderation/ban' && req.method === 'POST') {
@@ -375,7 +389,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
         ws.on('error', () => {});
         if (stopped) { ws.close(UPDATE_CLOSE.code, UPDATE_CLOSE.reason); return; }
         const connectionId = randomUUID();
-        const connection = { ws, identity, connectionId, joined: false, alive: true, pending: 0 };
+        const connection = { ws, identity, connectionId, joined: false, alive: true, pending: 0, hidden: new Set() };
         connections.set(connectionId, connection);
         // The host ends each request after a few minutes, so the town retires the socket first,
         // after a notice that lets the page move to a fresh one without dropping anything.
@@ -387,6 +401,8 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
           // it joins; the page offers Refresh instead of drawing a world it cannot render.
           const required = await roomProtocol();
           if (!acceptsWorldProtocol(protocol, required)) { ws.close(4000, 'World version changed'); return false; }
+          // Residents blocked either way (#292), known before the first snapshot; a store outage fails the join.
+          if (blocks) await loadHidden(blocks, connection, identity.userId);
           const result = await room.request({ type: 'join', identity, connectionId });
           if (!result.ok) { ws.close(1013, 'The town cannot accept this connection.'); return false; }
           connection.joined = true;
@@ -407,7 +423,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             if (onMove && !isAdmin(identity.userId) && previous && previous.worldId !== worldId) Promise.resolve(onMove(identity.userId, previous.worldId)).catch(() => {});
           }
           if (ws.readyState !== WebSocket.OPEN) return false;
-          send(ws, { ...withVoice(view.snapshot), selfId: identity.userId });
+          send(ws, { ...withVoice(viewFor(view.snapshot, connection.hidden, identity.userId)), selfId: identity.userId });
           return true;
         })().catch(error => {
           // Fixed classifications only: storage/provider errors can contain
@@ -469,11 +485,20 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
               send(ws, { type: 'result', requestId, ok: Boolean(ok), message: ok ? 'Report sent to the town moderators.' : 'Report could not be submitted.' });
               return;
             }
-            const resolved = await accountDesignCommand({ command, userId: identity.userId, connectionId, worldId,
+            const screened = await screenCommand(blocks, identity.userId, command, isAdmin);
+            if (screened.refusal) { send(ws, { type: 'result', requestId, ...screened.refusal }); return; }
+            const resolved = await accountDesignCommand({ command: screened.command, userId: identity.userId, connectionId, worldId,
               room, library: designLibrary, security, isAdmin });
             const result = resolved.result ?? await room.request({ type: 'command', userId: identity.userId, connectionId, message: resolved.command, ...(selection!==undefined?{selection}:{}) });
             equipObservation?.result(result);
             if (result.error === 'stale_connection') { ws.close(4009, 'This account joined in another tab.'); return; }
+            // A grant checked just before a block was stored is ended once it lands. Without a
+            // known block nothing is separated; a failed check is logged.
+            if (result.ok && grantedPeer(command) && await blocks?.between(identity.userId, command.peerId)
+              .catch(() => { console.warn(JSON.stringify({ event: 'block_recheck_failed', worldId }));return false; })) {
+              const ended = await room.request({ type: 'separate', a: identity.userId, b: command.peerId }).catch(() => null);
+              if (!ended?.ok) console.warn(JSON.stringify({ event: 'block_separation_incomplete', worldId }));
+            }
             const earlyAck = result.ok && command.type === 'travel' && requestId !== undefined;
             if (earlyAck) send(ws, { type: 'result', requestId, ...result });
             // The sender sees its result at once; everyone else gets it on the next
@@ -530,8 +555,29 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
     } finally { heartbeatBusy = false; }
   }, heartbeatMs);
   heartbeat.unref();
-  return { server, disconnectUser, async close() {
-    stopped = true; clearInterval(loop); clearInterval(heartbeat);
+  // Account erasure (#292): this world forgets the account, through the room's one writer.
+  // Player blocking (#292): a change reaches both residents' sockets here at once, and every
+  // socket within five seconds, so a block made through another gateway reaches it too. A
+  // store outage keeps the last known set. The room ends office and home invitations.
+  async function refreshHidden(list = [...connections.values()]) {
+    // A connection still joining is refreshed too, so a block made meanwhile reaches its first frame.
+    for (const connection of list) await loadHidden(blocks, connection, connection.identity.userId).catch(() => {});
+  }
+  // Sockets here are refreshed even when the room cannot end invitations right now.
+  async function separateAccounts(a, b, blocked) {
+    try { if (blocked) { const result = await room.request({ type: 'separate', a, b }); if (!result?.ok) throw new Error('Block separation did not complete'); } }
+    finally { if (blocks) await refreshHidden([...connections.values()].filter(connection => [a, b].includes(connection.identity.userId))); }
+  }
+  let syncing = null;
+  const blockSync = blocks ? setInterval(() => { if (!stopped && connections.size && !syncing) syncing = refreshHidden().finally(() => { syncing = null; }); }, blockSyncMs) : null;
+  blockSync?.unref();
+  async function forgetAccount(userId) {
+    const result = await room.request({ type: 'forget', userId });
+    if (!result?.ok) throw new Error('World erasure did not complete');
+    if (voice) await voice.revokeUser(userId).catch(() => false);
+  }
+  return { server, disconnectUser, forgetAccount, separateAccounts, async close() {
+    stopped = true; clearInterval(loop); clearInterval(heartbeat); clearInterval(blockSync);
     if (presence) await Promise.allSettled([...connections.values()].map(connection => presence.leave(connection.identity.userId, connection.connectionId)));
     await closeForUpdate([...connections.values()].map(({ ws }) => ws));
     wss.close(); auth.close?.();

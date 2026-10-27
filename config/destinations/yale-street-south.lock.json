@@ -1,0 +1,15 @@
+{
+  "id": "yale-street-south",
+  "kit": "city-kit-1",
+  "seed": 1930,
+  "hash": "15d856273951a4e9",
+  "recipeHash": "e78780396112c56b",
+  "overridesHash": "174b1d836bafee25",
+  "stats": {
+    "pieces": 118,
+    "buildings": 28,
+    "solids": 35,
+    "materials": 11,
+    "triangles": 110292
+  }
+}

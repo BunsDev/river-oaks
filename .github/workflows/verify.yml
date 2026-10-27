@@ -219,6 +219,15 @@ jobs:
             journeys: garden-campus-traversal
           - id: commons
             journeys: east-garden-commons
+          # Bayou Heights over the Lantern Footbridge (#586 continuation), in its own shard.
+          - id: heights
+            journeys: bayou-heights
+          # Studewood beyond Heights Boulevard (toward 3x), in its own shard.
+          - id: studewood
+            journeys: studewood
+          # The Bayou Terraces beside the Commons, over their footbridges from Heights.
+          - id: terraces
+            journeys: bayou-terraces
           # Sign-in settles without flicker: the redirect splash, then every visible
           # state (theme, gate, Character Studio button, character) moves one way only.
           - id: access

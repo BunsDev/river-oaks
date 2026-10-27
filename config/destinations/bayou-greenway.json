@@ -1,0 +1,581 @@
+{
+  "id": "bayou-greenway",
+  "title": "Bayou Heights: Bayou Greenway and Heights Green",
+  "kit": "city-kit-1",
+  "seed": 1925,
+  "inspiration": "Patterns only, no copied buildings: a Houston Heights-style east bank across the bayou from Bayou Market, with a greenway trail along the water (Buffalo Bayou), a neighborhood green with a bandstand, an icehouse patio, and a boulevard with a walking esplanade (Heights Boulevard). All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    152,
+    -7.5,
+    250,
+    167.5
+  ],
+  "streets": [
+    {
+      "id": "greenway",
+      "from": [
+        156.5,
+        -8
+      ],
+      "to": [
+        156.5,
+        163
+      ],
+      "lane": 4,
+      "sidewalk": 2.5,
+      "trees": {
+        "offset": 7,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 13,
+        "spacing": 24
+      }
+    },
+    {
+      "id": "nineteenth-west",
+      "from": [
+        152,
+        0
+      ],
+      "to": [
+        251,
+        0
+      ],
+      "lane": 7,
+      "sidewalk": 4,
+      "trees": {
+        "offset": 15,
+        "spacing": 9
+      },
+      "lamps": {
+        "offset": 19,
+        "spacing": 14
+      }
+    }
+  ],
+  "plazas": [
+    {
+      "id": "lantern-footbridge",
+      "rect": [
+        113,
+        -3,
+        152,
+        3
+      ]
+    },
+    {
+      "id": "heights-green",
+      "rect": [
+        160,
+        6.5,
+        249.5,
+        163
+      ],
+      "lawns": [
+        [
+          160,
+          6.5,
+          161.5,
+          163
+        ],
+        [
+          161.5,
+          6.5,
+          249.5,
+          8
+        ],
+        [
+          248,
+          104.5,
+          249.5,
+          117.5
+        ],
+        [
+          172,
+          34,
+          238,
+          104
+        ],
+        [
+          166,
+          132,
+          244,
+          161.8
+        ]
+      ],
+      "hedges": [
+        [
+          161.5,
+          161.8,
+          248.5,
+          163
+        ]
+      ],
+      "treeRows": [
+        {
+          "y": 27,
+          "from": 166,
+          "to": 244,
+          "spacing": 13
+        },
+        {
+          "y": 140,
+          "from": 168,
+          "to": 242,
+          "spacing": 12.3
+        },
+        {
+          "y": 154,
+          "from": 174,
+          "to": 236,
+          "spacing": 12.4
+        }
+      ]
+    }
+  ],
+  "blocks": [],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "heights-stall-0",
+      "piece": "furniture/market-stall",
+      "at": [
+        191,
+        19
+      ],
+      "sign": "Gulf Coast Honey",
+      "awning": "canvas-teal"
+    },
+    {
+      "id": "heights-stall-1",
+      "piece": "furniture/market-stall",
+      "at": [
+        196.5,
+        19
+      ],
+      "sign": "Bayou Tamales",
+      "awning": "canvas-rose"
+    },
+    {
+      "id": "heights-stall-2",
+      "piece": "furniture/market-stall",
+      "at": [
+        213.5,
+        19
+      ],
+      "sign": "Prairie Peaches",
+      "awning": "canvas-apricot"
+    },
+    {
+      "id": "heights-stall-3",
+      "piece": "furniture/market-stall",
+      "at": [
+        219,
+        19
+      ],
+      "sign": "Heights Kolaches",
+      "awning": "canvas-teal"
+    },
+    {
+      "id": "market-planter-w",
+      "piece": "landscape/planter",
+      "rect": [
+        185.6,
+        18.4,
+        188,
+        19.6
+      ]
+    },
+    {
+      "id": "market-planter-e",
+      "piece": "landscape/planter",
+      "rect": [
+        222,
+        18.4,
+        224.4,
+        19.6
+      ]
+    },
+    {
+      "id": "lawn-bench-s-180",
+      "piece": "furniture/bench",
+      "at": [
+        180,
+        31.2
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "lawn-bench-s-192",
+      "piece": "furniture/bench",
+      "at": [
+        192,
+        31.2
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "lawn-bench-s-218",
+      "piece": "furniture/bench",
+      "at": [
+        218,
+        31.2
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "lawn-bench-s-230",
+      "piece": "furniture/bench",
+      "at": [
+        230,
+        31.2
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "lawn-bench-n-180",
+      "piece": "furniture/bench",
+      "at": [
+        180,
+        106.8
+      ]
+    },
+    {
+      "id": "lawn-bench-n-230",
+      "piece": "furniture/bench",
+      "at": [
+        230,
+        106.8
+      ]
+    },
+    {
+      "id": "lawn-bench-w-50",
+      "piece": "furniture/bench",
+      "at": [
+        170.4,
+        50
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "lawn-bench-e-50",
+      "piece": "furniture/bench",
+      "at": [
+        239.6,
+        50
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "lawn-bench-w-70",
+      "piece": "furniture/bench",
+      "at": [
+        170.4,
+        70
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "lawn-bench-e-70",
+      "piece": "furniture/bench",
+      "at": [
+        239.6,
+        70
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "lawn-bench-w-90",
+      "piece": "furniture/bench",
+      "at": [
+        170.4,
+        90
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "lawn-bench-e-90",
+      "piece": "furniture/bench",
+      "at": [
+        239.6,
+        90
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "green-lamp-0",
+      "piece": "furniture/lamp",
+      "at": [
+        168,
+        30
+      ]
+    },
+    {
+      "id": "green-lamp-1",
+      "piece": "furniture/lamp",
+      "at": [
+        242,
+        30
+      ]
+    },
+    {
+      "id": "green-lamp-2",
+      "piece": "furniture/lamp",
+      "at": [
+        168,
+        108
+      ]
+    },
+    {
+      "id": "green-lamp-3",
+      "piece": "furniture/lamp",
+      "at": [
+        242,
+        108
+      ]
+    },
+    {
+      "id": "green-lamp-4",
+      "piece": "furniture/lamp",
+      "at": [
+        192,
+        126
+      ]
+    },
+    {
+      "id": "green-lamp-5",
+      "piece": "furniture/lamp",
+      "at": [
+        218,
+        126
+      ]
+    },
+    {
+      "id": "green-lamp-6",
+      "piece": "furniture/lamp",
+      "at": [
+        168,
+        146
+      ]
+    },
+    {
+      "id": "green-lamp-7",
+      "piece": "furniture/lamp",
+      "at": [
+        242,
+        146
+      ]
+    },
+    {
+      "id": "grove-picnic-182",
+      "piece": "furniture/cafe-set",
+      "at": [
+        182,
+        146
+      ]
+    },
+    {
+      "id": "grove-picnic-194",
+      "piece": "furniture/cafe-set",
+      "at": [
+        194,
+        146
+      ]
+    },
+    {
+      "id": "grove-picnic-216",
+      "piece": "furniture/cafe-set",
+      "at": [
+        216,
+        146
+      ]
+    },
+    {
+      "id": "grove-picnic-228",
+      "piece": "furniture/cafe-set",
+      "at": [
+        228,
+        146
+      ]
+    },
+    {
+      "id": "edge-oak-w-42",
+      "piece": "landscape/street-tree",
+      "at": [
+        165.5,
+        42
+      ],
+      "height": 11,
+      "radius": 4.2,
+      "yaw": 15.54
+    },
+    {
+      "id": "edge-oak-e-42",
+      "piece": "landscape/street-tree",
+      "at": [
+        244.5,
+        42
+      ],
+      "height": 11.5,
+      "radius": 4.4,
+      "yaw": 22.26
+    },
+    {
+      "id": "edge-oak-w-58",
+      "piece": "landscape/street-tree",
+      "at": [
+        165.5,
+        58
+      ],
+      "height": 11,
+      "radius": 4.2,
+      "yaw": 21.46
+    },
+    {
+      "id": "edge-oak-e-58",
+      "piece": "landscape/street-tree",
+      "at": [
+        244.5,
+        58
+      ],
+      "height": 11.5,
+      "radius": 4.4,
+      "yaw": 30.740000000000002
+    },
+    {
+      "id": "edge-oak-w-74",
+      "piece": "landscape/street-tree",
+      "at": [
+        165.5,
+        74
+      ],
+      "height": 11,
+      "radius": 4.2,
+      "yaw": 27.38
+    },
+    {
+      "id": "edge-oak-e-74",
+      "piece": "landscape/street-tree",
+      "at": [
+        244.5,
+        74
+      ],
+      "height": 11.5,
+      "radius": 4.4,
+      "yaw": 39.22
+    },
+    {
+      "id": "edge-oak-w-90",
+      "piece": "landscape/street-tree",
+      "at": [
+        165.5,
+        90
+      ],
+      "height": 11,
+      "radius": 4.2,
+      "yaw": 33.3
+    },
+    {
+      "id": "edge-oak-e-90",
+      "piece": "landscape/street-tree",
+      "at": [
+        244.5,
+        90
+      ],
+      "height": 11.5,
+      "radius": 4.4,
+      "yaw": 47.7
+    },
+    {
+      "id": "greenway-bench-22",
+      "piece": "furniture/bench",
+      "at": [
+        154.2,
+        22
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "greenway-bench-58",
+      "piece": "furniture/bench",
+      "at": [
+        154.2,
+        58
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "greenway-bench-94",
+      "piece": "furniture/bench",
+      "at": [
+        154.2,
+        94
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "greenway-bench-130",
+      "piece": "furniture/bench",
+      "at": [
+        154.2,
+        130
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "bike-rack-bridge",
+      "piece": "furniture/bike-rack",
+      "at": [
+        159.2,
+        13
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "commons-railing-n",
+      "piece": "furniture/railing",
+      "rect": [
+        115.05,
+        3,
+        115.2,
+        38.8
+      ]
+    },
+    {
+      "id": "commons-railing-s",
+      "piece": "furniture/railing",
+      "rect": [
+        115.05,
+        -38.8,
+        115.2,
+        -3
+      ]
+    }
+  ],
+  "context": [
+    {
+      "id": "bayou-north",
+      "piece": "landscape/bayou",
+      "rect": [
+        115.2,
+        3,
+        152,
+        175
+      ]
+    },
+    {
+      "id": "greenway-lawn-n",
+      "piece": "landscape/lawn",
+      "rect": [
+        152,
+        7.5,
+        153.4,
+        163
+      ]
+    }
+  ],
+  "overrides": {},
+  "additions": []
+}
