@@ -5,20 +5,24 @@ import { validateHeightsRegistration } from './bayou-heights-world.js';
 import { commonsBaseLayout } from '../../shared/bayou-heights.js';
 import { heightsBaseLayout } from '../../shared/studewood.js';
 import { validateStudewoodRegistration } from './studewood-world.js';
+import { studewoodBaseLayout } from '../../shared/bayou-terraces.js';
+import { validateTerracesRegistration } from './bayou-terraces-world.js';
 import { createSpatialChunkStream } from './spatial-chunk-stream.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
 import { cityKitLandscape } from './city-kit/render.js';
 
-// Loaded only for bayou-heights-1 and heights-studewood-1 (main.js), with the composition they need.
+// Loaded only for bayou-heights-1, heights-studewood-1 and bayou-terraces-1 (main.js), with the composition they need.
 export { attachBayouHeights } from './bayou-heights-world.js';
 export { attachStudewood } from './studewood-world.js';
+export { attachBayouTerraces } from './bayou-terraces-world.js';
 
 /**
  * The Commons as Heights presents it: the restored Commons layout, bayou opened for the
  * footbridge. Its planted beds draw within 60 m, as Heights' own do (HEIGHTS_PLANTING_METRES):
  * seen across the bayou, the Commons' beds at every distance are about a million triangles.
  */
-export const heightsCommonsLayout = layout => ({ ...commonsBaseLayout(layout.studewood ? heightsBaseLayout(layout) : layout), destination: layout.destination,
+const heightsOnly = layout => layout.terraces ? heightsOnly(studewoodBaseLayout(layout)) : layout.studewood ? heightsBaseLayout(layout) : layout;
+export const heightsCommonsLayout = layout => ({ ...commonsBaseLayout(heightsOnly(layout)), destination: layout.destination,
   plantingMetres: KIT_CONVENTIONS.lod.treeMetres[1] });
 
 // A camera within this distance of a Heights neighborhood that can see it streams it in:
@@ -43,6 +47,8 @@ export const HEIGHTS_CHUNK_BYTES = {
   'yale-street-north': 3.35 * MiB, 'yale-street-south': 2.05 * MiB, 'heights-boulevard-north': 2.95 * MiB, 'heights-boulevard-south': 2.05 * MiB,
   // Studewood (heights-studewood-1) in the luxury kit, measured headless at 2.84 and 2.43 MiB.
   'studewood-north': 3 * MiB, 'studewood-south': 2.6 * MiB,
+  // The Bayou Terraces (bayou-terraces-1) in the luxury kit, measured headless at 2.76 and 2.01 MiB.
+  'bayou-terrace-north': 2.9 * MiB, 'bayou-terrace-south': 2.15 * MiB,
 };
 // Each neighborhood composed after Heights' own adds its street trees and planted beds to the
 // shared part. Allowances per placement err high, so the shared estimate grows with them.
@@ -70,15 +76,24 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
   // Studewood (heights-studewood-1) streams as two more Heights neighborhoods, east to its own edge.
   if (layout.studewood) validateStudewoodRegistration(manifest, layout);
   const own = locationWorldBounds(location), bounds = layout.studewood ? [own[0], own[1], layout.studewood.bounds[2], own[3]] : own, [west, south, east, north] = bounds;
+  // The Bayou Terraces (bayou-terraces-1) stream as two more neighborhoods west of the bayou, gated like the rest.
+  if (layout.terraces) validateTerracesRegistration(manifest, layout);
+  const terraces = layout.terraces?.bounds ?? [], onTerrace = point => terraces.some(([w, s, e, n]) => point[0] >= w && point[0] <= e && point[1] >= s && point[1] <= n);
+  const gated = point => point[0] > west - .35 || onTerrace(point);
+  const sharedBounds = terraces.reduce((box, [w, s, e, n]) => [Math.min(box[0], w), Math.min(box[1], s), Math.max(box[2], e), Math.max(box[3], n)], bounds);
   const entry = [west + 1, location.entries.find(item => item.id === 'market-footbridge').position_m[1]];
   // The location's id sorts before its neighborhoods', so at equal distance the shared part is kept first.
   const SHARED = location.id, idOf = plan => `${location.id}/${plan.id}`;
   const planAt = point => plans.reduce((best, plan) => outside(plan.site, point) < outside(best.site, point) ? plan : best);
+  // A terrace's own ground and its footbridge, out to where the greenway's plan is nearer: there the way back is east, over the bridge.
+  const terracePlans = new Set(layout.terraces?.plans.map(plan => plan.id) ?? []), onTerracePlan = point => gated(point) && terracePlans.has(planAt(point).id);
+  // With the terraces at the District edge, District points must not stream them: from the District, Heights stays unloaded.
+  const inDistrict = point => Boolean(layout.terraces) && point[0] < layout.edge;
   const sharedBytes = plans.slice(layout.studewood?.planStart ?? plans.length).reduce((bytes, plan) => {
     const { trees, planters } = cityKitLandscape(plan, { groundAt: () => layout.ground, ground: layout.ground });
     return bytes + trees.length * HEIGHTS_SHARED_PLACEMENT_BYTES.tree + planters.length * HEIGHTS_SHARED_PLACEMENT_BYTES.planter;
   }, HEIGHTS_CHUNK_BYTES[SHARED]);
-  const chunks = [{ id: SHARED, bounds, estimatedBytes: sharedBytes },
+  const chunks = [{ id: SHARED, bounds: sharedBounds, estimatedBytes: sharedBytes },
     ...plans.map(plan => ({ id: idOf(plan), plan, bounds: plan.site, estimatedBytes: HEIGHTS_CHUNK_BYTES[plan.id] ?? 3 * MiB }))];
   const boxes = plans.map(plan => { const [w, s, e, n] = plan.site; return [plan, new Box3(new Vector3(w, layout.ground - 4, -n), new Vector3(e, layout.ground + 30, -s))]; });
   const frustum = new Frustum(), viewMatrix = new Matrix4(), forward = new Vector3(), measured = {}, seen = new Map();
@@ -129,8 +144,8 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
   const state = id => stream.debug().chunks.find(chunk => chunk.id === id).state;
   return {
     update(points, camera) {
-      const wanted = [...points];
-      if (camera) {
+      const wanted = points.filter(point => !inDistrict(point));
+      if (camera && !inDistrict([camera.position.x, -camera.position.z])) {
         camera.updateMatrixWorld();
         frustum.setFromProjectionMatrix(viewMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
         const eye = [camera.position.x, -camera.position.z], time = now();
@@ -158,14 +173,14 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
       }
       stream.update(wanted);
       const player = points[0];
-      const inside = player && player[0] > west - .35 && player[0] <= east && player[1] >= south && player[1] <= north;
+      const terrace = player && onTerracePlan(player), inside = player && (terrace || player[0] > west - .35 && player[0] <= east && player[1] >= south && player[1] <= north);
       const atBridge = player && Math.abs(player[0] - west) < 30 && Math.abs(player[1] - entry[1]) < 15;
       const at = inside ? player : atBridge ? entry : null;
       // What the player waits on: the shared part, where they stand, and any neighborhood within reach.
       const ids = at ? [SHARED, idOf(planAt(at)), ...plans.filter(plan => outside(plan.site, at) < 3).map(idOf)] : [];
-      if (ids.some(id => state(id) === 'stalled')) announce('Bayou Heights loading has stalled. You can return west to the Commons while the connection recovers.');
-      else if (ids.some(id => state(id) === 'failed')) announce('Bayou Heights is still loading. Retrying automatically; you can return to the Commons.');
-      else if (at && !presented(at)) announce(inside ? 'Loading Bayou Heights… You can return west while it loads.' : 'Loading Bayou Heights… Please wait at the footbridge.');
+      if (ids.some(id => state(id) === 'stalled')) announce(terrace ? 'Bayou Terraces loading has stalled. You can return over the footbridge while the connection recovers.' : 'Bayou Heights loading has stalled. You can return west to the Commons while the connection recovers.');
+      else if (ids.some(id => state(id) === 'failed')) announce(terrace ? 'The Bayou Terraces are still loading. Retrying automatically; you can return over the footbridge.' : 'Bayou Heights is still loading. Retrying automatically; you can return to the Commons.');
+      else if (at && !presented(at)) announce(terrace ? 'Loading the Bayou Terraces… You can return over the footbridge while they load.' : inside ? 'Loading Bayou Heights… You can return west while it loads.' : 'Loading Bayou Heights… Please wait at the footbridge.');
       else if (ids.some(id => !stream.ready(id))) announce('Loading more of Bayou Heights…');
       else announce('');
     },
@@ -173,10 +188,11 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
     ready: () => presented(entry),
     allowsStep(from, to) {
       if (!to?.slice(0, 2).every(Number.isFinite)) return false;
-      if (to[0] <= west - .35 || presented(to)) return true;
+      if (!gated(to) || presented(to)) return true;
       // As in the Commons: someone restored where Heights is not yet presented may step around
-      // an obstacle or retreat west; from presented ground, the next neighborhood waits to load.
-      return Boolean(from) && from[0] > west - .35 && !presented(from) && to[0] <= from[0] + 1e-9;
+      // an obstacle or retreat west (on a terrace, back toward its footbridge); from presented
+      // ground, the next neighborhood waits to load.
+      return Boolean(from) && gated(from) && !presented(from) && (onTerracePlan(from) ? to[0] >= from[0] - 1e-9 : to[0] <= from[0] + 1e-9);
     },
     debug: () => ({ ...stream.debug(), status, geometryBudgetBytes: HEIGHTS_MAX_BYTES, measuredBytes: { ...measured },
       estimatedBytes: Object.fromEntries(chunks.map(chunk => [chunk.id, chunk.estimatedBytes])) }),
