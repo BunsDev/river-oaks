@@ -110,6 +110,14 @@ export function depthFaces(root, { minArea = 0.002, skip = () => false, maxFaces
 // to the side they face. A pair buried in a solid (floors between storeys, a box sunk below the
 // paving) never reaches the screen, so it is not reported.
 // `groundAt(east, north)` (optional) is the terrain height: overlaps below it are buried.
+// The height at `point` of the plane through three projected corners with these heights.
+function planeHeight([a, b, c], [ha, hb, hc], [x, y]) {
+  const det = (b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1]);
+  if (Math.abs(det) < 1e-12) return (ha + hb + hc) / 3;
+  const s = ((x - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (y - a[1])) / det, t = ((b[0] - a[0]) * (y - a[1]) - (x - a[0]) * (b[1] - a[1])) / det;
+  return ha + s * (hb - ha) + t * (hc - ha);
+}
+
 export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minOverlap = 0.004, minArea, skip, groundAt = null, focus = null } = {}) {
   const faces = depthFaces(root, { minArea, skip, focus });
   const direction = n => n.map(v => Math.round(v * 100) + 0).join(',');
@@ -130,6 +138,7 @@ export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minO
     const u = new THREE.Vector3().crossVectors(axis, normal).normalize(), w = new THREE.Vector3().crossVectors(normal, u);
     const project = p => [u.x * p[0] + u.y * p[1] + u.z * p[2], w.x * p[0] + w.y * p[1] + w.z * p[2]];
     project.unproject = ([a, b], h) => [u.x * a + w.x * b + normal.x * h, u.y * a + w.y * b + normal.y * h, u.z * a + w.z * b + normal.z * h];
+    project.height = p => normal.x * p[0] + normal.y * p[1] + normal.z * p[2];
     bases.set(d, project); return project;
   };
   const ccw = polygon => area2(polygon) < 0 ? polygon.slice().reverse() : polygon;
@@ -146,7 +155,8 @@ export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minO
     for (const [key, ahead] of [[d, true], [opposite, false]]) for (const entry of byDirection.get(key) ?? []) {
       const material = entry.face.material;
       if (material.transparent || material.alphaTest > 0 || material.alphaHash) continue;
-      const flat = entry.face.points.map(project), item = { flat, height: ahead ? entry.offset : -entry.offset, ahead, mesh: entry.face.object }, extent = bounds(flat);
+      // Heights across the shared frame, as the faces being tested are measured.
+      const flat = entry.face.points.map(project), item = { flat, heights: entry.face.points.map(project.height), ahead, mesh: entry.face.object }, extent = bounds(flat);
       if (spread(extent) > large) wide.push(item); else cells(extent, k => { if (!grid.has(k)) grid.set(k, []); grid.get(k).push(item); });
     }
     const index = { grid, wide }; occluders.set(d, index); return index;
@@ -164,7 +174,7 @@ export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minO
     }
     const balance = new Map();
     for (const item of [...(grid.get(`${Math.floor(point[0] / cell)},${Math.floor(point[1] / cell)}`) ?? []), ...wide])
-      if (item.height > height + 1e-4 && insideTriangle(point, item.flat)) balance.set(item.mesh, (balance.get(item.mesh) ?? 0) + (item.ahead ? 1 : -1));
+      if (insideTriangle(point, item.flat) && planeHeight(item.flat, item.heights, point) > height + 1e-4) balance.set(item.mesh, (balance.get(item.mesh) ?? 0) + (item.ahead ? 1 : -1));
     for (const value of balance.values()) if (value > 0) return false;
     return true;
   };
@@ -173,6 +183,10 @@ export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minO
     const [d, slot] = id.split('|'), next = buckets.get(`${d}|${Number(slot) + 1}`) ?? [];
     const project = basisFor(d, list[0].n);
     const flat = entry => entry.flat ??= ccw(entry.face.points.map(project)), box = entry => entry.box ??= bounds(flat(entry));
+    // A face's height across the bucket's plane at a projected point. Faces in a bucket are only
+    // near-parallel: far from the origin a 0.1° slope moves a plane's offset by metres, so two faces
+    // are as far apart as their heights where they overlap.
+    const heightAt = (entry, point) => planeHeight(entry.face.points.map(project), entry.face.points.map(project.height), point);
     const grid = new Map(), wide = [], others = [...list, ...next], everyone = others.map((_, index) => index);
     others.forEach((entry, index) => { if (spread(box(entry)) > large) wide.push(index); else cells(box(entry), k => { if (!grid.has(k)) grid.set(k, []); grid.get(k).push(index); }); });
     list.forEach((first, index) => {
@@ -184,29 +198,31 @@ export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minO
         seen.add(other);
         const second = others[other];
         if (first.face.material === second.face.material) continue;
-        const dot = first.n[0] * second.n[0] + first.n[1] * second.n[1] + first.n[2] * second.n[2], gap = Math.abs(first.offset - second.offset);
-        if (dot < 0.99995 || gap > maxGap) continue;
+        const dot = first.n[0] * second.n[0] + first.n[1] * second.n[1] + first.n[2] * second.n[2];
+        if (dot < 0.99995 || Math.abs(first.offset - second.offset) > maxGap) continue;
         const [u0, v0, u1, v1] = box(second);
         if (u1 <= x0 || u0 >= x1 || v1 <= y0 || v0 >= y1) continue;
-        // On one plane (to float noise) neither face is in front, so the one pulled further forward wins.
-        const [front, back] = first.offset >= second.offset ? [first, second] : [second, first], coplanar = gap < 2e-4;
-        if (pulledAhead(front.face.material, back.face.material) || (coplanar && pulledAhead(back.face.material, front.face.material))) continue;
         const polygon = overlapPolygon(flat(first), flat(second)), overlap = polygon.length < 3 ? 0 : Math.abs(area2(polygon));
         if (overlap < minOverlap) continue;
+        const centre = polygon.reduce((sum, p) => [sum[0] + p[0] / polygon.length, sum[1] + p[1] / polygon.length], [0, 0]);
+        const heights = [heightAt(first, centre), heightAt(second, centre)], gap = Math.abs(heights[0] - heights[1]);
+        if (gap > maxGap) continue;
+        // On one plane (to float noise) neither face is in front, so the one pulled further forward wins.
+        const [front, back] = heights[0] >= heights[1] ? [first, second] : [second, first], coplanar = gap < 2e-4;
+        if (pulledAhead(front.face.material, back.face.material) || (coplanar && pulledAhead(back.face.material, front.face.material))) continue;
         const size = narrowest(polygon);
         if (fightMetres(gap, model) >= visibleMetres(size, model)) continue;
         // Sample the overlap's centre and points toward its corners, just in front of the nearer face.
-        const centre = polygon.reduce((sum, p) => [sum[0] + p[0] / polygon.length, sum[1] + p[1] / polygon.length], [0, 0]);
         // A small skew keeps samples off the diagonals that split each rectangle into two triangles.
         const samples = [centre, ...polygon.slice(0, 6).map(p => [centre[0] + (p[0] - centre[0]) * 0.8, centre[1] + (p[1] - centre[1]) * 0.8])].map(([x, y]) => [x + 0.00137, y + 0.00071]);
-        const nearer = Math.max(first.offset, second.offset), blockers = occludersFor(d, first.n);
+        const nearer = Math.max(...heights), blockers = occludersFor(d, first.n);
         if (!samples.some(point => open(blockers, project, point, nearer, first.n))) continue;
         const pair = [first.face, second.face].sort((p, q) => name(p) < name(q) ? -1 : 1);
         const pairKey = `${name(pair[0])}~${name(pair[1])}~${gap.toFixed(4)}~${d}`;
-        const at = (first.offset >= second.offset ? first : second).face.points[0];
+        const at = front.face.points[0];
         const found = pairs.get(pairKey) ?? { a: name(pair[0]), b: name(pair[1]), gap, normal: first.n.map(v => Math.round(v * 1000) / 1000), overlap: 0, largest: 0, count: 0, at: [at[0], at[1], -at[2]] };
         found.overlap += overlap; found.count++; found.size = Math.max(found.size ?? 0, size);
-        if (overlap > found.largest) { found.largest = overlap; const c = polygon.reduce((sum, p) => [sum[0] + p[0] / polygon.length, sum[1] + p[1] / polygon.length], [0, 0]); found.at = [at[0], at[1], -at[2]]; found.centre2d = c; found.faces = [first, second].map(entry => ({ offset: entry.offset, points: entry.face.points.map(p => p.map(v => Math.round(v * 1000) / 1000)) })); }
+        if (overlap > found.largest) { found.largest = overlap; const c = polygon.reduce((sum, p) => [sum[0] + p[0] / polygon.length, sum[1] + p[1] / polygon.length], [0, 0]); found.at = [at[0], at[1], -at[2]]; found.centre2d = c; found.faces = [first, second].map(entry => ({ offset: entry.offset, object: entry.face.object, points: entry.face.points.map(p => p.map(v => Math.round(v * 1000) / 1000)) })); }
         pairs.set(pairKey, found);
       } });
     });

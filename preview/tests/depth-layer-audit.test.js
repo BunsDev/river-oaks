@@ -88,3 +88,18 @@ test('on one plane, whichever layer polygon offset pulls further forward wins', 
   assert.deepEqual(pairs(scene(box(warnings, [2, -.2, 2], [4, 0, 4]), box(pavers, [0, -.1, 0], [8, 0, 8]))), []);
   assert.deepEqual(pairs(scene(box(plain, [0, -.1, 0], [8, 0, 8]), box(material('plain-2'), [2, -.2, 2], [4, 0, 4]))), ['plain / plain-2']);
 });
+
+test('two near-parallel faces are as far apart as they are where they overlap, not as their planes say at the origin', () => {
+  const ground = material('ground'), stone = material('stone'), paver = material('paver');
+  // Far from the origin a 0.1° slope moves a plane's offset by metres: the Commons ground read as
+  // 1.1 cm under a residence panel's top 5.6 m above it (2026-10-27, depth-layers list).
+  const slope = Math.atan(0.002), sheet = (surface, lift) => {
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(40, 40).rotateX(-Math.PI / 2).rotateZ(-slope).translate(2800, 18 + lift, 0), surface);
+    mesh.name = surface.name; return mesh;
+  };
+  const top = Math.sin(slope) * 2800 + Math.cos(slope) * 18 - 0.0113;
+  const roof = box(stone, [2799, top - .2, -1], [2801, top, 1]);
+  assert.deepEqual(pairs(scene(sheet(ground, 0), roof)), [], 'a level roof 5.6 m above sloping ground');
+  // A paving sheet 3 mm over the same slope still fights it.
+  assert.deepEqual(pairs(scene(sheet(ground, 0), sheet(paver, .003), roof)), ['ground / paver']);
+});

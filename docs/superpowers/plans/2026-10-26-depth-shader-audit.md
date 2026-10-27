@@ -130,6 +130,25 @@ The depth-layers journey on this tree (04:04Z, 37 s) passed:
 - 1.18–1.27 million faces per station;
 - the four shader-patch checks pass, with no compile or page errors.
 
+## The audit measured gaps from the origin (fixed 2026-10-27): 313 listed pairs to 292
+
+- **Found** by tracing increment 2's roof × residence-panel pair. Its unnamed "Mesh" face was the Commons ground (object 2702) at 18.37 m, 5.6 m below the panel's top at 23.96 m.
+  - Faces in a bucket are only near-parallel (dot ≥ 0.99995), and the gap was the difference of their plane offsets `n·p`, each taken with its own normal.
+  - About 2.8 km from the origin, a 0.1° slope moves an offset by metres.
+- **Fix in `depth-layer-audit.js`.** Both faces' heights are read across the bucket's shared frame at the overlap's centre (`planeHeight`).
+  - That gap decides front and back, the fight distance and the samples' height.
+  - Occluders are measured in the same frame. Otherwise a sloping paving sheet counted as above itself.
+- **New test.** A level roof 5.6 m above ground sloped 0.1° at x 2,800 doesn't pair; it does on the old audit. A sheet 3 mm over that ground still fights.
+- **Still open.** The first sort compares plane offsets. A level face within a few centimetres of sloping ground far from the origin can still be missed.
+- **The list** went from 313 to 292 (recorded 15:29Z, confirmed by a normal run at 15:30Z):
+  - 59 pairs re-measured in place;
+  - 76 listed surface pairs at new spots, 28 of them street markings now found up to 1.5 mm under the crowned asphalt;
+  - 21 surface pairs never listed before, mostly facade faces whose true gap is 0–3 cm (the origin offset overstated it);
+  - 27 surface pairs no longer listed at all (campus 8, facades 11, others 8);
+  - both increment-2 suspects gone (the paver undersides and the roof × residence panel).
+- **DEV hook.** `depthFights()` now reports each pair's two faces with object id, named ancestors and geometry type. That's how this was found.
+- **Checks.** Audit and city-kit tests 22/22, with the new test red on the old audit; all fourteen kit neighbourhoods have no fights. Core verify passed on the first attempt: agent 289/289; preview 4,288 passed, 1 skipped; server 1,036 passed, 278 skipped (Redis cases); desktop 127 passed, 5 skipped.
+
 ## Main merged a fourth time (`a4bf5588`, Woodland Heights, 2026-10-27)
 
 - **`verify.yml`.** Main's `woodland` shard stays beside `depth`.
@@ -160,7 +179,7 @@ The depth-layers journey on this tree (04:04Z, 37 s) passed:
   - streets, campus and the Axe unchanged; iPic 9 → 11 (below).
   - 82 pairs went and 37 were renamed in place (the finish names). Seven are new to the list:
   - **Pavers × finish:** street pavers against a finish batch (hoarding, planter, soffit), 3.8 cm apart at (−2812, −1278). It appears only with the finish offset: an A/B scan at the arrival found the offset settles 58 pairs and adds this one. Both faces point down, 19–22 cm above the terrain, under the sidewalk's raised paving, so no camera can see them. A terrain-based rule can't tell; a walking-surface rule would, but could hide real fights under bridges. Listed as a false positive.
-  - **Roof × residence panel:** an unnamed mesh (likely a roof sheet) and a residence panel's top, 1.1 cm apart at (−2855.4, 24, −1305). It isn't the finish offset, and a district-only offline scene doesn't reproduce it. Cause not isolated; listed.
+  - **Roof × residence panel:** an unnamed mesh (likely a roof sheet) and a residence panel's top, 1.1 cm apart at (−2855.4, 24, −1305). It isn't the finish offset, and a district-only offline scene doesn't reproduce it. Later traced to the audit's gap measurement, and gone (below).
   - **Five pre-existing pairs the scan catches only sometimes:** iPic Auditorium carpet × Tuck Room boards and × Upper lounge carpet; campus bronze × stone; campus glass × floor; facade interior × stone. The old audit finds the iPic pairs offline, and no increment-2 change touches these builders. The station scan's coverage varies with what has streamed in, so the ratchet could flake on them; listing them prevents that.
 - **Checks**:
   - district, reference-block, audit and manifest files: 2,484 passed, 0 failed, 1 skipped;
@@ -197,7 +216,7 @@ By source:
 
 Hosted checks on `86afad18` (the third merge): 26 of 26 passed, including the `depth`, `studewood` and `terraces` shards and the aggregate `preview`.
 
-1. Burn the list down builder by builder, largest visible pairs first, rerunning the journey in record mode after each. Isolate the roof × residence-panel pair at (−2855.4, 24, −1305) with a focused browser scan.
+1. Burn the list down builder by builder, largest visible pairs first, rerunning the journey in record mode after each.
 2. If Val wants them: main's six curb-return tangents that miss their straight curb by 20–64 cm, at (−2790, −1431), (−2903, −1431), (−2770, −1177) and (−2780, −1431). Each is on a short segment whose far end is a mitred bend, and the return's arc starts at the square tangent. Val's triangle was a different fault (above): a junction wedge, not the corner fan.
 
 ## Decisions for Val

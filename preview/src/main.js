@@ -1421,7 +1421,11 @@ if (renderAudit) {
       // and this renderer's measured depth reach (depth-layer-audit.js).
       depthFights({ slack, ...options } = {}) {
         const found = findDepthFights(scene, { model: slack ? { ...DEPTH_MODEL, slack } : DEPTH_MODEL, groundAt: (east, north) => terrainHeight(world.terrain, east, north), ...options });
-        return { faces: found.faces, truncated: found.truncated, fights: found.map(({ faces, centre2d, ...pair }) => pair) };
+        // Each pair names the two faces of its largest overlap: which object, under which named
+        // groups, and where, so an unnamed mesh can be traced to its builder.
+        const face = ({ object, points }) => { const path = []; for (let node = object.parent; node && path.length < 3; node = node.parent) if (node.name) path.push(node.name);
+          return { id: object.id, path: path.join(' < '), geometry: object.geometry.type, userData: Object.keys(object.userData), points: points.map(point => [+point[0].toFixed(3), +point[1].toFixed(3), +(-point[2]).toFixed(3)]) }; };
+        return { faces: found.faces, truncated: found.truncated, fights: found.map(({ faces, centre2d, ...pair }) => ({ ...pair, faces: faces?.map(face) })) };
       },
       depthPrecision: options => measureDepthPrecision(renderer, options),
       // What the camera sees through a screen pixel (CSS px in the canvas): the first few surfaces.
