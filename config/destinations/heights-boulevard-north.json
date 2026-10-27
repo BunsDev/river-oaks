@@ -1,0 +1,340 @@
+{
+  "id": "heights-boulevard-north",
+  "title": "Bayou Heights: Heights Boulevard north",
+  "kit": "city-kit-1",
+  "seed": 1928,
+  "inspiration": "Patterns only, no copied buildings: a Houston Heights-style east bank across the bayou from Bayou Market, with a greenway trail along the water (Buffalo Bayou), a neighborhood green with a bandstand, an icehouse patio, and a boulevard with a walking esplanade (Heights Boulevard). All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    364,
+    0,
+    422.5,
+    167.5
+  ],
+  "streets": [
+    {
+      "id": "boulevard-west",
+      "from": [
+        370.5,
+        -8
+      ],
+      "to": [
+        370.5,
+        163
+      ],
+      "lane": 7,
+      "sidewalk": 3,
+      "trees": {
+        "offset": 9,
+        "spacing": 18
+      },
+      "lamps": {
+        "offset": 15,
+        "spacing": 30
+      }
+    },
+    {
+      "id": "esplanade",
+      "from": [
+        385,
+        -8
+      ],
+      "to": [
+        385,
+        163
+      ],
+      "lane": 12,
+      "sidewalk": 3,
+      "trees": {
+        "offset": 14,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 20,
+        "spacing": 24
+      }
+    },
+    {
+      "id": "boulevard-east",
+      "from": [
+        399.5,
+        -8
+      ],
+      "to": [
+        399.5,
+        163
+      ],
+      "lane": 7,
+      "sidewalk": 3,
+      "trees": {
+        "offset": 9,
+        "spacing": 18
+      },
+      "lamps": {
+        "offset": 15,
+        "spacing": 30
+      }
+    },
+    {
+      "id": "nineteenth-east",
+      "from": [
+        364,
+        0
+      ],
+      "to": [
+        406,
+        0
+      ],
+      "lane": 7,
+      "sidewalk": 4
+    },
+    {
+      "id": "twentieth-east",
+      "from": [
+        364,
+        111
+      ],
+      "to": [
+        406,
+        111
+      ],
+      "lane": 6,
+      "sidewalk": 3.5
+    }
+  ],
+  "plazas": [],
+  "blocks": [
+    {
+      "id": "frontage-mid",
+      "style": "garden-court",
+      "rect": [
+        406,
+        7.5,
+        420.5,
+        104.5
+      ],
+      "front": "west",
+      "sides": [
+        "north",
+        "south"
+      ],
+      "depth": [
+        11,
+        14.5
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        5,
+        7
+      ],
+      "names": [
+        "Mockingbird Tea",
+        "Sycamore Books",
+        "Grackle Coffee",
+        "Fireweed Florals",
+        "Esplanade Gelato",
+        "Porch Light Studio"
+      ]
+    },
+    {
+      "id": "frontage-north",
+      "style": "garden-court",
+      "rect": [
+        406,
+        117.5,
+        420.5,
+        163
+      ],
+      "front": "west",
+      "sides": [
+        "north",
+        "south"
+      ],
+      "depth": [
+        11,
+        14.5
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        5,
+        7
+      ],
+      "names": [
+        "Heron House Inn",
+        "Cicada Hall",
+        "Lamplighter Frames"
+      ]
+    }
+  ],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "esplanade-bench-20",
+      "piece": "furniture/bench",
+      "at": [
+        380.2,
+        20
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "esplanade-bench-e-20",
+      "piece": "furniture/bench",
+      "at": [
+        389.8,
+        26
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "esplanade-bench-44",
+      "piece": "furniture/bench",
+      "at": [
+        380.2,
+        44
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "esplanade-bench-e-44",
+      "piece": "furniture/bench",
+      "at": [
+        389.8,
+        50
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "esplanade-bench-70",
+      "piece": "furniture/bench",
+      "at": [
+        380.2,
+        70
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "esplanade-bench-e-70",
+      "piece": "furniture/bench",
+      "at": [
+        389.8,
+        76
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "esplanade-bench-96",
+      "piece": "furniture/bench",
+      "at": [
+        380.2,
+        96
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "esplanade-bench-e-96",
+      "piece": "furniture/bench",
+      "at": [
+        389.8,
+        102
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "esplanade-bench-128",
+      "piece": "furniture/bench",
+      "at": [
+        380.2,
+        128
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "esplanade-bench-e-128",
+      "piece": "furniture/bench",
+      "at": [
+        389.8,
+        134
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "esplanade-bench-150",
+      "piece": "furniture/bench",
+      "at": [
+        380.2,
+        150
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "esplanade-bench-e-150",
+      "piece": "furniture/bench",
+      "at": [
+        389.8,
+        156
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "end-hedge-0",
+      "piece": "landscape/hedge",
+      "rect": [
+        364.4,
+        161.8,
+        376.6,
+        163
+      ]
+    },
+    {
+      "id": "end-hedge-1",
+      "piece": "landscape/hedge",
+      "rect": [
+        377,
+        161.8,
+        393,
+        163
+      ]
+    },
+    {
+      "id": "end-hedge-2",
+      "piece": "landscape/hedge",
+      "rect": [
+        393.4,
+        161.8,
+        405.6,
+        163
+      ]
+    }
+  ],
+  "context": [
+    {
+      "id": "esplanade-lawn-0",
+      "piece": "landscape/lawn",
+      "rect": [
+        383,
+        14,
+        387,
+        100
+      ]
+    },
+    {
+      "id": "esplanade-lawn-1",
+      "piece": "landscape/lawn",
+      "rect": [
+        383,
+        122,
+        387,
+        158
+      ]
+    }
+  ],
+  "overrides": {},
+  "additions": []
+}
