@@ -27,7 +27,7 @@ test('prefetches before entry, deduplicates updates, retains hysteresis, unloads
 
 test('prioritizes nearer chunks and enforces resident, byte and concurrent ceilings', async () => {
   const h = harness({ chunks: [chunk('far', 20), chunk('near')], prefetchDistance: 30, unloadDistance: 40 });
-  h.stream.update([[5, 5]]); await flush(); assert.equal(h.loads[0].item.id, 'near'); assert.equal(h.loads.length, 1);
+  h.stream.update([[5, 5]]); await flush(); assert.equal(h.loads[0].item.id, 'near'); assert.equal(h.stream.debug().loads, 1);
   h.stream.update([[25, 5]]); await flush(); assert.equal(h.stream.ready('near'), false); assert.equal(h.stream.ready('far'), true);
   assert.equal(h.attached.size, 1); assert.equal(h.stream.debug().residentBytes, 10);
   h.stream.dispose(); assert.deepEqual(h.counts(), { allocations: 2, disposals: 2 });
@@ -122,4 +122,19 @@ test('invalid positions do not evict a valid scene and invalid definitions fail 
   assert.equal(h.stream.ready('a'), true); h.stream.dispose();
   assert.throws(() => harness({ chunks: [chunk('a'), chunk('a')] }), /chunk/i);
   assert.throws(() => harness({ maxConcurrent: 0 }), /limit/i);
+});
+
+test('a loaded chunk\'s measured size replaces its estimate when the scheduler fits chunks under the byte ceiling', async () => {
+  // 'big' is authored at 10 bytes but measures 60; with 'next' at 50 the pair no longer fits in 100.
+  const h = harness({ chunks: [{ id: 'big', bounds: [0, 0, 10, 10], estimatedBytes: 10 }, { id: 'next', bounds: [12, 0, 22, 10], estimatedBytes: 50 }],
+    maxResident: 2, prefetchDistance: 30, unloadDistance: 40, load: async item => ({ bytes: item.id === 'big' ? 60 : 50, dispose() {} }) });
+  h.stream.update([[5, 5]]); await flush(); h.stream.update([[5, 5]]); await flush();
+  assert.equal(h.stream.ready('big'), true); assert.equal(h.stream.debug().chunks[0].measuredBytes, 60);
+  assert.equal(h.stream.ready('next'), false, 'the second chunk is never started once the first measures over its estimate');
+  assert.equal(h.stream.debug().loads, 1);
+  h.stream.update([[100, 100]]); assert.equal(h.stream.debug().residentBytes, 0);
+  h.stream.update([[5, 5]]); await flush(); h.stream.update([[5, 5]]); await flush();
+  assert.equal(h.stream.debug().loads, 2); assert.equal(h.stream.ready('big'), true); assert.equal(h.stream.ready('next'), false);
+  assert.equal(h.stream.debug().failures, 0, 'no chunk is built only to be rejected by the ceiling');
+  h.stream.dispose();
 });

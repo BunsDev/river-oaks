@@ -125,6 +125,28 @@ async page => {
     await tab.waitForFunction(target => { const town = window.__riverMultiplayer(), p = town.snapshot.players.find(p => p.id === town.selfId); return Math.hypot(p.position[0] - target[0], p.position[1] - target[1]) < .8; }, target);
     console.log(label);
   };
+  // Turn the player (and so the camera behind it) to a heading, the way walk() turns.
+  const face = async (tab, heading, label) => {
+    for (let i = 0; i < 20; i++) {
+      const pose = await point(tab), difference = Math.atan2(Math.sin(heading - pose.yaw), Math.cos(heading - pose.yaw));
+      if (Math.abs(difference) <= .035) return;
+      const box = await tab.locator('#canvas-host').boundingBox(), x = box.x + box.width * .5, y = box.y + box.height * .4;
+      await tab.mouse.move(x, y); await tab.mouse.down(); await tab.mouse.move(x + Math.max(-box.width * .35, Math.min(box.width * .35, -difference / .003)), y, { steps: 3 }); await tab.mouse.up();
+    }
+    throw new Error(`${label}: could not turn to the heading`);
+  };
+  // At the far point, look west before expecting eviction: a player who keeps the Market in
+  // view keeps it loaded by design (camera retention), which is not an eviction failure. On
+  // 2026-10-26 a main-source run timed out here on lap 8 under a host load above 50 with no
+  // record of where the camera pointed; a timeout now reports the stream and camera state.
+  const evicted = async (tab, label) => {
+    await face(tab, Math.PI / 2, label);
+    try { await tab.waitForFunction(() => window.__riverSpatialStream().residentBytes === 0); }
+    catch (error) {
+      const state = await tab.evaluate(() => { const s = window.__riverSpatialStream(); return { chunks: s.chunks, residentBytes: s.residentBytes, pending: s.pending, lastVisibleAt: s.lastVisibleAt ?? null, camera: s.camera, direction: s.direction }; });
+      throw new Error(`${label}: ${error.message}; stream ${JSON.stringify(state)}`);
+    }
+  };
   const measure = async label => {
     const rows = await Promise.all(tabs.map(tab => tab.evaluate(() => {
       const probe = window.__streamProbe, stream = window.__riverSpatialStream(), frames = [...probe.frames].sort((a, b) => a - b);
@@ -215,7 +237,7 @@ async page => {
     // restored client registers resources again whenever it next draws them.
     await walk(probe, [[edge - 8, -1335], approach[0]], 'Probe client returns after the restore');
     await walk(probe, clearRoute((await self(probe)).position.slice(0, 2), far), 'Probe client walks away from the Commons');
-    await probe.waitForFunction(() => window.__riverSpatialStream().residentBytes === 0);
+    await evicted(probe, 'Probe eviction after the restore');
     const probeEvicted = await probe.evaluate(() => window.__riverSpatialStream());
     check(probeEvicted.pending === 0 && probeEvicted.chunks[0].state === 'absent' && commonsGroups(probeEvicted) === 0, 'After a restore the Commons evicts with no pending loads or groups');
     await walk(probe, [...clearRoute((await self(probe)).position.slice(0, 2), approach[0]), gates[0]], 'Probe client returns to the gateway');
@@ -284,7 +306,7 @@ async page => {
         check(Boolean(path?.length), `Eviction ${lap + 1} player ${i} has a walkable route`);
         await walk(tab, path, `Eviction ${lap + 1} player ${i}`);
       }));
-      await Promise.all(tabs.map(tab => tab.waitForFunction(() => window.__riverSpatialStream().residentBytes === 0)));
+      await Promise.all(tabs.map((tab, i) => evicted(tab, `Eviction ${lap + 1} player ${i}`)));
       const unloaded = await measure(`Evicted ${lap + 1}`);
       check(unloaded.every(state => state.pending === 0 && state.chunks[0].state === 'absent' && commonsGroups(state) === 0), `Eviction ${lap + 1}: no pending loads, resident expansion buffers or Commons groups`);
       const districtPlayers = await mutuallyVisible();
