@@ -221,12 +221,17 @@ ABBA detail:
 
 **Evidence comments:** #638 (6446065460) and #587 (6446071792). The #587 conditions 1–3 are met on the 3× `main` with these caveats. Conditions 4 and 5 are open.
 
-**#670** (river-oaks-3e) is not landed. The independent review says land after one fix (comment 6439566536). MEDIUM: the one-step rollbacks out of Studewood and Terraces strand or freeze residents, because `relocateResidents` is wired only into Heights → Commons. Reproduced. 3e can be reached only through the PR.
+**#670** (river-oaks-3e) landed on 2026-10-27 as `a1fa945a` (tree `377ee540`).
+- **The fix:** the review's MEDIUM (comment 6439566536) was fixed by 3e at signed `97435e5f`. Both one-step rollbacks, Studewood → Heights and Terraces → Studewood, now call `relocateResidents`.
+- **Before landing:** all 25 hosted checks passed at `97435e5f`. e9's focused migration, rollback and resident tests on a `git archive` copy of `97435e5f`: 68 passed, 2 skipped, 0 failed.
+- **Landing:** `pnpm run land 670 --owner river-oaks-e9` brought the branch up to date as `78702d49`; Verify passed and the merge guard merged it.
+- **On `main`:** ancestry confirmed on fresh `origin/main`, and every check at `a1fa945a` passed.
+- **Handover:** evidence comment 6449621420 asks 3e to record the delivery and release the branch at its exact tip, since 3e owns the task and the branch.
 
 ### Finish line at handoff
 
 1. **Ticked rows.**
-   - District stack: #655, #649, #662, #663 and #673 merged. #670 is stopped on a documented blocker: the MEDIUM fix by its owner, or Val's acceptance as a follow-up.
+   - District stack: all six merged, #670 last as `a1fa945a`.
    - #292 stack: all five merged.
 2. **3× on `main`:** met. `woodland-heights-1` is 3.048× at 0.5 m.
 3. **Acceptance pass:** done on a5857cf4, with the caveats above; comments posted on #638 and #587.
@@ -240,7 +245,7 @@ ABBA detail:
 
 | Item | Blocker | Owner | Next action |
 | --- | --- | --- | --- |
-| #670 | MEDIUM: rollback stranding (comment 6439566536) | 3e | 3e fixes it, then e9 or another lander lands it; or Val accepts it as a follow-up (Decision 6) |
+| #670 retirement | Merged as `a1fa945a`; the register task and local branch belong to 3e | 3e | 3e marks `next-district-586-support-20261024` delivered and releases the branch at its exact tip; then guarded prune (comment 6449621420) |
 | Acceptance snapshots `scratchpad/accept-pre`, `accept-final`, `accept-ws` (task `three-x-acceptance-snapshots-20261027`) | Detached; retiring needs `--cancel-stale` | e9 | Decision 5. Receipts are already archived |
 | world-streaming lap-12 cause | Mechanism reproduced by 71: facing the Commons at the far point keeps it resident; lap 12 itself wasn't observed | 71 | The guard (`e89b1505`) is in flight under 71's authority |
 
@@ -251,7 +256,7 @@ ABBA detail:
 3. **`CRON_SECRET` in Vercel production.** #661 is on `main`. Without the secret, the settle pass and retries never run on Vercel; a deletion still gets its first full pass. Set it, or confirm it's already set.
 4. **Owner and admin self-deletion (#666, Decision 4 in `docs/account-deletion.md`).** Deletion is off by default. If it's turned on, an owner, moderator, waitlist-admin, campus-operator or screening-host account that deletes itself loses its role until a code or config change. 0b recommends refusing those ids.
 5. **Acceptance snapshots.** Authorize `pnpm run project:prune --cancel-stale --detached-path <path> --expected-head <sha>` for `scratchpad/accept-pre` (2d63637f), `accept-final` (a5857cf4) and `accept-ws` (95882097) once they've been untouched 12 h, or keep them.
-6. **#670.** Either wait for 3e's rollback fix (recommended), or accept the MEDIUM as a tracked follow-up that must land before any Studewood or Terraces rollback runs, and let #670 land now.
+6. **#670:** resolved without a decision. 3e fixed the rollback at `97435e5f`, and it landed as `a1fa945a`.
 7. **world-streaming facing guard** (71's `test/streaming-evict-facing-20261027`, `e89b1505`). It turns both players west before the eviction waits.
    - **Evidence:** 71 reproduced the mechanism deterministically on `main` 95882097, in a one-page probe (15:34–15:36Z). At the far point, with the chunk 116.3 m away (past the 110 m unload):
      - facing east, toward the Commons, it stays resident (8.24 MB, chunk distance 0) for 15 s;
@@ -259,7 +264,7 @@ ABBA detail:
      - facing east again, it reloads within 15 s.
    - So the eviction check depends on the walk ending up facing west, and a turn-back after an overshoot fails it.
    - This wasn't observed on lap 12 itself. Evidence: `.runtime/evict-facing-probe/` in 71's parked worktree.
-   - **Update:** after the reproduction, river-oaks-71 is taking the guard forward under its own Phase 3 authority (fix recurring flakes without loosening checks): a draft PR, an independent review, the hosted world-streaming shard, then the land queue.
+   - **Update:** after the reproduction, river-oaks-71 is taking the guard forward as draft #703 under its own Phase 3 authority (fix recurring flakes without loosening checks): a draft PR, an independent review, the hosted world-streaming shard, then the land queue.
      - The waits, the 120 s timeout and every assertion are unchanged. Only the walk's incidental final facing becomes the precondition the stream needs.
      - e9 agrees it doesn't loosen the check.
      - No longer waiting on Val unless 71 holds it.
@@ -267,6 +272,6 @@ ABBA detail:
 
 ## Next action
 
-- Val: Decisions 3–8.
-- #670 lands once its fix is in (or on Decision 6).
+- Val: Decisions 3, 4, 5 and 8 (7 only if 71 holds #703).
+- 3e: record #670's delivery and release its branch.
 - Nothing else is open for e9 under this goal.
