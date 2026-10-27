@@ -84,3 +84,10 @@ test('player blocking routes reach the server through hosted rewrites, with thei
   }
   assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/blocks/everyone'), '/not-found');
 });
+
+test('in-app account deletion reaches the server through a hosted rewrite', () => {
+  const config = JSON.parse(readFileSync(new URL('../../vercel.json', import.meta.url)));
+  const rewrite = config.rewrites.find(item => item.source === '/api/account/delete');assert.ok(rewrite, 'missing rewrite');
+  assert.equal(normalizeVercelRoute(rewrite.destination), '/api/account/delete');
+  assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/account/export'), '/not-found');
+});

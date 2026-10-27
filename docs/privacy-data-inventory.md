@@ -7,8 +7,10 @@ inventory, not a privacy policy or legal advice; the published policy is Val's.
 
 Account deletion starts with the signed WorkOS `user.deleted` webhook
 (`server/workos-deletion.js`), which calls `createAccountErasure`
-(`server/account-erasure.js:25`). It is wired in `server/town.js:151` (standalone)
-and `server/redis-backend.js:96` (hosted). The order is fixed:
+(`server/account-erasure.js:25`). It is wired in `server/town.js:160` (standalone)
+and `server/redis-backend.js:99` (hosted). In-app deletion, off unless
+`RIVER_OAKS_ACCOUNT_DELETION=1`, runs the same erasure after WorkOS deletes the user
+([in-app account deletion](account-deletion.md)). The order is fixed:
 
 1. The request is recorded under its WorkOS event id (below).
 2. The character tombstone (`server/character-store.js:220`). From then on the
@@ -31,15 +33,16 @@ The record holds the account id, the WorkOS event id and when the second run is 
 Hosted, it is one Redis hash (`server/account-erasure.js:113`); a failed or
 interrupted request stays in it, and the sweep (`server/account-erasure.js:64`)
 retries it and runs each due second run: every 30 seconds on a long-lived server
-(`server/redis-backend.js:101`), and every five minutes through the Vercel cron
+(`server/redis-backend.js:104`), and every five minutes through the Vercel cron
 `/api/erasure-sweep` (`server/account-erasure.js:130`), so on Vercel the second run
 and the record's removal take up to about six minutes. The cron needs `CRON_SECRET`.
 Without it on Vercel, nothing sweeps: no second run happens, a failed request is
 retried only by WorkOS, and each record keeps its account id. The backend logs
 `account_erasure_sweep_unscheduled` at every start in that case
-(`server/redis-backend.js:104`).
-The standalone town keeps the record in memory, like its other stores
-(`server/town.js:163`), and WorkOS retries a request that a restart interrupted.
+(`server/redis-backend.js:107`).
+The standalone town keeps the record in memory (`server/town.js:172`). WorkOS retries
+a webhook request that a restart interrupted, but a restart before a request's second
+run skips that run.
 Every failure is logged with the WorkOS event id and the names of the failed steps,
 the tombstone and the revocation included, and never the account
 (`server/account-erasure.js:32`). A sweep that can't read the records logs
@@ -54,7 +57,7 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 | --- | --- | --- | --- |
 | Character drafts, revisions, selection | `server/character-store.js:236` · `:255` | Until deleted | Replaced by the tombstone `{deleted:true}`, keyed by a SHA-256 of the id |
 | Erasure request: account id, WorkOS event id, when its second run is due | `server/account-erasure.js:102` · `:113` | A minute after the first run finishes, plus up to 30 seconds (long-lived servers) or five minutes (Vercel cron) until the sweep; a failing request stays until it succeeds. On Vercel without `CRON_SECRET`, indefinitely | The record of the erasure itself; dropped after the second run |
-| Sessions, CSRF tokens, sign-in state | `server/auth.js:73` · `server/redis-auth.js:218` | 7 days (`server/auth.js:13`, `server/redis-auth.js:12`) | Erased |
+| Sessions (with the time of sign-in), CSRF tokens, sign-in state | `server/auth.js:73` · `server/redis-auth.js:218` | 7 days (`server/auth.js:13`, `server/redis-auth.js:12`) | Erased |
 | Stored GitHub login | `server/github-names.js:79` · `:91` | Until deleted | Erased (`:87`, `:98`) |
 | Email-code sign-in state | `server/magic-auth.js:88` | 10 minutes (`:6`) | Lapses; never names the account after use |
 | Profile: tagline, bio, pronouns, interests; shops already visited | `server/profiles.js:36` · `:85` | Until deleted | Erased (`:59`, `:107`) |
@@ -82,9 +85,11 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 
 The web client uses `localStorage`, `sessionStorage` and cookies only. It has no
 IndexedDB, Cache Storage, script-readable cookie or service worker. Server erasure
-cannot reach a device. Today sign-out (`preview/src/access-entry.js:434`,
-`preview/src/multiplayer-client.js:392`) clears none of the per-account keys
-below. Clearing them at sign-out and after in-app deletion is #292 increment C.
+cannot reach a device. In-app deletion clears the per-account keys below on the
+device it runs on (`clearAccountStorage` in `preview/src/account-deletion.js`). Sign-out
+(`preview/src/access-entry.js:434`, `preview/src/multiplayer-client.js:392`) still clears
+none of them; those files belong to other tasks, and
+[in-app account deletion](account-deletion.md#on-the-device) says how they can call it.
 
 | Key | Where | Holds | Per account |
 | --- | --- | --- | --- |
@@ -113,7 +118,7 @@ this change.
 
 | Processor | Receives | Configured by | Where | Reached by deletion |
 | --- | --- | --- | --- | --- |
-| WorkOS (AuthKit) | Email address, sign-in codes and tokens; sends the sign-in emails | `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_WEBHOOK_SECRET` | `server/auth.js:223`, `server/magic-auth.js:153`, `server/redis-auth.js:356` | Its `user.deleted` event starts erasure. No code here deletes the WorkOS user yet; in-app deletion (increment C) will |
+| WorkOS (AuthKit) | Email address, sign-in codes and tokens; sends the sign-in emails | `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_WEBHOOK_SECRET` | `server/auth.js:223`, `server/magic-auth.js:153`, `server/redis-auth.js:356` | Its `user.deleted` event starts erasure. In-app deletion deletes the WorkOS user first (`server/auth.js` and `server/redis-auth.js` `deleteProviderUser`) |
 | GitHub API | The GitHub id of a GitHub sign-in, to read the public login | `GITHUB_TOKEN` | `server/github-names.js:42` | Nothing is stored there by River Oaks; the local copy is erased |
 | LiveKit | A random participant identity, a room name, voice audio | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `RIVER_OAKS_VOICE` | `server/livekit-client.js:34`, `server/voice.js:257` | Rooms are live only; erasure removes the participant. No recording code exists |
 | Cloudflare Turnstile | A challenge token; the browser loads Cloudflare's script | `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | `server/turnstile.js:7`, `preview/src/access-entry.js:192` | Nothing stored by River Oaks |

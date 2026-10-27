@@ -131,7 +131,7 @@ twins('removing someone who is not blocked changes no version', async blocks => 
   assert.deepEqual(await versions(), before);
 });
 
-test('every command that gives another account access is checked again once it succeeds, and nothing else', () => {
+test('every command that gives another account access is recognised, and nothing else', () => {
   for (const command of [{ type: 'campus', action: 'grant', peerId: 'pat' }, { type: 'office', action: 'invite', peerId: 'pat' }, { type: 'homeAccess', action: 'grant', peerId: 'pat' }])
     assert.equal(grantedPeer(command), 'pat', JSON.stringify(command));
   for (const command of [{ type: 'campus', action: 'ungrant', peerId: 'pat' }, { type: 'office', action: 'remove', peerId: 'pat' }, { type: 'interaction', action: 'invite', peerId: 'pat' },

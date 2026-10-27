@@ -1,6 +1,7 @@
 import {createCharacterMetrics} from './character-metrics.js';
 import { createWorkOSDeletionHandler } from './workos-deletion.js';
 import { createAccountErasure, createMemoryPendingErasures, eraseEach } from './account-erasure.js';
+import { accountDeletionEnabled, createAccountDeletionRoute } from './account-deletion.js';
 import { createMemoryCharacterStore } from './character-store.js';
 import { createMemoryOfficeDesk } from './office-desk.js';
 import { createChauffeurRoute, createLocalChauffeurSecurity, chauffeurDailyLimit } from './chauffeur.js';
@@ -166,12 +167,14 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
     // Live removal needs the lease, so it goes first.
     voice:async id=>{if(voice)await voice.revokeUser(id);await voiceLeases.revoke(id);},
   },after:{avatarPreferences:id=>avatarPreferences.eraseUser(id),cyclingMiles:id=>cyclingMiles.eraseUser(id)},
-  // This town's stores live in memory, so its record of each request does too; WorkOS
-  // retries a request that a restart interrupted.
+  // Each request's record lives in memory: WorkOS retries a request that a restart
+  // interrupted, but a restart before its second run skips that run.
   pending:createMemoryPendingErasures()});
   const erasureSweep=setInterval(()=>{void eraseAccount.sweep().catch(()=>{});},30_000);erasureSweep.unref();
   const deletionRequest=createWorkOSDeletionHandler({secret:mode==='workos'?(env.WORKOS_WEBHOOK_SECRET||null):null,onDelete:(id,eventId)=>eraseAccount(id,{eventId})});
-  const handleRequest=async(req,res)=>await deletionRequest(req,res)||await chauffeurRequest(req,res);
+  // In-app deletion (#292) stays off unless RIVER_OAKS_ACCOUNT_DELETION is 1 and a failed erasure can be retried.
+  const accountDeletion=createAccountDeletionRoute({enabled:accountDeletionEnabled(env,{development:mode==='local'}),auth,security:localSecurity,origin,eraseAccount:id=>eraseAccount(id)});
+  const handleRequest=async(req,res)=>await deletionRequest(req,res)||await accountDeletion(req,res)||await chauffeurRequest(req,res);
   const router=createWorldRouter({worldFor,configuredWorldId:worldId,handleRequest});
   const characterMetrics=createCharacterMetrics({enabled:env.RIVER_OAKS_CHARACTER_STUDIO_METRICS==='1'});
   return {server:router.server,auth:mode,origin,worldId,catalog,worldFor,eraseAccount,close(){
