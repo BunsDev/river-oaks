@@ -75,28 +75,32 @@ async page => {
     await page.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === id && item.gesture === 'shove'), after.selfId).catch(() => {});
 
     // The rival answers with a telegraphed counter (#640). U, timed against the town's own
-    // remaining windup (the evade window is the 350 ms before contact), evades it: no damage,
-    // said in words. Snapshots arrive every 200 ms, so the page notes when contact falls by its
-    // own clock as soon as the counter appears, and U is pressed 230 ms before that, leaving
-    // the key's round trip inside the window. A counter that can't be timed lands; the rival
-    // telegraphs again after its cooldown.
+    // remaining windup, evades it: no damage, said in words. The evade must reach the town in
+    // the 350 ms before contact. Snapshots arrive every 200 ms, so the page notes when contact
+    // falls by its own clock as soon as the counter appears, and U is pressed `lead` ms before
+    // that. Every delay (the snapshot's delivery, polling, the key's round trip) only makes the
+    // evade later, so the lead sits near the window's early edge. A counter that can't be timed
+    // lands; the rival telegraphs again after its cooldown.
     await visitor.waitForFunction(() => window.__crimeLines.some(text => /winding up to strike back/.test(text)));
+    const lead = 320, attempts = [];
     let evadedCounter = null;
     for (let attempt = 0; attempt < 3 && !evadedCounter; attempt++) {
-      const counter = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), counter = m.snapshot.crime.actions?.find(item => item.kind === 'counter' && item.targetId === m.selfId && item.outcome === null);
+      const counter = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), counter = m.snapshot?.crime?.actions?.find(item => item.kind === 'counter' && item.targetId === m.selfId && item.outcome === null && item.phase === 'windup');
         return counter && { id: counter.id, remainingMs: counter.remainingMs, contactAt: performance.now() + counter.remainingMs, health: m.snapshot.players.find(p => p.id === m.selfId).health }; }, null, { polling: 16, timeout: 10000 }).then(handle => handle.jsonValue()).catch(() => null);
-      if (!counter) continue;
-      if (counter.remainingMs < 260) { // Seen too late to time: let it land, then wait for the next.
-        await visitor.waitForFunction(id => window.__riverMultiplayer().snapshot.crime.actions?.find(item => item.id === id && item.outcome !== null), counter.id);
+      if (!counter) { attempts.push({ attempt, seen: null }); continue; }
+      if (counter.remainingMs < lead + 30) { // Seen too late to time: let it land, then wait for the next.
+        attempts.push({ attempt, remainingMs: counter.remainingMs, late: true });
+        await visitor.waitForFunction(id => window.__riverMultiplayer().snapshot?.crime?.actions?.find(item => item.id === id && item.outcome !== null), counter.id);
         continue;
       }
       await visitor.locator('#canvas-host').focus();
-      await visitor.waitForFunction(at => performance.now() >= at, counter.contactAt - 230, { polling: 16 });
+      await visitor.waitForFunction(at => performance.now() >= at, counter.contactAt - lead, { polling: 16 });
       await visitor.keyboard.press('KeyU');
-      const outcome = await visitor.waitForFunction(id => window.__riverMultiplayer().snapshot.crime.actions?.find(item => item.id === id && item.outcome !== null)?.outcome, counter.id).then(handle => handle.jsonValue());
+      const outcome = await visitor.waitForFunction(id => window.__riverMultiplayer().snapshot?.crime?.actions?.find(item => item.id === id && item.outcome !== null)?.outcome, counter.id).then(handle => handle.jsonValue());
+      attempts.push({ attempt, remainingMs: counter.remainingMs, outcome });
       if (outcome === 'evaded') evadedCounter = { ...counter, after: (await town(visitor)).self.health };
     }
-    check(evadedCounter, 'A timed evade (U) beats the rival\'s telegraphed counter');
+    check(evadedCounter, `A timed evade (U) beats the rival's telegraphed counter${evadedCounter ? '' : ` ${JSON.stringify(attempts)}`}`);
     await visitor.waitForFunction(() => window.__crimeLines.some(text => /^You evaded Westcreek rival/.test(text)));
     check(evadedCounter.after === evadedCounter.health, 'An evaded counter does no damage');
 
