@@ -182,27 +182,79 @@ The 3× target at 0.5 m is 139,433.25 m², and Woodland clears it by 2,231 m². 
 
 **3× acceptance pass** (`scratchpad/accept-run.sh`, adapted from 71's `rc-run.sh`). It runs on detached snapshots of final `main` a5857cf4 and pre-stack `main` 2d63637f, registered as `three-x-acceptance-snapshots-20261027`. Its own `caffeinate` and an isolated Redis started at 04:59Z.
 - Both rehearsals passed: Commons at 04:59:02–04:59:28Z and Heights at 04:59:28–04:59:42Z.
-- The 7 journeys are queued fifth for the shared browser lock.
-- Then the District ABBA: A is 2d63637f at `east-garden-commons-market-1`, B is a5857cf4 at `woodland-heights-1`, run A1 B1 B2 A2 under one held lock, each arm at load ≤12. After it, `baseline-compare.js` and `verify full`.
+- The journeys, the ABBA and `verify full` followed; see Round 4.
+
+### Round 4 (2026-10-27 05:50Z – 15:30Z): #292 complete, acceptance pass done
+
+**Merged:**
+
+| PR | Merge | Review | Retirement |
+| --- | --- | --- | --- |
+| #667 report wording, support contact, App Review map | `51e00c24` (07:11Z) | e9 read the diff and ran focused tests 24/24; probed `supportLink` (http, credentials, IP, example domains, `javascript:` and mailto fields all refused) | `retirement-w049Lb` |
+| #682 moderators read saved reports | `a4bf5588` (10:04Z); Verify attempt 1 failed `preview shared (development)`, the rerun passed | Review: land after fixes. MEDIUM: a moderator saw reports about themself, with the reporter, and could ban them. 0b fixed it at the store level before the 200 cap, removed `reporter.id`, and refused staff bans. e9 checked the fix diff and ran focused tests 30/30 | `retirement-T2x8C9` |
+
+Also retired: #666's branch (`retirement-os8X7O`). The #292 stack (#661, #665, #666, #667, #682) is complete on `main`, with all five branches retired.
+
+**3× acceptance pass on final `main` a5857cf4.** Clean detached snapshots, an isolated Redis, its own `caffeinate`, and the shared browser lock, from 04:59 to 15:25Z. Receipts are archived (28 files, 28/28 OK) at `~/worktree-backups/river-oaks/evidence-three-x-on-main-20261026/acceptance-a5857cf4/`.
+
+| Check | Result | sha256 |
+| --- | --- | --- |
+| Commons rehearsal, Gardens and garage starts | passed | `d1987182`, `b427c054` |
+| Heights rehearsal | passed | `9b93a4a0` |
+| `world-gate-587` | 26 checks | `8910c68c` (journeys) |
+| `east-garden-commons` | 10 checks | the same |
+| `bayou-heights`, `studewood`, `bayou-terraces`, `woodland-heights` | 14, 11, 11, 11 checks | the same |
+| `world-streaming` | failed on lap 12 of 22 (eviction wait at `world-streaming.js:287`); single rerun on `main` 95882097 (with #700 diagnostics) passed 290 checks, all 22 evictions, 0 violations | rerun `cd5ebf37` |
+| District ABBA: A = 2d63637f at Commons, B = a5857cf4 at `woodland-heights-1`, A1 B1 B2 A2 at 08:34–09:05Z, each arm at load ≤8.2 | met, nothing over | compare `06d31a50`; arms `2e9dff72`, `73f5d3b1`, `3474a990`, `e1e1f6b4` |
+| `pnpm run verify full`, 19 stages: tooling 289/289, preview 4,251 + 1 skip, server with Redis 1,319/1,319, desktop 127 + 5 skips, every browser stage | passed, clean tree | `bef43341` |
+
+ABBA detail:
+- CPU-submission p95: −1.1% and −2.4% on desktop; −0.7% and −2.8% on the phone viewport.
+- Mean frame: 0 to −1.2%.
+- Reconnect: −9.6% desktop, +0.8% phone.
+- Budgets: +10% for frame and CPU, +20% for reconnect.
+
+**Caveats:**
+- **Hosted Verify on a5857cf4's push failed** in `preview checks` and `preview experience (studewood)`. The first is "Redis fences Studewood rollout…", the lease bug fixed by #698 (`866ae90d`). The second is a walk stall, which 71's #702 shared walk driver addresses. Verify on current `main` 95882097 is green.
+- **#673's first-attempt failure** has the same root cause as that Redis bug: a room that refuses a district's durable state never releases its lease, so the next join waits 5 s and can reach `request_timeout`.
+- **The world-streaming lap-12 cause is unconfirmed.** 71's analysis: the Commons stream keeps a visible destination resident, and the far point is only about 9.7 m past the 110 m unload. 71 has a defensive facing change drafted (`test/streaming-evict-facing-20261027`), held for Val.
+
+**Evidence comments:** #638 (6446065460) and #587 (6446071792). The #587 conditions 1–3 are met on the 3× `main` with these caveats. Conditions 4 and 5 are open.
+
+**#670** (river-oaks-3e) is not landed. The independent review says land after one fix (comment 6439566536). MEDIUM: the one-step rollbacks out of Studewood and Terraces strand or freeze residents, because `relocateResidents` is wired only into Heights → Commons. Reproduced. 3e can be reached only through the PR.
+
+### Finish line at handoff
+
+1. **Ticked rows.**
+   - District stack: #655, #649, #662, #663 and #673 merged. #670 is stopped on a documented blocker: the MEDIUM fix by its owner, or Val's acceptance as a follow-up.
+   - #292 stack: all five merged.
+2. **3× on `main`:** met. `woodland-heights-1` is 3.048× at 0.5 m.
+3. **Acceptance pass:** done on a5857cf4, with the caveats above; comments posted on #638 and #587.
+4. **Retirement:** every e9-landed PR is delivered with evidence, and its ref and worktree are retired through the guarded prune: #660, #686, #689, #661, #662, #663, #665, #673, #666, #667, #682. Still preserved: the three acceptance snapshots (Decision 5).
+5. **#292 lane:** complete.
+6. **Handoff:** this ledger and the Decisions below.
 
 ## Gaps
 
 | Item | Blocker | Owner | Next action |
 | --- | --- | --- | --- |
-| #670 | 3e is finishing the wiring patch, rehearsal and `verify full` | 3e | 3e marks it ready and releases it (comment 6431515014); e9 lands it |
-| #667 → #682 | 0b is merging up and verifying | 0b | Re-review each, then land in order |
-| `feat/account-deletion-292-20261024` | Waits for 0b's exact-head release | 0b | e9 archives and prunes |
-| 3× acceptance pass | Waits for the last district to land | e9 | The journeys and District ABBA on final `main` (needs load ≤12), then the #638 and #587 comments |
+| #670 | MEDIUM: rollback stranding (comment 6439566536) | 3e | 3e fixes it, then e9 or another lander lands it; or Val accepts it as a follow-up (Decision 6) |
+| Acceptance snapshots `scratchpad/accept-pre`, `accept-final`, `accept-ws` (task `three-x-acceptance-snapshots-20261027`) | Detached; retiring needs `--cancel-stale` | e9 | Decision 5. Receipts are already archived |
+| world-streaming lap-12 cause | Unconfirmed; the rerun passed | 71 | Decision 7 |
 
 ## Decisions for Val
 
 1. **#661 erasure in production:** answered, "Land after fixes". It landed as `66756b19`.
 2. **#686:** answered, "Land it". It landed as `c6eba6a3`.
 3. **`CRON_SECRET` in Vercel production.** #661 is on `main`. Without the secret, the settle pass and retries never run on Vercel; a deletion still gets its first full pass. Set it, or confirm it's already set.
-4. **Owner and admin self-deletion (#666, Decision 4 in `docs/account-deletion.md`).** Deletion is off by default. If it's turned on, an owner or moderator account that deletes itself loses its role until a code or config change. 0b recommends refusing those ids.
+4. **Owner and admin self-deletion (#666, Decision 4 in `docs/account-deletion.md`).** Deletion is off by default. If it's turned on, an owner, moderator, waitlist-admin, campus-operator or screening-host account that deletes itself loses its role until a code or config change. 0b recommends refusing those ids.
+5. **Acceptance snapshots.** Authorize `pnpm run project:prune --cancel-stale --detached-path <path> --expected-head <sha>` for `scratchpad/accept-pre` (2d63637f), `accept-final` (a5857cf4) and `accept-ws` (95882097) once they've been untouched 12 h, or keep them.
+6. **#670.** Either wait for 3e's rollback fix (recommended), or accept the MEDIUM as a tracked follow-up that must land before any Studewood or Terraces rollback runs, and let #670 land now.
+7. **world-streaming facing guard** (71's `test/streaming-evict-facing-20261027`). Land it as a defensive journey change, which changes what the eviction check requires, or wait for a reproduced failure with #700's diagnostics.
+8. **Activation:** #587 conditions 4 (visual and device sign-off) and 5 (production state) for the 3× world.
 
 ## Next action
 
-- The 3× acceptance pass finishes. Post one evidence comment each on #638 and #587, with receipt hashes.
-- Land #667 → #682 after re-review, and #670 when 3e releases it.
-- Retire the deletion branch once 0b releases it. The acceptance snapshots need Val's `--cancel-stale` or stay as evidence.
+- Val: Decisions 3–8.
+- #670 lands once its fix is in (or on Decision 6).
+- Nothing else is open for e9 under this goal.
