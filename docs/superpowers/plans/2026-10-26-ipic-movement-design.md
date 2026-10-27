@@ -157,6 +157,12 @@ What the numbers and captures show:
       cocoon or look through one. With the fix, it passes.
   - **Stop 10, the old foyer (4, 27.4),** can no longer be reached: it is back of house. The
     capture tool stopped there, by design.
+- **Captures of 3a7d931d** (snapshot, 01:10–01:35Z; the last stop now uses the cross aisle):
+  - **07-lounge-2:** the camera stops in front of the cocoon behind the visitor. Jevica and
+    Jev are in frame, and no cocoon is in view.
+  - **10-cross-aisle:** the rows are seen from behind the back row, with the end wall a few
+    metres east.
+  - Every other stop matches 85913401.
 - **After the cocoon fix:**
   - focused, 153 of 153 (`.runtime/ipic/focused-2.log`);
   - `ipic-review-data --check` current;
@@ -174,8 +180,6 @@ What the numbers and captures show:
 - The escalator treads are still static: the escalator is walked, not ridden.
 - The Blender review renders and receipts in `docs/ipic-review/` are not re-rendered.
   They show the earlier enclosure and wing.
-- The browser captures show 85913401, before the cocoon fix. The fix is covered by the new
-  test, not yet by a browser capture.
 - The Tuck Room's trailing pothos ends 2.45 m over the floor. The camera may pass among
   the strands' lower ends, but none of the captures showed this.
 - Not run: Redis (`server/tests/ipic-routes.test.js`), the full browser suite, WebKit,
@@ -183,5 +187,4 @@ What the numbers and captures show:
 
 ## Next
 
-Core verify on the cocoon fix, then push it to #692 and recapture the lounge. Merging
-needs Val.
+Watch the hosted checks on draft #692. Merging needs Val.
