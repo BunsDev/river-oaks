@@ -1,0 +1,440 @@
+{
+  "id": "studewood-south",
+  "title": "Bayou Heights East: Studewood Street south, the market yard and the lawn",
+  "kit": "city-kit-1",
+  "seed": 1932,
+  "inspiration": "Patterns only, no copied buildings: the east side of a Houston Heights-style neighborhood beyond the boulevard, with a working street of small shops, a neighborhood park with a water tower and a night market, and a playground and courts. All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    406,
+    -122.5,
+    507.5,
+    5
+  ],
+  "streets": [
+    {
+      "id": "studewood-south",
+      "from": [
+        429.5,
+        -118
+      ],
+      "to": [
+        429.5,
+        -7
+      ],
+      "lane": 7,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 4,
+        "spacing": 18
+      },
+      "lamps": {
+        "offset": 10,
+        "spacing": 30
+      }
+    },
+    {
+      "id": "eighteenth-studewood",
+      "from": [
+        406,
+        -71
+      ],
+      "to": [
+        507.5,
+        -71
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 30,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 36,
+        "spacing": 18
+      }
+    }
+  ],
+  "plazas": [
+    {
+      "id": "market-green",
+      "rect": [
+        435.5,
+        -12,
+        507.5,
+        5
+      ],
+      "lawns": [
+        [
+          440,
+          -9,
+          503,
+          -5
+        ]
+      ],
+      "hedges": [
+        [
+          506.3,
+          -12,
+          507.5,
+          5
+        ]
+      ],
+      "treeRows": []
+    },
+    {
+      "id": "market-yard",
+      "rect": [
+        452.5,
+        -65.5,
+        507.5,
+        -11
+      ],
+      "lawns": [
+        [
+          480,
+          -58,
+          501,
+          -18
+        ]
+      ],
+      "hedges": [
+        [
+          506.3,
+          -65.5,
+          507.5,
+          -11
+        ]
+      ],
+      "treeRows": [
+        {
+          "y": -61,
+          "from": 458,
+          "to": 502,
+          "spacing": 11
+        }
+      ]
+    },
+    {
+      "id": "studewood-lawn",
+      "rect": [
+        452.5,
+        -118,
+        507.5,
+        -76.5
+      ],
+      "lawns": [
+        [
+          458,
+          -112,
+          501,
+          -84
+        ]
+      ],
+      "hedges": [
+        [
+          452.5,
+          -118,
+          507.5,
+          -116.8
+        ],
+        [
+          506.3,
+          -116.8,
+          507.5,
+          -76.5
+        ]
+      ],
+      "treeRows": [
+        {
+          "y": -80.5,
+          "from": 458,
+          "to": 502,
+          "spacing": 11
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "id": "studewood-market-row",
+      "style": "market-row",
+      "rect": [
+        436.5,
+        -64.5,
+        452.5,
+        -12
+      ],
+      "front": "west",
+      "sides": [
+        "north",
+        "south"
+      ],
+      "depth": [
+        12,
+        16
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        4.5,
+        6.5
+      ],
+      "names": [
+        "Cane Sugar Creamery",
+        "Lightning Bug Lamps",
+        "Tejano Tortilleria",
+        "Mudbug Hardware",
+        "Prickly Pear Pottery",
+        "Cattail Cafe"
+      ]
+    },
+    {
+      "id": "studewood-row-south",
+      "style": "garden-court",
+      "rect": [
+        436.5,
+        -118,
+        452.5,
+        -77.5
+      ],
+      "front": "west",
+      "sides": [
+        "north"
+      ],
+      "depth": [
+        12,
+        16
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        4.5,
+        6.5
+      ],
+      "names": [
+        "Rain Lily Yoga",
+        "Copperhead Climbing",
+        "Gulf Moon Books",
+        "Sunflower Laundry"
+      ]
+    }
+  ],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "yard-cafe-0",
+      "piece": "furniture/cafe-set",
+      "at": [
+        460,
+        -20
+      ]
+    },
+    {
+      "id": "yard-cafe-1",
+      "piece": "furniture/cafe-set",
+      "at": [
+        460,
+        -30
+      ]
+    },
+    {
+      "id": "yard-cafe-2",
+      "piece": "furniture/cafe-set",
+      "at": [
+        460,
+        -40
+      ]
+    },
+    {
+      "id": "yard-cafe-3",
+      "piece": "furniture/cafe-set",
+      "at": [
+        470,
+        -20
+      ]
+    },
+    {
+      "id": "yard-cafe-4",
+      "piece": "furniture/cafe-set",
+      "at": [
+        470,
+        -30
+      ]
+    },
+    {
+      "id": "yard-cafe-5",
+      "piece": "furniture/cafe-set",
+      "at": [
+        470,
+        -40
+      ]
+    },
+    {
+      "id": "yard-stall-0",
+      "piece": "furniture/market-stall",
+      "at": [
+        462,
+        -52
+      ],
+      "sign": "Eastside Elote",
+      "awning": "canvas-apricot"
+    },
+    {
+      "id": "yard-stall-1",
+      "piece": "furniture/market-stall",
+      "at": [
+        475,
+        -52
+      ],
+      "sign": "Prairie Honey",
+      "awning": "canvas-teal"
+    },
+    {
+      "id": "yard-stall-2",
+      "piece": "furniture/market-stall",
+      "at": [
+        488,
+        -52
+      ],
+      "sign": "Gulf Shrimp Tacos",
+      "awning": "canvas-rose"
+    },
+    {
+      "id": "yard-bench--50",
+      "piece": "furniture/bench",
+      "at": [
+        503.8,
+        -50
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "yard-bench--38",
+      "piece": "furniture/bench",
+      "at": [
+        503.8,
+        -38
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "yard-bench--26",
+      "piece": "furniture/bench",
+      "at": [
+        503.8,
+        -26
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "lawn-bench-466",
+      "piece": "furniture/bench",
+      "at": [
+        466,
+        -114.3
+      ],
+      "yaw": 0.0
+    },
+    {
+      "id": "lawn-bench-480",
+      "piece": "furniture/bench",
+      "at": [
+        480,
+        -114.3
+      ],
+      "yaw": 0.0
+    },
+    {
+      "id": "lawn-bench-494",
+      "piece": "furniture/bench",
+      "at": [
+        494,
+        -114.3
+      ],
+      "yaw": 0.0
+    },
+    {
+      "id": "lawn-lamp-0",
+      "piece": "furniture/lamp",
+      "at": [
+        456,
+        -100
+      ]
+    },
+    {
+      "id": "lawn-lamp-1",
+      "piece": "furniture/lamp",
+      "at": [
+        456,
+        -86
+      ]
+    },
+    {
+      "id": "lawn-lamp-2",
+      "piece": "furniture/lamp",
+      "at": [
+        504,
+        -100
+      ]
+    },
+    {
+      "id": "lawn-lamp-3",
+      "piece": "furniture/lamp",
+      "at": [
+        504,
+        -86
+      ]
+    },
+    {
+      "id": "lawn-bike-rack",
+      "piece": "furniture/bike-rack",
+      "at": [
+        456,
+        -108
+      ],
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "green-lamp-0",
+      "piece": "furniture/lamp",
+      "at": [
+        446,
+        -10.5
+      ]
+    },
+    {
+      "id": "green-lamp-1",
+      "piece": "furniture/lamp",
+      "at": [
+        470,
+        -10.5
+      ]
+    },
+    {
+      "id": "green-lamp-2",
+      "piece": "furniture/lamp",
+      "at": [
+        494,
+        -10.5
+      ]
+    },
+    {
+      "id": "studewood-south-end-street",
+      "piece": "landscape/hedge",
+      "rect": [
+        422.9,
+        -118,
+        436.1,
+        -116.8
+      ]
+    }
+  ],
+  "context": [],
+  "overrides": {},
+  "additions": []
+}

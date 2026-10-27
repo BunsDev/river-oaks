@@ -61,6 +61,12 @@ export function plazaSalonPlan(world) {
     // The Bayou Heights icehouse patio table (shared/bayou-heights.js).
     const icehouse=world.eastGardenCommons.heights?.icehouse;
     if(icehouse)chess.push({id:icehouse.tableId,x:icehouse.at[0],north:icehouse.at[1]});
+    // The Studewood Park table (shared/studewood.js).
+    const park=world.eastGardenCommons.studewood?.table;
+    if(park)chess.push({id:park.tableId,x:park.at[0],north:park.at[1]});
+    // The Bayou Terraces' north gardens table (shared/bayou-terraces.js).
+    const gardens=world.eastGardenCommons.terraces?.table;
+    if(gardens)chess.push({id:gardens.tableId,x:gardens.at[0],north:gardens.at[1]});
   }
   // A walnut backgammon table in the open square between the grove's middle trunks.
   const backgammon = { id: 'backgammon', x: -2789.6, north: -1297.4 };
@@ -152,7 +158,7 @@ export function plazaSalonSeats(world) {
       approach: along([x, north], facing, 0.62) });
   });
   for (const chair of plan.chairs) seats.push({ buildId: `bench:plaza-salon-${chair.id}`, slot: 0, kind: 'bench',
-    title: chair.id.startsWith('chess-commons') ? 'Commons game table' : chair.id.startsWith('chess-icehouse') ? 'Icehouse game table' : chair.id.startsWith('chess') ? 'Chess table' : chair.id.startsWith('backgammon') ? 'Backgammon table' : chair.id.startsWith('grove') ? 'Grove table' : 'Café armchair', x: chair.x, north: chair.north, heading: chair.heading, height: 0.48,
+    title: chair.id.startsWith('chess-commons') ? 'Commons game table' : chair.id.startsWith('chess-icehouse') ? 'Icehouse game table' : chair.id.startsWith('chess-studewood') ? 'Studewood Park game table' : chair.id.startsWith('chess-terrace') ? 'Terrace gardens game table' : chair.id.startsWith('chess') ? 'Chess table' : chair.id.startsWith('backgammon') ? 'Backgammon table' : chair.id.startsWith('grove') ? 'Grove table' : 'Café armchair', x: chair.x, north: chair.north, heading: chair.heading, height: 0.48,
     // Chairs face their table, so people step in from behind.
     approach: along([chair.x, chair.north], chair.heading, -0.82) });
   // Residents resting at Dior may take a plaza seat (resident-life groups seats by store).
@@ -191,7 +197,7 @@ export function chessCell(square, whiteChair = 0) {
 export const chessCellOffset = ({ i, j }) => [(i - 3.5) * CHESS_CELL_M, (3.5 - j) * CHESS_CELL_M];
 // The chess table and chair behind a plaza seat ('bench:plaza-salon-chess-west-1'), or null.
 export function chessSeat(buildId) {
-  const match = /^bench:plaza-salon-(chess-(?:west|east|commons|icehouse))-([01])$/.exec(buildId ?? '');
+  const match = /^bench:plaza-salon-(chess-(?:west|east|commons|icehouse|studewood|terrace))-([01])$/.exec(buildId ?? '');
   return match ? { tableId: match[1], chair: Number(match[2]) } : null;
 }
 // A cell's centre as [east, north]. The slab turns a quarter (Three.js yaw π/2),
