@@ -3,6 +3,7 @@ import { createJevSettings } from './jev-settings.js';
 import { createVoiceSettings } from './voice-ui.js';
 import { sharedVoicePreferences } from './voice-preferences.js';
 import { createAccountDeletionSettings } from './account-deletion.js';
+import { createModerationReports } from './moderation-reports.js';
 import { createSupportContact } from './support-contact.js';
 
 // Keep the navigation API shared by Commands and the HUD launchers.
@@ -120,6 +121,8 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
   const studio = layers.find(node => node.querySelector?.('a[href="/studio.html"]'));
   // Hidden unless the server offers in-app deletion (#292); it asks each time Account opens.
   const deletion = createAccountDeletionSettings();
+  // Saved player reports, for moderators only (#292); it asks each time Account opens too.
+  const reports = createModerationReports();
   // The published support contact (#292), from VITE_SUPPORT_CONTACT; nothing when unset.
   const support = createSupportContact(import.meta.env?.VITE_SUPPORT_CONTACT);
   const groups = [
@@ -127,13 +130,13 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
     ['Graphics', 'Sharper or smoother. Auto adjusts as you play.', graphics ? [graphics] : []],
     ['Audio', 'What you hear in town, and how you talk.', [group(null, voiceNodes), createVoiceSettings({ preferences: sharedVoicePreferences() }), createJevSettings('elevenlabs')]],
     ['World', 'Light, weather and what the district shows.', [group('Light', light), group('Show in the district', layers.filter(node => node !== studio)), ...(studio ? [group('Build', [studio])] : [])]],
-    ['Account', 'Invitations, problem reports and signing out.', [account, createJevSettings(), group('World data', [connection]), ...(support ? [support] : []), deletion]],
+    ['Account', 'Invitations, problem reports and signing out.', [account, createJevSettings(), group('World data', [connection]), reports, ...(support ? [support] : []), deletion]],
     ['About', 'Where this district comes from.', evidence],
   ];
   const tabs = [], panes = [];
   const selectSettings = (index, focus = false) => {
     tabs.forEach((tab, i) => { tab.setAttribute('aria-selected', String(index === i)); tab.tabIndex = i === index ? 0 : -1; panes[i].hidden = i !== index; });
-    if (panes[index].contains(deletion)) void deletion.refresh();
+    if (panes[index].contains(deletion)) { void deletion.refresh(); void reports.refresh(); }
     // On phones the categories scroll sideways; keep the chosen one in view.
     tabs[index].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     if (focus) tabs[index].focus();
@@ -164,7 +167,7 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
   const openSettings = selector => {
     if (!dialog.open) {
       returnFocus = document.activeElement; dialog.showModal();
-      if (deletion.closest('[role="tabpanel"]')?.hidden === false) void deletion.refresh();
+      if (deletion.closest('[role="tabpanel"]')?.hidden === false) { void deletion.refresh(); void reports.refresh(); }
     }
     const target = selector && dialog.querySelector(selector);
     if (target) {
