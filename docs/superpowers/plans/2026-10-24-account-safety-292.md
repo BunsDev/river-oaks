@@ -2,9 +2,9 @@
 
 Objective: complete account erasure, server-enforced player blocking, and in-app
 account deletion behind a default-off flag, for #292 (App Review 5.1.1(v), 1.2).
-This ledger covers increment A, erasure, and increment B, player blocking. In-app
-deletion (C) and reports, support and the App Review map (D) follow in their own
-branches.
+This ledger covers increment A (erasure), B (player blocking) and C (in-app deletion,
+off by default). Reports, support and the App Review map (D) follow in their own
+branch.
 
 Owner: `claude:river-oaks-0b (ebc46c90)`, task `account-safety-292-20261024`.
 Worktree `river-oaks-account-safety-292`, branch `feat/account-erasure-292-20261024`,
@@ -218,6 +218,100 @@ a failed recheck was silent (now logged as `block_recheck_failed`), the sender's
 still shows a grant ended by the recheck (documented), and the `Math.max` clamp had no
 test (added, red with the raw time).
 
+river-oaks-e9's re-review of B at `1f507f2c` (2026-10-27) found it land-ready, with one
+new LOW: the hosted recheck ran only on an ok answer, but a grant whose room answer
+timed out (7 s) stays queued and can land after the separation, and its retry is a
+conflict, so the guest kept access; office and home invitations the same. Fixed in C's
+branch, since B was landing. A first fix rechecked after every grant command; an
+independent review found that this made answers toward a blocker measurably slower
+(about 400 ms against 210 ms, one extra room operation), which would tell the sender.
+Now `screenCommand` marks only a grant it checked and found unblocked. The hosted server
+rechecks a marked grant on an ok answer, on `request_timeout`, on a conflict (a retry the
+screen also passed), and when the request throws once the grant may be queued (the
+reviewer's second pass: the socket closed with no recheck), then rethrows. The town,
+whose commands answer at once, rechecks on an ok answer. Tests, with a room that answers
+each grant at once while it is still queued: answered `request_timeout` (the separation
+is queued after it and ends it; red before, the guest stayed), a failed request (red
+without the recheck on the error path), and a block the screen saw (no separation; red
+with every grant rechecked); plus which commands the screen marks. Mutations red: no
+screen gate, ok answers only, no recheck on a failed request, never or always marked,
+and no town recheck. The second pass found the timing difference closed and the queue
+order sound: the grant's enqueue goes out before the separation's on the same
+connection, and the client doesn't resend after a reconnect.
+
+## Increment C: in-app account deletion
+
+Branch `feat/account-deletion-292-20261024` in worktree `river-oaks-deletion-292`,
+stacked on increment B's head `075e3876`. Off unless `RIVER_OAKS_ACCOUNT_DELETION=1`.
+Behaviour, prerequisites and Decisions for Val are in
+[in-app account deletion](../../account-deletion.md).
+
+Files owned:
+- New: `server/account-deletion.js`, `preview/src/account-deletion.js`,
+  `docs/account-deletion.md`.
+- New tests: `server/tests/account-deletion.test.js`, `account-deletion-town.test.js`,
+  `preview/tests/account-deletion.test.js`.
+- Changed: `server/auth.js`, `redis-auth.js` and `dev-auth.js` (`signedInAt`,
+  `deleteProviderUser`, `clearSession`); `server/town.js` and `redis-backend.js` (the
+  route); `redis-security.js` (the `account_deletion` scope); `vercel-routing.js`,
+  `vercel.json` and `preview/vite.config.js` (the route); `preview/src/sidebar.js` (the
+  control, refreshed when Account opens); `preview/src/settings-dialog.css`;
+  `.env.example`; the inventory, security review and architecture docs.
+- Not changed: sign-out in `preview/src/access-entry.js` (`touch-network-288-290`) and
+  `preview/src/multiplayer-client.js` (`outdoor-residents-admin-controls-20261024`)
+  still keeps device data. `clearAccountStorage` is exported for their owners.
+
+Each guard was checked by removing it and watching its test fail:
+- the sign-in time, in Redis sessions and through single-process refreshes;
+- a WorkOS failure that isn't a 404;
+- erasure before the provider;
+- the recency check;
+- the Redis scope;
+- the flag, in the hosted backend and the town;
+- the client's refresh fence, saved looks and world drafts, the exact phrase and the
+  CSRF header.
+
+Independent review (2026-10-24). It found no way around CSRF, the origin, the flag, the
+phrase or the limit, and nothing erased before WorkOS deletes the user.
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| The status check didn't refresh an expired access token, so the control vanished about five minutes after sign-in | High | The page asks `/auth/session` first. Server test pins that the route alone doesn't refresh; client test pins the order. Red without either |
+| With the flag on and no webhook secret, "finishes on its own" could be false | Medium | With WorkOS the flag takes effect only with `WORKOS_WEBHOOK_SECRET`, otherwise it logs `account_deletion_off`. Tested in the helper, the hosted backend and the town |
+| A lost answer or a timeout misled the resident | Low | A lost answer or a sign-out triggers a session re-check; 502 says "couldn't delete right now"; client test |
+| `GET` answers with the flag off | Low | Kept on purpose: a 404 would log a failed request each time Account opens. It reveals only that deletion is off. Documented |
+| Stale inventory row and line references | Low | Fixed |
+| Focus fell to the page; the redirect after 1.5 s could cut off the announcement | Low | Focus goes to the status line, the field or the note. Continue button, then leaves after 10 s |
+| A banned resident can delete and return under a new WorkOS id | Decision | Added to Decision 2 |
+| Stale attempts count toward the limit | Note | Documented |
+| No test for the desktop exchange's sign-in time | Test | Added for both stores; red without it |
+
+| Check | Result |
+| --- | --- |
+| `pnpm run test:server` with `REDIS_URL` (isolated 6421), before review fixes | 1235/1235, 0 skipped |
+| `pnpm test` (preview unit), before review fixes | 4108/4109, 1 skip that predates this change |
+| `pnpm run test:server` with `REDIS_URL`, after review fixes | 1236/1236, 0 skipped |
+| `pnpm test` (preview unit), after review fixes | 4109/4110, the same 1 skip |
+
+Erasure's recorded second pass (2026-10-26, `9dfe0497` and the fix after it). With
+increment A's pending record and sweep, deletion runs the erasure once; the sweep runs it
+again and retries a failure. An independent review found:
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| A Vercel preview could turn deletion on, but Vercel calls the cron only on production, so no second run or retry would happen | Medium | On Vercel the flag also needs `VERCEL_ENV=production`, else `account_deletion_off` with `cron_not_scheduled`. Helper and hosted-backend tests; red without the clause |
+| Nothing tested that the second pass is wired | Medium | The town test asserts the request waits for its second pass; new tests capture the 30 s sweep timer in the town and the hosted backend, and none on Vercel. Red with no town timer, no town record, no Redis timer, and a Redis timer on Vercel |
+| The docs claimed a hosted-backend test of the Vercel rule that didn't exist | Low | Added (no `CRON_SECRET`, preview, production) |
+| "A minute later", and step 4 said WorkOS always sends `user.deleted` | Low | Wording fixed; the 404 case without a recorded request is named as the one gap |
+| The town keeps its records in memory | Low | Documented: a restart skips the second run, and a failed run's retry unless a webhook covers it |
+
+The reviewer's second pass found no regressions; its two notes are the town wording
+above and the webhook gap below.
+
+| Check | Result |
+| --- | --- |
+| Deletion, erasure, town deletion and webhook files with `REDIS_URL` | 76/77, then 1/1: the Redis erasure test (`account-erasure.test.js`, unchanged here) timed out at 10 s at load 68 and passed alone |
+
 ## Gaps and decisions
 
 - The lantern walk's record round keeps lamplighter display names with no account
@@ -230,6 +324,18 @@ test (added, red with the raw time).
   that cannot load) reruns every 30 s on each, logging each time. Erasure is
   idempotent, so this costs load and log volume, not correctness. Adding a per-record
   lease and an attempt count is the follow-up.
+- A Vercel preview with `WORKOS_WEBHOOK_SECRET` and `CRON_SECRET` would record webhook
+  erasures that no cron sweeps (Vercel calls it only on production), keeping their
+  account ids, with no warning; `account_erasure_sweep_unscheduled` covers only a
+  missing `CRON_SECRET`. It matters only if WorkOS delivers to a preview. Follow-up on
+  increment A: warn when not production too, and say so in the inventory. In-app
+  deletion stays off on previews.
+- The standalone town keeps erasure records in memory, while some of its stores are on
+  disk. Example from river-oaks-e9's re-review of A: an `invite-redeem` let in before
+  the deletion lands after the first run, and the town restarts inside the 60 to 90 s
+  before the second run; the name and email stay in `WAITLIST_FILE`. Documented in
+  `town.js` and the inventory; the follow-up is a file-backed record beside
+  `BLOCKS_FILE`.
 - Bans, the moderation audit and the Redis security audit are kept (Decision 3).
   Deleting an account and signing up again gets a new WorkOS id and so evades a
   ban; a hashed tombstone is a Decision for Val, not implemented.
@@ -245,3 +351,7 @@ Increment B is draft PR #665: its lander review and two follow-up reviews are fi
 A's head is merged in. `pnpm run test:server` with Redis and `pnpm run verify` when the
 load is under about 20, push, hosted CI, and hand back after #661. Then carry the new
 erasure API into C to E.
+
+Increment C is draft PR #666, stacked on #665: B's head is merged in. In-app deletion
+now runs the erasure once and relies on its recorded second pass; then verify, push and
+hosted CI. Then increment D (reports, support contact, App Review map).
