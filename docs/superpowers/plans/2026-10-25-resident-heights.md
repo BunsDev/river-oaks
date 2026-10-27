@@ -143,6 +143,16 @@ The cause was this branch's Heights stops. Each candidate was proven reachable b
 
 Every first candidate nearest the landing was reachable and clear all round. So stops are now chosen as open ground: clear at 0.6 m and 1.2 m all round, nearest the landing. `resident-locations.test.js` proves, with full routes, that the chosen bandstand, icehouse and hall stops reach the landing and back. A cold Heights world now takes about 0.3 s.
 
+## Main merged again (`52c43c7a`, Studewood, 2026-10-27)
+
+#670 at `01db203c` showed only CodeQL on GitHub: main had moved and the PR conflicted, so Verify had no merge ref to run on. Main `52c43c7a` brings Studewood (#662) and account erasure (#292).
+
+- **`server/redis-room.js`**: the one conflict. Studewood's recovery now runs first, and its result stands in for the Heights one when it applies. The Heights record and its `district_heights_checkpoint_migrated` log keep this branch's `movedResidents`.
+- **Studewood → Commons or Gardens**: chains Studewood → Heights and then this branch's Heights recovery, spreading its result. Residents on Heights ground are moved on that path too. Studewood's own log line (`district_studewood_checkpoint_migrated`) doesn't count them; I left #662's line as it is.
+- **Checks**:
+  - The 147 resident, Heights, Studewood, Redis-room and checkpoint-migration files: 1,042 passed, 0 failed, 133 skipped (Redis cases).
+  - Core verify on the merged tree: passed on the first attempt (03:47–03:51Z): agent 289/289; preview 4,228 passed, 1 skipped; server 977 passed, 251 skipped (Redis cases); desktop 127 passed, 5 skipped. Receipt `1060ec6405e37f87…`.
+
 ## Gaps
 
 - The reverse-search regression can only be shown on Heights: the Commons band (9,396 cells) never reaches the search limit. The test lands with the Heights rehearsal once #649 is on main.
@@ -151,7 +161,7 @@ Every first candidate nearest the landing was reachable and clear all round. So 
 
 ## Next step
 
-#649 is on main (`3df540ee`), merged into this branch with the Heights rollback wiring.
+Main `52c43c7a` (with #649 and #662) is merged into this branch, with the Heights rollback wiring.
 1. Wait for hosted checks on the merge.
 2. Run `verify full` with an isolated Redis.
 3. Mark the PR ready. Merging and landing are Val's.
