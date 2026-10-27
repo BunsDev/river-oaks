@@ -12,6 +12,9 @@ test('native portrait uses a dedicated 4K target and restores the preview after 
   const result=portraitPixels({renderer,scene:new Scene(),camera});
   assert.equal(result.width,3840);assert.equal(result.height,2160);assert.equal(result.pixels[0],23);
   assert.deepEqual(calls,[16/9,[3840,2160,4],[3840,2160,0],.8]);assert.equal(current,previous);assert.equal(camera.aspect,.8);assert.deepEqual(renderer.shadowMap,{enabled:false,type:1,autoUpdate:false,needsUpdate:false});
+  // A diagnostic capture can turn MSAA off; the resolve pass is unchanged.
+  calls.length=0;portraitPixels({renderer,scene:new Scene(),camera,samples:0});
+  assert.deepEqual(calls,[16/9,[3840,2160,0],[3840,2160,0],.8]);
 });
 test('failed capture restores target and camera, and weak contexts reject before allocation',()=>{
   const old={},camera={aspect:1,updateProjectionMatrix(){}};let current=old;

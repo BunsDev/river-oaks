@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { findCarriageParking, carriageContains, carriageFootprint } from '../src/carriage-parking.js';
+import { findCarriageParking, carriageContains, carriageFootprint, vehicleCanOccupy } from '../src/carriage-parking.js';
+import { stepCarriage } from '../src/carriage-motion.js';
+import { VEHICLES } from '../src/vehicle-config.js';
 import { createWalkingEnvironment } from '../src/walking.js';
 import { createPedestrianNetwork } from '../src/pedestrian-network.js';
 
@@ -20,6 +22,24 @@ test('no carriage can be summoned indoors, in flight or without clear road space
   for(const change of [{roomId:'shop'},{flying:true},{altitude:1}])assert.equal(findCarriageParking(world,{...pose,...change}),null);
   assert.equal(findCarriageParking({...world,roads:[]},pose),null);
   assert.equal(findCarriageParking({...world,buildings:[{center:[0,0,0],size:[60,15,10]}]},pose),null);
+});
+test('a road vehicle drives off the road wherever its whole footprint fits, as a walker could',()=>{
+  // The road's north edge is at 3.5 m; a building's south wall stands at 12 m.
+  const site={...world,buildings:[{center:[0,16,0],size:[24,8,10]}]};
+  const environment=createWalkingEnvironment(site),network=createPedestrianNetwork(site),front=VEHICLES.rolls.length/2;
+  const drive=(people=[])=>{
+    const state={vehicle:'rolls',position:[0,0,0],yaw:-Math.PI/2,pitch:0,roll:0,speed:0,distance:0,steering:0};
+    const env={groundAt:environment.groundAt,canOccupy:next=>vehicleCanOccupy(next,environment,site,people)};
+    for(let frame=0;frame<600;frame++)stepCarriage(state,env,{forward:1},1/60);
+    return state;
+  };
+  const open=drive(),north=-open.position[2];
+  assert.ok(north-front>3.5,`the whole car leaves the road (centre at ${north.toFixed(2)} m)`);
+  assert.ok(carriageFootprint(open).every(([x,z])=>!['road','crossing'].includes(network.classify([x,-z]))&&environment.isFree(x,z)));
+  assert.ok(north+front<12,'it stops at the wall, not through it');
+  const held=drive([{position:[0,7,0]}]);
+  assert.ok(-held.position[2]+front<7,'a person on the pavement stops it');
+  assert.equal(vehicleCanOccupy(open,{...environment,roomAt:()=>({storeId:'shop'})},site),false,'never indoors');
 });
 test('a parked carriage blocks walking and low flight but leaves the space above open',()=>{
   const placement={position:[0,0,0],yaw:Math.PI/2,pitch:0,roll:0};

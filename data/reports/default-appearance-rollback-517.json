@@ -1,0 +1,44 @@
+{
+  "createdAt": "2026-10-25T03:23:48.864Z",
+  "status": "passed",
+  "modes": [
+    "required"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "default-appearance-tiers",
+      "status": "passed",
+      "seconds": 15.598,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The owner account wears its default Jevica",
+          "A resident account wears the default Sable",
+          "With the trial rolled back, both defaults keep imported materials, own and remote",
+          "No runtime errors: "
+        ],
+        "measurements": {
+          "rollback": {
+            "jevicaSelf": {
+              "tier": "off"
+            },
+            "sableSelf": {
+              "tier": "off"
+            },
+            "jevicaOnAlice": {
+              "tier": "off"
+            },
+            "sableOnOwner": {
+              "tier": "off"
+            }
+          }
+        },
+        "scope": "Rolled-back build (DEFAULT_APPEARANCE_REALISM.enabled is false): real two-account flow on desktop Chromium; identities load and neither default takes realism at Sharpest or Smoothest."
+      }
+    }
+  ],
+  "browser": "chromium",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)"
+}
