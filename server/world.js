@@ -6,7 +6,7 @@ import { officesFor } from '../preview/src/office-contract.js';
 import { createHash } from 'node:crypto';
 import { createInteractions } from './interactions.js';
 import { COMMUNITY_SCENARIOS, createCommunity, interactWithLocal, stepCommunity } from '../preview/src/community.js';
-import { createResidentLife, stepResidentLife } from '../preview/src/resident-life.js';
+import { REACTION_RULES, alarmResidents, createResidentLife, stepResidentLife, validReaction } from '../preview/src/resident-life.js';
 import { createWalkingEnvironment, createWalkingState, fastWalkFor } from '../preview/src/walking.js';
 import { FLIGHT_SPEED } from '../preview/src/flight.js';
 import { grantWish, undoWish, stepWishes, wishFor, refreshWishTrouble } from '../preview/src/wishes.js';
@@ -216,7 +216,12 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // the same bounded grid and physical collision, across the full walking area.
   const policeWorldData={...worldData,site_ring:null};
   const policeNavigation=createResidentNavigation(policeWorldData,{allowRoads:true,placedObjects:colliders});
+  // Trouble residents may notice (#640 increment 3): police taking hold of someone, landed
+  // contacts, and wanted players at arm's length. Drained each step into the resident simulation.
+  const policeAlarms=[];let wantedScanAt=-Infinity;
+  const residentSight=(from,to)=>environment.hasSightLine([from[0],from[1],from[2]+1.2],[to[0],to[1],to[2]+1.2]);
   const police=createPolice({players,starsOf:crime.starsOf,changed:()=>revision++,navigation:policeNavigation,observe:crime.observe,evading:crime.evading,participating:crime.participating,
+    alarm:position=>{if(policeAlarms.length<64)policeAlarms.push({kind:'police',position});},
     posts:(CRIME_TARGETS[worldId]??[]).flatMap(target=>[4].map(offset=>{
       const east=target.position[0]+offset,north=target.position[1];
       return [east,north,environment.groundAt(east,-north)];
@@ -1259,6 +1264,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     worldPolicy.clock=advanceClock(worldPolicy.clock,duration);
     crime.step(time);
     police.step(time,duration);
+    if(life){
+      const alarms=[...crime.drainContacts().map(contact=>({kind:'contact',position:contact.position})),...policeAlarms.splice(0)];
+      if(time-wantedScanAt>=250){
+        wantedScanAt=time;
+        for(const player of players.values())if(crime.starsOf(player.id)>0 && !player.levelId && !player.sitting && !player.vehicle && player.altitude<=.1 && !offices.has(player.id))alarms.push({kind:'wanted',position:[...player.position]});
+      }
+      for(const alarm of alarms)alarmResidents(life,alarm,{sees:residentSight});
+    }
     elapsed+=duration;
     revision++;
   }
@@ -1270,7 +1283,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
-        life:local.life?{speed:local.life.speed,distance:local.life.distance,heading:local.life.heading,status:local.life.status,action:local.life.action,source:local.life.source,blocked:local.life.blocked,visitId:local.life.visitId??null,helping:copy(local.life.helping??null),seat:copy(local.life.seat??null)}:null,
+        life:local.life?{speed:local.life.speed,distance:local.life.distance,heading:local.life.heading,status:local.life.status,action:local.life.action,source:local.life.source,blocked:local.life.blocked,visitId:local.life.visitId??null,helping:copy(local.life.helping??null),seat:copy(local.life.seat??null),reaction:local.life.reaction?.kind??null}:null,
         wish:copy(local.wish??null),wishDisruption:local.wishDisruption??null,priority:local.priority,need:local.need,needKnown:local.needKnown,status:local.status,
         action:local.action,source:local.source,lastInteraction:local.lastInteraction,lastResult:copy(local.lastResult),anchorId:local.anchorId,anchorName:local.anchorName})),
     };
@@ -1510,6 +1523,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       for (const id of nextMovements.keys()) if (!nextAppearances.has(id)) nextMovements.delete(id);
       const nextFocus=restoreMap(recovered.focus,maxPlayers,hold=>record(hold) && textId(hold.localId) && Number.isFinite(hold.until));
       for (const [id,hold] of nextFocus) if (!nextPlayers.has(id) || !localById.has(hold.localId)) throw new Error('Invalid focus');
+      const restoredElapsed=Number.isFinite(recovered.life?.elapsed)?recovered.life.elapsed:0;
       for (let index=0;index<nextState.locals.length;index++) {
         const local=nextState.locals[index],identity=residentIdentities[index],motion=local?.life;
         if (!record(local) || !Object.keys(identity).every(key=>local[key]===identity[key]) || !point(local.position,3)
@@ -1519,6 +1533,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           || !Number.isFinite(motion.heading) || !(nonnegative(motion.waitUntil) || motion.waitUntil===Infinity)
           || !Array.isArray(motion.route) || motion.route.length>40000 || !motion.route.every(step=>point(step,2))
           || motion.route.length && !record(motion.destination))) throw new Error('Invalid resident route');
+        if (life && (!validReaction(motion.reaction) || motion.reactionCooldownUntil!==undefined && !nonnegative(motion.reactionCooldownUntil)
+          || (local.indoor || local.stationary) && (motion.reaction || motion.reactionCooldownUntil!==undefined))) throw new Error('Invalid resident reaction');
+        // Reaction timers left in the future by a stale or forged record come back to now, as crime and police timers do.
+        if (life && motion.reaction) motion.reaction.until=Math.min(motion.reaction.until,restoredElapsed+REACTION_RULES.fleeMs/1000);
+        if (life && motion.reactionCooldownUntil!==undefined) motion.reactionCooldownUntil=Math.min(motion.reactionCooldownUntil,restoredElapsed+REACTION_RULES.cooldownMs/1000);
         if (local.wish && (!wishFor(local.wish.kind) || !nextPlayers.has(local.wish.ownerId) || !nonnegative(local.wish.age)
           || !['gift','trouble','pleading'].includes(local.wish.phase) || typeof local.wish.message!=='string')) throw new Error('Invalid wish');
       }

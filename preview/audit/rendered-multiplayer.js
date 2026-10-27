@@ -113,7 +113,7 @@ function command(actor, message) {
 }
 async function converge(page, count) {
   await page.waitForFunction(count => {
-    const town = window.__riverMultiplayer?.(), remotes = town?.remotes ?? [];
+    const town = window.__riverMultiplayer?.(), remotes = (town?.remotes ?? []).filter(figure => figure.kind === 'player');
     return town?.connected && town.snapshot?.players.length === count && remotes.length === count - 1
       && remotes.every(player => player.ready) && document.querySelector('#canvas-host')?.dataset.playerReady === 'true';
   }, count, { timeout: 90000 });
@@ -242,7 +242,7 @@ try {
       const measuredSeconds = (performance.now() - measurementStart) / 1000;
       const drawCensus = await page.evaluate(() => window.__riverRenderAudit.drawCensus());
       const sample = await page.evaluate(() => ({ timing: window.__riverRenderAudit.stop(), transport: window.__auditTransport.stop(), graphics: window.__riverRenderAudit.graphics(),
-        onScreenPeers: window.__riverMultiplayer().remotes.filter(peer => peer.onScreen).length,
+        onScreenPeers: window.__riverMultiplayer().remotes.filter(peer => peer.kind === 'player' && peer.onScreen).length,
         labelViewport: (()=>{const r=document.querySelector('.remote-player-labels').getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};})(),
         labels: [...document.querySelectorAll('.remote-player-label')].filter(label => !label.hidden).map(label => { const r=label.getBoundingClientRect(); return {id:label.dataset.peerId,left:r.left,right:r.right,top:r.top,bottom:r.bottom}; }),
         peers: window.__riverMultiplayer().remotes, npcs: window.__riverMultiplayer().snapshot.locals.length, visibility: document.visibilityState }));
@@ -321,7 +321,7 @@ try {
     report.results.at(-1).departureConvergenceMs = Math.round(performance.now() - departureStart);
     await pause(3000);
     report.results.at(-1).resourceSettleMs = 3000;
-    report.results.at(-1).afterPeersLeave = await page.evaluate(() => ({ peers: window.__riverMultiplayer().remotes.length, graphics: window.__riverRenderAudit.graphics() }));
+    report.results.at(-1).afterPeersLeave = await page.evaluate(() => ({ peers: window.__riverMultiplayer().remotes.filter(peer => peer.kind === 'player').length, graphics: window.__riverRenderAudit.graphics() }));
     assert.equal(report.results.at(-1).afterPeersLeave.peers, 0);
     await page.screenshot({ path: `${root}/output/playwright/render-audit-${profile.name}-cleanup.png` });
     await context.close(); app.disconnectUser('viewer'); await flush();

@@ -36,6 +36,23 @@ class Element {
   append() {}
   remove() {}
 }
+test('a startled or cowering resident turns to face the trouble the town turned them toward (#640)',()=>{
+ const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+ try{const camera=new THREE.PerspectiveCamera(),actors=createRemotePlayers(new THREE.Scene(),new Element());
+  const figure={id:'resident:n1',name:'Neighbour',position:[0,0,0],altitude:0,yaw:0,appearance:'sable-human',gesture:null,movement:'upright'};
+  actors.sync([figure],null);
+  for(let t=0;t<=1000;t+=16)actors.update(t,camera);
+  assert.equal(actors.stats()[0].kind,'resident');assert.ok(Math.abs(actors.stats()[0].heading-Math.PI)<.01,'faces the way they stood');
+  actors.sync([{...figure,yaw:1,gesture:'startle'}],null);
+  for(let t=1016;t<=2000;t+=16)actors.update(t,camera);
+  assert.ok(Math.abs(actors.stats()[0].heading-(1+Math.PI))<.01,`faces the alarm: ${actors.stats()[0].heading}`);
+  actors.sync([{...figure,yaw:2,gesture:null}],null);
+  for(let t=2016;t<=4000;t+=16)actors.update(t,camera);
+  assert.ok(Math.abs(actors.stats()[0].heading-(1+Math.PI))<.01,'standing still afterwards keeps the last heading');
+  actors.dispose();
+ }finally{globalThis.document=previousDocument;}
+});
+
 test('a cinematic actor starts facing its authored travel direction before the first frame',()=>{
  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
  try{const actors=createRemotePlayers(new THREE.Scene(),new Element(),{snapInitialHeading:true});

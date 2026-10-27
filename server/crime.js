@@ -73,6 +73,9 @@ export function createCrime({ worldId, groundAt, now, changed, decide, reachable
   // Public: stars per account, actions in progress. Private: when the quiet period started,
   // cooldowns, receipts, participants' timers and evade windows.
   let wanted = new Map(), cooldowns = new Map(), receipts = new Map(), actions = new Map(), participants = new Map(), evades = new Map(), sequence = 0;
+  // Contacts since the town last asked (#640 increment 3): what nearby residents may notice.
+  // Process-local, never checkpointed: a restored town alarms nobody about a fight it slept through.
+  let contacts = [];
   const starsOf = userId => wanted.get(userId)?.stars ?? 0;
   // A contact the town has not resolved yet reads as contact, never done: the outcome follows.
   const phaseOf = (action, at) => action.outcome === null ? (at < action.contactAt ? 'windup' : 'contact') : action.outcome === 'cancelled' || at >= action.endsAt ? 'done'
@@ -102,6 +105,8 @@ export function createCrime({ worldId, groundAt, now, changed, decide, reachable
   };
   const resolve = (action, outcome, reason, at, effect = null) => {
     Object.assign(action, { outcome, reason, resolvedAt: Math.max(action.startedAt, at), effect });changed();
+    const actor = players.get(action.actorId) ?? rivals.get(action.actorId);
+    if (outcome !== 'cancelled' && actor && contacts.length < 64) contacts.push({ at, kind: action.kind, actorId: action.actorId, position: [...actor.position] });
   };
   // Participation: the minimal player health this PvE exchange needs, on the player record the
   // police capture already reads. It ends with full health; the field stays at 100.
@@ -411,6 +416,7 @@ export function createCrime({ worldId, groundAt, now, changed, decide, reachable
     evading(userId, at) { const entry = evades.get(userId); return Boolean(entry && entry.at <= at && at <= entry.at + R.evadeMs); },
     // Only an active crime participant can be grabbed for refusing to surrender (#640).
     participating: userId => participants.has(userId),
+    drainContacts() { const list = contacts;contacts = [];return list; },
     arrest(userId) { endParticipation(userId, now(), 'arrested');if (wanted.delete(userId)) changed(); } };
 }
 

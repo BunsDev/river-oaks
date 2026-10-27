@@ -7,6 +7,10 @@ import { TERRACES_REVISION } from '../../shared/bayou-terraces-layout.js';
 import { WOODLAND_REVISION } from '../../shared/woodland-heights-layout.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
+import { residentFigures } from './resident-figures.js';
+// The resident ids drawn last snapshot (#640): resident-figures.js keeps the set stable at the cut.
+let drawnResidents = new Set();
+const residents = (locals, at) => { const figures = residentFigures(locals, at, drawnResidents); drawnResidents = new Set(figures.map(figure => figure.id.slice('resident:'.length))); return figures; };
 import { createCommonsStream } from './commons-stream.js';
 import './spatial-stream.css';
 import { createCharacterStudio } from './character-studio.js';
@@ -654,12 +658,12 @@ function startMultiplayer() {
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
-      // Authored rivals (#597) draw like players, from the town's crime state only.
-      remotePlayers.sync([...players.filter(p=>!p.office),...(players.length?[...rivalFigures(multiplayer?.snapshot?.crime),...policeFigures(multiplayer?.snapshot?.police)]:[])], selfId);
+      const self = players.find(player => player.id === selfId);
+      // Authored rivals (#597), officers (#598) and nearby outdoor residents (#640) draw like players, from the town's state only.
+      remotePlayers.sync([...players.filter(p=>!p.office),...(players.length?[...rivalFigures(multiplayer?.snapshot?.crime),...policeFigures(multiplayer?.snapshot?.police),...residents(multiplayer?.snapshot?.locals,self?.position)]:[])], selfId);
       officeUI?.sync(players,selfId);
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
-      const self = players.find(player => player.id === selfId);
       walking?.syncAuthoritativePose(self);
       if (self) cyclingBoard?.setName(self.name);
       playerAvatar?.setSharedIdentity(self);
