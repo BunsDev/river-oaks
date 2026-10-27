@@ -2,6 +2,10 @@
 
 This follow-up builds on PR #695 at `3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8`. Its second increment, shared-frame gap correction and paving repair are already incorporated. The independent triage is [recorded on #695](https://github.com/BunsDev/river-oaks/pull/695#issuecomment-6433393987); that older review's counts describe its older head.
 
+**Current integration status:** #695 subsequently advanced to facade increment `882a27d5` (legacy classes 292 → 204). The combined candidate preserves that work and additionally retains shader callbacks/cache keys on its depth-biased material clones; otherwise Three's `Material.clone()` loses authored metric UVs, cladding colour and joints. A failing compile-patch regression proves that loss and passes after the correction. The two extra same-material alcove underside classes are independently reproduced on pre-increment geometry and remain explicitly bounded in the district test.
+
+The updated-parent baseline scan was interrupted before producing a result. The last verified 9,255-occurrence baseline is retained, **without new exceptions**. It has not yet been reconciled with increment 3; some resolved upstream conflicts can remain permitted until that burn-down is completed. The 13 browser checks, 4,302 hosted unit passes and pixel measurements below describe source checkpoint `b86ccc01`, not completed validation of the combined candidate. Keep the PR draft until the combined spatial delta, normal depth journey and visual/performance acceptance are verified. [Integration receipt](integration.json) identifies the retained source and its focused checks.
+
 ## Focus and visibility
 
 | Candidate | Evidence and player relevance | Treatment |
@@ -46,6 +50,21 @@ The final shrink-only recording journey passed 13 checks, including all five sha
 
 The standard reproduction command is `pnpm run test:experience depth-layers`. Local execution used a temporary runner around the same journey and authenticated fixture to select the disclosed alternate Chromium, rewrite fixture/import URLs and capture the existing reception view. It did not change depth thresholds or assertions. `RIVER_OAKS_DEPTH_LAYERS_RECORD=1` compares before shrinking; migration was run only on the recorded unchanged geometry.
 
-`pnpm run verify` is blocked locally at tooling: 284/289 pass and five unchanged `project-prune-cancel` tests fail because native `ps -axo command=` reports `fatal library error, lookup self`. The isolated unchanged-tooling control reproduces all five. No safety guard was relaxed. Full preview and the remaining core profiles are running separately; their results must be reconciled before merge readiness.
+Final local results on the source published as `b86ccc01` are recorded in [verification.json](verification.json):
+
+| Check | Result |
+| --- | --- |
+| Focused depth/baseline/interior/city-kit tests | 36 pass, zero failures/skips |
+| Core | Blocked at tooling: 284 pass, five unchanged process-list tests fail |
+| Full preview | Incomplete: the existing 600-second profile timeout killed the run; no failed assertion was reported |
+| Server | 1,031 pass, zero failures, 283 optional skips |
+| Desktop | 127 pass, one unchanged `/proc` status test fails, four skips |
+| Build | Pass |
+| Python lint, format, tests and demo contract | Pass; 170 tests pass |
+| Security | Worktree and available shallow history pass; two history commits scanned, not the repository's full remote history |
+
+The five tooling failures report native `ps -axo command=` → `fatal library error, lookup self`; an isolated unchanged-tooling control reproduces all five. The isolated unchanged desktop control reproduces its missing `/proc/<own-pid>/status` (ENOENT): eight pass, one fails. No process, crash-watch, timing or movement guard was relaxed.
+
+Hosted [run 40550640018](https://github.com/BunsDev/river-oaks/actions/runs/40550640018) independently passes the **normal, non-recording depth journey** with locked Playwright/Chromium and Mesa under Xvfb ([job 122353098807](https://github.com/BunsDev/river-oaks/actions/runs/40550640018/job/122353098807)). The **full preview unit job passes 4,302 tests, zero failures and one skip** in 560.652 seconds; tooling passes 286 with three skips. Both Python verification jobs and the desktop test step also pass. The aggregate is not green: the terraces journey fails on an `alice footbridge` stall with a `movement_too_fast` refusal; [failure artifact 12754523241](https://github.com/BunsDev/river-oaks/actions/runs/40550640018/artifacts/12754523241) is retained. A single-job rerun was requested, but GitHub rejects it with 403 while the overall run remains active. Do not attribute this failure to the depth change, or dismiss it as unrelated, without a control/retry. Movement and collision source files are unchanged.
 
 The source changes do not alter global camera depth, clipping planes, material policy, authoritative movement or collision. This work remains a draft increment pending hosted checks and player-height approach/strafe/turn/back-away captures at fixed daylight/dusk settings on desktop and phone profiles. No merge, deployment or physical-device visual/performance acceptance is claimed.

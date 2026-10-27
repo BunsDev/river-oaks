@@ -1,0 +1,464 @@
+{
+  "testedSourceCommit": "b86ccc018b92440bb7b22ffa10a7cef8a23c5358",
+  "sourceHashes": "results.json#sourceSha256",
+  "focused": {
+    "command": "node --test preview/tests/depth-layer-audit.test.js preview/tests/depth-layer-baseline.test.js preview/tests/interior-depth-joins.test.js preview/tests/city-kit.test.js",
+    "passed": 36,
+    "failed": 0,
+    "skipped": 0
+  },
+  "localProfiles": {
+    "core": {
+      "schemaVersion": 1,
+      "profile": "core",
+      "startedAt": "2026-10-27T16:55:04.339Z",
+      "status": "failed",
+      "revision": "3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8",
+      "dirty": true,
+      "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+      "results": [
+        {
+          "id": "agent-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:agent"
+          ],
+          "status": "failed",
+          "exitCode": 1,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 35270
+        },
+        {
+          "id": "preview-tests",
+          "command": [
+            "pnpm",
+            "test"
+          ],
+          "status": "not_run"
+        },
+        {
+          "id": "server-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:server"
+          ],
+          "status": "not_run"
+        },
+        {
+          "id": "desktop-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:desktop"
+          ],
+          "status": "not_run"
+        },
+        {
+          "id": "build",
+          "command": [
+            "pnpm",
+            "run",
+            "build"
+          ],
+          "status": "not_run"
+        },
+        {
+          "id": "python-lint",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "ruff",
+            "check",
+            "."
+          ],
+          "status": "not_run"
+        },
+        {
+          "id": "python-format",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "ruff",
+            "format",
+            "--check",
+            "."
+          ],
+          "status": "not_run"
+        },
+        {
+          "id": "python-tests",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "pytest",
+            "-q"
+          ],
+          "status": "not_run"
+        },
+        {
+          "id": "demo",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "river-oaks",
+            "demo"
+          ],
+          "status": "not_run"
+        },
+        {
+          "id": "demo-verify",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "river-oaks",
+            "verify",
+            "--config",
+            "data/generated/demo/config.json",
+            "--raw",
+            "data/generated/demo",
+            "--world",
+            "data/generated/demo/world.json",
+            "--output",
+            "data/generated/demo/report.json"
+          ],
+          "status": "not_run"
+        },
+        {
+          "id": "secrets",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "python",
+            "scripts/check_secrets.py",
+            "--all"
+          ],
+          "status": "not_run"
+        }
+      ],
+      "finishedAt": "2026-10-27T16:55:39.637Z"
+    },
+    "preview": {
+      "schemaVersion": 1,
+      "profile": "preview",
+      "startedAt": "2026-10-27T17:19:48.168Z",
+      "status": "failed",
+      "revision": "3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8",
+      "dirty": true,
+      "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+      "results": [
+        {
+          "id": "preview-tests",
+          "command": [
+            "pnpm",
+            "test"
+          ],
+          "status": "failed",
+          "exitCode": null,
+          "expectedExit": 0,
+          "signal": "SIGKILL",
+          "error": "ETIMEDOUT",
+          "durationMs": 600062
+        }
+      ],
+      "finishedAt": "2026-10-27T17:29:48.261Z"
+    },
+    "server": {
+      "schemaVersion": 1,
+      "profile": "server",
+      "startedAt": "2026-10-27T17:29:50.906Z",
+      "status": "passed",
+      "revision": "3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8",
+      "dirty": true,
+      "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+      "results": [
+        {
+          "id": "server-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:server"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 211414
+        }
+      ],
+      "finishedAt": "2026-10-27T17:33:22.378Z"
+    },
+    "desktop": {
+      "schemaVersion": 1,
+      "profile": "desktop",
+      "startedAt": "2026-10-27T17:33:23.484Z",
+      "status": "failed",
+      "revision": "3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8",
+      "dirty": true,
+      "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+      "results": [
+        {
+          "id": "desktop-tests",
+          "command": [
+            "pnpm",
+            "run",
+            "test:desktop"
+          ],
+          "status": "failed",
+          "exitCode": 1,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 31953
+        }
+      ],
+      "finishedAt": "2026-10-27T17:33:55.473Z"
+    },
+    "build": {
+      "schemaVersion": 1,
+      "profile": "build",
+      "startedAt": "2026-10-27T17:33:56.332Z",
+      "status": "passed",
+      "revision": "3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8",
+      "dirty": true,
+      "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+      "results": [
+        {
+          "id": "build",
+          "command": [
+            "pnpm",
+            "run",
+            "build"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 5295
+        }
+      ],
+      "finishedAt": "2026-10-27T17:34:01.651Z"
+    },
+    "python": {
+      "schemaVersion": 1,
+      "profile": "python",
+      "startedAt": "2026-10-27T17:34:02.547Z",
+      "status": "passed",
+      "revision": "3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8",
+      "dirty": true,
+      "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+      "results": [
+        {
+          "id": "python-lint",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "ruff",
+            "check",
+            "."
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 112
+        },
+        {
+          "id": "python-format",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "ruff",
+            "format",
+            "--check",
+            "."
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 121
+        },
+        {
+          "id": "python-tests",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "pytest",
+            "-q"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 34519
+        },
+        {
+          "id": "demo",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "river-oaks",
+            "demo"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 736
+        },
+        {
+          "id": "demo-verify",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "river-oaks",
+            "verify",
+            "--config",
+            "data/generated/demo/config.json",
+            "--raw",
+            "data/generated/demo",
+            "--world",
+            "data/generated/demo/world.json",
+            "--output",
+            "data/generated/demo/report.json"
+          ],
+          "status": "passed",
+          "exitCode": 2,
+          "expectedExit": 2,
+          "signal": null,
+          "durationMs": 685
+        }
+      ],
+      "finishedAt": "2026-10-27T17:34:38.755Z"
+    },
+    "security": {
+      "schemaVersion": 1,
+      "profile": "security",
+      "startedAt": "2026-10-27T17:34:39.807Z",
+      "status": "passed",
+      "revision": "3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8",
+      "dirty": true,
+      "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+      "results": [
+        {
+          "id": "secrets",
+          "command": [
+            "uv",
+            "run",
+            "--locked",
+            "python",
+            "scripts/check_secrets.py",
+            "--all"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 13922
+        },
+        {
+          "id": "secret-history",
+          "command": [
+            "gitleaks",
+            "git",
+            "--log-opts=--all",
+            "--redact",
+            "--no-banner",
+            "--ignore-gitleaks-allow"
+          ],
+          "status": "passed",
+          "exitCode": 0,
+          "expectedExit": 0,
+          "signal": null,
+          "durationMs": 16032
+        }
+      ],
+      "finishedAt": "2026-10-27T17:35:09.809Z"
+    }
+  },
+  "counts": {
+    "tooling": {
+      "passed": 284,
+      "failed": 5
+    },
+    "server": {
+      "passed": 1031,
+      "failed": 0,
+      "skipped": 283
+    },
+    "desktop": {
+      "passed": 127,
+      "failed": 1,
+      "skipped": 4
+    },
+    "python": {
+      "passed": 170,
+      "failed": 0
+    }
+  },
+  "controls": {
+    "unchangedTooling": {
+      "passed": 3,
+      "failed": 5,
+      "reason": "ps -axo command= fails: fatal library error, lookup self"
+    },
+    "unchangedDesktopCoreDumpWatch": {
+      "passed": 8,
+      "failed": 1,
+      "reason": "own process /proc/<pid>/status is absent (ENOENT)"
+    }
+  },
+  "localHistoryScope": {
+    "shallow": true,
+    "secretHistoryCommitsScanned": 2
+  },
+  "hosted": {
+    "run": 40550640018,
+    "url": "https://github.com/BunsDev/river-oaks/actions/runs/40550640018",
+    "depth": {
+      "job": 122353098807,
+      "conclusion": "success",
+      "mode": "normal, non-recording",
+      "command": "xvfb-run -a pnpm run test:experience depth-layers",
+      "browser": "locked Playwright 1.64.1 Chromium, Linux Mesa software runner"
+    },
+    "toolingStep": "success",
+    "python311": "success",
+    "python313": "success",
+    "aggregate": "pending; not merge acceptance",
+    "terraces": {
+      "job": 122353098261,
+      "conclusion": "failure",
+      "error": "alice footbridge stalled; recorded movement_too_fast refusal",
+      "failureArtifact": 12754523241,
+      "rerun": "Attempt rejected with 403 while the overall workflow remains running; no assertion or movement guard changed"
+    },
+    "previewUnit": {
+      "job": 122353097857,
+      "conclusion": "success",
+      "passed": 4302,
+      "failed": 0,
+      "skipped": 1,
+      "durationMs": 560651.66846
+    },
+    "toolingCounts": {
+      "passed": 286,
+      "failed": 0,
+      "skipped": 3
+    },
+    "desktopStep": "success"
+  }
+}

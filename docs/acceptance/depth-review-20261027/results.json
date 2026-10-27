@@ -250,5 +250,7 @@
     "phone performance and quality",
     "continuous player-height approach/strafe/turn/back-away at fixed daylight and dusk",
     "hosted CI aggregate"
-  ]
+  ],
+  "testedSourceCommit": "b86ccc018b92440bb7b22ffa10a7cef8a23c5358",
+  "verification": "verification.json"
 }

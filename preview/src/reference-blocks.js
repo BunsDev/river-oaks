@@ -217,11 +217,12 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
     for (const h of transom ? [lo, lo + (hi - lo) * 0.7, hi] : [lo, hi]) box(f, frame, a, b, Math.max(lo, h - 0.045), Math.min(hi, h + 0.045), d, d + 0.08);
     box(f, frame, a - 0.04, b + 0.04, lo - 0.06, lo, d, face + 0.05);
   }
-  // A recessed balcony: sliding doors at the back, a louvred railing at the face.
+  // A recessed balcony: sliding doors at the back, a louvred railing at the face. The doors stand
+  // 8 cm off the mass wall behind them, past the 5.7 cm the depth buffer needs at 120 m.
   function loggia(f, a, b, lo, hi, face, frame = n.frame) {
-    sheet(f, m.shopGlass, a, b, lo, hi, 0.04);
-    for (const s of [a + 0.04, (a + b) / 2, b - 0.04]) box(f, frame, s - 0.04, s + 0.04, lo, hi, 0.04, 0.12);
-    box(f, frame, a, b, hi - 0.06, hi, 0.04, 0.12);
+    sheet(f, m.shopGlass, a, b, lo, hi, 0.08);
+    for (const s of [a + 0.04, (a + b) / 2, b - 0.04]) box(f, frame, s - 0.04, s + 0.04, lo, hi, 0.08, 0.16);
+    box(f, frame, a, b, hi - 0.06, hi, 0.08, 0.16);
     for (let j = 0; j < 4; j++) box(f, n.slats, a, b, lo + 0.14 + j * 0.25, lo + 0.25 + j * 0.25, face - 0.14, face - 0.05);
     for (const s of [a + 0.05, b - 0.05]) box(f, n.slats, s - 0.03, s + 0.03, lo, lo + 1.1, face - 0.16, face - 0.04);
   }
@@ -600,13 +601,14 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
       box(f, m.granite, p0, p1, 0, 0.5, -0.05, 0.49);
     });
     bays.forEach(([b0, b1]) => {
-      storefront(f, b0, b1, 5.0, { doors: doorS, mullion: m.bronze, pitch: 1.9, transom: 3.6, upper: m.shopGlass, d: 0.04, depth: 0.14 });
-      sheet(f, m.charcoal, b0, b1, 5.0, 6.5, 0.02);
+      // Glass and spandrel stand 8 cm off the mass behind them (see loggia).
+      storefront(f, b0, b1, 5.0, { doors: doorS, mullion: m.bronze, pitch: 1.9, transom: 3.6, upper: m.shopGlass, d: 0.08, depth: 0.14 });
+      sheet(f, m.charcoal, b0, b1, 5.0, 6.5, 0.08);
       for (let i = 0; i < 4; i++) box(f, m.teak, b0, b1, 5.55 + i * 0.23, 5.69 + i * 0.23, 0.14, 0.3);
-      sheet(f, m.shopGlass, b0, b1, 6.5, glassTop, 0.06);
+      sheet(f, m.shopGlass, b0, b1, 6.5, glassTop, 0.08);
       const columns = Math.max(2, Math.round((b1 - b0) / 2.4));
-      for (let i = 0; i <= columns; i++) { const s = b0 + (b1 - b0) * i / columns; box(f, m.bronze, Math.max(b0, s - 0.045), Math.min(b1, s + 0.045), 6.5, glassTop, 0.06, 0.2); }
-      for (const h of [6.5, (6.5 + glassTop) / 2, glassTop]) box(f, m.bronze, b0, b1, h - 0.045, h + 0.045, 0.06, 0.2);
+      for (let i = 0; i <= columns; i++) { const s = b0 + (b1 - b0) * i / columns; box(f, m.bronze, Math.max(b0, s - 0.045), Math.min(b1, s + 0.045), 6.5, glassTop, 0.08, 0.22); }
+      for (const h of [6.5, (6.5 + glassTop) / 2, glassTop]) box(f, m.bronze, b0, b1, h - 0.045, h + 0.045, 0.08, 0.22);
       box(f, n.equinoxStone, b0, b1, 6.4, 6.52, 0.0, 0.5);
       box(f, n.equinoxStone, b0, b1, glassTop, top, -0.05, 0.45);
     });
@@ -818,9 +820,9 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
     box(f, n.white, t0, t1, 4.85, 5.25, -0.05, 1.6);
     sheet(f, m.railGlass, t0, t1, 5.25, 6.3, 1.52);
     box(f, n.canopy, t0, t1, 6.28, 6.34, 1.46, 1.58);
-    sheet(f, m.shopGlass, a, b, 5.25, 9.3, 0.04);
-    for (let s = a; s <= b + 0.01; s += (b - a) / Math.max(1, Math.round((b - a) / 1.6))) box(f, n.canopy, s - 0.04, s + 0.04, 5.25, 9.3, 0.04, 0.14);
-    box(f, n.canopy, a, b, 7.25, 7.3, 0.04, 0.12);
+    sheet(f, m.shopGlass, a, b, 5.25, 9.3, 0.08);
+    for (let s = a; s <= b + 0.01; s += (b - a) / Math.max(1, Math.round((b - a) / 1.6))) box(f, n.canopy, s - 0.04, s + 0.04, 5.25, 9.3, 0.08, 0.18);
+    box(f, n.canopy, a, b, 7.25, 7.3, 0.08, 0.16);
     box(f, n.white, r0, r1, 9.3, DIOR_PODIUM + 0.4, -0.05, 3.6);
     box(f, n.soffit, r0, r1, 9.28, 9.3, 0.1, 3.58);
   }
