@@ -1,0 +1,289 @@
+{
+  "id": "heights-boulevard-south",
+  "title": "Bayou Heights: Heights Boulevard south",
+  "kit": "city-kit-1",
+  "seed": 1929,
+  "inspiration": "Patterns only, no copied buildings: a Houston Heights-style east bank across the bayou from Bayou Market, with a greenway trail along the water (Buffalo Bayou), a neighborhood green with a bandstand, an icehouse patio, and a boulevard with a walking esplanade (Heights Boulevard). All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    364,
+    -122.5,
+    422.5,
+    0
+  ],
+  "streets": [
+    {
+      "id": "boulevard-west",
+      "from": [
+        370.5,
+        -118
+      ],
+      "to": [
+        370.5,
+        -7
+      ],
+      "lane": 7,
+      "sidewalk": 3,
+      "trees": {
+        "offset": 4,
+        "spacing": 18
+      },
+      "lamps": {
+        "offset": 10,
+        "spacing": 30
+      }
+    },
+    {
+      "id": "esplanade",
+      "from": [
+        385,
+        -118
+      ],
+      "to": [
+        385,
+        -7
+      ],
+      "lane": 12,
+      "sidewalk": 3,
+      "trees": {
+        "offset": 8,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 14,
+        "spacing": 24
+      }
+    },
+    {
+      "id": "boulevard-east",
+      "from": [
+        399.5,
+        -118
+      ],
+      "to": [
+        399.5,
+        -7
+      ],
+      "lane": 7,
+      "sidewalk": 3,
+      "trees": {
+        "offset": 4,
+        "spacing": 18
+      },
+      "lamps": {
+        "offset": 10,
+        "spacing": 30
+      }
+    },
+    {
+      "id": "eighteenth-east-end",
+      "from": [
+        364,
+        -71
+      ],
+      "to": [
+        406,
+        -71
+      ],
+      "lane": 6,
+      "sidewalk": 3.5
+    }
+  ],
+  "plazas": [],
+  "blocks": [
+    {
+      "id": "frontage-south",
+      "style": "garden-court",
+      "rect": [
+        406,
+        -64.5,
+        420.5,
+        -7.5
+      ],
+      "front": "west",
+      "sides": [
+        "north",
+        "south"
+      ],
+      "depth": [
+        11,
+        14.5
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        5,
+        7
+      ],
+      "names": [
+        "Bayou Heights Post",
+        "Pelican Shoe Repair",
+        "Rain Lily Spa",
+        "Prairie Lantern Co."
+      ]
+    },
+    {
+      "id": "frontage-far-south",
+      "style": "garden-court",
+      "rect": [
+        406,
+        -118,
+        420.5,
+        -77.5
+      ],
+      "front": "west",
+      "sides": [
+        "north",
+        "south"
+      ],
+      "depth": [
+        11,
+        14.5
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        5,
+        7
+      ],
+      "names": [
+        "Sandbar Surf",
+        "Gulfwind Kites",
+        "Kingfisher Fly Shop"
+      ]
+    }
+  ],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "esplanade-bench-20",
+      "piece": "furniture/bench",
+      "at": [
+        380.2,
+        -20
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "esplanade-bench-e-20",
+      "piece": "furniture/bench",
+      "at": [
+        389.8,
+        -14
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "esplanade-bench-44",
+      "piece": "furniture/bench",
+      "at": [
+        380.2,
+        -44
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "esplanade-bench-e-44",
+      "piece": "furniture/bench",
+      "at": [
+        389.8,
+        -38
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "esplanade-bench-88",
+      "piece": "furniture/bench",
+      "at": [
+        380.2,
+        -88
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "esplanade-bench-e-88",
+      "piece": "furniture/bench",
+      "at": [
+        389.8,
+        -82
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "esplanade-bench-108",
+      "piece": "furniture/bench",
+      "at": [
+        380.2,
+        -108
+      ],
+      "yaw": 1.570796
+    },
+    {
+      "id": "esplanade-bench-e-108",
+      "piece": "furniture/bench",
+      "at": [
+        389.8,
+        -102
+      ],
+      "yaw": -1.570796
+    },
+    {
+      "id": "end-hedge-0",
+      "piece": "landscape/hedge",
+      "rect": [
+        364.4,
+        -118,
+        376.6,
+        -116.8
+      ]
+    },
+    {
+      "id": "end-hedge-1",
+      "piece": "landscape/hedge",
+      "rect": [
+        377,
+        -118,
+        393,
+        -116.8
+      ]
+    },
+    {
+      "id": "end-hedge-2",
+      "piece": "landscape/hedge",
+      "rect": [
+        393.4,
+        -118,
+        405.6,
+        -116.8
+      ]
+    }
+  ],
+  "context": [
+    {
+      "id": "esplanade-lawn-0",
+      "piece": "landscape/lawn",
+      "rect": [
+        383,
+        -60,
+        387,
+        -14
+      ]
+    },
+    {
+      "id": "esplanade-lawn-1",
+      "piece": "landscape/lawn",
+      "rect": [
+        383,
+        -112,
+        387,
+        -82
+      ]
+    }
+  ],
+  "overrides": {},
+  "additions": []
+}

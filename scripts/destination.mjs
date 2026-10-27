@@ -21,7 +21,10 @@ const readRecipe = path => JSON.parse(readFileSync(resolve(path), 'utf8'));
 const lockPath = path => resolve(path).replace(/\.json$/, '.lock.json');
 const recipePaths = () => readdirSync(recipesDir).filter(name => name.endsWith('.json') && !name.endsWith('.lock.json')).map(name => join(recipesDir, name));
 // Recipes with a hand-authored gateway outside their own walkable ground name it here.
-const ENTRIES = { 'bayou-market-commons': { entry: [0, 0], extraSurfaces: [{ id: 'east-garden-commons/promenade', rect: [-3, -3, 82, 3] }] } };
+const ENTRIES = { 'bayou-market-commons': { entry: [0, 0], extraSurfaces: [{ id: 'east-garden-commons/promenade', rect: [-3, -3, 82, 3] }] },
+  // Bayou Heights (shared/bayou-heights.js): the footbridge landing and Nineteenth Street are composed seams.
+  'bayou-greenway': { entry: [115.5, 0], extraSurfaces: [{ id: 'bayou-heights/footbridge-landing', rect: [150, -3, 154, 3] }] },
+  'yale-icehouse': { entry: [156.5, -62.5], extraSurfaces: [{ id: 'bayou-greenway/greenway/walk', rect: [152, -8, 161, 7.5] }, { id: 'bayou-greenway/nineteenth-west/walk', rect: [152, -7.5, 251, 7.5] }] } };
 
 export function report(plan) {
   const entry = ENTRIES[plan.id] ?? { entry: plan.surfaces[0] ? [(plan.surfaces[0].rect[0] + plan.surfaces[0].rect[2]) / 2, (plan.surfaces[0].rect[1] + plan.surfaces[0].rect[3]) / 2] : [0, 0] };

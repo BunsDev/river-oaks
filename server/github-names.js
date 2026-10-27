@@ -84,6 +84,7 @@ export function createMemoryGitHubNameStore() {
       if (!values.has(userId) && values.size >= 50_000) values.delete(values.keys().next().value);
       values.set(userId, value);
     },
+    async delete(userId) { values.delete(userId); },
   };
 }
 
@@ -94,5 +95,6 @@ export function createRedisGitHubNameStore({ redis, key }) {
       try { return raw ? JSON.parse(raw) : null; } catch { return null; }
     },
     async set(userId, value) { await redis.hset(key, userId, JSON.stringify(value)); },
+    async delete(userId) { await redis.hdel(key, userId); },
   };
 }

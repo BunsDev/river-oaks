@@ -37,6 +37,11 @@ export function createMemoryLandmarks({ now = Date.now, createId = () => `lm-${r
       items.splice(index, 1);
       return true;
     },
+    // Account erasure: every saved place in this world.
+    async eraseUser(userId) {
+      if (!validUser(userId)) throw new Error('Invalid account');
+      byUser.delete(userId);
+    },
   };
 }
 
@@ -81,5 +86,6 @@ export function createRedisLandmarks({ redis, prefix, now = Date.now, createId =
       if (typeof id !== 'string' || id.length > 80) return false;
       return await redis.eval(REMOVE, 1, keyOf(userId), id) === 1;
     },
+    async eraseUser(userId) { await redis.del(keyOf(userId)); },
   };
 }
