@@ -157,13 +157,15 @@ By source:
 
 ## Next step
 
-2. Increment 2, already measured in a scratch checkout (378 pairs to 318):
+Hosted checks on `86afad18` (the third merge): 26 of 26 passed, including the `depth`, `studewood` and `terraces` shards and the aggregate `preview`.
+
+1. Increment 2, already measured in a scratch checkout (378 pairs to 318):
    - building masses draw walls only (no cap 2 cm under each roof sheet);
    - finish batches are named after the materials they draw;
    - plain facade finishes (frames, bands, rails, louvres) are pulled forward over the cladding they sit on;
    - window sills and eaves soffits no longer share planes with walls and eaves.
-3. Val's spot at (−2907.952, −1401.081), ground 18.012, 2026-10-27: a long sliver triangle of corner paving crosses the asphalt there. The corner field in `sidewalks.js` is a fan about `corner.center`, which folds back across a corner whose outline is not star-shaped from that centre. Under investigation.
-4. Burn the list down builder by builder, largest visible pairs first, rerunning the journey in record mode after each.
+2. Burn the list down builder by builder, largest visible pairs first, rerunning the journey in record mode after each.
+3. If Val wants them: main's six curb-return tangents that miss their straight curb by 20–64 cm, at (−2790, −1431), (−2903, −1431), (−2770, −1177) and (−2780, −1431). Each is on a short segment whose far end is a mitred bend, and the return's arc starts at the square tangent. Val's triangle was a different fault (above): a junction wedge, not the corner fan.
 
 ## Decisions for Val
 
