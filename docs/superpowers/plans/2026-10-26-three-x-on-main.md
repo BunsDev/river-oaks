@@ -149,13 +149,49 @@ For each e9 landing:
 - 1 m: 2.4661×;
 - the 3× target is 139,433.25 m² at 0.5 m.
 
+### Round 3 (2026-10-27 03:00Z – 05:50Z): 3× reached on `main`
+
+| PR | Merge | Lander | Notes | Retirement |
+| --- | --- | --- | --- | --- |
+| #663 Bayou Terraces, 2.82× | `74f12d76` (03:39Z) | e9 | 71 prepared `ee6b677e`; Verify passed on `632fb1c` | `retirement-TnCG4W`; 18 files |
+| #665 player blocking | `f403dc33` (04:09Z) | e9 | Re-review land-ready (below). The first `gh pr ready` hit GitHub's secondary GraphQL limit; it was retried after the reset | `retirement-ZwqUlM`; 7 files |
+| #673 Woodland Heights, 3.05× | `a5857cf4` (04:56Z) | e9 | 71 prepared `fcfc6a98`. Verify attempt 1 failed in `preview checks` on two Redis epoch tests: "switches district only to a newer epoch", the known load-flaky one, and "fences Commons rollout and rollback by epoch". The single rerun passed. First-failure log: `scratchpad/ci673-preview-checks-attempt1.log` | `retirement-VIyqcn`; 48 files |
+| #666 in-app deletion (default-off flag) | `d70f4d87` (05:44Z) | e9 | Review land-ready (below); Verify passed on `22562d6` | waits for 0b's release |
+
+**3× reachable ground on `main` a5857cf4.** Measured with `node preview/audit/world-expansion-footprint.js --reachable`; receipt sha256 `255dea7d`.
+
+| Revision | 0.5 m | × Gardens | 1 m |
+| --- | --- | --- | --- |
+| `river-oaks-gardens-3` (baseline) | 46,477.75 m² | 1.000 | 46,549 m² |
+| `bayou-heights-1` | 93,508 | 2.0119 | 2.0173 |
+| `heights-studewood-1` | 114,323.75 | 2.4598 | 2.4661 |
+| `bayou-terraces-1` | 131,269.5 | 2.8244 | 2.8294 |
+| **`woodland-heights-1`** | **141,664.25** | **3.0480** | **3.0519** |
+
+The 3× target at 0.5 m is 139,433.25 m², and Woodland clears it by 2,231 m². This measures reachable ground in source. Players still get the default District until Val activates the new revision.
+
+**Re-reviews.** All were independent and read-only, run before landing.
+- **#665 at `1f507f2c`: land-ready.**
+  - Campus grants: 8 mutations go red, and a walk-out probe shows the guest put at the door, unseated, then refused by the suite.
+  - The join snapshot mutation goes red separately in each architecture.
+  - The LOW fixes: 23 of 23 mutations go red.
+  - New LOW: the hosted recheck was skipped on `request_timeout`. 0b reproduced it and fixed it in #666 (`4df91a44`), with no timing side channel.
+- **#666 at `bf835443`: land-ready.** No HIGH or MEDIUM findings.
+  - Authorization, CSRF, the rate limit, the flag on every path, WorkOS-first ordering, the erasure wiring and logging are sound.
+  - LOW: three test gaps, two of them contradicting the ledger's mutation claims; owner self-deletion; the overstated ten-minute rationale. 0b fixed all of them on #667's branch, red first, and corrected the ledger. Owner self-deletion is Decision 4 in `docs/account-deletion.md`.
+
+**3× acceptance pass** (`scratchpad/accept-run.sh`, adapted from 71's `rc-run.sh`). It runs on detached snapshots of final `main` a5857cf4 and pre-stack `main` 2d63637f, registered as `three-x-acceptance-snapshots-20261027`. Its own `caffeinate` and an isolated Redis started at 04:59Z.
+- Both rehearsals passed: Commons at 04:59:02–04:59:28Z and Heights at 04:59:28–04:59:42Z.
+- The 7 journeys are queued fifth for the shared browser lock.
+- Then the District ABBA: A is 2d63637f at `east-garden-commons-market-1`, B is a5857cf4 at `woodland-heights-1`, run A1 B1 B2 A2 under one held lock, each arm at load ≤12. After it, `baseline-compare.js` and `verify full`.
+
 ## Gaps
 
 | Item | Blocker | Owner | Next action |
 | --- | --- | --- | --- |
-| #663 → #673 | Each lands after the one before it | 71, then e9 | 71 merges main, runs core and releases; e9 lands on green hosted CI |
 | #670 | 3e is finishing the wiring patch, rehearsal and `verify full` | 3e | 3e marks it ready and releases it (comment 6431515014); e9 lands it |
-| #665 → #666 → #667 → #682 | 0b is merging up and verifying | 0b | Re-review each fixed head, then land in order |
+| #667 → #682 | 0b is merging up and verifying | 0b | Re-review each, then land in order |
+| `feat/account-deletion-292-20261024` | Waits for 0b's exact-head release | 0b | e9 archives and prunes |
 | 3× acceptance pass | Waits for the last district to land | e9 | The journeys and District ABBA on final `main` (needs load ≤12), then the #638 and #587 comments |
 
 ## Decisions for Val
@@ -163,9 +199,10 @@ For each e9 landing:
 1. **#661 erasure in production:** answered, "Land after fixes". It landed as `66756b19`.
 2. **#686:** answered, "Land it". It landed as `c6eba6a3`.
 3. **`CRON_SECRET` in Vercel production.** #661 is on `main`. Without the secret, the settle pass and retries never run on Vercel; a deletion still gets its first full pass. Set it, or confirm it's already set.
+4. **Owner and admin self-deletion (#666, Decision 4 in `docs/account-deletion.md`).** Deletion is off by default. If it's turned on, an owner or moderator account that deletes itself loses its role until a code or config change. 0b recommends refusing those ids.
 
 ## Next action
 
-- Land #663 when 71 releases it, then #673. Measure reachable ground on `main` after each.
-- Land #670 when 3e releases it, and #665 → #666 → #667 → #682 after their re-reviews.
-- After the last district lands: run the 3× acceptance pass and post one comment each on #638 and #587.
+- The 3× acceptance pass finishes. Post one evidence comment each on #638 and #587, with receipt hashes.
+- Land #667 → #682 after re-review, and #670 when 3e releases it.
+- Retire the deletion branch once 0b releases it. The acceptance snapshots need Val's `--cancel-stale` or stay as evidence.
