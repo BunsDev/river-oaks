@@ -11,6 +11,11 @@ export const IPIC_RUN_WALL = 2.72;
 // well is one volume from reception to the lounge, closed at the lounge's ceiling (Val, 2026-10-26). Only the
 // mural landing's side bays keep a lower ceiling.
 export const IPIC_CEILINGS = Object.freeze({ reception: 3.9, landingBays: 6.7, upper: 10.3, auditorium: 10.4 });
+// The lounge's hanging woven cocoons (ipic-interior.js): [a, d, centre over the street floor, size]. At size 1 a
+// cocoon is 1.15 m tall and 0.24 m in radius.
+export const IPIC_COCOONS = Object.freeze([[-4.5, 21.9, 8.8, 1.15], [-3.3, 22.8, 9.05, .9], [-5.3, 24.2, 9, .85], [-1.8, 21.5, 9.1, .8],
+  [-1.4, 24, 8.85, 1.05], [.6, 22.3, 9.05, .8]].map(Object.freeze));
+export const IPIC_COCOON = Object.freeze({ height: 1.15, radius: .24 });
 // The upper-lounge planter at a = -5.65 was moved 5 cm west (Val, 2026-10-15) to widen the passage to the
 // auditorium, which then ran between it and the sofa. The sofa now backs onto the west guardrail (2026-10-18).
 export const IPIC_PLANTERS = Object.freeze([[-4.8, 0, 1.6, 1.8], [5.7, 0, 1.6, 1.8], [-5.65, 6, 25.4, 1.5], [1, 6, 25.4, 1.5]]);
@@ -117,13 +122,24 @@ export function ipicFloor(d, a = 0) {
 // The underside of the lowest ceiling drawn over (d, a), over the street floor: reception's coffers (as far as the
 // far face of the well's header wall, so no camera stops inside it), the escalator well (and the landing's side
 // bays), the lounge's and the Tuck Room's beams, and the auditorium. The walking camera stays under it
-// (third-person.js). Hanging lamps and plants (the cocoons, the pothos strands) are not ceilings.
+// (third-person.js), and clear of the cocoons (ipicHeadroom). Hanging lamps and plants are not ceilings.
 export function ipicCeiling(d, a = 0) {
   const slab = y => y - .09;
   if (d < 6.2) return 3.6;
   if (d < 20) return d > 11.82 && d < 14.18 && Math.abs(a) > IPIC_RUN_WALL ? slab(IPIC_CEILINGS.landingBays) : slab(IPIC_CEILINGS.upper);
   if (d < IPIC_WING.d0) return 9.6;
   return slab(IPIC_CEILINGS.auditorium);
+}
+
+// How high the walking camera may rise over (d, a): under the ceiling, and under each cocoon within 0.35 m of its
+// shell. Kept under the ceilings only, a camera behind a visitor in the lounge rose into a cocoon, which then
+// filled the view (Val, 2026-10-26).
+export function ipicHeadroom(d, a = 0) {
+  let top = ipicCeiling(d, a);
+  for (const [ca, cd, y, size] of IPIC_COCOONS) {
+    if (Math.hypot(a - ca, d - cd) < IPIC_COCOON.radius * size + .35) top = Math.min(top, y - IPIC_COCOON.height * size / 2);
+  }
+  return top;
 }
 
 // Which way a seat faces in the room frame (a, d): +d at yaw 0, -a at yaw PI/2, as ipicSeatSites turns it.
@@ -133,7 +149,7 @@ export function configureIpicRoom(room) {
   room.interior = IPIC_INTERIOR;
   room.height = 10.4;
   room.floorAt = (east, north) => { const [a, d] = room.toLocal(east, north); return room.floor + ipicFloor(d, a); };
-  room.ceilingAt = (east, north) => { const [a, d] = room.toLocal(east, north); return room.floor + ipicCeiling(d, a); };
+  room.ceilingAt = (east, north) => { const [a, d] = room.toLocal(east, north); return room.floor + ipicHeadroom(d, a); };
   // The auditorium wing beyond the 13 m room; store-rooms.js addRoomParts makes containment and lookup see it.
   room.parts = [{ ...IPIC_WING }];
   room.fixtures = [];

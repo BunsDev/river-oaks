@@ -30,8 +30,8 @@ export function thirdPersonPose(state, environment) {
     const here = environment.roomAt?.(px, pz) ?? null, y = target[1] + boom[1] * t;
     if (!clear || (here?.storeId ?? null) !== room) break;
     if (y < environment.groundAt(px, pz) + 0.25) break;
-    // A room that draws its ceilings (IPIC's) keeps the camera under them. Otherwise, on the escalators and
-    // upstairs, the view was the top of a ceiling slab (Val, 2026-10-26).
+    // A room that draws its ceilings (IPIC's) keeps the camera under them and what hangs from them. Otherwise, on
+    // the escalators and upstairs, the view was the top of a ceiling slab or the inside of a lamp (Val, 2026-10-26).
     if (here?.ceilingAt && y > here.ceilingAt(px, -pz) - 0.3) break;
     fraction = t;
   }

@@ -210,6 +210,13 @@ The body sat correctly everywhere; the camera and the enclosure did not.
 
   `IPIC_CEILINGS` holds the drawn heights for both the plan and the meshes. Across a lane,
   the rails still collapse the boom, as before.
+
+  Under the lounge's ceiling, the camera hangs at the cocoons' height. The first branch
+  capture behind a visitor looking down the second run put the camera inside the cocoon at
+  (−1.4, 24), whose shell filled the view. So `room.ceilingAt` is `ipicHeadroom(d, a)`:
+  the ceiling, lowered within 0.35 m of a cocoon's shell to the cocoon's bottom. The camera
+  stops before a cocoon or passes under it, and never looks at the visitor through one.
+  `IPIC_COCOONS` gives the cocoons to both the plan and the meshes.
 - **A roof across the escalator.** The mural landing's ceiling ran across both lanes at
   6.7 m, 0.7 m above the lounge floor. Now the escalator well is one volume between the run
   walls, from reception to the lounge:

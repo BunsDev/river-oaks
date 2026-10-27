@@ -5,7 +5,7 @@ import { createIpicMaterials, districtSignLayout } from './ipic-materials.js';
 
 // Where the upper lounge's carpet meets the Tuck Room's boards, west of the bar stools (a = 3.4).
 const TUCK_ROOM_EDGE = 2.65;
-import { IPIC_BACK_BAR, IPIC_BAR, IPIC_CEILINGS, IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_RUN_WALL, IPIC_PLANTERS, IPIC_AUDITORIUM_RISERS, IPIC_AUDITORIUM_ROWS, IPIC_AUDITORIUM_SEAT_D, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D, IPIC_WING, RISER_RAMP, ipicFloor, ipicSeatForward } from './ipic-plan.js';
+import { IPIC_BACK_BAR, IPIC_BAR, IPIC_CEILINGS, IPIC_COCOON, IPIC_COCOONS, IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_RUN_WALL, IPIC_PLANTERS, IPIC_AUDITORIUM_RISERS, IPIC_AUDITORIUM_ROWS, IPIC_AUDITORIUM_SEAT_D, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D, IPIC_WING, RISER_RAMP, ipicFloor, ipicSeatForward } from './ipic-plan.js';
 import { dartboardPixel } from './dartboard-texture.js';
 
 // Editable metre-scale scene. Local +X=across frontage, -Z=into the venue,
@@ -79,9 +79,9 @@ export function buildIpicInterior(room, options = {}) {
     }
   }
   // An elongated woven cocoon (photo review P8, IMG_9758): a closed rattan shell ribbed by its weave, open
-  // at the bottom where the lamp shines through. Centred on y, it is 1.15 m tall at size 1.
+  // at the bottom where the lamp shines through. Centred on y; its size is IPIC_COCOON's, scaled.
   function cocoon(a, y, d, size = 1) {
-    const height = 1.15 * size, radius = .24 * size, at = t => radius * Math.sin(Math.PI * t) ** .75;
+    const height = IPIC_COCOON.height * size, radius = IPIC_COCOON.radius * size, at = t => radius * Math.sin(Math.PI * t) ** .75;
     const profile = scale => Array.from({ length: 19 }, (_, i) => { const t = .1 + .9 * i / 18; return new THREE.Vector2(at(t) * scale, (t - .5) * height); });
     box(m.rattan, a, y, d, 1, 1, 1, { shape: keep(new THREE.LatheGeometry(profile(1), 24)) });
     const ribs = profile(1.03);
@@ -242,7 +242,7 @@ export function buildIpicInterior(room, options = {}) {
   box(m.sunburst, sofaA, 6.4, 22.1, 1.5, .075, .9, { shape: cylinder });
   for (const a of [sofaA - .5, sofaA + .5]) rod(m.black, [a, 6, 22.1], [a, 6.38, 22.1], .025);
   tub(-4.75, 6, 23.2, .3); tub(-3.45, 6, 23.2, -.3);
-  for (const [a, d, y, size] of [[-4.5, 21.9, 8.8, 1.15], [-3.3, 22.8, 9.05, .9], [-5.3, 24.2, 9, .85], [-1.8, 21.5, 9.1, .8], [-1.4, 24, 8.85, 1.05], [.6, 22.3, 9.05, .8]]) cocoon(a, y, d, size);
+  for (const [a, d, y, size] of IPIC_COCOONS) cocoon(a, y, d, size);
   label(["I'm Busy for the rest of my Life.", "I'm Busy for the rest of my Life.", "I'm Busy for the rest of my Life."], room.aMin + .13, 8.4, 23.6, 3.8, 1.45, { yaw: Math.PI / 2, font: 'cursive', color: '#ccb68c', height: 512 });
   // Glass arrival guardrails stop at the two escalator openings.
   for (const a of [-4.5, 4.7]) {

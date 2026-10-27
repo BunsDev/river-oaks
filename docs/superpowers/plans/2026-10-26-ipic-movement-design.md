@@ -126,19 +126,62 @@ What the numbers and captures show:
   - 4178 pass, 1 skipped;
   - 915 pass, 225 skipped (Redis-gated);
   - 120 pass, 3 skipped.
-- **Browser:** the branch captures and `ipic-runner.mjs` are queued from a snapshot of
-  this working tree.
+- **Hosted checks on 85913401 (draft #692):** all 22 green, `preview` included.
+  - `preview shared (development)` first failed in `crime-shared` ("A timed evade (U) beats
+    the rival's telegraphed counter").
+  - Main's run 40420131202 (23:29Z) fails with the same message.
+  - That one job was rerun and passed.
+- **IPIC visit, `node preview/e2e/ipic-runner.mjs`** (Chromium 156, software rendering;
+  snapshot of 85913401, 00:09–00:12Z): passed, 11 of 11 checks, no errors. It walks up both
+  runs into the auditorium, takes a recliner, focuses the film, stands at 1280 and 390 px,
+  and walks back out to the street (`output/playwright/ipic/visit.json` in the snapshot).
+- **Branch captures** (snapshot of 85913401, 00:10–00:14Z), compared side by side with the
+  baseline:
+  - **Fixed.**
+    - Stops 03–06: the runs and the landing show Jevica on the escalator, with no ceiling
+      top in the frame.
+    - Stop 04: the landing was a blank slab and is now Jevica at the foot of the second run.
+    - Stops 07-1 and 08-1: the lounge and the Tuck Room were blank slabs.
+    - Stop 01: the bay under the sign is a timber wall, where the street showed through.
+    - Stop 09-1: the doorway looks along the cross aisle to the wing's end wall.
+  - **Unchanged:** 07-0 and 08-0.
+  - **Worse, then fixed: 07-lounge-2.** It looks back down the second run from the lounge.
+    On main the camera looked down past a cocoon that hid half of Jevica. Kept under the
+    ceiling, the camera sat inside the cocoon at (−1.4, 24), whose shell filled the view.
+    - The fix: `room.ceilingAt` is now `ipicHeadroom(d, a)`, the ceiling lowered within
+      0.35 m of a cocoon's shell to the cocoon's bottom. `IPIC_COCOONS` and `IPIC_COCOON`
+      are shared by the plan and the meshes.
+    - The new test "in the lounge the camera stays clear of the hanging cocoons…" covers
+      every free lounge point on a 0.6 × 0.5 m grid, at 8 yaws and 4 pitches.
+    - With `ceilingAt` on `ipicCeiling` alone, it fails: 143 poses come within 0.3 m of a
+      cocoon or look through one. With the fix, it passes.
+  - **Stop 10, the old foyer (4, 27.4),** can no longer be reached: it is back of house. The
+    capture tool stopped there, by design.
+- **After the cocoon fix:**
+  - focused, 153 of 153 (`.runtime/ipic/focused-2.log`);
+  - `ipic-review-data --check` current;
+  - `office-ipic-contract.test.js` 8 of 8;
+  - `pnpm run verify` (core) passed, 01:01–01:09Z at a 1-minute load of 14 (276 of 276;
+    4179 pass, 1 skipped; 915 pass, 225 Redis-gated skips; 120 pass, 3 skipped).
+  - An earlier run of the gate at 00:26Z, under a 5-minute load of 67, failed one tooling
+    test: "browser queue admission does not consume the command execution timeout". It
+    allows 300 ms for a spawned node to start. The same test passed 3 of 3 alone, and this
+    branch does not change `scripts/`. Its log is kept in
+    `.runtime/ipic/verify-cocoon-1-queue-admission-flake.log`.
 
 ## Gaps
 
 - The escalator treads are still static: the escalator is walked, not ridden.
 - The Blender review renders and receipts in `docs/ipic-review/` are not re-rendered.
   They show the earlier enclosure and wing.
-- Hanging cocoons in the lounge can still come between a low camera and the player.
-- Not run: Redis (`server/tests/ipic-routes.test.js`), the browser suite, WebKit, phones,
-  and human visual acceptance.
+- The browser captures show 85913401, before the cocoon fix. The fix is covered by the new
+  test, not yet by a browser capture.
+- The Tuck Room's trailing pothos ends 2.45 m over the floor. The camera may pass among
+  the strands' lower ends, but none of the captures showed this.
+- Not run: Redis (`server/tests/ipic-routes.test.js`), the full browser suite, WebKit,
+  phones, and human visual acceptance.
 
 ## Next
 
-Inspect the branch captures against the baseline, then add the result to the draft PR.
-Merging needs Val.
+Core verify on the cocoon fix, then push it to #692 and recapture the lounge. Merging
+needs Val.

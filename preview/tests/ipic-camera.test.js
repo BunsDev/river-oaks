@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { createWalkingEnvironment } from '../src/walking.js';
 import { buildIpicInterior } from '../src/ipic-interior.js';
-import { ipicCeiling, ipicFloor } from '../src/ipic-plan.js';
+import { IPIC_COCOON, IPIC_COCOONS, ipicCeiling, ipicFloor } from '../src/ipic-plan.js';
 import { thirdPersonPose } from '../src/third-person.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
@@ -66,6 +66,29 @@ test('looking up or down the escalators, the camera keeps the visitor in view at
     }
   }
   assert.deepEqual(hidden, []);
+});
+
+// Under the lounge's ceiling the camera hangs among the woven cocoons. On the first branch build it rose into the
+// one behind a visitor looking down the second run, and the shell filled the view.
+test('in the lounge the camera stays clear of the hanging cocoons and never looks at the visitor through one', () => {
+  const capsule = ([ca, cd, y, size], [a, d, h]) => {
+    const r = IPIC_COCOON.radius * size, bottom = y - IPIC_COCOON.height * size / 2, top = y + IPIC_COCOON.height * size / 2;
+    return Math.hypot(Math.max(0, Math.hypot(a - ca, d - cd) - r), h < bottom ? bottom - h : h > top ? h - top : 0);
+  };
+  const wrong = [];
+  for (let a = -6; a <= 2.4; a += .6) for (let d = 20.4; d <= 25.4; d += .5) {
+    const [east, north] = room.toWorld(a, d), x = east, z = -north;
+    if (!environment.isFree(x, z)) continue;
+    const eye = environment.groundAt(x, z) + 1.68;
+    for (let k = 0; k < 8; k++) for (const pitch of [-.6, -.3, 0, .5]) {
+      const { position } = thirdPersonPose({ position: [x, eye, z], yaw: k * Math.PI / 4, pitch }, environment);
+      const camera = [...local(position), position[1] - room.floor], visitor = [a, d, eye - room.floor];
+      const near = Math.min(...IPIC_COCOONS.map(c => capsule(c, camera)));
+      const through = IPIC_COCOONS.some(c => Array.from({ length: 41 }, (_, i) => camera.map((v, j) => v + (visitor[j] - v) * i / 40)).some(p => capsule(c, p) === 0));
+      if (near < .3 - 1e-9 || through) wrong.push(`(${a.toFixed(1)}, ${d.toFixed(1)}) yaw ${k} pitch ${pitch}: ${through ? 'through a cocoon' : `${near.toFixed(2)} m from a cocoon`}`);
+    }
+  }
+  assert.deepEqual(wrong.slice(0, 6), [], `${wrong.length} lounge camera poses`);
 });
 
 test.after(() => group.userData.dispose());
