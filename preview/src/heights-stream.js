@@ -3,18 +3,22 @@ import manifest from '../public/data/world-manifest.json' with { type: 'json' };
 import { locationWorldBounds } from './world-manifest.js';
 import { validateHeightsRegistration } from './bayou-heights-world.js';
 import { commonsBaseLayout } from '../../shared/bayou-heights.js';
+import { heightsBaseLayout } from '../../shared/studewood.js';
+import { validateStudewoodRegistration } from './studewood-world.js';
 import { createSpatialChunkStream } from './spatial-chunk-stream.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
+import { cityKitLandscape } from './city-kit/render.js';
 
-// Loaded only for bayou-heights-1 (main.js), with the composition it needs.
+// Loaded only for bayou-heights-1 and heights-studewood-1 (main.js), with the composition they need.
 export { attachBayouHeights } from './bayou-heights-world.js';
+export { attachStudewood } from './studewood-world.js';
 
 /**
  * The Commons as Heights presents it: the restored Commons layout, bayou opened for the
  * footbridge. Its planted beds draw within 60 m, as Heights' own do (HEIGHTS_PLANTING_METRES):
  * seen across the bayou, the Commons' beds at every distance are about a million triangles.
  */
-export const heightsCommonsLayout = layout => ({ ...commonsBaseLayout(layout), destination: layout.destination,
+export const heightsCommonsLayout = layout => ({ ...commonsBaseLayout(layout.studewood ? heightsBaseLayout(layout) : layout), destination: layout.destination,
   plantingMetres: KIT_CONVENTIONS.lod.treeMetres[1] });
 
 // A camera within this distance of a Heights neighborhood that can see it streams it in:
@@ -37,7 +41,12 @@ export const HEIGHTS_MAX_BYTES = 16 * MiB;
 export const HEIGHTS_CHUNK_BYTES = {
   'bayou-heights': 6.5 * MiB, 'bayou-greenway': 3 * MiB, 'yale-icehouse': 3.3 * MiB, 'nineteenth-and-yale': 3.45 * MiB,
   'yale-street-north': 3.35 * MiB, 'yale-street-south': 2.05 * MiB, 'heights-boulevard-north': 2.95 * MiB, 'heights-boulevard-south': 2.05 * MiB,
+  // Studewood (heights-studewood-1) in the luxury kit, measured headless at 2.84 and 2.43 MiB.
+  'studewood-north': 3 * MiB, 'studewood-south': 2.6 * MiB,
 };
+// Each neighborhood composed after Heights' own adds its street trees and planted beds to the
+// shared part. Allowances per placement err high, so the shared estimate grows with them.
+export const HEIGHTS_SHARED_PLACEMENT_BYTES = { tree: 4 * 1024, planter: 10 * 1024 };
 const outside = ([w, s, e, n], [x, y]) => Math.hypot(Math.max(w - x, 0, x - e), Math.max(s - y, 0, y - n));
 
 function geometryBytes(group) {
@@ -58,12 +67,18 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
   loadModule = () => import('./bayou-heights.js') }) {
   const layout = validateHeightsRegistration(manifest, world.eastGardenCommons), { plans } = layout.heights;
   const location = manifest.locations.find(item => item.id === layout.heights.id);
-  const bounds = locationWorldBounds(location), [west, south, east, north] = bounds;
+  // Studewood (heights-studewood-1) streams as two more Heights neighborhoods, east to its own edge.
+  if (layout.studewood) validateStudewoodRegistration(manifest, layout);
+  const own = locationWorldBounds(location), bounds = layout.studewood ? [own[0], own[1], layout.studewood.bounds[2], own[3]] : own, [west, south, east, north] = bounds;
   const entry = [west + 1, location.entries.find(item => item.id === 'market-footbridge').position_m[1]];
   // The location's id sorts before its neighborhoods', so at equal distance the shared part is kept first.
   const SHARED = location.id, idOf = plan => `${location.id}/${plan.id}`;
   const planAt = point => plans.reduce((best, plan) => outside(plan.site, point) < outside(best.site, point) ? plan : best);
-  const chunks = [{ id: SHARED, bounds, estimatedBytes: HEIGHTS_CHUNK_BYTES[SHARED] },
+  const sharedBytes = plans.slice(layout.studewood?.planStart ?? plans.length).reduce((bytes, plan) => {
+    const { trees, planters } = cityKitLandscape(plan, { groundAt: () => layout.ground, ground: layout.ground });
+    return bytes + trees.length * HEIGHTS_SHARED_PLACEMENT_BYTES.tree + planters.length * HEIGHTS_SHARED_PLACEMENT_BYTES.planter;
+  }, HEIGHTS_CHUNK_BYTES[SHARED]);
+  const chunks = [{ id: SHARED, bounds, estimatedBytes: sharedBytes },
     ...plans.map(plan => ({ id: idOf(plan), plan, bounds: plan.site, estimatedBytes: HEIGHTS_CHUNK_BYTES[plan.id] ?? 3 * MiB }))];
   const boxes = plans.map(plan => { const [w, s, e, n] = plan.site; return [plan, new Box3(new Vector3(w, layout.ground - 4, -n), new Vector3(e, layout.ground + 30, -s))]; });
   const frustum = new Frustum(), viewMatrix = new Matrix4(), forward = new Vector3(), measured = {}, seen = new Map();
