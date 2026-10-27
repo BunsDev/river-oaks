@@ -896,9 +896,32 @@ Landing order: #654, #659, #656, #655, then #649 after round 6. Each decision is
   - **#662:** GitHub retargeted it to main. Signed merge of main `36382dfe`; tests 17/17; recipe locks clean; core passed in one run. Released to river-oaks-e9, who claimed it and is landing it.
   - **#663:** signed merge of #662's head, `adb2baa2`; tests 48/48; core passed in one run. Pushed; released to e9 once #662 merges.
   - **#673:** signed merge of #663's head, `e0b2d293`; tests 60/60; core passed in one run. Pushed; released once #663 merges.
-- **`crime-shared` comparison so far:** old-1, under 6× CPU throttling, **failed "A timed evade (U) beats the rival's telegraphed counter"**, which reproduces the hosted flake locally. The new-timing runs are queued for the browser lock.
-- **`crime-shared` timed evade** (task `crime-evade-timing-20261027`, uncommitted). Snapshots arrive every 200 ms, so the U press keyed off a possibly stale `remainingMs`. The journey now notes contact time by the page's clock as soon as the counter appears, and presses 230 ms before it.
-  - An old-against-new comparison under 6× CPU throttling (scratch `crime-old` and `crime-new`) is queued for the browser lock.
+- **#696, `crime-shared` evade timing** (task `crime-evade-timing-20261027`).
+  - **Measured on scratch copies, visitor CPU-throttled through CDP:**
+    - 6×: both old and new fail; the page sees the counter too late for any timing.
+    - 3×: the old timing passed 4 of 6. The new one (230 ms lead) passed 6 of 6, every time on the first attempt, with the evade sent 157–208 ms before contact.
+  - **Hosted:** that 230 ms version (`2f430afe`) **failed the check on hosted**.
+  - **Independent review:** no HIGH. Its MEDIUM: the error only runs one way, so the lead should sit near the window's early edge.
+  - **The 340 ms lead (`4d7cbd6e`):**
+    - 3/3 at 3×, sent 273–294 ms before contact;
+    - **`crime-shared` passed on hosted** in 36 s; the 230 ms run took 2 min and failed.
+  - **That hosted run's two other failures, neither touched by this change; failed jobs rerunning:**
+    - server `crime-transport.test.js` "redis: one hit is seen by every client once…": "alice: socket closed (4009) before its first snapshot". A reconnect and writer-replacement race in the test, for the crime owner. Log kept.
+    - `east-garden-commons` "owner home: stalled". The owner was still moving at 5.8 m/s when the 120 s per-waypoint deadline expired, 15 m from a waypoint whose approach passes an obstacle at 0.05 m. It's the same corner class #676 fixed for world-streaming. **Follow-up:** route this journey through `clearRouter()` too.
+- **#673:** released to river-oaks-e9 at `fcfc6a98` (signed merge of main `74f12d76`; tests 60/60; core passed in one run).
+- **The district stack is on main. 3× reachable ground (Woodland A′ measured 3.0480× at 0.5 m on its branch):**
+  - #649 Bayou Heights `3df540ee` (river-oaks-91, 01:20Z);
+  - #662 Studewood `9ee35b4c` (e9, 02:50Z);
+  - #663 Bayou Terraces `74f12d76` (e9, 03:39Z);
+  - #673 Woodland Heights `a5857cf4` (e9, 04:56Z; `preview checks` passed on rerun).
+
+  Each step: this task merged main and ran core, and e9 landed it on Val's gate. e9 retires the district worktrees after archiving them, then runs the 3× acceptance pass on final main (journeys, the District ABBA and reachable-ground measurement) and posts on #638 and #587.
+- **Main red after the stack: #698, Redis room lease** (task `redis-refused-lease-20261027`).
+  - **Symptom:** hosted `preview checks` failed intermittently from a5857cf4 on (#673 attempt 1, both #696 attempts, d70f4d87). The failure rotated across Redis district-epoch tests: gardens migration :250, Studewood :163, Heights :166. Each time, the join right after a refused join returned `request_timeout`.
+  - **Cause:** `runTick` takes the lease, refuses the stored state ("Invalid durable town district/region/checkpoint/..."), and never releases it. The next room waited the 5 s lease out (5,507 ms measured locally), and the longer recovery chain pushed it past `REQUEST_MS` (7 s) on hosted runners. A refuser that keeps ticking renews the lease indefinitely. 32 parallel local runs at load 6–7 did not reproduce the timeout, but the timing gap was measured directly.
+  - **Fix (`fae70fe6`):** `tick()` runs the token-checked `RELEASE` on an "Invalid durable" refusal. A new regression test fails on the old code, and the existing epoch test now asserts the release after each refusal. Focused Redis files 20/20; full server suite with Redis 1,339/1,339; core passed in one run (twice).
+  - **Independent review:** nothing HIGH or MEDIUM. On base it measured `request_timeout` while the refuser keeps ticking, and 9 of 10 commands timing out under a higher-generation refuser; with the fix, 10 of 10. LOW notes addressed.
+  - PR #698 open; landing through `land-wait-checks.mjs`. #696 lands after it.
 - **`office-computer-embed` account-switch race:** river-oaks-e9's journey-only fix. Whether access-entry should reload at all stays a product question.
 - **garden-campus-traversal "phone back on the street":** one hosted failure (#675 attempt 1). Its artifact doesn't show the phone's state, so a fix would be a guess. **Proposal for the journey's owner:** make `onLevel`'s failure message include the server's `levelId` and position.
 - **Hosted `playwright install --with-deps` mirror stalls** (proposal for Val, not a change). Tonight the step took 9–10.7 min, against 6 s normally, on #649, #676 and #655's runs. That pushed `preview checks`, `preview experience (commons)` and `worlds-and-creator` past their 20 min job limit. Options:
