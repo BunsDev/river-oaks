@@ -5,14 +5,15 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 export const CHARACTER_PORTRAIT_SIZE=Object.freeze({width:3840,height:2160});
 // Render directly at the export resolution, independently of the preview's
 // CSS size, pixel ratio or adaptive quality. Never upscale a viewport capture.
-export function portraitPixels({renderer,scene,camera}){
+// `samples` is the MSAA sample count; diagnostics pass 0 to see unresolved edges.
+export function portraitPixels({renderer,scene,camera,samples=4}){
   const {width,height}=CHARACTER_PORTRAIT_SIZE,gl=renderer.getContext();
   if(gl.isContextLost()||Math.min(renderer.capabilities.maxTextureSize,gl.getParameter(gl.MAX_RENDERBUFFER_SIZE))<width)
     throw new Error('Native 4K capture is unavailable on this graphics device.');
   const previous=renderer.getRenderTarget(),aspect=camera.aspect;
   const shadows={enabled:renderer.shadowMap.enabled,type:renderer.shadowMap.type,autoUpdate:renderer.shadowMap.autoUpdate,needsUpdate:renderer.shadowMap.needsUpdate};
   const complete=()=>{if(gl.isContextLost()||gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw new Error('Native 4K framebuffer is unavailable on this graphics device.');};
-  const linear=new WebGLRenderTarget(width,height,{samples:4,type:HalfFloatType});
+  const linear=new WebGLRenderTarget(width,height,{samples,type:HalfFloatType});
   const target=new WebGLRenderTarget(width,height,{depthBuffer:false}),output=new OutputPass();
   try{
     Object.assign(renderer.shadowMap,{enabled:true,type:PCFShadowMap,autoUpdate:true,needsUpdate:true});

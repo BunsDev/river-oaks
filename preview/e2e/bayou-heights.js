@@ -64,8 +64,10 @@ async page => {
       const deadline=Date.now()+120000;
       for(;;){
         const pose=await tab.evaluate(()=>window.__riverCarriage().pose),dx=target[0]-pose.position[0],dz=-target[1]-pose.position[2],distance=Math.hypot(dx,dz);
-        // Stay inside the planner's 0.3 m corner clearance before turning.
-        if(distance<.15){await releaseKeys();break;}
+        // Stay inside the planner's 0.3 m corner clearance before turning. Arrive only once
+        // stopped: a runner sampled mid-stride within the radius slides about a metre past it.
+        if(distance<.15){await releaseKeys();if(pose.speed<.05)break;
+          await tab.waitForFunction(()=>window.__riverCarriage().pose.speed<.05,null,{timeout:10000});continue;}
         if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose,refusals:await tab.evaluate(()=>window.__heightsRefusals)})}`);
         const heading=Math.atan2(-dx,-dz),difference=Math.atan2(Math.sin(heading-pose.yaw),Math.cos(heading-pose.yaw));
         if(Math.abs(difference)>.035){await releaseKeys();await turn(tab,difference);continue;}

@@ -12,6 +12,7 @@ import { studioDownloadAllowed } from './studio-download.js';
 import { deviceSignIn, exchangeDesktopSession } from './auth.js';
 import { APP_NAME, APP_USER_MODEL_ID } from './identity.js';
 import { runSquirrelEvent, squirrelEvent } from './squirrel.js';
+import { watchCoreDumps } from './core-dump-watch.js';
 
 // The Windows installer (Squirrel) starts the app to install, update or remove
 // its shortcuts and waits for it to exit. Handle that before anything else and
@@ -145,6 +146,13 @@ function createWindow() {
     const { response } = await dialog.showMessageBox(window, { type: 'error', message: 'The game stopped unexpectedly', detail: 'Reload the current app. Saved Studio drafts and game preferences are preserved; unsaved edits may be lost.', buttons: ['Reload game', 'Quit'], cancelId: 1 });
     if (response === 0) void loadGame(); else app.quit();
   });
+  // Linux: a crashed renderer that systemd-coredump is still reading would hold
+  // the recovery above for minutes; end it instead (core-dump-watch.js).
+  if (process.platform === 'linux') {
+    const stopCoreDumpWatch = watchCoreDumps({ pid: () => contents.isDestroyed() ? 0 : contents.getOSProcessId(),
+      onEnd: pid => console.error(`Game renderer ${pid} is writing a core dump; ending it so the game can recover`) });
+    contents.once('destroyed', stopCoreDumpWatch);
+  }
   window.on('unresponsive', async () => {
     const { response } = await dialog.showMessageBox(window, { type: 'warning', message: 'The game is taking longer than expected', buttons: ['Keep waiting', 'Reload game'], defaultId: 0, cancelId: 0 });
     if (response === 1 && !contents.isDestroyed()) contents.reload();
