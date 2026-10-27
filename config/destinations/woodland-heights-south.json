@@ -1,0 +1,785 @@
+{
+  "id": "woodland-heights-south",
+  "title": "Woodland Heights: Live Oak Lane south, Eighteenth Street and the Woodland lawn",
+  "kit": "city-kit-1",
+  "seed": 1936,
+  "inspiration": "Patterns only, no copied buildings: a Houston Heights-style residential neighborhood east of a working street, with one-storey bungalows behind front gardens, a small neighborhood green with a game table, and shops at the corners of the cross streets. All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    507.5,
+    -122.5,
+    552.5,
+    5
+  ],
+  "streets": [
+    {
+      "id": "live-oak-south",
+      "from": [
+        530,
+        -122
+      ],
+      "to": [
+        530,
+        -7
+      ],
+      "lane": 6,
+      "sidewalk": 4,
+      "trees": {
+        "offset": 4,
+        "spacing": 18
+      },
+      "lamps": {
+        "offset": 13,
+        "spacing": 36
+      }
+    },
+    {
+      "id": "eighteenth-woodland",
+      "from": [
+        507.5,
+        -71
+      ],
+      "to": [
+        552.5,
+        -71
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 4.5,
+        "spacing": 9
+      },
+      "lamps": {
+        "offset": 8.5,
+        "spacing": 30
+      }
+    }
+  ],
+  "plazas": [
+    {
+      "id": "south-gardens-east",
+      "rect": [
+        536,
+        -54.5,
+        544,
+        5
+      ],
+      "lawns": [
+        [
+          537.5,
+          -44.5,
+          542,
+          -41.25
+        ],
+        [
+          537.5,
+          -39.75,
+          542,
+          -36.5
+        ],
+        [
+          537.5,
+          -23.5,
+          542,
+          -20.25
+        ],
+        [
+          537.5,
+          -18.75,
+          542,
+          -15.5
+        ]
+      ]
+    },
+    {
+      "id": "south-gardens-west",
+      "rect": [
+        516.5,
+        -54.5,
+        524,
+        5
+      ],
+      "lawns": [
+        [
+          518,
+          -44.5,
+          522.5,
+          -41.25
+        ],
+        [
+          518,
+          -39.75,
+          522.5,
+          -36.5
+        ],
+        [
+          518,
+          -23.5,
+          522.5,
+          -20.25
+        ],
+        [
+          518,
+          -18.75,
+          522.5,
+          -15.5
+        ]
+      ]
+    },
+    {
+      "id": "side-garden-sw-0",
+      "rect": [
+        508,
+        -54.5,
+        517.5,
+        -45
+      ],
+      "lawns": [
+        [
+          508.6,
+          -53.9,
+          515.9,
+          -45.6
+        ]
+      ]
+    },
+    {
+      "id": "side-garden-se-0",
+      "rect": [
+        543,
+        -54.5,
+        552.5,
+        -45
+      ],
+      "lawns": [
+        [
+          544.6,
+          -53.9,
+          550.9,
+          -45.6
+        ]
+      ],
+      "hedges": [
+        [
+          551.3,
+          -54.5,
+          552.5,
+          -45
+        ]
+      ]
+    },
+    {
+      "id": "side-garden-sw-1",
+      "rect": [
+        508,
+        -36,
+        517.5,
+        -24
+      ],
+      "lawns": [
+        [
+          508.6,
+          -35.4,
+          515.9,
+          -24.6
+        ]
+      ]
+    },
+    {
+      "id": "side-garden-se-1",
+      "rect": [
+        543,
+        -36,
+        552.5,
+        -24
+      ],
+      "lawns": [
+        [
+          544.6,
+          -35.4,
+          550.9,
+          -24.6
+        ]
+      ],
+      "hedges": [
+        [
+          551.3,
+          -36,
+          552.5,
+          -24
+        ]
+      ]
+    },
+    {
+      "id": "side-garden-sw-2",
+      "rect": [
+        508,
+        -15,
+        517.5,
+        5
+      ],
+      "lawns": [
+        [
+          508.6,
+          -14.4,
+          515.9,
+          4.4
+        ]
+      ]
+    },
+    {
+      "id": "side-garden-se-2",
+      "rect": [
+        543,
+        -15,
+        552.5,
+        5
+      ],
+      "lawns": [
+        [
+          544.6,
+          -14.4,
+          550.9,
+          4.4
+        ]
+      ],
+      "hedges": [
+        [
+          551.3,
+          -15,
+          552.5,
+          5
+        ]
+      ]
+    },
+    {
+      "id": "woodland-lawn",
+      "rect": [
+        536,
+        -122,
+        552.5,
+        -76.5
+      ],
+      "lawns": [
+        [
+          539.5,
+          -116,
+          550.5,
+          -84
+        ]
+      ],
+      "hedges": [
+        [
+          551.3,
+          -122,
+          552.5,
+          -76.5
+        ]
+      ],
+      "treeRows": [
+        {
+          "y": -80.5,
+          "from": 541,
+          "to": 549,
+          "spacing": 8
+        }
+      ]
+    },
+    {
+      "id": "lawn-gardens-west",
+      "rect": [
+        516.5,
+        -122,
+        524,
+        -76.5
+      ],
+      "lawns": [
+        [
+          518,
+          -111.5,
+          522.5,
+          -108.25
+        ],
+        [
+          518,
+          -106.75,
+          522.5,
+          -103.5
+        ],
+        [
+          518,
+          -94.5,
+          522.5,
+          -91.25
+        ],
+        [
+          518,
+          -89.75,
+          522.5,
+          -86.5
+        ]
+      ]
+    },
+    {
+      "id": "side-garden-ssw-0",
+      "rect": [
+        508,
+        -122,
+        517.5,
+        -112
+      ],
+      "lawns": [
+        [
+          508.6,
+          -121.4,
+          515.9,
+          -112.6
+        ]
+      ]
+    },
+    {
+      "id": "side-garden-ssw-1",
+      "rect": [
+        508,
+        -103,
+        517.5,
+        -95
+      ],
+      "lawns": [
+        [
+          508.6,
+          -102.4,
+          515.9,
+          -95.6
+        ]
+      ]
+    },
+    {
+      "id": "side-garden-ssw-2",
+      "rect": [
+        508,
+        -86,
+        517.5,
+        -76.5
+      ],
+      "lawns": [
+        [
+          508.6,
+          -85.4,
+          515.9,
+          -77.1
+        ]
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "id": "eighteenth-corner-west",
+      "style": "market-row",
+      "rect": [
+        508,
+        -64.5,
+        523,
+        -54.5
+      ],
+      "front": "south",
+      "sides": [
+        "east"
+      ],
+      "depth": [
+        10,
+        10
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        4.5,
+        7.5
+      ],
+      "names": [
+        "Wren & Willow Gifts",
+        "Corner Lot Deli",
+        "Live Oak Laundry"
+      ]
+    },
+    {
+      "id": "eighteenth-corner-east",
+      "style": "heights-row",
+      "rect": [
+        537,
+        -64.5,
+        552.5,
+        -54.5
+      ],
+      "front": "south",
+      "sides": [
+        "west"
+      ],
+      "depth": [
+        10,
+        10
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        4.5,
+        7.5
+      ],
+      "names": [
+        "Garden Gate Nursery",
+        "Two Wheels Repair",
+        "Cicada Ice Cream"
+      ]
+    }
+  ],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "garden-tree-sw-0",
+      "piece": "landscape/street-tree",
+      "at": [
+        512.25,
+        -49.75
+      ],
+      "height": 9.5,
+      "radius": 3.6,
+      "yaw": 0.6
+    },
+    {
+      "id": "garden-tree-se-0",
+      "piece": "landscape/street-tree",
+      "at": [
+        547.75,
+        -49.75
+      ],
+      "height": 10.5,
+      "radius": 3.9,
+      "yaw": 2.1
+    },
+    {
+      "id": "garden-tree-sw-1",
+      "piece": "landscape/street-tree",
+      "at": [
+        512.25,
+        -30
+      ],
+      "height": 10.5,
+      "radius": 3.9,
+      "yaw": 2.1
+    },
+    {
+      "id": "garden-tree-se-1",
+      "piece": "landscape/street-tree",
+      "at": [
+        547.75,
+        -30
+      ],
+      "height": 8.8,
+      "radius": 3.4,
+      "yaw": 3.9
+    },
+    {
+      "id": "garden-tree-sw-2",
+      "piece": "landscape/street-tree",
+      "at": [
+        512.25,
+        -5
+      ],
+      "height": 8.8,
+      "radius": 3.4,
+      "yaw": 3.9
+    },
+    {
+      "id": "garden-tree-se-2",
+      "piece": "landscape/street-tree",
+      "at": [
+        547.75,
+        -5
+      ],
+      "height": 11.2,
+      "radius": 4.1,
+      "yaw": 5.2
+    },
+    {
+      "id": "garden-tree-ssw-0",
+      "piece": "landscape/street-tree",
+      "at": [
+        512.25,
+        -117
+      ],
+      "height": 8.8,
+      "radius": 3.4,
+      "yaw": 3.9
+    },
+    {
+      "id": "garden-tree-ssw-1",
+      "piece": "landscape/street-tree",
+      "at": [
+        512.25,
+        -99
+      ],
+      "height": 11.2,
+      "radius": 4.1,
+      "yaw": 5.2
+    },
+    {
+      "id": "garden-tree-ssw-2",
+      "piece": "landscape/street-tree",
+      "at": [
+        512.25,
+        -81.25
+      ],
+      "height": 9.5,
+      "radius": 3.6,
+      "yaw": 0.6
+    },
+    {
+      "id": "lawn-bench-541",
+      "piece": "furniture/bench",
+      "at": [
+        541,
+        -119.7
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "lawn-bench-545",
+      "piece": "furniture/bench",
+      "at": [
+        545,
+        -119.7
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "lawn-bench-549",
+      "piece": "furniture/bench",
+      "at": [
+        549,
+        -119.7
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "lawn-lamp-w112",
+      "piece": "furniture/lamp",
+      "at": [
+        538,
+        -112
+      ]
+    },
+    {
+      "id": "lawn-lamp-w88",
+      "piece": "furniture/lamp",
+      "at": [
+        538,
+        -88
+      ]
+    },
+    {
+      "id": "lawn-lamp-e100",
+      "piece": "furniture/lamp",
+      "at": [
+        550.5,
+        -100
+      ]
+    },
+    {
+      "id": "lawn-bike-rack",
+      "piece": "furniture/bike-rack",
+      "at": [
+        538,
+        -100
+      ],
+      "yaw": 1.5707963267948966
+    },
+    {
+      "id": "lawn-tree-0",
+      "piece": "landscape/street-tree",
+      "at": [
+        547.5,
+        -110
+      ],
+      "height": 8.8,
+      "radius": 3.4,
+      "yaw": 3.9
+    },
+    {
+      "id": "lawn-tree-1",
+      "piece": "landscape/street-tree",
+      "at": [
+        542,
+        -92
+      ],
+      "height": 11.2,
+      "radius": 4.1,
+      "yaw": 5.2
+    },
+    {
+      "id": "live-oak-south-end",
+      "piece": "landscape/hedge",
+      "rect": [
+        523,
+        -122,
+        537,
+        -120.8
+      ]
+    },
+    {
+      "id": "eighteenth-east-end",
+      "piece": "landscape/hedge",
+      "rect": [
+        551.3,
+        -77.5,
+        552.5,
+        -64.5
+      ]
+    }
+  ],
+  "context": [],
+  "overrides": {},
+  "additions": [
+    {
+      "id": "bungalow-sw-0",
+      "piece": "building/shell",
+      "rect": [
+        508,
+        -45,
+        516.5,
+        -36
+      ],
+      "storeys": 1,
+      "height": 4.6,
+      "wall": "stucco-ivory",
+      "trim": "trim-teal",
+      "roof": "stepped",
+      "style": "garden-court",
+      "faces": [
+        "east"
+      ],
+      "bays": 2,
+      "sign": null,
+      "variant": "awning",
+      "awning": "canvas-teal"
+    },
+    {
+      "id": "bungalow-sw-1",
+      "piece": "building/shell",
+      "rect": [
+        508,
+        -24,
+        516.5,
+        -15
+      ],
+      "storeys": 1,
+      "height": 4.6,
+      "wall": "brick-rose",
+      "trim": "trim-mint",
+      "roof": "parapet",
+      "style": "garden-court",
+      "faces": [
+        "east"
+      ],
+      "bays": 2,
+      "sign": null,
+      "variant": "loggia",
+      "awning": "canvas-rose"
+    },
+    {
+      "id": "bungalow-se-0",
+      "piece": "building/shell",
+      "rect": [
+        544,
+        -45,
+        552.5,
+        -36
+      ],
+      "storeys": 1,
+      "height": 4.6,
+      "wall": "stucco-apricot",
+      "trim": "trim-deep-teal",
+      "roof": "cornice",
+      "style": "garden-court",
+      "faces": [
+        "west"
+      ],
+      "bays": 2,
+      "sign": null,
+      "variant": "recessed",
+      "awning": "canvas-teal"
+    },
+    {
+      "id": "bungalow-se-1",
+      "piece": "building/shell",
+      "rect": [
+        544,
+        -24,
+        552.5,
+        -15
+      ],
+      "storeys": 1,
+      "height": 4.6,
+      "wall": "stucco-ivory",
+      "trim": "trim-ivory",
+      "roof": "stepped",
+      "style": "garden-court",
+      "faces": [
+        "west"
+      ],
+      "bays": 2,
+      "sign": null,
+      "variant": "loggia",
+      "awning": "canvas-rose"
+    },
+    {
+      "id": "bungalow-ssw-0",
+      "piece": "building/shell",
+      "rect": [
+        508,
+        -112,
+        516.5,
+        -103
+      ],
+      "storeys": 1,
+      "height": 4.6,
+      "wall": "stucco-ivory",
+      "trim": "trim-teal",
+      "roof": "parapet",
+      "style": "garden-court",
+      "faces": [
+        "east"
+      ],
+      "bays": 2,
+      "sign": null,
+      "variant": "awning",
+      "awning": "canvas-teal"
+    },
+    {
+      "id": "bungalow-ssw-1",
+      "piece": "building/shell",
+      "rect": [
+        508,
+        -95,
+        516.5,
+        -86
+      ],
+      "storeys": 1,
+      "height": 4.6,
+      "wall": "stucco-apricot",
+      "trim": "trim-mint",
+      "roof": "cornice",
+      "style": "garden-court",
+      "faces": [
+        "east"
+      ],
+      "bays": 2,
+      "sign": null,
+      "variant": "loggia",
+      "awning": "canvas-rose"
+    }
+  ]
+}

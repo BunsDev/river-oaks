@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { TICKET_TTL_MS, TICKETS_PER_USER } from './ticket-policy.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
+import { REPORT_LIST_LIMIT, normalizeReport } from './moderation-reports.js';
 
 // One counter per client and window, so a flood of distinct clients cannot fill
 // a shared table and lock out everyone else. Each counter expires after its
@@ -66,6 +67,7 @@ redis.call('LPUSH', KEYS[2], ARGV[2]); redis.call('LTRIM', KEYS[2], 0, 9999)
 return 1`;
 
 const AUDIT = `redis.call('LPUSH', KEYS[1], ARGV[1]); redis.call('LTRIM', KEYS[1], 0, 9999); return 1`;
+const READ_AUDIT = `return redis.call('LRANGE', KEYS[1], ARGV[1], ARGV[2])`;
 const text = (value, max = 100) => typeof value === 'string' && value.length > 0 && value.length <= max && !/[\u0000-\u001f\u007f]/.test(value);
 const identity = user => user && text(user.userId) && text(user.sessionId);
 
@@ -89,7 +91,7 @@ export function createRedisSecurity({ redis, prefix, now = Date.now }) {
   };
   return {
     async allow(scope, id, limit, windowMs) {
-      if (!['chauffeur', 'access', 'login', 'frames', 'social', 'groups', 'events', 'workplace', 'workplace_read', 'office_desk', 'profile', 'inventory', 'debug-report', 'chauffeur_daily', 'invites', 'voice', 'voice_daily', 'character-read', 'character-write'].includes(scope)) return false;
+      if (!['chauffeur', 'account_deletion', 'access', 'login', 'frames', 'social', 'groups', 'events', 'workplace', 'workplace_read', 'office_desk', 'profile', 'inventory', 'debug-report', 'chauffeur_daily', 'invites', 'voice', 'voice_daily', 'character-read', 'character-write', 'blocks', 'moderation_reports'].includes(scope)) return false;
       return limited(scope, id, limit, windowMs);
     },
     async issueTicket(user, worldId = DEFAULT_WORLD_ID) {
@@ -124,6 +126,23 @@ export function createRedisSecurity({ redis, prefix, now = Date.now }) {
       return true;
     },
     async audit(kind, record) { await execute(AUDIT, ['audit'], [event(kind, record)]); },
+    // Saved reports, newest first (moderation-reports.js). The list is newest first
+    // already; it's read 500 entries at a time, and only as far as `limit` needs.
+    // Reports about `except` don't count.
+    async reports(limit = REPORT_LIST_LIMIT, except = null) {
+      const found = [];
+      for (let start = 0; start < 10_000 && found.length < limit; start += 500) {
+        const lines = await execute(READ_AUDIT, ['audit'], [start, start + 499]);
+        for (const line of lines) {
+          let entry = null;
+          try { entry = normalizeReport(JSON.parse(line)); } catch { /* not a report */ }
+          if (entry && entry.reportedId !== except) found.push(entry);
+          if (found.length >= limit) break;
+        }
+        if (lines.length < 500) break;
+      }
+      return found;
+    },
     close() { /* No owned connection or ephemeral process resources. */ },
   };
 }

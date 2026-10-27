@@ -158,6 +158,25 @@ Every first candidate nearest the landing was reachable and clear all round. So 
 
 Main moved to #663 while `ce1ba42f` was being pushed, and `redis-room.js` conflicted the same way. The Terraces recovery runs first, then Studewood's, then Heights', which keeps `movedResidents`. Against main, this branch's `redis-room.js` diff is still only the Heights record and its log line. A Terraces rollback chains through Studewood and spreads its result, so resident moves carry through. The 151 resident, Heights, Studewood, Terraces, Redis-room and migration files: 1,083 passed, 0 failed, 134 skipped (Redis cases). Core verify passed on the first attempt (03:55–03:59Z): agent 289/289; preview 4,239 passed, 1 skipped; server 983 passed, 252 skipped (Redis cases); desktop 127 passed, 5 skipped.
 
+## Review by river-oaks-e9 (2026-10-27) and fixes
+
+river-oaks-e9 reviewed `5bef2cde` independently: "land after one fix" (#670 comment `6439566536`). Main `95882097` (Woodland Heights) is merged in, cleanly.
+
+- **MEDIUM, fixed:** the one-step rollbacks Terraces → Studewood and Studewood → Heights stranded or froze residents on ground they remove.
+  - The Heights strips cover every Heights revision's bounds, so the terrace footbridge decks and Studewood's cross streets are resident ground there.
+  - Both rollbacks now call `relocateResidents` after the players are placed. Each uses the same test of removed ground as its players (the terraces and their bridges, 0.35 m out; east of Heights Boulevard's east sidewalk) and the players' landing as `toward`.
+  - They return `movedResidents` and `reroutedResidents`; the chained rollbacks merge both steps' lists, and forward recoveries return empty lists.
+- **New `server/tests/resident-terraces-studewood-rollback.test.js`**, 3/3:
+  - each rollback moves a resident on the removed ground onto ground the kept planner reaches, from which it routes on, and re-plans a resident walking onto it where it stands;
+  - a chained Terraces → Heights rollback keeps both steps' lists: the first step's move survives only through the merge.
+  - All three fail on main's migrations.
+- **Woodland Heights → Terraces** removes no resident ground: of 10,669 resident cells in the Heights bounds, none is resident ground only under Woodland.
+- **LOW 1, fixed:** "every Heights stop stands in open ground" now asserts the 0.6 m and 1.2 m clearance all round. It fails when stops are placed on ground that isn't open. On today's data the first ring point is already open, so the reviewer's `.find(open)` → `ring[0]` mutation stays green; the test pins the property, not the mechanism.
+- **LOW 2:** without the reverse search, two tests fail at this head: the Heights Green regression and the stop test's route check. The earlier "all four" was measured on the rehearsal scratch merge `ae7d3150`, whose stops and tests differ from this head; I haven't attributed the difference. The PR body now says two.
+- **LOW 3:** in Heights → Gardens, the moved-residents merge can't be observed. Every resident the first step moves lands on Commons ground that the second step removes, so it moves again. The re-routed merge is pinned there (the walk into Heights is re-planned only by the first step), and the moved merge is pinned on the Terraces chain above.
+- **LOW 4** (the cold first route from the bandstand) stays documented under Gaps.
+- **Checks:** the 166 resident, Heights, Studewood, Terraces, Woodland, Redis-room and migration files with an isolated Redis (6461): 1,374/1,374, 0 skipped. Core verify passed on the first attempt (16:45–16:51Z): agent 289/289; preview 4,284 passed, 1 skipped; server 1,046 passed, 278 skipped (Redis cases); desktop 127 passed, 5 skipped.
+
 ## Gaps
 
 - The reverse-search regression can only be shown on Heights: the Commons band (9,396 cells) never reaches the search limit. The test lands with the Heights rehearsal once #649 is on main.
@@ -167,5 +186,5 @@ Main moved to #663 while `ce1ba42f` was being pushed, and `redis-room.js` confli
 ## Next step
 
 Main `74f12d76` (with #649, #662 and #663) is merged into this branch, with the Heights rollback wiring. Hosted checks (25/25) and `verify full` with an isolated Redis passed at `cc76bca5`.
-1. Mark the PR ready for review.
-2. Merging and landing are Val's. If main moves again, merge it in and rerun core verify and the hosted checks first.
+1. After core verify and the hosted checks on the review fix, record in the register that #670 is ready for river-oaks-e9 to land under Val's authorization. Under the delivery cadence, marking it ready goes with landing.
+2. This session never merges. If main moves again before landing, merge it in and rerun core verify and the hosted checks first.

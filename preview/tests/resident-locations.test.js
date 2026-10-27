@@ -255,6 +255,11 @@ test('every Heights stop stands in open ground the planner walks to and from the
   assert.deepEqual(placed.map(stop=>stop.id.slice(id.length+1)).sort(),['bandstand','hall','icehouse']);
   const navigation=createResidentNavigation(heights,{locations:true});
   for(const stop of placed) {
+    // Open ground: clear at 0.6 m and 1.2 m all round, so a resident can leave in any direction.
+    for(let i=0;i<16;i++)for(const radius of [0.6,1.2]) {
+      const angle=i/16*Math.PI*2,point=[stop.position[0]+Math.cos(angle)*radius,stop.position[1]+Math.sin(angle)*radius];
+      assert.ok(navigation.free(point),`${stop.name} is clear ${radius} m toward ${i}/16`);
+    }
     assert.ok(navigation.route(stop.position,landing),`${stop.name} reaches the landing`);
     assert.ok(navigation.route(landing,stop.position),`the landing reaches ${stop.name}`);
   }
