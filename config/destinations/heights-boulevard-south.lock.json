@@ -1,0 +1,15 @@
+{
+  "id": "heights-boulevard-south",
+  "kit": "city-kit-1",
+  "seed": 1929,
+  "hash": "9514091ea0aa4dbc",
+  "recipeHash": "259ab6c541838003",
+  "overridesHash": "174b1d836bafee25",
+  "stats": {
+    "pieces": 170,
+    "buildings": 17,
+    "solids": 58,
+    "materials": 7,
+    "triangles": 81936
+  }
+}

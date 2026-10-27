@@ -74,15 +74,17 @@ test('browser queue admission does not consume the command execution timeout', a
   const release = await holdBrowserLock('other session', { env: { ...options.env }, log: () => {} });
   t.after(release);
   const wrapper = fileURLToPath(new URL('../browser-lock.mjs', import.meta.url));
-  const pending = runProfile('fixture', [{ id: 'browser', browser: true, timeoutMs: 300,
+  // The command waits longer in the queue (2.5 s) than its whole timeout (2 s), so it
+  // passes only if queueing is not counted; the 2 s lets two Node processes start under load.
+  const pending = runProfile('fixture', [{ id: 'browser', browser: true, timeoutMs: 2000,
     command: [process.execPath, wrapper, 'nested browser', '--', process.execPath, '-e', 'require("fs").writeFileSync(process.argv[1], "started")', marker] }], options);
-  await new Promise(resolve => setTimeout(resolve, 600));
+  await new Promise(resolve => setTimeout(resolve, 2500));
   assert.equal(existsSync(marker), false, 'the queued command must not launch before admission');
   release();
   const result = await pending;
   assert.equal(result.status, 'passed');
   assert.equal(existsSync(marker), true);
-  assert.ok(result.results[0].queueDurationMs >= 500);
+  assert.ok(result.results[0].queueDurationMs >= 2400);
   assert.equal(options.env.RIVER_OAKS_BROWSER_LOCK_HELD, '', 'a released task must not leak a nesting token into later tasks');
   assert.deepEqual(options.queue.list(), []);
 });

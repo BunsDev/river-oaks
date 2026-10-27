@@ -62,6 +62,11 @@ export function createMemoryPresence({ now = Date.now } = {}) {
       }
       return result;
     },
+    // Account erasure: unfenced, unlike leave, so any tab's record goes.
+    async eraseUser(userId) {
+      if (!validId(userId)) throw new Error('Invalid account');
+      records.delete(userId);
+    },
   };
 }
 
@@ -109,5 +114,6 @@ export function createRedisPresence({ redis, prefix } = {}) {
       });
       return result;
     },
+    async eraseUser(userId) { await redis.del(key(userId)); },
   };
 }

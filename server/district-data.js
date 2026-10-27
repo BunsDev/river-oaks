@@ -1,5 +1,9 @@
 import { COMMONS_REVISION } from '../shared/east-garden-commons-layout.js';
 import { attachEastGardenCommons } from '../preview/src/east-garden-commons-world.js';
+import { HEIGHTS_REVISION } from '../shared/bayou-heights-layout.js';
+import { attachBayouHeights } from '../preview/src/bayou-heights-world.js';
+import { STUDEWOOD_REVISION } from '../shared/studewood-layout.js';
+import { attachStudewood } from '../preview/src/studewood-world.js';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { attachDistrictGalleryPlan } from '../preview/src/district-interior-contract.js';
@@ -20,6 +24,10 @@ export async function loadDistrictData({ districtRevision } = {}) {
     throw new Error('District gallery plan digest mismatch');
   }
   const attached = attachDistrictGalleryPlan(world, plan);
-  const campus = [DISTRICT_REVISION_GARDENS,COMMONS_REVISION].includes(districtRevision) ? attachGardenCampus(attached) : attached;
-  return districtRevision === COMMONS_REVISION ? attachEastGardenCommons(campus) : campus;
+  const campus = [DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION].includes(districtRevision) ? attachGardenCampus(attached) : attached;
+  const commons = [COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION].includes(districtRevision) ? attachEastGardenCommons(campus) : campus;
+  // Bayou Heights composes across the bayou from the Commons (#586 continuation).
+  const heights = [HEIGHTS_REVISION,STUDEWOOD_REVISION].includes(districtRevision) ? attachBayouHeights(commons) : commons;
+  // Studewood continues Heights east beyond Heights Boulevard (toward 3×).
+  return districtRevision === STUDEWOOD_REVISION ? attachStudewood(heights) : heights;
 }
