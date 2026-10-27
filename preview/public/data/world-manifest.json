@@ -67,6 +67,38 @@
       ],
       "adjacent": [
         "river-oaks-district",
+        "bayou-heights",
+        "east-garden-reserve-north",
+        "east-garden-reserve-south"
+      ]
+    },
+    {
+      "id": "bayou-heights",
+      "status": "authored",
+      "bounds_m": [
+        -2551.336078522973,
+        -1457.6085898216527,
+        -2243.836078522973,
+        -1167.1779702985634
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "content_revision": "bayou-heights-1",
+      "entries": [
+        {
+          "id": "market-footbridge",
+          "position_m": [
+            -2551.336078522973,
+            -1335,
+            18.37222868285045
+          ]
+        }
+      ],
+      "adjacent": [
+        "east-garden-commons",
         "east-garden-reserve",
         "east-garden-reserve-north",
         "east-garden-reserve-south"
@@ -76,7 +108,7 @@
       "id": "east-garden-reserve",
       "status": "reserved",
       "bounds_m": [
-        -2551.336078522973,
+        -2243.836078522973,
         -1457.6085898216527,
         -2158.4479977351207,
         -1167.1779702985634
@@ -86,12 +118,10 @@
         0,
         0
       ],
-      "content_revision": "empty-v2",
+      "content_revision": "empty-v3",
       "entries": [],
       "adjacent": [
-        "east-garden-commons",
-        "east-garden-reserve-north",
-        "east-garden-reserve-south"
+        "bayou-heights"
       ]
     },
     {
@@ -113,7 +143,7 @@
       "adjacent": [
         "river-oaks-district",
         "east-garden-commons",
-        "east-garden-reserve"
+        "bayou-heights"
       ]
     },
     {
@@ -135,7 +165,7 @@
       "adjacent": [
         "river-oaks-district",
         "east-garden-commons",
-        "east-garden-reserve"
+        "bayou-heights"
       ]
     }
   ]

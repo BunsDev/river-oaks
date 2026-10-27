@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CONNECTING, IMPROVED, QUIET_CHECKS, STALE_SNAPSHOT_MS, UPDATING, closeNotice, createStalenessWatch, retryDelay } from '../src/connection-policy.js';
+import { CONNECTING, IMPROVED, OFFLINE_STALE_MS, QUIET_CHECKS, STALE_SNAPSHOT_MS, UPDATING, closeNotice, createStalenessWatch, retryDelay } from '../src/connection-policy.js';
 
 test('retries back off to 30 s, with each delay drawn from the upper half of its step', () => {
   const steps = [1000, 2000, 4000, 8000, 16000, 30000, 30000];
@@ -64,4 +64,49 @@ test('other closes keep their meaning and whether the page retries', () => {
   assert.equal(closeNotice(1006).status, 'Connection lost. Rejoining the town…');
   assert.equal(closeNotice(4901, 'No town updates.').terminal, false);
   assert.equal(CONNECTING.status, 'Connecting to the town…');
+});
+
+test('a page the browser reports offline admits a silent socket at once, and a socket still delivering stays (#290)', () => {
+  let online = true;
+  const watch = createStalenessWatch({ online: () => online });
+  watch.heard(0);
+  assert.equal(watch.stale(OFFLINE_STALE_MS + 1), false, 'online: a short silence is nothing');
+  online = false;
+  assert.equal(watch.stale(OFFLINE_STALE_MS + 1), true, 'offline: the same silence is a dead socket, with no quiet checks to wait out');
+  // A socket the network loss did not reach (a local server) keeps delivering and stays.
+  const local = createStalenessWatch({ online: () => false });
+  for (let now = 0; now <= 5000; now += 200) { local.heard(now); assert.equal(local.stale(now + 100), false, `delivering at ${now}`); }
+  assert.ok(OFFLINE_STALE_MS >= 600 && OFFLINE_STALE_MS < 1000, 'several missed snapshots, and well inside a watchdog tick');
+  // The fast path needs the drop itself, a socket heard online that then went quiet. A
+  // browser that reports offline throughout, or that says so while the socket keeps
+  // delivering, is not trusted on that word alone: a late check after a long frame
+  // waits out the online rule, as before.
+  for (const [label, heardOffline] of [['offline from the start', [0, 200, 400]], ['offline while still delivering', [1000, 1200, 1400, 1600, 1800, 2000]]]) {
+    let reported = true;
+    const wrong = createStalenessWatch({ online: () => reported });
+    if (label === 'offline from the start') reported = false;
+    else wrong.heard(800);
+    reported = false;
+    for (const at of heardOffline) wrong.heard(at);
+    const last = heardOffline.at(-1);
+    assert.equal(wrong.stale(last + 1200), false, `${label}: one late check is no verdict`);
+    for (let check = 2; check < QUIET_CHECKS; check++) wrong.stale(last + STALE_SNAPSHOT_MS + check);
+    assert.equal(wrong.stale(last + STALE_SNAPSHOT_MS + 1), true, `${label}: a long silence still is`);
+  }
+  // A last snapshot that arrives just after the browser reports the loss is still the drop.
+  let flipped = true;
+  const racing = createStalenessWatch({ online: () => flipped });
+  racing.heard(0); flipped = false; racing.heard(150);
+  assert.equal(racing.stale(150 + OFFLINE_STALE_MS + 1), true);
+  // By default the watch asks the browser.
+  const saved = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  try {
+    const reported = { onLine: true };
+    Object.defineProperty(globalThis, 'navigator', { configurable: true, value: reported });
+    const browser = createStalenessWatch(); browser.heard(0); reported.onLine = false;
+    assert.equal(browser.stale(OFFLINE_STALE_MS + 1), true);
+    Object.defineProperty(globalThis, 'navigator', { configurable: true, value: {} });
+    const unknown = createStalenessWatch(); unknown.heard(0);
+    assert.equal(unknown.stale(OFFLINE_STALE_MS + 1), false, 'a browser that cannot tell counts as online');
+  } finally { if (saved) Object.defineProperty(globalThis, 'navigator', saved); else delete globalThis.navigator; }
 });

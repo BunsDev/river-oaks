@@ -2,6 +2,7 @@ import {isRealisticHumanRig} from './character-fidelity-contract.js';
 import {createCharacterFidelity, fidelityTierForQuality} from './character-fidelity-runtime.js';
 import {characterQualitySnapshot} from './character-quality.js';
 import {loadCharacterRealismTextures, REALISM_TIERS} from './character-realism.js';
+import {defaultAppearanceRealism} from './default-appearance-realism.js';
 import {releaseTransmissionTargets} from './transmission-targets.js';
 import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
@@ -13,11 +14,13 @@ import { sharedAppearance } from './shared-appearances.js';
 export const CHARACTER_HERO_PRESET='garden-front-v1';
 // A fresh rig makes a neutral portrait independent of the preview's previous
 // gait, wave, turntable phase, camera, reduced-motion history or frame timing.
-export async function createCharacterHero({definition,ownerId,load=loadResidentAvatar,realism,expression='neutral',loadRealismTextures=loadCharacterRealismTextures}){
+export async function createCharacterHero({definition,ownerId,load=loadResidentAvatar,realism,components,expression='neutral',loadRealismTextures=loadCharacterRealismTextures}){
   if(realism!==undefined&&!Object.hasOwn(REALISM_TIERS,realism))throw new TypeError('Unknown realism tier');
   const validated=validateCharacterDefinition(definition,{ownerId});if(!validated.ok)throw new TypeError(validated.error);
   const value=validated.definition;
-  realism??=isRealisticHumanRig(value.rig)?fidelityTierForQuality(characterQualitySnapshot()):'off';
+  // Named defaults take their trial components, like the world avatar (#517).
+  components??=isRealisticHumanRig(value.rig)?undefined:defaultAppearanceRealism(value.appearanceId)??undefined;
+  realism??=isRealisticHumanRig(value.rig)||components?fidelityTierForQuality(characterQualitySnapshot()):'off';
   const scene=new THREE.Scene();scene.background=new THREE.Color('#cbd8d1');
   // Authored looks are framed for their 1.7 m figures; a recipe's height scales the frame.
   const stature=value.schemaVersion===3?value.parameters.height/170:1;
@@ -32,7 +35,7 @@ export async function createCharacterHero({definition,ownerId,load=loadResidentA
     avatar=await load(Math.max(0,AVATAR_PROFILES.indexOf(value.rig)),`remote-hero-${value.appearanceId}`,value.rig,{folk:false,appearanceId:value.appearanceId,faceRecipe:{},realism:'off',...(value.schemaVersion===3?{recipe:value.parameters}:{})});
     if(sharedAppearance(value.appearanceId).costume==='jevica')costume=createPlayerCostume(avatar,'jevica');
     colors=createCharacterMaterials(avatar.object);colors.apply(value);
-    if(realism!=='off'){effect=createCharacterFidelity(avatar.rig,{loadTextures:loadRealismTextures});await effect.setTier(realism);}
+    if(realism!=='off'){effect=createCharacterFidelity(avatar.rig,{loadTextures:loadRealismTextures,components});await effect.setTier(realism);}
     scene.add(avatar.object);
     avatar.update(0,'idle',false,{speed:0,distance:0,gestureTime:0},()=>0);costume?.update(false,0);costume?.updateOptics(camera,2160);
     if(expression!=='neutral')avatar.setExpression(expression);

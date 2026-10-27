@@ -16,15 +16,25 @@ export const STALE_SNAPSHOT_MS = 8_000;
 // for a while (a long frame, sleep, a hidden tab) has had no chance to read its socket, and
 // one late check is no verdict; a page whose every check runs late still gets one.
 export const QUIET_CHECKS = 5;
+// When the browser reports that the network dropped under a socket it was hearing, the
+// silence needs no further proof: a socket that has missed several snapshots is gone. The
+// report alone is not trusted. A browser that says offline from the start, or while the
+// socket keeps delivering (a local server the loss did not reach), keeps the online rule.
+export const OFFLINE_STALE_MS = 750;
 
-export function createStalenessWatch({ staleMs = STALE_SNAPSHOT_MS, checks = QUIET_CHECKS } = {}) {
-  let last = 0, quiet = 0;
+export function createStalenessWatch({ staleMs = STALE_SNAPSHOT_MS, checks = QUIET_CHECKS, offlineMs = OFFLINE_STALE_MS, online = () => globalThis.navigator?.onLine !== false } = {}) {
+  let last = 0, quiet = 0, heardOnline = -Infinity;
   return {
-    heard(now) { last = now; quiet = 0; },
+    heard(now) { last = now; quiet = 0; if (online()) heardOnline = now; },
     // Back in view or online: count the checks afresh.
     resume() { quiet = 0; },
-    // True when the socket should be treated as dead at this check.
-    stale(now) { quiet++; return now - last > staleMs && quiet >= checks; },
+    // True when the socket should be treated as dead at this check. A snapshot that
+    // arrives just after the browser reports the loss still belongs to the drop.
+    stale(now) {
+      quiet++;
+      const dropped = !online() && last - heardOnline < offlineMs;
+      return dropped ? now - last > offlineMs : now - last > staleMs && quiet >= checks;
+    },
   };
 }
 

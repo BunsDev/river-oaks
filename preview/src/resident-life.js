@@ -9,6 +9,7 @@ const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const ACTIONS=new Set(['continue','pause','greet','redirect','seek_shelter','slow','stop']);
 const SOURCES=new Set(['jev','local_rules','safety_override']);
 const HELP_WAIT=30;
+const WANDER_OUTINGS=12,WANDER_STEP=60;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 // Collision avoidance is physical occupancy, not a projection of every visible
 // person onto the street. Low flight still overlaps a standing pedestrian.
@@ -18,10 +19,30 @@ const streetVisitor=(local,visitor,pose)=>visitor && (!pose ||
   (pose.roomId??null)===(local.storeId??null) && Math.abs(feetHeight(local)-pose.ground-(pose.altitude??0))<1.8) ? visitor : null;
 
 
+// Residents also stroll into composed locations. Three lanterns along the way
+// (nearest, middle and farthest from the District) give them somewhere to go;
+// more would leave the nearest stops all in the Commons, and residents who
+// wandered in would rarely come back.
+function locationStops(world,navigation) {
+  const layout=world.eastGardenCommons,lanterns=[...layout?.destination?.lanterns ?? []];
+  if(!navigation.locations || lanterns.length<3) return [];
+  lanterns.sort((a,b)=>a.at[0]-b.at[0]);
+  const stops=[];
+  for(const lantern of [lanterns[0],lanterns[lanterns.length>>1],lanterns.at(-1)]) {
+    // A lantern is a solid; stand on clear ground beside it.
+    search:for(let radius=0.8;radius<=3;radius+=0.4)for(let i=0;i<16;i++) {
+      const angle=i/16*Math.PI*2,position=[lantern.at[0]+Math.cos(angle)*radius,lantern.at[1]+Math.sin(angle)*radius];
+      if(navigation.free(position)) {stops.push({id:lantern.id,name:lantern.name,position});break search;}
+    }
+  }
+  return stops;
+}
+
 export function createResidentLife(world,state,routeProvider=null) {
-  const navigation=createResidentNavigation(world);
+  const navigation=createResidentNavigation(world,{locations:true});
   if(!navigation) return null;
-  const stops=(world.communityLocations ?? []).map(stop=>({...stop,position:navigation.sidewalkPoint(stop.position)})).filter(stop=>navigation.free(stop.position));
+  const stops=[...(world.communityLocations ?? []).map(stop=>({...stop,position:navigation.sidewalkPoint(stop.position)})),...locationStops(world,navigation)]
+    .filter(stop=>navigation.free(stop.position));
   // These small awnings exist in the interpreted storefront mesh, not a shelter registry.
   const shelters=(world.stores ?? []).map(store=>({id:store.id,name:store.name,position:[store.facade[0]+store.outward[0]*0.9,store.facade[1]+store.outward[1]*0.9]})).filter(stop=>navigation.free(stop.position));
   // Storefront benches by store: a resident resting at that storefront may sit.
@@ -38,6 +59,19 @@ export function createResidentLife(world,state,routeProvider=null) {
   return {state,navigation,routeProvider:routeProvider ?? navigation.route,planning:false,stops,shelters,benches,takenSeats:new Set(),elapsed:0,storm:false,revision:0,packet:null,cursor:0,paused:false,stats:{jev:0,local_rules:0,safety_override:0,latency_ms:null}};
 }
 
+// Clear ground off the roadway, up to WANDER_STEP metres along the way to a stop.
+function strollToward(navigation,from,target) {
+  const length=distance(from,target.position);
+  if(length<=WANDER_STEP) return length>4 ? target : null;
+  const t=WANDER_STEP/length,ahead=[from[0]+(target.position[0]-from[0])*t,from[1]+(target.position[1]-from[1])*t];
+  for(let radius=0;radius<=8;radius+=0.5)for(let i=0;i<(radius?16:1);i++) {
+    const angle=i/16*Math.PI*2,position=[ahead[0]+Math.cos(angle)*radius,ahead[1]+Math.sin(angle)*radius];
+    if(navigation.free(position) && navigation.pedestrian.classify(position)!=='road')
+      return {id:target.id,name:target.name,position,stroll:true};
+  }
+  return null;
+}
+
 function plan(life,local,index) {
   const motion=local.life,sheltering=life.storm || motion.action==='seek_shelter';
   let candidates=(sheltering?life.shelters:life.stops).filter(stop=>sheltering || distance(local.position,stop.position)>4);
@@ -46,6 +80,14 @@ function plan(life,local,index) {
   if(!sheltering && candidates.length) {
     const offset=(index+motion.visits)%Math.min(3,candidates.length);
     candidates=[...candidates.slice(offset),...candidates.slice(0,offset)];
+    // Residents wander: every other outing is a stroll of up to WANDER_STEP metres
+    // toward a far stop that changes every few outings. Over time they cross the
+    // whole town (the Commons too) while each route search stays short.
+    if((index+motion.visits)%2===1) {
+      const target=life.stops[(index*7+Math.floor(motion.visits/WANDER_OUTINGS)*13)%life.stops.length];
+      const stroll=target && strollToward(life.navigation,local.position,target);
+      if(stroll) candidates=[stroll,...candidates];
+    }
   }
   // One route search per update; failed destinations are retried on later updates.
   const candidate=candidates[motion.attempt ?? 0];
@@ -57,7 +99,7 @@ function plan(life,local,index) {
   const accept=route=>{
     if(life.revision!==revision || life.state.generation!==generation || motion.routeVersion!==routeVersion) return;
     if(!route) {motion.attempt=(motion.attempt ?? 0)+1;motion.waitUntil=life.elapsed+0.2;return;}
-    motion.route=route;motion.destination={id:candidate.id,name:candidate.name,shelter:sheltering,...(seat?{seatId:seat.id}:{})};motion.attempt=0;
+    motion.route=route;motion.destination={id:candidate.id,name:candidate.name,shelter:sheltering,...(seat?{seatId:seat.id}:{}),...(candidate.stroll?{stroll:true}:{})};motion.attempt=0;
   };
   const result=life.routeProvider(local.position.slice(0,2),goal.slice(0,2));
   if(result?.then) {
@@ -236,7 +278,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
         motion.waitUntil=motion.destination.shelter?Infinity:life.elapsed+(motion.destination.returning?1:6+index%5*2);
         const seat=motion.destination.seatId && benchSeat(life,motion.destination.seatId);
         if(seat && !benchHolder(life,seat.id,local)) {sitDown(life,local,seat);motion.waitUntil+=6;}
-        if(!motion.destination.returning && !motion.destination.visit) {local.anchorId=motion.destination.id;local.anchorName=motion.destination.name;local.persona.anchorName=motion.destination.name;}
+        if(!motion.destination.returning && !motion.destination.visit && !motion.destination.stroll) {local.anchorId=motion.destination.id;local.anchorName=motion.destination.name;local.persona.anchorName=motion.destination.name;}
       }
       continue;
     }

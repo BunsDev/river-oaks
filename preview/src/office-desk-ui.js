@@ -39,7 +39,8 @@ export function createOfficeDeskUI({getMultiplayer,onClose=()=>{},computer:compu
  window.addEventListener('resize',fitTitle,{signal});
  const model=createDeskModel({account:()=>getMultiplayer()?.identity?.id??null,request:async(action,data)=>{
   const mp=getMultiplayer();if(!mp?.connected)throw new Error('office_visit_required');
-  return mp.officeDeskRequest(action,data);
+  // The server answers refusals with a status; a request with no answer may still have been applied.
+  try{return await mp.officeDeskRequest(action,data);}catch(error){if(error?.status===undefined)error.unconfirmed=true;throw error;}
  },onChange:render});
  function schedule(){clearTimeout(timer);const s=model.state;if(dialog.open&&view==='tasks'&&s.dirty&&!s.busy&&!s.error&&s.task?.title.trim())timer=setTimeout(()=>void model.save(),1200);}
  function render(){
@@ -49,8 +50,8 @@ export function createOfficeDeskUI({getMultiplayer,onClose=()=>{},computer:compu
   $('save').disabled=busy||!t||!s.dirty||s.error==='desk_conflict';$('finish').disabled=busy||!t||!t.title.trim()||s.error==='desk_conflict';$('delete').disabled=busy;
   $('export').disabled=!t;$('finish').textContent=t?.status==='done'?'Reopen task':'Mark complete ✓';
   $('save-status').dataset.state=s.error?'error':s.status;
-  $('save-status').textContent=s.error?'Not saved · your draft is kept here':s.status==='removing'?'Removing task…':s.status==='saving'?'Saving…':s.status==='loading'?'Opening your desk…':s.dirty?'Unsaved changes':s.status==='new'?'Start with a title':s.desk.updatedAt?'All changes saved':'Ready when you are';
-  $('notice').hidden=!s.error;$('error').textContent=messages[s.error]??'Your desk couldn’t connect. Your draft is kept here. Try again.';
+  $('save-status').textContent=s.unconfirmed?'Not confirmed · your draft is kept here':s.error?'Not saved · your draft is kept here':s.status==='removing'?'Removing task…':s.status==='saving'?'Saving…':s.status==='loading'?'Opening your desk…':s.dirty?'Unsaved changes':s.status==='new'?'Start with a title':s.desk.updatedAt?'All changes saved':'Ready when you are';
+  $('notice').hidden=!s.error;$('error').textContent=s.unconfirmed?'The connection dropped before your desk answered, so this change may already be saved. Try again to confirm it; it is never saved twice.':messages[s.error]??'Your desk couldn’t connect. Your draft is kept here. Try again.';
   $('reload').hidden=s.error!=='desk_conflict';$('retry').hidden=s.error==='desk_conflict';$('rescue').hidden=!t;
   if(t){
    const switched=renderedTask!==t.id;$('notes').placeholder=t.id===sceneTask?SCENE_HINT:NOTES_HINT;$('title').placeholder=t.id===sceneTask?'Scene idea':TITLE_HINT;
