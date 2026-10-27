@@ -153,6 +153,8 @@ __pycache__/
 *.egg-info/
 data/raw/
 data/generated/
+# The local Commons experience stage's report (config/agent-workflow.json, experience-commons).
+data/reports/experience-commons.json
 data/models/
 unreal/**/Binaries/
 unreal/**/Intermediate/

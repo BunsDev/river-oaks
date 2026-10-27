@@ -24,6 +24,7 @@ import { createLiveKitClient, livekitConfigured } from '../livekit-client.js';
 import { randomUUID } from 'node:crypto';
 import { phoneFixtureHost } from './phone-fixture-host.js';
 import { phoneDecoderProbePlugin } from './phone-fixture-decoder.js';
+import { isolatedFixturePlugin } from './isolated-fixture.js';
 const webPort=Number(process.env.RIVER_OAKS_TEST_WEB_PORT??5180),townPort=Number(process.env.RIVER_OAKS_DEV_TOWN_PORT??8788);
 const phoneHost=phoneFixtureHost(process.env.RIVER_OAKS_PHONE_FIXTURE_HOST);
 const webHost=phoneHost??'127.0.0.1';
@@ -77,7 +78,7 @@ app=createGameServer({characterStudioEnabled:process.env.RIVER_OAKS_CHARACTER_ST
   ...(Number(process.env.RIVER_OAKS_TEST_CONNECTION_LIFETIME_MS)>0?{connectionLifetime:Number(process.env.RIVER_OAKS_TEST_CONNECTION_LIFETIME_MS),rotateNoticeMs:Number(process.env.RIVER_OAKS_TEST_ROTATE_NOTICE_MS??5000)}:{})});
 await new Promise(resolve=>app.server.listen(townPort,'127.0.0.1',resolve));
 const townHttp=`http://127.0.0.1:${townPort}`;
-const vite=await createViteServer({configFile:'preview/vite.config.js',envDir:false,plugins:phoneHost?[phoneDecoderProbePlugin()]:[],server:{host:webHost,port:webPort,strictPort:true,proxy:{'/auth':townHttp,'/api/multiplayer':townHttp,'/api/landmarks':townHttp,'/api/social':townHttp,'/api/workplace':townHttp,'/api/profile':townHttp,'/api/character':townHttp,'/api/waitlist':townHttp,'/api/debug-reports':townHttp,'/api/moderation':townHttp,'/api/voice':townHttp,'/multiplayer':{target:`ws://127.0.0.1:${townPort}`,ws:true}}}});
+const vite=await createViteServer({configFile:'preview/vite.config.js',envDir:false,plugins:[isolatedFixturePlugin(),...(phoneHost?[phoneDecoderProbePlugin()]:[])],server:{host:webHost,port:webPort,strictPort:true,proxy:{'/auth':townHttp,'/api/multiplayer':townHttp,'/api/landmarks':townHttp,'/api/social':townHttp,'/api/workplace':townHttp,'/api/profile':townHttp,'/api/character':townHttp,'/api/waitlist':townHttp,'/api/debug-reports':townHttp,'/api/moderation':townHttp,'/api/voice':townHttp,'/multiplayer':{target:`ws://127.0.0.1:${townPort}`,ws:true}}}});
 await vite.listen();
 console.log('Multiplayer browser fixture: '+origin+' (test identities only; no live WorkOS acceptance)');
 if(phoneHost)console.log('Phone GPU fixture: '+origin+'/?render-audit=1&motion-debug=1 (one synthetic guest; stop after review)');
