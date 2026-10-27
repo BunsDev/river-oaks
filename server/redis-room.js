@@ -107,6 +107,7 @@ function validOperation(operation) {
   if(operation.type==='join')return validIdentity(operation.identity) && id(operation.connectionId);
   if(operation.type==='kick')return id(operation.userId) && (operation.sessionId===undefined || id(operation.sessionId));
   if(operation.type==='forget')return id(operation.userId) && Object.keys(operation).length===2;
+  if(operation.type==='separate')return id(operation.a) && id(operation.b) && operation.a!==operation.b && Object.keys(operation).length===3;
   if(operation.type==='revise')return id(operation.actorId) && Number.isSafeInteger(operation.expectedDraftVersion)
     && operation.expectedDraftVersion>=1 && operation.expectedDraftVersion<=100001;
   return ['command','heartbeat','leave'].includes(operation.type) && id(operation.userId) && id(operation.connectionId)
@@ -385,6 +386,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       // Account erasure (#292): the connection, any pending selection, then the world's records.
       // Metres this tick drained, or this owner has yet to bank, go too; the reply waits for a
       // bank already in progress, so the ride store's erasure comes after it.
+      // Player blocking (#292): a block between Jevica and a resident ends the resident's invitations.
+      if(operation.type==='separate'){world.separate(operation.a,operation.b);return {ok:true};}
       if(operation.type==='forget') {
         if(connection)remove(operation.userId);
         pendingSelections.delete(operation.userId);selectionVersions.delete(operation.userId);
