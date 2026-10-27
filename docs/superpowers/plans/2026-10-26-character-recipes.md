@@ -300,7 +300,20 @@ Recorded on the uncommitted branch at base 8b73888a (2026-10-26).
 - Each slider edit reloads the preview avatar from the cached rig, rather than morphing
   it live.
 
+- **Final tree (60e2351c):**
+  - Experience journeys passed (03:36–03:38Z; `scratchpad/recipes-browser-10.log`):
+    `character-recipes`, `character-studio`, `character-studio-layout`,
+    `character-portrait`, `character-studio-paused` and `character-fidelity`.
+    - The random people in its captures read as natural skin, light to deep.
+  - Core gate: passed, 03:36–03:41Z (`.runtime/agent/core.json`):
+    - 284 of 284;
+    - 4239 pass, 1 skip;
+    - 972 pass, 251 skips;
+    - 127 pass, 5 skips.
+- No WebKit, phone-hardware or human visual acceptance.
+
 ## Next
 
-The rerun journeys and capture inspection, then `pnpm run verify` on the fixed tree, a
-signed commit, a draft PR (hosted shared journeys) and the register.
+Hosted checks on the pushed head of #694, including the shared Studio journeys
+(`character-studio-shared` has not yet run past `crime-shared`, which fails the same way
+on main and other branches). Merging awaits Val; Phase 3 awaits Val's authorization.
