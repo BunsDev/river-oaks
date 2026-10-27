@@ -1,0 +1,15 @@
+{
+  "id": "yale-street-north",
+  "kit": "city-kit-1",
+  "seed": 1927,
+  "hash": "79929f8b6fed4679",
+  "recipeHash": "5b6de5cc1c40bbd2",
+  "overridesHash": "174b1d836bafee25",
+  "stats": {
+    "pieces": 180,
+    "buildings": 34,
+    "solids": 70,
+    "materials": 13,
+    "triangles": 142884
+  }
+}

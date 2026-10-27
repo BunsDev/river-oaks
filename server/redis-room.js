@@ -1,4 +1,8 @@
 import { recoverDistrictCommonsCheckpoint } from './district-commons-checkpoint-migration.js';
+import { recoverDistrictHeightsCheckpoint } from './district-heights-checkpoint-migration.js';
+import { recoverDistrictStudewoodCheckpoint } from './district-studewood-checkpoint-migration.js';
+import { recoverDistrictTerracesCheckpoint } from './district-terraces-checkpoint-migration.js';
+import { recoverDistrictWoodlandCheckpoint } from './district-woodland-checkpoint-migration.js';
 import { characterSelectionOperation } from './character-store.js';
 import { defaultAppearanceFor } from '../preview/src/shared-appearances.js';
 import { randomUUID } from 'node:crypto';
@@ -102,6 +106,8 @@ function validOperation(operation) {
   if(!record(operation))return false;
   if(operation.type==='join')return validIdentity(operation.identity) && id(operation.connectionId);
   if(operation.type==='kick')return id(operation.userId) && (operation.sessionId===undefined || id(operation.sessionId));
+  if(operation.type==='forget')return id(operation.userId) && Object.keys(operation).length===2;
+  if(operation.type==='separate')return id(operation.a) && id(operation.b) && operation.a!==operation.b && Object.keys(operation).length===3;
   if(operation.type==='revise')return id(operation.actorId) && Number.isSafeInteger(operation.expectedDraftVersion)
     && operation.expectedDraftVersion>=1 && operation.expectedDraftVersion<=100001;
   return ['command','heartbeat','leave'].includes(operation.type) && id(operation.userId) && id(operation.connectionId)
@@ -207,7 +213,12 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
         // The garage/Gardens district revision switch (#512) chains the older garage recoveries itself.
-        const commons = recoverDistrictCommonsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        // Woodland Heights extends the terraces, which extend Studewood, which extends Heights, which extends the Commons layout, so their recoveries run first.
+        const woodland = recoverDistrictWoodlandCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const terraces = woodland.ok ? woodland : recoverDistrictTerracesCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const studewood = terraces.ok ? terraces : recoverDistrictStudewoodCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const heights = studewood.ok ? studewood : recoverDistrictHeightsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const commons = heights.ok ? heights : recoverDistrictCommonsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const gardens = commons.ok ? commons : recoverDistrictGardensCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const tower = gardens.ok ? gardens : recoverDistrictTowerCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const levels = tower.ok ? tower : recoverDistrictLevelsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
@@ -219,7 +230,11 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
           error.checkpointReason = checkpointReason;
           throw error;
         }
-        districtMigration = commons.ok ? { kind: 'commons', from: commons.from, to: commons.to, moved: commons.moved.length }
+        districtMigration = woodland.ok ? { kind: 'woodland', from: woodland.from, to: woodland.to, moved: woodland.moved.length }
+          : terraces.ok ? { kind: 'terraces', from: terraces.from, to: terraces.to, moved: terraces.moved.length }
+          : studewood.ok ? { kind: 'studewood', from: studewood.from, to: studewood.to, moved: studewood.moved.length }
+          : heights.ok ? { kind: 'heights', from: heights.from, to: heights.to, moved: heights.moved.length, movedResidents: heights.movedResidents.length }
+          : commons.ok ? { kind: 'commons', from: commons.from, to: commons.to, moved: commons.moved.length }
           : gardens.ok ? { kind: 'gardens', from: gardens.from, to: gardens.to, moved: gardens.moved.length }
           : tower.ok ? { kind: 'tower', from: tower.from }
           : levels.ok ? { kind: 'levels', from: levels.from }
@@ -368,6 +383,19 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         if(connection && (!operation.sessionId || operation.sessionId===connection.identity.sessionId))remove(operation.userId);
         return {ok:true};
       }
+      // Account erasure (#292): the connection, any pending selection, then the world's records.
+      // Metres this tick drained, or this owner has yet to bank, go too; the reply waits for a
+      // bank already in progress, so the ride store's erasure comes after it.
+      // Player blocking (#292): a block between Jevica and a resident ends the resident's invitations.
+      if(operation.type==='separate'){world.separate(operation.a,operation.b);return {ok:true};}
+      if(operation.type==='forget') {
+        if(connection)remove(operation.userId);
+        pendingSelections.delete(operation.userId);selectionVersions.delete(operation.userId);
+        world.forgetAccount(operation.userId);
+        for(let index=drained.length-1;index>=0;index--)if(drained[index].userId===operation.userId)drained.splice(index,1);
+        await rides?.forget(operation.userId);
+        return {ok:true};
+      }
       if(!connection || connection.connectionId!==operation.connectionId || connection.leftAt!==null)return rejected('stale_connection');
       if(!await allowed(connection.identity)){remove(operation.userId);return rejected('session_invalid');}
       if(connection.identity.expiresAt<=time)return rejected('session_expired');
@@ -468,7 +496,15 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       visitors,JSON.stringify(revisionUpdate?.sources??[]),
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'commons'
+    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'woodland'
+      ? { event: 'district_woodland_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'terraces'
+      ? { event: 'district_terraces_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'studewood'
+      ? { event: 'district_studewood_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'heights'
+      ? { event: 'district_heights_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved, movedResidents: districtMigration.movedResidents }
+      : districtMigration.kind === 'commons'
       ? { event: 'district_commons_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
       : districtMigration.kind === 'gardens'
       ? { event: 'district_gardens_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
@@ -485,7 +521,17 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   }
   function tick() {
     if(closed)return Promise.resolve(null);
-    if(!pendingTick)pendingTick=runTick().catch(error=>{cached=null;throw error;}).finally(()=>{pendingTick=null;});
+    // runTick refuses a durable state this process can't serve (another region; an invalid
+    // checkpoint, presence, roster or character selection; a newer district epoch, or the same
+    // epoch under another revision) after taking the lease and before writing anything. Let the
+    // lease go: a refusing room that kept ticking would renew it indefinitely and lock out the
+    // deployment that can serve the town. RELEASE checks the token, so this is the same as the
+    // lease expiring early.
+    if(!pendingTick)pendingTick=runTick().catch(async error=>{
+      cached=null;
+      if(/^Invalid durable /.test(error?.message))await redis.eval(RELEASE,1,keys.lease,token).catch(()=>{});
+      throw error;
+    }).finally(()=>{pendingTick=null;});
     return pendingTick;
   }
   async function request(operation) {

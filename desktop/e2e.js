@@ -1,7 +1,7 @@
 import { openHudSpace } from '../preview/e2e/hud-navigation.js';
 import { _electron as electron } from 'playwright';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -244,19 +244,50 @@ try {
   await page.waitForFunction(() => document.querySelector('#community-speech').textContent.length > 40);
   await page.locator('#community-close').click();
   check('resident conversation');
-  await openHudSpace(page, 'settings-section', 'Graphics');
-  await page.locator('[data-quality=smooth]').click();
-  await page.waitForFunction(() => JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}').mode === 'smooth');
+  // Connecting to the town locks the access gate, and the gate closes an open
+  // Settings dialog (multiplayer-client.js setStatus). So does a drop: this runner
+  // can miss the town's 30 s heartbeat (holdW above), and in Desktop job 121709518224
+  // it did with Settings open, about 5 s after the reloaded game was ready, leaving
+  // the Auto button hidden for the click's whole timeout. Choose with the town
+  // joined; if a town drop during the attempt took the dialog, rejoin, reopen it and
+  // choose again. A dialog that closes without a drop is still a failure.
+  const settingsOpen = async () => await page.locator('#settings-dialog[open]').count() > 0;
+  // Watch the town from the start of each attempt; the watch lasts until the next
+  // attempt or the next load.
+  const watchTown = () => page.evaluate(() => {
+    window.__desktopQualityTown?.watch.disconnect();
+    const host = document.querySelector('#canvas-host');let state = host.dataset.multiplayer;const town = [state];
+    const watch = new MutationObserver(() => { if (host.dataset.multiplayer !== state) town.push(state = host.dataset.multiplayer); });
+    watch.observe(host, { attributes: true, attributeFilter: ['data-multiplayer'] });
+    window.__desktopQualityTown = { watch, town };
+  });
+  const townSinceAttempt = () => page.evaluate(() => window.__desktopQualityTown?.town ?? []);
+  const dropped = town => sharedTown && town.some(state => state !== 'joined');
+  const qualityRetries = report.qualityRetries = [];
+  const chooseQuality = async mode => {
+    for (;;) {
+      if (sharedTown) await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.multiplayer === 'joined');
+      await watchTown();
+      const chosen = await openHudSpace(page, 'settings-section', 'Graphics')
+        .then(() => page.locator(`[data-quality=${mode}]`).click())
+        .then(() => true, async error => {
+          if (await settingsOpen() || !dropped(await townSinceAttempt()) || qualityRetries.length >= 2) throw error;
+          return false;
+        });
+      if (chosen) break;
+      qualityRetries.push({ mode, town: await townSinceAttempt() });
+    }
+    await page.waitForFunction(mode => JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}').mode === mode, mode);
+  };
+  await chooseQuality('smooth');
   await page.reload();
   await gameReady();
-  // Connecting to the town locks the access gate, and the gate closes an open
-  // Settings dialog (multiplayer-client.js setStatus). Open it once joined.
-  if (sharedTown) await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.multiplayer === 'joined');
   assert.equal(await page.locator('[data-quality=smooth]').getAttribute('aria-pressed'), 'true');
   check('graphics preference survives reload');
-  await openHudSpace(page, 'settings-section', 'Graphics');
-  await page.locator('[data-quality=auto]').click();
-  await page.locator('#settings-dialog .settings-header button').click();
+  await chooseQuality('auto');
+  // Close Settings, unless a town drop since the Auto attempt began already has.
+  if (await settingsOpen()) await page.locator('#settings-dialog .settings-header button').click().catch(async error => { if (await settingsOpen() || !dropped(await townSinceAttempt())) throw error; });
+  else assert.ok(dropped(await townSinceAttempt()), `Settings closed after choosing Auto without a town drop (town ${JSON.stringify(await townSinceAttempt())})`);
   // Selecting Auto restarts it at full resolution with AO, and it decides once
   // per 45 frames: on a 10 fps runner it needs about 27 s to reach its floor and
   // drop AO. Measure the loop once Auto has stopped stepping down (two decision
@@ -339,25 +370,36 @@ try {
   await page.screenshot({ path: join(root, `output/playwright/desktop-${report.mode}.png`) });
   // Playwright marks a deliberately crashed Page permanently crashed. Verify
   // automatic recovery through the surviving native webContents instead.
-  const recovered = await app.evaluate(async ({ BrowserWindow }) => {
+  // Times from the crash: Electron reporting it, the reload finishing, and the game playable.
+  const { recovered, ...crashRecovery } = await app.evaluate(async ({ BrowserWindow }) => {
     const contents = BrowserWindow.getAllWindows()[0].webContents;
+    const crashed = Date.now(), timings = {};
+    contents.once('render-process-gone', (_event, details) => { timings.goneMs = Date.now() - crashed; timings.reason = details.reason; });
     await new Promise((resolve, reject) => {
       const loaded = () => { clearTimeout(timer); resolve(); };
       const timer = setTimeout(() => {
         contents.removeListener('did-finish-load', loaded);
-        reject(new Error(`Recovery navigation did not finish: loading=${contents.isLoading()}, crashed=${contents.isCrashed()}`));
+        reject(new Error(`Recovery navigation did not finish: loading=${contents.isLoading()}, crashed=${contents.isCrashed()}, ${JSON.stringify(timings)}`));
       }, 60000);
       contents.once('did-finish-load', loaded);
       contents.forcefullyCrashRenderer();
     });
+    timings.loadedMs = Date.now() - crashed;
     const deadline = Date.now() + 60000;
     while (Date.now() < deadline) {
       const ready = await contents.executeJavaScript("document.querySelector('#loading')?.hidden && document.querySelector('#canvas-host')?.dataset.playerReady === 'true'");
-      if (ready) return true;
+      if (ready) return { recovered: true, ...timings, playableMs: Date.now() - crashed };
       await new Promise(resolve => setTimeout(resolve, 100));
     }
-    return false;
+    return { recovered: false, ...timings };
   });
+  report.crashRecovery = crashRecovery;
+  // Where Linux pipes core dumps to a collector, the renderer must be ended
+  // rather than waited for (desktop/core-dump-watch.js, #370).
+  if (process.platform === 'linux') {
+    crashRecovery.corePattern = (await readFile('/proc/sys/kernel/core_pattern', 'utf8').catch(() => '')).trim();
+    if (crashRecovery.corePattern.startsWith('|')) assert.equal(crashRecovery.reason, 'killed', `a renderer writing its core through ${crashRecovery.corePattern.split(' ')[0]} is ended, not waited for`);
+  }
   assert.equal(recovered, true, 'crash recovery rebuilds a playable character');
   check('renderer crash recovers to playable game');
   report.gpu = await app.evaluate(({ app }) => app.getGPUFeatureStatus());

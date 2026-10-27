@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import {applyCharacterRealism, corneaTriangles, naturalIris, skinScatterChunk, REALISM_TIERS, _poreNormalPixels} from '../src/character-realism.js';
+import {applyCharacterRealism, corneaTriangles, naturalIris, skinScatterChunk, REALISM_COMPONENTS, REALISM_TIERS, _poreNormalPixels} from '../src/character-realism.js';
 
 test('pore normals are seeded, periodic and point out of the surface', () => {
   const a = _poreNormalPixels(64, 4, 517), b = _poreNormalPixels(64, 4, 517), c = _poreNormalPixels(64, 4, 518);
@@ -139,6 +139,44 @@ test('the low quality tier retains corrected eyes and coverage without pore or s
   assert.equal(skin.mesh.material.normalMap,null);
   assert.equal(eyes.mesh.material.roughness,.42);
   effect.dispose();
+});
+
+test('a component subset leaves the eyes and every omitted skin part as imported', () => {
+  const {rig: avatar, skin, eyes, hair, brows} = rig();
+  const before = avatar.model.children.length, roughness = new THREE.DataTexture(new Uint8Array(4), 1, 1);
+  const material = skin.mesh.material, eyeMap = eyes.mesh.material.map, eyeGeometry = eyes.mesh.geometry;
+  const compile = material.onBeforeCompile, cacheKey = material.customProgramCacheKey, sheenColor = material.sheenColor.clone();
+  const effect = applyCharacterRealism(avatar, {tier: 'high', textures: {roughness}, alphaAt: corneaDisc, components: ['roughness', 'pores', 'coverage']});
+  assert.deepEqual(effect.report.components, ['roughness', 'pores', 'coverage']);
+  assert.equal(effect.report.cornea, 0); assert.equal(avatar.model.children.length, before, 'no cornea shell');
+  assert.equal(eyes.mesh.material.map, eyeMap, 'the iris keeps its authored texture');
+  assert.equal(eyes.mesh.geometry, eyeGeometry); assert.equal(eyes.mesh.material.alphaTest, .4);
+  assert.equal(effect.report.skin, 1);
+  assert.equal(material.roughnessMap, roughness); assert.equal(material.normalScale.x, REALISM_TIERS.high.pores);
+  assert.equal(material.onBeforeCompile, compile, 'no skin-wrap shader'); assert.equal(material.customProgramCacheKey, cacheKey);
+  assert.equal(material.sheen, 0); assert.deepEqual(material.sheenColor, sheenColor, 'sheen is not selected');
+  for (const card of [hair, brows]) { assert.equal(card.mesh.material.alphaToCoverage, true); assert.ok(card.mesh.material.alphaTest < .4); }
+  effect.dispose();
+  assert.equal(material.roughnessMap, null); assert.equal(material.normalMap, null); assert.equal(material.roughness, .62);
+  for (const card of [hair, brows]) { assert.equal(card.mesh.material.alphaToCoverage, false); assert.equal(card.mesh.material.alphaTest, .4); }
+});
+
+test('coverage alone leaves skin untouched and does not ask for the roughness map', () => {
+  const {rig: avatar, skin, hair} = rig();
+  const effect = applyCharacterRealism(avatar, {tier: 'standard', alphaAt: corneaDisc, components: ['coverage']});
+  assert.equal(effect.report.skin, 0); assert.deepEqual(effect.report.unsupported, [], 'an omitted roughness map is not a missing one');
+  assert.equal(skin.mesh.material.normalMap, null); assert.equal(skin.mesh.material.roughness, .62);
+  assert.equal(hair.mesh.material.alphaToCoverage, true);
+  effect.dispose();
+});
+
+test('every component is selected by default and unknown components are refused', () => {
+  const {rig: avatar} = rig();
+  const effect = applyCharacterRealism(avatar, {tier: 'high', alphaAt: corneaDisc});
+  assert.deepEqual(effect.report.components, [...REALISM_COMPONENTS]);
+  effect.dispose();
+  assert.deepEqual(applyCharacterRealism(avatar, {tier: 'off'}).report.components, []);
+  assert.throws(() => applyCharacterRealism(avatar, {tier: 'high', components: ['iris']}), /Unknown realism component/);
 });
 
 test('compiled skin responses are isolated by tier and reusable after returning to a tier', () => {

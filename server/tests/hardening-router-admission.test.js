@@ -47,3 +47,14 @@ test('on the Redis gateway an admitted request spends the per-address budget onc
   assert.equal(counters.length, 1);
   assert.equal(await redis.get(counters[0]), '1', 'counted once, not once by the router and again by the world');
 });
+
+// Moderation is one per deployment, so its routes go to the configured world whatever
+// the request names, as the ban route always has (#292).
+test('moderation routes go to the configured world', async t => {
+  const asked = [];
+  const router = createWorldRouter({configuredWorldId: 'moon-garden', worldFor: async id => { asked.push(id);return null; }});
+  await new Promise(resolve => router.server.listen(0, '127.0.0.1', resolve));t.after(() => router.close());
+  const base = `http://127.0.0.1:${router.server.address().port}`;
+  for (const path of ['/api/moderation/ban', '/api/moderation/reports', '/api/moderation/reports?world=river-oaks']) assert.equal((await fetch(`${base}${path}`)).status, 404);
+  assert.deepEqual(asked, ['moon-garden', 'moon-garden', 'moon-garden']);
+});
