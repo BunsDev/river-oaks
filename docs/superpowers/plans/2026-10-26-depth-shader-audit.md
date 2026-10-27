@@ -121,6 +121,15 @@ The development-only hooks are `window.__riverRenderAudit.depthFights()` and `de
   - bayou-greenway, yale-icehouse and yale-street-north each lose a 1 m overlap that a lawn strip already covered, so the visible result doesn't change.
 - **Checks.** 63 street, ground, kit, depth-audit, Studewood and destination files: 2,352 passed, 0 failed, 15 skipped. Core verify passed on the first attempt (03:39–03:44Z): agent 289/289; preview 4,233 passed, 1 skipped; server 970 passed, 251 skipped (Redis cases); desktop 127 passed, 5 skipped. Receipt `acc85ac49db62c7b…`.
 
+## Main merged a third time (`74f12d76`, Bayou Terraces, 2026-10-27)
+
+Main moved to #663 before the second merge was pushed. `verify.yml` keeps the `terraces` shard beside `depth`. Both new Terraces kit recipes have no fights, so all twelve neighbourhoods are clear. The 68 street, ground, kit, depth-audit, Studewood, Terraces and destination files: 2,396 passed, 0 failed, 16 skipped. Core verify passed on the first attempt (03:59–04:03Z): agent 289/289; preview 4,244 passed, 1 skipped; server 976 passed, 252 skipped (Redis cases); desktop 127 passed, 5 skipped.
+
+The depth-layers journey on this tree (04:04Z, 37 s) passed:
+- the 388 listed pairs remain, with none new and none fixed since listing; the junction paving and kit trims don't touch the three stations' listed pairs;
+- 1.18–1.27 million faces per station;
+- the four shader-patch checks pass, with no compile or page errors.
+
 ## Val's triangle at (−2907.95, −1401.08)
 
 - **What it was.** A hole, not a fight. A vertical-ray probe and a camera pick found nothing but the pale terrain under a 12 cm wedge: Westcreek Lane bends 1.7° where the District access lane meets it from the west. `joinStreetSegments` mitred only two-way bends, so both segments ended square at the junction, and on the east side (no other street) the asphalt, gutter, curb and pavers all left a wedge of bare ground.
