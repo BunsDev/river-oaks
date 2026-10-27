@@ -12,6 +12,7 @@ import { magicOptions } from './magic-auth.js';
 import { createDevAuth, devAuthAllowed } from './dev-auth.js';
 import { createSharedWorld, migrateWorldCheckpoint } from './world.js';
 import { parseScreeningHosts } from './screenings.js';
+import { contentFilterFromEnv } from './content-filter.js';
 import { configuredOfficeLayout } from './offices.js';
 import { configuredDistrictRevision } from '../preview/src/garden-campus-district.js';
 import { parseCampusOperators } from './campus-leases.js';
@@ -75,8 +76,10 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
   const blocks = await createFileBlocks(resolve(env.BLOCKS_FILE ?? '.runtime/blocks.json'));
   const mode = chooseAuth({ env, origin, devAuth });
   const admins = (env.WAITLIST_ADMIN_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean);
+  // The content filter for every user text field (#292); null when RIVER_OAKS_CONTENT_FILTER=off.
+  const contentFilter = contentFilterFromEnv(env);
   const waitlist = await createFileWaitlist(resolve(env.WAITLIST_FILE ?? '.runtime/waitlist.json'), {
-    admins, autoApprove: mode === 'local' && env.RIVER_OAKS_ACCEPTANCE_FIXTURE === '1',
+    admins, autoApprove: mode === 'local' && env.RIVER_OAKS_ACCEPTANCE_FIXTURE === '1', contentFilter,
   });
 
   // Venue hosts are explicit grants; none configured means no one can control a screening.
@@ -142,7 +145,7 @@ export async function createTown({ env = process.env, origin, devAuth = 'auto', 
         ...(id===worldId?{onApplyRegion:applyRegion}:{}),regionSha256:meta?.regionSha256,
         onBan:userId=>{for(const [otherId,other] of games)if(otherId!==id)other.game.disconnectUser(userId,4003,'This account cannot join the town.');},
         onMove:(userId,fromWorldId)=>games.get(fromWorldId)?.game.disconnectUser(userId,4009,'This account joined another world.'),
-        moderators:(env.MODERATOR_USER_IDS??'').split(',').map(value=>value.trim()).filter(Boolean),
+        moderators:(env.MODERATOR_USER_IDS??'').split(',').map(value=>value.trim()).filter(Boolean),contentFilter,
         trustedProxyIPs:(env.TRUSTED_PROXY_IPS??'').split(',').map(value=>value.trim()).filter(Boolean),voice});
       const entry={game,world,meta};games.set(id,entry);return entry;
     })().finally(()=>pending.delete(id));
