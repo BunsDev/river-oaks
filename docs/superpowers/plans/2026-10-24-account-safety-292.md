@@ -457,6 +457,14 @@ ban; the local development owner wasn't staff; and five mutations that survived 
 now pinned. Not changed: the in-world Ban button (`multiplayer-client.js`, owned
 elsewhere) still shows for staff, and the server's refusal is shown there.
 
+Its second pass, read only, found no high or medium issue. Folded in: when a newer
+refresh took over after a ban and failed, the row was stale again; the list now shows
+the change at once, held until it reloads, and a superseded refresh reports the failure
+shown. A lift's flip is tested too, and Decision 2 no longer asks to build the list.
+Recorded, not changed: a report about the reader still takes a place in the stored
+history (the hosted audit's newest 10,000 entries, the town log rotated at 5 MB), a
+faint signal where that history ends, shared with every ban, unban and report.
+
 ## Gaps and decisions
 
 - The lantern walk's record round keeps lamplighter display names with no account

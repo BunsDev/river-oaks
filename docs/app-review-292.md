@@ -251,8 +251,8 @@ Recommended: leave Computer out of iOS v1 (Decision 5).
    server, and let reports and blocking handle the rest.
 2. **Moderation.** Who reads reports, how fast, and where a threat or child-safety
    report goes. In the US, a provider that finds apparent child sexual abuse material
-   must report it to NCMEC. Recommended: name an owner and a 24-hour target, and
-   build the moderator Reports list proposed above. Name at least two moderators: a
+   must report it to NCMEC. Recommended: name an owner and a 24-hour target. The
+   moderators' Reports list above is built. Name at least two moderators: a
    report about a moderator is shown only to the others, so with one, nobody sees it
    in the app.
 3. **Support contact.** The address or page for `VITE_SUPPORT_CONTACT` and App Store

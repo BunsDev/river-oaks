@@ -22,8 +22,8 @@ export function createModerationReports({ fetcher = (...args) => fetch(...args),
   const when = at => { try { return new Date(at).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' }); } catch { return at; } };
 
   // `known`: the last answer said this account moderates, so a failure since is theirs.
-  // `shown`: the reports in the list now.
-  let asked = 0, self = null, busy = false, known = false, shown = [];
+  // `shown`: the reports in the list now; `failing`: the failure it shows, if any.
+  let asked = 0, self = null, busy = false, known = false, shown = [], failing = null;
   // Every action button in the list, so a ban in flight can hold them all.
   const buttons = new Set();
   const hold = held => { for (const button of buttons) button.disabled = held; };
@@ -44,10 +44,11 @@ export function createModerationReports({ fetcher = (...args) => fetch(...args),
       }
     } catch { /* NOT_CHANGED: no answer, or one that isn't JSON */ }
     busy = false;
-    // A refresh that fails keeps the last list: it shows this change, under both messages.
-    // The buttons work again unless another ban started meanwhile.
+    // The list shows this change at once, held until it reloads. If the reload fails, or a
+    // newer one takes over and fails, the change stays, under both messages. The buttons
+    // work again unless another ban started meanwhile.
+    if (changed) { draw(shown.map(item => item.reported.id === account.id ? { ...item, reported: { ...item.reported, banned } } : item)); hold(true); }
     const failure = changed ? await refresh() : null;
-    if (failure) draw(shown.map(item => item.reported.id === account.id ? { ...item, reported: { ...item.reported, banned } } : item));
     hold(busy);
     status.textContent = failure ? `${message} ${failure}` : message;
     // A refresh can hide the group (the session ended); focus then stays in the pane.
@@ -78,7 +79,7 @@ export function createModerationReports({ fetcher = (...args) => fetch(...args),
     node.append(summary, meta, actions);
     return node;
   };
-  // Answers the failure it shows, if any.
+  // Answers the failure the group shows once it's done, if any.
   async function refresh() {
     const mine = ++asked;
     let session = null, response = null, value = null, threw = false;
@@ -86,10 +87,10 @@ export function createModerationReports({ fetcher = (...args) => fetch(...args),
       session = await signedIn();
       if (session) { response = await fetcher(LIST_PATH, { credentials: 'same-origin', cache: 'no-store' }); value = await response.json().catch(() => null); }
     } catch { threw = true; }
-    if (mine !== asked) return null;
+    if (mine !== asked) return failing;
     self = session?.user?.id ?? null;
     if (response?.ok && value?.moderator === true && Array.isArray(value.reports)) {
-      known = true; root.hidden = false;
+      known = true; root.hidden = false; failing = null;
       draw(value.reports);
       status.textContent = value.reports.length ? '' : 'No reports yet.';
       return null;
@@ -98,8 +99,8 @@ export function createModerationReports({ fetcher = (...args) => fetch(...args),
     // is shown only when the route says it is a moderator's, or this account just was one.
     // The last list stays under it.
     const failed = (threw || (session && response && !response.ok && response.status !== 401 && response.status !== 403)) && (value?.moderator === true || known);
-    if (failed) { root.hidden = false; status.textContent = value?.moderator === true && sentence(value.error) ? value.error : UNAVAILABLE; return status.textContent; }
-    known = false; root.hidden = true; status.textContent = ''; draw([]);
+    if (failed) { root.hidden = false; failing = status.textContent = value?.moderator === true && sentence(value.error) ? value.error : UNAVAILABLE; return failing; }
+    known = false; root.hidden = true; status.textContent = ''; failing = null; draw([]);
     return null;
   }
   return Object.assign(root, { refresh });

@@ -115,6 +115,41 @@ test('when the list can\'t refresh after a ban, the row shows the change, both m
     [['erin: harassment (banned)', [['Lift erin’s ban', false]]], ['sam: cheating', [['Ban sam…', false]]]]);
 });
 
+test('a lift whose list can\'t refresh shows the account as no longer banned', async t => {
+  withDocument(t);
+  let limited = false;
+  const api = server({ list: () => limited ? reply({ moderator: true, error: 'Please wait a moment before refreshing reports.' }, 429)
+    : reply({ moderator: true, reports: [report('2026-10-26T10:00:00.000Z', 'harassment', 'pat', 'erin', true)] }),
+  ban: () => { limited = true;return reply({ ok: true }); } });
+  const root = createModerationReports({ fetcher: api.fetcher });
+  await root.refresh();
+  await rows(root)[0].actions[0].click();
+  assert.equal(parts(root).status.textContent, 'erin’s ban is lifted. Please wait a moment before refreshing reports.');
+  assert.deepEqual(rows(root).map(item => [item.summary, item.actions.map(button => [button.textContent, button.disabled])]), [['erin: harassment', [['Ban erin…', false]]]]);
+});
+
+test('when a newer refresh takes over after a ban and fails, the row still shows the ban', async t => {
+  withDocument(t);
+  let lists = 0, release;
+  const slow = new Promise(resolve => { release = resolve; });
+  const { fetcher } = server({ list: async () => {
+    lists++;
+    // The list after the ban waits; Account reopening asks again and is limited.
+    if (lists === 2) { await slow;return reply({ moderator: true, reports: [report('2026-10-26T10:00:00.000Z', 'harassment', 'pat', 'erin', true)] }); }
+    if (lists === 3) return reply({ moderator: true, error: 'Please wait a moment before refreshing reports.' }, 429);
+    return reply({ moderator: true, reports: [report('2026-10-26T10:00:00.000Z', 'harassment', 'pat', 'erin')] });
+  } });
+  const root = createModerationReports({ fetcher });
+  await root.refresh();
+  rows(root)[0].actions[0].click();
+  const sent = rows(root)[0].actions[0].click();
+  for (let i = 0; i < 10; i++) await new Promise(resolve => setImmediate(resolve));
+  await root.refresh();
+  release();await sent;
+  assert.deepEqual(rows(root).map(item => [item.summary, item.actions.map(button => [button.textContent, button.disabled])]), [['erin: harassment (banned)', [['Lift erin’s ban', false]]]]);
+  assert.equal(parts(root).status.textContent, 'erin is banned. Please wait a moment before refreshing reports.');
+});
+
 test('every button stays held until the list after a ban has loaded', async t => {
   withDocument(t);
   let release, waiting = false;
@@ -132,7 +167,9 @@ test('every button stays held until the list after a ban has loaded', async t =>
   const sent = confirm.click();
   for (let i = 0; i < 10; i++) await new Promise(resolve => setImmediate(resolve));
   assert.equal(api.calls.filter(call => call[1] === '/api/moderation/ban').length, 1);
-  assert.deepEqual([confirm.disabled, cancel.disabled], [true, true], 'held while the list reloads');
+  assert.deepEqual([confirm.disabled, cancel.disabled], [true, true]);
+  assert.deepEqual(rows(root).map(item => [item.summary, item.actions.map(button => [button.textContent, button.disabled])]),
+    [['erin: harassment (banned)', [['Lift erin’s ban', true]]]], 'the change shows at once, held while the list reloads');
   release();await sent;
   assert.deepEqual(rows(root)[0].actions.map(button => [button.textContent, button.disabled]), [['Lift erin’s ban', false]]);
 });
