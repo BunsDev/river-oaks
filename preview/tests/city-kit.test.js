@@ -240,3 +240,14 @@ test('street furniture speaks the District vocabulary: orbital lamps, grates, po
   let disposed = false; grate.material.map.addEventListener('dispose', () => { disposed = true; });
   kit.userData.dispose(); assert.ok(disposed, 'the grate texture is released with the kit');
 });
+
+test('no two parallel faces of a neighbourhood fight for depth within sight (depth-layer-audit.js)', async () => {
+  const { findDepthFights } = await import('../src/depth-layer-audit.js');
+  // The planter's mulch lay 1.5 mm over a brass slab and crawled through it from about 20 m (2026-10-26).
+  for (const [name, recipe] of [['bayou-market-commons', commons], ['nineteenth-and-yale', yale]]) {
+    const kit = buildCityKit(assembleNeighborhood(recipe), { groundAt: () => 0, ground: 0 });
+    const fights = findDepthFights(kit, { groundAt: () => 0 });
+    assert.deepEqual(fights.map(({ a, b, gap, size, fightMetres, at }) => ({ a, b, gap: +gap.toFixed(4), size: +size.toFixed(2), fightMetres: Math.round(fightMetres), at: at.map(v => +v.toFixed(1)) })), [], name);
+    kit.userData.dispose();
+  }
+});

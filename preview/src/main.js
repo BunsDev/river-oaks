@@ -25,6 +25,7 @@ import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
 import { createPlayDock } from './play-dock.js';
 import { AO_OUTPUT, createRenderPipeline } from './render-pipeline.js';
+import { DEPTH_MODEL, findDepthFights, measureDepthPrecision } from './depth-layer-audit.js';
 import { warnIfSoftwareRendering } from './hardware-acceleration.js';
 import './hardware-acceleration.css';
 import { bindRenderVisibility } from './render-lifecycle.js';
@@ -1380,6 +1381,13 @@ if (renderAudit) {
       // position and target, and optional FOV. release() hands the camera back.
       view({ position, target, fov }) { auditCamera = { position: new THREE.Vector3(...position), target: new THREE.Vector3(...target), fov, restoreFov: auditCamera?.restoreFov ?? camera.fov }; },
       release() { if (auditCamera?.fov) { camera.fov = auditCamera.restoreFov; camera.updateProjectionMatrix(); } auditCamera = null; },
+      // Parallel faces of different materials close enough to fight for depth in the loaded scene,
+      // and this renderer's measured depth reach (depth-layer-audit.js).
+      depthFights({ slack, ...options } = {}) {
+        const found = findDepthFights(scene, { model: slack ? { ...DEPTH_MODEL, slack } : DEPTH_MODEL, groundAt: (east, north) => terrainHeight(world.terrain, east, north), ...options });
+        return { faces: found.faces, truncated: found.truncated, fights: found.map(({ faces, centre2d, ...pair }) => pair) };
+      },
+      depthPrecision: options => measureDepthPrecision(renderer, options),
     } : {}),
     graphics() {
       const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
