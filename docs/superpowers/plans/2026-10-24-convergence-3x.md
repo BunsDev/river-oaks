@@ -970,11 +970,11 @@ Landing order: #654, #659, #656, #655, then #649 after round 6. Each decision is
 Status of the 2026-10-26 goal ("proceed with all of the above e2e"):
 
 - **Phase 1, landing train: done.** Every PR Val authorized has landed: #654, #659, #656 (switched off), #655, #649, #662, #663, #673 and #693. #653 stayed on hold as Val decided, and river-oaks-7c has since landed it.
-- **Phase 2, release candidate on converged main: running, owned by river-oaks-e9.**
-  - The acceptance journeys on `a5857cf4` passed except `world-streaming` lap 12, which is likely the visible-Commons stream point.
-  - The District ABBA finished 08:34–09:05Z, all four arms exiting 0.
-  - `verify full` is in progress. A single `world-streaming` rerun on `d458c927` or later follows, with #700's diagnostics.
-  - e9 posts the 3× acceptance on #638 and #587.
+- **Phase 2, release candidate on converged main: done (river-oaks-e9, 15:25Z).**
+  - verify full on `a5857cf4` passed all 19 stages (09:05–15:25Z, `bef43341`), clean tree.
+  - Acceptance journeys: 6 of 7 passed. `world-streaming` failed once on lap 12, then passed on its rerun on `95882097` with #700's diagnostics (290 checks, 22 evictions, report `cd5ebf37`). The lap-12 cause is unconfirmed.
+  - District ABBA met (`06d31a50`); rehearsals passed.
+  - Evidence: #638 issuecomment-6446065460 and #587 issuecomment-6446071792. The #587 gate's conditions 1–3 are met on the 3× main, with two caveats recorded: `a5857cf4`'s push Verify was red from the #698 bug and the walk stall (`95882097` is green), and `world-streaming` needed a rerun.
 - **Phase 3, recurring flakes, without loosening any check: done for every mechanism found.**
   - #698: Redis room lease release; main had been red.
   - #696: `crime-shared` evade timing.
@@ -990,7 +990,8 @@ Status of the 2026-10-26 goal ("proceed with all of the above e2e"):
   - The CI fix for the `playwright install --with-deps` stalls: 7.6% of jobs take 6 min or more, and 7 hit the 20-min limit today. Timeout changes are not authorized here.
   - Authorization to cancel this session's 19 detached scratch checkouts (`project:prune --cancel-stale --detached-path`).
   - Commons activation conditions 4 (sign-off) and 5 (production state).
-- **river-oaks-e9:** whether to move `world-streaming`'s eviction far point, or the final facing, if the rerun confirms the visible-Commons cause. That change touches a check, so it is proposed rather than made.
+- **Val, decision:** the parked `world-streaming` face-away guard (branch `test/streaming-evict-facing-20261027` at `e89b1505`, signed and pushed, core passed, task `streaming-evict-facing-20261027`, no PR). Each player faces west, away from the Commons, before the eviction waits, because the stream keeps a visible Commons resident. It changes the check's precondition, and the rerun didn't confirm the cause, so it lands only on Val's word or if the stall recurs with #700's diagnostics.
+- **river-oaks-3e, or Val if 3e is unreachable:** #670 (residents into Heights) has river-oaks-e9's review MEDIUM, comment 6439566536. The Terraces→Studewood and Studewood→Heights rollbacks don't call `relocateResidents`, so residents can be stranded on ground those rollbacks remove. The fix is a call in both rollbacks plus a regression test. river-oaks-e9's messages to 3e expired (permission-mode mismatch). This session's relay was held at first, then released at about 16:00Z, so 3e has the finding.
 - **The crime owner (`crime-police-598`, `crime-release-599`):** the one-off `crime-transport` Redis failure, "alice: socket closed (4009) before its first snapshot". The log is in `evidence/crime-evade-timing-696`.
 - **Next stall to read:** the `bayou-terraces` 2 fps crawl. #702's `presses` counters in the next stall error should name it.
 - **Not yet acted on:** a diagnostic message in the campus-traversal "phone back on the street" stall (`onLevel`).
