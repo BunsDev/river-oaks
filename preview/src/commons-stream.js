@@ -14,9 +14,11 @@ function geometryBytes(group) {
   return [...buffers].reduce((bytes, buffer) => bytes + buffer.byteLength, 0);
 }
 
-export function createCommonsStream({ world, parent, onStatus = () => {}, onScene = () => {}, now,
+// `layout` is the Commons layout to present; Bayou Heights passes the restored Commons
+// with its bayou opened for the footbridge (heights-stream.js).
+export function createCommonsStream({ world, layout: presented = world.eastGardenCommons, parent, onStatus = () => {}, onScene = () => {}, now,
   loadModule = () => import('./east-garden-commons.js') }) {
-  const layout = validateCommonsRegistration(manifest, world.eastGardenCommons);
+  const layout = validateCommonsRegistration(manifest, presented);
   const location = manifest.locations.find(item => item.id === layout.id);
   const [west, south, east, north] = locationWorldBounds(location);
   const gatewayNorth = location.entries.find(entry => entry.id === 'district-promenade').position_m[1];
@@ -77,7 +79,9 @@ export function createCommonsStream({ world, parent, onStatus = () => {}, onScen
     ready: () => stream.ready(layout.id),
     allowsStep(from, to) {
       if (!to?.slice(0, 2).every(Number.isFinite)) return false;
-      if (stream.ready(layout.id) || to[0] <= layout.edge - .35) return true;
+      // Beyond the Commons (Bayou Heights, bayou-heights-1) that location's own stream gates presentation.
+      // The Bayou Terraces (bayou-terraces-1) beside the Commons are gated by the Heights stream too.
+      if (stream.ready(layout.id) || to[0] <= layout.edge - .35 || to[0] > east + .35 || to[1] < south - .35 || to[1] > north + .35) return true;
       // A restored player may need to move sideways around a planter before
       // retreating west. Existing collision still applies; entry and further
       // eastward progress remain blocked until presentation is available.

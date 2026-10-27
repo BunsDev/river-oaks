@@ -493,7 +493,12 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       .catch(()=>{});
   },voiceReconcileMs):null;
   voiceLoop?.unref();
-  return {server,disconnectUser,get playerCount(){return connections.size;},replaceWorld(next,hash){
+  // Account erasure (#292): end every connection, then this world forgets the account.
+  const forgetAccount=async userId=>{
+    disconnectUser(userId,4003,'This account was deleted.');clearTimeout(departures.get(userId));departures.delete(userId);world.forgetAccount(userId);
+    await rides?.forget(userId);
+  };
+  return {server,disconnectUser,forgetAccount,get playerCount(){return connections.size;},replaceWorld(next,hash){
     if(next.worldId!==worldId)throw new Error('Cannot replace a different world');
     for(const timer of departures.values())clearTimeout(timer);
     departures.clear();tickets.clear();
