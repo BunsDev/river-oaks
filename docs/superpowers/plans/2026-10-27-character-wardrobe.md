@@ -90,6 +90,26 @@ hash, f5c1f2a0…, is the one in `realistic-humans.sources.json`. A full build t
   The first run failed at the pose control, which reduced motion disables; the tool no
   longer emulates reduced motion.
 
+- `pnpm run verify` (core) passed on 4a7f8d8a's tree, 22:46–22:53Z:
+  - agent 284/284;
+  - preview 4243 passed, 1 skipped;
+  - server 972 passed, 251 skipped;
+  - desktop 127 passed, 5 skipped;
+  - ruff, the build and the secrets scan passed.
+
+  The first run failed only on ruff line lengths in the build script. After the fix, a
+  rebuild was byte-identical.
+- Journeys on 4a7f8d8a (local Chromium, from a snapshot): `character-recipes`,
+  `character-studio`, `character-studio-layout` and `character-portrait` all passed.
+  `character-recipes` passed its new checks:
+  - only the frame's tops and bottoms are offered;
+  - a top, a bottom from another suit and other shoes stage on the same person;
+  - a second account loads the worn mixed recipe.
+
+  The in-town capture shows the mixed outfit.
+- Draft #719: 17 of 17 hosted checks pass on 4a7f8d8a. Stacked on #694's branch, so the
+  main-only shared journeys run once it targets `main`.
+
 ## Gaps
 
 - Dresses, hats, and face targets on the Jevica and realistic bodies.
@@ -98,5 +118,5 @@ hash, f5c1f2a0…, is the one in `realistic-humans.sources.json`. A full build t
 
 ## Next
 
-Core gate on the final tree, signed commit, and a draft PR stacked on #694. Then run
-the character journeys (`character-recipes` with its new mix-and-match step).
+After #694 lands, retarget #719 to `main`, update it from `main` and let the full hosted
+matrix run. Merging needs Val's explicit go-ahead.
