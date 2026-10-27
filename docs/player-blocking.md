@@ -54,7 +54,7 @@ messages, covered above.
 Not covered: public event listings, landmarks and builds stay visible to everyone. A
 table game already in progress between them continues until one stands up. A campus
 operator can still offer a lease, under the operator's name, to a resident who blocked
-them. Moderation reports work in both directions.
+them. Moderation reports work in both directions (`server/tests/reports.test.js`).
 
 ## Routes
 

@@ -3,6 +3,7 @@ import { createJevSettings } from './jev-settings.js';
 import { createVoiceSettings } from './voice-ui.js';
 import { sharedVoicePreferences } from './voice-preferences.js';
 import { createAccountDeletionSettings } from './account-deletion.js';
+import { createSupportContact } from './support-contact.js';
 
 // Keep the navigation API shared by Commands and the HUD launchers.
 export function setupSidebar() {
@@ -119,12 +120,14 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
   const studio = layers.find(node => node.querySelector?.('a[href="/studio.html"]'));
   // Hidden unless the server offers in-app deletion (#292); it asks each time Account opens.
   const deletion = createAccountDeletionSettings();
+  // The published support contact (#292), from VITE_SUPPORT_CONTACT; nothing when unset.
+  const support = createSupportContact(import.meta.env?.VITE_SUPPORT_CONTACT);
   const groups = [
     ['Appearance', 'Light or dark, or follow your device.', [appearance]],
     ['Graphics', 'Sharper or smoother. Auto adjusts as you play.', graphics ? [graphics] : []],
     ['Audio', 'What you hear in town, and how you talk.', [group(null, voiceNodes), createVoiceSettings({ preferences: sharedVoicePreferences() }), createJevSettings('elevenlabs')]],
     ['World', 'Light, weather and what the district shows.', [group('Light', light), group('Show in the district', layers.filter(node => node !== studio)), ...(studio ? [group('Build', [studio])] : [])]],
-    ['Account', 'Invitations, problem reports and signing out.', [account, createJevSettings(), group('World data', [connection]), deletion]],
+    ['Account', 'Invitations, problem reports and signing out.', [account, createJevSettings(), group('World data', [connection]), ...(support ? [support] : []), deletion]],
     ['About', 'Where this district comes from.', evidence],
   ];
   const tabs = [], panes = [];

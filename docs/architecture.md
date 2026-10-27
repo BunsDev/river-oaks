@@ -3,7 +3,7 @@
 | Task | Owning seam | Verification and context |
 | --- | --- | --- |
 | Rendered world, controls, residents, movement | `preview/src/`, `preview/index.html`, `preview/vite.config.js` | `preview/tests/`, `preview/e2e/`; [testing](testing.md), [world direction](world-direction.md) |
-| Shared state, accounts, access, world design | `server/`, `api/server.js`, `middleware.js`, `vercel.json` | `server/tests/`; [multiplayer](multiplayer.md), [email access](email-access.md), [security review](security-review.md), [privacy data inventory](privacy-data-inventory.md), [player blocking](player-blocking.md), [in-app account deletion](account-deletion.md), [workplace operations](workplace-operations.md), [world events](world-events.md) |
+| Shared state, accounts, access, world design | `server/`, `api/server.js`, `middleware.js`, `vercel.json` | `server/tests/`; [multiplayer](multiplayer.md), [email access](email-access.md), [security review](security-review.md), [privacy data inventory](privacy-data-inventory.md), [player blocking](player-blocking.md), [in-app account deletion](account-deletion.md), [App Review readiness](app-review-292.md), [workplace operations](workplace-operations.md), [world events](world-events.md) |
 | Decision, speech, GIS and world exports | `src/river_oaks/`, `scripts/*.py`, `config/river-oaks.json` | `tests/`; [data contracts](data.md), [auto mode](auto-mode.md) |
 | Native world and contracts | `unreal/Source/RiverOaks/`, `unreal/Config/`, `unreal/Content/Python/` | native automation; [Unreal](unreal.md), [engine acceptance](engine-acceptance.md) |
 | Desktop lifecycle, packaging, IPC | `desktop/` | `desktop/tests/`, `desktop/e2e.js`; [desktop](desktop.md) |

@@ -73,10 +73,26 @@ test('deletion asks the provider first, signs the browser out, then erases', asy
 });
 
 test('when the provider cannot delete the account, nothing is erased and the session stays', async t => {
-  const { request, calls } = await harness(t, { provider: async () => { throw new Error('WorkOS unavailable'); } });
+  const warn = t.mock.method(console, 'warn', () => {});
+  let failure = Object.assign(new Error('WorkOS unavailable'), { status: 500 });
+  const { request, calls } = await harness(t, { provider: async () => { throw failure; } });
   const response = await ask(request);
   assert.equal(response.status, 502);assert.equal(response.headers.get('set-cookie'), null);
   assert.deepEqual(calls, [['provider', 'erin']]);
+  // The log says what WorkOS answered, and nothing else about the error.
+  failure = new Error('socket hang up');
+  assert.equal((await ask(request)).status, 502);
+  assert.deepEqual(warn.mock.calls.map(call => JSON.parse(call.arguments[0])),
+    [{ event: 'account_deletion_unavailable', status: 500 }, { event: 'account_deletion_unavailable', status: null }]);
+});
+
+test('a sign-in time in the future is not recent', async t => {
+  const { request, calls, user } = await harness(t);
+  user.signedInAt += 120_000;
+  assert.deepEqual(await (await request('/api/account/delete', { headers: { Cookie: 'session' } })).json(), { available: true, recent: false });
+  const response = await ask(request);
+  assert.equal(response.status, 403);assert.equal((await response.json()).reason, 'sign_in_again');
+  assert.deepEqual(calls, []);
 });
 
 test('when erasure fails after the provider deleted the account, the browser is still signed out and told', async t => {

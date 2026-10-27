@@ -90,6 +90,10 @@
 :root[data-theme] .game-hud #settings-dialog .access-tools button:hover { background: var(--hud-tile-hover); }
 :root[data-theme] .game-hud #settings-dialog #access-signout { color: #a33a32; }
 :root[data-theme=dark] .game-hud #settings-dialog #access-signout { color: #ff9f94; }
+/* Support (support-contact.js): shown only when VITE_SUPPORT_CONTACT is set. */
+:root[data-theme] .game-hud #settings-dialog .support-contact > p { margin: 0; color: var(--ink); font-size: 13px; line-height: 1.5; }
+:root[data-theme] .game-hud #settings-dialog .support-contact a { color: var(--hud-action); text-underline-offset: 2px; }
+:root[data-theme=dark] .game-hud #settings-dialog .support-contact a { color: var(--hud-focus); }
 /* Delete account (account-deletion.js): shown only when the server offers it, last in Account. */
 :root[data-theme] .game-hud #settings-dialog .account-deletion > p { margin: 0 0 10px; color: var(--hud-muted); font-size: 12.5px; line-height: 1.5; }
 :root[data-theme] .game-hud #settings-dialog .account-deletion-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 0 0 10px; }
