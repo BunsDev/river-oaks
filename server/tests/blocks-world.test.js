@@ -132,6 +132,25 @@ test('only Jevica’s invitations to a blocked resident are refused; anyone else
   assert.equal((await screenCommand(blocks, 'jev', revoke, isAdmin)).command, revoke, 'revoking stays possible');
 });
 
+// The servers check a grant again after it reaches the world, in case a block was stored
+// meanwhile. Only a grant the screen checked and found unblocked needs that; anything else
+// would only cost time toward a blocker, which the sender could measure.
+test('only a grant the screen checked, and found unblocked, is checked again after it reaches the world', async () => {
+  const blocks = createMemoryBlocks(), isAdmin = id => id === 'jev';
+  await blocks.add('b', { userId: 'jev', name: 'Jev' });
+  const recheck = async (userId, command) => (await screenCommand(blocks, userId, command, isAdmin)).recheck === true;
+  const grant = peerId => ({ type: 'campus', action: 'grant', leaseId: 'lease', peerId });
+  const office = peerId => ({ type: 'office', action: 'invite', officeId: 'jevica-office', peerId });
+  assert.equal(await recheck('a', grant('c')), true, 'a grant toward an unblocked resident');
+  assert.equal(await recheck('jev', office('c')), true, 'Jevica’s invitation toward an unblocked resident');
+  assert.equal(await recheck('jev', { type: 'homeAccess', action: 'grant', storeId: 'home', peerId: 'c' }), true);
+  assert.equal(await recheck('b', grant('jev')), false, 'a grant toward a blocker is already rewritten');
+  assert.equal(await recheck('a', office('b')), false, 'a resident’s invitation is refused by the world for anyone');
+  for (const command of [{ type: 'travel', peerId: 'c' }, { type: 'interaction', action: 'invite', kind: 'handshake', peerId: 'c' },
+    { type: 'campus', action: 'ungrant', leaseId: 'lease', peerId: 'c' }, { type: 'chat', text: 'hi', peerId: 'c' }])
+    assert.equal(await recheck('a', command), false, JSON.stringify(command));
+});
+
 test('separating Jevica from a resident with nothing to end changes nothing, revision included', () => {
   const { world } = plaza();
   const before = world.snapshot().revision;
