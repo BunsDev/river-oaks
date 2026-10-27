@@ -1,4 +1,5 @@
 import { poseFor } from './crime-poses.js';
+import { advanceCombat, applyCombatPose, createCombatBlend, facingYaw } from './combat-motion.js';
 import { layoutPeerLabels } from './peer-label-layout.js';
 import { createAvatarPlaceholder } from './avatar-placeholder.js';
 import { cullAvatarMeshes, figureHeight, figureInView, FIGURE_SPHERE } from './avatar-culling.js';
@@ -19,7 +20,7 @@ import { createPeerMotion } from './locomotion-handoff.js';
 // of view skip its update and every pass, like a peer beyond the distance gate.
 // Audits and journeys count players apart from the town's own figures (rivals, police, residents).
 export const figureKind=id=>/^(rival|police|resident):/.test(id)?id.slice(0,id.indexOf(':')):'player';
-export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=>true,snapInitialHeading=false,shadowDirection=null}={}){
+export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=>true,snapInitialHeading=false,shadowDirection=null,reducedMotion=Boolean(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches)}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
   // Who is talking on shared voice right now: a ring on the nameplate and the
   // speaker cadence in conversation-motion. Set at event time, read per frame.
@@ -86,7 +87,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
     });},
     stats(){return [...entries].map(([id,entry])=>{
       const arm=entry.avatar?.rig?.model?.getObjectByName('upperarm_r'),rest=arm&&entry.avatar.rig.rest.get(arm);
-      return {id,kind:figureKind(id),onScreen:Boolean(entry.onScreen),labelVisible:Boolean(entry.labelVisible),ready:Boolean(entry.avatar),fallback:Boolean(entry.placeholder),appearance:entry.loadedAppearance,character:entry.definition?structuredClone(entry.definition):null,materials:entry.colors?.inspect()??[],realism:entry.avatar?.realismReport??null,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray(),locomotion:{speed:entry.motion.state.speed,heading:entry.motion.state.heading??null,distance:entry.motion.state.distance},feet:(entry.avatar?.feet??[]).map(leg=>({side:leg.side,contact:leg.contact,error:leg.error,target:leg.target?.toArray()??null,actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()}))};
+      return {id,kind:figureKind(id),combat:entry.combat?.kind??null,combatProgress:entry.combat?.progress??null,onScreen:Boolean(entry.onScreen),labelVisible:Boolean(entry.labelVisible),ready:Boolean(entry.avatar),fallback:Boolean(entry.placeholder),appearance:entry.loadedAppearance,character:entry.definition?structuredClone(entry.definition):null,materials:entry.colors?.inspect()??[],realism:entry.avatar?.realismReport??null,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray(),locomotion:{speed:entry.motion.state.speed,heading:entry.motion.state.heading??null,distance:entry.motion.state.distance},feet:(entry.avatar?.feet??[]).map(leg=>({side:leg.side,contact:leg.contact,error:leg.error,target:leg.target?.toArray()??null,actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()}))};
     });},
     sync(players,selfId){
       if(disposed)return;
@@ -99,7 +100,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
           holder.position.set(player.position[0],player.position[2]+player.altitude,-player.position[1]);
           if(snapInitialHeading)holder.rotation.y=player.yaw+Math.PI;
           const placeholder=createAvatarPlaceholder();holder.add(placeholder.object);
-          entry={holder,label,placeholder,target:player,removed:false,motion:createPeerMotion(player.id),version:0,loadedAppearance:null,pendingAppearance:null,requestedAppearance:null,failures:0,retryAt:0};entries.set(player.id,entry);
+          entry={holder,label,placeholder,target:player,removed:false,motion:createPeerMotion(player.id),blend:createCombatBlend(),combat:null,version:0,loadedAppearance:null,pendingAppearance:null,requestedAppearance:null,failures:0,retryAt:0};entries.set(player.id,entry);
           if(speaking.has(player.id))label.dataset.speaking='true';
         }
         entry.target=player;entry.posed=true;entry.syncedAt=performance.now();setLabelText(entry,player.name+(entry.failures?' · avatar unavailable':entry.avatar?'':' · loading avatar'));syncRoad(entry,player.vehicle);loadAppearance(entry,player);
@@ -117,6 +118,8 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
         const {holder,target,avatar}=entry;next.set(target.position[0],target.position[2]+target.altitude,-target.position[1]);
         // Horizontal stride, travel heading and lift carry (locomotion-handoff.js).
         const motion=entry.motion.step(holder.position,next,delta,now,{posed:entry.posed,snap:Boolean(target.sitting||entry.wasSitting),walking:!target.vehicle&&target.altitude<=0.1,levelId:target.levelId??null}),[dx,dz]=motion.moved;entry.posed=false;
+        // #640: the figure's combat state from its last snapshot, played forward (combat-motion.js).
+        const combat=entry.combat=target.combat?advanceCombat(target.combat,Math.max(0,now-entry.syncedAt)):null;
         // Face the way they walk, as the local avatar does; a player standing
         // still keeps their last heading. Facing the camera yaw while moving
         // made remote players moonwalk.
@@ -128,6 +131,8 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
         else if(target.interaction)entry.heading=target.interaction.heading;
         // A startled or cowering resident faces the trouble the town turned them toward (#640).
         else if(target.gesture==='water'||target.gesture==='startle'||target.gesture==='cower')entry.heading=target.yaw+Math.PI;
+        // In a fight the body faces the opponent; the feet below keep the travel heading (#640).
+        else if(combat?.facing&&!target.vehicle&&facingYaw(combat.facing)!==null)entry.heading=facingYaw(combat.facing);
         else if(motion.heading!==undefined)entry.heading=motion.heading;
         if(target.sitting)holder.rotation.y=entry.heading;
         else holder.rotation.y+=Math.atan2(Math.sin(entry.heading-holder.rotation.y),Math.cos(entry.heading-holder.rotation.y))*(1-Math.exp(-12*delta));
@@ -150,6 +155,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
           avatar.object.position.set(0,seat?seat.height-avatar.rig.hipHeight+.025:ride?ride.passengerSeat[1]-avatar.rig.hipHeight+.025:0,0);
           avatar.object.rotation.y=ride?-Math.PI/2:0;
           avatar.update(now,!ride&&target.altitude<=0.1?(poseFor(target.gesture)??'continue'):'continue',speaking.has(target.id),{speed:seated?0:motion.speed,flightSpeed:speed,distance:motion.distance,heading:seated?undefined:motion.heading,platform:motion.platform,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,seatToFloor:seat?seat.height:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',handshakeTarget:target.interaction?.kind==='handshake'?target.interaction.target:undefined,gestureTime:target.interaction?target.interaction.elapsed+Math.max(0,now-entry.syncedAt)/1000:undefined},()=>holder.position.y);
+          for(const layer of entry.blend.step(combat,now,{reducedMotion}))applyCombatPose(avatar.rig,layer,{reducedMotion});
           entry.riderSeated=seated;
           entry.outfit.update(!seated&&target.altitude>0.1,now,seated);entry.vehicle.object.visible=!seated&&target.altitude>0.1;
           if(entry.road){

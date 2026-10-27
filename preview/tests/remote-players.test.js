@@ -53,6 +53,25 @@ test('a startled or cowering resident turns to face the trouble the town turned 
  }finally{globalThis.document=previousDocument;}
 });
 
+test('a figure in a fight faces its opponent and reports the town\'s combat state (#640 increment 4)',()=>{
+ const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
+ try{const camera=new THREE.PerspectiveCamera(),actors=createRemotePlayers(new THREE.Scene(),new Element(),{reducedMotion:true});
+  const rival={id:'rival:westcreek',name:'Westcreek rival',position:[0,0,0],altitude:0,yaw:0,appearance:'sable-human',gesture:null,movement:'upright'};
+  actors.sync([rival],null);
+  for(let t=0;t<=1000;t+=16)actors.update(t,camera);
+  assert.equal(actors.stats()[0].combat,null);
+  // Engaged with a player to the east: the body turns east while the state is a held pose.
+  actors.sync([{...rival,combat:{kind:'down',progress:1,durationMs:0,facing:[1,0]}}],null);
+  for(let t=1016;t<=2500;t+=16)actors.update(t,camera);
+  assert.equal(actors.stats()[0].combat,'down');assert.equal(actors.stats()[0].combatProgress,1);
+  assert.ok(Math.abs(actors.stats()[0].heading-Math.PI/2)<.01,`faces east: ${actors.stats()[0].heading}`);
+  actors.sync([{...rival,combat:null}],null);
+  for(let t=2516;t<=3000;t+=16)actors.update(t,camera);
+  assert.equal(actors.stats()[0].combat,null);
+  actors.dispose();
+ }finally{globalThis.document=previousDocument;}
+});
+
 test('a cinematic actor starts facing its authored travel direction before the first frame',()=>{
  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};
  try{const actors=createRemotePlayers(new THREE.Scene(),new Element(),{snapInitialHeading:true});
