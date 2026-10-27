@@ -269,7 +269,8 @@ Each guard was checked by removing it and watching its test fail:
 - the Redis scope;
 - the flag, in the hosted backend and the town;
 - the client's refresh fence, saved looks and world drafts, the exact phrase and the
-  CSRF header.
+  CSRF header. (The refresh fence's test passed without it; see the lander review
+  below.)
 
 Independent review (2026-10-24). It found no way around CSRF, the origin, the flag, the
 phrase or the limit, and nothing erased before WorkOS deletes the user.
@@ -277,7 +278,7 @@ phrase or the limit, and nothing erased before WorkOS deletes the user.
 | Finding | Severity | Outcome |
 | --- | --- | --- |
 | The status check didn't refresh an expired access token, so the control vanished about five minutes after sign-in | High | The page asks `/auth/session` first. Server test pins that the route alone doesn't refresh; client test pins the order. Red without either |
-| With the flag on and no webhook secret, "finishes on its own" could be false | Medium | With WorkOS the flag takes effect only with `WORKOS_WEBHOOK_SECRET`, otherwise it logs `account_deletion_off`. Tested in the helper, the hosted backend and the town |
+| With the flag on and no webhook secret, "finishes on its own" could be false | Medium | With WorkOS the flag takes effect only with `WORKOS_WEBHOOK_SECRET`, otherwise it logs `account_deletion_off`. Tested in the helper, the hosted backend and the town (the town's WorkOS rule only since the lander review below) |
 | A lost answer or a timeout misled the resident | Low | A lost answer or a sign-out triggers a session re-check; 502 says "couldn't delete right now"; client test |
 | `GET` answers with the flag off | Low | Kept on purpose: a 404 would log a failed request each time Account opens. It reveals only that deletion is off. Documented |
 | Stale inventory row and line references | Low | Fixed |
@@ -312,6 +313,72 @@ above and the webhook gap below.
 | --- | --- |
 | Deletion, erasure, town deletion and webhook files with `REDIS_URL` | 76/77, then 1/1: the Redis erasure test (`account-erasure.test.js`, unchanged here) timed out at 10 s at load 68 and passed alone |
 
+Lander review of C (river-oaks-e9, 2026-10-27, at `bf835443`): land-ready, with no high
+or medium findings. It checked authorization, CSRF, the limit, the flag on every path,
+WorkOS first with a 404 counted as deleted, the erasure wiring, the blocking mark (which
+can't be forged) and the logs. e9 marked C ready and started its lander; the fixes
+below are on D's branch. An independent review of the fixes confirmed each mutation,
+found no high or medium issue, and its notes are folded in (two more staff roles,
+wording, a test name).
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| The hosted recheck's conflict arm was untested: removing it stayed green | Low | Test: the room answers a grant as a conflict while that grant is still queued (the server can't tell it from a retry); one separation. Red without the arm |
+| The client's refresh fence was untested, though listed above as checked: the replaced answer was in place before the earlier refresh asked for it | Low | Each refresh now gets its own answer, and the earlier one's arrives last. Red with the fence reduced to `busy` |
+| The town's WorkOS rule was untested, though the table above says it was: `{development:true}` stayed green | Low | A WorkOS-mode town with fake credentials, where no request leaves the test. Without the secret it logs `account_deletion_off` (`webhook_secret_missing`) and has no route (404); with it the route asks for a sign-in (401). Red with `{development:true}` |
+| A staff account can delete itself and lose its role | Low | Decision 4 in `docs/account-deletion.md`: owner, moderator, waitlist-admin, campus-operator and screening-host ids. e9 is raising it with Val |
+| Decision 1 overstated the ten-minute rule | Low | Reworded: once ten minutes have passed it stops a stolen cookie used elsewhere, not an unattended device still signed in to GitHub |
+| `account_deletion_unavailable` didn't say what WorkOS answered | Nit | It logs the status the WorkOS SDK reports (408 for a local timeout, none for a network failure), and nothing else about the error. Red first |
+| No test for a sign-in time in the future | Nit | Added: not recent, and refused. Red without the `>= 0` guard |
+
+## Increment D: reports, support contact, App Review map
+
+Branch `feat/account-safety-review-292-20261024` in worktree `river-oaks-review-292`,
+stacked on increment C's head `b33ad8ec`. The guideline map, gaps and Decisions for Val
+are in [App Review readiness](../../app-review-292.md).
+
+Files owned:
+- New: `preview/src/support-contact.js`, `docs/app-review-292.md`.
+- New tests: `server/tests/reports.test.js`, `preview/tests/support-contact.test.js`.
+- Changed: `server/app.js` and `server/distributed-app.js` (the report confirmation);
+  `preview/src/sidebar.js` (Support in Account); `preview/src/settings-dialog.css`;
+  `.env.example` (`VITE_SUPPORT_CONTACT`); `docs/architecture.md`,
+  `docs/security-review.md`, `docs/player-blocking.md`, `docs/privacy-data-inventory.md`
+  (report retention).
+- Not edited, owned elsewhere: `preview/src/multiplayer-client.js` (the Report button
+  sends only `disruption`; the Block button isn't wired in), `preview/src/main.js`,
+  `preview/src/access-entry.js` (the sign-in and waitlist pages show no contact).
+
+Red first: both report tests failed on the old confirmation ("Report sent to the town
+moderators."). The town one also failed because the refusals had used up the reporter's
+limit; the test now makes them from a third resident and checks that limit.
+
+Mutation checks (each red, then restored):
+- no reserved-domain check on an email address;
+- no https check; no credential check; no `rel` on the https link;
+- no named-host check; a loose address pattern.
+
+Independent review (2026-10-24):
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| The map called blocking met, but residents have no Block button: `player-blocks.js` isn't wired in (B) | High | The map marks it a blocking gap for the owner of `multiplayer-client.js`. The #292 B comment and the #665 body were corrected |
+| The list of resident content missed direct messages, groups, public events and chosen usernames | Medium | Listed, with the filter's scope widened; none of them can be reported |
+| GitHub tokens: WorkOS can hand the resident's token to the server (5.1.1(v)) | Medium | Now Decision 7: turn token return off; the code already falls back |
+| "Saved for the moderators to review" promised a review nobody owns; the town log also drops old reports | Medium | Now "Report saved."; both losses documented; inventory retention corrected. Tests red first |
+| The support contact isn't shown before approval | Medium | Recorded as a gap for the owner of `access-entry.js` |
+| The address pattern allowed mailto fields (an added Bcc), direction overrides, trailing dots and IP hosts | Low | Plain ASCII addresses and named hosts only; tests red first |
+| Dark-mode link contrast 2.97:1 | Low | `--hud-focus` in dark mode (#a8ecd6 on #203e43) |
+| Hosted report test didn't block anyone; rate limits differ by server | Low | Block step added to the hosted test; the difference is documented |
+| The sidebar wiring has no test | Low | Kept, as for deletion: no sidebar unit test exists. Recorded |
+| "Every store forgets the account" contradicted the kept audit; audit formats differ; `import.meta.env` without `?.` | Note | Reworded; formats documented; `?.` used |
+
+| Check | Result |
+| --- | --- |
+| `pnpm run test:server` with `REDIS_URL` (isolated 6421), after review fixes | 1238/1238, 0 skipped |
+| `pnpm test` (preview unit), after review fixes | 4111/4112, the same 1 skip that predates this work |
+| `pnpm run verify` (core) | passed |
+
 ## Gaps and decisions
 
 - The lantern walk's record round keeps lamplighter display names with no account
@@ -341,17 +408,38 @@ above and the webhook gap below.
   ban; a hashed tombstone is a Decision for Val, not implemented.
 - Desktop (`desktop/`) is owned by another session; its local state is listed, not
   changed.
+- Hosted `preview experience (places)` failed once on #665 and once on #666, both in
+  `office-computer-embed`. The #666 failure is a race in the journey, present on main:
+  - `preview/src/access-entry.js` checks the session every 15 s and reloads when the
+    account differs from `document.body.dataset.accountId`, which is set once at entry.
+  - The journey switches accounts on a live page, then keeps working on it. The reload
+    lands within 15 s of the switch; when the steps after the switch run slowly
+    (8.5 s against 5 s in a passing run), it detaches the desk mid-click. The log shows
+    the page navigating to its own URL.
+  - The journey's tasks are retired, and the file isn't in #292's scope. A fix: wait for
+    that reload after the switch, or have the journey assert the reload itself.
+  - The #665 failure, a click inside the Computer frame after the first switch, has no
+    diagnosis. Each PR used its one rerun.
+- Hosted `preview checks` failed on #667's first head (`c7bcae1f`) in B's own test,
+  `blocking keeps its own write limit`: 200, not 429. The hosted limiter counts per clock
+  minute, and that run crossed a minute boundary (02:34:58-02:35:00Z). The test now fixes
+  the security store's clock inside one minute (B commit `f9d865fa`, merged up the stack
+  as `d06d9fcd` into C and `b626616b` into D). It's red without the fix when started a
+  second before a boundary, and red when the limit is raised to 100.
 
 ## Next action
 
-Increment A is draft PR #661, head `74eb7e03`: the lander's review and two follow-up
-reviews are fixed. Push, hosted CI, and hand back to river-oaks-e9, which lands it.
+Status, 2026-10-26. river-oaks-e9 lands the stack in order (#661, #665, #666, #667,
+#682), each after its own re-review and hosted CI; Val authorized that in e9's session.
+The lander's reviews of #661 and #665 are fixed, each followed by two independent
+reviews, and each increment carries the one below it. C now runs the erasure once and
+relies on its recorded second pass. Each PR goes back to e9 after verify, push and
+hosted CI.
 
-Increment B is draft PR #665: its lander review and two follow-up reviews are fixed, and
-A's head is merged in. `pnpm run test:server` with Redis and `pnpm run verify` when the
-load is under about 20, push, hosted CI, and hand back after #661. Then carry the new
-erasure API into C to E.
-
-Increment C is draft PR #666, stacked on #665: B's head is merged in. In-app deletion
-now runs the erasure once and relies on its recorded second pass; then verify, push and
-hosted CI. Then increment D (reports, support contact, App Review map).
+Still open from the 2026-10-25 handoff:
+1. Val decides on the numbered Decisions in `docs/app-review-292.md`, `docs/account-deletion.md`, `docs/player-blocking.md` and the inventory.
+2. Owners to ask:
+   - The owner of `multiplayer-client.js` and `main.js` (`outdoor-residents-admin-controls-20261024`): wire blocking with the four calls in `docs/player-blocking.md`, and add a report reason.
+   - The owner of `access-entry.js` (`touch-network-288-290-20261024`): show the support contact before approval, and call `clearAccountStorage` on sign-out.
+3. After the policy Decisions: a content filter and a moderator reports view. Both are gaps that block review.
+4. Native work stays with #286, #287 and #293.
