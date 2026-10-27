@@ -173,11 +173,14 @@ export function createOffices({worldData,players,isAdmin,isGuest=()=>false,envir
   }
   function load(saved){for(const [map,entries]of [[grants,saved.grants],[requests,saved.requests],[visits,saved.visits]]){map.clear();for(const [k,v]of entries)map.set(k,v);}}
   // Account erasure: the visit, every grant and every request.
+  // True when the account had a visit, an invitation or a request to end.
   const forget=id=>{
+    const had=visits.has(id)||[...grants.values(),...requests.values()].some(list=>list.some(item=>item.userId===id));
     leave(id);
     for(const [officeId,list] of [...grants])grants.set(officeId,list.filter(g=>g.userId!==id));
     for(const [officeId,list] of [...requests])requests.set(officeId,list.filter(r=>r.userId!==id));
-    changed();
+    if(had)changed();
+    return had;
   };
   return {command,publicVisit,has:id=>visits.has(id),leave,forget,checkpoint,validate,load,catalog};
 }

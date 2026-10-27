@@ -1,7 +1,7 @@
 import { accountName } from '../preview/src/resident-names.js';
 
 /** A profile is readable through an in-world encounter or an accepted contact. */
-export async function profileAction({action,identity,worldId,profiles,social,readBody,visiblePlayer,allowWrite}) {
+export async function profileAction({action,identity,worldId,profiles,social,readBody,visiblePlayer,allowWrite,blocks=null}) {
   if(!profiles)return {status:503,value:{error:'Profiles are unavailable.'}};
   if(!['view','save','claim-intro'].includes(action))return {status:404,value:{error:'Not found.'}};
   let data;
@@ -27,7 +27,8 @@ export async function profileAction({action,identity,worldId,profiles,social,rea
   if(peerId!==identity.userId) {
     const visible=await visiblePlayer(identity,peerId);
     const contact=visible?null:(await social?.list(identity.userId))?.find(item=>item.peer.id===peerId && item.status==='accepted');
-    if(!visible && !contact)return {status:404,value:{error:'Profile not found.'}};
+    // A block either way reads as a profile that is not here (#292).
+    if(!visible && !contact || blocks && await blocks.between(identity.userId,peerId))return {status:404,value:{error:'Profile not found.'}};
     name=visible?.name??contact.peer.name;
   }
   return {status:200,value:{profile:{...(await profiles.get(peerId)),userId:peerId,name:accountName(peerId,name)}}};
