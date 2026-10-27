@@ -51,6 +51,13 @@ test('faces sealed inside a solid or below the paving never reach the screen', (
   assert.deepEqual(pairs(scene(...buried)), ['steel / stone'], 'without the paving above them they would show');
   assert.deepEqual(pairs(scene(sheet, ...buried)), [], 'under the paving');
   assert.deepEqual(pairs(scene(...buried), { groundAt: () => 0 }), [], 'below the terrain');
+  // A planter sunk under paving that stands 6.4 cm above the terrain: the two undersides lie
+  // 2.8 cm apart, where only a camera under the street could see them (2026-10-27, Street pavers).
+  const slab = box(paving, [-10, .054, -10], [10, .064, 10]), planter = box(steel, [1, .026, 1], [2, .6, 2]);
+  assert.deepEqual(pairs(scene(slab, planter), { groundAt: () => 0 }), [], 'undersides beside the ground');
+  // A bench seat's underside is another matter: 45 cm up, it fights a board 3 mm under it.
+  const seat = box(stone, [0, .45, 0], [2, .5, .5]), board = box(steel, [.2, .447, .1], [1.8, .45, .4]);
+  assert.deepEqual(pairs(scene(seat, board), { groundAt: () => 0 }), ['steel / stone'], 'a raised underside still counts');
 });
 
 test('polygon offset settles a pair only when it pulls the front layer forward', () => {

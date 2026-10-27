@@ -244,7 +244,9 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
           balconies.push([middle - w / 2, middle + w / 2, h0 + 0.2, h0 + 3.05]);
         }
       }
-      holes.push(...windows.map(([a, b, lo, hi]) => [a, b, lo, hi]), ...balconies);
+      // The wall under a window stops at its sill's underside: the sill's top is the only face at
+      // the opening's foot, where the two shared a plane (depth-layer-audit.js).
+      holes.push(...windows.map(([a, b, lo, hi]) => [a, b, lo - 0.06, hi]), ...balconies);
       wall(f, material, s0 - (s0 === 0 ? ends[0] : 0), s1 + (s1 === W ? ends[1] : 0), h0, h1, -0.05, depth, holes);
       // A slim projecting floor line reads each storey.
       box(f, material, s0 - (s0 === 0 ? ends[0] : 0), s1 + (s1 === W ? ends[1] : 0), h0 - 0.05, h0 + 0.07, depth, depth + 0.05);
@@ -254,7 +256,8 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
   }
   function eaves(f, W, { depth = 0.9, over = 1.3, material = n.white, ends = [depth, depth] } = {}) {
     box(f, material, -ends[0] - over, W + ends[1] + over, EAVES, EAVES + 0.55, -0.05, depth + over);
-    box(f, n.soffit, -ends[0] - over + 0.02, W + ends[1] + over - 0.02, EAVES - 0.02, EAVES, depth, depth + over - 0.02);
+    // The soffit board is 6 cm deep, so its face stays clear of the eaves' underside from afar.
+    box(f, n.soffit, -ends[0] - over + 0.02, W + ends[1] + over - 0.02, EAVES - 0.06, EAVES, depth, depth + over - 0.02);
   }
   // A store sign box standing proud of the wall, lettered on its face.
   function signBox(f, a, b, lo, hi, d0, d1, material, text, style) {

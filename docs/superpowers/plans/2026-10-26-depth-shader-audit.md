@@ -130,6 +130,30 @@ The depth-layers journey on this tree (04:04Z, 37 s) passed:
 - 1.18–1.27 million faces per station;
 - the four shader-patch checks pass, with no compile or page errors.
 
+## Increment 2 (2026-10-27): 388 listed pairs to 313
+
+- **`district.js`**:
+  - Building masses draw walls only (`setDrawRange` on the extrusion's side group). The cap sat 2 cm under each roof sheet and fought it from the air. Stepped blocks keep a roof sheet at the step, so no terrace opens.
+  - Plain finishes (frames, bands, rails, louvres) take polygon offset −1/−2 over the cladding they sit on.
+  - Finish batches are named for the materials they draw (`finish:reference-gilt`, not a parameter key), so the list and census can say what they are.
+- **`reference-blocks.js`**: the wall under a window stops 6 cm lower, at its sill's underside; the soffit board is 6 cm deep.
+- **`depth-layer-audit.js`**:
+  - It scans only what is drawn: a geometry's draw range, and its groups only when the material is an array, as three.js draws it.
+  - A `focus` option scans around one spot.
+  - Undersides within 10 cm of the terrain count as unseen (it was 2 cm). A new test fails under the 2 cm rule (a planter sunk under paving 6.4 cm proud) and keeps a bench seat's underside.
+- **The list** went from 388 to 313 pairs:
+  - district facades 216 → 152, roofs 17 → 9, other 62 → 57;
+  - streets, campus and the Axe unchanged; iPic 9 → 11 (below).
+  - 82 pairs went and 37 were renamed in place (the finish names). Seven are new to the list:
+  - **Pavers × finish:** street pavers against a finish batch (hoarding, planter, soffit), 3.8 cm apart at (−2812, −1278). It appears only with the finish offset: an A/B scan at the arrival found the offset settles 58 pairs and adds this one. Both faces point down, 19–22 cm above the terrain, under the sidewalk's raised paving, so no camera can see them. A terrain-based rule can't tell; a walking-surface rule would, but could hide real fights under bridges. Listed as a false positive.
+  - **Roof × residence panel:** an unnamed mesh (likely a roof sheet) and a residence panel's top, 1.1 cm apart at (−2855.4, 24, −1305). It isn't the finish offset, and a district-only offline scene doesn't reproduce it. Cause not isolated; listed.
+  - **Five pre-existing pairs the scan catches only sometimes:** iPic Auditorium carpet × Tuck Room boards and × Upper lounge carpet; campus bronze × stone; campus glass × floor; facade interior × stone. The old audit finds the iPic pairs offline, and no increment-2 change touches these builders. The station scan's coverage varies with what has streamed in, so the ratchet could flake on them; listing them prevents that.
+- **Checks**:
+  - district, reference-block, audit and manifest files: 2,484 passed, 0 failed, 1 skipped;
+  - audit tests 6/6, with the new case red under the old rule;
+  - the depth-layers journey recorded at 10:16Z and confirmed by a normal run at 10:17Z;
+  - core verify below.
+
 ## Val's triangle at (−2907.95, −1401.08)
 
 - **What it was.** A hole, not a fight. A vertical-ray probe and a camera pick found nothing but the pale terrain under a 12 cm wedge: Westcreek Lane bends 1.7° where the District access lane meets it from the west. `joinStreetSegments` mitred only two-way bends, so both segments ended square at the junction, and on the east side (no other street) the asphalt, gutter, curb and pavers all left a wedge of bare ground.
@@ -159,13 +183,8 @@ By source:
 
 Hosted checks on `86afad18` (the third merge): 26 of 26 passed, including the `depth`, `studewood` and `terraces` shards and the aggregate `preview`.
 
-1. Increment 2, already measured in a scratch checkout (378 pairs to 318):
-   - building masses draw walls only (no cap 2 cm under each roof sheet);
-   - finish batches are named after the materials they draw;
-   - plain facade finishes (frames, bands, rails, louvres) are pulled forward over the cladding they sit on;
-   - window sills and eaves soffits no longer share planes with walls and eaves.
-2. Burn the list down builder by builder, largest visible pairs first, rerunning the journey in record mode after each.
-3. If Val wants them: main's six curb-return tangents that miss their straight curb by 20–64 cm, at (−2790, −1431), (−2903, −1431), (−2770, −1177) and (−2780, −1431). Each is on a short segment whose far end is a mitred bend, and the return's arc starts at the square tangent. Val's triangle was a different fault (above): a junction wedge, not the corner fan.
+1. Burn the list down builder by builder, largest visible pairs first, rerunning the journey in record mode after each. Isolate the roof × residence-panel pair at (−2855.4, 24, −1305) with a focused browser scan.
+2. If Val wants them: main's six curb-return tangents that miss their straight curb by 20–64 cm, at (−2790, −1431), (−2903, −1431), (−2770, −1177) and (−2780, −1431). Each is on a short segment whose far end is a mitred bend, and the return's arc starts at the square tangent. Val's triangle was a different fault (above): a junction wedge, not the corner fan.
 
 ## Decisions for Val
 

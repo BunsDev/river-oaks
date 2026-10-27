@@ -66,7 +66,9 @@ const insideTriangle = ([x, y], [[ax, ay], [bx, by], [cx, cy]]) => {
 // meshes (people, animals, cloth) move every frame and are left out, as are lines and points.
 // Triangles smaller than `minArea` (trim, lettering) are skipped for speed. Past `maxFaces` the
 // list is cut short and marked `truncated`, so a scan that could not finish never reads as clean.
-export function depthFaces(root, { minArea = 0.002, skip = () => false, maxFaces = 1.5e6 } = {}) {
+// `focus` ({ at: [east, up, north], radius }) keeps only triangles centred within `radius` of a spot.
+export function depthFaces(root, { minArea = 0.002, skip = () => false, maxFaces = 1.5e6, focus = null } = {}) {
+  const near = focus ? new THREE.Vector3(focus.at[0], focus.at[1], -focus.at[2]) : null, centre = new THREE.Vector3();
   root.updateMatrixWorld(true);
   const faces = [], a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), ab = new THREE.Vector3(), ac = new THREE.Vector3(), normal = new THREE.Vector3();
   const world = new THREE.Matrix4(), instance = new THREE.Matrix4();
@@ -74,8 +76,10 @@ export function depthFaces(root, { minArea = 0.002, skip = () => false, maxFaces
     if (!object.isMesh || object.isSkinnedMesh || object.morphTargetInfluences?.length || skip(object)) return;
     const geometry = object.geometry, position = geometry?.attributes.position, index = geometry?.index;
     if (!position) return;
-    const count = index ? index.count : position.count, materials = [object.material].flat();
-    const groups = geometry.groups.length ? geometry.groups : [{ start: 0, count, materialIndex: 0 }];
+    // Only what is drawn: the geometry's draw range, by group when it has them.
+    const total = index ? index.count : position.count, from = geometry.drawRange.start, count = Math.min(total, from + geometry.drawRange.count), materials = [object.material].flat();
+    const groups = (geometry.groups.length && Array.isArray(object.material) ? geometry.groups : [{ start: 0, count: total, materialIndex: 0 }])
+      .map(group => ({ ...group, start: Math.max(group.start, from) })).filter(group => group.start < count);
     const copies = object.isInstancedMesh ? object.count : 1;
     for (let copy = 0; copy < copies; copy++) {
       world.copy(object.matrixWorld);
@@ -90,6 +94,7 @@ export function depthFaces(root, { minArea = 0.002, skip = () => false, maxFaces
           normal.crossVectors(ab.subVectors(b, a), ac.subVectors(c, a));
           const length = normal.length();
           if (length / 2 < minArea) continue;
+          if (near && centre.copy(a).add(b).add(c).divideScalar(3).distanceTo(near) > focus.radius) continue;
           normal.divideScalar(length);
           if (faces.length >= maxFaces) { faces.truncated = true; return; }
           faces.push({ object, material, normal: normal.toArray(), offset: normal.dot(a), points: [a.toArray(), b.toArray(), c.toArray()], doubleSided: material.side === THREE.DoubleSide });
@@ -105,8 +110,8 @@ export function depthFaces(root, { minArea = 0.002, skip = () => false, maxFaces
 // to the side they face. A pair buried in a solid (floors between storeys, a box sunk below the
 // paving) never reaches the screen, so it is not reported.
 // `groundAt(east, north)` (optional) is the terrain height: overlaps below it are buried.
-export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minOverlap = 0.004, minArea, skip, groundAt = null } = {}) {
-  const faces = depthFaces(root, { minArea, skip });
+export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minOverlap = 0.004, minArea, skip, groundAt = null, focus = null } = {}) {
+  const faces = depthFaces(root, { minArea, skip, focus });
   const direction = n => n.map(v => Math.round(v * 100) + 0).join(',');
   // Bucket by direction (to 0.01) and by plane offset in maxGap steps; a face meets its own and
   // the next offset bucket. Double-sided faces also enter facing the other way.
@@ -150,11 +155,12 @@ export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minO
   // often than it enters it: it starts inside one of that mesh's solids (a floor between storeys,
   // a pier inside a slab). Open sheets such as the draped paving only ever enter, so a sheet
   // passing through a building cannot hide what is inside it. Below the terrain is buried too.
-  // Undersides resting on the ground (a bench foot, a bollard base) cannot be seen either.
+  // Undersides within 10 cm of the terrain (a bench foot, a bollard base, a planter sunk under
+  // paving that stands 6 cm proud) cannot be seen either: no camera gets below them.
   const open = ({ grid, wide }, project, point, height, normal) => {
     if (groundAt) {
       const [x, y, z] = project.unproject(point, height + 1e-3), ground = groundAt(x, -z);
-      if (y < ground - 0.005 || (normal[1] < -0.5 && y < ground + 0.02)) return false;
+      if (y < ground - 0.005 || (normal[1] < -0.5 && y < ground + 0.1)) return false;
     }
     const balance = new Map();
     for (const item of [...(grid.get(`${Math.floor(point[0] / cell)},${Math.floor(point[1] / cell)}`) ?? []), ...wide])

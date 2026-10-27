@@ -131,6 +131,10 @@ export function buildDistrictBuildings(world) {
     for (const [outline, from, to] of step ? [[shape, retailHeight, step.height], [towerShape, step.height, roofHeight]] : [[shape, retailHeight, roofHeight]]) {
       const geometry = new THREE.ExtrudeGeometry(outline, { depth: to-from, bevelEnabled: false, steps: 1, curveSegments: 1 });
       geometry.rotateX(-Math.PI / 2); geometries.add(geometry);
+      // Walls only: the roof sheet just above is the one top, and the base stands on the ground
+      // floor. A cap 2 cm under the roof fought it for depth from the air (depth-layer-audit.js).
+      const walls = geometry.groups.find(group => group.materialIndex === 1);
+      if (walls) geometry.setDrawRange(walls.start, walls.count);
       const mesh = new THREE.Mesh(geometry, massMaterial);
       mesh.position.y = building.center[2]+from; mesh.castShadow = mesh.receiveShadow = true;
       mesh.userData.districtBuilding = building.id; group.add(mesh);
@@ -422,10 +426,16 @@ export function buildDistrictBuildings(world) {
     const id = `${batch.geometry.uuid}|${key}`;
     if (!finishes.has(id)) {
       const material = batch.material.clone(); material.color.set('#ffffff'); material.name = `finish:${key}`; materials.add(material);
+      // Plain finishes are the trim applied to textured cladding (frames, bands, rails, louvres):
+      // pulled forward a couple of depth steps, they win where they meet it on one plane.
+      Object.assign(material, { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
       finishes.set(id, { material, geometry: batch.geometry, parts: [] }); drawn.push(finishes.get(id));
     }
     for (const part of batch.parts) finishes.get(id).parts.push({ ...part, color: batch.material.color });
+    (finishes.get(id).names ??= new Set()).add(batch.material.name || 'plain');
   }
+  // A finish batch is named for the materials it draws, so audits and census reports can say what it is.
+  for (const finish of finishes.values()) finish.material.name = `finish:${[...finish.names].sort().join('+')}`;
   for (const { material, geometry, parts } of drawn) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
     mesh.name = `facade:${material.name}`;
