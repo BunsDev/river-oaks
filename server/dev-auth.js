@@ -42,7 +42,7 @@ export function createDevAuth({ origin, env = process.env, now = Date.now, onLog
     const userId = `dev-${createHash('sha256').update(cookie).digest('hex').slice(0, 12)}`;
     ownerUserId ??= userId;
     const name = `${NAMES[sessions.size % NAMES.length]}-dev`;
-    const record = { userId, name, sessionId: userId, csrfToken: randomBytes(24).toString('base64url'), expiresAt: now() + SESSION_TTL };
+    const record = { userId, name, sessionId: userId, csrfToken: randomBytes(24).toString('base64url'), expiresAt: now() + SESSION_TTL, signedInAt: now() };
     sessions.set(cookie, record);
     res.setHeader('Set-Cookie', `${COOKIE}=${cookie}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_TTL / 1000}`);
     return record;
@@ -60,6 +60,9 @@ export function createDevAuth({ origin, env = process.env, now = Date.now, onLog
       for (const [key, record] of sessions) if (record.userId === userId) sessions.delete(key);
       await onLogout(userId);
     },
+    // In-app deletion (#292): there is no provider account, so only its sessions go, at erasure.
+    deleteProviderUser: async () => {},
+    clearSession(res) { res.setHeader('Set-Cookie', `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`); },
     authenticate: async req => current(req),
     async handle(req, res) {
       const path = new URL(req.url, origin).pathname;

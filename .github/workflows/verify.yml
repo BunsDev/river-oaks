@@ -228,6 +228,9 @@ jobs:
           # The Bayou Terraces beside the Commons, over their footbridges from Heights.
           - id: terraces
             journeys: bayou-terraces
+          # Woodland Heights east of Studewood, along Twentieth Street (toward 3x).
+          - id: woodland
+            journeys: woodland-heights
           # Surfaces that fight for depth in the composed town, and the shared shader patches
           # on instanced, batched and unmapped meshes (preview/src/depth-layer-audit.js).
           - id: depth

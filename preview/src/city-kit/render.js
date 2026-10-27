@@ -180,6 +180,14 @@ function yieldTo(rect, by) {
   return null;
 }
 
+// `rect` less `by`: up to four rectangles around the part `by` covers.
+function without(rect, [w, s, e, n]) {
+  if (rect[2] <= w || rect[0] >= e || rect[3] <= s || rect[1] >= n) return [rect];
+  return [[rect[0], rect[1], Math.min(rect[2], w), rect[3]], [Math.max(rect[0], e), rect[1], rect[2], rect[3]],
+    [Math.max(rect[0], w), rect[1], Math.min(rect[2], e), Math.min(rect[3], s)], [Math.max(rect[0], w), Math.max(rect[1], n), Math.min(rect[2], e), rect[3]]]
+    .filter(([a, b, c, d]) => c - a > 1e-6 && d - b > 1e-6);
+}
+
 function renderShell(piece, batch, detail, m, ground, signs, shared = new Set()) {
   const [w, s, e, n] = piece.rect, style = KIT_STYLES[piece.style] ?? KIT_STYLES['market-row'];
   const wall = m(piece.wall), trim = m(piece.trim), accent = m(style.accent), glass = m('glass'), bronze = m('metal-bronze');
@@ -617,25 +625,26 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
     let rect = piece.rect;
     // Street paving stops where the plaza paving begins; neither overlaps the other.
     if (clipStreet && piece.piece.startsWith('street/') && !piece.id.endsWith('/paving') && rect[2] > clipStreet[0] && rect[0] < clipStreet[0]) rect = [rect[0], rect[1], clipStreet[0], rect[3]];
-    paved.set(piece, rect);
+    paved.set(piece, [rect]);
   }
-  // A neighbourhood may have several plazas, met by streets on any side (Studewood): street paving
-  // still yields to each one, and where a plaza overlaps only part of a street piece, the plaza
-  // stops at the street instead. Same-plane paving in two materials fights for depth.
-  for (const street of plan.pieces.filter(p => paved.has(p) && p.piece.startsWith('street/') && !p.id.endsWith('/paving'))) for (const court of courts) {
-    const kept = yieldTo(paved.get(street), paved.get(court));
-    if (kept) paved.set(street, kept); else paved.set(court, yieldTo(paved.get(court), paved.get(street)) ?? paved.get(court));
-  }
+  // A neighbourhood may have several plazas, met by streets on any side (Studewood, Woodland
+  // Heights): street paving still yields to each one where it can stop short of it. Where a plaza
+  // overlaps only part of a street piece, the plaza gives way instead, drawn as the rectangles
+  // around the street. Same-plane paving in two materials fights for depth.
+  for (const street of plan.pieces.filter(p => paved.has(p) && p.piece.startsWith('street/') && !p.id.endsWith('/paving'))) for (const court of courts)
+    paved.set(court, paved.get(court).flatMap(part => {
+      const kept = yieldTo(paved.get(street)[0], part);
+      if (kept) { paved.set(street, [kept]); return [part]; }
+      return without(part, paved.get(street)[0]);
+    }));
   for (const piece of plan.pieces) {
     const spec = groundPiece[piece.piece];
     if (!spec) continue;
-    const rect = paved.get(piece);
-    if (rect[2] - rect[0] <= 1e-6 || rect[3] - rect[1] <= 1e-6) continue;
     const name = piece.material ?? spec[0], layer = spec[1], material = layer ? (overlays.get(`${name}|${layer}`) ?? overlays.set(`${name}|${layer}`, overlay(name, layer)).get(`${name}|${layer}`)) : m(name);
-    flat.add(material, drape(rect, groundAt, layer ? .004 * layer : 0, layer ? 4 : 2));
+    for (const rect of paved.get(piece)) if (rect[2] - rect[0] > 1e-6 && rect[3] - rect[1] > 1e-6) flat.add(material, drape(rect, groundAt, layer ? .004 * layer : 0, layer ? 4 : 2));
     if (piece.piece === 'landscape/tree-pit') {
       // The grate's texture spans the pit once, its round opening on the trunk.
-      const [w, s, e, n] = rect, inner = [w + .12, s + .12, e - .12, n - .12], plate = drape(inner, groundAt, .02, 4), uv = plate.attributes.uv;
+      const [w, s, e, n] = piece.rect, inner = [w + .12, s + .12, e - .12, n - .12], plate = drape(inner, groundAt, .02, 4), uv = plate.attributes.uv;
       for (let i = 0; i < uv.count; i++) uv.setXY(i, (uv.getX(i) - inner[0]) / (inner[2] - inner[0]), (uv.getY(i) - inner[1]) / (inner[3] - inner[1]));
       flat.add(grate, plate);
     }

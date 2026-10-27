@@ -130,6 +130,20 @@ The depth-layers journey on this tree (04:04Z, 37 s) passed:
 - 1.18–1.27 million faces per station;
 - the four shader-patch checks pass, with no compile or page errors.
 
+## Main merged a fourth time (`a4bf5588`, Woodland Heights, 2026-10-27)
+
+- **`verify.yml`.** Main's `woodland` shard stays beside `depth`.
+- **The Woodland Heights kit recipes** brought one pair, a sidewalk over plaza paving. A sidewalk there overlaps two plazas at once, and in one case the overlap covers only part of each:
+  - in the north, a corner piece paves the rest of the plaza's end;
+  - in the south, nothing does, which leaves an L.
+- **Fix in `render.js`.** Street paving still yields where it can stop short of a plaza. Otherwise the plaza loses exactly the area the street piece covers and is drawn as the rectangles around it (`without`). No gap can open: only area a street piece paves is removed.
+  - bayou-greenway and yale-street-north each lose one more 1 m overlap that the old rule left (unflagged, under a lawn strip).
+  - All fourteen kit neighbourhoods have no fights.
+- **Checks.** 194 street, ground, kit, depth-audit, district, reference-block, Studewood, Terraces, Woodland and destination files: 3,157 passed, 0 failed, 112 skipped (Redis cases).
+- **On this merged tree:**
+  - The depth-layers journey passed (10:25–11:41Z, most of it waiting for the browser lock): 313 listed, none new, none fixed.
+  - Core verify passed on the first attempt: agent 289/289; preview 4,287 passed, 1 skipped; server 1,036 passed, 278 skipped (Redis cases); desktop 127 passed, 5 skipped.
+
 ## Increment 2 (2026-10-27): 388 listed pairs to 313
 
 - **`district.js`**:
@@ -152,7 +166,7 @@ The depth-layers journey on this tree (04:04Z, 37 s) passed:
   - district, reference-block, audit and manifest files: 2,484 passed, 0 failed, 1 skipped;
   - audit tests 6/6, with the new case red under the old rule;
   - the depth-layers journey recorded at 10:16Z and confirmed by a normal run at 10:17Z;
-  - core verify below.
+  - core verify ran on the merge above.
 
 ## Val's triangle at (−2907.95, −1401.08)
 

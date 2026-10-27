@@ -6,6 +6,8 @@ import { STUDEWOOD_REVISION } from '../shared/studewood-layout.js';
 import { attachStudewood } from '../preview/src/studewood-world.js';
 import { TERRACES_REVISION } from '../shared/bayou-terraces-layout.js';
 import { attachBayouTerraces } from '../preview/src/bayou-terraces-world.js';
+import { WOODLAND_REVISION } from '../shared/woodland-heights-layout.js';
+import { attachWoodlandHeights } from '../preview/src/woodland-heights-world.js';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { attachDistrictGalleryPlan } from '../preview/src/district-interior-contract.js';
@@ -26,12 +28,14 @@ export async function loadDistrictData({ districtRevision } = {}) {
     throw new Error('District gallery plan digest mismatch');
   }
   const attached = attachDistrictGalleryPlan(world, plan);
-  const campus = [DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION].includes(districtRevision) ? attachGardenCampus(attached) : attached;
-  const commons = [COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION].includes(districtRevision) ? attachEastGardenCommons(campus) : campus;
+  const campus = [DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision) ? attachGardenCampus(attached) : attached;
+  const commons = [COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision) ? attachEastGardenCommons(campus) : campus;
   // Bayou Heights composes across the bayou from the Commons (#586 continuation).
-  const heights = [HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION].includes(districtRevision) ? attachBayouHeights(commons) : commons;
+  const heights = [HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision) ? attachBayouHeights(commons) : commons;
   // Studewood continues Heights east beyond Heights Boulevard (toward 3×).
-  const studewood = [STUDEWOOD_REVISION,TERRACES_REVISION].includes(districtRevision) ? attachStudewood(heights) : heights;
+  const studewood = [STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision) ? attachStudewood(heights) : heights;
   // The Bayou Terraces flank the Commons on the west bank, reached over two footbridges from the Heights greenway.
-  return districtRevision === TERRACES_REVISION ? attachBayouTerraces(studewood) : studewood;
+  const terraces = [TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision) ? attachBayouTerraces(studewood) : studewood;
+  // Woodland Heights continues Studewood east along Twentieth and Eighteenth Streets (toward 3×).
+  return districtRevision === WOODLAND_REVISION ? attachWoodlandHeights(terraces) : terraces;
 }

@@ -6,9 +6,15 @@ const groupId=value=>typeof value==='string' && /^[a-zA-Z0-9_-]{1,80}$/.test(val
 const userId=value=>typeof value==='string' && value.length>0 && value.length<=160 && !/[\u0000-\u001f\u007f]/u.test(value);
 const failure=(status,error)=>({status,value:{error}});
 
-export async function groupAction({action,identity,groups,social,readBody,allowWrite}) {
+// A group shared with a blocked resident stays, without their messages (#292).
+const unblocked=(group,hidden)=>!hidden?.size||!group?group:{...group,
+  ...(group.latest&&hidden.has(group.latest.authorId)?{latest:null}:{}),
+  ...(Array.isArray(group.messages)?{messages:group.messages.filter(item=>!hidden.has(item.authorId))}:{})};
+
+export async function groupAction({action,identity,groups,social,readBody,allowWrite,blocks=null}) {
   if(!groups)return failure(503,'Groups are unavailable.');
-  if(action==='list')return {status:200,value:{groups:(await groups.list(identity.userId)).map(guardGroup)}};
+  const hidden=blocks&&['list','read'].includes(action)?await blocks.hidden(identity.userId):null;
+  if(action==='list')return {status:200,value:{groups:(await groups.list(identity.userId)).map(group=>guardGroup(unblocked(group,hidden)))}};
   if(!['read','create','invite','accept','decline','leave','remove','send'].includes(action))return failure(404,'Not found.');
   let data;
   try{data=await readBody();}catch{return failure(400,'Invalid group request.');}
@@ -19,14 +25,15 @@ export async function groupAction({action,identity,groups,social,readBody,allowW
     return failure(400,'Invalid group request.');
   if(action==='read') {
     const group=await groups.read(identity.userId,data.groupId);
-    return group?{status:200,value:{group:guardGroup(group)}}:failure(404,'Group not found.');
+    return group?{status:200,value:{group:guardGroup(unblocked(group,hidden))}}:failure(404,'Group not found.');
   }
   if(!await allowWrite(identity.userId))return failure(429,'Please wait before changing groups.');
   let result;
   if(action==='create')result=await groups.create(identity,data);
   else if(action==='invite') {
+    // A contact a block could not end yet is not one.
     const contact=(await social?.list(identity.userId))?.find(item=>item.status==='accepted' && item.peer.id===data.peerId);
-    if(!contact)return failure(409,'Add this resident as a contact before inviting them.');
+    if(!contact||await blocks?.between(identity.userId,data.peerId))return failure(409,'Add this resident as a contact before inviting them.');
     result=await groups.invite(identity,data.groupId,{userId:contact.peer.id,name:contact.peer.name});
   }
   else if(action==='accept')result=await groups.accept(identity.userId,data.groupId);

@@ -254,7 +254,7 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
         || claims.client_id !== clientId) return null;
       const expiresAt = Math.min(claims.exp * 1000, record.expiresAt);
       if (expiresAt <= now()) return null;
-      return { userId: record.userId, sessionId: record.sessionId, name: nameOf(record.userId, record), email: result.user.email, expiresAt, csrfToken: record.csrfToken };
+      return { userId: record.userId, sessionId: record.sessionId, name: nameOf(record.userId, record), email: result.user.email, expiresAt, csrfToken: record.csrfToken, signedInAt: Number.isFinite(record.signedInAt) ? record.signedInAt : null };
     } catch { return null; }
   }
 
@@ -316,9 +316,10 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
       json(res, 403, { error: 'invalid_session' }); return;
     }
     if(!await accountActive(verified.user.id)){json(res,403,{error:'account_unavailable'});return true;}
+    // signedInAt marks this sign-in; a refresh keeps it, so in-app deletion can ask for a recent one.
     const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: provider,
       generation: token(), csrfToken: token(), cookieHash: digest(result.sealedSession),
-      sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL };
+      sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL, signedInAt: now() };
     if (!identity(verified, record)) {
       logSessionRejection(verified, record, clientId, now());
       json(res, 403, { error: 'invalid_session' }); return;
@@ -436,9 +437,10 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
           json(res, 403, { error: 'invalid_session' }); return true;
         }
         if(!await accountActive(verified.user.id)){json(res,403,{error:'account_unavailable'});return true;}
+        // The desktop shell exchanges its token right after the browser sign-in and keeps none.
         const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: result.authenticationMethod,
           generation: token(), csrfToken: token(), cookieHash: digest(result.sealedSession),
-          sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL };
+          sealedSession: result.sealedSession, expiresAt: now() + SESSION_TTL, signedInAt: now() };
         if (!identity(verified, record)) {
           logSessionRejection(verified, record, clientId, now());
           json(res, 403, { error: 'invalid_session' }); return true;
@@ -493,6 +495,12 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
       // A duplicate delivery must retry a failed cross-world disconnect too.
       await onLogout(userId);
     },
+    // In-app deletion (#292): WorkOS deletes the user; one already gone counts as deleted.
+    async deleteProviderUser(userId){
+      if(!validId(userId))throw new TypeError('Invalid account');
+      try{await sdk.userManagement.deleteUser(userId);}catch(error){if(error?.status!==404)throw error;}
+    },
+    clearSession(res){setCookie(res,SESSION_COOKIE,'',0);},
     close() { enabled = false; },
   };
 }

@@ -7,8 +7,10 @@ inventory, not a privacy policy or legal advice; the published policy is Val's.
 
 Account deletion starts with the signed WorkOS `user.deleted` webhook
 (`server/workos-deletion.js`), which calls `createAccountErasure`
-(`server/account-erasure.js:25`). It is wired in `server/town.js:151` (standalone)
-and `server/redis-backend.js:96` (hosted). The order is fixed:
+(`server/account-erasure.js:25`). It is wired in `server/town.js:160` (standalone)
+and `server/redis-backend.js:99` (hosted). In-app deletion, off unless
+`RIVER_OAKS_ACCOUNT_DELETION=1`, runs the same erasure after WorkOS deletes the user
+([in-app account deletion](account-deletion.md)). The order is fixed:
 
 1. The request is recorded under its WorkOS event id (below).
 2. The character tombstone (`server/character-store.js:220`). From then on the
@@ -31,15 +33,16 @@ The record holds the account id, the WorkOS event id and when the second run is 
 Hosted, it is one Redis hash (`server/account-erasure.js:113`); a failed or
 interrupted request stays in it, and the sweep (`server/account-erasure.js:64`)
 retries it and runs each due second run: every 30 seconds on a long-lived server
-(`server/redis-backend.js:101`), and every five minutes through the Vercel cron
+(`server/redis-backend.js:104`), and every five minutes through the Vercel cron
 `/api/erasure-sweep` (`server/account-erasure.js:130`), so on Vercel the second run
 and the record's removal take up to about six minutes. The cron needs `CRON_SECRET`.
 Without it on Vercel, nothing sweeps: no second run happens, a failed request is
 retried only by WorkOS, and each record keeps its account id. The backend logs
 `account_erasure_sweep_unscheduled` at every start in that case
-(`server/redis-backend.js:104`).
-The standalone town keeps the record in memory, like its other stores
-(`server/town.js:163`), and WorkOS retries a request that a restart interrupted.
+(`server/redis-backend.js:107`).
+The standalone town keeps the record in memory (`server/town.js:172`). WorkOS retries
+a webhook request that a restart interrupted, but a restart before a request's second
+run skips that run.
 Every failure is logged with the WorkOS event id and the names of the failed steps,
 the tombstone and the revocation included, and never the account
 (`server/account-erasure.js:32`). A sweep that can't read the records logs
@@ -54,11 +57,12 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 | --- | --- | --- | --- |
 | Character drafts, revisions, selection | `server/character-store.js:236` · `:255` | Until deleted | Replaced by the tombstone `{deleted:true}`, keyed by a SHA-256 of the id |
 | Erasure request: account id, WorkOS event id, when its second run is due | `server/account-erasure.js:102` · `:113` | A minute after the first run finishes, plus up to 30 seconds (long-lived servers) or five minutes (Vercel cron) until the sweep; a failing request stays until it succeeds. On Vercel without `CRON_SECRET`, indefinitely | The record of the erasure itself; dropped after the second run |
-| Sessions, CSRF tokens, sign-in state | `server/auth.js:73` · `server/redis-auth.js:218` | 7 days (`server/auth.js:13`, `server/redis-auth.js:12`) | Erased |
+| Sessions (with the time of sign-in), CSRF tokens, sign-in state | `server/auth.js:73` · `server/redis-auth.js:218` | 7 days (`server/auth.js:13`, `server/redis-auth.js:12`) | Erased |
 | Stored GitHub login | `server/github-names.js:79` · `:91` | Until deleted | Erased (`:87`, `:98`) |
 | Email-code sign-in state | `server/magic-auth.js:88` | 10 minutes (`:6`) | Lapses; never names the account after use |
 | Profile: tagline, bio, pronouns, interests; shops already visited | `server/profiles.js:36` · `:85` | Until deleted | Erased (`:59`, `:107`) |
 | Contacts and direct messages | `server/social.js:41` · `:150` | Until deleted | Erased from both sides of every pair (`:108`, `:200`) |
+| Blocks: who the account blocked, with the name shown, who blocked it, and a change counter | `server/blocks.js` (Redis; `BLOCKS_FILE` in the standalone town) | Until lifted | Erased from both sides ([player blocking](player-blocking.md)) |
 | Groups: owned, memberships, invitations, messages | `server/groups.js:36` · `:212` | Until deleted | Owned groups deleted; elsewhere membership, invitations and messages removed, including groups already left (`:104`, `:255`) |
 | Events hosted, RSVPs | `server/events.js:31` · `:119` | Until the event ends | Hosted events deleted; RSVPs removed (`:60`, `:142`) |
 | Presence (world, last seen) | `server/presence.js:27` · `:86` | 90 seconds (`:4`) | Erased (`:66`, `:117`) |
@@ -72,8 +76,8 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 | Voice leases | `server/voice.js:57` · `:162` | While in a call | Revoked and removed from the room (`:95`, `:196`) |
 | Workplace tasks and drafts | `server/workplace.js:25` · `:81` | Workplace retention limit | Erased (`:477`); a busy workplace fails the step so it is retried |
 | World state: player, chat lines, builds, inventory, wishes, home guests, office grants, campus leases, wanted stars, screenings, lantern walk, game tables | `server/world.js:117`, checkpointed by each room | Chat: last 40 lines (`:49`); builds until removed | Forgotten in every world (`server/world.js:591`). Builds others sit on are anonymized |
-| Moderation bans, reports and audit | `server/moderation.js:5` · `server/redis-security.js:112`, `:120` | Until removed by an admin | Kept (Decision 3) |
-| Rate-limit buckets and join tickets | `server/redis-security.js:81`, `:100` | At most 24 hours; tickets 60 s (`server/ticket-policy.js:7`) | Lapse |
+| Moderation bans, reports and audit | `server/moderation.js:6` · `server/redis-security.js:114`, `:122` | Bans until lifted. Moderators see the newest 200 reports, with both accounts' shown names, in Settings → Account → Reports (`server/moderation-reports.js`), except reports about themselves. A report keeps its reporter's account id after the reporter's erasure; the list then names them `Visitor #` and that id (Decision 3). Reports and the audit: in the town, until the log passes 5 MB a second time (it's renamed to `.previous`, replacing the one before); hosted, the newest 10,000 bans, unbans and reports | Kept (Decision 3) |
+| Rate-limit buckets and join tickets | `server/redis-security.js:83`, `:102` | At most 24 hours; tickets 60 s (`server/ticket-policy.js:7`) | Lapse |
 | Crime cooldowns, attack receipts, strikes, fights and evades; police pursuits, surrenders and holds, per world | `server/crime.js:75`, `server/police.js:29` | Receipts 60 s (`server/crime.js:12`); cooldowns, finished strikes and evades within seconds (`:11`, `:16`) | Forgetting the account first runs its departure, which ends its fight and every police pursuit or hold at once. Wanted stars are cleared at once; the cooldown and a cancelled strike lapse within seconds |
 | Room replies | `server/redis-room.js:18` | 15 seconds | Lapse |
 
@@ -81,9 +85,11 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 
 The web client uses `localStorage`, `sessionStorage` and cookies only. It has no
 IndexedDB, Cache Storage, script-readable cookie or service worker. Server erasure
-cannot reach a device. Today sign-out (`preview/src/access-entry.js:434`,
-`preview/src/multiplayer-client.js:392`) clears none of the per-account keys
-below. Clearing them at sign-out and after in-app deletion is #292 increment C.
+cannot reach a device. In-app deletion clears the per-account keys below on the
+device it runs on (`clearAccountStorage` in `preview/src/account-deletion.js`). Sign-out
+(`preview/src/access-entry.js:434`, `preview/src/multiplayer-client.js:392`) still clears
+none of them; those files belong to other tasks, and
+[in-app account deletion](account-deletion.md#on-the-device) says how they can call it.
 
 | Key | Where | Holds | Per account |
 | --- | --- | --- | --- |
@@ -94,7 +100,7 @@ below. Clearing them at sign-out and after in-app deletion is #292 increment C.
 | `river-oaks-creator-region-draft-v1[:<world>]` | `preview/src/region-draft.js:7` | Region drafts (admin) | Authored content |
 | `river-oaks-studio-designer-v1` | `preview/src/studio/designer-panel.js:3` | Studio project id, brief, familiar's name | Authored content |
 | `river-oaks-entered`, `river-oaks-signing-in` | `preview/src/access-entry.js:145`, `:71` | Entry and sign-in redirect flags | Device |
-| Theme, graphics, debug layers, panels, guides, sounds | `preview/src/theme.js:11`, `preview/src/render-quality.js:13`, `preview/src/debug-tools.js:28`, `preview/src/sidebar.js:76`, `preview/src/play-dock.js:22`, `preview/src/walking-ui.js:214`, `preview/src/salon-guide-content.js:168` | Display preferences | Device |
+| Theme, graphics, debug layers, panels, guides, sounds | `preview/src/theme.js:11`, `preview/src/render-quality.js:13`, `preview/src/debug-tools.js:28`, `preview/src/sidebar.js:79`, `preview/src/play-dock.js:22`, `preview/src/walking-ui.js:214`, `preview/src/salon-guide-content.js:168` | Display preferences | Device |
 | Cookie `river_oaks_session` (HttpOnly) | `server/auth.js:10` | Sealed session | Yes; expired at sign-out (`server/auth.js:335`) |
 | Cookie `river_oaks_gate` (HttpOnly) | `server/asset-gate.js:10` | Signed asset pass | Yes; not cleared at sign-out, lapses with its TTL |
 | Sign-in state cookies (HttpOnly) | `server/auth.js:11`, `server/magic-auth.js:5`, `server/email-verification.js:3` | One sign-in attempt | Cleared after use |
@@ -112,7 +118,7 @@ this change.
 
 | Processor | Receives | Configured by | Where | Reached by deletion |
 | --- | --- | --- | --- | --- |
-| WorkOS (AuthKit) | Email address, sign-in codes and tokens; sends the sign-in emails | `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_WEBHOOK_SECRET` | `server/auth.js:223`, `server/magic-auth.js:153`, `server/redis-auth.js:356` | Its `user.deleted` event starts erasure. No code here deletes the WorkOS user yet; in-app deletion (increment C) will |
+| WorkOS (AuthKit) | Email address, sign-in codes and tokens; sends the sign-in emails | `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_WEBHOOK_SECRET` | `server/auth.js:223`, `server/magic-auth.js:153`, `server/redis-auth.js:356` | Its `user.deleted` event starts erasure. In-app deletion deletes the WorkOS user first (`server/auth.js` and `server/redis-auth.js` `deleteProviderUser`) |
 | GitHub API | The GitHub id of a GitHub sign-in, to read the public login | `GITHUB_TOKEN` | `server/github-names.js:42` | Nothing is stored there by River Oaks; the local copy is erased |
 | LiveKit | A random participant identity, a room name, voice audio | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `RIVER_OAKS_VOICE` | `server/livekit-client.js:34`, `server/voice.js:257` | Rooms are live only; erasure removes the participant. No recording code exists |
 | Cloudflare Turnstile | A challenge token; the browser loads Cloudflare's script | `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY` | `server/turnstile.js:7`, `preview/src/access-entry.js:192` | Nothing stored by River Oaks |
@@ -154,7 +160,12 @@ There is no analytics or error-reporting service, and no other email sender.
 3. **Bans and the moderation audit.** They are kept so that a report or ban
    survives the reported account's deletion. A new sign-up gets a new WorkOS id,
    so a deleted and banned account can return. Recommended: keep the audit, and
-   decide whether to add a hashed ban list keyed by email.
+   decide whether to add a hashed ban list keyed by email. The audit also keeps an
+   erased reporter's account id, which the moderators' Reports list shows as
+   `Visitor #` and the id. A ban from the list on an erased account writes an
+   `invites-revoked` entry with its id back into the waitlist audit. Recommended
+   follow-up: on erasure, replace the reporter's id with `erased-account` in both
+   audits, and skip the invite revocation and hide Ban for an erased account.
 4. **Builds of an erased account.** Erasure deletes every build the account placed,
    in every world, unless someone is sitting on it (`server/world.js:595`). For a
    resident that is their own content. For one of Jevica's owner accounts it would
