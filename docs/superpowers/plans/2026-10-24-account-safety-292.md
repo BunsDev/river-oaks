@@ -379,6 +379,92 @@ Independent review (2026-10-24):
 | `pnpm test` (preview unit), after review fixes | 4111/4112, the same 1 skip that predates this work |
 | `pnpm run verify` (core) | passed |
 
+Lander review of D (river-oaks-e9, 2026-10-27, at `331bc542`): land-ready. This was the
+lander's first review of D's own change; its earlier reviews covered #661, #665 and
+#666. The handoff message wrongly said it had seen D before. It read `support-contact.js`
+(text only, `noopener noreferrer`), the sidebar wiring, the report copy on both servers
+and the status-only deletion log. Its focused run passed 24/24, with the 9 Redis cases
+skipped; the Redis run above covers those. It probed `supportLink`: a real address and an
+https path are accepted; http, credentials, IP hosts, example domains, `javascript:` and
+a `mailto` with fields are refused; a U+202E in the path is percent-encoded. #667 landed
+as `51e00c24` (2026-10-27 07:11Z).
+
+## Increment E: moderators read reports
+
+Branch `feat/moderation-reports-292-20261026` in worktree `river-oaks-moderation-292`,
+stacked on increment D's head `99cc3d30`. It closes one part of the 1.2 report gap:
+moderators couldn't read reports in the app.
+
+Files owned:
+- New: `server/moderation-reports.js`, `preview/src/moderation-reports.js`.
+- New tests: `server/tests/moderation-reports.test.js`, `preview/tests/moderation-reports.test.js`.
+- Changed: `server/moderation.js` and `server/redis-security.js` (a `reports()` reader
+  each, and the `moderation_reports` limit scope); `server/app.js` and
+  `server/distributed-app.js` (the route); `server/world-router.js` (every
+  `/api/moderation/` path goes to the configured world); `server/vercel-routing.js` and
+  `vercel.json`; `preview/src/sidebar.js` and `preview/src/settings-dialog.css`;
+  `server/tests/vercel-routing.test.js`, `server/tests/hardening-router-admission.test.js`;
+  `docs/app-review-292.md`, `docs/privacy-data-inventory.md`, `docs/security-review.md`.
+
+Red first: the server and client tests failed with the modules missing; the routing
+cases failed on the old rewrite list and router.
+
+Mutation checks (each red, then restored):
+- Server:
+  - no moderator check; no ban check; no approval check; no limit, and no limit scope;
+  - no report-kind check; town log not reversed, or `.previous` not read;
+  - one hosted chunk only; lookup errors not caught.
+- Client:
+  - no own-account guard; no stale-answer fence; no in-flight guard; a ban without the confirmation;
+  - failures shown to residents; failures shown only on the first answer;
+  - raw error codes shown; focus lost when the group hides; `known` never reset.
+
+Independent review (2026-10-26):
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| The list skipped waitlist approval, which the ban route requires; an unapproved moderator read every report | Medium | Treated as a resident. Town and hosted tests red first |
+| Residents saw the Reports group whenever the request failed (per-address 429, a Redis outage) | Medium | A failure shows only on a moderator's answer, or right after one. Tests red first |
+| No per-moderator read limit; the whole hosted list read each time; lookup errors gave the generic 503 | Low | 30 a minute on both servers; hosted read 500 at a time, only as far as needed; lookups inside the 503. The town still reads its two logs (about 5 MB each) in the moderation queue: recorded |
+| Raw error codes and client errors shown after a ban | Low | Sentences only; anything else reads "The ban didn't change. Try again." |
+| Up to 200 buttons named "Ban…"; focus lost when the group hides | Low | Each button names its account; focus goes to the Account pane |
+| A test compared a name with itself; no test that non-moderators never reach the store; hosted 401, 403 and cap untested | Low | All added |
+| The inventory's `sidebar.js` line was already off by two; "whether it is banned" covered only the reported account | Low | Corrected |
+| The sidebar wiring has no test | Low | As for deletion and support, no sidebar unit test exists. Recorded |
+| Found after the review: Account refreshes the list each time it opens, so the new limit's 429 could empty the list a moderator was reading | Low | The last list stays under any moderator failure. Test red first |
+
+Lander review of E (river-oaks-e9, 2026-10-27, at `5dac5cd3`): land after fixes, no
+high findings. It confirmed authorization on both servers (env parsing, 401/403/405,
+path variants 404, the exact Vercel rewrite and allowlist), no emails or free text,
+text-only rendering, the 200 cap, and the 429 fix and the moderator and limit guards by
+mutation.
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| A moderator saw reports about themself, with the reporter's identity, and could ban the reporter | Medium | Reports about the reader are left out inside each store, before the newest 200 are taken, so they don't push a row off the list either; any other moderator sees them. The reporter is sent only as a shown name (for an account without a username, `Visitor #` and its id). Town and hosted tests; red without the filter, with the id sent, and with the filter after the cap |
+| A moderator could ban another moderator or an owner, who then couldn't lift it | Low | Both ban routes refuse (403) to ban moderators, waitlist admins and the server's owner accounts (its `isAdmin`: Jevica's ids, or the local development owner), before revoking invites or anything else; lifting a ban on one still works. The list marks them `staff` and offers no Ban. Tests on both servers and the client; red without each check, when invites are revoked first, and when unbanning is refused too |
+| An erased reporter's id stays in both audits and now shows in the app; a ban on an erased account writes `invites-revoked` back into the waitlist audit | Low | Recorded in the inventory (Decision 3) with the follow-up: replace the reporter's id on erasure, skip the revocation and hide Ban for erased accounts. Not built: it needs a tombstone read per account and changes erasure's audit steps |
+| A refresh 429 after a ban left every button disabled and overwrote the 429 message | Low | When the refresh fails, the list shows the change (banned, or lifted), both messages show, and the buttons work again unless another ban started meanwhile. Buttons stay held until the list after a ban loads, and after a refused ban they work again. Red with each part removed |
+| A ban was looked up for every reporter; every resident's Account opens the list route | Low | Bans are looked up only for reported accounts (test; red when reporters are looked up). The call stays: the ticket that says who moderates is held by `main.js` and `multiplayer-client.js`, owned elsewhere, and a resident's answer costs a session check and a ban lookup, before any read |
+| A shared hosted limit key and an extra response field survived mutation | Low | A second hosted moderator reads after the first is limited, and both servers' tests compare whole report objects and the response's keys. Both mutations red |
+
+An independent review of these fixes found no high or medium issue and confirmed the
+reader filter, the staff checks' order and both servers' limits by mutation. Folded in:
+the cap came before the filter, so a report about the reader still pushed their oldest
+row off a full list; the docs said the reporter was not identified; a failed refresh
+left the changed row offering the old action; releasing the buttons ignored a second
+ban; the local development owner wasn't staff; and five mutations that survived are
+now pinned. Not changed: the in-world Ban button (`multiplayer-client.js`, owned
+elsewhere) still shows for staff, and the server's refusal is shown there.
+
+Its second pass, read only, found no high or medium issue. Folded in: when a newer
+refresh took over after a ban and failed, the row was stale again; the list now shows
+the change at once, held until it reloads, and a superseded refresh reports the failure
+shown. A lift's flip is tested too, and Decision 2 no longer asks to build the list.
+Recorded, not changed: a report about the reader still takes a place in the stored
+history (the hosted audit's newest 10,000 entries, the town log rotated at 5 MB), a
+faint signal where that history ends, shared with every ban, unban and report.
+
 ## Gaps and decisions
 
 - The lantern walk's record round keeps lamplighter display names with no account
@@ -416,8 +502,8 @@ Independent review (2026-10-24):
     lands within 15 s of the switch; when the steps after the switch run slowly
     (8.5 s against 5 s in a passing run), it detaches the desk mid-click. The log shows
     the page navigating to its own URL.
-  - The journey's tasks are retired, and the file isn't in #292's scope. A fix: wait for
-    that reload after the switch, or have the journey assert the reload itself.
+  - The journey's tasks are retired, and the file isn't in #292's scope. #686 (main
+    `c6eba6a3`, 2026-10-26) fixed it; every head is now merged with it.
   - The #665 failure, a click inside the Computer frame after the first switch, has no
     diagnosis. Each PR used its one rerun.
 - Hosted `preview checks` failed on #667's first head (`c7bcae1f`) in B's own test,
@@ -429,17 +515,20 @@ Independent review (2026-10-24):
 
 ## Next action
 
-Status, 2026-10-26. river-oaks-e9 lands the stack in order (#661, #665, #666, #667,
-#682), each after its own re-review and hosted CI; Val authorized that in e9's session.
-The lander's reviews of #661 and #665 are fixed, each followed by two independent
-reviews, and each increment carries the one below it. C now runs the erasure once and
-relies on its recorded second pass. Each PR goes back to e9 after verify, push and
-hosted CI.
+Status, 2026-10-27. river-oaks-e9 landed #661 (`66756b19`), #665 (`f403dc33`), #666
+(`d70f4d87`) and #667 (`51e00c24`), each after its own review and hosted CI; Val
+authorized that in e9's session. Each landed branch was split into its own register task,
+released, and retired by e9. #682 (E) is the last: main merged in, then verify, push and
+hosted CI, then e9's review.
 
-Still open from the 2026-10-25 handoff:
+Still open from the earlier handoffs (the 2026-10-26 one, before the lander's reviews, recorded
+the merged heads and their evidence; see git history):
 1. Val decides on the numbered Decisions in `docs/app-review-292.md`, `docs/account-deletion.md`, `docs/player-blocking.md` and the inventory.
 2. Owners to ask:
    - The owner of `multiplayer-client.js` and `main.js` (`outdoor-residents-admin-controls-20261024`): wire blocking with the four calls in `docs/player-blocking.md`, and add a report reason.
-   - The owner of `access-entry.js` (`touch-network-288-290-20261024`): show the support contact before approval, and call `clearAccountStorage` on sign-out.
-3. After the policy Decisions: a content filter and a moderator reports view. Both are gaps that block review.
+   - The owner of `access-entry.js` (`touch-network-288-290-20261024`): show the support contact before approval; call `clearAccountStorage` on sign-out. (The 15 s reload race the browser journey tripped on was fixed by #686.)
+3. Still blocking 1.2, after the policy Decisions:
+   - a content filter;
+   - keeping reported content with the report, and keeping reports until a moderator closes them;
+   - notifying a moderator.
 4. Native work stays with #286, #287 and #293.
