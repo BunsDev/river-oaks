@@ -947,7 +947,8 @@ Landing order: #654, #659, #656, #655, then #649 after round 6. Each decision is
   - **The failure:** a hosted run took 112 s, against 37 s for its passing rerun, and all three evade attempts saw `{seen: null}`.
   - **Cause:** the owner page's best-effort shove wait (`.catch`) waited out its 60 s default when the 600 ms gesture was missed. Meanwhile the rival countered every 2.5 s, five landed counters downed the visitor, and the rival disengaged.
   - **Fix:** the wait gives up after 1 s, and a missed counter now records `engagedId` and health. Nothing that asserts changed.
-  - **Hosted:** attempts 1 and 2 were cancelled at the 20-min limit for `shared (required)` (installs of 9.8 and 10.3 min); attempt 3 passed 26/26. Landing.
+  - **Hosted:** attempts 1 and 2 were cancelled at the 20-min limit for `shared (required)` (installs of 9.8 and 10.3 min); attempt 3 passed 26/26.
+  - **Landed** as `95882097` (head `eb37ca87`) and retired (`retirement-Us4X3f`). The first merge-guard call refused because the PR was still a draft (`gh pr ready` had failed unseen); it landed after a confirmed ready.
 - **#702, one walk driver** (task `shared-walk-driver-20261027`). **Landed** as `7b8bca53` and retired (`retirement-okdRKN`).
   - `preview/e2e/walk-driver.js` serves `east-garden-commons`, `bayou-heights`, `bayou-terraces`, `studewood` and `woodland-heights`. Each now gets the waypoint settle and the page-held turn; bayou-heights' `face()` goes through the same turn. The stall error gains `turns` and `presses`.
   - The walk itself is the Commons driver as merged. On a 260-case sweep it matches main exactly.
@@ -963,3 +964,33 @@ Landing order: #654, #659, #656, #655, then #649 after round 6. Each decision is
   - give the install its own step timeout, with a retry against another mirror.
 
   The first two change the workflow, so this is Val's call.
+
+## Handoff (about 11:00Z, 2026-10-27)
+
+Status of the 2026-10-26 goal ("proceed with all of the above e2e"):
+
+- **Phase 1, landing train: done.** Every PR Val authorized has landed: #654, #659, #656 (switched off), #655, #649, #662, #663, #673 and #693. #653 stayed on hold as Val decided, and river-oaks-7c has since landed it.
+- **Phase 2, release candidate on converged main: running, owned by river-oaks-e9.**
+  - The acceptance journeys on `a5857cf4` passed except `world-streaming` lap 12, which is likely the visible-Commons stream point.
+  - The District ABBA finished 08:34–09:05Z, all four arms exiting 0.
+  - `verify full` is in progress. A single `world-streaming` rerun on `d458c927` or later follows, with #700's diagnostics.
+  - e9 posts the 3× acceptance on #638 and #587.
+- **Phase 3, recurring flakes, without loosening any check: done for every mechanism found.**
+  - #698: Redis room lease release; main had been red.
+  - #696: `crime-shared` evade timing.
+  - #699: Commons waypoint settle and page-held turn.
+  - #700: `world-streaming` eviction diagnostics.
+  - #701: `crime-shared` counter before the loop.
+  - #702: one walk driver for the five district journeys.
+  - All are landed and retired, with evidence archived and restore-tested.
+- **Phase 4, 3× stack: on main** (#649 → #673; Woodland A′ measured 3.0480×).
+
+**Open, with who acts:**
+- **Val:**
+  - The CI fix for the `playwright install --with-deps` stalls: 7.6% of jobs take 6 min or more, and 7 hit the 20-min limit today. Timeout changes are not authorized here.
+  - Authorization to cancel this session's 19 detached scratch checkouts (`project:prune --cancel-stale --detached-path`).
+  - Commons activation conditions 4 (sign-off) and 5 (production state).
+- **river-oaks-e9:** whether to move `world-streaming`'s eviction far point, or the final facing, if the rerun confirms the visible-Commons cause. That change touches a check, so it is proposed rather than made.
+- **The crime owner (`crime-police-598`, `crime-release-599`):** the one-off `crime-transport` Redis failure, "alice: socket closed (4009) before its first snapshot". The log is in `evidence/crime-evade-timing-696`.
+- **Next stall to read:** the `bayou-terraces` 2 fps crawl. #702's `presses` counters in the next stall error should name it.
+- **Not yet acted on:** a diagnostic message in the campus-traversal "phone back on the street" stall (`onLevel`).
