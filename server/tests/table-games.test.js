@@ -139,3 +139,14 @@ test('a checkpoint keeps a game in progress, and a game that does not replay is 
   world.reset();
   assert.deepEqual(world.snapshot().tables, [], 'a reset clears the tables');
 });
+
+test('erasing a player clears their table, even while the opponent stays seated, and the world restores', () => {
+  const { act, table, world } = setup();
+  assert.equal(act('alice', { action: 'invite', kind: 'chess' }).ok, true);assert.equal(act('bob', { action: 'accept' }).ok, true);
+  assert.equal(act('alice', { action: 'move', move: 'e2e4' }).ok, true);
+  world.forgetAccount('alice');
+  assert.equal(table(), null);
+  assert.equal(JSON.stringify(world.checkpoint()).includes('"alice"'), false);
+  const restored = createSharedWorld(data, { now: () => 2_000_000 });
+  assert.deepEqual(restored.restore(JSON.parse(JSON.stringify(world.checkpoint()))), { ok: true });
+});

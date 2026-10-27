@@ -130,13 +130,60 @@ test('a queued lander wakes on release without waiting for the fallback or touch
   await enteredWait;
   assert.equal(fake.calls.pull, 0);
   first.dequeue(99);
-  // Waking well inside the 120 s fallback proves the watcher did it; the margin
-  // absorbs a loaded machine, where the notification and resume can take seconds.
+  // Waking well inside the 120 s fallback proves the watcher or the short recheck
+  // did it; the margin absorbs a loaded machine, where the resume can take seconds.
   const timeout = setTimeout(() => assert.fail('queue release did not wake the lander'), 30000);
   t.after(() => clearTimeout(timeout));
   assert.equal((await pending).status, 'merged');
   clearTimeout(timeout);
   assert.equal(fake.calls.guard, 1);
+});
+
+const settled = (promise, ms) => { let timer;
+  return Promise.race([promise.then(() => 'settled', () => 'settled'), new Promise(done => { timer = setTimeout(() => done('waiting'), ms); })]).finally(() => clearTimeout(timer)); };
+
+test('a release the watcher never reports still wakes the waiter at the next recheck', async t => {
+  // The watcher attaches but never fires, as when a macOS FSEvents stream is not yet live.
+  const dir = scratch(t), first = queueAt(dir, 2);
+  const silent = () => Object.assign(new EventEmitter(), { close() {} });
+  const mine = createQueue({ file: join(dir, 'queue.json'), lock: join(dir, 'queue.lock'), pid: 1, host: 'here', alive: () => true,
+    watchDirectory: silent, recheckMs: 50 });
+  first.enqueue(99); mine.enqueue(7);
+  const pending = mine.waitForTurn(7, 120000);
+  assert.equal(await settled(pending, 200), 'waiting', 'rechecks never grant a turn while another session is ahead');
+  first.dequeue(99);
+  const timeout = setTimeout(() => assert.fail('a missed notification left the waiter for its 120 s fallback'), 5000);
+  t.after(() => clearTimeout(timeout));
+  await pending;
+  clearTimeout(timeout);
+  assert.equal(mine.position(7), 0);
+});
+
+test('the directory watcher alone wakes a waiter once its stream is live', async t => {
+  const dir = scratch(t), first = queueAt(dir, 2);
+  const mine = createQueue({ file: join(dir, 'queue.json'), lock: join(dir, 'queue.lock'), pid: 1, host: 'here', alive: () => true, recheckMs: 600000 });
+  first.enqueue(99); mine.enqueue(7);
+  const pending = mine.waitForTurn(7, 600000);
+  await new Promise(done => setTimeout(done, 200));
+  first.dequeue(99);
+  assert.equal(await settled(pending, 15000), 'settled', 'the notification, not a recheck or the timer, woke it');
+  assert.equal(mine.position(7), 0);
+});
+
+test('a recheck that meets a held queue lock waits for the next tick instead of failing', async t => {
+  const dir = scratch(t), first = queueAt(dir, 2);
+  let held = false;
+  const alive = () => { if (held) throw Object.assign(new Error('The queue lock is held: test'), { code: 'QUEUE_LOCK_HELD' }); return true; };
+  const silent = () => Object.assign(new EventEmitter(), { close() {} });
+  const mine = createQueue({ file: join(dir, 'queue.json'), lock: join(dir, 'queue.lock'), pid: 1, host: 'there', alive, watchDirectory: silent, recheckMs: 20 });
+  first.enqueue(99); mine.enqueue(7);
+  const pending = mine.waitForTurn(7, 600000);
+  held = true;
+  assert.equal(await settled(pending, 150), 'waiting', 'a held lock during rechecks keeps the waiter queued');
+  held = false;
+  first.dequeue(99);
+  assert.equal(await settled(pending, 5000), 'settled');
+  await pending;
 });
 
 test('release before the queue watcher is attached is observed immediately', async t => {

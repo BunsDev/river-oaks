@@ -813,13 +813,17 @@ parameters, unsupported content types and ambiguous signatures. See the
 [WorkOS webhook contract](https://workos.com/docs/events/data-syncing/webhooks).
 No event body, credentials or private account fields are logged.
 
-An authenticated deletion first erases private character drafts, immutable
-revisions and selection state into the existing character tombstone, then revokes
-all local auth sessions for that user and requests disconnects from loaded worlds.
-Redis gateways share the durable tombstone and auth namespace; other active room
-leaders also consult session validity in their commit loop. This does not claim
-erasure of unrelated profile, social or workplace data. Memory-town state remains
-process-local, while the hosted Redis tombstone survives gateway replacement.
+An authenticated deletion runs the account erasure in `server/account-erasure.js`
+(#292). It first erases private character drafts, immutable revisions and selection
+state into the existing character tombstone, then revokes all local auth sessions
+for that user and disconnects every socket. Then it erases the account from every
+other store and from every world in the catalog: profile, contacts, groups, events,
+presence, design library, desk, look, ride totals, landmarks, problem reports,
+waitlist request, the stored GitHub name, voice leases and each world's checkpoint.
+A partial failure answers 503, so WorkOS retries. Redis gateways share the durable
+tombstone and auth namespace, and each world forgets the account through its room's
+single writer. [The privacy data inventory](privacy-data-inventory.md) lists every
+store, what deletion does to it and what is deliberately kept.
 
 A successful response follows completed storage/session cleanup and successful
 disconnect requests. Any storage error, thrown cleanup error or refused/pending

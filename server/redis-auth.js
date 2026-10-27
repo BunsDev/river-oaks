@@ -216,8 +216,8 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
   // Use a caller-provided hash tag unchanged; otherwise derive a stable safe tag.
   const namespace = typeof prefix === 'string' && /\{[^{}]+\}/.test(prefix) ? prefix : `{${digest(String(prefix))}}`;
   const keys = ['states', 'state-expiry', 'sessions', 'session-expiry', 'cookies', 'user-sessions'].map(suffix => `${namespace}:auth:${suffix}`);
-  const github = sdk && createGitHubNames({ userManagement: sdk.userManagement, token: githubToken, fetcher: githubFetch, now,
-    store: createRedisGitHubNameStore({ redis, key: `${namespace}:auth:github` }) });
+  const githubStore = createRedisGitHubNameStore({ redis, key: `${namespace}:auth:github` });
+  const github = sdk && createGitHubNames({ userManagement: sdk.userManagement, token: githubToken, fetcher: githubFetch, now, store: githubStore });
   // Residents are shown by GitHub username; only an admin account is Jevica.
   const nameOf = (userId, account) => residentName({ admin: isJevicaAdmin(userId), login: account?.login, userId });
   // Sessions from before usernames were stored, or whose lookup failed, are
@@ -485,9 +485,11 @@ export function createRedisAuth({ redis, prefix, apiKey, clientId, cookiePasswor
       if (!enabled || !validId(userId) || !validId(sessionId)) return false;
       try { return await accountActive(userId)&&Boolean(await transaction({ op: 'active', userId, sessionId })); } catch { return false; }
     },
+    // Account deletion: every session and the stored GitHub name.
     async revokeUser(userId){
       if(!validId(userId))throw new TypeError('Invalid account');
       await transaction({op:'user-delete',userId});
+      await githubStore.delete(userId);
       // A duplicate delivery must retry a failed cross-world disconnect too.
       await onLogout(userId);
     },

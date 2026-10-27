@@ -99,6 +99,18 @@ export function createMemoryGroups({now=Date.now,createId=randomUUID}={}) {
       member(record,actor.userId).name=message.authorName;
       return {ok:true,message};
     },
+    // Account erasure: an owned group goes for everyone. Elsewhere the account's
+    // membership, invitation and messages go, including groups it already left.
+    async eraseUser(userId) {
+      if(!validUserId(userId))throw new Error('Invalid account');
+      for(const [id,record] of [...records]){
+        if(record.ownerId===userId){for(const person of [...record.members,...array(record.invites)])drop(person.id,id);records.delete(id);continue;}
+        record.members=record.members.filter(item=>item.id!==userId);
+        record.invites=array(record.invites).filter(item=>item.id!==userId);
+        record.messages=array(record.messages).filter(item=>item.authorId!==userId);
+      }
+      indexes.delete(userId);
+    },
   };
 }
 
@@ -137,9 +149,22 @@ if action=='create' then
   return 'ok'
 end
 local raw=redis.call('HGET',KEYS[1],id)
+if not raw and action=='erase' then drop(actor) return 'ok' end
 if not raw then return 'missing' end
 local record=cjson.decode(raw)
-if action=='invite' then
+if action=='erase' then
+  if record.ownerId==actor then
+    for _,person in ipairs(record.members) do drop(person.id) end
+    for _,person in ipairs(record.invites or {}) do drop(person.id) end
+    redis.call('HDEL',KEYS[1],id)
+    drop(actor)
+    return 'ok'
+  end
+  for i=#record.members,1,-1 do if record.members[i].id==actor then table.remove(record.members,i) end end
+  for i=#(record.invites or {}),1,-1 do if record.invites[i].id==actor then table.remove(record.invites,i) end end
+  for i=#(record.messages or {}),1,-1 do if record.messages[i].authorId==actor then table.remove(record.messages,i) end end
+  drop(actor)
+elseif action=='invite' then
   if record.ownerId~=actor then return 'forbidden' end
   if contains(record.members,target) or contains(record.invites,target) then return 'existing' end
   if #record.members+#record.invites>=32 or #index(target)>=12 then return 'limit' end
@@ -225,6 +250,21 @@ export function createRedisGroups({redis,prefix,now=Date.now,createId=randomUUID
       const message=messageFor(actor,text,createId,now);if(!message)return invalid;
       const result=await change('send',id,actor.userId,'',JSON.stringify(message));
       return result.ok?{ok:true,message}:result;
+    },
+    // Groups the account left still hold its messages, so every record is read.
+    async eraseUser(userId) {
+      if(!validUserId(userId))throw new Error('Invalid account');
+      const ids=new Set(array(JSON.parse(await redis.hget(keys[1],userId)??'[]')));
+      let cursor='0';
+      do {
+        const [next,entries]=await redis.hscan(keys[0],cursor,'COUNT',200);cursor=next;
+        for(let i=0;i<entries.length;i+=2){
+          const record=JSON.parse(entries[i+1]);
+          if(record.ownerId===userId||member(record,userId)||invited(record,userId)||array(record.messages).some(item=>item.authorId===userId))ids.add(entries[i]);
+        }
+      } while(cursor!=='0');
+      for(const id of ids)await change('erase',id,userId);
+      await redis.hdel(keys[1],userId);
     },
   };
 }

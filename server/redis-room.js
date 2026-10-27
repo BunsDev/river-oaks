@@ -1,5 +1,6 @@
 import { recoverDistrictCommonsCheckpoint } from './district-commons-checkpoint-migration.js';
 import { recoverDistrictHeightsCheckpoint } from './district-heights-checkpoint-migration.js';
+import { recoverDistrictStudewoodCheckpoint } from './district-studewood-checkpoint-migration.js';
 import { characterSelectionOperation } from './character-store.js';
 import { defaultAppearanceFor } from '../preview/src/shared-appearances.js';
 import { randomUUID } from 'node:crypto';
@@ -103,6 +104,7 @@ function validOperation(operation) {
   if(!record(operation))return false;
   if(operation.type==='join')return validIdentity(operation.identity) && id(operation.connectionId);
   if(operation.type==='kick')return id(operation.userId) && (operation.sessionId===undefined || id(operation.sessionId));
+  if(operation.type==='forget')return id(operation.userId) && Object.keys(operation).length===2;
   if(operation.type==='revise')return id(operation.actorId) && Number.isSafeInteger(operation.expectedDraftVersion)
     && operation.expectedDraftVersion>=1 && operation.expectedDraftVersion<=100001;
   return ['command','heartbeat','leave'].includes(operation.type) && id(operation.userId) && id(operation.connectionId)
@@ -208,8 +210,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
         // The garage/Gardens district revision switch (#512) chains the older garage recoveries itself.
-        // Bayou Heights extends the Commons layout, so its recovery runs first.
-        const heights = recoverDistrictHeightsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        // Studewood extends Heights, which extends the Commons layout, so their recoveries run first.
+        const studewood = recoverDistrictStudewoodCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const heights = studewood.ok ? studewood : recoverDistrictHeightsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const commons = heights.ok ? heights : recoverDistrictCommonsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const gardens = commons.ok ? commons : recoverDistrictGardensCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const tower = gardens.ok ? gardens : recoverDistrictTowerCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
@@ -222,7 +225,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
           error.checkpointReason = checkpointReason;
           throw error;
         }
-        districtMigration = heights.ok ? { kind: 'heights', from: heights.from, to: heights.to, moved: heights.moved.length }
+        districtMigration = studewood.ok ? { kind: 'studewood', from: studewood.from, to: studewood.to, moved: studewood.moved.length }
+          : heights.ok ? { kind: 'heights', from: heights.from, to: heights.to, moved: heights.moved.length }
           : commons.ok ? { kind: 'commons', from: commons.from, to: commons.to, moved: commons.moved.length }
           : gardens.ok ? { kind: 'gardens', from: gardens.from, to: gardens.to, moved: gardens.moved.length }
           : tower.ok ? { kind: 'tower', from: tower.from }
@@ -372,6 +376,17 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         if(connection && (!operation.sessionId || operation.sessionId===connection.identity.sessionId))remove(operation.userId);
         return {ok:true};
       }
+      // Account erasure (#292): the connection, any pending selection, then the world's records.
+      // Metres this tick drained, or this owner has yet to bank, go too; the reply waits for a
+      // bank already in progress, so the ride store's erasure comes after it.
+      if(operation.type==='forget') {
+        if(connection)remove(operation.userId);
+        pendingSelections.delete(operation.userId);selectionVersions.delete(operation.userId);
+        world.forgetAccount(operation.userId);
+        for(let index=drained.length-1;index>=0;index--)if(drained[index].userId===operation.userId)drained.splice(index,1);
+        await rides?.forget(operation.userId);
+        return {ok:true};
+      }
       if(!connection || connection.connectionId!==operation.connectionId || connection.leftAt!==null)return rejected('stale_connection');
       if(!await allowed(connection.identity)){remove(operation.userId);return rejected('session_invalid');}
       if(connection.identity.expiresAt<=time)return rejected('session_expired');
@@ -472,7 +487,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       visitors,JSON.stringify(revisionUpdate?.sources??[]),
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'heights'
+    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'studewood'
+      ? { event: 'district_studewood_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'heights'
       ? { event: 'district_heights_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
       : districtMigration.kind === 'commons'
       ? { event: 'district_commons_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
