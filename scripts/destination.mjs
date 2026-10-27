@@ -120,6 +120,6 @@ else if (command === 'override') override(rest[0], rest[1]);
 else if (command === 'preview') {
   const recipe = readRecipe(rest[0] ?? join(recipesDir, 'bayou-market-commons.json'));
   console.log(`In-engine kit preview: pnpm run dev, then open /e2e/fixtures/city-kit.html?recipe=${recipe.id}`);
-  if (recipe.id === 'bayou-market-commons') console.log('Playable in the town: RIVER_OAKS_DISTRICT_REVISION=east-garden-commons-market-1 pnpm run dev, then walk east from the District arrival.');
+  if (recipe.id === 'bayou-market-commons') console.log('Playable in the town: pnpm run dev serves it (the development town defaults to the full expansion), then walk east from the District arrival.');
 } else { console.error(`usage: destination build|check|override|preview (${pieceCount} kit pieces)`); process.exitCode = 2; }
 function fail() { throw new Error('Pass a recipe .json path'); }
