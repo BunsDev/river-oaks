@@ -30,23 +30,39 @@ async page => {
     if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await tab.locator('#panel-toggle').click();
     if(await tab.locator('.visit-tools').evaluate(node=>node.open))await tab.locator('.visit-tools-toggle').click();
   };
+  // Both players walk at once in one browser. In headed Chromium the first drag in a page after
+  // the other page's drag rarely gets pointer capture, so it does not turn: across three hosted
+  // runs such drags captured 5 of 561 times, against 109 of 132 after the same page's drag. When
+  // both players turned at once they kept failing in turn until a waypoint deadline. A page keeps
+  // the turn until it faces its waypoint; the other page waits.
+  let turning=Promise.resolve();
   const walk=async(tab,points,label)=>{
-    const started=Date.now(),start=await self(tab),samples=[];
+    const started=Date.now(),start=await self(tab),samples=[],turns={drags:0,turned:0,waitedMs:0};let dragYaw=null,holding=false,endTurn=()=>{};
     const releaseKeys=async()=>{await tab.keyboard.up('KeyW');await tab.keyboard.up('ShiftLeft');};
+    const holdTurn=async()=>{
+      const previous=turning;let release;turning=new Promise(resolve=>{release=resolve;});
+      endTurn=()=>{release();endTurn=()=>{};};const since=Date.now();await previous;turns.waitedMs+=Date.now()-since;
+    };
     try{for(const target of points){
       const deadline=Date.now()+120000;
       for(;;){
         const pose=await tab.evaluate(()=>window.__riverCarriage().pose),dx=target[0]-pose.position[0],dz=-target[1]-pose.position[2],distance=Math.hypot(dx,dz);
-        // Stay inside the planner's 0.3 m corner clearance before turning.
-        if(distance<.15){await releaseKeys();break;}
-        if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose,refusals:await tab.evaluate(()=>window.__commonsRefusals)})}`);
+        if(dragYaw!==null){if(pose.yaw!==dragYaw)turns.turned++;dragYaw=null;}
+        // Stay inside the planner's 0.3 m corner clearance before turning. A fast press can carry the
+        // walker through the waypoint at full speed; let it stop and measure again, or it coasts on
+        // (a hosted run ended 0.9 m past its lantern, outside the town's arrival check).
+        if(distance<.15){await releaseKeys();if(pose.speed<.05)break;await tab.waitForFunction(()=>window.__riverCarriage().pose.speed<.05,null,{timeout:10000});continue;}
+        if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose,turns,refusals:await tab.evaluate(()=>window.__commonsRefusals)})}`);
         const heading=Math.atan2(-dx,-dz),difference=Math.atan2(Math.sin(heading-pose.yaw),Math.cos(heading-pose.yaw));
         if(Math.abs(difference)>.035){
           await releaseKeys();
+          if(!holding){holding=true;await holdTurn();}
           const box=await tab.locator('#canvas-host').boundingBox(),x=box.x+box.width*.5,y=box.y+box.height*.4;
           const drag=Math.max(-box.width*.35,Math.min(box.width*.35,-difference/.003));
-          await tab.mouse.move(x,y);await tab.mouse.down();await tab.mouse.move(x+drag,y,{steps:3});await tab.mouse.up();continue;
+          await tab.mouse.move(x,y);await tab.mouse.down();await tab.mouse.move(x+drag,y,{steps:3});await tab.mouse.up();
+          turns.drags++;dragYaw=pose.yaw;continue;
         }
+        if(holding){holding=false;endTurn();}
         // A lifecycle release clears runtime input; repeat keydown cannot resume it.
         if(pose.speed<.05)await releaseKeys();
         await tab.locator('#canvas-host').focus();
@@ -64,12 +80,12 @@ async page => {
         samples.push((await self(tab)).position);
       }
     }
-    }finally{await releaseKeys();}
+    }finally{if(holding)endTurn();await releaseKeys();}
     const target=points.at(-1);
     try{await tab.waitForFunction(target=>{const town=window.__riverMultiplayer(),p=town.snapshot.players.find(p=>p.id===town.selfId);return Math.hypot(p.position[0]-target[0],p.position[1]-target[1])<.6;},target,{timeout:10000});}
     catch(error){throw new Error(`${label}: the town did not confirm arrival ${JSON.stringify(await tab.evaluate(()=>{const town=window.__riverMultiplayer();
       return {pose:window.__riverCarriage().pose.position,town:town.snapshot.players.find(p=>p.id===town.selfId)?.position,connected:town.connected,refusals:window.__commonsRefusals};}).catch(()=>null))} (${error.message})`);}
-    routes.push({label,seconds:(Date.now()-started)/1000,start:start.position,end:(await self(tab)).position,samples});console.log(`${label} reached`);
+    routes.push({label,seconds:(Date.now()-started)/1000,start:start.position,end:(await self(tab)).position,samples,turns});console.log(`${label} reached`);
   };
   try{
     await Promise.all([ready(page),ready(peer)]);
