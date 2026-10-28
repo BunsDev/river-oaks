@@ -17,7 +17,7 @@ the binary is marked **native**.
 | --- | --- | --- | --- |
 | 1.2 | Filter objectionable content | Length limits and control-character checks only; no content filter | **Gap, blocking** |
 | 1.2 | Report offensive content, respond in time | Residents can be reported from the roster, and reports are saved. Moderators read them, newest first, in Settings → Account → Reports and can ban from there (this change). Messages, events and groups can't be reported; nobody is told | **Gap, blocking** |
-| 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The Block button is built but not wired into the client | **Gap, blocking** (client owner) |
+| 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The roster now offers Block/Unblock and Settings → Account lists blocked residents | Integrated in source; fixture verification and native acceptance remain distinct |
 | 1.2 | Published contact information | Settings → Account → Support, once `VITE_SUPPORT_CONTACT` is set (this change). Not on the sign-in or waitlist pages | Needs a value; **gap** before approval |
 | 5.1.1(v) | Delete the account in the app | In-app deletion behind a default-off flag (#666), webhook erasure (#661) | Met in source, off |
 | 5.1.1(v) | Revoke social credentials; no social tokens kept off the device | WorkOS can return the resident's GitHub token, which the server then uses | **Decision** |
@@ -104,15 +104,19 @@ Ban for them; lifting a ban on one still works. Tests:
 Proposed next increment: keep the reported content with the report, and keep reports
 until a moderator closes them. Response time and ownership are Decision 2.
 
-**Blocking. Gap, blocking.** [Player blocking](player-blocking.md) (#665) is enforced
+**Blocking. Integrated in source.** [Player blocking](player-blocking.md) (#665) is enforced
 on the server. It covers chat, gestures, greetings, contacts, direct messages,
 profiles, group messages, invitations, travel, private places and Garden campus guest
-access, and it holds across reconnects and worlds. But residents can't make a block yet. The Block button for
-the roster and the blocked list for Settings (`preview/src/player-blocks.js`) are
-built and tested, but not wired in: `preview/src/multiplayer-client.js` and
-`preview/src/main.js` belong to other active tasks. Until their owners make the four
-calls listed in that page, a block can only be made through `/api/blocks/*`. Voice
-isn't covered: the device mute is the only control today
+access, and it holds across reconnects and worlds. Residents can now use Block/Unblock
+beside Report in the player roster and manage their blocked list in Settings → Account.
+The multiplayer client owns authenticated attachment, reconnect refresh and teardown;
+the Account pane offers refresh and reports failures without false success. Session
+and attempt fences prevent stale replies or a pending sign-out from rebinding another
+session's list. The implementation and fixture evidence are recorded in
+`docs/superpowers/plans/2026-10-27-player-blocking-ui-292.md`; live auth, hosted routing,
+physical-device and human accessibility acceptance are separate. This integration
+does not close this App Review issue or authorize an iOS release. Voice isn't covered:
+the device mute is the only control today
 ([Decision 1 there](player-blocking.md)).
 
 **Contact. Needs a value, and a gap before approval.** `VITE_SUPPORT_CONTACT`, set at
