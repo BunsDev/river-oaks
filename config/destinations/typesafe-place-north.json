@@ -1,0 +1,335 @@
+{
+  "id": "typesafe-place-north",
+  "title": "TypeSafe Place: Luxury Living, its courts and the shops on Twentieth Street",
+  "kit": "city-kit-1",
+  "seed": 2026,
+  "inspiration": "Patterns only, no copied buildings: an elevated residential neighborhood east of Woodland Heights, after the concept art 'TypeSafe Place Residential Heights'. Two 20-storey balconied towers (Luxury Living, and Penthouse Row with its setback crown), garden-roofed mid-rises (Sky Gardens), everyday shop rows with garden roofs, a neighborhood green with a pink ribbon sculpture, and a tree-lined walking avenue. All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    552.5,
+    0,
+    619,
+    117.5
+  ],
+  "streets": [
+    {
+      "id": "twentieth-typesafe",
+      "from": [
+        552.5,
+        111
+      ],
+      "to": [
+        619,
+        111
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 8,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 14,
+        "spacing": 30
+      },
+      "clear": [
+        [
+          548,
+          560
+        ],
+        [
+          611,
+          620
+        ]
+      ]
+    }
+  ],
+  "plazas": [
+    {
+      "id": "luxury-forecourt",
+      "rect": [
+        590,
+        4,
+        620,
+        94.5
+      ],
+      "lawns": [
+        [
+          594,
+          10,
+          614,
+          34
+        ],
+        [
+          594,
+          58,
+          614,
+          86
+        ]
+      ],
+      "treeRows": [
+        {
+          "y": 44,
+          "from": 596,
+          "to": 612,
+          "spacing": 8
+        },
+        {
+          "y": 50,
+          "from": 596,
+          "to": 612,
+          "spacing": 8
+        }
+      ]
+    },
+    {
+      "id": "luxury-south",
+      "rect": [
+        553,
+        4,
+        591,
+        40
+      ],
+      "lawns": [
+        [
+          556,
+          8,
+          586,
+          30
+        ]
+      ],
+      "hedges": [
+        [
+          553,
+          4,
+          554.2,
+          40
+        ]
+      ]
+    },
+    {
+      "id": "luxury-west",
+      "rect": [
+        553,
+        39,
+        560,
+        94.5
+      ],
+      "hedges": [
+        [
+          553,
+          39,
+          554.2,
+          94.5
+        ]
+      ]
+    },
+    {
+      "id": "luxury-north",
+      "rect": [
+        559,
+        70,
+        591,
+        94.5
+      ],
+      "lawns": [
+        [
+          563,
+          76,
+          587,
+          86
+        ]
+      ]
+    },
+    {
+      "id": "luxury-passage",
+      "rect": [
+        554.2,
+        93.5,
+        559,
+        105.5
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "id": "twentieth-retail-south",
+      "style": "place-retail",
+      "rect": [
+        559,
+        94.5,
+        619,
+        104.5
+      ],
+      "front": "north",
+      "sides": [
+        "east",
+        "west"
+      ],
+      "depth": [
+        10,
+        10
+      ],
+      "storeys": [
+        2,
+        3
+      ],
+      "bays": [
+        6,
+        7.5
+      ],
+      "names": [
+        "Strict Mode Coffee",
+        "Union Type Florist",
+        "Promise Kept Books",
+        "The Interface Bakery",
+        "Optional Chain Cyclery",
+        "Readonly Records"
+      ]
+    }
+  ],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "forecourt-bench-40",
+      "piece": "furniture/bench",
+      "at": [
+        596.2,
+        40
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "forecourt-bench-54",
+      "piece": "furniture/bench",
+      "at": [
+        596.2,
+        54
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "forecourt-cafe-0",
+      "piece": "furniture/cafe-set",
+      "at": [
+        596.0,
+        90.5
+      ]
+    },
+    {
+      "id": "forecourt-cafe-1",
+      "piece": "furniture/cafe-set",
+      "at": [
+        600.5,
+        90.5
+      ]
+    },
+    {
+      "id": "forecourt-cafe-2",
+      "piece": "furniture/cafe-set",
+      "at": [
+        605.0,
+        90.5
+      ]
+    },
+    {
+      "id": "forecourt-cafe-3",
+      "piece": "furniture/cafe-set",
+      "at": [
+        609.5,
+        90.5
+      ]
+    },
+    {
+      "id": "forecourt-lamp-20",
+      "piece": "furniture/lamp",
+      "at": [
+        617.5,
+        20
+      ]
+    },
+    {
+      "id": "forecourt-lamp-70",
+      "piece": "furniture/lamp",
+      "at": [
+        617.5,
+        70
+      ]
+    },
+    {
+      "id": "south-bench-562",
+      "piece": "furniture/bench",
+      "at": [
+        562,
+        34.5
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "south-bench-571",
+      "piece": "furniture/bench",
+      "at": [
+        571,
+        34.5
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "south-bench-580",
+      "piece": "furniture/bench",
+      "at": [
+        580,
+        34.5
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "north-bench-566",
+      "piece": "furniture/bench",
+      "at": [
+        566,
+        89
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "north-bench-576",
+      "piece": "furniture/bench",
+      "at": [
+        576,
+        89
+      ],
+      "yaw": 0
+    }
+  ],
+  "context": [],
+  "overrides": {},
+  "additions": [
+    {
+      "id": "luxury-living",
+      "piece": "building/shell",
+      "rect": [
+        560,
+        40,
+        590,
+        70
+      ],
+      "storeys": 20,
+      "height": 71.1,
+      "wall": "stone-pearl",
+      "trim": "steel-black",
+      "roof": "parapet",
+      "style": "place-tower",
+      "faces": [
+        "north",
+        "south",
+        "east",
+        "west"
+      ],
+      "bays": 1,
+      "sign": "Luxury Living",
+      "variant": "gallery",
+      "awning": "canvas-blush"
+    }
+  ]
+}

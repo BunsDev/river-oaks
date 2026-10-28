@@ -3,6 +3,7 @@ import { inBayouHeights } from '../../shared/bayou-heights-layout.js';
 import { inStudewood } from '../../shared/studewood-layout.js';
 import { inBayouTerraces } from '../../shared/bayou-terraces-layout.js';
 import { inWoodlandHeights } from '../../shared/woodland-heights-layout.js';
+import { inTypeSafePlace } from '../../shared/typesafe-place-layout.js';
 
 // Names the connected location a walker stands in, so the HUD and its polite
 // live region tell keyboard and screen-reader players when they cross between
@@ -18,12 +19,14 @@ export const STUDEWOOD_NAME = 'Studewood';
 export const TERRACES_NAME = 'Bayou Terraces';
 // East of Studewood in woodland-heights-1.
 export const WOODLAND_NAME = 'Woodland Heights';
+// East of Woodland Heights in typesafe-place-1.
+export const TYPESAFE_NAME = 'TypeSafe Place';
 
 /** Location name at east/north metres, or null for a world without connected locations. */
 export function connectedLocationAt(world, east, north) {
   const layout = world?.eastGardenCommons;
   if (!layout) return null;
-  return commonsGroundAt(layout, east, north) === null ? DISTRICT_NAME : inBayouTerraces(layout, east, north) ? TERRACES_NAME : inWoodlandHeights(layout, east) ? WOODLAND_NAME : inStudewood(layout, east) ? STUDEWOOD_NAME : inBayouHeights(layout, east) ? HEIGHTS_NAME : layout.destination ? MARKET_NAME : COMMONS_NAME;
+  return commonsGroundAt(layout, east, north) === null ? DISTRICT_NAME : inBayouTerraces(layout, east, north) ? TERRACES_NAME : inTypeSafePlace(layout, east) ? TYPESAFE_NAME : inWoodlandHeights(layout, east) ? WOODLAND_NAME : inStudewood(layout, east) ? STUDEWOOD_NAME : inBayouHeights(layout, east) ? HEIGHTS_NAME : layout.destination ? MARKET_NAME : COMMONS_NAME;
 }
 
 /** Announcement for a crossing, or null when the location did not change. */

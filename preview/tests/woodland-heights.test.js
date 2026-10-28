@@ -62,8 +62,9 @@ test('Woodland Heights registers new land east of Studewood, and loading checks 
   assert.ok(Math.abs(location.bounds_m[2] - location.bounds_m[0] - 45) < 1e-9);
   assert.deepEqual(locationWorldBounds(location), location.bounds_m);
   assert.ok(location.adjacent.includes('studewood') && studewood.adjacent.includes('woodland-heights'));
-  // New land: wholly east of the original envelope, which every other location still partitions.
-  assert.ok(validated.locations.every(item => item.id === 'woodland-heights' || item.bounds_m[2] <= location.bounds_m[0]));
+  // New land: wholly east of the original envelope, which every other location still partitions
+  // (TypeSafe Place, typesafe-place-1, is newer land east of Woodland).
+  assert.ok(validated.locations.every(item => ['woodland-heights', 'typesafe-place'].includes(item.id) || item.bounds_m[2] <= location.bounds_m[0]));
   assert.equal(validateWoodlandRegistration(manifest, layout), layout);
   for (const mutate of [item => { item.content_revision = 'woodland-heights-0'; }, item => { item.bounds_m[2] += 1; }, item => { item.entries[0].position_m[1] += 1; }, item => { item.status = 'reserved'; }]) {
     const changed = structuredClone(manifest); mutate(changed.locations.find(item => item.id === 'woodland-heights'));
