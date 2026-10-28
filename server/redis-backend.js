@@ -12,6 +12,8 @@ import { createRedisSecurity } from './redis-security.js';
 import { createRedisWaitlist } from './waitlist.js';
 import { createWorldGateway } from './world-gateway.js';
 import { parseScreeningHosts } from './screenings.js';
+import { contentFilterFromEnv } from './content-filter.js';
+import { moderationNotifierFromEnv, responseHoursFromEnv } from './moderation-notify.js';
 import { configuredOfficeLayout } from './offices.js';
 import { configuredDistrictEpoch, configuredDistrictRevision } from '../preview/src/garden-campus-district.js';
 import { parseCampusOperators } from './campus-leases.js';
@@ -49,7 +51,11 @@ export async function createRedisBackend(env = process.env) {
     const accessNamespace = env.WAITLIST_NAMESPACE ?? (env.VERCEL_ENV === 'production' ? 'river-oaks:production:access:v1' : `${namespace}:access`);
     if (!/^[A-Za-z0-9:_-]{1,120}$/.test(accessNamespace)
       || env.VERCEL_ENV && env.VERCEL_ENV !== 'production' && accessNamespace === 'river-oaks:production:access:v1') throw new Error('Invalid waitlist namespace');
-    const waitlist = createRedisWaitlist({ redis, prefix: `{${accessNamespace}}`, admins });
+    // The content filter for every user text field (#292); null when RIVER_OAKS_CONTENT_FILTER=off.
+    const contentFilter = contentFilterFromEnv(env);
+    // Moderation routing (#292): the moderators' inbox and the response target for reports.
+    const moderationNotifier = moderationNotifierFromEnv(env), responseHours = responseHoursFromEnv(env);
+    const waitlist = createRedisWaitlist({ redis, prefix: `{${accessNamespace}}`, admins, contentFilter });
     const characters=createRedisCharacterStore({redis,prefix:accountPrefixFor(namespace)});
     let gateway;
     const auth = createRedisAuth({ redis, prefix, origin, accountActive: async id => !(await characters.get(id)).deleted,
@@ -73,7 +79,7 @@ export async function createRedisBackend(env = process.env) {
     // Vercel the per-minute cron (/api/voice-sweep) does it.
     const voiceLeases = createRedisVoiceLeases({ redis, prefix });
     const voice = configureVoice({ env, namespace, allow: (...args) => security.allow(...args), leases: voiceLeases, sweepMs: env.VERCEL !== '1' ? 30_000 : 0 });
-    gateway = createWorldGateway({handleRequest,redis,namespace,worldData,auth,security,waitlist,waitlistAdmins:admins,origin,configuredWorldId:worldId,voice,voiceCronSecret:env.CRON_SECRET||null,
+    gateway = createWorldGateway({handleRequest,redis,namespace,worldData,auth,security,waitlist,waitlistAdmins:admins,origin,configuredWorldId:worldId,voice,voiceCronSecret:env.CRON_SECRET||null,contentFilter,moderationNotifier,responseHours,
       moderators: (env.MODERATOR_USER_IDS ?? '').split(',').map(id => id.trim()).filter(Boolean),
       trustedProxyIPs: (env.TRUSTED_PROXY_IPS ?? '').split(',').map(ip => ip.trim()).filter(Boolean),
       ...(env.VERCEL === '1' ? { address: vercelClientAddress } : {}),

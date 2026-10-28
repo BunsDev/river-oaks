@@ -66,6 +66,18 @@ export const KIT_MATERIALS = Object.freeze({
   'bronze-satin': { color: '#7a6040', roughness: .3, metalness: .85 },
   'lamp-teal': { color: '#1f454a', roughness: .5, metalness: .65 },
   'opal-glow': { color: '#c9fff0', emissive: '#c9fff0', emissiveIntensity: 2.2, roughness: .4 },
+  // TypeSafe Place (typesafe-place-1): pearl stone and warm concrete residences, rose-gold
+  // metal, blush canvas, planted roofs, and the pink light the neighborhood is known by.
+  'stone-pearl': { surface: 'pavement', color: '#ece6dd', tile: 5, textureContrast: .26 },
+  'concrete-warm': { surface: 'stone', color: '#d3cabc', tile: 4, textureContrast: .3 },
+  'rose-gold': { color: '#c48a80', roughness: .32, metalness: .85 },
+  'canvas-blush': { color: '#e3a1b4', roughness: .9 },
+  'glass-rail': { color: '#a9c8c9', roughness: .05, metalness: .2, glass: true },
+  // Homes lit from within: a warm pane among the reflective glass.
+  'glass-lit': { color: '#4d4a44', roughness: .25, emissive: '#ffb76b', emissiveIntensity: .2 },
+  planting: { surface: 'grass', color: '#557f45', tile: 1.2, textureContrast: .5 },
+  'neon-rose': { color: '#ff6fae', emissive: '#ff4f9a', emissiveIntensity: 1.8, roughness: .4 },
+  'ribbon-rose': { color: '#e4589b', roughness: .3, metalness: .35, emissive: '#ff3f8f', emissiveIntensity: .3 },
 });
 
 // Architectural styles choose materials and preferred variants. Distinction comes
@@ -93,6 +105,25 @@ export const KIT_STYLES = Object.freeze({
     wall: ['limestone'], trim: 'bronze-satin', accent: 'metal-brass',
     storefronts: ['loggia', 'gallery', 'loggia'], awnings: ['canvas-rose'],
     windows: 'tall', roofs: ['reveal', 'stepped'], setback: 0, signage: 'blade', signPalette: 'noir',
+  },
+  // TypeSafe Place: residential towers and mid-rises with a balcony slab and a glass rail on
+  // every storey, gallery lobbies, and a pink light band at the crown.
+  'place-tower': {
+    wall: ['stone-pearl', 'concrete-warm'], trim: 'steel-black', accent: 'rose-gold',
+    storefronts: ['gallery'], awnings: ['canvas-blush'],
+    windows: 'balcony', roofs: ['crown'], setback: 0, signage: 'letters', signPalette: 'noir',
+  },
+  'place-residence': {
+    wall: ['stone-pearl', 'concrete-warm'], trim: 'steel-black', accent: 'rose-gold',
+    storefronts: ['gallery', 'loggia'], awnings: ['canvas-blush'],
+    windows: 'balcony', roofs: ['garden'], setback: 0, signage: 'letters', signPalette: 'noir',
+  },
+  // Everyday retail: pearl stone shop rows with blush awnings, every roof a garden. One wall,
+  // roof and awning material each keeps a row's draw calls within the kit budget.
+  'place-retail': {
+    wall: ['stone-pearl'], trim: 'steel-black', accent: 'rose-gold',
+    storefronts: ['gallery', 'awning', 'canopy'], awnings: ['canvas-blush'],
+    windows: 'ribbon', roofs: ['garden'], setback: 0, signage: 'letters', signPalette: 'noir',
   },
   'heights-row': {
     wall: ['stucco-apricot', 'brick-umber'], trim: 'trim-deep-teal', accent: 'metal-bronze',
@@ -127,6 +158,11 @@ export const KIT_PIECES = Object.freeze({
   'roof/sawtooth': { family: 'roof', collision: 'none', triangles: 220 },
   // A thin black-steel coping over a shadow reveal: no cornice.
   'roof/reveal': { family: 'roof', collision: 'none', triangles: 72 },
+  // A planted roof inside the parapet: lawn, raised beds and a pergola. Nothing rises more
+  // than 1.9 m above the roof, inside the 3.1 m flight margin over every roof.
+  'roof/garden': { family: 'roof', collision: 'none', triangles: 420 },
+  // The top two storeys set back behind terraces, under a pink light band.
+  'roof/crown': { family: 'roof', collision: 'none', triangles: 360 },
   'landscape/street-tree': { family: 'landscape', collision: 'solid', footprint: [.6, .6], height: 2.5, triangles: 0 },
   'landscape/tree-pit': { family: 'landscape', collision: 'none', triangles: 40 },
   'landscape/planter': { family: 'landscape', collision: 'solid', height: .5, triangles: 60 },
@@ -141,6 +177,8 @@ export const KIT_PIECES = Object.freeze({
   // board. Its front (counter side) faces yaw's −v, like a bench's seat.
   'furniture/market-stall': { family: 'furniture', collision: 'solid', footprint: [3.6, 2.4], height: 2.8, triangles: 700 },
   'landmark/water-tower': { family: 'landmark', collision: 'solid', footprint: [7, 7], height: 27, triangles: 3200 },
+  // The Neighborhood Green's public art: a looped pink ribbon on a stone plinth.
+  'landmark/ribbon': { family: 'landmark', collision: 'solid', footprint: [4, 4], height: 8.6, triangles: 4200 },
   // Edges: a planted hedge stops walking; a bayou and context massing give the
   // boundary a reason and a skyline. Context massing is visual only, never ground.
   'landscape/hedge': { family: 'landscape', collision: 'solid', height: .95, triangles: 60 },
