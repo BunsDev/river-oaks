@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import {createArmContacts,placePalm} from './arm-contact.js';
 
-export function createDrivingHands(model,holder) {
- const arms=createArmContacts(model,holder);
+// Palms on a vehicle's grips. Pass the avatar's arms when it already measured
+// them at rest; handlebars (motorcycle, bicycle) take the palms down.
+export function createDrivingHands(model,holder,arms=createArmContacts(model,holder)) {
  const fingers=[];model.traverse(bone=>{if(bone.isBone&&/^(index|middle|ring|pinky)_0[123]_[lr]$/.test(bone.name))fingers.push({bone,rest:bone.quaternion.clone()});});
  const pose=(vehicle,spec)=>{
   const orientation=vehicle.getWorldQuaternion(new THREE.Quaternion());
-  const localFrame=spec.kind==='motorcycle'?new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),-Math.PI/2):new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0),new THREE.Vector3(0,-1,0)));
+  const localFrame=spec.kind!=='rolls'?new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),-Math.PI/2):new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0),new THREE.Vector3(0,-1,0)));
   const steering=vehicle.userData.driveSteeringAngle??0;
   // The car's wheel and the hover coach's yoke turn about the vehicle's X axis; handlebars about Y.
   const wheel=spec.kind==='rolls'||spec.kind==='hover';

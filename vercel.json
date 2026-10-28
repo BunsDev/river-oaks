@@ -171,6 +171,10 @@
       "destination": "/api/server?_river_path=/api/moderation/reports"
     },
     {
+      "source": "/api/moderation/reports/close",
+      "destination": "/api/server?_river_path=/api/moderation/reports/close"
+    },
+    {
       "source": "/api/waitlist/status",
       "destination": "/api/server?_river_path=/api/waitlist/status"
     },

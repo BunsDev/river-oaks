@@ -3,6 +3,7 @@ import { HEIGHTS_REVISION } from '../../shared/bayou-heights-layout.js';
 import { STUDEWOOD_REVISION } from '../../shared/studewood-layout.js';
 import { TERRACES_REVISION } from '../../shared/bayou-terraces-layout.js';
 import { WOODLAND_REVISION } from '../../shared/woodland-heights-layout.js';
+import { TYPESAFE_REVISION } from '../../shared/typesafe-place-layout.js';
 // The Gardens in the real district (#507). A server-selected district revision
 // replaces the parking garage osm-way-625330790 with #506's measured campus
 // (shared/garden-campus-layout.js). The garage stays the default revision and the
@@ -30,7 +31,7 @@ import { registerCampusLevelObstacles } from './garden-campus-levels.js';
 
 export const DISTRICT_REVISION_GARAGE = 'river-oaks-garage-1';
 export const DISTRICT_REVISION_GARDENS = 'river-oaks-gardens-3';
-export const DISTRICT_REVISIONS = Object.freeze([DISTRICT_REVISION_GARAGE, DISTRICT_REVISION_GARDENS, COMMONS_REVISION, HEIGHTS_REVISION, STUDEWOOD_REVISION, TERRACES_REVISION, WOODLAND_REVISION]);
+export const DISTRICT_REVISIONS = Object.freeze([DISTRICT_REVISION_GARAGE, DISTRICT_REVISION_GARDENS, COMMONS_REVISION, HEIGHTS_REVISION, STUDEWOOD_REVISION, TERRACES_REVISION, WOODLAND_REVISION, TYPESAFE_REVISION]);
 export const CAMPUS_ROOM_PREFIX = 'campus:';
 export const CAMPUS_BUILDING_KIND = 'campus';
 // Clear height of a ground hall under the F2 slab (5 m storey, 0.35 m slab).

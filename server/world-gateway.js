@@ -27,7 +27,7 @@ import { eraseEach } from './account-erasure.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
-  characterStudioEnabled=true,characterMetrics=null,characterMetricsEnabled=false,moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,approvedSpacesEnabled=false,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null,screeningHosts=[],officeLayout,campusOperators=[],districtEpoch=0,connectionLifetime,rotateNoticeMs,contentFilter}={}) {
+  characterStudioEnabled=true,characterMetrics=null,characterMetricsEnabled=false,moderators=[],trustedProxyIPs=[],address,isAdmin,handleRequest,approvedSpacesEnabled=false,workplaceEnabled=false,workplaceSweep=false,workplaceCronSecret=null,assetGateSecret=null,voice=null,voiceCronSecret=null,screeningHosts=[],officeLayout,campusOperators=[],districtEpoch=0,connectionLifetime,rotateNoticeMs,contentFilter,moderationNotifier=null,responseHours}={}) {
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
   // Default off: approvedSpacesEnabled (RIVER_OAKS_APPROVED_SPACES=1) lets regions place approved furnished spaces (#420).
@@ -84,7 +84,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??data.title});
       const game=createDistributedServer({characterMetrics:metrics,characterStudioEnabled,assetGateSecret,auth:sharedAuth,room,protocolVersion:worldProtocolVersion(data),worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,blocks,onBlocked:separateEverywhere,groups,profiles,characters,events,workplace,officeDesk,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
-        ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(contentFilter!==undefined?{contentFilter}:{}),...(connectionLifetime?{connectionLifetime}:{}),...(rotateNoticeMs?{rotateNoticeMs}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
+        ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(contentFilter!==undefined?{contentFilter}:{}),...(moderationNotifier?{moderationNotifier}:{}),...(responseHours?{responseHours}:{}),...(connectionLifetime?{connectionLifetime}:{}),...(rotateNoticeMs?{rotateNoticeMs}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);
           if(!target || target.meta?.template!=='region-v1')return {ok:false,error:'missing'};

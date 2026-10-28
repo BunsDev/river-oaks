@@ -2,14 +2,17 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { batchCostumeAttachments } from './costume-batching.js';
 import { VEHICLES } from './vehicle-config.js';
+import { BICYCLE_CRANK, BICYCLE_SEATPOST, bicyclePedal, bicyclePedalPitch } from './bicycle-crank.js';
 import { createVehicleGlints } from './vehicle-glints.js';
 
 // Authored real-scale meshes, front -X. Shared materials are batched per moving
 // assembly; the high-detail wheels and steering remain independent transforms.
-export function createRoadVehicle(kind='rolls') {
+// A pedalling bicycle (one being ridden) also turns its crank and pedals;
+// parked bikes keep them in the frame batch.
+export function createRoadVehicle(kind='rolls',{pedalling=false}={}) {
  const spec=VEHICLES[kind];if(!spec)throw new Error('Unknown road vehicle');
  const object=new THREE.Group();object.name=spec.label;
- const owned=new Set(),groups=[object],wheels=[],hubs=[],spinners=[];
+ const owned=new Set(),groups=[object],wheels=[],hubs=[],spinners=[],pedals=[];let crank=null,saddle=null;
  const material=(name,color,options={})=>{const m=new THREE.MeshPhysicalMaterial({color,roughness:.4,...options});m.name=name;owned.add(m);return m;};
  const pink=material('Pearlescent rose paint','#f386a1',{metalness:.38,roughness:.23,clearcoat:1,clearcoatRoughness:.08});
  const chrome=material('Polished royal gold','#d6ac55',{metalness:1,roughness:.16});
@@ -210,10 +213,23 @@ export function createRoadVehicle(kind='rolls') {
   tube([[.14,.88,0],[.52,.34,0]],.016,frame);            // seat stays
   tube([[.05,.30,0],[.52,.34,0]],.016,frame);            // chain stays
   tube([[-.42,.62,0],[-.46,.98,0]],.024,bronze);         // head tube
-  add(new THREE.CylinderGeometry(.09,.09,.02,24),black,[.05,.30,.045]);   // chainring
-  for(const z of [-.09,.09])add(new THREE.BoxGeometry(.11,.02,.04),black,[.05+(z<0?.08:-.08),.30,z]); // pedals
-  box([.12,.92,0],[.27,.06,.15],darkLeather,.03);        // saddle
-  tube([[.14,.88,0],[.12,.90,0]],.014,bronze);           // seat post
+  // The crank on the bottom bracket: a chainring on the right, two arms and
+  // free pedals (bicycle-crank.js). A ridden bike turns it with setCrank.
+  const {center,length}=BICYCLE_CRANK,hub=pedalling?[0,0]:center;
+  if(pedalling){crank=new THREE.Group();crank.position.set(...center,0);object.add(crank);groups.push(crank);}
+  const ring=add(new THREE.CylinderGeometry(.09,.09,.012,24),black,[hub[0],hub[1],-.045],[1,1,1],crank??object);ring.rotation.x=Math.PI/2;
+  for(const side of [-1,1])box([hub[0]-side*length/2,hub[1],side*.07],[length+.02,.022,.012],black,.003,crank??object); // arms
+  for(const side of ['r','l']){
+   const pedal=pedalling?new THREE.Group():null,at=bicyclePedal(side,0);
+   if(pedal){pedal.position.fromArray(at);object.add(pedal);groups.push(pedal);pedals.push({side,pedal});}
+   box(pedal?[0,0,0]:at,[.09,.02,.09],black,.003,pedal??object);
+  }
+  // The saddle on its seat post. A ridden bike raises it up the seat tube to fit
+  // its rider (setSaddle); the post's foot stays hidden in the tube.
+  if(pedalling){saddle=new THREE.Group();object.add(saddle);groups.push(saddle);}
+  const [postX,postY]=BICYCLE_SEATPOST.axis,post=pedalling?BICYCLE_SEATPOST.reach+.02:0;
+  box([.12,.92,0],[.27,.06,.15],darkLeather,.03,saddle??object);        // saddle
+  tube([[.14-postX*post,.88-postY*post,0],[.14,.88,0],[.12,.90,0]],.014,bronze,saddle??object); // seat post
   for(const [x,r] of spec.wheels) {
    const shape=new THREE.Shape();
    for(let i=0;i<=40;i++){const a=.35+i/40*(Math.PI-.7),px=x+Math.cos(a)*(r+.045),y=r+Math.sin(a)*(r+.045);if(!i)shape.moveTo(px,y);else shape.lineTo(px,y);}
@@ -380,7 +396,9 @@ export function createRoadVehicle(kind='rolls') {
  const wheelTreads=wheels.map(wheel=>{const samples=[],seen=new Set();wheel.traverse(mesh=>{if(!mesh.isMesh||mesh.material!==rubber)return;const matrix=wheel.matrixWorld.clone().invert().multiply(mesh.matrixWorld);const p=mesh.geometry.attributes.position;for(let i=0;i<p.count;i++){const point=new THREE.Vector3().fromBufferAttribute(p,i).applyMatrix4(matrix),key=point.toArray().map(v=>v.toFixed(6)).join(',');if(!seen.has(key)){seen.add(key);samples.push(point);}}});return samples;});
  const glints=createVehicleGlints(spec);object.add(glints.object);
  let disposed=false,lastTime=null;
- return {object,wheels,wheelTreads,steering,spec,spinners:spinners.map(s=>s.object),
+ return {object,wheels,wheelTreads,steering,spec,spinners:spinners.map(s=>s.object),pedals:Object.fromEntries(pedals.map(({side,pedal})=>[side,pedal])),
   animate(now,speed=0,reducedMotion=false){const dt=lastTime===null?0:Math.max(0,Math.min(.08,(now-lastTime)/1000));lastTime=now;for(const s of spinners){s.velocity+=(Math.abs(speed)*2.8-s.velocity)*(1-Math.exp(-(speed?.9:.35)*dt));s.phase+=reducedMotion?0:s.velocity*dt;s.object.rotation.z=s.phase-s.wheel.rotation.z;}hoverMotion?.(now,dt,speed,reducedMotion);glints.update(now,reducedMotion);},
+  setSaddle(lift){if(!saddle)return;const [x,y]=BICYCLE_SEATPOST.axis,l=Math.max(0,Math.min(BICYCLE_SEATPOST.reach,lift||0));saddle.position.set(x*l,y*l,0);},
+  setCrank(angle){if(!crank)return;crank.rotation.z=angle;for(const {side,pedal} of pedals){pedal.position.fromArray(bicyclePedal(side,angle));pedal.rotation.z=bicyclePedalPitch(side,angle);}},
   updateSteering(angle){object.userData.driveSteeringAngle=angle;if(kind==='rolls'||kind==='hover')steering.rotation.z=-angle*2.2;else steering.rotation.y=angle*.6;},dispose(){if(disposed)return;disposed=true;glints.dispose();object.removeFromParent();owned.forEach(r=>r.dispose());object.clear();}};
 }

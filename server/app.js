@@ -17,7 +17,8 @@ import { CLIENT_ADDRESS, createClientAddress, rateLimitKey } from './client-addr
 import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { createDebugReportRoutes } from './debug-report-routes.js';
-import { STAFF_BAN_REFUSED, createModerationReportsRoute, staffAccount } from './moderation-reports.js';
+import { REPORT_UNAVAILABLE, STAFF_BAN_REFUSED, closeRequest, createModerationReportsRoute, staffAccount, submitReport } from './moderation-reports.js';
+import { RESPONSE_HOURS } from './moderation-notify.js';
 import { createMemoryDebugReports } from './debug-reports.js';
 import { protectedGameAsset } from './game-assets.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, acceptsWorldProtocol, validateWorldId } from '../preview/src/world-contract.js';
@@ -40,7 +41,7 @@ import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, continuedConnection, re
 const types = { '.webm':'video/webm','.mp4':'video/mp4','.vtt':'text/vtt; charset=utf-8','.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, blocks = null, onBlocked = null, blockSyncMs = 5000, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), avatarPreferences = null, characters = null, characterStudioEnabled = true, characterMetrics = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, connectionLifetime = 0, rotateNoticeMs = ROTATE_NOTICE_MS, cyclingMiles = null, cyclingFlushMs = 30000, contentFilter = defaultContentFilter() }) {
+export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, blocks = null, onBlocked = null, blockSyncMs = 5000, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), avatarPreferences = null, characters = null, characterStudioEnabled = true, characterMetrics = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, connectionLifetime = 0, rotateNoticeMs = ROTATE_NOTICE_MS, cyclingMiles = null, cyclingFlushMs = 30000, contentFilter = defaultContentFilter(), moderationNotifier = null, responseHours = RESPONSE_HOURS }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
@@ -108,7 +109,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   // Moderators read saved player reports (#292).
   const moderationReads = createRateLimiter(30,60000), staff = staffAccount({ moderators, admins: waitlistAdmins, isAdmin });
   const handleModerationReports = createModerationReportsRoute({ auth, moderators, isBanned: async id => isBanned(id), isApproved: id => waitlist.isApproved(id),
-    allow: async id => moderationReads(id), reports: moderation?.reports ? except => moderation.reports(undefined, except) : null, usernameOf: id => waitlist.usernameOf?.(id) ?? null, isStaff: staff });
+    allow: async id => moderationReads(id), reports: moderation?.reports ? except => moderation.reports(undefined, except) : null, usernameOf: id => waitlist.usernameOf?.(id) ?? null, isStaff: staff, responseHours, now });
   async function body(req,max=4096) {
     let size=0,chunks=[];
     for await (const chunk of req) {size+=chunk.length;if(size>max)throw new Error('Request too large');chunks.push(chunk);}
@@ -294,6 +295,17 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         if(data.banned){disconnectUser(data.userId,4003,'This account cannot join the town.');await workplace?.suspend(data.userId);await onBan?.(data.userId);}
         return json(res,200,{ok:true});
       }
+      // A moderator closes a report they have dealt with (#292).
+      if (pathname==='/api/moderation/reports/close' && req.method==='POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if (!moderatorIds.has(identity.userId) || !moderation?.closeReport) return json(res,403,{error:'Moderator access required.'});
+        const id=closeRequest(await body(req));
+        if(!id)return json(res,400,{error:'Invalid report.'});
+        let closed=false;
+        try{closed=await moderation.closeReport(id,identity.userId);}catch{return json(res,503,{error:REPORT_UNAVAILABLE});}
+        if(!closed)return json(res,404,{error:'That report isn’t here.'});
+        return json(res,200,{ok:true});
+      }
       if (pathname.startsWith('/api/') || pathname.startsWith('/auth/')) return json(res,404,{error:'Not found'});
       if (!['GET','HEAD'].includes(req.method)) return json(res,405,{error:'Method not allowed'});
       if (!staticRoot) return json(res,404,{error:'Run the frontend development server.'});
@@ -425,8 +437,11 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             const message=slot.message;
             if(!message)throw new Error('Invalid');
             if(message.type==='report') {
-              if(!moderation || !reports(identity.userId) || !['disruption','harassment','cheating'].includes(message.reason) || !connections.has(message.playerId) || message.playerId===identity.userId)return send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report could not be submitted.'});
-              moderation.report(identity.userId,message.playerId,message.reason).then(()=>send(ws,{type:'result',requestId:message.requestId,ok:true,message:'Report saved.'}),()=>send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report unavailable. Try again.'}));return;
+              // Every attempt counts toward the reporter's three a minute, refused ones included.
+              if(!moderation || !reports(identity.userId))return send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report could not be submitted.'});
+              const result=await submitReport({reporterId:identity.userId,message,present:id=>connections.has(id),chat:world.snapshot().chat,usernameOf:id=>waitlist.usernameOf?.(id)??null,
+                save:async entry=>{await moderation.report(entry.reporterId,entry.reportedId,entry.reason,{id:entry.id,content:entry.content,respondBy:entry.respondBy,at:entry.at});return true;},notifier:moderationNotifier,responseHours,now});
+              return send(ws,{type:'result',requestId:message.requestId,...result});
             }
             const {requestId,selection,...command}=message;
             if(command.type==='character'||selection!==undefined)equipObservation=observeCharacterEquip(characterMetrics);

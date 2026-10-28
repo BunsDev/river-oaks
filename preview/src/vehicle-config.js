@@ -12,7 +12,9 @@ export const VEHICLES = {
  // so every seat consumer works unchanged). maxSpeed is the server's hard cap,
  // 18 mph; cruiseSpeed is the pedalling speed without the sprint key.
  bicycle:{kind:'bicycle',label:'Plaza bicycle',length:1.8,width:.6,height:1.1,wheelbase:1.05,maxSpeed:8.05,cruiseSpeed:5,seats:1,steeringLimit:.6,steeredWheels:1,
-  wheels:[[-.525,.34,0],[.525,.34,0]],driverSeat:[.12,.92,0],passengerSeat:[.12,.92,0],driverFloor:.30,passengerFloor:.30,bodyHeight:.95,grips:[[-.42,1.02,-.22],[-.42,1.02,.22]]},
+  wheels:[[-.525,.34,0],[.525,.34,0]],driverSeat:[.12,.92,0],passengerSeat:[.12,.92,0],driverFloor:.30,passengerFloor:.30,bodyHeight:.95,
+  // Palm points: 3 cm above the bar's axis, where a closed hand's palm sits on it.
+  grips:[[-.42,1.05,-.22],[-.42,1.05,.22]],steeringPivot:[-.46,.98,0]},
  // The landowner hover coach: a seafoam, chrome-trimmed hover helicopter for
  // the owner accounts that hold the town's private homes. Parked and on the
  // road it travels like the car: four unseen ground-contact tyres under its

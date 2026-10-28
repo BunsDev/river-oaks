@@ -184,3 +184,32 @@ test('Redis fences Woodland rollout and rollback by epoch and preserves durable 
   await assert.rejects(join(create(woodland,2),'stale-woodland'),/Invalid durable town district/);
   const again=create(woodland,4);assert.equal((await join(again,'four')).ok,true);await again.close();
 });
+
+test('the town lets Jevica fly up from the Woodland green, over a house roof and on, but not down into it',()=>{
+  let time=100000;const town=createSharedWorld(woodland,{now:()=>time}),environment=createWalkingEnvironment(woodland);
+  const flyer='user_01M402HKJYDTH1QJM5NAQDZ4HH',command=message=>{time+=2000;return town.command(flyer,message);};
+  town.join({userId:flyer,name:'Jevica'});
+  const at=([east,north])=>[east,north,environment.groundAt(east,-north)],green=frame([545,40]);
+  // The Woodland house nearest the green.
+  const house=layout.woodland.plans.flatMap(plan=>plan.pieces).filter(piece=>piece.piece==='building/shell'&&piece.rect[2]-piece.rect[0]>=4&&piece.rect[3]-piece.rect[1]>=4)
+    .map(piece=>({piece,distance:Math.hypot((piece.rect[0]+piece.rect[2])/2-green[0],(piece.rect[1]+piece.rect[3])/2-green[1])})).sort((a,b)=>a.distance-b.distance)[0].piece;
+  const [w,s,e,n]=house.rect,roof=[(w+e)/2,(s+n)/2],over=house.height+6;
+  // Poses within the town's budget: 3 m of lift and 20 m of flight a second.
+  const fly=(target,altitude)=>{
+    const from=town.snapshot().players[0],steps=Math.max(1,Math.ceil(Math.hypot(target[0]-from.position[0],target[1]-from.position[1])/20),Math.ceil(Math.abs(altitude-from.altitude)/3));
+    for(let i=1;i<=steps;i++){
+      const t=i/steps,point=[from.position[0]+(target[0]-from.position[0])*t,from.position[1]+(target[1]-from.position[1])*t];
+      const result=command({type:'pose',position:at(point),yaw:0,altitude:from.altitude+(altitude-from.altitude)*t});
+      if(!result.ok)return result;
+    }
+    return {ok:true};
+  };
+  assert.equal(command({type:'travel',position:green}).ok,true);
+  assert.equal(fly(green,over).ok,true,'rising over the green');
+  const result=fly(roof,over);
+  assert.equal(result.ok,true,`over the roof of ${house.id}: ${JSON.stringify(result)}`);
+  assert.deepEqual(town.snapshot().players[0].position.slice(0,2),roof);
+  // The terrain sampled under a footprint sits below the street, so the roof is higher above it.
+  assert.equal(command({type:'pose',position:at(roof),yaw:0,altitude:house.height+3}).error,'blocked','not down into the house');
+  assert.equal(fly(green,over).ok,true,'and back over the green');
+});
