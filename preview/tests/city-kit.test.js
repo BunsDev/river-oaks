@@ -260,13 +260,20 @@ test('the Pink Jet-Age finish keeps plans, locks, geometry and draw calls identi
   for (const [recipe, name] of [[commons, 'bayou-market-commons'], [yale, 'nineteenth-and-yale']]) {
     const plan = assembleNeighborhood(recipe), before = canonicalJSON(plan);
     const build = finish => buildCityKit(plan, { groundAt: () => 0, ground: 0, ...(finish ? { finish } : {}) });
-    const summary = kit => { const meshes = []; kit.traverse(item => { if (item.isMesh) meshes.push([item.name, item.geometry.attributes.position.count]); }); return meshes; };
+    const summary = kit => { const meshes = []; kit.traverse(item => { if (item.isMesh) meshes.push([item.parent?.name ?? '', item.name, item.geometry.attributes.position.count]); }); return meshes; };
     const classic = build(), defaulted = build('classic'), pink = build('pink-jet-age');
     // Rendering never writes to the plan, so the committed lock still reproduces.
     assert.equal(canonicalJSON(plan), before); assert.equal(plan.hash, read(`${name}.lock`).hash);
-    // Same meshes, same vertex counts, same material count: only colours differ.
-    assert.deepEqual(summary(pink), summary(classic)); assert.deepEqual(summary(defaulted), summary(classic));
-    assert.deepEqual(pink.userData.stats(), classic.userData.stats());
+    // Classic is the default. Under the finish, massing, ground, furniture and signs keep
+    // the same meshes and vertices; only facade detail may grow by the rounded forms.
+    assert.deepEqual(summary(defaulted), summary(classic));
+    const isDetail = ([parent]) => parent.endsWith(' detail');
+    assert.deepEqual(summary(pink).filter(entry => !isDetail(entry)), summary(classic).filter(entry => !isDetail(entry)));
+    const classicStats = classic.userData.stats(), pinkStats = pink.userData.stats(), drawCalls = summary(pink).length, added = pinkStats.triangles - classicStats.triangles;
+    // The rounded forms are present, and bounded.
+    assert.ok(added > 0 && added < 12000, `${name}: forms add ${added} triangles`);
+    assert.ok(pinkStats.materials - classicStats.materials <= 1, `${name}: forms add at most one shared slot`);
+    assert.ok(drawCalls <= KIT_CONVENTIONS.budgets.drawCallsPerNeighborhood, `${name}: ${drawCalls} draw calls`);
     assert.equal(classic.userData.finish, 'classic'); assert.equal(pink.userData.finish, 'pink-jet-age');
     const colourOf = (kit, slot) => { let found; kit.traverse(item => { if (item.isMesh && item.material.name === `city-kit/${slot}`) found = item.material; }); return found; };
     let recoloured = 0;

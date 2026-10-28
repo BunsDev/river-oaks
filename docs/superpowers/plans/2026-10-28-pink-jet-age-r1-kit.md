@@ -96,6 +96,29 @@ A render-time **finish**, not a new style, kit version or content revision.
   - pink shows on canopies, fins and loggias on Commons, and on fascias and sills on Yale.
   - Core verify passed again: tooling 289/289, preview 4341 + 1 skip, server 1077 +
     283 Redis skips, desktop 127 + 5 skips, 0 failures.
+- 2026-10-28: increment 1 merged as #749 (`be166248`).
+
+### Increment 2: rounded forms (`feat/pink-jet-age-r1-forms-20261028`)
+
+- Built only when the finish sets `forms: true` (`pink-jet-age`). Classic output is
+  unchanged.
+- Adds three shapes to the detail batch, using existing slots:
+  - a rounded nose on the gallery canopy;
+  - a rounded nose on the canopy variant;
+  - ivory capsule plates behind primary shop signs.
+- Test: under `pink-jet-age`, every non-detail mesh is identical to classic. Detail
+  triangles grow (>0, <12000), materials grow by at most 1, and draw calls stay
+  ≤ budget. `node --test preview/tests/city-kit.test.js` → 17/17.
+- Matched review 3 (`.runtime/city-kit/review-2026-10-28T19-48-33-839Z`):
+  - all 4 recipe/seed cases have unchanged plan hashes, 0 errors and 0 failed
+    requests;
+  - under pink, scenes grow by +2 to +4 meshes and +1.8k to +2.9k triangles, and
+    material counts are unchanged;
+  - the Commons gallery nose and the Yale capsule plates read clearly, with no
+    z-fighting seen.
+- Core `pnpm run verify` passed: tooling 289/289, preview 4341 + 1 skip, server
+  1077 + 283 Redis skips, desktop 127 + 5 skips, 0 failures. Only this ledger entry
+  was edited afterwards.
 
 ## Visual notes for Val (not automated acceptance)
 
@@ -109,4 +132,5 @@ A render-time **finish**, not a new style, kit version or content revision.
 
 ## Next step
 
-Step 1: read the city-kit seam and inventory materials.
+Land increment 2. Then district packages R2–R5 opt live scenes into `finish`, which
+needs Val's visual acceptance and answers to the three palette notes above.
