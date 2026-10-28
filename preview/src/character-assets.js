@@ -29,6 +29,30 @@ export const CHARACTER_ASSETS = Object.freeze({
     "sha256": "d341bf3a344bfd8d091ea226482d9bd51ad18732fe361e5860537052e767cdc1",
     "bytes": 9447632,
     "receipt": "/assets/characters/realistic-humans.sources.json"
+  },
+  "woman-casual": {
+    "id": "woman-casual",
+    "sha256": "51fa4cda6fd5f76c2657a350a2bfd800eb25b3da28a41d4001330cd174a8d3d1",
+    "bytes": 1889592,
+    "receipt": "/assets/characters/sources.json"
+  },
+  "woman-tailored": {
+    "id": "woman-tailored",
+    "sha256": "c4fbe6b7c069ed2236d16774190893222f5dc8459a09e2cd68b73dbd4ca1e19c",
+    "bytes": 1748448,
+    "receipt": "/assets/characters/sources.json"
+  },
+  "woman-daywear": {
+    "id": "woman-daywear",
+    "sha256": "7d2db64730455d55d207773850de760c4046db71c0e095d4006da8d549a148d9",
+    "bytes": 2164940,
+    "receipt": "/assets/characters/sources.json"
+  },
+  "man-workwear": {
+    "id": "man-workwear",
+    "sha256": "37e96403d3ea1e779551070e3568543a669f6c3029233d2c54926f1332ab95fd",
+    "bytes": 1893396,
+    "receipt": "/assets/characters/sources.json"
   }
 });
 
