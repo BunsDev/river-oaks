@@ -86,6 +86,7 @@ Step breakdown of the heights job: setup (install, Playwright caches) is under 1
 - 07:45Z: worktree created from `main` `18222a6d`; task claimed; ledger written.
 - 07:58Z: lane split agreed with river-oaks-ac (green wave: it lands #720 and #717 under Val's ticks; I start no lander for them) and river-oaks-bd (register reconcile: owner-null rows only; it leaves quaternius-clip-import and crime-release-599 to me).
 - 08:46Z: #681 merged by river-oaks-ac's lander as `d09d5183`; the #721 lander took its turn and is updating the branch with `main`.
+- 08:59Z: predecessor snapshot `wt-688` (6f600af1 scratchpad, head `94ad9926`, both commits on `main` via #688) pruned after its 12 h cutoff: dry-run eligible with `--expected-head`, first `--apply` refused by the shared retirement lock at 08:58Z, retried clean; archive `~/worktree-backups/river-oaks/cancel-detached-SHHyER` (manifest status `cancelled-local`); register row retired with evidence and archive. Next cutoffs: `ws-703` 13:51Z, `main-18222a6d` and `abba-18222a6d` after their leases (09:00Z, 12:00Z) and 12 h touch windows.
 - 07:51Z: local run `node preview/e2e/experience-runner.js bayou-heights bayou-heights-return` started from `../river-oaks-heights-shard-split` under the browser lock, `caffeinate -s`, load 15, report `data/reports/heights-split-local.json` (untracked, not committed).
 
 ## Gaps
