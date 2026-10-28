@@ -13,7 +13,7 @@ async page => {
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
   await page.locator('#play-tab-rides').click();
   const options=await page.locator('#player-vehicle option').evaluateAll(items=>items.map(item=>item.value));
-  check(options.includes('hover')&&!(await page.locator('.vehicle-garage').isHidden()),'The owner garage offers the landowner hover coach');
+  check(options.includes('hover')&&(await page.locator('.vehicle-garage').evaluate(garage=>garage.hidden))===false,'The owner garage offers the landowner hover coach');
   await page.locator('#player-vehicle').selectOption('hover');
   await page.waitForFunction(()=>window.__riverCarriage().vehicle==='hover');
   await host().focus();await page.keyboard.press('KeyQ');
