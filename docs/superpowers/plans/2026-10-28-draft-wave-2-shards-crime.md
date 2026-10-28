@@ -61,6 +61,7 @@ Step breakdown of the heights job: setup (install, Playwright caches) is under 1
 
 - Owner `codex:quaternius-phase2-20261027`: lease expired 10-28 00:54Z; the two live `codex` processes run in coven-threads and coven-cave, none in a river-oaks checkout; no Codex transcript for it since 10-27. Taken over 07:56Z under the goal's released-claim rule, recorded in the register.
 - 08:27Z: river-oaks-d7 reported Val's instruction to it to work #722 through to merging; released to d7 at exact head `3a3956c3` (register updated). Landing is d7's under its own authority; this session's landing line does not cover #722.
+- 08:43Z: river-oaks-d7 declined the handoff (no merge authorization from Val for it; it never touched the register row or the worktree). Task reclaimed by this session; #722's head is now `c82d7b53`, a merge of `main` `a88150f8` made through GitHub at 08:18Z (not by this session). It stays a draft; landing is decision 1.
 - All 19 files in `.runtime/quaternius-phase2/49-handoff-manifest.json` matched their SHA-256 and byte counts (0 mismatches). Committed unchanged as signed `2765bc32` on `3df540ee`, rebased onto `main` `18222a6d` as signed `3a3956c3`, pushed, **draft #722** (07:57Z). Phase 1 excluded (#694 open). Core on this head: after the browser lock frees.
 
 ## Round 4b: Crime Feel increment 5 (read-only survey, 07:58Z)
@@ -93,7 +94,7 @@ Step breakdown of the heights job: setup (install, Playwright caches) is under 1
 
 ## Decisions for Val
 
-1. **#722 (Quaternius clips)**: d7 holds it under your instruction to it (head moved to `c82d7b53`, a merge of `main`, at 08:3xZ). Nothing for this session unless you move it back.
+1. **#722 (Quaternius clips)**: draft, head `c82d7b53` (your GitHub merge of `main` at 08:18Z), owned again by this session after d7 declined. Landing it is outside this goal's landing line (it is not a table PR); say "land #722" and it goes through `pnpm run land` once core on `c82d7b53` and hosted Verify are green.
 2. **Draft-wave landings not covered by the goal's defaults** (08:40Z; #692 already merged as `a88150f8`): ready PRs #691 (`dirty`, conflicts with `main`) and #694 (owner 4c25a886, lease expired 06:00Z), #718 (owner 487 live until 10-29 03:00Z), #720 (ac's lane). Drafts: #685 (answer 3, same expired owner), #695/#707 (owner 3e until 12:00Z), the #292 stack #713→#715→#716 and #711 (bodies say merging is your call), #714 and #709 (leases expired), #697/#687/#668 (ledgers), #705 (explicit line required). Tick each to land; released ones go through `pnpm run land` only after a core receipt on the head and a recorded review verdict.
 3. **Coordinator idle tick**: #655's stroll planning moved the p95 (second-slowest tick of a 28-tick window) from 33 to 60 ms by redistributing route searches, not by adding work; one tier-1 active gate miss (109.4 > 85.0) on `18222a6d` in the attribution run. Product fix is a per-tick route-search budget in `stepResidentLife` — authorize or leave as a measured finding.
 4. **Night sky for the Crime Feel milestone**: 19:00 renders a daylight sky (clear weather keeps the daytime HDR); the `crime-night` journey passes on HUD and timing but a "night" capture needs an authored sky and lamps. Scope it into increment 6 or accept daylight for the first playable.
