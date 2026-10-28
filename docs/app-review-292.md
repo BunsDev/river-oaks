@@ -58,11 +58,15 @@ every field in the list above, apart from voice, before any store sees it:
   can’t be used here." (names: "That name can’t be used here.").
 - **How it matches.** Whole words and short phrases from `config/content-filter.json`,
   after folding case, accents, look-alike digits and symbols (`k1ll`, `f@g`, Cyrillic
-  and Greek look-alikes), spaced-out letters (`k i l l`) and a run-together phrase
-  (`killyourself`). Nothing inside a longer word matches, so ordinary words that
-  contain a term are left alone. Images aren't screened: residents can't post any.
+  and Greek look-alikes), zero-width characters inside a word, letters spaced out one
+  by one (`k i l l`) and a run-together phrase (`killyourself`). A plain `-s` plural of a
+  term matches; other forms are listed on their own. Not folded: letters spaced in
+  groups (`ki ll`), repeated letters (`kiiill`) or leetspeak beyond the look-alike table.
+  Nothing inside a longer word matches, so ordinary words that contain a term are left
+  alone. Text longer than 4,000 characters is refused unscreened rather than passed
+  (every field's own cap is far lower). Images aren't screened: residents can't post any.
 - **Policy.** `refuse` lists the terms; `mask` names the fields where a match is
-  replaced by asterisks instead of refused (never usernames). The shipped list holds
+  replaced by asterisks (`∗`) instead of refused (never usernames). The shipped list holds
   severe slurs and direct threats, as a starting point. `RIVER_OAKS_CONTENT_FILTER=off`
   turns the filter off; `RIVER_OAKS_CONTENT_FILTER_FILE` replaces the list with a file
   of the same shape, and a missing or malformed file stops the server at start.

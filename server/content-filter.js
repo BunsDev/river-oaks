@@ -45,6 +45,10 @@ const fold = char => {
 };
 // Apostrophes inside a word are dropped ("i'll" reads "ill"); every other non-letter ends a word.
 const APOSTROPHE = /^['’ʼ]$/u;
+// Combining marks (accents, already folded by NFKD) and format characters (zero-width
+// space and joiner, word joiner, soft hyphen) are neither letters nor word breaks: "ki\u200Bll"
+// reads "kill".
+const INVISIBLE = /[\p{M}\p{Cf}]/u;
 
 // The words a text reads as, each with the index range it came from in the original
 // string, so a masked copy can be made without moving anything else. Each code point is
@@ -57,7 +61,7 @@ function words(text) {
     const source = index; index += char.length;
     if (APOSTROPHE.test(char)) { if (current) current.end = source + char.length; continue; }
     for (const piece of char.normalize('NFKD')) {
-      if (/\p{M}/u.test(piece)) continue;
+      if (INVISIBLE.test(piece)) continue;
       const plain = fold(piece);
       if (!/^[a-z0-9]+$/.test(plain)) { current = null; continue; }
       if (!current) { current = { folded: '', end: source, start: source }; out.push(current); }
@@ -99,7 +103,9 @@ function compile(list) {
   return terms.sort((a, b) => b.parts.length - a.parts.length || b.joined.length - a.joined.length);
 }
 
-const same = (word, part) => word === part || word === `${part}s` || word === `${part}es`;
+// A term also matches its plain plural ("blorts"). No "-es" rule: it made "spic" match "spices";
+// a plural that needs it is listed on its own.
+const same = (word, part) => word === part || word === `${part}s`;
 
 // Every match in `text`: {term, start, end, ranges} in the original string's indexes,
 // `ranges` being each matched word.
@@ -156,6 +162,9 @@ export function createContentFilter(config = defaults) {
     check,
     screen(field, text) {
       if (!FIELDS.includes(field) || typeof text !== 'string') return { ok: true, text };
+      // Text past the scan limit is refused, never let through unscreened. Every store caps its
+      // fields far below this, so a resident only sees it if a cap is missing.
+      if (text.length > MAX_TEXT) return { ok: false, reason: FILTERED, message: MESSAGES[field], term: null };
       const matches = check(text);
       if (!matches.length) return { ok: true, text };
       if (mask.has(field)) return { ok: true, text: maskFiltered(text, matches), masked: true };
