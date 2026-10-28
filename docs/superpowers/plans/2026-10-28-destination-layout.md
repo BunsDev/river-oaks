@@ -57,4 +57,21 @@ Hosted Verify on `1c7e37d4` (source plus a ledger note), run 40711445100 attempt
 
 World Studio input: a region as **Export JSON** writes it is already a reference (`preview/public/data/sample-region.json`: the garden ring becomes four streets beside Moon Lane, 5 streets, nothing dropped), proven by a test in `city-kit-reference.test.js`; the starter districts work the same way.
 
-Gaps after increment 2: World Studio cannot open a city-kit plan; plazas, furniture and tree rows are still typed per item; no bridge from the Studio neighborhood compiler's parcels to kit blocks; the reference adapter reads axis-aligned grids only (curves are reported for hand authoring, by design).
+## Increment 3: a plan opens in World Studio
+
+Task `destination-studio-20261028`, branch `feat/destination-studio-20261028` stacked on increment 2 (worktree `/Users/buns/Documents/GitHub/BunsDev/river-oaks-destination-studio`); retarget after #733 merges.
+
+Objective: `destination build` writes `studio-region.json`, the plan as a schema-v1 creator region that World Studio opens with **Open JSON** and the server's region package compiler accepts: roads from streets with their lanes, a box per building shell (footprint, height, stable id), trees with crowns, places from the landmark, plazas and streets, parcels from authored and derived blocks, the arrival on the widest street's sidewalk, bounds padded 2 m. A review view for walking and marking places; edits return to the recipe as overrides by piece id. Pieces under 4 m a side and context beyond the region are listed as omitted; plans Studio would refuse are refused with the reason.
+
+Files owned: `shared/city-kit/studio.js` (new), `scripts/destination.mjs` (build writes the region; preview says how to open it), `preview/tests/city-kit-studio.test.js` (new), `docs/city-kit.md` (Studio section), this ledger.
+
+Results (2026-10-28):
+
+- `node --test preview/tests/city-kit-studio.test.js preview/tests/city-kit-reference.test.js preview/tests/city-kit-layout.test.js preview/tests/city-kit.test.js`: 31 passed, 0 failed. The layout example's region is checked field by field (bounds, roads, a shell's box, places, parcels), then accepted by `editableRegion`, `parseRegion`, `createStudioDocument` and the server's `compileRegionPackage`; all 15 committed recipes export regions both accept (Heights Boulevard north omits seven rear wings under 4 m; the Commons omits context beyond the region; the greenway, with no buildings, still opens on its plazas and streets); refusals carry the reason; the CLI writes the file and reports it in build's JSON.
+- `pnpm run destination check`: 15 locks reproduce (plan hashes do not cover the Studio file). `python3 -I scripts/check_secrets.py --all`: no leaks.
+- A drawing of the exported Nineteenth & Yale region (`.runtime/destination-reference/yale-studio-region.svg.png`, local) shows four blocks of massing, the crossing streets with trees, the court, places and the arrival on Nineteenth's sidewalk.
+- `pnpm run verify` (core), receipt `.runtime/agent/core.json` (revision `8f0c659a`, dirty with the files above), log `.runtime/destination-studio/verify-core-001.log`: passed. agent-tests 289/289; preview-tests 4325 passed, 1 skipped; server-tests 1051 passed, 280 skipped (no Redis); desktop-tests 127 passed, 5 skipped; build, python lint/format/tests (170 passed), demo, secrets passed. Not run: opening the file in a running Studio in a browser, `verify full`, Redis, native.
+
+Next bridge (increment 4 candidate): the Studio neighborhood compiler's region carries `parcels` with `bounds_m`; `destination reference` can turn a region's parcels into kit quarters, so Studio-drawn parcels decide where kit blocks go.
+
+Gaps after increment 3: plazas and furniture are still typed per item; no bridge yet from Studio parcels to kit quarters. plazas, furniture and tree rows are still typed per item; no bridge from the Studio neighborhood compiler's parcels to kit blocks; the reference adapter reads axis-aligned grids only (curves are reported for hand authoring, by design).
