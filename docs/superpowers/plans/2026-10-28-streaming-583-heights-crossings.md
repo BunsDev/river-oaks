@@ -73,6 +73,7 @@ or #697's harness. Phase 2 travel itself (#582) is on main through #594 and #623
 | Hosted checks on #729 head `323aff81` | 27/27 success, including the `terraces` shard with the new travel-home release check and the `woodland`, `heights` and `heights-return` shards (aggregate `preview` success). |
 | Merge of main `36e906b2` (#725 TypeSafe Place, #715 moderation routing) | One conflict in `heights-stream.js` (main's view boxes over the tallest building beside this branch's `measuredTextures`); `docs/world-streaming.md` now counts twenty Heights chunks. Focused `node --test` with `typesafe-place.test.js` added: 115 passed, 0 failed, 0 skipped. `pnpm run verify` (core) on the merged tree passed 2026-10-28T19:21:52Z (`.runtime/agent/core.json`): tooling 289; preview 4,343 + 1 existing skip; server 1,077 + 283 Redis skips; desktop 127 + 5 skips; Ruff; pytest; demo and demo-verify; secret scan clean. Host load 17–24. |
 | Hosted checks on `0204368e` (ledger-only push) | 19/20 Verify jobs success; `preview shared (worlds-and-creator)` failed `player-blocking-interface` waiting 45 s for the roster status "You blocked sage-dev." (`player-blocking-journey.js:85`), the same failure as main push `f424a492` (run 40709671541) that day; no roster or blocking code is in this diff. The docs-only push `1a6b47eb` got no Verify run because the PR was in conflict with main. |
+| Hosted checks on #729 head `eb8f1bbe` (main `36e906b2` merged in) | 27/27 success, including `preview shared (worlds-and-creator)`, the `terraces`, `woodland`, `heights` and `heights-return` shards and the aggregate `preview`. |
 
 ## Phase 2 demonstrations on this head (`0204368e`, 2026-10-28)
 
@@ -102,6 +103,7 @@ Run from the worktree with the shared browser lock, caffeinated, host one-minute
 ## Next step
 
 Draft PR #729 published; hosted Verify passed 27/27 on `323aff81` and `verify full`
-passed on `0204368e`; main `36e906b2` is merged in with core verify passed on the result. Hosted Verify (including the `terraces` and `woodland` shards) is
+passed on `0204368e`; main `36e906b2` is merged in with core verify passed on the result and hosted 27/27 on
+`eb8f1bbe`. Hosted Verify (including the `terraces` and `woodland` shards) is
 the merge gate. Mark ready and land only with Val's authorization. Open for Val: whether
 the Heights ceiling should count owned textures (and at what total).
