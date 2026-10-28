@@ -68,14 +68,18 @@ function nearestSurface(a, d, radius, top = 1.9) {
 // Photo review P18: from the mural landing the street showed past the landing's open side bays, and
 // the district's ground showed under both escalator runs. From anywhere a body stands on the runs or
 // the landing, every sight line at eye height must meet an opaque part of the interior (glass is seen
-// through, so it does not count).
-test('from the escalator runs and the mural landing every sight line meets the interior', () => {
+// through, so it does not count). Val (2026-10-26) found the same from reception, under the "IPIC & THE TUCK
+// ROOM" sign (the street's ground and the next shop's shelves past the bay beside the first run), and from the
+// lounge, past the glass guardrails, down the bays beside the second run: reception and the lounge are sampled
+// too, every other grid point, into the same enclosure.
+test('from reception, the escalator runs, the mural landing and the lounge every sight line into the escalators\' enclosure meets the interior', () => {
   const raycaster = new THREE.Raycaster(), open = [];
   const opaque = hit => !(hit.object.material?.transparent && hit.object.material.opacity < 1);
   const directions = [];
   for (let k = 0; k < 16; k++) directions.push(new THREE.Vector3(Math.cos(k * Math.PI / 8), 0, Math.sin(k * Math.PI / 8)));
   for (let k = 0; k < 8; k++) directions.push(new THREE.Vector3(Math.cos(k * Math.PI / 4), -.7, Math.sin(k * Math.PI / 4)).normalize());
-  for (const [a, d] of walkable.filter(([, d]) => d > 6.2 && d < 19.8)) {
+  const coarse = ([a, d]) => Math.round((a - room.aMin) / .25) % 2 === 0 && Math.round(d / .25) % 2 === 0;
+  for (const [a, d] of walkable.filter(([a, d]) => d > 6.2 && d < 19.8 || (d > .5 && d < 25.8 && coarse([a, d])))) {
     const eye = new THREE.Vector3(a, serverGround(a, d) + 1.6, -d);
     for (const direction of directions) {
       raycaster.set(eye, direction);

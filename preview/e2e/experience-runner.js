@@ -1,5 +1,6 @@
 import { startBrowserFixture } from './fixture-server.js';
 import { startComputerFixture } from './fixtures/office-computer-child/server.js';
+import { startRealComputer } from './fixtures/office-computer-real.js';
 import { chromium, webkit } from 'playwright';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
@@ -44,6 +45,7 @@ try {
       'garden-campus-traversal':{RIVER_OAKS_DISTRICT_REVISION:'river-oaks-gardens-3'},
       'east-garden-commons':{RIVER_OAKS_DISTRICT_REVISION:'east-garden-commons-market-1'},
       'bayou-heights':{RIVER_OAKS_DISTRICT_REVISION:'bayou-heights-1'},
+      'bayou-heights-return':{RIVER_OAKS_DISTRICT_REVISION:'bayou-heights-1'},
       'studewood':{RIVER_OAKS_DISTRICT_REVISION:'heights-studewood-1'},
       'bayou-terraces':{RIVER_OAKS_DISTRICT_REVISION:'bayou-terraces-1'},
       'woodland-heights':{RIVER_OAKS_DISTRICT_REVISION:'woodland-heights-1'},
@@ -52,13 +54,14 @@ try {
       'garden-campus-suite':{RIVER_OAKS_DISTRICT_REVISION:'river-oaks-gardens-3',RIVER_OAKS_CAMPUS_OPERATOR_IDS:'bob'},
     }[name]??{};
     // The Computer embed journey frames a separate-origin child fixture (#486); other journeys get no Computer origin.
-    if (name === 'office-computer-embed') {
-      computerFixture = await startComputerFixture();
+    // office-computer-real frames a real Computer checkout instead (RIVER_OAKS_COMPUTER_CHECKOUT, #487).
+    if (name === 'office-computer-embed' || name === 'office-computer-real') {
+      computerFixture = name === 'office-computer-real' ? await startRealComputer() : await startComputerFixture();
       Object.assign(fixtureEnv, { VITE_TYPESAFE_COMPUTER_ORIGIN: computerFixture.origin, VITE_TYPESAFE_COMPUTER_TEST_LOOPBACK: '1' });
     }
     fixture = await startBrowserFixture({env:fixtureEnv});
     const { origin } = fixture;
-    computerFixture?.setParentOrigin(origin);
+    await computerFixture?.setParentOrigin(origin);
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await context.addCookies([{ name: 'fixture_session', value: 'owner', url: origin }]);
     const page = await context.newPage();
@@ -72,7 +75,7 @@ try {
       console.log(`Running ${name}`);
       // These repository harnesses are page functions, also used by the browser CLI.
       const source = (await readFile(join(root, `preview/e2e/${name}.js`), 'utf8')).replace(/http:\/\/127\.0\.0\.1:(?:5173|5180|5181)/g, origin);
-      const result = await eval(`(${source})\n//# sourceURL=preview/e2e/${name}.js`)(page, { worldMapEnabled: process.env.VITE_WORLD_MAP === 'true', computerOrigin: computerFixture?.origin });
+      const result = await eval(`(${source})\n//# sourceURL=preview/e2e/${name}.js`)(page, { worldMapEnabled: process.env.VITE_WORLD_MAP === 'true', computerOrigin: computerFixture?.origin, computerRevision: computerFixture?.revision, computerFraming: computerFixture?.refuseFraming && { refuse: () => computerFixture.refuseFraming(), allow: () => computerFixture.allowFraming() } });
       if (result?.passed === false) throw new Error(result.failure ?? 'Harness reported failure');
       results.push({ name, status: 'passed', seconds: (Date.now() - started) / 1000, result });
       console.log(`Passed ${name}`);

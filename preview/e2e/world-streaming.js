@@ -68,6 +68,13 @@ async page => {
     throw new Error(`${label}: the Commons stayed resident ${JSON.stringify(states)}`, { cause: outcomes.find(outcome => outcome.status === 'rejected').reason });
   };
   const self = tab => tab.evaluate(() => { const town = window.__riverMultiplayer(); return town.snapshot.players.find(p => p.id === town.selfId); });
+  // The Commons stream keeps a visible destination resident at any distance (commons-stream.js),
+  // and a walker that overshoots the far point turns back east, toward it, to arrive. Before an
+  // eviction wait each player faces west, away from the Commons; where it stands is unchanged.
+  // The faces of different pages take turns (walk-driver.js); this journey's walk turns itself.
+  // Walking yaw: 0 faces north and +π/2 west (stepWalking in walking.js).
+  const { createWalkDriver } = await import('./walk-driver.js');
+  const { face } = createWalkDriver({ self, routes: [] }), WEST = Math.PI / 2;
   const point = tab => tab.evaluate(() => window.__riverCarriage().pose);
   let failLoads = true, failedRequests = 0, deferModule = true, pendingModuleRequested;
   const moduleRequested = new Promise(resolve => { pendingModuleRequested = resolve; }), pendingModules = [];
@@ -242,6 +249,7 @@ async page => {
     // restored client registers resources again whenever it next draws them.
     await walk(probe, [[edge - 8, -1335], approach[0]], 'Probe client returns after the restore');
     await walk(probe, clearRoute((await self(probe)).position.slice(0, 2), far), 'Probe client walks away from the Commons');
+    await face(probe, WEST, 'Probe client faces away from the Commons');
     await evicted([probe], 'Probe client eviction');
     const probeEvicted = await probe.evaluate(() => window.__riverSpatialStream());
     check(probeEvicted.pending === 0 && probeEvicted.chunks[0].state === 'absent' && commonsGroups(probeEvicted) === 0, 'After a restore the Commons evicts with no pending loads or groups');
@@ -310,6 +318,7 @@ async page => {
         const path = clearRoute((await self(tab)).position.slice(0, 2), [far[0], far[1] - i]);
         check(Boolean(path?.length), `Eviction ${lap + 1} player ${i} has a walkable route`);
         await walk(tab, path, `Eviction ${lap + 1} player ${i}`);
+        await face(tab, WEST, `Eviction ${lap + 1} player ${i} faces away from the Commons`);
       }));
       await evicted(tabs, `Eviction ${lap + 1}`);
       const unloaded = await measure(`Evicted ${lap + 1}`);
