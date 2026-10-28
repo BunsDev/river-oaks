@@ -21,6 +21,7 @@ import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
 import { groupAction } from './groups-api.js';
 import { loadHidden, screenCommand, viewFor } from './blocks.js';
+import { defaultContentFilter, screenText } from './content-filter.js';
 import { blockAction } from './blocks-api.js';
 import { profileAction } from './profile-api.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
@@ -49,7 +50,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
   trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
   connectionLifetime = 270_000, rotateNoticeMs = ROTATE_NOTICE_MS, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
   // cyclingMiles: accepted for the leaderboard route (PR 2); the room owner flushes rides.
-  cyclingMiles = null } = {}) {
+  cyclingMiles = null, contentFilter = defaultContentFilter() } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
@@ -271,7 +272,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             const place=await room.resolvePlace(placeId);
             return place?{world:{id:worldId,title:worldTitle},place}:null;
           },
-          allowWrite: id => security.allow('social', id, 12, 60_000), blocks });
+          allowWrite: id => security.allow('social', id, 12, 60_000), blocks, contentFilter });
         return json(res, result.status, result.value);
       }
       if (path.startsWith('/api/blocks/') && req.method === 'POST') {
@@ -290,13 +291,13 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
         const result=await groupAction({action:path.slice('/api/groups/'.length),identity,groups,social,
-          readBody:()=>body(req),allowWrite:id=>security.allow('groups',id,24,60_000),blocks});
+          readBody:()=>body(req),allowWrite:id=>security.allow('groups',id,24,60_000),blocks,contentFilter});
         return json(res,result.status,result.value);
       }
       if (path.startsWith('/api/events/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
-        const result=await eventAction({action:path.slice('/api/events/'.length),identity,events,isAdmin,readBody:()=>body(req),
+        const result=await eventAction({action:path.slice('/api/events/'.length),identity,events,isAdmin,contentFilter,readBody:()=>body(req),
           resolveVenue:async placeId=>{
             const place=await room.resolvePlace(placeId);
             return place?{worldId,worldTitle,placeId:place.id,placeName:place.name}:null;
@@ -342,7 +343,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
               ? view.snapshot.players.find(player => player.id === peerId) : null;
           },
-          allowWrite: id => security.allow('profile', id, 6, 60_000), blocks });
+          allowWrite: id => security.allow('profile', id, 6, 60_000), blocks, contentFilter });
         return json(res, result.status, result.value);
       }
       if (path === '/api/moderation/ban' && req.method === 'POST') {
@@ -491,6 +492,12 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
                 && await security.report({ reporterId: identity.userId, targetId: command.playerId, reason: command.reason });
               send(ws, { type: 'result', requestId, ok: Boolean(ok), message: ok ? 'Report saved.' : 'Report could not be submitted.' });
               return;
+            }
+            // Town chat is screened by the content filter (#292) at the gateway, where blocks are screened too.
+            if (command.type === 'chat' && typeof command.text === 'string') {
+              const text = screenText(contentFilter, 'chat', command.text);
+              if (!text.ok) { send(ws, { type: 'result', requestId, ok: false, error: 'chat_filtered', message: text.message }); return; }
+              command.text = text.text;
             }
             const screened = await screenCommand(blocks, identity.userId, command, isAdmin);
             if (screened.refusal) { send(ws, { type: 'result', requestId, ...screened.refusal }); return; }

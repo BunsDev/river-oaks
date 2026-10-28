@@ -32,6 +32,7 @@ import { securityHeaders } from './security-headers.js';
 import { createVoiceRoutes } from './voice-routes.js';
 import { createRideFlush } from './ride-flush.js';
 import { loadHidden, screenCommand, viewFor } from './blocks.js';
+import { defaultContentFilter, screenText } from './content-filter.js';
 import { blockAction } from './blocks-api.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
 import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, continuedConnection, retireAfter, rotateNotice } from './connection-close.js';
@@ -39,7 +40,7 @@ import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, continuedConnection, re
 const types = { '.webm':'video/webm','.mp4':'video/mp4','.vtt':'text/vtt; charset=utf-8','.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, blocks = null, onBlocked = null, blockSyncMs = 5000, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), avatarPreferences = null, characters = null, characterStudioEnabled = true, characterMetrics = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, connectionLifetime = 0, rotateNoticeMs = ROTATE_NOTICE_MS, cyclingMiles = null, cyclingFlushMs = 30000 }) {
+export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, blocks = null, onBlocked = null, blockSyncMs = 5000, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), avatarPreferences = null, characters = null, characterStudioEnabled = true, characterMetrics = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, connectionLifetime = 0, rotateNoticeMs = ROTATE_NOTICE_MS, cyclingMiles = null, cyclingFlushMs = 30000, contentFilter = defaultContentFilter() }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
@@ -221,7 +222,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             const place=world.resolvePlace(placeId);
             return place?{world:{id:worldId,title:worldTitle},place}:null;
           },
-          allowWrite:id=>socialWrites(id),blocks});
+          allowWrite:id=>socialWrites(id),blocks,contentFilter});
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/blocks/') && req.method==='POST') {
@@ -237,13 +238,13 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         const result=await groupAction({action:pathname.slice('/api/groups/'.length),identity,groups,social,
-          readBody:()=>body(req),allowWrite:id=>groupWrites(id),blocks});
+          readBody:()=>body(req),allowWrite:id=>groupWrites(id),blocks,contentFilter});
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/events/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
-        const result=await eventAction({action:pathname.slice('/api/events/'.length),identity,events,isAdmin,readBody:()=>body(req),
+        const result=await eventAction({action:pathname.slice('/api/events/'.length),identity,events,isAdmin,contentFilter,readBody:()=>body(req),
           resolveVenue:async placeId=>{
             const place=world.resolvePlace(placeId);
             return place?{worldId,worldTitle,placeId:place.id,placeName:place.name}:null;
@@ -279,7 +280,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const result=await profileAction({action:pathname.slice('/api/profile/'.length),identity,worldId,profiles,social,readBody:()=>body(req),
           visiblePlayer:async(user,peerId)=>connections.get(user.userId)?.identity.sessionId===user.sessionId
             ? snapshot().players.find(player=>player.id===peerId) : null,
-          allowWrite:id=>socialWrites(id),blocks});
+          allowWrite:id=>socialWrites(id),blocks,contentFilter});
         return json(res,result.status,result.value);
       }
       if (pathname==='/api/moderation/ban' && req.method==='POST') {
@@ -434,6 +435,8 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             if(selection!==undefined&&(!characterSelection||!isCharacterSelection(command))){const result={ok:false,error:'invalid_character_operation'};equipObservation?.result(result);return send(ws,{type:'result',requestId,...result});}
             if(characterSelection?.hasPending(identity.userId)){const result={ok:false,error:'character_selection_pending'};equipObservation?.result(result);return send(ws,{type:'result',requestId,...result});}
             if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN){equipObservation?.aborted();return;}
+            // Town chat is screened by the content filter (#292) at the gateway, where blocks are screened too.
+            if(command.type==='chat' && typeof command.text==='string'){const text=screenText(contentFilter,'chat',command.text);if(!text.ok)return send(ws,{type:'result',requestId,ok:false,error:'chat_filtered',message:text.message});command.text=text.text;}
             const screened=await screenCommand(blocks,identity.userId,command,isAdmin);
             if(screened.refusal)return send(ws,{type:'result',requestId,...screened.refusal});
             const result=characterSelection&&isCharacterSelection(command)
