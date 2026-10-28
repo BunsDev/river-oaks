@@ -34,6 +34,7 @@ async function connect(t, base, userId) {
   const { ticket } = await response.json();
   const ws = new WebSocket(`${base.replace('http:', 'ws:')}/multiplayer?ticket=${ticket}&world=river-oaks&protocol=3`, { headers: { Origin: origin, Cookie: `fixture=${userId}` } });
   ws.on('error', () => {});t.after(() => ws.terminate());
+  const closed = new Promise(resolve => ws.once('close', code => resolve(code)));
   const results = new Map();
   await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error(`${userId}: no first snapshot`)), 15_000);
@@ -45,10 +46,10 @@ async function connect(t, base, userId) {
   });
   const command = message => new Promise(resolve => { const requestId = randomUUID();results.set(requestId, resolve);ws.send(JSON.stringify({ ...message, requestId })); });
   const campus = message => command({ type: 'campus', operationId: `op-${randomUUID().slice(0, 12)}`, worldId: 'river-oaks', contract: { ...CAMPUS_LEASE_CONTRACT }, ...message });
-  return { command, campus };
+  return { command, campus, closed };
 }
 
-async function raceGrant(t, base, blocks, expected = []) {
+async function raceGrant(t, base, blocks, { expected = [], answered = true, stale = 1, failed = false } = {}) {
   const carol = await connect(t, base, OP), bob = await connect(t, base, 'bob');await connect(t, base, 'dana');
   const offered = await carol.campus({ action: 'issue', unitId: 'T1-F2-W-S', tenantId: 'bob', startsAt: Date.now(), endsAt: Date.now() + 30 * 86_400_000 });
   assert.equal(offered.ok, true, JSON.stringify(offered));
@@ -56,9 +57,11 @@ async function raceGrant(t, base, blocks, expected = []) {
   assert.equal(accepted.ok, true, JSON.stringify(accepted));
   // Dana's block is stored, and its separation has run, while Bob's grant is on its way.
   assert.equal((await blocks.add('dana', { userId: 'bob', name: 'bob' })).ok, true);
-  blocks.stale = 1;
-  assert.equal((await bob.campus({ action: 'grant', leaseId: accepted.lease.id, expectedVersion: accepted.lease.version, peerId: 'dana' })).ok, true, 'the grant was checked before the block');
-  const listed = await bob.command({ type: 'campus', action: 'list' });
+  blocks.stale = stale;
+  const granting = bob.campus({ action: 'grant', leaseId: accepted.lease.id, expectedVersion: accepted.lease.version, peerId: 'dana' });
+  if (failed) assert.equal(await bob.closed, 1013, 'the request failed and the socket closed');
+  else assert.equal((await granting).ok, answered, 'the grant was checked before the block');
+  const listed = await (failed ? await connect(t, base, 'bob') : bob).command({ type: 'campus', action: 'list' });
   assert.deepEqual(listed.campus.leases.find(item => item.id === offered.lease.id).guests.map(item => item.userId), expected, 'and is ended once it lands');
 }
 
@@ -75,7 +78,7 @@ test('standalone town: when the second check fails, the grant stands and the fai
   blocks.between = async (a, b) => { if (++checks === 2) throw new Error('blocks store down');return checks === 1 ? false : store.between(a, b); };
   const app = createGameServer({ world: createSharedWorld(data, { campusOperators: [OP] }), auth, waitlist: approvedWaitlist, origin, staticRoot: '/nonexistent', blocks });
   await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));t.after(() => app.close());
-  await raceGrant(t, `http://127.0.0.1:${app.server.address().port}`, blocks, ['dana']);
+  await raceGrant(t, `http://127.0.0.1:${app.server.address().port}`, blocks, { expected: ['dana'] });
   assert.deepEqual(warnings, [JSON.stringify({ event: 'block_recheck_failed' })]);
 });
 
@@ -88,4 +91,51 @@ test('hosted: a campus grant that passed the block check before the block was st
   await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
   t.after(async () => { await app.close();await room.close();security.close();const keys = await redis.keys(`${prefix}*`);if (keys.length) await redis.del(...keys);await redis.quit(); });
   await raceGrant(t, `http://127.0.0.1:${app.server.address().port}`, blocks);
+});
+
+// The room's answer can time out, or its request fail, while the grant stays in its
+// durable queue; a retry is then answered as a conflict. This room answers every grant
+// one of those ways at once, while that same grant is still queued (the server can't
+// tell it from a retry), and records the separations the server asks for.
+async function timingOut(t, { fail = false, answer = 'request_timeout' } = {}) {
+  const redis = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1 });redis.on('error', () => {});
+  const prefix = `{river-oaks:test-blocks-race:${randomUUID()}}`, security = createRedisSecurity({ redis, prefix });
+  const room = createRedisRoom({ redis, prefix, worldId: 'river-oaks', worldData: data, campusOperators: [OP], authorize: async () => true });
+  const separations = [], landing = [];
+  const slow = { ...room, request: operation => {
+    if (operation.type === 'separate') separations.push(operation);
+    if (operation.type !== 'command' || operation.message?.action !== 'grant') return room.request(operation);
+    landing.push(room.request(operation));
+    return fail ? Promise.reject(new Error('room unavailable'))
+      : Promise.resolve({ ok: false, error: answer, message: 'Request outcome is pending. Refresh the town before retrying.' });
+  } };
+  const blocks = lagging(createRedisBlocks({ redis, prefix }));
+  const app = createDistributedServer({ auth, security, room: slow, waitlist: approvedWaitlist, blocks, origin, moderators: [] });
+  await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
+  t.after(async () => { await Promise.allSettled(landing);await app.close();await room.close();security.close();const keys = await redis.keys(`${prefix}*`);if (keys.length) await redis.del(...keys);await redis.quit(); });
+  return { base: `http://127.0.0.1:${app.server.address().port}`, blocks, separations };
+}
+
+test('hosted: a campus grant whose answer timed out is still ended once it lands', { skip: !process.env.REDIS_URL, timeout: 30_000 }, async t => {
+  const f = await timingOut(t);
+  await raceGrant(t, f.base, f.blocks, { answered: false });
+  assert.equal(f.separations.length, 1, 'the separation was queued after the grant');
+});
+
+test('hosted: a campus grant answered as a conflict is still ended once it lands', { skip: !process.env.REDIS_URL, timeout: 30_000 }, async t => {
+  const f = await timingOut(t, { answer: 'campus_operation_conflict' });
+  await raceGrant(t, f.base, f.blocks, { answered: false });
+  assert.equal(f.separations.length, 1);
+});
+
+test('hosted: a campus grant whose request failed once it was queued is still ended once it lands', { skip: !process.env.REDIS_URL, timeout: 30_000 }, async t => {
+  const f = await timingOut(t, { fail: true });
+  await raceGrant(t, f.base, f.blocks, { failed: true });
+  assert.equal(f.separations.length, 1);
+});
+
+test('hosted: a grant the screen already refused is not checked again, so its answer takes no longer toward a blocker', { skip: !process.env.REDIS_URL, timeout: 30_000 }, async t => {
+  const f = await timingOut(t);
+  await raceGrant(t, f.base, f.blocks, { answered: false, stale: 0 });
+  assert.deepEqual(f.separations, []);
 });

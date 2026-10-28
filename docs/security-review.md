@@ -7,6 +7,50 @@ possible attacks have been eliminated or a deployed penetration test.
 
 ## Changes
 
+- Moderator reports list (#292, 2026-10-26). New read-only route
+  `GET /api/moderation/reports` on both servers, also rewritten on Vercel and sent to
+  the configured world like `/api/moderation/ban`. It needs a signed-in session.
+  A banned account gets 403. Anyone outside `MODERATOR_USER_IDS`, or without waitlist
+  approval (as the ban route requires), gets `{ moderator: false }` before anything is
+  read. Anything but GET gets 405. A moderator may read 30 times a minute, counted per
+  moderator. It returns the newest 200 saved reports with the reported account's id,
+  both shown names, reason, time, and the reported account's ban state and whether it
+  is staff; it never returns other audit entries. A report about the reader is left
+  out inside each store, before the newest 200 are taken, so it neither shows nor
+  pushes a row off the reader's list. A faint signal remains where the stored history
+  ends: a report about the reader still takes a place in the hosted audit's newest
+  10,000 entries, or bytes in the town log rotated at 5 MB, as every ban, unban and
+  report does. The reporter is sent only as a shown name; for an account without a
+  username that name is `Visitor #` and its id.
+  `/api/moderation/ban` now refuses (403) to ban `MODERATOR_USER_IDS`,
+  `WAITLIST_ADMIN_USER_IDS` and Jevica's owner accounts, on both servers; lifting a ban
+  on one still works (a banned moderator couldn't lift their own).
+  Damaged log lines and unknown reasons are skipped. The hosted list is read 500
+  entries at a time, only as far as needed; the town reads its two logs, up to about
+  5 MB each, in the moderation queue. Names reach the page as text only, and the page
+  shows a failure only on a moderator's answer. Bans from the list go through the
+  existing CSRF-checked `/api/moderation/ban`, after a confirmation, one at a time.
+- Reports and support contact (#292, 2026-10-24). No new route or permission. A saved
+  report now answers "Report saved." on both backends, instead of claiming it was
+  sent to moderators. `VITE_SUPPORT_CONTACT`, public and set at build time, shows a
+  plain ASCII email address or an https link to a named host in Settings → Account.
+  Anything else, including mailto fields, direction overrides and bare IP addresses,
+  shows nothing. Open gaps: content filtering, a moderator reports view, and the
+  Block button, which isn't wired in yet; see `docs/app-review-292.md`.
+- In-app account deletion (#292, 2026-10-24), off unless `RIVER_OAKS_ACCOUNT_DELETION=1`
+  and `WORKOS_WEBHOOK_SECRET` is set; on Vercel it also needs `CRON_SECRET`, and stays
+  off outside production, since Vercel calls the cron only there (the loopback fixture
+  needs only the flag).
+  A new route, `POST /api/account/delete`, on both backends. It needs a signed-in
+  session, the same origin and the CSRF token, at most 3 attempts an hour, the exact
+  phrase `delete my account`, and a sign-in within ten minutes. Sessions now record
+  `signedInAt`, which survives refreshes. Approval and bans aren't checked. WorkOS
+  deletes the user first; any failure other than 404 erases nothing. Then the session
+  cookie is cleared and account erasure runs, recorded for its second pass a minute or
+  more later. The `GET` form reports only
+  whether deletion is available and whether the sign-in is recent. The route is added
+  to `vercel.json`, `server/vercel-routing.js` and the Vite proxy, and
+  `account_deletion` to the Redis rate-limit scopes. See `docs/account-deletion.md`.
 - Player blocking (#292, 2026-10-24). New routes: `POST /api/blocks/list`, `/add` and
   `/remove`, on both backends. They have the same authentication, approval, ban,
   origin and CSRF checks as other mutations, plus a 12-a-minute write limit. A

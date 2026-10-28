@@ -167,6 +167,10 @@
       "destination": "/api/server?_river_path=/api/moderation/ban"
     },
     {
+      "source": "/api/moderation/reports",
+      "destination": "/api/server?_river_path=/api/moderation/reports"
+    },
+    {
       "source": "/api/waitlist/status",
       "destination": "/api/server?_river_path=/api/waitlist/status"
     },
@@ -201,6 +205,7 @@
     { "source": "/api/blocks/list", "destination": "/api/server?_river_path=/api/blocks/list" },
     { "source": "/api/blocks/add", "destination": "/api/server?_river_path=/api/blocks/add" },
     { "source": "/api/blocks/remove", "destination": "/api/server?_river_path=/api/blocks/remove" },
+    { "source": "/api/account/delete", "destination": "/api/server?_river_path=/api/account/delete" },
     { "source": "/api/groups/list", "destination": "/api/server?_river_path=/api/groups/list" },
     { "source": "/api/groups/read", "destination": "/api/server?_river_path=/api/groups/read" },
     { "source": "/api/groups/create", "destination": "/api/server?_river_path=/api/groups/create" },

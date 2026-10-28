@@ -17,6 +17,7 @@ import { CLIENT_ADDRESS, createClientAddress, rateLimitKey } from './client-addr
 import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { createDebugReportRoutes } from './debug-report-routes.js';
+import { STAFF_BAN_REFUSED, createModerationReportsRoute, staffAccount } from './moderation-reports.js';
 import { createMemoryDebugReports } from './debug-reports.js';
 import { protectedGameAsset } from './game-assets.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, acceptsWorldProtocol, validateWorldId } from '../preview/src/world-contract.js';
@@ -30,7 +31,7 @@ import { workplaceAction } from './workplace-api.js';
 import { securityHeaders } from './security-headers.js';
 import { createVoiceRoutes } from './voice-routes.js';
 import { createRideFlush } from './ride-flush.js';
-import { grantedPeer, loadHidden, screenCommand, viewFor } from './blocks.js';
+import { loadHidden, screenCommand, viewFor } from './blocks.js';
 import { blockAction } from './blocks-api.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
 import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, continuedConnection, retireAfter, rotateNotice } from './connection-close.js';
@@ -103,6 +104,10 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     } });
   const debugReportSends = createRateLimiter(3,600000);
   const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned, allow: id => debugReportSends(id) });
+  // Moderators read saved player reports (#292).
+  const moderationReads = createRateLimiter(30,60000), staff = staffAccount({ moderators, admins: waitlistAdmins, isAdmin });
+  const handleModerationReports = createModerationReportsRoute({ auth, moderators, isBanned: async id => isBanned(id), isApproved: id => waitlist.isApproved(id),
+    allow: async id => moderationReads(id), reports: moderation?.reports ? except => moderation.reports(undefined, except) : null, usernameOf: id => waitlist.usernameOf?.(id) ?? null, isStaff: staff });
   async function body(req,max=4096) {
     let size=0,chunks=[];
     for await (const chunk of req) {size+=chunk.length;if(size>max)throw new Error('Request too large');chunks.push(chunk);}
@@ -119,6 +124,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       if (await auth.handle(req,res)) return;
       if (await handleWaitlist(req, res, pathname)) return;
       if (await handleDebugReports(req, res, pathname)) return;
+      if (pathname==='/api/moderation/reports') {await handleModerationReports(req,res);return;}
       if (handleCharacters && await handleCharacters(req,res,pathname)) return;
       if (handleVoice && await handleVoice(req,res,pathname,new URL(req.url,'http://localhost'))) return;
       // The default district answers with its served revision (#507) even without a catalog.
@@ -281,6 +287,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         if (!moderatorIds.has(identity.userId) || !moderation) return json(res,403,{error:'Moderator access required.'});
         const data=await body(req);
         if(typeof data.userId!=='string' || data.userId.length>100 || data.userId===identity.userId || typeof data.banned!=='boolean')return json(res,400,{error:'Invalid moderation action.'});
+        if(data.banned && staff(data.userId))return json(res,403,{error:STAFF_BAN_REFUSED});
         if(data.banned) await waitlist.revokeInvites?.({userId:data.userId,actorId:identity.userId});
         await moderation.setBanned(data.userId,data.banned,identity.userId);
         if(data.banned){disconnectUser(data.userId,4003,'This account cannot join the town.');await workplace?.suspend(data.userId);await onBan?.(data.userId);}
@@ -422,7 +429,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             if(!message)throw new Error('Invalid');
             if(message.type==='report') {
               if(!moderation || !reports(identity.userId) || !['disruption','harassment','cheating'].includes(message.reason) || !connections.has(message.playerId) || message.playerId===identity.userId)return send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report could not be submitted.'});
-              moderation.report(identity.userId,message.playerId,message.reason).then(()=>send(ws,{type:'result',requestId:message.requestId,ok:true,message:'Report sent to the town moderators.'}),()=>send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report unavailable. Try again.'}));return;
+              moderation.report(identity.userId,message.playerId,message.reason).then(()=>send(ws,{type:'result',requestId:message.requestId,ok:true,message:'Report saved.'}),()=>send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report unavailable. Try again.'}));return;
             }
             const {requestId,selection,...command}=message;
             if(command.type==='character'||selection!==undefined)equipObservation=observeCharacterEquip(characterMetrics);
@@ -439,7 +446,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             equipObservation?.result(result);
             // A grant checked just before a block was stored is ended once it lands. Without a
             // known block nothing is separated; a failed check is logged.
-            if(result.ok && grantedPeer(command) && await blocks?.between(identity.userId,command.peerId)
+            if(result.ok && screened.recheck && await blocks.between(identity.userId,command.peerId)
               .catch(()=>{console.warn(JSON.stringify({event:'block_recheck_failed'}));return false;}))world.separate(identity.userId,command.peerId);
             if(result.ok && !characterSelection && avatarPreferences && ['appearance','movement'].includes(command.type))
               await avatarPreferences.save(identity.userId,world.accountAppearance(identity.userId));

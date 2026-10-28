@@ -2,6 +2,7 @@ import { recoverDistrictCommonsCheckpoint } from './district-commons-checkpoint-
 import { recoverDistrictHeightsCheckpoint } from './district-heights-checkpoint-migration.js';
 import { recoverDistrictStudewoodCheckpoint } from './district-studewood-checkpoint-migration.js';
 import { recoverDistrictTerracesCheckpoint } from './district-terraces-checkpoint-migration.js';
+import { recoverDistrictWoodlandCheckpoint } from './district-woodland-checkpoint-migration.js';
 import { characterSelectionOperation } from './character-store.js';
 import { defaultAppearanceFor } from '../preview/src/shared-appearances.js';
 import { randomUUID } from 'node:crypto';
@@ -212,8 +213,9 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
         // The garage/Gardens district revision switch (#512) chains the older garage recoveries itself.
-        // The terraces extend Studewood, which extends Heights, which extends the Commons layout, so their recoveries run first.
-        const terraces = recoverDistrictTerracesCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        // Woodland Heights extends the terraces, which extend Studewood, which extends Heights, which extends the Commons layout, so their recoveries run first.
+        const woodland = recoverDistrictWoodlandCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const terraces = woodland.ok ? woodland : recoverDistrictTerracesCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const studewood = terraces.ok ? terraces : recoverDistrictStudewoodCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const heights = studewood.ok ? studewood : recoverDistrictHeightsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const commons = heights.ok ? heights : recoverDistrictCommonsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
@@ -228,9 +230,10 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
           error.checkpointReason = checkpointReason;
           throw error;
         }
-        districtMigration = terraces.ok ? { kind: 'terraces', from: terraces.from, to: terraces.to, moved: terraces.moved.length }
+        districtMigration = woodland.ok ? { kind: 'woodland', from: woodland.from, to: woodland.to, moved: woodland.moved.length }
+          : terraces.ok ? { kind: 'terraces', from: terraces.from, to: terraces.to, moved: terraces.moved.length }
           : studewood.ok ? { kind: 'studewood', from: studewood.from, to: studewood.to, moved: studewood.moved.length }
-          : heights.ok ? { kind: 'heights', from: heights.from, to: heights.to, moved: heights.moved.length }
+          : heights.ok ? { kind: 'heights', from: heights.from, to: heights.to, moved: heights.moved.length, movedResidents: heights.movedResidents.length }
           : commons.ok ? { kind: 'commons', from: commons.from, to: commons.to, moved: commons.moved.length }
           : gardens.ok ? { kind: 'gardens', from: gardens.from, to: gardens.to, moved: gardens.moved.length }
           : tower.ok ? { kind: 'tower', from: tower.from }
@@ -493,12 +496,14 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       visitors,JSON.stringify(revisionUpdate?.sources??[]),
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'terraces'
+    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'woodland'
+      ? { event: 'district_woodland_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'terraces'
       ? { event: 'district_terraces_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
       : districtMigration.kind === 'studewood'
       ? { event: 'district_studewood_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
       : districtMigration.kind === 'heights'
-      ? { event: 'district_heights_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      ? { event: 'district_heights_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved, movedResidents: districtMigration.movedResidents }
       : districtMigration.kind === 'commons'
       ? { event: 'district_commons_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
       : districtMigration.kind === 'gardens'
@@ -516,7 +521,17 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   }
   function tick() {
     if(closed)return Promise.resolve(null);
-    if(!pendingTick)pendingTick=runTick().catch(error=>{cached=null;throw error;}).finally(()=>{pendingTick=null;});
+    // runTick refuses a durable state this process can't serve (another region; an invalid
+    // checkpoint, presence, roster or character selection; a newer district epoch, or the same
+    // epoch under another revision) after taking the lease and before writing anything. Let the
+    // lease go: a refusing room that kept ticking would renew it indefinitely and lock out the
+    // deployment that can serve the town. RELEASE checks the token, so this is the same as the
+    // lease expiring early.
+    if(!pendingTick)pendingTick=runTick().catch(async error=>{
+      cached=null;
+      if(/^Invalid durable /.test(error?.message))await redis.eval(RELEASE,1,keys.lease,token).catch(()=>{});
+      throw error;
+    }).finally(()=>{pendingTick=null;});
     return pendingTick;
   }
   async function request(operation) {
