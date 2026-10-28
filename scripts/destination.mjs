@@ -8,7 +8,7 @@
 //   pnpm run destination override <recipe.json> <piece-id> (--set key=value ... | --suppress) [--note text]
 //   pnpm run destination preview <recipe.json>
 //   pnpm run destination layout <recipe.json> [--freeze]   # the land each quarter claims and the blocks it derives
-//   pnpm run destination reference <world.json> --site w,s,e,n --id <id> [--out recipe.json]   # a recipe skeleton from mapped roads
+//   pnpm run destination reference <world.json> --site w,s,e,n --id <id> [--parcels ignore] [--out recipe.json]   # a recipe skeleton from mapped roads (and parcels)
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, resolve, dirname, basename } from 'node:path';
@@ -164,15 +164,22 @@ function reference(path) {
   const bytes = readFileSync(resolve(path)), world = JSON.parse(bytes.toString('utf8'));
   const options = { id, site, title: flag('--title') ?? undefined, style: flag('--style') ?? undefined, rotation: flag('--rotation') === null || flag('--rotation') === 'auto' ? 'auto' : Number(flag('--rotation')),
     tolerance: number('--tolerance', undefined), sidewalk: number('--sidewalk', undefined), lane: number('--lane', undefined), minimumLength: number('--min-length', undefined),
-    kinds: flag('--kinds') ? flag('--kinds').split(',') : null, source: { name: basename(path), sha256: createHash('sha256').update(bytes).digest('hex') } };
+    kinds: flag('--kinds') ? flag('--kinds').split(',') : null, parcels: flag('--parcels') ?? undefined, source: { name: basename(path), sha256: createHash('sha256').update(bytes).digest('hex') } };
   for (const key of Object.keys(options)) if (options[key] === undefined) delete options[key];
   const grid = dominantRotation(world, site), recipe = referenceRecipe(world, options), ref = recipe.reference;
   console.log(`${basename(path)}: ${world.roads.length} mapped roads; grid turned ${ref.rotation}° (${Math.round(grid.aligned * 100)}% of ${grid.length} m of road inside the site runs with it); site ${recipe.site[2]}×${recipe.site[3]} m; ${ref.buildings} mapped buildings inside, counted only.`);
   console.log(['street', 'from', 'to', 'lane', 'roads'].join('\t'));
   for (const street of recipe.streets) { const roads = ref.streets.find(entry => entry.id === street.id); console.log([street.id, street.from.join(','), street.to.join(','), street.lane, `${roads.roads.length}× ${roads.name ?? roads.roads[0]}`].join('\t')); }
   for (const entry of ref.dropped) console.warn(`dropped ${entry.name ?? entry.road} (${entry.road}, ${entry.length} m): ${entry.reason}`);
+  if (ref.parcels.quarters.length) {
+    console.log(`parcels: ${ref.parcels.quarters.length} mapped parcels are quarters (${ref.parcels.quarters.map(entry => entry.id).join(', ')}); ${ref.openLand} m² outside them stays open`);
+    for (const entry of ref.parcels.quarters) for (const note of entry.snapped) console.log(`parcel ${entry.parcel}: ${note} edge snapped to the street`);
+  }
+  for (const entry of ref.parcels.dropped) console.warn(`parcel ${entry.parcel} not a quarter: ${entry.reason}`);
   if (ref.layoutError) console.warn(`layout: ${ref.layoutError}`);
-  for (const warning of ref.layoutWarnings) console.warn(`layout: ${warning}`);
+  const openWarnings = ref.layoutWarnings.filter(warning => warning.startsWith('open land '));
+  for (const warning of ref.layoutWarnings) if (!openWarnings.includes(warning) || !ref.parcels.quarters.length) console.warn(`layout: ${warning}`);
+  if (openWarnings.length && ref.parcels.quarters.length) console.warn(`layout: ${openWarnings.length} pieces of land outside the parcels stay open (listed in reference.layoutWarnings)`);
   // The budget outlook before anyone names a shop: the kit holds about four blocks per recipe.
   try {
     const plan = assembleNeighborhood(structuredClone(recipe)), limit = KIT_CONVENTIONS.budgets.trianglesPerNeighborhood;

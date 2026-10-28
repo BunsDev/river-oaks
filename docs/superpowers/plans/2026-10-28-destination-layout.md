@@ -57,4 +57,18 @@ Hosted Verify on `1c7e37d4` (source plus a ledger note), run 40711445100 attempt
 
 World Studio input: a region as **Export JSON** writes it is already a reference (`preview/public/data/sample-region.json`: the garden ring becomes four streets beside Moon Lane, 5 streets, nothing dropped), proven by a test in `city-kit-reference.test.js`; the starter districts work the same way.
 
+## Increment 4: Studio parcels decide where kit blocks go
+
+Task `destination-parcels-20261028`, branch `feat/destination-parcels-20261028` stacked on increment 2 beside increment 3 (worktree `/Users/buns/Documents/GitHub/BunsDev/river-oaks-destination-parcels`); retarget after #733 merges.
+
+Objective: when a reference carries `parcels` with `bounds_m` (a World Studio region, or a candidate from the Studio-side neighborhood compiler), `destination reference` makes each parcel inside the site a quarter: bounds turned into the kit frame, snapped to the module, clipped to the site, edges within a metre of a street's corridor edge moved onto it (reported) so the blocks have frontage. Land outside the parcels stays open and is reported as a total; parcels outside the site or thinner than a bay are listed with the reason; `--parcels ignore` lays one quarter over the site.
+
+Files owned: `shared/city-kit/reference.js` (parcels to quarters), `scripts/destination.mjs` (`--parcels`, parcel summary), `preview/tests/city-kit-reference.test.js` (a test builds a real compiler candidate with `scripts/neighborhood.mjs build` and crops it), `docs/city-kit.md`, this ledger.
+
+Results (2026-10-28):
+
+- `node --test preview/tests/city-kit-reference.test.js preview/tests/city-kit-layout.test.js preview/tests/city-kit.test.js`: 28 passed, 0 failed. The new test builds a real neighborhood-compiler candidate (Garden Blocks: six roads, sixteen 30 m parcels) with `scripts/neighborhood.mjs build` in a temp directory, crops its south-west block with the four bounding streets, and checks the four quarters' rectangles, the snapped edges (28 → 27.7 and 88 → 88.3 m, the compiler's sidewalk against the kit's corridor), the twelve parcels outside the site, four derived blocks facing their streets, the open-land total (2,502.85 m², the band between the site edge and the streets), that the plan assembles within the triangle budget, that `--parcels ignore` gives one quarter with the same four blocks, that the whole candidate yields sixteen quarters and exceeds the budget as the outlook says, a parcel cut by the site edge, a sliver dropped with its size, option and id errors, and the CLI's parcel lines.
+- `pnpm run destination check`: 15 locks reproduce. `python3 -I scripts/check_secrets.py --all`: no leaks.
+- `pnpm run verify` (core), receipt `.runtime/agent/core.json` (revision `8f0c659a`, dirty with the files above), log `.runtime/destination-parcels/verify-core-001.log`: passed. agent-tests 289/289; preview-tests 4322 passed, 1 skipped; server-tests 1051 passed, 280 skipped (no Redis); desktop-tests 127 passed, 5 skipped; build, python lint/format/tests (170 passed), demo, secrets passed. Not run: `verify full`, Redis, browser, native.
+
 Gaps after increment 2: World Studio cannot open a city-kit plan; plazas, furniture and tree rows are still typed per item; no bridge from the Studio neighborhood compiler's parcels to kit blocks; the reference adapter reads axis-aligned grids only (curves are reported for hand authoring, by design).

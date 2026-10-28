@@ -114,8 +114,57 @@ test('a World Studio region package is a reference as it is exported: its ring r
   assert.deepEqual(recipe.reference.dropped, []);
   assert.equal(recipe.reference.source.crs, 'LOCAL:METRES', 'a region without a CRS is local metres');
   assert.equal(recipe.reference.buildings, 4);
+  assert.deepEqual(recipe.reference.parcels, { source: 'quarters', quarters: [], dropped: [] }, 'the sample draws no parcels, so one quarter covers the site');
   assert.ok(recipe.reference.blocks > 4, 'the whole sample is more than one recipe holds; the budget line says so');
   validateRecipe(structuredClone(recipe));
+});
+
+test('parcels from the Studio neighborhood compiler become quarters, so a drawing decides where kit blocks go', () => {
+  // A real candidate from the Studio-side compiler, built here: a lattice of six roads and sixteen 30 m parcels.
+  const dir = mkdtempSync(join(tmpdir(), 'city-kit-parcels-')), candidate = join(dir, 'garden-001');
+  execFileSync(process.execPath, [join(root, 'scripts/neighborhood.mjs'), 'build', '--recipe', join(root, 'config/neighborhoods/garden-blocks.json'), '--out', candidate], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
+  const region = JSON.parse(readFileSync(join(candidate, 'region.json'), 'utf8'));
+  assert.equal(region.parcels.length, 16);
+  // The south-west block with its four bounding streets: four parcels, four quarters, four blocks.
+  const recipe = referenceRecipe(region, { id: 'garden-sw', site: [-96, -96, 8, 8], source: { name: 'region.json' } });
+  assert.deepEqual(recipe.streets.map(street => street.id).sort(), ['cross', 'middle', 'south', 'west']);
+  const quarters = recipe.reference.parcels.quarters;
+  assert.deepEqual(quarters.map(entry => [entry.id, ...entry.rect]), [
+    ['p-west-south-0-0', 27.7, 27.7, 58, 58], ['p-west-south-0-1', 58, 27.7, 88.3, 58], ['p-west-south-1-0', 27.7, 58, 58, 88.3], ['p-west-south-1-1', 58, 58, 88.3, 88.3]]);
+  // The compiler keeps its parcels its own sidewalk width (8.16 m) from the road; the kit's corridor ends at 7.7 m, so the edge is moved onto it.
+  assert.deepEqual(quarters[0].snapped, ['west 28 to 27.7 (west)', 'south 28 to 27.7 (south)']);
+  assert.deepEqual(quarters[3].snapped, ['east 88 to 88.3 (middle)', 'north 88 to 88.3 (cross)']);
+  assert.equal(recipe.reference.parcels.dropped.length, 12);
+  assert.ok(recipe.reference.parcels.dropped.every(entry => entry.reason === 'outside the site'));
+  assert.deepEqual(recipe.layout.quarters.map(quarter => [quarter.id, quarter.names.length]), [['p-west-south-0-0', 1], ['p-west-south-0-1', 1], ['p-west-south-1-0', 1], ['p-west-south-1-1', 1]]);
+  assert.equal(recipe.reference.blocks, 4);
+  assert.equal(recipe.reference.openLand, 2502.85, 'the band between the site edge and the streets stays open');
+  assert.ok(recipe.reference.layoutWarnings.every(warning => warning.startsWith('open land ')), 'nothing but open land is reported');
+  const plan = assembleNeighborhood(structuredClone(recipe));
+  assert.deepEqual(plan.provenance.layout.blocks.map(block => `${block.id}:${block.front}`), ['p-west-south-0-0:south', 'p-west-south-0-1:south', 'p-west-south-1-0:north', 'p-west-south-1-1:north']);
+  assert.ok(plan.stats.triangles < 260000);
+  // Ignoring the parcels lays one quarter over the site, with the same streets.
+  const single = referenceRecipe(region, { id: 'garden-sw', site: [-96, -96, 8, 8], parcels: 'ignore' });
+  assert.deepEqual(single.layout.quarters.map(quarter => quarter.id), ['quarter']);
+  assert.deepEqual(single.reference.parcels, { source: 'ignore', quarters: [], dropped: [] });
+  assert.equal(single.reference.blocks, 4);
+  // The whole candidate: sixteen quarters, sixteen blocks, and the budget line says that is too many for one recipe.
+  const whole = referenceRecipe(region, { id: 'garden', site: region.bounds_m });
+  assert.equal(whole.reference.parcels.quarters.length, 16);
+  assert.equal(whole.reference.blocks, 16);
+  assert.ok(assembleNeighborhood(structuredClone(whole)).stats.triangles > 260000);
+  // A parcel cut by the site edge keeps the part inside; a sliver thinner than a bay is dropped with its size.
+  const cut = referenceRecipe(region, { id: 'garden-cut', site: [-96, -96, 30, 8] });
+  assert.deepEqual(cut.reference.parcels.quarters.find(entry => entry.id === 'p-middle-south-0-0').rect, [103.7, 27.7, 126, 58]);
+  const sliver = referenceRecipe(region, { id: 'garden-sliver', site: [-96, -96, 11, 8] });
+  assert.deepEqual(sliver.reference.parcels.dropped.find(entry => entry.parcel === 'p-middle-south-0-0'), { parcel: 'p-middle-south-0-0', reason: 'only 3.3 × 30.3 m inside the site' });
+  assert.throws(() => referenceRecipe(region, { id: 'x', site: [-96, -96, 8, 8], parcels: 'blocks' }), /parcels must be quarters or ignore/);
+  assert.throws(() => referenceRecipe({ ...region, parcels: [region.parcels[0], region.parcels[0]] }, { id: 'x', site: [-96, -96, 8, 8] }), /parcel ids must be unique/);
+  // The CLI says what the parcels became.
+  const text = execFileSync(process.execPath, [join(root, 'scripts/destination.mjs'), 'reference', join(candidate, 'region.json'), '--site=-96,-96,8,8', '--id', 'garden-sw', '--out', join(dir, 'garden-sw.json')], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  assert.match(text, /parcels: 4 mapped parcels are quarters \(p-west-south-0-0, p-west-south-0-1, p-west-south-1-0, p-west-south-1-1\); 2502\.85 m² outside them stays open/);
+  assert.match(text, /parcel p-west-south-0-0: west 28 to 27\.7 \(west\) edge snapped to the street/);
+  assert.match(text, /4 streets, \d+ roads dropped, 4 blocks from one quarter with placeholder names|4 blocks/);
 });
 
 test('destination reference writes the skeleton with the source hash, and build accepts it', () => {
