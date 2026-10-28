@@ -4,6 +4,7 @@ import { groundSurfaceHeight } from './world-surface.js';
 import { storeRoomsFor, interiorLevelRoomsFor, roomAt, roomBlocked } from './store-rooms.js';
 import { roomBlocksConversation } from './conversation-sight.js';
 import { plazaSalonFootprints } from './plaza-salon-plan.js';
+import { cityBikeRackFootprints } from './bike-racks.js';
 import { campusFlightVolumes } from './garden-campus-district.js';
 import { isJevicaAccount } from './jevica-accounts.js';
 
@@ -87,13 +88,16 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   // A stable district altitude ceiling prevents corrections as terrain changes
   // beneath the bubble. Client motion and shared pose/checkpoint validation use it.
   const flightCeiling=Math.max(32,...roofs.map(roof=>roof.top+5-Math.min(...roof.ring.map(([x,z])=>groundAt(x,z)))));
-  // Plaza salon furniture (plaza-salon-plan.js) blocks bodies and low flight like a
-  // placed object. One box around the plaza keeps every other query to a compare.
-  const props = plazaSalonFootprints(world).map(([east, north, radius, height]) => ({ x: east, z: -north, radius, height }));
-  const propBox = props.length ? { minX: Math.min(...props.map(p => p.x - p.radius)) - 2, maxX: Math.max(...props.map(p => p.x + p.radius)) + 2,
-    minZ: Math.min(...props.map(p => p.z - p.radius)) - 2, maxZ: Math.max(...props.map(p => p.z + p.radius)) + 2 } : null;
-  const propAt = (x, y, z, radius, halfHeight = 0) => propBox && x > propBox.minX && x < propBox.maxX && z > propBox.minZ && z < propBox.maxZ
-    && props.some(p => (x - p.x) ** 2 + (z - p.z) ** 2 < (p.radius + radius) ** 2 && y - halfHeight < groundAt(p.x, p.z) + p.height);
+  // Plaza salon furniture (plaza-salon-plan.js) and the curbside bike rack bars
+  // (bike-racks.js) block bodies and low flight like a placed object. One box
+  // around the plaza and one per rack keep every other query to a few compares.
+  const propBoxes = [plazaSalonFootprints(world), ...cityBikeRackFootprints(world)].filter(group => group.length).map(group => {
+    const props = group.map(([east, north, radius, height]) => ({ x: east, z: -north, radius, height }));
+    return { props, minX: Math.min(...props.map(p => p.x - p.radius)) - 2, maxX: Math.max(...props.map(p => p.x + p.radius)) + 2,
+      minZ: Math.min(...props.map(p => p.z - p.radius)) - 2, maxZ: Math.max(...props.map(p => p.z + p.radius)) + 2 };
+  });
+  const propAt = (x, y, z, radius, halfHeight = 0) => propBoxes.some(box => x > box.minX && x < box.maxX && z > box.minZ && z < box.maxZ
+    && box.props.some(p => (x - p.x) ** 2 + (z - p.z) ** 2 < (p.radius + radius) ** 2 && y - halfHeight < groundAt(p.x, p.z) + p.height));
   const baseIsFree = (x, z) => {
     if(!commonsAllows(world.eastGardenCommons,x,-z,RADIUS))return false;
     if (x < west + RADIUS || x > east - RADIUS || z < -north + RADIUS || z > -south - RADIUS) return false;
@@ -116,7 +120,7 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   };
   const isFree = (x,z) => {
     if(!baseIsFree(x,z))return false;
-    if(!placedObjects.length && !propBox)return true;
+    if(!placedObjects.length && !propBoxes.length)return true;
     // Every obstacle tests the same candidate position. Resolve its surface
     // once, while keeping later queries fresh for moving objects and terrain.
     const y=groundAt(x,z)+.9;

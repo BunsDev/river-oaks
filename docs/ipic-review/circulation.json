@@ -410,10 +410,10 @@
     },
     {
       "zone": "auditorium",
-      "radiusM": 4,
+      "radiusM": 2.86,
       "at": [
-        7.6,
-        30
+        -16.6,
+        29
       ],
       "clearsLongestTurningBody": true
     }

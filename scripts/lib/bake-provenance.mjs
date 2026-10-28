@@ -14,6 +14,8 @@ const avatarInputs = [
   'preview/src/bodice-fitting.js',
   'preview/src/boot-fitting.js',
   'preview/src/character-bodice-fit.js',
+  'preview/src/character-recipe-look.js',
+  'preview/src/character-recipe.js',
   'preview/src/coat-back.js',
   'preview/src/coat-tail-geometry.js',
   'preview/src/coat-tail-skinning.js',
