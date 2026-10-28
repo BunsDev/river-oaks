@@ -111,3 +111,108 @@ Presentation only, in `preview/src/combat-motion.js`: the town decides every pha
 - **Other figures.** `main.js` attaches the town's state to every player, rival and officer figure; `remote-players.js` plays it forward from the snapshot's arrival, faces the opponent and layers the pose. A figure the layer poses drops the legacy `shove` / `stagger` / `down` gesture so the two never stack. Keyboard and touch reach the same states: the HUD's buttons and keys send the same messages.
 - **Reduced motion.** No swings: strikes, evades and flinches keep the posed rig and the HUD text carries the event. Held states (down, surrender, arrest, a grab's reach) and the counter's telegraph show one static key pose, so a downed or held figure is never shown standing at rest. The blend snaps instead of easing.
 - **Tests.** `preview/tests/combat-motion.test.js` (spec adopted from the earlier presentation worktree) covers timing parity, phase reading and late snapshots, facing at 30/60/120 Hz with foot placement, every pose on every shipped rig, bounds and determinism, reduced motion, the blend and the HUD reader; `preview/tests/crime-ui.test.js` the published state; `preview/tests/remote-players.test.js` the figure state and facing. The `crime-shared` journey checks the published strike and the figure state on both screens, the telegraph cue, the admitted evade, surrender holding the figure with inputs cleared, and a clean exit.
+
+## Evidence (#640 increment 5)
+
+Measurements, not budgets: every number below is what one machine produced on one day, bound to
+the revisions named, under the load averages recorded in the receipts. Nothing here changes an
+acceptance threshold, a budget or a harness default.
+
+### Crime workload, main vs branch (the #599 protocol of 2026-10-24)
+
+`pnpm run audit:crime` (`server/crime-workload.js`, report in `data/reports/crime-workload.json`):
+server simulation only (`createSharedWorld` on a synthetic clock, 50 ms steps); every player stands
+around the service lane rival at five stars in `south-service-lane` and strikes every simulated
+second; the police respond at the six-officer cap; two runs of 20 s per tier after a 2 s warm-up;
+the same script on `main` and on the branch, same machine. The town is deterministic, so the two
+runs of a tier differ only in timing. What the protocol produces: the rival is down after four
+hits and recovers 20 s later, so most strikes miss (`target_incapacitated`); officers arrest the
+standing strikers, who are returned to the safe arrival and then strike from outside the zone
+(`not_danger_zone`). Step maxima of 70–90 ms are host noise (load averages 29–102 during these
+runs; other sessions shared the machine).
+
+main a1fa945a [ 101.97, 51.06, 29.31 ] branch b7df2c6a [ 65.77, 47.16, 28.65 ]
+| Head | Players | Step p95 (ms) | Step max (ms) | Snapshot (bytes) | Checkpoint (bytes) | Officers (max) | Strikes admitted / hit / miss |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| main (a1fa945a) run 1 | 1 | 1.1 | 86 | 59896 | 141629 | 3 | 4 / 4 / 0 |
+| main (a1fa945a) run 2 | 1 | 0.88 | 83.76 | 59896 | 141629 | 3 | 4 / 4 / 0 |
+| branch (b7df2c6a) run 1 | 1 | 1.28 | 88.21 | 61464 | 141629 | 3 | 4 / 4 / 0 |
+| branch (b7df2c6a) run 2 | 1 | 0.96 | 69.66 | 61464 | 141629 | 3 | 4 / 4 / 0 |
+| main (a1fa945a) run 1 | 8 | 1.34 | 83.69 | 62845 | 145761 | 6 | 8 / 4 / 4 |
+| main (a1fa945a) run 2 | 8 | 1.41 | 84.81 | 62845 | 145761 | 6 | 8 / 4 / 4 |
+| branch (b7df2c6a) run 1 | 8 | 1.09 | 78.21 | 64413 | 145761 | 6 | 8 / 4 / 4 |
+| branch (b7df2c6a) run 2 | 8 | 1 | 66.7 | 64413 | 145761 | 6 | 8 / 4 / 4 |
+| main (a1fa945a) run 1 | 16 | 1.36 | 92.4 | 67790 | 153715 | 6 | 18 / 6 / 12 |
+| main (a1fa945a) run 2 | 16 | 1.16 | 87.89 | 67790 | 153715 | 6 | 18 / 6 / 12 |
+| branch (b7df2c6a) run 1 | 16 | 1.29 | 79.16 | 69358 | 153715 | 6 | 18 / 6 / 12 |
+| branch (b7df2c6a) run 2 | 16 | 1.36 | 76.2 | 69358 | 153715 | 6 | 18 / 6 / 12 |
+| main (a1fa945a) run 1 | 32 | 1.18 | 78.85 | 79119 | 170373 | 6 | 52 / 8 / 42 |
+| main (a1fa945a) run 2 | 32 | 1.14 | 82.53 | 79119 | 170373 | 6 | 52 / 8 / 42 |
+| branch (b7df2c6a) run 1 | 32 | 1.21 | 73.48 | 80687 | 170373 | 6 | 52 / 8 / 42 |
+| branch (b7df2c6a) run 2 | 32 | 1.1 | 73.14 | 80687 | 170373 | 6 | 52 / 8 / 42 |
+
+### Input to pose and contact alignment, 30/60/120 Hz under the proposed network profiles
+
+`RIVER_OAKS_COMBAT_EVIDENCE=<path> node --test preview/tests/combat-timing.test.js`: a simulated
+town (the strike phases of `server/crime.js`, a 50 ms loop that broadcasts at most every 200 ms as
+`server/app.js` does) and the shipped `combat-motion.js` run the way `crime-ui.js`,
+`player-avatar.js`, `main.js` and `remote-players.js` call it, under the #637 profiles (RTT 0/100/
+200 ms, one-way jitter ±0/15/40 ms, 0/1/3 % head-of-line stalls of 250/400 ms, seeds 3/11/29).
+Milliseconds after the key press, or after the town's contact instant; p50 (min–max) over seeds.
+The striker's own figure starts from the first snapshot that carries the admitted action, not from
+the reply: the "if started from the reply" column is what that would save (not implemented).
+
+| Profile | Hz | Striker: key → pose shown | …if started from the reply | Striker: contact shown after the town's contact | Other player: key → strike shown | contact shown after the town's contact | rival flinch after the town's contact |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| rtt0 (RTT 0 ms, ±0 ms, 0 % stalls of 0 ms) | 30 | 133 (133–133) | 0 (0–0) | 33 (33–33) | 133 (133–133) | 0 (0–0) | 33 (33–33) |
+| rtt0 (RTT 0 ms, ±0 ms, 0 % stalls of 0 ms) | 60 | 117 (117–133) | 0 (0–0) | 17 (17–17) | 117 (117–133) | 0 (0–0) | 33 (17–33) |
+| rtt0 (RTT 0 ms, ±0 ms, 0 % stalls of 0 ms) | 120 | 117 (108–125) | 0 (0–0) | 8 (8–8) | 117 (108–125) | 0 (0–0) | 25 (17–33) |
+| rtt100 (RTT 100 ms, ±15 ms, 1 % stalls of 250 ms) | 30 | 167 (167–200) | 100 (100–133) | 58 (58–58) | 167 (167–167) | 58 (58–58) | 291 (258–291) |
+| rtt100 (RTT 100 ms, ±15 ms, 1 % stalls of 250 ms) | 60 | 167 (150–183) | 100 (100–117) | 58 (41–58) | 167 (167–167) | 58 (41–58) | 274 (258–275) |
+| rtt100 (RTT 100 ms, ±15 ms, 1 % stalls of 250 ms) | 120 | 158 (150–175) | 100 (92–108) | 49 (41–58) | 158 (158–158) | 49 (41–58) | 266 (249–266) |
+| rtt200 (RTT 200 ms, ±40 ms, 3 % stalls of 400 ms) | 30 | 200 (200–233) | 200 (167–233) | 88 (87–121) | 200 (200–200) | 120 (88–121) | 320 (287–321) |
+| rtt200 (RTT 200 ms, ±40 ms, 3 % stalls of 400 ms) | 60 | 200 (183–233) | 183 (167–217) | 88 (87–104) | 183 (183–200) | 104 (71–120) | 304 (271–304) |
+| rtt200 (RTT 200 ms, ±40 ms, 3 % stalls of 400 ms) | 120 | 200 (175–233) | 183 (167–217) | 79 (71–96) | 183 (183–200) | 96 (71–120) | 295 (271–304) |
+
+What the model says: the striker's pose follows the key by one way plus up to one broadcast
+interval plus a frame; the other player's shown contact trails the town's by one way plus jitter
+plus a frame (the state is played forward from the snapshot's age); the rival's flinch trails by
+more, because it waits for the first snapshot that carries the hit. The pose never leads the town
+and never runs backwards (asserted).
+
+### Two-browser capture in the south service lane
+
+`RIVER_OAKS_SHARED_JOURNEY=crime-night RIVER_OAKS_SHARED_REPORT=crime-night-shared.json pnpm run test:shared development` (`preview/e2e/crime-night.js`,
+on demand, not in the default journey list): two Chromium pages at 1280×860, both at the latest
+authored hour (19:00; the time-of-day control ends there, so a night sky is not yet authored), the
+visitor strikes with T and evades the rival's counter with U while the owner watches from a few
+metres east. Each page stamps on its own clock when the key went down, when its figure took up
+the pose, when the hit arrived and when the other figure's contact and flinch showed; screenshots
+at the lane, the strike (the visitor's right after T, the owner's once their page shows it), the telegraph and the
+evade go to `output/playwright/crime-night-*.png`.
+The receipt's `evidence` carries the stamps. Run 1 on this head (receipt `crime-night-run1-receipt.json` in the worktree's evidence
+folder; Apple M5 Max, ANGLE Metal, full rendering; both pages ran at about 28 animation frames per
+second over the fight, screenshots included): striker key → HUD published the strike 70 ms, figure
+took up the pose 68 ms (the pose and the attribute land in the same frame), hit snapshot 409 ms
+(40 ms after the town's contact by the striker's own estimate), counter telegraph 791 ms after the
+hit, evade key → lean 109 ms, counter evaded on the first attempt; the other browser showed the
+strike 194 ms after the key (16 % into the swing), its contact 37 ms after the town's contact, the
+rival's flinch 37 ms after it (the same frame as the hit snapshot) and the counter telegraph 16 ms
+after the striker's HUD did. Two things the capture shows that the model does not: the other
+browser never showed the evade (the evade window lives only in the evader's reply; the snapshot
+carries no evade state for peers, so increment 4 leans the local figure only), and 19:00 renders
+with a daylight sky (clear weather keeps the daytime HDR; the hour only lowers and warms the
+sun), so a night encounter needs an authored sky and lamps before it can be captured.
+Run 2 on the same head (`b7df2c6a` with these files, another session's detached copy, 2026-10-28
+08:28Z, receipt `data/reports/crime-night-shared-ae.json` kept out of the commit; same machine and
+renderer, about 38 animation frames per second on both pages): striker key → HUD 51 ms, pose
+49 ms, hit snapshot 448 ms (99 ms after the town's contact by the striker's estimate), counter
+telegraph 633 ms after the hit, evade key → lean 79 ms; the first evade press was late (131 ms of
+the window left when it reached the town), the second evaded with 593 ms to spare. The other
+browser showed the strike 36 ms after the key (at the start of the swing), its contact 6 ms before
+the striker's estimate of the town's contact and 119 ms before the striker's hit snapshot (the two
+pages stamp on their own clocks and the owner plays the snapshot forward, so the sign is not a
+lead over the town), the flinch 128 ms after the town's contact and in the same frame as its own
+hit snapshot, and the counter telegraph 17 ms before the striker's HUD. The evade was again not
+shown to the other browser. The 9 checks passed in 18.8 s. The same two pages at 19:00 again
+rendered a daylight sky.
