@@ -8,6 +8,9 @@ async page => {
   const { openHudSpace } = await import('./hud-navigation.js');
   const recipe = JSON.parse(readFileSync('config/destinations/nineteenth-and-yale.json', 'utf8')); // the runner works from the repo root
   const plan = assembleNeighborhood(structuredClone(recipe)), { region, summary } = studioRegion(recipe, plan);
+  // What opens is the shipped plan: the build reproduces the committed lock of the Nineteenth & Yale district.
+  const lock = JSON.parse(readFileSync('config/destinations/nineteenth-and-yale.lock.json', 'utf8'));
+  if (plan.hash !== lock.hash) throw new Error(`Nineteenth & Yale built ${plan.hash}, not its committed lock ${lock.hash}`);
   const checks = [], check = (ok, label) => { if (!ok) throw new Error(label); checks.push(label); console.log(label); };
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto('http://127.0.0.1:5173/');
@@ -18,7 +21,7 @@ async page => {
   await page.locator('#studio-import').setInputFiles({ name: 'studio-region.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(region)) });
   await page.locator('[data-item="northwest-row-parcel-0"]').waitFor({ timeout: 10000 });
   const items = await page.locator('[data-item]').count(), expected = 1 + summary.buildings + summary.trees + summary.places;
-  check(items === expected, `Studio lists the arrival, ${summary.buildings} buildings, ${summary.trees} trees and ${summary.places} places of Nineteenth & Yale (${items} items)`);
+  check(items === expected, `Studio lists the arrival, ${summary.buildings} buildings, ${summary.trees} trees and ${summary.places} places of the shipped Nineteenth & Yale plan ${lock.hash} (${items} items)`);
   await page.locator('[data-item="northwest-row-parcel-0"]').click();
   const shell = plan.pieces.find(piece => piece.id === 'nineteenth-and-yale/northwest-row/parcel-0');
   const east = Number(await page.getByLabel('East (m)', { exact: true }).inputValue()), width = Number(await page.getByLabel('Width (m)', { exact: true }).inputValue());
