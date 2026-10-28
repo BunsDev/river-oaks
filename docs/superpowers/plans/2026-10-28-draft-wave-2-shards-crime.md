@@ -62,6 +62,7 @@ Step breakdown of the heights job: setup (install, Playwright caches) is under 1
 - Owner `codex:quaternius-phase2-20261027`: lease expired 10-28 00:54Z; the two live `codex` processes run in coven-threads and coven-cave, none in a river-oaks checkout; no Codex transcript for it since 10-27. Taken over 07:56Z under the goal's released-claim rule, recorded in the register.
 - 08:27Z: river-oaks-d7 reported Val's instruction to it to work #722 through to merging; released to d7 at exact head `3a3956c3` (register updated). Landing is d7's under its own authority; this session's landing line does not cover #722.
 - 08:43Z: river-oaks-d7 declined the handoff (no merge authorization from Val for it; it never touched the register row or the worktree). Task reclaimed by this session; #722's head is now `c82d7b53`, a merge of `main` `a88150f8` made through GitHub at 08:18Z (not by this session). It stays a draft; landing is decision 1.
+- 08:47Z: core on `c82d7b53` passed (08:42–08:47Z, receipt `.runtime/agent/core.json` in `../river-oaks-quaternius-clips`, log `core-722-c82d7b53.log` in the scratchpad).
 - All 19 files in `.runtime/quaternius-phase2/49-handoff-manifest.json` matched their SHA-256 and byte counts (0 mismatches). Committed unchanged as signed `2765bc32` on `3df540ee`, rebased onto `main` `18222a6d` as signed `3a3956c3`, pushed, **draft #722** (07:57Z). Phase 1 excluded (#694 open). Core on this head: after the browser lock frees.
 
 ## Round 4b: Crime Feel increment 5 (read-only survey, 07:58Z)
@@ -84,6 +85,7 @@ Step breakdown of the heights job: setup (install, Playwright caches) is under 1
 
 - 07:45Z: worktree created from `main` `18222a6d`; task claimed; ledger written.
 - 07:58Z: lane split agreed with river-oaks-ac (green wave: it lands #720 and #717 under Val's ticks; I start no lander for them) and river-oaks-bd (register reconcile: owner-null rows only; it leaves quaternius-clip-import and crime-release-599 to me).
+- 08:46Z: #681 merged by river-oaks-ac's lander as `d09d5183`; the #721 lander took its turn and is updating the branch with `main`.
 - 07:51Z: local run `node preview/e2e/experience-runner.js bayou-heights bayou-heights-return` started from `../river-oaks-heights-shard-split` under the browser lock, `caffeinate -s`, load 15, report `data/reports/heights-split-local.json` (untracked, not committed).
 
 ## Gaps
