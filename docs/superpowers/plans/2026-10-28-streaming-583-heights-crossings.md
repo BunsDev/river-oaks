@@ -82,6 +82,7 @@ Run from the worktree with the shared browser lock, caffeinated, host one-minute
 | Demonstration | Result |
 | --- | --- |
 | `pnpm run test:experience world-streaming` (District ↔ Bayou Market Commons, two bounded rendered fixture clients plus a probe client; 14:44–15:52Z) | All 22 laps completed (2 warm-ups + 20 measured round trips) with 271 checks passed: identity, avatar and shared return positions preserved; exactly one Commons presentation group per client; no duplicate remote avatars; bounded owned resources and unchanged documents on every lap; every eviction released all 8,239,722 owned bytes with zero pending loads (loads 22 = unloads 22 at the end). Probe client: recovery from the injected module failure (6 failures then success) and both context-loss probes (pending load and resident Commons; 0 m and 0.55 m authoritative drift, direction preserved). One forced reconnect: 1,163 ms, 0 m drift. Warmed post-GC heap at lap 2: 126.0 / 125.6 MB used. **Not met:** the warmed GPU-count allowance on 6 of 20 measured trips, a stable step on client 0 of +12 geometries and +13 textures (783/262 against 771/249, the same values each time, evicted counts 673/259 each time), so a one-time upload after the reference, not growth. **Outcome recorded as failed:** after lap 22's checks the harness's final eviction walk for player 1 stalled against an obstacle at (−2778.6, −1346.2) heading for (−2786, −1371) with the stream already clean, at host load 34; the post-twenty retained-heap sample therefore did not run. #697's harness re-routes wedged walks; main's does not. |
+| `pnpm run test:experience world-streaming`, second run on `6ed1aaf0` (20:30–21:38Z, host load 12–22) | All 22 laps again with 281 checks passed and none failed; every eviction released all 8,239,722 owned bytes with zero pending loads (loads 23 = unloads 23 at the end); reconnect 812 ms with 0 m drift; two graphics recoveries; probe failed-load recovery. Post-GC retained heap after twenty measured trips 128.8 / 127.4 MB against the warmed 127.0 / 127.1 MB: ratios 1.014 and 1.002 against the 1.10 bound. GPU-count allowance missed once, on lap 22, client 0 at +12 geometries / +13 textures: the registration step (+12 / +9) came at eviction 16 this run and stayed flat for six laps; the ±4 texture transient made 13. Outcome again `failed`, after all laps: the harness's split-occupancy walk for the peer wedged at (−2714.7, −1305.3) with speed 0 heading for the plaza at host load 22. Receipt `journey-2026-10-28T20-30-27.517Z.json` in the scratchpad `phase2-receipts/`. |
 | `node preview/audit/world-streaming-matched.js` (Gardens `river-oaks-gardens-3` vs Market `east-garden-commons-market-1`, desktop and phone viewports, one and two players, three 30 s windows each, five rejoins; 15:52–16:12Z) | Passed all four profiles, no errors. Frame p95 (median of windows): desktop 1p 16.8 vs 16.7 ms; desktop 2p 50.0 vs 50.0 ms; phone 1p 16.7 vs 16.8 ms; phone 2p 33.4 vs 33.4 ms (vsync-locked steps). CPU submission p95: desktop 1p 14.9 vs 14.0 ms (+6 %); desktop 2p 17.6 vs 19.0 ms; phone 1p 13.0 vs 12.0 ms (+8 %); phone 2p 14.6 vs 13.5 ms (+8 %), all within the +10 % budget. Heap: Market 364 / 386 MB vs Gardens 435 / 386 MB. Loopback receive 294–300 kB/s on both. Reconnect medians: desktop 1,340 vs 1,182 ms (+13 %); phone 1,236 vs 1,088 ms (+14 %), within the 20 % budget, 0 m drift on all 20 rejoins. Initial transfer 539 resources, 75,679,787 vs 75,679,779 bytes (+8 B; unbundled Vite development transfer, not the production cold-load budget). Renderer geometries/textures identical between revisions at each tier. Host load 9.7–14.5 during windows. |
 | `pnpm run verify full` (isolated Redis `127.0.0.1:16586`) | Passed 2026-10-28T18:58:07Z (`.runtime/agent/full.json`, revision `0204368e`, 19 of 19 stages): dependency audit with no known vulnerabilities; tooling 289; preview 4,313 + 1 existing skip; server with Redis 1,373 and 0 skips; desktop 127 + 5 skips; build; Ruff; pytest 170; demo and demo-verify; secret scan and gitleaks history clean. Browser stages behind the shared lock: security e2e, reflections WebGL, the 16-journey experience stage (19.0 min), the Commons journey (reconnect keeps identity and Commons position, no page errors), 28 shared journeys (19.0 min) and the IPIC screening (19 checks). Queue waits behind other sessions' browser runs totalled about 1 h 53 min; host load 13–21 during the stages. The generated `data/reports/experience.json` and `shared-experience.json` were restored afterwards and are not committed. |
 
@@ -94,11 +95,19 @@ Run from the worktree with the shared browser lock, caffeinated, host one-minute
   and synthetic textures; atlas sizes in the browser come from the journey evidence.
 - The hosted `terraces` and `woodland` shards do not walk home to the District, so the
   release fix needs a journey check or a local run to be browser-verified.
-- The world-streaming journey on this head met every lap check but not the warmed
-  GPU-count allowance on 6 of 20 measured trips (a constant +12 geometries / +13
-  textures step on client 0, not growth) and recorded `failed` because main's harness
-  wedged on its final eviction walk at host load 34; #697 carries the harness re-route.
-  The post-twenty retained-heap sample therefore has no figure on this head.
+- Both world-streaming runs on this head met every lap check (271 and 281 checks) and the
+  second supplied the post-twenty retained-heap sample (ratios 1.014 / 1.002). Both missed
+  the warmed GPU-count allowance on client 0 by the same one-time step, +12 geometries and
+  +9 textures (lap 4 in the first run, eviction 16 in the second), then a flat plateau, with
+  a ±4 texture transient on top (13 > the fixed +10). Scene inventories (the world group and
+  the scene root's other children) are identical on every sample, so `renderer.info.memory`
+  registered existing objects on first rendered use, the harness's own warm-up premise. Which
+  object registers is not pinned; the nine textures match the Prince Jev figure's material
+  maps. The bound lives in `preview/e2e/world-streaming.js`, #697's harness; forcing
+  registration before the baseline or widening the texture allowance is reported there.
+- Both runs recorded `failed` outside the laps, in main's harness walks under host load
+  22–34 (the final eviction walk, then the split-occupancy walk). #697 re-routes wedged
+  walks; this PR does not touch the harness.
 
 ## Next step
 
