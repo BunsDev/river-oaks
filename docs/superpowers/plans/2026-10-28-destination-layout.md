@@ -29,7 +29,7 @@ Results (2026-10-28, worktree head `1781924a` plus the uncommitted files above):
 
 Gaps and later increments: geographic reference input for city-kit streets (the Python adapter serves the Studio compiler only; kit streets are axis-aligned), World Studio opening of a city-kit plan, a plaza/furniture derivation step (benches, lamps and tree rows are still typed per item), and a Studio-side bridge from the neighborhood compiler's parcels to kit blocks.
 
-Delivery: draft PR #730 (https://github.com/BunsDev/river-oaks/pull/730), source head `7caa2cd858d6558249bed17efde5e76b8b8fa0da` (signed; the core receipt above belongs to that tree). Hosted Verify pending at the time of this note.
+Delivery: draft PR #730 (https://github.com/BunsDev/river-oaks/pull/730), source head `7caa2cd858d6558249bed17efde5e76b8b8fa0da` (signed; the core receipt above belongs to that tree). Hosted checks on `b64271bb` (source plus this ledger note): 29 success, 5 skipped, 0 failed, 2026-10-28 09:57 CDT. Awaiting review and merge authorization.
 
 Next step: hosted Verify, review, then land when authorized.
 
@@ -50,3 +50,7 @@ Results (2026-10-28):
 - `python3 -I scripts/check_secrets.py --all`: no leaks.
 - The rasterized `plan.svg` of the fixture's core crop (`.runtime/destination-reference/plan.svg.png`, local) shows Main Street and Cross Street with four derived blocks facing Main.
 - `pnpm run verify` (core) on this source, receipt `.runtime/agent/core.json` (revision `b64271bb`, dirty with the files above), log `.runtime/destination-reference/verify-core-001.log`: passed. agent-tests 289/289; preview-tests 4320 passed, 1 skipped; server-tests 1051 passed, 280 skipped (no Redis); desktop-tests 127 passed, 5 skipped; build, python lint/format/tests (170 passed), demo and secrets passed. Not run: `verify full` (Redis, browser), browser journeys, native.
+
+Delivery: draft PR #733 (https://github.com/BunsDev/river-oaks/pull/733), head `cfe3207d5395b9cbb7f65ddab97a0739b3f8fe7a` (signed), base `feat/destination-layout-20261028`. Hosted Verify pending at the time of this note; retarget to `main` after #730 merges.
+
+Gaps after increment 2: World Studio cannot open a city-kit plan; plazas, furniture and tree rows are still typed per item; no bridge from the Studio neighborhood compiler's parcels to kit blocks; the reference adapter reads axis-aligned grids only (curves are reported for hand authoring, by design).
