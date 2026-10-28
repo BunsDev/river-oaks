@@ -234,7 +234,18 @@ ABBA detail:
    - District stack: all six merged, #670 last as `a1fa945a`.
    - #292 stack: all five merged.
 2. **3× on `main`:** met. `woodland-heights-1` is 3.048× at 0.5 m.
-3. **Acceptance pass:** round 1 ran on `a5857cf4`, before #670 landed. Round 2 ran on the final `main`, `5541f831`, which contains #670 `a1fa945a`. The host was held awake, and `pmset` shows no sleep, wake or dark-wake events from 18:19Z on 10-27 to 00:49Z on 10-28. Round 2 results:
+3. **Acceptance pass: met by round 3.** Every step passed on the final `main`, `18222a6d`, with no reruns.
+   - **Head:** `18222a6d` contains the whole district stack: #670 `a1fa945a`, #703 (the facing guard) and #688.
+   - **Conditions:** it ran 00:54–05:02Z on 10-28 with the host held awake. `pmset` shows no sleep, wake or dark-wake events in that window. Every step started only at load ≤12, on its own Redis, under the browser lock.
+   - **Results:**
+     - Commons and Heights rehearsals passed (`eaca43d2`).
+     - All 7 journeys passed, world-streaming included (`809bad05`).
+     - District ABBA: A = `2d63637f`, B = `18222a6d`, five rejoins, order A1 B1 B2 A2. All budgeted metrics were within allowance (`bb67bfe7`).
+     - `verify full` passed: 289/289; 4,290 of 4,291 with none failed; Redis 1,368/1,368 (`94508379`).
+   - **Evidence comments:** #638 6461107095 and #587 6461107314.
+   - **Archive:** 22 files with verified SHA256SUMS, at `~/worktree-backups/river-oaks/evidence-three-x-on-main-20261026/acceptance-18222a6d/`.
+
+   Earlier rounds are kept as history. Round 1 ran on `a5857cf4`, before #670 landed. Round 2 ran on `5541f831`, which contains #670 `a1fa945a`, but not #703 or #688. The host was held awake, and `pmset` shows no sleep, wake or dark-wake events from 18:19Z on 10-27 to 00:49Z on 10-28. Round 2 results:
    - **Rehearsals:** both Commons rehearsals and the Heights rehearsal passed (Heights receipt `ed94130c`).
    - **Journeys:** world-gate-587, east-garden-commons and the four district journeys passed (`bf8bc7e9`).
    - **District ABBA:** five-rejoin protocol, A = `2d63637f`, B = `5541f831`, order A1 B1 B2 A2 under one lock. Every budgeted metric was within allowance (`16a15cf1`).
@@ -255,7 +266,7 @@ ABBA detail:
 | --- | --- | --- | --- |
 | #670 retirement | Merged as `a1fa945a`; the register task and local branch belong to 3e | 3e | 3e marks `next-district-586-support-20261024` delivered and releases the branch at its exact tip; then guarded prune (comment 6449621420) |
 | Acceptance snapshots `scratchpad/accept-pre`, `accept-final`, `accept-ws` (task `three-x-acceptance-snapshots-20261027`) | Detached; retiring needs `--cancel-stale` | e9 | Decision 5. Receipts are already archived |
-| world-streaming connection-count failure (round 2, run 1 on `5541f831`) | Not reproduced. The rerun on `5541f831` failed on the facing mechanism instead, and the run on `18222a6d` after #703 passed | e9 (reported) | Watch for a recurrence. The first log is in the round-2 archive |
+| world-streaming connection-count failure (round 2, run 1 on `5541f831`) | Not reproduced. It passed twice on `18222a6d`: in the standalone run and in round 3 | e9 (reported) | Watch for a recurrence. The first log is in the round-2 archive |
 | #670 branch retirement (`feat/resident-heights-20261025`, `feat/resident-locations-20261024`) | 3e marked the task delivered but holds retirement until Val authorizes it. Ignored evidence must be archived first; the locations branch differs from #655's merged head | 3e | Decision 9 |
 
 ## Decisions for Val
