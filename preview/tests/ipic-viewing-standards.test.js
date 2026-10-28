@@ -1,14 +1,16 @@
 // The auditorium's proportions against cinema viewing guidance (Val, 2026-10-19; IPIC_VIEWING in
 // ipic-plan.js): horizontal angle of view per row, the look up to the image's top, the C-value over each
-// headrest in front, seats facing the screen, and a wing three times the old room's width.
+// headrest in front, seats facing the screen, and a wing that ends at a cross aisle just past the doorway.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { IPIC_AUDITORIUM_ROWS, IPIC_AUDITORIUM_SEAT_D, IPIC_SCREEN, IPIC_VIEWING, IPIC_WING, ipicFloor, ipicSeatForward } from '../src/ipic-plan.js';
 import { storeRoomsFor } from '../src/store-rooms.js';
+import { createWalkingEnvironment } from '../src/walking.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
 const room = storeRoomsFor(world).find(r => r.interior === 'ipic-photo-v1');
+const environment = createWalkingEnvironment(world);
 const recliners = room.ipicSeats.filter(seat => seat.key.startsWith('recliner'));
 const degrees = radians => radians * 180 / Math.PI;
 const [fa, fd] = IPIC_SCREEN.facing, right = [-fd || 0, fa];
@@ -67,9 +69,23 @@ test('recliners face the screen, centred on it, and the screen fits the wing\'s 
   assert.ok(Math.abs(IPIC_SCREEN.a - IPIC_WING.aMin) < .2, 'on the north end wall');
 });
 
-test('the wing runs three times the old auditorium\'s width along the building', () => {
-  const [wing] = room.parts;
+// The wing first ran 39 m along the building, 25 m of it empty carpet past the doorway (Val, 2026-10-26: "the
+// dimensions are contorted and tons of dead space"). It ends at a cross aisle just past the doorway.
+test('the wing ends at a cross aisle just past the doorway, and nothing beyond it is open floor', () => {
+  const [wing] = room.parts, back = IPIC_AUDITORIUM_ROWS[0];
   assert.deepEqual({ ...wing }, { ...IPIC_WING });
-  assert.ok(Math.abs((wing.aMax - wing.aMin) / 3 - (room.aMax - room.aMin)) < .05, `${wing.aMax - wing.aMin} m against ${room.aMax - room.aMin} m`);
   assert.ok(wing.d1 <= room.depth && wing.d0 >= 26, 'behind the cinema wall, within the room\'s depth');
+  const [west, east] = room.fixtures.filter(f => f.kind === 'ipic-cinema-wall').map(f => f.a + f.w / 2 * (f.a < -4.7 ? 1 : -1)).sort((x, y) => x - y);
+  assert.ok(west > wing.aMin && east < wing.aMax && wing.aMax - east <= 1, `the doorway ${west}..${east} opens into the wing, which ends at ${wing.aMax}`);
+  // The back row's recliners reach 0.7 m behind their seats (their bases); the aisle behind them is wide enough to
+  // pass in, and no wider.
+  const aisle = wing.aMax - .09 - (back.a + .7);
+  assert.ok(aisle >= 2.4 && aisle <= 3.5, `a ${aisle.toFixed(2)} m cross aisle`);
+  assert.ok(wing.aMax - wing.aMin <= 2.2 * (wing.d1 - wing.d0), `${wing.aMax - wing.aMin} m long and ${wing.d1 - wing.d0} m wide`);
+  const open = [];
+  for (let a = wing.aMax + .1; a < room.aMax; a += .25) for (let d = 26.3; d < room.depth; d += .25) {
+    const [east, north] = room.toWorld(a, d);
+    if (environment.isFree(east, -north)) open.push(`${a.toFixed(2)},${d.toFixed(2)}`);
+  }
+  assert.deepEqual(open.slice(0, 5), [], `${open.length} open points behind the auditorium's end wall`);
 });

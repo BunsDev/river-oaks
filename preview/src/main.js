@@ -380,7 +380,7 @@ function initializeRenderer() {
   $('#world-status-stack').append(commonsStreamStatus);
   // Before the player panel, so G reaches the rack first and the owner's ride button only when no bike is in play.
   cyclingBoard = createCyclingLeaderboard();
-  plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, getMiles: () => cyclingBoard?.mine() ?? null, reducedMotion });
+  plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, getMiles: () => cyclingBoard?.mine() ?? null, getSaddle: () => playerAvatar?.bicycleSaddle ?? 0, reducedMotion });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
@@ -1507,7 +1507,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverPlazaHearts = () => plazaHearts ? { ...plazaHearts.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null,
     deal: (seed, hand) => plazaHearts.deal(seed, hand) } : null;
   window.__riverCyclingBoard = () => cyclingBoard ? { ...cyclingBoard.debug(), mine: cyclingBoard.mine(), open: open => { cyclingBoard.panel.open = open; }, refresh: () => cyclingBoard.refresh() } : null;
-  window.__riverCycling = () => plazaBicycle ? { riding: plazaBicycle.riding, slotId: plazaBicycle.slotId, rideMeters: plazaBicycle.rideMeters, lastRideMeters: plazaBicycle.lastRideMeters, yaw: plazaBicycle.placement?.yaw ?? null, prompt: plazaBicycle.prompt()?.kind ?? null,
+  window.__riverCycling = () => plazaBicycle ? { riding: plazaBicycle.riding, slotId: plazaBicycle.slotId, rideMeters: plazaBicycle.rideMeters, lastRideMeters: plazaBicycle.lastRideMeters, yaw: plazaBicycle.placement?.yaw ?? null, position: plazaBicycle.placement?.position ?? null, speed: plazaBicycle.placement?.speed ?? null, steering: plazaBicycle.placement?.steering ?? null, prompt: plazaBicycle.prompt()?.kind ?? null,
     taken: multiplayer?.snapshot?.cycling?.taken ?? [], parked: plazaSalon?.userData.rack?.parked() ?? null, cityParked: cityBikeRacks?.userData.rack?.parked() ?? null,
     // Arrive at a slot's approach by the normal travel path.
     // Arrive at a slot's approach by the normal travel path. Like the seats' goNear, a
