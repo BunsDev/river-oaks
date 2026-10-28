@@ -129,6 +129,10 @@ export function kitFinish(name = 'classic') {
   return finish;
 }
 
+// The live client's reading of an untrusted preference (#742): an unknown or malformed
+// name renders classic instead of throwing.
+export const knownFinish = name => typeof name === 'string' && Object.hasOwn(KIT_FINISHES, name) ? name : 'classic';
+
 // Architectural styles choose materials and preferred variants. Distinction comes
 // from massing, rhythm and frontage depth as much as colour.
 export const KIT_STYLES = Object.freeze({

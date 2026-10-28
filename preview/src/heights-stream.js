@@ -59,8 +59,9 @@ export const HEIGHTS_CHUNK_BYTES = {
   // Woodland Heights (woodland-heights-1) in the luxury kit, measured headless at 1.77 and 1.34 MiB.
   'woodland-heights-north': 1.9 * MiB, 'woodland-heights-south': 1.45 * MiB,
   // TypeSafe Place (typesafe-place-1), split at Place Avenue so each tower's half streams on its
-  // own, measured headless at 2.12, 3.02, 2.54, 2.40 and 2.40 MiB.
-  'typesafe-place-north': 2.25 * MiB, 'typesafe-place-penthouse': 3.25 * MiB, 'typesafe-place-uptown': 2.7 * MiB,
+  // own, measured headless at 2.12, 3.02, 2.54, 2.40 and 2.40 MiB. Estimates cover every kit finish:
+  // Pink Jet-Age's rounded forms measure 2.32 MiB for the north half and 2.88 MiB for uptown (#742).
+  'typesafe-place-north': 2.35 * MiB, 'typesafe-place-penthouse': 3.25 * MiB, 'typesafe-place-uptown': 2.9 * MiB,
   'typesafe-place-green': 2.55 * MiB, 'typesafe-place-south': 2.6 * MiB,
 };
 // Each neighborhood composed after Heights' own adds its street trees and planted beds to the
@@ -80,10 +81,11 @@ function geometryBytes(group) {
 /**
  * Streams Bayou Heights' presentation like the Commons (commons-stream.js), in parts: the
  * landmarks, trees and planting the neighborhoods share, and each neighborhood. The scene
- * passed to onScene holds whichever are attached.
+ * passed to onScene holds whichever are attached. `finish` is the presentation-only kit
+ * finish (render-quality.js readFinishPreference) every part is built with.
  */
 export function createHeightsStream({ world, parent, onStatus = () => {}, onScene = () => {}, now = () => performance.now(),
-  loadModule = () => import('./bayou-heights.js') }) {
+  finish, loadModule = () => import('./bayou-heights.js') }) {
   const layout = validateHeightsRegistration(manifest, world.eastGardenCommons), { plans } = layout.heights;
   const location = manifest.locations.find(item => item.id === layout.heights.id);
   // Studewood (heights-studewood-1) streams as two more Heights neighborhoods, east to its own edge,
@@ -141,7 +143,7 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
       const module = await loadModule();
       // Imports cannot be aborted, but a stale import must never allocate a scene.
       if (signal.aborted) throw new Error('Cancelled Heights load');
-      const group = chunk.plan ? module.buildHeightsNeighborhood(layout, chunk.plan) : module.buildHeightsLandscape(layout);
+      const group = chunk.plan ? module.buildHeightsNeighborhood(layout, chunk.plan, { finish }) : module.buildHeightsLandscape(layout, { finish });
       let disposed = false;
       const dispose = () => { if (!disposed) { disposed = true; group.userData.dispose(); } };
       signal.addEventListener('abort', dispose, { once: true });
