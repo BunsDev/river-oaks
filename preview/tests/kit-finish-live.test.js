@@ -4,8 +4,8 @@ import * as THREE from 'three';
 import { loadDistrictData } from '../../server/district-data.js';
 import { KIT_FINISHES, PINK_JET_AGE } from '../../shared/city-kit/catalog.js';
 import { DEFAULT_FINISH, readFinishPreference } from '../src/render-quality.js';
-import { COMMONS_DESTINATION_BYTES, createCommonsStream } from '../src/commons-stream.js';
-import { createHeightsStream, heightsCommonsLayout, HEIGHTS_CHUNK_BYTES } from '../src/heights-stream.js';
+import { COMMONS_DESTINATION_BYTES, commonsDestinationBytes, createCommonsStream } from '../src/commons-stream.js';
+import { createHeightsStream, heightsChunkBytes, heightsCommonsLayout, HEIGHTS_CHUNK_BYTES, HEIGHTS_FINISH_CHUNK_BYTES } from '../src/heights-stream.js';
 import { buildEastGardenCommons } from '../src/east-garden-commons.js';
 import { buildHeightsLandscape, buildHeightsNeighborhood } from '../src/bayou-heights.js';
 
@@ -116,15 +116,31 @@ test('chunk estimates err high under every finish, so the rounded forms never ov
   for (const finish of Object.keys(KIT_FINISHES)) {
     for (const plan of layout.heights.plans) {
       const kit = buildHeightsNeighborhood(layout, plan, { finish }), measured = bytes(kit);
-      assert.ok(measured <= HEIGHTS_CHUNK_BYTES[plan.id], `${finish} ${plan.id}: ${measured} > ${HEIGHTS_CHUNK_BYTES[plan.id]}`);
+      const estimate = heightsChunkBytes(plan.id, finish);
+      assert.ok(measured <= estimate, `${finish} ${plan.id}: ${measured} > ${estimate}`);
       dispose(kit);
     }
     for (const presented of [commonsWorld.eastGardenCommons, heightsCommonsLayout(layout)]) {
       const group = buildEastGardenCommons(presented, { finish }); await group.userData.ready;
-      assert.ok(bytes(group) <= COMMONS_DESTINATION_BYTES, `${finish} Commons: ${bytes(group)}`);
+      assert.ok(bytes(group) <= commonsDestinationBytes(finish), `${finish} Commons: ${bytes(group)}`);
       dispose(group);
     }
   }
+});
+
+test('classic streaming estimates are unchanged; a finish only raises the chunks it outgrows', () => {
+  // Pre-#742 classic values: TypeSafe Place north 2.25 MiB, uptown 2.7 MiB, Commons 3 MiB.
+  const MiB = 1024 * 1024;
+  assert.equal(heightsChunkBytes('typesafe-place-north'), 2.25 * MiB);
+  assert.equal(heightsChunkBytes('typesafe-place-uptown'), 2.7 * MiB);
+  assert.equal(commonsDestinationBytes(), 3 * MiB);
+  assert.equal(commonsDestinationBytes('neon'), 3 * MiB, 'an unknown finish keeps classic');
+  for (const id of Object.keys(HEIGHTS_CHUNK_BYTES)) assert.equal(heightsChunkBytes(id, 'classic'), HEIGHTS_CHUNK_BYTES[id]);
+  for (const [finish, overrides] of Object.entries(HEIGHTS_FINISH_CHUNK_BYTES)) {
+    assert.ok(finish in KIT_FINISHES, finish);
+    for (const [id, bytes] of Object.entries(overrides)) assert.ok(bytes >= HEIGHTS_CHUNK_BYTES[id], `${finish} ${id} only raises`);
+  }
+  assert.ok(COMMONS_DESTINATION_BYTES['pink-jet-age'] >= COMMONS_DESTINATION_BYTES.classic);
 });
 
 test('under the finish Heights keeps its geometry and draws its landmarks in kit slots', () => {

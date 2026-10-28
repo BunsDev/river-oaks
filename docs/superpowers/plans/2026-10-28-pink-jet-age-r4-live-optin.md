@@ -75,9 +75,11 @@ or collision.
   (2,436,864 B) and uptown (3,024,384 B) over their estimates under pink, and the
   Commons destination (3,251,548 B) over its 3 MiB. Each estimate is supposed to err
   high, because an estimate below the real size admits a chunk the ceiling then
-  refuses. They were raised to 2.35 MiB, 2.9 MiB and 3.2 MiB
-  (`COMMONS_DESTINATION_BYTES`). The classic sizes stay within the existing 1.25×
-  tolerance. A regression holds every finish under every estimate. The smaller pink
+  refuses. Review (Cody) made the estimates per finish, so classic streaming stays
+  exactly as on main (2.25 MiB, 2.7 MiB and 3 MiB). Pink Jet-Age alone overrides them
+  to 2.35 MiB, 2.9 MiB and 3.2 MiB (`HEIGHTS_FINISH_CHUNK_BYTES`,
+  `COMMONS_DESTINATION_BYTES`). Regressions check that every finish stays under its own
+  estimates and that classic's are unchanged. The smaller pink
   resident set near the Commons remains a real cost of the forms: more of Heights
   waits for room. That is a ceiling decision for R4 or R9, not this slice.
 - **Core gate.** The first `pnpm run verify` failed one server test
@@ -86,6 +88,9 @@ or collision.
   `.runtime/pink-jet-age-r4/verify-1.log`. The rerun passed: tooling 289/289,
   preview 4347 + 1 skip, server 1077 + 283 Redis skips, desktop 127 + 5 skips,
   Python 170, secret guard clean.
+- **Per-finish estimates (review).** Core verify passed again after the change: tooling
+  289/289, preview 4348 + 1 skip, server 1077 + 283 Redis skips, desktop 127 + 5
+  skips. The kit-finish, stream and neighborhood suites pass 71/71.
 - **Matched live captures.** Run 1 used `typesafe-place-1` in Chromium 156 (Metal) on
   the uncommitted working tree on `e5cfada6`, before the estimate change, with load
   around 15. Seven fixed cameras were captured under classic and pink, plus an
@@ -104,6 +109,6 @@ or collision.
 - The Heights Hall camera in run 1 was blocked by a street tree. The recapture on the
   committed head moves it.
 - Browser journeys and `verify full` were not run. The opt-in leaves default rendering
-  unchanged; only the TypeSafe Place and Commons stream estimates changed.
+  unchanged, including classic stream estimates.
 - Next: draft PR, recapture on the committed head, then hand off for review. This
   task does not mark the PR ready or land it.

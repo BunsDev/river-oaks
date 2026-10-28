@@ -4,9 +4,10 @@ import { locationWorldBounds } from './world-manifest.js';
 import { validateCommonsRegistration } from './east-garden-commons-world.js';
 import { createSpatialChunkStream } from './spatial-chunk-stream.js';
 
-// The composed destination's geometry, rounded up from measurement under every kit finish:
-// 2.91 MiB classic and 3.10 MiB with Pink Jet-Age's rounded forms (#742).
-export const COMMONS_DESTINATION_BYTES = 3.2 * 1024 * 1024;
+// The composed destination's geometry, rounded up from measurement per kit finish: 2.91 MiB
+// classic and 3.10 MiB with Pink Jet-Age's rounded forms (#742). Classic keeps its estimate.
+export const COMMONS_DESTINATION_BYTES = { classic: 3 * 1024 * 1024, 'pink-jet-age': 3.2 * 1024 * 1024 };
+export const commonsDestinationBytes = (finish = 'classic') => COMMONS_DESTINATION_BYTES[finish] ?? COMMONS_DESTINATION_BYTES.classic;
 
 // Counts owned buffer storage; no shared District resources enter this chunk.
 function geometryBytes(group) {
@@ -35,7 +36,7 @@ export function createCommonsStream({ world, layout: presented = world.eastGarde
   let status = '';
   const announce = text => { if (text !== status) { status = text; onStatus(text); } };
   const stream = createSpatialChunkStream({
-    chunks: [{ id: location.id, bounds: locationWorldBounds(location), estimatedBytes: layout.destination ? COMMONS_DESTINATION_BYTES : 65536 }],
+    chunks: [{ id: location.id, bounds: locationWorldBounds(location), estimatedBytes: layout.destination ? commonsDestinationBytes(finish) : 65536 }],
     maxResident: 1, maxConcurrent: 1, maxBytes: 16 * 1024 * 1024,
     prefetchDistance: 85, unloadDistance: 110, now,
     async load(_chunk, signal) {

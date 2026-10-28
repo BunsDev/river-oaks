@@ -59,11 +59,17 @@ export const HEIGHTS_CHUNK_BYTES = {
   // Woodland Heights (woodland-heights-1) in the luxury kit, measured headless at 1.77 and 1.34 MiB.
   'woodland-heights-north': 1.9 * MiB, 'woodland-heights-south': 1.45 * MiB,
   // TypeSafe Place (typesafe-place-1), split at Place Avenue so each tower's half streams on its
-  // own, measured headless at 2.12, 3.02, 2.54, 2.40 and 2.40 MiB. Estimates cover every kit finish:
-  // Pink Jet-Age's rounded forms measure 2.32 MiB for the north half and 2.88 MiB for uptown (#742).
-  'typesafe-place-north': 2.35 * MiB, 'typesafe-place-penthouse': 3.25 * MiB, 'typesafe-place-uptown': 2.9 * MiB,
+  // own, measured headless at 2.12, 3.02, 2.54, 2.40 and 2.40 MiB.
+  'typesafe-place-north': 2.25 * MiB, 'typesafe-place-penthouse': 3.25 * MiB, 'typesafe-place-uptown': 2.7 * MiB,
   'typesafe-place-green': 2.55 * MiB, 'typesafe-place-south': 2.6 * MiB,
 };
+// A kit finish that adds geometry overrides only the chunks it outgrows, so classic streaming is
+// unchanged. Pink Jet-Age's rounded forms measure 2.32 MiB for TypeSafe Place north and 2.88 MiB
+// for uptown (#742).
+export const HEIGHTS_FINISH_CHUNK_BYTES = {
+  'pink-jet-age': { 'typesafe-place-north': 2.35 * MiB, 'typesafe-place-uptown': 2.9 * MiB },
+};
+export const heightsChunkBytes = (id, finish = 'classic') => HEIGHTS_FINISH_CHUNK_BYTES[finish]?.[id] ?? HEIGHTS_CHUNK_BYTES[id];
 // Each neighborhood composed after Heights' own adds its street trees and planted beds to the
 // shared part. Allowances per placement err high, so the shared estimate grows with them.
 export const HEIGHTS_SHARED_PLACEMENT_BYTES = { tree: 4 * 1024, planter: 10 * 1024 };
@@ -115,7 +121,7 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
     return bytes + trees.length * HEIGHTS_SHARED_PLACEMENT_BYTES.tree + planters.length * HEIGHTS_SHARED_PLACEMENT_BYTES.planter;
   }, HEIGHTS_CHUNK_BYTES[SHARED]);
   const chunks = [{ id: SHARED, bounds: sharedBounds, estimatedBytes: sharedBytes },
-    ...plans.map(plan => ({ id: idOf(plan), plan, bounds: plan.site, estimatedBytes: HEIGHTS_CHUNK_BYTES[plan.id] ?? 3 * MiB }))];
+    ...plans.map(plan => ({ id: idOf(plan), plan, bounds: plan.site, estimatedBytes: heightsChunkBytes(plan.id, finish) ?? 3 * MiB }))];
   // A neighborhood's view box reaches over its tallest building: TypeSafe Place's towers stand 71 m.
   const boxes = plans.map(plan => { const [w, s, e, n] = plan.site, tallest = Math.max(26, ...plan.pieces.filter(piece => piece.piece === 'building/shell').map(piece => piece.height));
     return [plan, new Box3(new Vector3(w, layout.ground - 4, -n), new Vector3(e, layout.ground + tallest + 4, -s))]; });
