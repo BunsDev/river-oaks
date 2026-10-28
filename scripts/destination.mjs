@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { assembleNeighborhood, canonicalJSON, validateRecipe, walkableConnectivity } from '../shared/city-kit/assemble.js';
 import { expandLayout } from '../shared/city-kit/layout.js';
 import { referenceRecipe, dominantRotation } from '../shared/city-kit/reference.js';
+import { studioRegion } from '../shared/city-kit/studio.js';
 import { KIT_CONVENTIONS, KIT_PIECES } from '../shared/city-kit/catalog.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..'), recipesDir = join(root, 'config/destinations');
@@ -94,11 +95,21 @@ function build(path) {
   writeFileSync(join(out, 'plan.svg'), svg(plan, layout));
   writeFileSync(join(out, 'report.json'), `${JSON.stringify(summary, null, 2)}\n`);
   if (layout) { writeFileSync(join(out, 'layout.json'), `${JSON.stringify(layout, null, 2)}\n`); for (const warning of layout.warnings) console.warn(`layout: ${warning}`); }
+  // The plan as a World Studio region, for review by walking and marking places (docs/city-kit.md, "Open a plan in World Studio").
+  // Build's stdout is one JSON object; the Studio summary joins it, and hints go to stderr.
+  let studio = null;
+  try {
+    const exported = studioRegion(recipe, plan);
+    writeFileSync(join(out, 'studio-region.json'), `${JSON.stringify(exported.region, null, 2)}\n`);
+    for (const entry of exported.omitted) console.warn(`studio: omitted ${entry.id} (${entry.size.join(' × ')} m): ${entry.reason}`);
+    console.warn(`studio: ${exported.summary.roads} roads, ${exported.summary.buildings} buildings, ${exported.summary.trees} trees, ${exported.summary.places} places, ${exported.summary.parcels} parcels, arrival ${exported.summary.spawn.join(',')}; open studio-region.json in World Studio with Open JSON`);
+    studio = { ...exported.summary, bytes: exported.bytes, file: 'studio-region.json' };
+  } catch (error) { console.warn(`studio: no region written: ${error.message}`); studio = { error: error.message }; }
   if (has('--lock')) {
     if (seed !== recipe.seed) throw new Error('Lock only the recipe seed');
     writeFileSync(lockPath(path), `${JSON.stringify({ id: plan.id, kit: plan.kit, seed, hash: plan.hash, recipeHash: plan.provenance.recipeHash, overridesHash: plan.provenance.overridesHash, stats: plan.stats }, null, 2)}\n`);
   }
-  console.log(JSON.stringify({ out, hash: plan.hash, seed, stats: plan.stats, budgetsWithin: summary.budgets.within, connectivity: summary.connectivity.ratio, overrides: plan.provenance.overrides,
+  console.log(JSON.stringify({ out, hash: plan.hash, seed, stats: plan.stats, budgetsWithin: summary.budgets.within, studio, connectivity: summary.connectivity.ratio, overrides: plan.provenance.overrides,
     ...(layout ? { layout: { cells: layout.cells.length, derived: layout.derived.map(block => block.id), warnings: layout.warnings.length } } : {}) }, null, 2));
   if (!summary.budgets.within || summary.connectivity.ratio < 1 || summary.connectivity.lanterns.some(item => !item.reachable)) process.exitCode = 1;
 }
@@ -200,6 +211,7 @@ else if (command === 'reference') reference(rest.find(arg => arg.endsWith('.json
 else if (command === 'preview') {
   const recipe = readRecipe(rest[0] ?? join(recipesDir, 'bayou-market-commons.json'));
   console.log(`In-engine kit preview: pnpm run dev, then open /e2e/fixtures/city-kit.html?recipe=${recipe.id}`);
+  console.log(`World Studio: pnpm run destination build ${rest[0] ?? 'config/destinations/bayou-market-commons.json'}, then Open JSON on studio-region.json from the build directory.`);
   if (recipe.id === 'bayou-market-commons') console.log('Playable in the town: pnpm run dev serves it (the development town defaults to the full expansion), then walk east from the District arrival.');
 } else { console.error(`usage: destination build|check|override|preview|layout|reference (${pieceCount} kit pieces)`); process.exitCode = 2; }
 function fail(what = 'a recipe .json path') { throw new Error(`Pass ${what}`); }
