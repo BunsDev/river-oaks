@@ -13,6 +13,8 @@
 import { execFileSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { loadavg } from 'node:os';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 import { loadDistrictData } from '../../server/district-data.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
@@ -23,9 +25,11 @@ const options = routeOptions(process.argv.slice(2));
 const revision = COMMONS_REVISION, world = await loadDistrictData({ districtRevision: revision });
 const cameras = validateCameras([...gardensCameras(), ...commonsCameras(world.eastGardenCommons)]).filter(camera => !options.cameras || options.cameras.includes(camera.id));
 if (!cameras.length) throw new Error(`No camera matches ${options.cameras}`);
-const hours = Object.fromEntries(options.hours.map(label => [label, ROUTE_HOURS[label]])), output = options.out;
-const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-const dirty = execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], { encoding: 'utf8' }).trim() !== '';
+// HEAD, the dirty flag and a relative --out belong to this checkout, whatever the shell's directory.
+const root = fileURLToPath(new URL('../../', import.meta.url));
+const hours = Object.fromEntries(options.hours.map(label => [label, ROUTE_HOURS[label]])), output = resolve(root, options.out);
+const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
+const dirty = execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], { cwd: root, encoding: 'utf8' }).trim() !== '';
 await mkdir(output, { recursive: true });
 
 // Mean and spread (standard deviation) of luma over a 160 x 100 downsample of the capture.
