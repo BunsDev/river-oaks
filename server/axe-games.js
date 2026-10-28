@@ -159,7 +159,23 @@ export function createAxeGames({ players, laneIds = [], atLane = () => null, dis
   }
   const load = list => { lanes = new Map(list.map(lane => [lane.id, lane])); };
   const clear = () => { if (lanes.size) { lanes.clear(); changed(); } };
+  // Account erasure: a match or an invitation the account was part of is cleared.
+  const forget = userId => {
+    let touched = false;
+    for (const item of [...lanes.values()]) if (item.players?.includes(userId) || item.invite?.from === userId || item.invite?.to === userId) { lanes.delete(item.id); touched = true; }
+    if (touched) changed();
+  };
+  // Player blocking (#292): an open invitation between the two ends; a game stays.
+  const separate = (a, b) => {
+    let touched = false;
+    for (const item of [...lanes.values()]) if (item.invite && [a, b].includes(item.invite.from) && [a, b].includes(item.invite.to)) {
+      if (item.players) item.invite = null; else lanes.delete(item.id);
+      touched = true;
+    }
+    if (touched) changed();
+    return touched;
+  };
   const snapshot = () => [...lanes.values()].map(view);
 
-  return { command, prune, snapshot, checkpoint, validate, load, clear };
+  return { command, prune, forget, separate, snapshot, checkpoint, validate, load, clear };
 }

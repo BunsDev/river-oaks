@@ -358,5 +358,32 @@ export function createCampusLeases({ enabled = true, worldId, operators = [], pl
     return { serial: saved.serial, leases: nextLeases, requests: nextRequests, receipts: structuredClone(saved.receipts) };
   }
   const load = state => { ({ serial, leases, requests, receipts } = state); };
-  return { enabled, command, prune, suiteAccess, entitlements, snapshot, checkpoint, validate, blank, load, units: () => [...UNITS.values()] };
+  // Account erasure: a lease the account holds ends (its guests are walked out),
+  // then its leases, requests, guest places and receipts are forgotten.
+  function forget(userId, time) {
+    for (const lease of live()) if (lease.tenantId === userId) end(lease, 'revoked', time);
+    for (const [id, lease] of [...leases]) {
+      if (lease.tenantId === userId) { leases.delete(id); continue; }
+      if (lease.guests.some(guest => guest.userId === userId)) Object.assign(lease, { guests: lease.guests.filter(guest => guest.userId !== userId), version: lease.version + 1 });
+    }
+    for (const [id, item] of [...requests]) if (item.userId === userId) requests.delete(id);
+    receipts = receipts.filter(item => { try { return JSON.parse(item.key)[0] !== userId; } catch { return true; } });
+    changed();
+  }
+  // A block (#292): guest access between the two accounts ends, whichever of them is the
+  // tenant, and the guest is walked out, as when the tenant removes them. True when any did.
+  function separate(a, b, time) {
+    let removed = false;
+    for (const lease of live()) {
+      const guestId = lease.tenantId === a ? b : lease.tenantId === b ? a : null;
+      const guest = guestId && lease.guests.find(item => item.userId === guestId);
+      if (!guest) continue;
+      Object.assign(lease, { guests: lease.guests.filter(item => item !== guest), version: lease.version + 1, updatedAt: Math.max(lease.updatedAt, time) });
+      onAccessEnded(ended(guest.userId, 'guest', lease, 'guest_removed'));
+      removed = true;
+    }
+    if (removed) changed();
+    return removed;
+  }
+  return { enabled, command, prune, forget, separate, suiteAccess, entitlements, snapshot, checkpoint, validate, blank, load, units: () => [...UNITS.values()] };
 }

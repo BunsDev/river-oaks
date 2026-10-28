@@ -55,6 +55,11 @@ export function createMemoryProfiles({now=Date.now}={}) {
       const profile={...fields,version:data.expectedVersion+1,updatedAt:now()};
       records.set(userId,profile);return {ok:true,profile:structuredClone(profile)};
     },
+    // Account erasure: the profile and the store intros it has seen.
+    async eraseUser(userId) {
+      if(!validId(userId))throw new Error('Invalid account');
+      records.delete(userId);intros.delete(userId);
+    },
   };
 }
 
@@ -76,6 +81,7 @@ const CLAIM_INTRO=`
   redis.call('HSET',KEYS[1],ARGV[1],cjson.encode(seen))
   return 1
 `;
+const ERASE=`redis.call('HDEL',KEYS[1],ARGV[1]) redis.call('HDEL',KEYS[2],ARGV[1]) return 1`;
 export function createRedisProfiles({redis,prefix,now=Date.now}={}) {
   if(!redis?.eval || typeof prefix!=='string' || !/^\{[^{}]+\}$/.test(prefix))throw new Error('Invalid profile storage');
   const key=`${prefix}:profiles:v1`;
@@ -97,6 +103,10 @@ export function createRedisProfiles({redis,prefix,now=Date.now}={}) {
       const profile={...fields,version:data.expectedVersion+1,updatedAt:now()};
       const reason=await redis.eval(SAVE,1,key,id(userId),data.expectedVersion,JSON.stringify(profile),MAX_PROFILES);
       return reason==='ok'?{ok:true,profile}:{ok:false,reason};
+    },
+    async eraseUser(userId) {
+      if(!validId(userId))throw new Error('Invalid account');
+      await redis.eval(ERASE,2,key,`${prefix}:store-intros:v1`,id(userId));
     },
   };
 }

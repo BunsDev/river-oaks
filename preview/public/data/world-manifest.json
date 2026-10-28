@@ -36,8 +36,8 @@
       ],
       "adjacent": [
         "east-garden-commons",
-        "east-garden-reserve-north",
-        "east-garden-reserve-south"
+        "bayou-terrace-north",
+        "bayou-terrace-south"
       ]
     },
     {
@@ -67,16 +67,48 @@
       ],
       "adjacent": [
         "river-oaks-district",
-        "east-garden-reserve",
-        "east-garden-reserve-north",
-        "east-garden-reserve-south"
+        "bayou-heights",
+        "bayou-terrace-north",
+        "bayou-terrace-south"
       ]
     },
     {
-      "id": "east-garden-reserve",
-      "status": "reserved",
+      "id": "bayou-heights",
+      "status": "authored",
       "bounds_m": [
         -2551.336078522973,
+        -1457.6085898216527,
+        -2243.836078522973,
+        -1167.1779702985634
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "content_revision": "bayou-heights-1",
+      "entries": [
+        {
+          "id": "market-footbridge",
+          "position_m": [
+            -2551.336078522973,
+            -1335,
+            18.37222868285045
+          ]
+        }
+      ],
+      "adjacent": [
+        "east-garden-commons",
+        "studewood",
+        "bayou-terrace-north",
+        "bayou-terrace-south"
+      ]
+    },
+    {
+      "id": "studewood",
+      "status": "authored",
+      "bounds_m": [
+        -2243.836078522973,
         -1457.6085898216527,
         -2158.4479977351207,
         -1167.1779702985634
@@ -86,17 +118,25 @@
         0,
         0
       ],
-      "content_revision": "empty-v2",
-      "entries": [],
+      "content_revision": "heights-studewood-1",
+      "entries": [
+        {
+          "id": "twentieth-street",
+          "position_m": [
+            -2243.836078522973,
+            -1224,
+            18.37222868285045
+          ]
+        }
+      ],
       "adjacent": [
-        "east-garden-commons",
-        "east-garden-reserve-north",
-        "east-garden-reserve-south"
+        "bayou-heights",
+        "woodland-heights"
       ]
     },
     {
-      "id": "east-garden-reserve-north",
-      "status": "reserved",
+      "id": "bayou-terrace-north",
+      "status": "authored",
       "bounds_m": [
         -2666.336078522973,
         -1295,
@@ -108,17 +148,26 @@
         0,
         0
       ],
-      "content_revision": "empty-v2",
-      "entries": [],
+      "content_revision": "bayou-terraces-1",
+      "entries": [
+        {
+          "id": "twentieth-footbridge",
+          "position_m": [
+            -2551.336078522973,
+            -1224,
+            18.37222868285045
+          ]
+        }
+      ],
       "adjacent": [
         "river-oaks-district",
         "east-garden-commons",
-        "east-garden-reserve"
+        "bayou-heights"
       ]
     },
     {
-      "id": "east-garden-reserve-south",
-      "status": "reserved",
+      "id": "bayou-terrace-south",
+      "status": "authored",
       "bounds_m": [
         -2666.336078522973,
         -1457.6085898216527,
@@ -130,12 +179,50 @@
         0,
         0
       ],
-      "content_revision": "empty-v2",
-      "entries": [],
+      "content_revision": "bayou-terraces-1",
+      "entries": [
+        {
+          "id": "eighteenth-footbridge",
+          "position_m": [
+            -2551.336078522973,
+            -1406,
+            18.37222868285045
+          ]
+        }
+      ],
       "adjacent": [
         "river-oaks-district",
         "east-garden-commons",
-        "east-garden-reserve"
+        "bayou-heights"
+      ]
+    },
+    {
+      "id": "woodland-heights",
+      "status": "authored",
+      "bounds_m": [
+        -2158.4479977351207,
+        -1457.6085898216527,
+        -2113.4479977351207,
+        -1167.1779702985634
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "content_revision": "woodland-heights-1",
+      "entries": [
+        {
+          "id": "twentieth-street",
+          "position_m": [
+            -2158.4479977351207,
+            -1224,
+            18.37222868285045
+          ]
+        }
+      ],
+      "adjacent": [
+        "studewood"
       ]
     }
   ]

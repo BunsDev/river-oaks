@@ -1,0 +1,15 @@
+{
+  "id": "yale-icehouse",
+  "kit": "city-kit-1",
+  "seed": 1926,
+  "hash": "77bc748feef6b209",
+  "recipeHash": "5d1ce72f15c3d245",
+  "overridesHash": "83ab9bf00bae548e",
+  "stats": {
+    "pieces": 192,
+    "buildings": 33,
+    "solids": 91,
+    "materials": 13,
+    "triangles": 131616
+  }
+}

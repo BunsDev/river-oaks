@@ -3,17 +3,18 @@ import { createRoadVehicle } from './road-vehicles.js';
 import { drivingInput } from './vehicle-config.js';
 import { fitCarriageToGround, stepCarriage } from './carriage-motion.js';
 import { carriageFootprint, carriageContains } from './carriage-parking.js';
-import { plazaSalonRack } from './plaza-salon-plan.js';
+import { bikeRackSlots } from './bike-racks.js';
 import { SEAT_REACH } from './shared-seating.js';
 import { isGameplayKey } from './keyboard-input.js';
 
-// The plaza bicycle. G beside the rack asks the town for a slot (`cycle`), then
+// The rack bicycle. G beside a rack asks the town for a slot (`cycle`), then
 // mounts the walking controls on a bike exactly as the car does; G while riding
 // asks for a ground spot (`travel`, so the step down is not a walking-speed
 // violation) and then `uncycle` hands the slot back. The bike never exists
-// outside the rack and the rider: a parked bike is drawn by the plaza salon
-// while its slot is free, and this controller draws the one you ride. The town
-// counts the metres; the distance shown here is the ride in progress.
+// outside the racks and the rider: a parked bike is drawn by the plaza salon
+// or the curbside racks (city-bike-racks.js) while its slot is free, and this
+// controller draws the one you ride. The town counts the metres; the distance
+// shown here is the ride in progress.
 
 // A slot (world [east, north], heading 0 = south) as a carriage-motion
 // placement in scene space. The mesh faces local -X and stepCarriage advances
@@ -80,7 +81,7 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
     if (busy || mounted || !environment || !pose || pose.sitting || pose.riding || pose.flying || pose.roomId) return false;
     if (!multiplayer?.connected) { notify('Reconnect before taking a bike.'); return false; }
     const slot = nearestFreeSlot(slots, me(), taken());
-    if (!slot) { notify(slots.length && taken().size >= slots.length ? 'All bikes are out.' : 'Walk up to the bike rack first.'); return false; }
+    if (!slot) { notify(slots.length && taken().size >= slots.length ? 'All bikes are out.' : 'Walk up to a bike rack first.'); return false; }
     busy = true;
     try {
       const result = await multiplayer.command({ type: 'cycle', rackId: slot.rackId, slot: slot.slot });
@@ -138,7 +139,7 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
   host.addEventListener('keydown', onKey);
   return {
     load(world) {
-      slots = plazaSalonRack(world);
+      slots = bikeRackSlots(world);
       if (mounted && walking.riding) walking.dismount([placement.position[0], placement.position[1], placement.position[2]]);
       clear();
     },

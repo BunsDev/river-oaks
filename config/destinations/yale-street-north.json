@@ -1,0 +1,348 @@
+{
+  "id": "yale-street-north",
+  "title": "Bayou Heights: Yale Street north, Twentieth Street and Twentieth Street Square",
+  "kit": "city-kit-1",
+  "seed": 1927,
+  "inspiration": "Patterns only, no copied buildings: a Houston Heights-style east bank across the bayou from Bayou Market, with a greenway trail along the water (Buffalo Bayou), a neighborhood green with a bandstand, an icehouse patio, and a boulevard with a walking esplanade (Heights Boulevard). All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    250,
+    64,
+    364,
+    167.5
+  ],
+  "streets": [
+    {
+      "id": "yale-north",
+      "from": [
+        307,
+        63
+      ],
+      "to": [
+        307,
+        163
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 6,
+        "spacing": 10
+      },
+      "lamps": {
+        "offset": 11,
+        "spacing": 16
+      }
+    },
+    {
+      "id": "twentieth",
+      "from": [
+        248.5,
+        111
+      ],
+      "to": [
+        365,
+        111
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 7,
+        "spacing": 10
+      },
+      "lamps": {
+        "offset": 12,
+        "spacing": 16
+      }
+    }
+  ],
+  "plazas": [
+    {
+      "id": "twentieth-square",
+      "rect": [
+        248.5,
+        64,
+        301.5,
+        105.5
+      ],
+      "lawns": [
+        [
+          300.5,
+          64,
+          301.5,
+          105.5
+        ],
+        [
+          248.5,
+          104.5,
+          300.5,
+          105.5
+        ],
+        [
+          258,
+          75,
+          292,
+          97
+        ]
+      ],
+      "hedges": [
+        [
+          249.5,
+          64,
+          300.5,
+          65.2
+        ]
+      ],
+      "treeRows": [
+        {
+          "y": 69.5,
+          "from": 254,
+          "to": 296,
+          "spacing": 10.5
+        },
+        {
+          "y": 101,
+          "from": 256,
+          "to": 294,
+          "spacing": 12.6
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "id": "twentieth-south-e",
+      "style": "heights-row",
+      "rect": [
+        313.5,
+        64,
+        364,
+        104.5
+      ],
+      "front": "north",
+      "sides": [
+        "west",
+        "east"
+      ],
+      "depth": [
+        12,
+        16
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        4.5,
+        6.5
+      ],
+      "names": [
+        "Prairie Wool",
+        "Saltgrass Kitchen",
+        "Hollow Oak Guitars",
+        "Night Jar Wine",
+        "Thistle & Twine",
+        "Persimmon Press"
+      ]
+    },
+    {
+      "id": "twentieth-north-w",
+      "style": "garden-court",
+      "rect": [
+        250,
+        117.5,
+        300.5,
+        163
+      ],
+      "front": "south",
+      "sides": [
+        "west",
+        "east"
+      ],
+      "depth": [
+        12,
+        16
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        4.5,
+        6.5
+      ],
+      "names": [
+        "Garden Gate Nursery",
+        "Monarch Dance Studio",
+        "Swallowtail Press",
+        "Live Oak Pilates",
+        "Muscadine Market"
+      ]
+    },
+    {
+      "id": "twentieth-north-e",
+      "style": "heights-row",
+      "rect": [
+        313.5,
+        117.5,
+        364,
+        163
+      ],
+      "front": "south",
+      "sides": [
+        "west",
+        "east"
+      ],
+      "depth": [
+        12,
+        16
+      ],
+      "storeys": [
+        1,
+        2
+      ],
+      "bays": [
+        4.5,
+        6.5
+      ],
+      "names": [
+        "Cottonwood Mercantile",
+        "Lone Pine Leather",
+        "Wildflower Pottery",
+        "Red Bud Cyclery",
+        "Bramble Bakehouse"
+      ]
+    }
+  ],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "yale-north-end",
+      "piece": "landscape/hedge",
+      "rect": [
+        301,
+        161.8,
+        313,
+        163
+      ]
+    },
+    {
+      "id": "square-bench-s-264",
+      "piece": "furniture/bench",
+      "at": [
+        264,
+        73.2
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "square-bench-s-275",
+      "piece": "furniture/bench",
+      "at": [
+        275,
+        73.2
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "square-bench-s-286",
+      "piece": "furniture/bench",
+      "at": [
+        286,
+        73.2
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "square-bench-n-264",
+      "piece": "furniture/bench",
+      "at": [
+        264,
+        98.8
+      ]
+    },
+    {
+      "id": "square-bench-n-275",
+      "piece": "furniture/bench",
+      "at": [
+        275,
+        98.8
+      ]
+    },
+    {
+      "id": "square-bench-n-286",
+      "piece": "furniture/bench",
+      "at": [
+        286,
+        98.8
+      ]
+    },
+    {
+      "id": "square-lamp-0",
+      "piece": "furniture/lamp",
+      "at": [
+        254,
+        73
+      ]
+    },
+    {
+      "id": "square-lamp-1",
+      "piece": "furniture/lamp",
+      "at": [
+        296,
+        73
+      ]
+    },
+    {
+      "id": "square-lamp-2",
+      "piece": "furniture/lamp",
+      "at": [
+        254,
+        99
+      ]
+    },
+    {
+      "id": "square-lamp-3",
+      "piece": "furniture/lamp",
+      "at": [
+        296,
+        99
+      ]
+    },
+    {
+      "id": "square-cafe-79",
+      "piece": "furniture/cafe-set",
+      "at": [
+        253,
+        79
+      ]
+    },
+    {
+      "id": "square-cafe-86",
+      "piece": "furniture/cafe-set",
+      "at": [
+        253,
+        86
+      ]
+    },
+    {
+      "id": "square-cafe-93",
+      "piece": "furniture/cafe-set",
+      "at": [
+        253,
+        93
+      ]
+    },
+    {
+      "id": "square-bike-rack",
+      "piece": "furniture/bike-rack",
+      "at": [
+        297.5,
+        86
+      ],
+      "yaw": 1.570796
+    }
+  ],
+  "context": [],
+  "overrides": {},
+  "additions": []
+}
