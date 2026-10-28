@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { KIT_CONVENTIONS, KIT_MATERIALS, KIT_STYLES } from '../../../shared/city-kit/catalog.js';
+import { KIT_CONVENTIONS, KIT_MATERIALS, KIT_STYLES, kitFinish } from '../../../shared/city-kit/catalog.js';
 import { physicalSurface, paverSurface } from '../materials.js';
 import { buildMatureTrees, buildPlanterPlanting } from '../landscape-models.js';
 import { treeGrateTexture } from '../street-furniture.js';
@@ -25,11 +25,13 @@ const RENDER_MATERIALS = {
   'produce-green': { color: '#5d8a3a', roughness: .7 },
 };
 
-function createMaterials() {
-  const made = new Map();
+// A finish (catalog.js KIT_FINISHES) replaces fields of a slot's spec; slot names, and so
+// material names, batching and draw calls, are the same under every finish.
+function createMaterials(finish = 'classic') {
+  const made = new Map(), recolour = kitFinish(finish).materials;
   const get = name => {
     if (made.has(name)) return made.get(name);
-    const spec = KIT_MATERIALS[name] ?? RENDER_MATERIALS[name] ?? { color: '#888888' };
+    const base = KIT_MATERIALS[name] ?? RENDER_MATERIALS[name] ?? { color: '#888888' }, spec = recolour[name] ? { ...base, ...recolour[name] } : base;
     let material;
     if (spec.surface === 'district-paver') material = paverSurface();
     else if (spec.surface) material = physicalSurface(spec.surface, { tileSize: spec.tile ?? 4, instanced: false, variation: .08, color: new THREE.Color(spec.color ?? '#ffffff'),
@@ -38,7 +40,7 @@ function createMaterials() {
     else if (spec.glass) material = new THREE.MeshPhysicalMaterial({ color: spec.color, roughness: spec.roughness, metalness: spec.metalness, transparent: true, opacity: .26, envMapIntensity: .7, clearcoat: .6, clearcoatRoughness: .06, depthWrite: false });
     else material = new THREE.MeshStandardMaterial({ color: spec.color, roughness: spec.roughness ?? .8, metalness: spec.metalness ?? 0,
       ...(spec.emissive ? { emissive: new THREE.Color(spec.emissive), emissiveIntensity: spec.emissiveIntensity ?? 1 } : {}) });
-    material.name = `city-kit/${name}`;
+    material.name = `city-kit/${name}`; material.userData.finish = finish;
     made.set(name, material);
     return material;
   };
@@ -611,11 +613,12 @@ export function disposeLandscape(groups) {
  * Build the plan's scene. `groundAt(east, north)` returns walking ground height;
  * `ground` is the level site height for shells and edges. With `landscape: false`
  * the caller draws the plan's trees and planting (cityKitLandscape). Planting draws at
- * every distance unless `plantingMetres` limits it.
+ * every distance unless `plantingMetres` limits it. `finish` (catalog.js KIT_FINISHES)
+ * recolours material slots only; the default `classic` renders exactly as before.
  */
-export function buildCityKit(plan, { groundAt, ground, landscape = true, plantingMetres = Infinity }) {
-  const group = new THREE.Group(); group.name = `City kit: ${plan.id}`;
-  const materials = createMaterials(), m = materials.get, disposables = [];
+export function buildCityKit(plan, { groundAt, ground, landscape = true, plantingMetres = Infinity, finish = 'classic' }) {
+  const group = new THREE.Group(); group.name = `City kit: ${plan.id}`; group.userData.finish = finish;
+  const materials = createMaterials(finish), m = materials.get, disposables = [];
   const blocks = new Map(), blockFor = piece => {
     // Context massing shares one level-of-detail group; blocks get their own.
     const key = piece.piece === 'building/context' ? 'context' : piece.id.split('/')[1];
