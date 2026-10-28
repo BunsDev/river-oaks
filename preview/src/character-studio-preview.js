@@ -29,6 +29,9 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
   const visibility=new IntersectionObserver(entries=>{visible=entries.at(-1)?.isIntersecting??false;if(visible)renderDirty=true;previous=null;});visibility.observe(host);
   let yaw=0,turntable=false,pose='idle',framing='full',renderDirty=true;
   const resize=new ResizeObserver(()=>{const {width,height}=host.getBoundingClientRect();renderer.setSize(Math.max(1,width),Math.max(1,height),false);camera.aspect=Math.max(1,width)/Math.max(1,height);camera.updateProjectionMatrix();renderDirty=true;});resize.observe(host);
+  // A player-made look is its recipe on its own body: a new recipe is a new load.
+  const lookKey=definition=>definition.schemaVersion===3?`${definition.appearanceId}:${JSON.stringify(definition.parameters)}`:definition.appearanceId;
+  let stature=1;
   const release=()=>{colors?.dispose();costume?.dispose();avatar?.dispose();avatar?.object.removeFromParent();avatar=costume=colors=null;loadedId=null;};
   async function load(){
     if(loading||disposed)return;loading=true;
@@ -38,15 +41,16 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
           onStatus('loading');host.dataset.ready='false';
           let next,nextCostume;
           try{
-            next=await loadResidentAvatar(Math.max(0,AVATAR_PROFILES.indexOf(definition.rig)),`remote-studio-${definition.appearanceId}`,definition.rig,{folk:false,appearanceId:definition.appearanceId,faceRecipe:{}});
+            next=await loadResidentAvatar(Math.max(0,AVATAR_PROFILES.indexOf(definition.rig)),`remote-studio-${definition.appearanceId}`,definition.rig,{folk:false,appearanceId:definition.appearanceId,faceRecipe:{},...(definition.schemaVersion===3?{recipe:definition.parameters}:{})});
             if(sharedAppearance(definition.appearanceId).costume==='jevica')nextCostume=createPlayerCostume(next,'jevica');
             return {avatar:next,costume:nextCostume,colors:createCharacterMaterials(next.object)};
           }catch(error){nextCostume?.dispose();next?.dispose();throw error;}
         },
         discard:resource=>{resource.colors.dispose();resource.costume?.dispose();resource.avatar.dispose();},
         accept:(resource,definition)=>{
-          resource.colors.apply(definition);release();avatar=resource.avatar;costume=resource.costume;colors=resource.colors;loadedId=definition.appearanceId;scene.add(avatar.object);
-          host.dataset.ready='true';host.dataset.appearance=loadedId;onStatus('ready');renderDirty=true;previous=null;distance=0;
+          resource.colors.apply(definition);release();avatar=resource.avatar;costume=resource.costume;colors=resource.colors;loadedId=lookKey(definition);scene.add(avatar.object);
+          stature=definition.schemaVersion===3?definition.parameters.height/170:1;
+          host.dataset.ready='true';host.dataset.appearance=definition.appearanceId;host.dataset.loadedLook=loadedId;onStatus('ready');renderDirty=true;previous=null;distance=0;
         },onError:()=>{if(!disposed){onStatus('error');host.dataset.ready='false';}},
       });
     }finally{loading=false;}
@@ -65,14 +69,15 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
         costume?.update(false,reducedMotion?0:now);costume?.updateOptics(camera,host.clientHeight);
       }
     }
-    const full=framing==='full',focus=full?.9:1.52;
-    const range=full?Math.max(3.8,2.1/camera.aspect):Math.max(1.35,.75/camera.aspect);
-    camera.position.set(0,full?1.08:1.59,range);camera.lookAt(0,focus,0);
+    // Authored looks are framed for their 1.7 m figures; a recipe's height scales the frame.
+    const full=framing==='full',focus=(full?.9:1.52)*stature;
+    const range=(full?Math.max(3.8,2.1/camera.aspect):Math.max(1.35,.75/camera.aspect))*(full?stature:1);
+    camera.position.set(0,(full?1.08:1.59)*stature,range);camera.lookAt(0,focus,0);
     if(!reducedMotion||renderDirty){renderer.render(scene,camera);renderDirty=false;}
   };frame=requestAnimationFrame(draw);
   return {
     setDefinition(value){const result=validateCharacterDefinition(value,{ownerId});if(!result.ok)throw new TypeError(result.error);wanted=result.definition;
-      if(loadedId===wanted.appearanceId){colors.apply(wanted);renderDirty=true;}else load();},
+      if(loadedId===lookKey(wanted)){colors.apply(wanted);renderDirty=true;}else load();},
     async capturePortrait(){
       if(disposed||loading||!avatar)throw new Error('Wait for the preview to finish loading.');
       let hero;

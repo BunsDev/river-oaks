@@ -1,5 +1,6 @@
 import { customizedCharacterDefinition } from './character-customization.js';
 import { characterAssetFor } from './character-assets.js';
+import { CUSTOM_APPEARANCE_ID, DEFAULT_RECIPE, RECIPE_CATALOG, characterRecipe } from './character-recipe.js';
 import { LEGACY_APPEARANCES, canUseAppearance, permittedAppearance, sharedAppearance } from './shared-appearances.js';
 
 export const CHARACTER_SCHEMA_VERSION = 1;
@@ -9,15 +10,30 @@ const owner = value => typeof value === 'string' && value.length > 0 && value.le
 
 // Version 1 describes existing authored bundles. Independent components become
 // editable only when the catalog proves their compatibility with each rig.
+// The player-made look has no authored bundle: its plain definition is the default recipe.
 export function characterDefinitionFor(ownerId, appearanceId, { revision = 0 } = {}) {
   if (!owner(ownerId) || !Number.isSafeInteger(revision) || revision < 0) throw new TypeError('Invalid character identity');
   if (!canUseAppearance(ownerId, appearanceId)) throw new TypeError('Appearance not permitted');
   const look = sharedAppearance(appearanceId);
+  if (look.recipe) return recipeCharacterDefinition(ownerId, DEFAULT_RECIPE, { revision });
   return {
     schemaVersion: CHARACTER_SCHEMA_VERSION, ownerId, revision,
     appearanceId: look.id, rig: look.rig ?? look.id, form: look.form,
     parameters: {}, palette: 'authored', hair: 'authored', outfit: look.id,
     attachments: [], assets: [characterAssetFor(look.rig ?? look.id)], provenance: { kind: 'authored', catalog: 'river-oaks-looks-v1' },
+  };
+}
+
+// Version 3 is a recipe over the shipped bodies (character-recipe.js). Its rig and
+// outfit are the recipe's body; the version 2 colour fields stay authored.
+export function recipeCharacterDefinition(ownerId, recipe, { revision = 0 } = {}) {
+  if (!owner(ownerId) || !Number.isSafeInteger(revision) || revision < 0) throw new TypeError('Invalid character identity');
+  const parameters = characterRecipe(recipe);
+  return {
+    schemaVersion: 3, ownerId, revision,
+    appearanceId: CUSTOM_APPEARANCE_ID, rig: parameters.body, form: 'human',
+    parameters, palette: 'authored', hair: 'authored', outfit: parameters.body,
+    attachments: [], assets: [characterAssetFor(parameters.body)], provenance: { kind: 'recipe', catalog: RECIPE_CATALOG },
   };
 }
 
@@ -32,9 +48,10 @@ function equal(value, expected) {
 export function validateCharacterDefinition(value, { ownerId } = {}) {
   if (!record(value) || Object.keys(value).length !== fields.length || fields.some(key => !Object.hasOwn(value,key))) return { ok:false, error:'invalid_character_definition' };
   if (!owner(ownerId) || value.ownerId !== ownerId) return { ok:false, error:'character_owner_mismatch' };
-  if (![CHARACTER_SCHEMA_VERSION,2].includes(value.schemaVersion)) return { ok:false, error:'unsupported_character_version' };
+  if (![CHARACTER_SCHEMA_VERSION,2,3].includes(value.schemaVersion)) return { ok:false, error:'unsupported_character_version' };
   let canonical;
-  try { canonical = value.schemaVersion===2
+  try { canonical = value.schemaVersion===3 ? recipeCharacterDefinition(ownerId,value.parameters,{revision:value.revision})
+    : value.schemaVersion===2
     ? customizedCharacterDefinition(ownerId,value.appearanceId,{revision:value.revision,palette:value.palette,hair:value.hair})
     : characterDefinitionFor(ownerId,value.appearanceId,{revision:value.revision}); }
   catch { return { ok:false, error:'invalid_character_definition' }; }
