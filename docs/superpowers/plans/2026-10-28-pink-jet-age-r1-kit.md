@@ -79,6 +79,29 @@ A render-time **finish**, not a new style, kit version or content revision.
   - plans, locks, geometry and draw calls identical under `pink-jet-age`, with slot
     recolours applied (Commons and Yale);
   - full material and geometry release across classic ↔ pink switches.
+- 2026-10-28: core `pnpm run verify` passed on `10ce1a47`. Committed, pushed and
+  opened as draft PR #749.
+- 2026-10-28, matched review 1 (`.runtime/city-kit/review-2026-10-28T18-58-18-924Z`):
+  - resources: identical calls, triangles, geometries and textures in all 18 views;
+  - **defect:** Commons Market Row showed no pink. The luxe styles use `steel-black`
+    trim and a `bronze-satin` accent, and both had been mapped to dark or chrome;
+  - **defect:** reflective glass read as saturated cyan.
+- Fix: `bronze-satin` → pink lacquer; `glass-dark` → muted grey-mint `#7a9591`. New
+  test: every storefront block has TypeSafe pink in its own facade detail. Mutation
+  check: with the old mapping it fails on `bayou-market-commons/market-row`; with the
+  fix, 17/17 pass. A looser first version, "any pink anywhere", passed on the old
+  mapping and was replaced.
+- 2026-10-28, matched review 2 (`.runtime/city-kit/review-2026-10-28T19-05-03-163Z`):
+  - 18 views, 0 resource mismatches, 0 page errors or failed requests;
+  - pink shows on canopies, fins and loggias on Commons, and on fascias and sills on Yale.
+  - Core verify passed again: tooling 289/289, preview 4341 + 1 skip, server 1077 +
+    283 Redis skips, desktop 127 + 5 skips, 0 failures.
+
+## Visual notes for Val (not automated acceptance)
+
+- Commons court loggia piers are fully pink. Pink leads strongly there.
+- Limestone over the pavement map still reads as warm grey rather than ivory.
+- Yale ground-floor kickplates are pink.
 
 ## Gaps
 

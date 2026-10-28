@@ -280,6 +280,16 @@ test('the Pink Jet-Age finish keeps plans, locks, geometry and draw calls identi
       recoloured++;
     }
     assert.ok(recoloured >= 6, `${name}: ${recoloured} recoloured slots in use`);
+    // Pink leads on every street: the luxury Commons once rendered without any (#749 review).
+    // Every block with storefronts shows pink in its own facade detail.
+    const brand = new THREE.Color(PINK_JET_AGE.pink).getHexString();
+    const storefrontBlocks = new Set(plan.pieces.filter(piece => piece.piece === 'building/shell' && piece.variant).map(piece => piece.id.split('/')[1]));
+    assert.ok(storefrontBlocks.size >= 2, `${name}: storefront blocks`);
+    for (const block of storefrontBlocks) {
+      const detail = pink.children.find(child => child.name === `${block} detail`); let found = false;
+      detail?.traverse(item => { if (item.isMesh && item.material.color?.getHexString() === brand) found = true; });
+      assert.ok(found, `${name}/${block}: no TypeSafe pink in its facade detail`);
+    }
     for (const kit of [classic, defaulted, pink]) kit.userData.dispose();
   }
 });

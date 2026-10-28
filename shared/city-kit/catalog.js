@@ -105,14 +105,16 @@ export const KIT_FINISHES = Object.freeze({
       // Pink leads on fascias, floor plates, sills and canopies; it never covers a whole wall.
       'trim-teal': { color: P.pink, roughness: .5 }, 'trim-deep-teal': { color: P.pink, roughness: .5 }, 'trim-mint': { color: P.pink, roughness: .5 },
       'canvas-teal': { color: P.pink }, 'canvas-rose': { color: P.pink }, 'canvas-apricot': { color: P.ivory }, 'canvas-blush': { color: P.pink },
-      // Restrained chrome replaces brass and bronze accents: satin, not mirror.
-      'metal-brass': { color: P.chrome, roughness: .3, metalness: .9 }, 'bronze-satin': { color: P.chrome, roughness: .3, metalness: .9 },
+      // Restrained chrome replaces brass accents: satin, not mirror. The luxury styles'
+      // satin bronze (gallery canopies, ribbon fins, court floor plates) becomes pink
+      // lacquer, otherwise those streets would show no pink at all (matched review, #749).
+      'metal-brass': { color: P.chrome, roughness: .3, metalness: .9 }, 'bronze-satin': { color: P.pink, roughness: .45, metalness: 0 },
       'rose-gold': { color: P.chrome, roughness: .3, metalness: .9 }, 'metal-bronze': { color: '#8e979b', roughness: .38, metalness: .8 },
       // Ink, not black, for mullions, edging and lamp columns.
       'steel-black': { color: P.ink }, 'lamp-teal': { color: P.ink },
-      // Mint glass. Reflective panes take a deeper mint so the sky never washes them out;
-      // rails and storefront glass carry the lighter role.
-      'glass-dark': { color: '#5d8f8a' }, glass: { color: '#6e9f99' }, 'glass-rail': { color: P.mintGlass },
+      // Mint glass. Reflective panes take a muted grey-mint: a saturated tint plus the sky
+      // reflection read as cyan in the matched review. Rails carry the lighter role.
+      'glass-dark': { color: '#7a9591' }, glass: { color: '#6e9f99' }, 'glass-rail': { color: P.mintGlass },
       planting: { color: P.garden },
     }),
   }),
