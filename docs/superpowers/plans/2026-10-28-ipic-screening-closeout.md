@@ -35,7 +35,7 @@ The #498 box-by-box map is the 2026-10-23 comment on #498 (nine boxes → #513, 
 | Compatibility and rollback on the current build | On main `91656cec`: `node --test server/tests/screenings.test.js server/tests/static-media.test.js server/tests/hardening-asset-cache.test.js` **19/19, 0 skipped** (rollback guard with both approved films, historical fixture reset, forged timeline, ranges and types, cache rule). `REDIS_URL=redis://127.0.0.1:62369` (this session's own redis-server, scratch dir, `--save ""`): `server/tests/screenings-transport.test.js server/tests/screenings.test.js` **19/19, 0 skipped** |
 | Serving on production (read-only) | 11 files: 206 on a 1 KB range, `accept-ranges: bytes`, right types, `public, max-age=3600, stale-while-revalidate=86400`, `x-vercel-cache: HIT`; lengths equal `sources.json`; the served second-film WebM hashes to the approved `24f08a74`. Receipt: scratchpad `serving-check-20261028T13*.txt` (this machine; summarised in the matrix) |
 | Startup, cold against warm | Full GETs of the 12.9 MB WebM from this laptop: 0.49 s (cache-busting query), 3.73 s, 1.13 s; first byte 0.18–0.26 s. A bound, not a benchmark; the matrix row says so |
-| MP4-in-WebKit option | Draft PR from `fix/screening-webkit-mp4-502-20261028` (below). Unmerged; offered for the case where Safari plays the WebM silently |
+| MP4-in-WebKit option | Draft **#728** from `fix/screening-webkit-mp4-502-20261028` (below). Unmerged; offered for the case where Safari plays the WebM silently |
 | Device and smoke packet for Val | The matrix's "Device and human runs for Val" section, now with a failure-to-fix table, exact production-smoke steps, the chooser device checklist (#499) and a pointer to the listening form (#501) |
 
 ### The option branch
@@ -62,7 +62,11 @@ The #498 box-by-box map is the 2026-10-23 comment on #498 (nine boxes → #513, 
 - **Two-browser journey:** `pnpm run test:screening` **19/19** on the branch (SwiftShader; both approved films; the host
   chose `ipic-two-seats-v1` after the fixture: its own texture, captions, transcript and 45,469 audio bytes decoding;
   background-and-back first presented frame 88 ms from the room; host loss paused at 10.62 s; leaving released the film).
-- **Core `pnpm run verify`:** see the log below (filled when the run finishes; a skip is not evidence).
+- **Core `pnpm run verify`:** **passed** on `de7742ad` (receipt `.runtime/agent/core.json` in the worktree, 13:20Z): tooling
+  289/289; preview 4,295 passed, 1 existing skip; server 1,048 passed, 279 Redis skips (core excludes Redis; the
+  screening transport suite ran on main with `REDIS_URL`, 19/19, 0 skipped); desktop 127 passed, 5 Windows skips; Python
+  170; build, offline fixture and secrets passed. The option touches no server code.
+- **PR:** draft **#728** (`de7742ad`, signed, GitHub-verified).
 - **Rollback:** revert the PR. No persisted or server effect; no media change.
 
 ## Finish line 3: #499, #500, #501
@@ -109,7 +113,7 @@ listening record (packet step 7, the form in the second-short ledger). The v2 re
 
 ## Finish line 4: #497 checklist and #359
 
-- **Checklist reconciled** (the #497 body, with the evidence comment): S1, S2 and S4 ticked with PR/merge evidence;
+- **Checklist reconciled** (the #497 body edited 2026-10-28 13:17Z, with the evidence comment): S1, S2 and S4 ticked with PR/merge evidence;
   S3 and S5 stay open for the human and device rows; the release line stays open until the signed-in smoke is recorded.
 - **Version-bound recommendation for #359:** `v0.2.2` (`f4dd959a`), in the matrix's "Release recommendation
   (2026-10-28)". Engineering-ready with both films on the candidate; experience-ready needs the packet; production
@@ -138,7 +142,7 @@ listening record (packet step 7, the form in the second-short ledger). The v2 re
 | `node preview/e2e/ipic-screen-engine-runner.mjs webkit` / `chromium` | option branch | WebKit MP4 first; Chromium WebM first; both decoded and advancing |
 | `node preview/e2e/ipic-screen-runner.mjs` | option branch, Metal M5 Max | 12/12 |
 | `pnpm run test:screening` | option branch, SwiftShader | 19/19 |
-| `pnpm run verify` (core) | option branch | pending at the time of writing; recorded in the log below |
+| `pnpm run verify` (core) | option branch `de7742ad` | passed: 289 / 4,295 (+1 skip) / 1,048 (+279 Redis skips) / 127 (+5 Windows skips) / 170 |
 | `node --test scripts/tests/plans-index.test.js` | docs branch | 2/2 |
 
 Not run: the ten-cycle soak (`ipic-screening-soak-runner.mjs 10`); the option changes nothing outside WebKit and the
@@ -155,3 +159,7 @@ PRs. No device, human or production action.
   screen runner 12/12 (13:10Z), journey 19/19 (13:12Z), core verify running.
 - **13:15–13:40Z:** matrix rows, Val packet, listening packet and v2 dry run, #500 design package, release
   recommendation, this ledger. Claimed `ipic-screening-packets-497-20261028`.
+- **13:40–13:55Z:** docs draft **#727** (`5bc63ec4`) opened; #497 checklist reconciled; evidence comments on #498, #499,
+  #500, #501. Core verify passed on the option branch (13:20Z); option draft **#728** (`de7742ad`) opened; comments on
+  #502, #497 and #359. Both commits SSH-signed and GitHub-verified. Remaining: Val's decisions and rows; the old S1
+  worktree's release by its owner.

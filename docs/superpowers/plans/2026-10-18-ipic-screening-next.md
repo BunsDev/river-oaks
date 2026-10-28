@@ -8,7 +8,7 @@ Coordinator ledger for tracker #497 and packages #498–#502 (umbrella #359). #5
   `ipic-screening-ledgers-delivered-497` (this update). All but the last two are retired.
 - **2026-10-28 closeout** (`claude:river-oaks-de (b6b31d)`): the S1 follow-ups #571 and #650 are on main and in
   `v0.2.2`; the matrix rows below marked *2026-10-28* were re-run on main `91656cec`; the WebKit MP4 option is draft
-  PR `fix/screening-webkit-mp4-502-20261028`; the device and smoke packet for Val is the section
+  PR #728 (`fix/screening-webkit-mp4-502-20261028`); the device and smoke packet for Val is the section
   [Device and human runs for Val](#device-and-human-runs-for-val-not-automated-emulation-is-not-evidence) below. Session
   ledger: [2026-10-28-ipic-screening-closeout](2026-10-28-ipic-screening-closeout.md).
 - **Baseline:** main `153471bc` (2026-10-18 12:4xZ). The tracker's planning SHA `a5e2a8ec` and #496's `3592780c` are
@@ -25,7 +25,7 @@ Coordinator ledger for tracker #497 and packages #498–#502 (umbrella #359). #5
 | S2 #499 | Host-only approved-film chooser | **#514**, merged `1a61e448` (21:45Z) | Live with #529's deploy (22:02:21Z); retired | — |
 | S3 #500 | Screen focus, Join screening, local audio | **#515**, merged `225acfc9` (22:29Z) | Deployed 22:29:46Z; retired | Val: the film against live voice chat |
 | S4 #501 | Second short "Two Seats, One Screen" | **#516** tooling, merged `b76ab77c` (2026-10-19 05:02Z); **#547** the approved film, merged `a4b889e3` (05:42Z) | Val approved the exact bytes (04:10Z); deployed 05:03:12Z and 05:43:17Z; production serves the approved bytes; both retired | Val: listening on headphones and a device speaker |
-| S5 #502 | Evidence matrix, device/human rows, release handoff | **#520**, merged `7fcce0f6` (2026-10-18 23:31Z); **#556** (hosted journey plays the approved second film), merged `7686554b`; **#559** (film cache), merged `4e54ea1e`; option draft `fix/screening-webkit-mp4-502-20261028` (MP4 first in WebKit; unmerged until Val's Safari row decides) | Deployed 23:31:50Z; #556 and #559 deployed 2026-10-19/20; worktrees retired; the register entry `ipic-journey-approved-film-502` was reconciled (retired) on 2026-10-24 | Val's device, human and production-smoke rows (packet below) |
+| S5 #502 | Evidence matrix, device/human rows, release handoff | **#520**, merged `7fcce0f6` (2026-10-18 23:31Z); **#556** (hosted journey plays the approved second film), merged `7686554b`; **#559** (film cache), merged `4e54ea1e`; option draft #728 (`fix/screening-webkit-mp4-502-20261028`, MP4 first in WebKit; unmerged until Val's Safari row decides) | Deployed 23:31:50Z; #556 and #559 deployed 2026-10-19/20; worktrees retired; the register entry `ipic-journey-approved-film-502` was reconciled (retired) on 2026-10-24 | Val's device, human and production-smoke rows (packet below) |
 
 Integration order: #498 → #499 → #500 → #502. #501 runs in parallel, and until it delivers, #499, #500 and #502
 work on the fixtures. Shared hunks get one owner at a time: `ipic-screening-ui.js` and its CSS (#498 lifecycle, then
@@ -105,7 +105,7 @@ console reports the source that decoded (`source`, `attempts`), the local state 
 
 | Observed | Reason it may have | Prepared fix (nothing applied without Val's go) | Rollback |
 | --- | --- | --- | --- |
-| Safari or iPhone plays the second film with no sound after Sound on and a tap | WebKit chose the WebM (Opus); its sound was not measurable in the engine check | Draft `fix/screening-webkit-mp4-502-20261028`: the MP4 first where the vendor is Apple; WebM stays the fallback; regressions and both engine checks pass | Revert that PR; no media, id or server change |
+| Safari or iPhone plays the second film with no sound after Sound on and a tap | WebKit chose the WebM (Opus); its sound was not measurable in the engine check | Draft #728 (`fix/screening-webkit-mp4-502-20261028`): the MP4 first where the vendor is Apple; WebM stays the fallback; regressions and both engine checks pass | Revert that PR; no media, id or server change |
 | "Play film" keeps appearing on iPhone | iOS refuses autoplay with sound until a gesture on the element's page | None needed: the status is truthful; Play film is the gesture | — |
 | The whole film does not fit in portrait | `focus.fits` is false: the panel's band is too short for the front row within 80° | #500's design package (portrait hint), in `2026-10-18-ipic-screening-viewing.md` | — |
 | A viewer joins late and sees black for more than ~5 s on cellular | Startup is the first decoded frame; the WebM is 12.9 MB and the MP4 16.9 MB; the CDN serves them | Record the time; no change prepared (HLS stays deferred) | — |
@@ -235,7 +235,7 @@ Val approved each landing, and each went through `pnpm run land <pr>`. Every mer
   playback and sound, other GPUs, VoiceOver and touch, listening, the film against voice chat, and a comfort review of
   the focused view. **Production-delivered: code and media yes; the signed-in host smoke no** (packet step 5).
 - **Authority still needed, all Val's:** (1) run the packet, or name who does; (2) if Safari plays the WebM silently,
-  land the option PR (a code change, so a new deployment of a compatible build); (3) if listening fails, approve a v2
+  land the option PR #728 (a code change, so a new deployment of a compatible build); (3) if listening fails, approve a v2
   recut; (4) the production smoke itself. No grant, environment or media change is requested.
 - **Compatible rollback:** unchanged from 2026-10-18/19: configuration only (`RIVER_OAKS_SCREENING_HOSTS` unset and a
   redeploy of the same build) pauses and prevents films without touching checkpoints; every media id and duration stays
