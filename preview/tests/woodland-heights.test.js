@@ -140,6 +140,25 @@ test('building land, the location edge and every Woodland solid stay closed', ()
   assert.equal(environment.isAreaFree(...(([x, n]) => [x, -n])(frame([545, 40])), 2), true, 'open green lawn');
 });
 
+test('Jevica flies over every roof from the Commons to Woodland Heights, never through one', () => {
+  const environment = createWalkingEnvironment(world);
+  const plans = [layout.destination, layout.heights, layout.studewood, layout.terraces, woodland].flatMap(part => part.plans ?? [part]);
+  const shells = plans.flatMap(plan => plan.pieces).filter(piece => piece.piece.startsWith('building/'));
+  assert.ok(shells.length > 390);
+  let roomy = 0;
+  for (const shell of shells) {
+    const [w, s, e, n] = shell.rect, x = (w + e) / 2, y = (s + n) / 2;
+    const ground = Math.max(...[[w, s], [e, s], [e, n], [w, n], [x, y]].map(([east, north]) => environment.groundAt(east, -north)));
+    assert.equal(environment.canFly(x, ground + shell.height, -y), false, `${shell.id}: not through the roof`);
+    // A rear wing narrower than the bubble's 2.6 m backs onto ground flight never covers.
+    if (e - w < 3 || n - s < 3) continue;
+    roomy++;
+    assert.equal(environment.canFly(x, ground + shell.height + 3.2, -y), true, `${shell.id}: just over the roof`);
+    assert.equal(environment.canFly(x, ground + environment.flightCeiling, -y), true, `${shell.id}: at the ceiling`);
+  }
+  assert.ok(roomy >= 377, `${roomy} roofs`);
+});
+
 test('the location label names Woodland Heights beyond Studewood and Studewood before it', () => {
   assert.equal(connectedLocationAt(world, ...frame([520, 111])), WOODLAND_NAME);
   assert.equal(connectedLocationAt(world, ...frame([545, 40])), WOODLAND_NAME);
