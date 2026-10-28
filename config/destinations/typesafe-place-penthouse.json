@@ -1,0 +1,322 @@
+{
+  "id": "typesafe-place-penthouse",
+  "title": "TypeSafe Place: Place Avenue, Penthouse Row and the Sky Gardens",
+  "kit": "city-kit-1",
+  "seed": 2026,
+  "inspiration": "Patterns only, no copied buildings: an elevated residential neighborhood east of Woodland Heights, after the concept art 'TypeSafe Place Residential Heights'. Two 20-storey balconied towers (Luxury Living, and Penthouse Row with its setback crown), garden-roofed mid-rises (Sky Gardens), everyday shop rows with garden roofs, a neighborhood green with a pink ribbon sculpture, and a tree-lined walking avenue. All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    619,
+    0,
+    702.5,
+    117.5
+  ],
+  "streets": [
+    {
+      "id": "place-avenue-north",
+      "from": [
+        628,
+        -8
+      ],
+      "to": [
+        628,
+        117.5
+      ],
+      "lane": 8,
+      "sidewalk": 5,
+      "paving": "plaza-stone",
+      "trees": {
+        "offset": 7,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 13,
+        "spacing": 24
+      }
+    },
+    {
+      "id": "twentieth-place",
+      "from": [
+        619,
+        111
+      ],
+      "to": [
+        702.5,
+        111
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 8,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 14,
+        "spacing": 30
+      }
+    }
+  ],
+  "plazas": [
+    {
+      "id": "penthouse-court",
+      "rect": [
+        636,
+        4,
+        646,
+        94.5
+      ],
+      "treeRows": [
+        {
+          "y": 20,
+          "from": 641,
+          "to": 641,
+          "spacing": 8
+        },
+        {
+          "y": 86,
+          "from": 641,
+          "to": 641,
+          "spacing": 8
+        }
+      ]
+    },
+    {
+      "id": "penthouse-south",
+      "rect": [
+        645,
+        4,
+        682,
+        46
+      ],
+      "lawns": [
+        [
+          650,
+          10,
+          677,
+          38
+        ]
+      ]
+    },
+    {
+      "id": "penthouse-north",
+      "rect": [
+        645,
+        76,
+        682,
+        94.5
+      ],
+      "lawns": [
+        [
+          650,
+          80,
+          677,
+          90
+        ]
+      ]
+    },
+    {
+      "id": "penthouse-east",
+      "rect": [
+        676,
+        45,
+        682,
+        77
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "id": "twentieth-retail-east",
+      "style": "place-retail",
+      "rect": [
+        637,
+        94.5,
+        702.5,
+        104.5
+      ],
+      "front": "north",
+      "sides": [
+        "west"
+      ],
+      "depth": [
+        10,
+        10
+      ],
+      "storeys": [
+        2,
+        3
+      ],
+      "bays": [
+        6,
+        7.5
+      ],
+      "names": [
+        "Generic Goods Market",
+        "Enum Noodle House",
+        "Literal Juice Bar",
+        "Type Guard Pet Spa",
+        "Infer Wine Bar",
+        "Tuple and Twine Tailors",
+        "Narrowing Nails",
+        "Satisfies Sweets"
+      ]
+    }
+  ],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "penthouse-cafe-0",
+      "piece": "furniture/cafe-set",
+      "at": [
+        652.0,
+        41.5
+      ]
+    },
+    {
+      "id": "penthouse-cafe-1",
+      "piece": "furniture/cafe-set",
+      "at": [
+        656.5,
+        41.5
+      ]
+    },
+    {
+      "id": "penthouse-cafe-2",
+      "piece": "furniture/cafe-set",
+      "at": [
+        661.0,
+        41.5
+      ]
+    },
+    {
+      "id": "penthouse-cafe-3",
+      "piece": "furniture/cafe-set",
+      "at": [
+        665.5,
+        41.5
+      ]
+    },
+    {
+      "id": "penthouse-cafe-4",
+      "piece": "furniture/cafe-set",
+      "at": [
+        670.0,
+        41.5
+      ]
+    },
+    {
+      "id": "penthouse-bench-655",
+      "piece": "furniture/bench",
+      "at": [
+        655,
+        92.5
+      ],
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "penthouse-bench-665",
+      "piece": "furniture/bench",
+      "at": [
+        665,
+        92.5
+      ],
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "penthouse-lamp",
+      "piece": "furniture/lamp",
+      "at": [
+        638.5,
+        46
+      ]
+    },
+    {
+      "id": "penthouse-east-lamp",
+      "piece": "furniture/lamp",
+      "at": [
+        679,
+        61
+      ]
+    }
+  ],
+  "context": [],
+  "overrides": {},
+  "additions": [
+    {
+      "id": "penthouse-row",
+      "piece": "building/shell",
+      "rect": [
+        646,
+        46,
+        676,
+        76
+      ],
+      "storeys": 20,
+      "height": 71.1,
+      "wall": "concrete-warm",
+      "trim": "steel-black",
+      "roof": "crown",
+      "style": "place-tower",
+      "faces": [
+        "north",
+        "south",
+        "east",
+        "west"
+      ],
+      "bays": 1,
+      "sign": "Penthouse Row",
+      "variant": "gallery",
+      "awning": "canvas-blush"
+    },
+    {
+      "id": "sky-gardens-south",
+      "piece": "building/shell",
+      "rect": [
+        682,
+        8,
+        702,
+        46
+      ],
+      "storeys": 9,
+      "height": 32.6,
+      "wall": "stone-pearl",
+      "trim": "steel-black",
+      "roof": "garden",
+      "style": "place-residence",
+      "faces": [
+        "west",
+        "north",
+        "south"
+      ],
+      "bays": 1,
+      "sign": "Sky Gardens",
+      "variant": "loggia",
+      "awning": "canvas-blush"
+    },
+    {
+      "id": "sky-gardens-north",
+      "piece": "building/shell",
+      "rect": [
+        682,
+        52,
+        702,
+        92
+      ],
+      "storeys": 11,
+      "height": 39.6,
+      "wall": "concrete-warm",
+      "trim": "steel-black",
+      "roof": "garden",
+      "style": "place-residence",
+      "faces": [
+        "west",
+        "north",
+        "south"
+      ],
+      "bays": 1,
+      "sign": null,
+      "variant": "loggia",
+      "awning": "canvas-blush"
+    }
+  ]
+}
