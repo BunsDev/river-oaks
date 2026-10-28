@@ -78,7 +78,14 @@ test('Stack rehearsal from Gardens: up one step at a time, occupants in every di
     await new Promise(resolve => gateway.server.listen(0, '127.0.0.1', resolve));
     return { gateway, base: `http://127.0.0.1:${gateway.server.address().port}`, revision, epoch };
   }
-  async function stop(node) { for (const ws of sockets) ws.terminate(); sockets.clear(); await node.gateway.close(); await delay(50); }
+  // Production deploy steps are minutes apart; here they are seconds apart, so the ticket
+  // window (10 per user per minute, redis-security.js) would refuse the 11th step on a fast
+  // runner: a 429 for bob at epoch 10, seen on hosted runs that reached it in under 40 s.
+  // Every step starts with a fresh window, as a real deploy would.
+  async function stop(node) {
+    for (const ws of sockets) ws.terminate(); sockets.clear(); await node.gateway.close(); await delay(50);
+    const windows = await redis.keys(`{${namespace}}:limit:tickets:*`); if (windows.length) await redis.del(...windows);
+  }
   async function join(node, id) {
     const headers = { Origin: origin, Cookie: `fixture=${id}`, 'X-CSRF-Token': 'fixture-csrf' };
     const response = await fetch(`${node.base}/api/multiplayer/ticket`, { method: 'POST', headers });
