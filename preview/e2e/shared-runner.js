@@ -56,6 +56,7 @@ async function start(mode, ports) {
   const ready = development ? 'Shared town: local development identities' : 'Multiplayer browser fixture:';
   const env = { ...process.env, RIVER_OAKS_TEST_CREATOR:mode==='creator'?'1':'0', NODE_ENV: 'development', VERCEL: '', VITE_SHARED_SOFTWARE_RENDERING: softwareRendering ? '1' : '', RIVER_OAKS_ACCEPTANCE_FIXTURE: '1', RIVER_OAKS_DEV_AUTH: 'local', RIVER_OAKS_DEV_TOWN: development ? 'on' : 'off', WORLD_ID: mode==='development-world'?'garden-2':'river-oaks', RIVER_OAKS_TEST_WEB_PORT: String(ports.web), RIVER_OAKS_DEV_TOWN_PORT: String(ports.town), MODERATION_FILE: join(temporary, 'moderation.json'), WAITLIST_FILE: join(temporary, 'waitlist.json') };
   // Creation journeys explicitly opt in; the flag journey checks the default off.
+  env.BLOCKS_FILE = join(temporary, 'blocks.json');
   env.RIVER_OAKS_CHARACTER_STUDIO=process.env.RIVER_OAKS_CHARACTER_STUDIO??'1';
   env.VITE_CHARACTER_STUDIO=process.env.VITE_CHARACTER_STUDIO??'true';
   env.VITE_CREATION_TOOLS = process.env.VITE_CREATION_TOOLS ?? (['development', 'development-publish', 'creator'].includes(mode) && selectedJourney !== 'creation-tools' ? 'true' : 'false');
@@ -114,6 +115,9 @@ try {
     const ports = { web, town };
     await start(mode, ports);
     const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:selectedJourney==='locomotion-peer'?['locomotion-peer']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating','world-rules-shared','crime-shared']):mode==='development-world'?['world-boundary','world-map','character-studio-worlds']:mode==='development-publish'?['world-publish','creator-generated-levels','creator-four-levels','creator-street-crossing',...(selectedJourney==='creator-approved-cafe'?['creator-approved-cafe']:[])]:mode==='creator'?['creator-objects']:[...(selectedJourney==='storefront-threshold'?['storefront-threshold']:[]),...(selectedJourney==='generated-gallery-shared'?['generated-gallery-shared']:[]),'access-gate','connection-required','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water','greetings','character-studio-shared','character-studio-tiers','default-appearance-tiers'];
+    if (mode === 'required' || (selectedJourney === 'player-blocking' && mode.startsWith('development'))) names.push('player-blocking');
+    if (mode === 'required') names.push('player-blocking-lifecycle');
+    if (mode === 'required' || mode === 'development-world' || (selectedJourney === 'player-blocking-interface' && mode.startsWith('development'))) names.push('player-blocking-interface');
     for (const name of names) {
       if (selectedJourney && name !== selectedJourney) continue;
       interruption.signal.throwIfAborted();

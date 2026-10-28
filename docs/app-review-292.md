@@ -15,9 +15,9 @@ the binary is marked **native**.
 
 | Guideline | What it asks | Where River Oaks is | Status |
 | --- | --- | --- | --- |
-| 1.2 | Filter objectionable content | Length limits and control-character checks only; no content filter | **Gap, blocking** |
+| 1.2 | Filter objectionable content | A server-side filter screens town chat, direct messages, groups, events, profiles and usernames before they're stored, on both servers (this change). Voice isn't filtered | Met in source; the list and the mode are Decision 1 |
 | 1.2 | Report offensive content, respond in time | Residents can be reported from the roster, and reports are saved. Moderators read them, newest first, in Settings → Account → Reports and can ban from there (this change). Messages, events and groups can't be reported; nobody is told | **Gap, blocking** |
-| 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The Block button is built but not wired into the client | **Gap, blocking** (client owner) |
+| 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The roster now offers Block/Unblock and Settings → Account lists blocked residents | Integrated in source; fixture verification and native acceptance remain distinct |
 | 1.2 | Published contact information | Settings → Account → Support, once `VITE_SUPPORT_CONTACT` is set (this change). Not on the sign-in or waitlist pages | Needs a value; **gap** before approval |
 | 5.1.1(v) | Delete the account in the app | In-app deletion behind a default-off flag (#666), webhook erasure (#661) | Met in source, off |
 | 5.1.1(v) | Revoke social credentials; no social tokens kept off the device | WorkOS can return the resident's GitHub token, which the server then uses | **Decision** |
@@ -43,13 +43,39 @@ What residents create that others see:
 Builds are catalog items placed in approved spaces, with no free text. World Studio
 drafts stay on the device.
 
-**Filtering. Gap, blocking.** Every text field is limited in length and refuses
-control characters; everything but direct messages also refuses direction
-overrides. Nothing filters objectionable words or images, and Apple asks
-for "a method for filtering objectionable material from being posted". A server-side
-filter on every field in the list above, apart from voice, would cover the text. What it matches, and whether it refuses or masks, is a content-policy
-choice (Decision 1). Voice can't be filtered as it happens; blocking, the device mute
-and reports cover it.
+**Filtering. Met in source; the policy is Decision 1.** Every text field is limited in
+length and refuses control characters; everything but direct messages also refuses
+direction overrides. Apple asks for "a method for filtering objectionable material from
+being posted", so a server-side content filter (`server/content-filter.js`) now screens
+every field in the list above, apart from voice, before any store sees it:
+
+- **Where.** The chat command at both gateways, before blocks are screened; `send` in
+  `social-api.js`; `create` and `send` in `groups-api.js`; `create` in `events-api.js`;
+  `save` in `profile-api.js` (tagline, bio, pronouns and each interest); and `setUsername`
+  in both waitlist stores. The world and the client are unchanged. A refused write is
+  400 with `{ error, reason: 'filtered' }`; a refused chat line is the socket result
+  `chat_filtered`. The resident sees "That message can’t be sent here." or "That text
+  can’t be used here." (names: "That name can’t be used here.").
+- **How it matches.** Whole words and short phrases from `config/content-filter.json`,
+  after folding case, accents, look-alike digits and symbols (`k1ll`, `f@g`, Cyrillic
+  and Greek look-alikes), zero-width characters inside a word, letters spaced out one
+  by one (`k i l l`) and a run-together phrase (`killyourself`). A plain `-s` plural of a
+  term matches; other forms are listed on their own. Not folded: letters spaced in
+  groups (`ki ll`), repeated letters (`kiiill`) or leetspeak beyond the look-alike table.
+  Nothing inside a longer word matches, so ordinary words that contain a term are left
+  alone. Text longer than 4,000 characters is refused unscreened rather than passed
+  (every field's own cap is far lower). Images aren't screened: residents can't post any.
+- **Policy.** `refuse` lists the terms; `mask` names the fields where a match is
+  replaced by asterisks (`∗`) instead of refused (never usernames). The shipped list holds
+  severe slurs and direct threats, as a starting point. `RIVER_OAKS_CONTENT_FILTER=off`
+  turns the filter off; `RIVER_OAKS_CONTENT_FILTER_FILE` replaces the list with a file
+  of the same shape, and a missing or malformed file stops the server at start.
+- **Tests.** `server/tests/content-filter.test.js` (matching, masking, configuration)
+  and `server/tests/content-filter-routes.test.js` (every field over HTTP and WebSocket
+  on the town, and on the hosted gateway with Redis).
+
+Voice can't be filtered as it happens; blocking, the device mute and reports cover it.
+The filter matches words, not meaning: reports and blocking handle the rest.
 
 **Reports. Gap, blocking.** The roster's **Report** button
 (`preview/src/multiplayer-client.js`) sends the socket command
@@ -104,15 +130,19 @@ Ban for them; lifting a ban on one still works. Tests:
 Proposed next increment: keep the reported content with the report, and keep reports
 until a moderator closes them. Response time and ownership are Decision 2.
 
-**Blocking. Gap, blocking.** [Player blocking](player-blocking.md) (#665) is enforced
+**Blocking. Integrated in source.** [Player blocking](player-blocking.md) (#665) is enforced
 on the server. It covers chat, gestures, greetings, contacts, direct messages,
 profiles, group messages, invitations, travel, private places and Garden campus guest
-access, and it holds across reconnects and worlds. But residents can't make a block yet. The Block button for
-the roster and the blocked list for Settings (`preview/src/player-blocks.js`) are
-built and tested, but not wired in: `preview/src/multiplayer-client.js` and
-`preview/src/main.js` belong to other active tasks. Until their owners make the four
-calls listed in that page, a block can only be made through `/api/blocks/*`. Voice
-isn't covered: the device mute is the only control today
+access, and it holds across reconnects and worlds. Residents can now use Block/Unblock
+beside Report in the player roster and manage their blocked list in Settings → Account.
+The multiplayer client owns authenticated attachment, reconnect refresh and teardown;
+the Account pane offers refresh and reports failures without false success. Session
+and attempt fences prevent stale replies or a pending sign-out from rebinding another
+session's list. The implementation and fixture evidence are recorded in
+`docs/superpowers/plans/2026-10-27-player-blocking-ui-292.md`; live auth, hosted routing,
+physical-device and human accessibility acceptance are separate. This integration
+does not close this App Review issue or authorize an iOS release. Voice isn't covered:
+the device mute is the only control today
 ([Decision 1 there](player-blocking.md)).
 
 **Contact. Needs a value, and a gap before approval.** `VITE_SUPPORT_CONTACT`, set at
@@ -246,9 +276,11 @@ Recommended: leave Computer out of iOS v1 (Decision 5).
 
 ## Decisions for Val
 
-1. **Content filter.** What a filter matches in chat, profiles and names, and whether
-   it refuses or masks. Recommended: refuse a short list of slurs and threats on the
-   server, and let reports and blocking handle the rest.
+1. **Content filter.** The filter is built and on by default. Decide the list in
+   `config/content-filter.json` (keep, cut or extend the shipped slurs and threats) and
+   whether any field, chat in particular, should mask instead of refuse (`mask`).
+   Recommended: keep refusing, keep the list short, and let reports and blocking
+   handle the rest.
 2. **Moderation.** Who reads reports, how fast, and where a threat or child-safety
    report goes. In the US, a provider that finds apparent child sexual abuse material
    must report it to NCMEC. Recommended: name an owner and a 24-hour target. The

@@ -56,7 +56,7 @@
   "functions": {
     "api/server.js": {
       "maxDuration": 300,
-      "includeFiles": "{preview/public/data/district*.json,src/river_oaks/chauffeur-policy.json}"
+      "includeFiles": "{preview/public/data/district*.json,src/river_oaks/chauffeur-policy.json,config/content-filter.json}"
     }
   },
   "regions": [
