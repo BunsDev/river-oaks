@@ -6,6 +6,11 @@ Coordinator ledger for tracker #497 and packages #498–#502 (umbrella #359). #5
   `ipic-screening-chooser-499`, `ipic-screening-viewing-500`, `ipic-screening-second-short-501`,
   `ipic-screening-second-short-register-501` (#547), `ipic-screening-acceptance-502` and
   `ipic-screening-ledgers-delivered-497` (this update). All but the last two are retired.
+- **2026-10-28 closeout** (`claude:river-oaks-de (b6b31d)`): the S1 follow-ups #571 and #650 are on main and in
+  `v0.2.2`; the matrix rows below marked *2026-10-28* were re-run on main `91656cec`; the WebKit MP4 option is draft
+  PR `fix/screening-webkit-mp4-502-20261028`; the device and smoke packet for Val is the section
+  [Device and human runs for Val](#device-and-human-runs-for-val-not-automated-emulation-is-not-evidence) below. Session
+  ledger: [2026-10-28-ipic-screening-closeout](2026-10-28-ipic-screening-closeout.md).
 - **Baseline:** main `153471bc` (2026-10-18 12:4xZ). The tracker's planning SHA `a5e2a8ec` and #496's `3592780c` are
   evidence only, not reset targets.
 - **Milestone:** an authorized host chooses between two approved shorts. A friend joins partway, and both watch on
@@ -16,11 +21,11 @@ Coordinator ledger for tracker #497 and packages #498–#502 (umbrella #359). #5
 
 | # | Package | Branch / worktree | State | Next action |
 | --- | --- | --- | --- | --- |
-| S1 #498 | Switching, mattes, fallback, failure states | **#513**, merged `1b38e44d` (2026-10-18 21:04Z) | Deployed 21:05:06Z; retired | — |
+| S1 #498 | Switching, mattes, fallback, failure states | **#513**, merged `1b38e44d` (2026-10-18 21:04Z); follow-ups **#571** (lifecycle fences, double-lit screen; independent review `/root/review_s1`), merged `167048c3` (2026-10-24 09:13Z), and **#650** (post-merge review gaps: missing-file reason, per-source diagnostics, replayed-reply guard, seek hold, end of file), merged `2da76e1f` (2026-10-25 00:17Z) | Deployed 21:05:06Z; follow-ups on main and in `v0.2.2` (`f4dd959a`, 2026-10-27); all three worktrees retired or archived | — (device and human rows are #502's) |
 | S2 #499 | Host-only approved-film chooser | **#514**, merged `1a61e448` (21:45Z) | Live with #529's deploy (22:02:21Z); retired | — |
 | S3 #500 | Screen focus, Join screening, local audio | **#515**, merged `225acfc9` (22:29Z) | Deployed 22:29:46Z; retired | Val: the film against live voice chat |
 | S4 #501 | Second short "Two Seats, One Screen" | **#516** tooling, merged `b76ab77c` (2026-10-19 05:02Z); **#547** the approved film, merged `a4b889e3` (05:42Z) | Val approved the exact bytes (04:10Z); deployed 05:03:12Z and 05:43:17Z; production serves the approved bytes; both retired | Val: listening on headphones and a device speaker |
-| S5 #502 | Evidence matrix, device/human rows, release handoff | **#520**, merged `7fcce0f6` (2026-10-18 23:31Z), `test/screening-acceptance-502-20261018` | Deployed 23:31:50Z. The worktree still serves Val's local dev server on :5180 | The two-film journey on main with both approved films; Val's device rows |
+| S5 #502 | Evidence matrix, device/human rows, release handoff | **#520**, merged `7fcce0f6` (2026-10-18 23:31Z); **#556** (hosted journey plays the approved second film), merged `7686554b`; **#559** (film cache), merged `4e54ea1e`; option draft `fix/screening-webkit-mp4-502-20261028` (MP4 first in WebKit; unmerged until Val's Safari row decides) | Deployed 23:31:50Z; #556 and #559 deployed 2026-10-19/20; worktrees retired; the register entry `ipic-journey-approved-film-502` was reconciled (retired) on 2026-10-24 | Val's device, human and production-smoke rows (packet below) |
 
 Integration order: #498 → #499 → #500 → #502. #501 runs in parallel, and until it delivers, #499, #500 and #502
 work on the fixtures. Shared hunks get one owner at a time: `ipic-screening-ui.js` and its CSS (#498 lifecycle, then
@@ -74,7 +79,10 @@ not device evidence. Self-review is not independent review.
 | Interrupted loads, offline, background/foreground | #502 | 4b | fixture-browser (#498): stall → Retry plays, offline → network → Retry plays, interrupted load quiet. Journey (emulated; headless Chromium keeps background tabs visible): the page marked hidden, its film paused as Safari pauses hidden media, its JavaScript frozen 8 s (CDP `Page.setWebLifecycleState`), then shown. The film had not moved while away; 254 ms after showing it had seeked, and its first **presented** frame (requestVideoFrameCallback) came 338 ms after showing, 59 ms from the room. Finding: disconnected beside a seat, `shared-seating-ui.js:51` throws every frame before the draw (seen in the 17:00Z #501 capture); the guard is in open PR #489, not duplicated | pass (emulated) | A phone lock and app switch are device rows (Val) |
 | Warm-up plus ten cycles of resources with a film change | #502 | 4b | Integrated soak on #520 `2df7a0a8` (#498 + #499 + #500 `b9d78b86` + #502), 17:15–17:20Z, load 29–53: warm-up plus 10 cycles, each changing the film from the short to the fixture (its own 640×360 texture on screen in 1.1–4.1 s). Startup per cycle: first presented frame 1.8–3.9 s after the trip in began (7.9 s on the cold first cycle). No growth in media elements, audio contexts, intervals, documents, textures or geometries; DOM nodes 5,923 → 5,941, listeners flat. Baseline on main: 11/11 with one film | pass | — |
 | Serving: MIME types and byte ranges on the intended path | #502 | 4b | Production, read-only, 2026-10-18 ~14:45Z: a 1 KB `Range` GET of each file on typesafe.place returned 206 with `accept-ranges: bytes`. Types: `video/mp4`, `video/webm`, `text/vtt; charset=utf-8`, `image/jpeg`. Total sizes match `sources.json`: 13,313,704; 9,289,288; 486; 93,773 | pass (types and ranges) | Val: the cache decision below |
-| Serving: caching | #502 | 4b (Val approved 2026-10-19) | Before: films and captions were `cache-control: private, no-store` with CDN `MISS`, because `vercel.json`'s non-image `/assets` rule (from #98, written for the gated `.js` and `.css`) also matched `.mp4`, `.webm` and `.vtt`; every visit re-downloaded 9–17 MB per film. Applied on `perf/screening-film-cache-20261019`: `/assets/ipic/screening/*.(mp4\|webm\|vtt)` get `public, max-age=3600, stale-while-revalidate=86400` and are excluded from the private rule; `server/tests/hardening-asset-cache.test.js` pins both (fails on main) | applied (pending deploy) | Read the production headers back after the merge |
+| Serving: caching | #502 | 4b (Val approved 2026-10-19) | Before: films and captions were `cache-control: private, no-store` with CDN `MISS`, because `vercel.json`'s non-image `/assets` rule (from #98, written for the gated `.js` and `.css`) also matched `.mp4`, `.webm` and `.vtt`; every visit re-downloaded 9–17 MB per film. Applied on `perf/screening-film-cache-20261019` (#559, merged `4e54ea1e`, deployed 2026-10-20 05:31Z): `/assets/ipic/screening/*.(mp4\|webm\|vtt)` get `public, max-age=3600, stale-while-revalidate=86400` and are excluded from the private rule; `server/tests/hardening-asset-cache.test.js` pins both. *2026-10-28, read-only, from this machine:* all 11 served files answer a 1 KB `Range` with 206, `accept-ranges: bytes`, the right type (`video/webm`, `video/mp4`, `text/vtt; charset=utf-8`, `image/jpeg`), that cache rule and `x-vercel-cache: HIT`; lengths equal `sources.json`; the served second-film WebM hashes to the approved `24f08a74` | **pass** (deployed and read back) | — |
+| Serving: startup, cold against warm cache | #502 | de | *2026-10-28, read-only, one laptop on home Wi-Fi, so a bound not a benchmark:* full GETs of the second film's WebM (12,940,976 bytes) from typesafe.place: a cache-busting query (CDN `HIT` all the same, since the rule caches by path) 0.49 s; the plain URL twice, 3.73 s then 1.13 s, both `HIT`. Time to first byte 0.18–0.26 s each time. In the browser the player starts on the first decoded frame, not the whole file: the integrated soak measured the first presented frame 1.8–3.9 s after the trip in (row above), and the cache turns a repeat visit's 9–17 MB download into a CDN hit within an hour | measured (bound) | Val's device rows record the first frame's delay on Safari and iPhone |
+| Compatibility and rollback on the current build | #502 | de | *2026-10-28 on main `91656cec` (#571, #650 and `v0.2.2` included):* `node --test server/tests/screenings.test.js server/tests/static-media.test.js server/tests/hardening-asset-cache.test.js` 19/19, 0 skipped, including the rollback guard (a checkpoint whose timeline and receipts name both approved films restores playing and stopped, and a resent start applies once), the historical 12-second fixture reset, the forged-timeline refusal, the standalone server's types and single byte ranges, and the cache rule. `REDIS_URL` on this session's own redis-server (port 62369, scratch dir): `server/tests/screenings-transport.test.js` + `screenings.test.js` 19/19, **0 skipped**: the real ticket and WebSocket gates in memory and Redis, and two Redis coordinators racing one start. No screening source changed between `v0.2.2` and `91656cec` | **pass** on the release candidate | — |
+| Safari's engine (Playwright WebKit 27.2 on macOS, Apple GPU): the second film | #502 | de | 2026-10-19: both encodes decode and seek at 1280 × 720; the MP4's AAC is audible through Web Audio, the WebM's Opus could not be measured that way (the game never routes film sound through Web Audio). *2026-10-28, `node preview/e2e/ipic-screen-engine-runner.mjs webkit` on the option branch:* `navigator.vendor` is `Apple Computer, Inc.`, `canPlayType` says `probably` for both; the player tries the **MP4 first**, one attempt, `decoded`, the film advances (9.52 → 11.65 s in 2 s) bound to the real screen material. `… chromium` on the same branch: Chromium 156 still tries the WebM first, decoded, advancing. On main the order is WebM first in every engine | engine only (not a device) | Val: macOS and iPhone Safari with Sound on (packet step 1 and 2). If sound fails on the WebM, the option PR is the fix |
 | Rollback: retained ids and durations, compatible build | #502 | 4b | Server test on #520: a checkpoint whose timeline and receipts name both films restores playing (the second film resumes) and stopped, and a resent start after the restore applies once. Older client, newer catalog: #499's unknown-film path (unsupported; no other film's frames or text). Unknown id in a checkpoint: fails closed (existing test) | pass | — |
 | Isolated Redis (diff-required for #499's server tests) | #502 | 4b | `REDIS_URL` on a private redis-server (port 16591, scratch dir): screenings transport + screenings tests 17/17, 0 skipped. Full server suite on the same Redis at load 138–154: 911/916, 4 failed (timeout-bound real-socket tests). The files with failures, rerun alone at load 65 (16:31Z): 33/33, 0 skipped | pass (the 4 failures were load) | — |
 | macOS Safari (real) | #502 | Val (device) | — | **unassigned device run** | Val runs it; the steps go in the #502 handoff |
@@ -86,9 +94,25 @@ not device evidence. Self-review is not independent review.
 
 ## Device and human runs for Val (not automated; emulation is not evidence)
 
-Run these on a build containing #513–#515: a Vercel preview of #515, or production after release. Use two accounts:
-the Jevica host account and any approved viewer. Record the device model, OS and browser version, and a pass, fail or
-note for each step. Screen recordings help.
+**The packet (2026-10-28).** Run on production (`v0.2.2`, main `f4dd959a` or later; nothing screening-related changed
+since). Use two accounts: the Jevica host account (the deployed `ipic:` grant) and any approved viewer. For each step
+record: the device model, OS and browser version, the film (`ipic-two-seats-v1` unless stated), the time, a pass, fail
+or note, and a screen recording where it helps. Paste the result as one comment on #502 (or #501 for listening, #500 for
+the focused view and voice chat); the matrix rows above get filled from it. `window.__riverScreening()` in the browser
+console reports the source that decoded (`source`, `attempts`), the local state and the focus framing (`focus.fits`).
+
+**What a failure means, and the prepared fix:**
+
+| Observed | Reason it may have | Prepared fix (nothing applied without Val's go) | Rollback |
+| --- | --- | --- | --- |
+| Safari or iPhone plays the second film with no sound after Sound on and a tap | WebKit chose the WebM (Opus); its sound was not measurable in the engine check | Draft `fix/screening-webkit-mp4-502-20261028`: the MP4 first where the vendor is Apple; WebM stays the fallback; regressions and both engine checks pass | Revert that PR; no media, id or server change |
+| "Play film" keeps appearing on iPhone | iOS refuses autoplay with sound until a gesture on the element's page | None needed: the status is truthful; Play film is the gesture | — |
+| The whole film does not fit in portrait | `focus.fits` is false: the panel's band is too short for the front row within 80° | #500's design package (portrait hint), in `2026-10-18-ipic-screening-viewing.md` | — |
+| A viewer joins late and sees black for more than ~5 s on cellular | Startup is the first decoded frame; the WebM is 12.9 MB and the MP4 16.9 MB; the CDN serves them | Record the time; no change prepared (HLS stays deferred) | — |
+| Dialogue is unclear over the music, or "Westheimer" sounds wrong | The synthetic voice, not the mix (whisper.cpp missed only that word, with or without music) | Recut as `ipic-two-seats-v2` with its own approval (dry run in `2026-10-18-ipic-second-short.md`); v1 keeps its id and duration | Choose v1 again in the chooser |
+
+**Rollback of the whole feature** stays as recorded under Release recommendation: configuration only (unset
+`RIVER_OAKS_SCREENING_HOSTS` and redeploy the same build), keeping every media id and duration. Never an older build.
 
 1. **macOS Safari (current), host account.** Walk into IPIC and sit in a recliner.
    - Choose the film in **Film**, then **Start film**: the screen shows the whole film with black mattes, the right way
@@ -111,7 +135,26 @@ note for each step. Screen recordings help.
 4. **Listening (after #501 is approved),** on headphones and a device speaker. Dialogue is intelligible over the music,
    and the movie and voice chat balance. Note whether the ±8 % sync correction is ever audible.
 5. **Production host smoke (only with Val's go).** The Jevica account starts the film in production, and a second
-   account sees it play. This is the first signed-in host action on production.
+   account sees it play. This is the first signed-in host action on production. **Exact steps:**
+   1. Both accounts signed in on typesafe.place; both walk into IPIC and sit (any recliner).
+   2. Host: in **Film**, choose "Two Seats, One Screen"; press **Start film**. Record the time and that the panel says
+      the film is playing, and `window.__riverScreening().source.src` (which encoding decoded).
+   3. Viewer, already seated: within 5 s the viewer's screen shows the same frame; **Sound on** after a tap. Record the
+      viewer's `__riverScreening().measuredDriftMs` a few seconds in (expected within ±400 ms, usually ±40 ms).
+   4. Host: **Pause** (both stop on the same frame), **Resume**, then **Stop** (both screens return to the idle screen).
+   5. Host leaves the auditorium with the film playing: the viewer's film pauses where the host left; nobody gets host
+      controls. Host returns and presses **Resume**.
+   6. Both **Stand up** and **Step outside**: no film sound in the lounge or street.
+   What to record: the Vercel deployment (`f4dd959a` or later), both device/browser versions, the film, each step's time
+   and result, the two diagnostics above. **If anything fails,** Stop the film (host) and record it; the rollback is the
+   configuration one above, and nothing else in production changes.
+6. **Chooser on devices (#499).** With the host account on iPhone Safari and macOS Safari: the **Film** select opens,
+   lists exactly the two approved films with length, sound and captions, and a poster; the fixture is absent. Choose
+   with touch (iPhone), with the keyboard (macOS: Tab to Film, arrow keys, Tab to Start film, Enter) and with VoiceOver
+   (both: the select announces its label and the chosen film; Start film announces its name). Record each. At 390 and
+   320 px wide the select and Start film must be uncovered and at least 44 px tall; a screenshot is enough.
+7. **Listening (#501), the form.** On named headphones and a named device speaker, playing the production WebM or MP4
+   (the form and the cue times are in `2026-10-18-ipic-second-short.md`, "Listening packet").
 
 ## Film cache (Val approved 2026-10-19; applied on `perf/screening-film-cache-20261019`)
 
@@ -176,6 +219,30 @@ Val approved each landing, and each went through `pnpm run land <pr>`. Every mer
   would then refuse a saved timeline that names `ipic-two-seats-v1`. Instead, ship a compatible build that drops it
   from `screeningChoices` and keeps the entry, its venue and its duration.
 
+## Release recommendation (2026-10-28, version-bound, for #359)
+
+- **Candidate:** **`v0.2.2`**, tag object `f4dd959a88ddcdf242d9e79c73d75bb7e61b2aa2` (merge of #712, 2026-10-27), which
+  main `91656cec` extends without any change to `preview/src/ipic-screening*.js`, `preview/src/screening-contract.js`,
+  `server/screenings.js`, `vercel.json` or `preview/public/assets/ipic/screening/`. It contains every screening
+  package: #513, #514, #515, #520, #516, #547, #550, #555, #556, #559, **#571** (`167048c3`) and **#650** (`2da76e1f`).
+  Production has deployed each merge in turn; the deployed build is this candidate or a later main that does not touch
+  screening.
+- **Readiness:** **engineering-ready with both approved films, on the release candidate.** On `91656cec`: the server
+  screening, serving and cache suites pass 19/19; the Redis transport suite passes 19/19 with zero skips; the focused
+  client suites pass 79/79 (option branch, which changes nothing outside WebKit); `node preview/e2e/ipic-screen-runner.mjs`
+  passes on Metal; `pnpm run test:screening` and core `pnpm run verify` results are in the closeout ledger.
+  **Two-film experience-ready: not yet.** It needs the rows only a person on a device can fill: macOS and iPhone Safari
+  playback and sound, other GPUs, VoiceOver and touch, listening, the film against voice chat, and a comfort review of
+  the focused view. **Production-delivered: code and media yes; the signed-in host smoke no** (packet step 5).
+- **Authority still needed, all Val's:** (1) run the packet, or name who does; (2) if Safari plays the WebM silently,
+  land the option PR (a code change, so a new deployment of a compatible build); (3) if listening fails, approve a v2
+  recut; (4) the production smoke itself. No grant, environment or media change is requested.
+- **Compatible rollback:** unchanged from 2026-10-18/19: configuration only (`RIVER_OAKS_SCREENING_HOSTS` unset and a
+  redeploy of the same build) pauses and prevents films without touching checkpoints; every media id and duration stays
+  in `SCREENING_MEDIA`; the server test on this candidate restores timelines and receipts naming both approved films,
+  playing or stopped. Withdrawing the second film means dropping it from `screeningChoices` while keeping its entry,
+  never reverting #547. Do not redeploy a build from before #429 (checkpoint v11 and the original short's id).
+
 ## Boundaries
 
 No deployment, production configuration or grant change, signed-in host action, media publication, paid service,
@@ -219,3 +286,10 @@ model co-author line. Merges go through `pnpm run land <pr>`, only after Val app
   - the fixture-browser screen runner passed 8/8.
 
   The committed two-browser journey gains the second approved film (19/19 locally).
+- **2026-10-28 (closeout, `claude:river-oaks-de`):** #571 and #650 confirmed merged and inside `v0.2.2`; the register's
+  `ipic-journey-approved-film-502` was already reconciled on 2026-10-24. Re-ran the server screening, serving, cache and
+  isolated-Redis transport suites on main `91656cec` (19/19 and 19/19, 0 skipped). Read production serving back (11 files
+  206, cached, hash `24f08a74`). Wrote the WebKit MP4 option on `fix/screening-webkit-mp4-502-20261028` with a red-first
+  regression and an engine runner (WebKit tries the MP4, Chromium the WebM). Upgraded this section into Val's device and
+  smoke packet, added the chooser device checklist (#499), the listening packet and v2 dry run (#501's ledger) and the
+  design-decision package (#500's ledger), and drafted the version-bound recommendation above for #359.
