@@ -143,3 +143,99 @@ Logs under the worktree's `.runtime/evidence-640/` (not committed). Branch
   profiles, input-to-pose and contact alignment), the on-demand `crime-night` journey (two browsers
   in the south service lane at the latest authored hour), `pnpm run verify full` with isolated
   Redis from a clean detached snapshot.
+
+## Increment 5 (2026-10-28, session `claude:river-oaks-3d (c317fd0a)`, worktree `../river-oaks-onfoot-640-inc5-3d`)
+
+Goal: Val, 2026-10-28, the #599 follow-up prompt ("Resume #599 from its latest exact candidate…").
+Branch `feat/onfoot-encounter-640-inc5-20261028` from #710's head `b7df2c6a`, draft PR stacked on
+#710. Takeover: d1 (c6ab037e) last wrote 2026-10-27T18:26Z and its lease lapsed 13:00Z; ae
+(68138fda) had planned the 13:00Z claim but last wrote 09:08Z. d1's branch
+`feat/onfoot-encounter-640-inc5-20261027` (no commits past `b7df2c6a`, no upstream) and worktree
+`../river-oaks-onfoot-640-inc5` are untouched. The four handoff files were copied byte-identical
+(sha256 `5d8ad3aa…` crime-workload.js, `8158f9ea…` crime-night.js, `ca336764…`
+combat-timing.test.js; shared-runner.js and package.json wiring; `docs/crime.md` with ae's run-2
+paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs under
+`.runtime/evidence-640/` (not committed) and the session scratchpad.
+
+- **Focused server suites with an isolated Redis** (`redis://127.0.0.1:16603/3`, this session's
+  own server): crime, crime-phases, police, police-capture, police-world, crime-transport,
+  world-policy, world-policy-transport, resident-reactions, redis-room, redis-backend:
+  **100 pass, 0 fail, 0 skipped** on `aeb95f85` (80 s). These are the server proofs for the #599
+  rows "policy off in every phase", "retry/reconnect/writer takeover exactly once", "surrender and
+  resisted capture", "stars held under observation" and "search after sight loss".
+- **`RIVER_OAKS_COMBAT_EVIDENCE=… node --test preview/tests/combat-timing.test.js`**: 1/1 on
+  `aeb95f85`; the 30/60/120 Hz × RTT 0/100/200 ms table in `docs/crime.md` is reproduced
+  (deterministic seeds).
+- **Crime workload, `main` `6f85ba9b` vs `aeb95f85`** (sustained mode, 2 × 20 s per tier, load
+  12–17 with other sessions on the host; `main` run in a clean detached snapshot with the harness
+  copied in and removed after, so its receipt reads `dirty`): step p95 1.46–1.89 ms on `main`,
+  1.49–2.23 ms on the branch (one 1-player outlier at 6.12 ms under host noise); step max
+  115–222 ms on both (cold route searches, 3–5 steps over 50 ms per run in both arms); snapshot
+  60,302 / 67,526 / 74,722 / 89,073 bytes on `main` against 61,848 / 69,072 / 76,268 / 90,619
+  (+1,546 per tier, the published combat state); checkpoint −50 bytes per tier; police at the cap
+  of 6 from 8 players; identical admissions and outcomes (8/160/320/640 strikes, 8/80/80/80 hits).
+  Report `data/reports/crime-workload.json` (branch, with `main` embedded as `baseline`).
+- **Zone geometry probe** (`createWalkingEnvironment` on `district.json` + vegetation, chest-height
+  `hasSightLine`): inside the south service lane 0 of 27,200 free points are hidden from the
+  officer post and no pair of free points within 3–12 m is blocked; inside Westcreek Lane 0 of
+  19,320 and none. Leaving a zone cancels pursuit. So "break sight around real geometry → search →
+  escape" cannot be shown in a browser in either authored zone; it stays server-proven
+  (police.test.js "sight loss searches the last seen point…", police-capture.test.js "a searching
+  officer looks around the last-seen point…", "a watched wanted player keeps their stars; out of
+  sight they cool off"). Routed to zone authoring as a decision for Val (below).
+- **Three-browser encounter journey** `preview/e2e/crime-encounter.js` (new, on demand through
+  `RIVER_OAKS_SHARED_JOURNEY=crime-encounter`, not in the default journey list; wired in
+  `preview/e2e/shared-runner.js`): owner page for the rules, a visitor and a witness with
+  `recordVideo` contexts, per-frame samplers on both, raw-command exactly-once challenges, socket
+  drop, window blur with W held, emergency off mid-pursuit, resisted and voluntary capture.
+  Described with the run-6 numbers in `docs/crime.md` ("The encounter in one run, three browsers").
+  Six runs on `aeb95f85` + the journey, each under the shared browser lock with `caffeinate -s`,
+  logs and receipts in `.runtime/evidence-640/crime-encounter-run{1..6}-*`:
+  1. 09:22Z fail, harness: "Walk then sprint on the local figure: 3.19 then 3.2 m/s" — the walk
+     analysis window (`t('walk:up') + 1500`) overlapped the sprint hold; window moved to +850 ms
+     with the motion JSON in the message.
+  2. 09:25Z fail, harness: "A timed evade (U) beats the rival's counter: seen null ×3" — the raw
+     duplicate-attack challenge ran before the keyboard strike, its star brought the officer in and
+     the rival's counter never targeted the visitor during the loop. The challenge moved to the
+     third approach (after the third strike) and the check now expects 25 damage / 1 star.
+  3. 09:31Z fail, harness: after emergency off the test waited for the HUD line "Nobody can be
+     harmed", which the HUD shows only beside a rival; the visitor stood by a resident. Dropped;
+     the town state (no unit on the visitor, nothing pending) is the proof.
+  4. 09:33Z fail, harness: "Emergency off during null" — no officer was on the visitor when the
+     switch flipped because the resident stood beyond the lane post's sight. The visitor now walks
+     back within sight before the pursuit is awaited.
+  5. 09:35Z fail, harness: the post-off movement proof used a server travel to an unwalkable spot.
+     Replaced by a real W hold reading `pose.speed > 0.3`.
+  6. **09:36–09:38Z pass, 31/31 checks in 125 s** (Apple M5 Max, ANGLE Metal, full rendering,
+     frame time p50 35 / p95 54 ms with three browsers; host load 10–17). Receipt
+     `data/reports/crime-encounter-shared.json` (sha256 `1a8d3f0c…`, copied to
+     `.runtime/evidence-640/crime-encounter-run6-receipt.json`); videos
+     `output/playwright/crime-encounter-video/crime-encounter-run6-{visitor,witness}.webm`
+     (`3ff709d0…`, `d108fcdb…`, 1280×860 at 25 fps, 125 s; git-ignored, kept on this host);
+     21 screenshots `output/playwright/crime-encounter-*.png`. Rows: movement pass, fight and
+     resisted capture pass, grab evaded pass, civilian reaction pass, policy off mid-pursuit pass,
+     exactly-once pass, reconnect mid-pursuit pass, focus loss pass, voluntary surrender pass;
+     not-run with reasons: search after sight loss, stars under observation, altitude/safe-ground
+     during windup (server-proven). No page errors on any of the three pages.
+- **What the recordings show** (frame sheets extracted with ffmpeg, read by this session, not a
+  human disposition): the visitor's figure walks, sprints, turns, strafes and backs up on the
+  crossing with feet planted and the chase camera following smoothly; the witness in first
+  person sees the same figure cross its view at the same cadence; the strike, the rival's flinch,
+  the officer's reach and the hands-up pose read on the witness's screen within a frame or two
+  of the town. Two things worth a human eye: the published HUD latency under three browsers (351
+  ms key → strike on this host, 51 ms when crime-night ran alone) and the chase camera sitting in
+  tree foliage when the visitor stands under the lane's trees (visible in the resident capture).
+  The hour is 19:00 daylight (no authored night sky), as ae found.
+- **`pnpm run verify` core on the uncommitted increment-5 tree** (`aeb95f85` dirty, 14:42–14:50Z,
+  receipt `.runtime/agent/core.json`, log `verify-core-inc5.log` in the session scratchpad):
+  **passed** — tooling 289/289; preview 4307 tests, 4306 pass, 1 existing skip; server 1320 tests,
+  1042 pass, 0 fail, 278 Redis-gated skips (no `REDIS_URL` in the core profile; the focused
+  100/100 run above covers the crime/police/transport suites with this session's isolated Redis);
+  desktop 132, 127 pass, 5 platform skips; then build, Python, demo and secrets. `pnpm run verify
+  full` (Redis, dependency audit, browser journeys) was **not run** on this tree; the three browser
+  runs above ran under the shared browser lock on their own.
+- Gaps: no human has watched the recordings (the disposition row stays open); the published
+  strike latency under three browsers on one host (351 ms) is a measurement, not a budget;
+  concealment escape needs zone geometry; the hour is daylight at 19:00.
+- Next: draft PR stacked on #710; hosted checks; `pnpm run verify full` from a detached snapshot
+  of the pushed head with isolated Redis; the #599 matrix (#731) consumes these receipts.
