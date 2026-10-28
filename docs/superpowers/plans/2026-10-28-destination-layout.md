@@ -29,4 +29,6 @@ Results (2026-10-28, worktree head `1781924a` plus the uncommitted files above):
 
 Gaps and later increments: geographic reference input for city-kit streets (the Python adapter serves the Studio compiler only; kit streets are axis-aligned), World Studio opening of a city-kit plan, a plaza/furniture derivation step (benches, lamps and tree rows are still typed per item), and a Studio-side bridge from the neighborhood compiler's parcels to kit blocks.
 
-Next step: draft PR (hosted Verify), review, then land when authorized. Increment 2 candidate: geographic reference input for kit streets.
+Delivery: draft PR #730 (https://github.com/BunsDev/river-oaks/pull/730), source head `7caa2cd858d6558249bed17efde5e76b8b8fa0da` (signed; the core receipt above belongs to that tree). Hosted Verify pending at the time of this note.
+
+Next step: hosted Verify, review, then land when authorized. Increment 2 candidate: geographic reference input for kit streets.
