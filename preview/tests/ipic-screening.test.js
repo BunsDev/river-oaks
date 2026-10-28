@@ -33,11 +33,11 @@ function fakeMedia({ canPlay = type => type.startsWith('video/webm') ? 'probably
   return media;
 }
 const view = (more = {}) => ({ venueId: 'ipic', screeningId: 'ipic-e1-1', mediaId: FILM.id, status: 'playing', revision: 1, epoch: 'e1', positionMs: 0, anchorServerTimeMs: 100_000, durationMs: FILM.durationMs, hostId: 'host', ...more });
-function setup({ media = fakeMedia(), offset = 0, probe = async () => true } = {}) {
+function setup({ media = fakeMedia(), offset = 0, probe = async () => true, preferType = null } = {}) {
   const local = { now: 50_000 };
   const clock = createServerClock({ now: () => local.now });
   clock.observeSync(local.now + offset, local.now, local.now); // a zero-latency sync: server = local + offset
-  const player = createScreeningPlayer({ media, clock, now: () => local.now, probe });
+  const player = createScreeningPlayer({ media, clock, now: () => local.now, probe, preferType });
   return { media, clock, player, local };
 }
 
@@ -640,4 +640,38 @@ test('Play film during a seek of a decoded film keeps it on the screen; an undec
   Object.assign(g.media, { seeking: true, readyState: 1 });
   void g.player.unlock();
   assert.equal(g.player.stats().state, 'loading', 'no frame of this source has decoded');
+});
+
+test('where the engine is WebKit, the MP4 is tried first and the WebM stays the fallback (#502)', async () => {
+  const { preferredScreeningType, screeningSources } = await import('../src/ipic-screening.js');
+  // Safari on macOS, and every browser on iOS, report Apple as the vendor; Chromium and Firefox do not.
+  const safari = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.1 Safari/605.1.15';
+  const crios = 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/142.0.0.0 Mobile/15E148 Safari/604.1';
+  const chrome = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36';
+  assert.equal(preferredScreeningType({ vendor: 'Apple Computer, Inc.', userAgent: safari }), 'video/mp4');
+  assert.equal(preferredScreeningType({ vendor: 'Apple Computer, Inc.', userAgent: crios }), 'video/mp4', 'Chrome on iOS is WebKit too');
+  assert.equal(preferredScreeningType({ vendor: 'Google Inc.', userAgent: chrome }), null, 'Chromium says AppleWebKit in its user agent but is not WebKit');
+  assert.equal(preferredScreeningType({ vendor: '', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.7; rv:146.0) Gecko/20100101 Firefox/146.0' }), null);
+  assert.equal(preferredScreeningType(undefined), null, 'no navigator (tests) keeps catalog order');
+  const both = fakeMedia({ canPlay: () => 'probably' });
+  const kinds = sources => sources.map(source => source.type.split(';')[0]);
+  assert.deepEqual(kinds(screeningSources(ORIGINAL, both, 'video/mp4')), ['video/mp4', 'video/webm']);
+  assert.deepEqual(kinds(screeningSources(ORIGINAL, both, null)), ['video/webm', 'video/mp4'], 'catalog order everywhere else');
+  assert.deepEqual(kinds(screeningSources(SCREENING_MEDIA['ipic-two-seats-v1'], both, 'video/mp4')), ['video/mp4', 'video/webm'], 'the second film too');
+  assert.deepEqual(kinds(screeningSources(ORIGINAL, fakeMedia({ canPlay: type => type.startsWith('video/webm') ? 'probably' : '' }), 'video/mp4')), ['video/webm'], 'a preference never adds an encoding the browser refuses');
+  // The player: the MP4 loads first; a decode failure falls back to the WebM once; the diagnostics name what decoded.
+  const f = setup({ media: fakeMedia({ canPlay: () => 'probably' }), offset: 51_000, preferType: 'video/mp4' });
+  f.player.apply(filmView(ORIGINAL));
+  assert.equal(f.media.calls.loaded[0], ORIGINAL.sources[1].src, 'the MP4 first');
+  f.media.fail(3);
+  assert.deepEqual(f.media.calls.loaded, [ORIGINAL.sources[1].src, ORIGINAL.sources[0].src], 'then the WebM, once');
+  f.media.readyState = 4; f.media.emit('canplay'); f.player.tick(); await tick();
+  assert.equal(f.player.stats().state, 'playing');
+  assert.deepEqual(f.player.stats().attempts.map(a => [a.type.split(';')[0], a.result]), [['video/mp4', 'decode'], ['video/webm', 'decoded']]);
+  f.player.retry();
+  assert.equal(f.media.calls.loaded.at(-1), ORIGINAL.sources[1].src, 'Retry begins again with the MP4');
+  // Without a preference the same player keeps the catalog order (every other engine, and hosted CI).
+  const g = setup({ media: fakeMedia({ canPlay: () => 'probably' }), offset: 51_000 });
+  g.player.apply(filmView(ORIGINAL));
+  assert.equal(g.media.calls.loaded[0], ORIGINAL.sources[0].src, 'the WebM first elsewhere');
 });
