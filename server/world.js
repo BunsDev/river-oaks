@@ -719,8 +719,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (!message.vehicle && player.cycling && time-(player.cycledAt??0)<CYCLE_GRACE_MS) return {ok:true,player:publicPlayer(player)};
     if (message.vehicle==='bicycle' && !player.cycling) return correction('bike_required');
     if (message.vehicle && message.vehicle!=='bicycle' && !isJevicaOwner(player.id)) return correction('exclusive_vehicle');
-    if (message.vehicle && altitude>0.1) return correction('invalid_pose');
-    if (altitude>0 && (!canFlyAs(player.id,player.appearance) || assignedUpper)) return correction('flight_not_allowed');
+    // Only a vehicle that flies (the landowner hover coach) carries altitude; its flight is the
+    // coach's, not the rider's appearance's, but no one flies from an upper interior level.
+    const flyingVehicle=Boolean(message.vehicle&&VEHICLES[message.vehicle].flies);
+    if (message.vehicle && altitude>0.1 && !flyingVehicle) return correction('invalid_pose');
+    if (altitude>0 && (!flyingVehicle && !canFlyAs(player.id,player.appearance) || assignedUpper)) return correction('flight_not_allowed');
     const ground = movementEnvironment.groundAt(position[0],-position[1]);
     if (Math.abs(position[2]-ground) > 0.2) return correction('invalid_ground');
     const dt = Math.max(0,Math.min(1,(time-player.poseAt)/1000));
@@ -1416,7 +1419,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           || interiorLevels.get(player.levelId)?.plan.buildingId===player.buildingId)
         && (player.rideMeters===undefined || nonnegative(player.rideMeters) && player.rideMeters<=1e6)
         && (player.cycling==null || typeof player.cycling==='string' && rackSlots.has(player.cycling) && player.vehicle==='bicycle')
-        && (player.vehicle==null || (player.vehicle==='bicycle' ? player.altitude<=0.1 : isJevicaOwner(player.id) && vehicleKind(player.vehicle) && player.altitude<=0.1))
+        && (player.vehicle==null || (player.vehicle==='bicycle' ? player.altitude<=0.1 : isJevicaOwner(player.id) && vehicleKind(player.vehicle) && (player.altitude<=0.1 || Boolean(VEHICLES[player.vehicle].flies))))
         && nonnegative(player.altitude) && player.altitude<=environment.flightCeiling && Number.isFinite(player.poseAt)
         && (player.gesture===undefined && player.gestureUntil===undefined
           || (player.gesture===null || SHOWN_GESTURES.includes(player.gesture)) && nonnegative(player.gestureUntil))
@@ -1491,7 +1494,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         }
         // Older signed checkpoints allowed every player to fly. Keep their
         // account and appearance, but restore non-Jevica players on safe ground.
-        if(player.altitude>0&&!canFlyAs(player.id,player.appearance)){
+        if(player.altitude>0&&!canFlyAs(player.id,player.appearance)&&!(player.vehicle&&VEHICLES[player.vehicle]?.flies)){
           const grounded=createWalkingState(recoveredEnvironment,[east,north]).position;
           player.position=[grounded[0],-grounded[2],recoveredEnvironment.groundAt(grounded[0],grounded[2])];
           player.altitude=0;

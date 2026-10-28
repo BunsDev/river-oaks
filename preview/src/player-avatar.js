@@ -51,7 +51,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     <div class="player-actions"><button id="player-camera" type="button" aria-pressed="true"><span data-camera-label>Third person</span><kbd>V</kbd></button></div>
     <section class="vehicle-garage" aria-label="Jev chauffeur">
       <div class="vehicle-garage-title"><span>Your chauffeur</span><span aria-hidden="true">✧</span></div>
-      <label for="player-vehicle">Your ride</label><select id="player-vehicle"><option value="rolls">Pink Rolls-Royce</option><option value="motorcycle">Rose motorcycle</option></select>
+      <label for="player-vehicle">Your ride</label><select id="player-vehicle"><option value="rolls">Pink Rolls-Royce</option><option value="motorcycle">Rose motorcycle</option><option value="hover">Landowner hover coach</option></select>
       <div class="player-actions"><button id="player-carriage" type="button" aria-keyshortcuts="Q"><span>Call Jev</span><kbd>Q</kbd></button><button id="player-ride" type="button" aria-keyshortcuts="G"><span data-ride-label>Ride with Jev</span><kbd>G</kbd></button></div>
       <button id="player-chauffeur" type="button" aria-pressed="false">Jev smart drive</button><div class="player-actions"><button id="player-drive-pause" type="button">Pause ride</button><button id="player-drive-park" type="button">Brake & park</button></div><div class="player-drive-pad" aria-label="Driving directions"><button type="button" data-drive="forward">Accelerate ↑</button><button type="button" data-drive="left">Steer ←</button><button type="button" data-drive="reverse">Reverse ↓</button><button type="button" data-drive="right">Steer →</button></div><p id="player-drive-status" role="status" aria-live="polite">Jev is ready</p>
     </section>
@@ -89,7 +89,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   bindPageLifecycle({ release: holdRide, signal: lifetime.signal });
   const rideButton=panel.querySelector('#player-ride');
   rideButton.addEventListener('click',async()=>{
-    if(carriage.riding)status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';
+    if(carriage.riding){if(carriage.airborne){carriage.land();status.textContent='The coach is landing. Press G again once it is down.';}else status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';}
     else status.textContent=carriage.board()?'Ride with Jev, or give directions with W/S and A/D.':'Walk closer to your vehicle before boarding.';
   });
   host.addEventListener('keydown',event=>{

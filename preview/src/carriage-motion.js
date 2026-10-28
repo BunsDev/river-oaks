@@ -38,6 +38,9 @@ export function fitCarriageToGround(state,groundAt,wheelTreads) {
   const [x,,z]=state.position,c=Math.cos(state.yaw),s=Math.sin(state.yaw),scale=state.scale??1;
   const spec=VEHICLES[state.vehicle],halfBase=(spec?.wheelbase??3.44)/2,halfTrack=spec?Math.max(.3,...spec.wheels.map(w=>Math.abs(w[2]))):1.16;
   state.position[1]=groundAt(x,z);
+  // Airborne, the hull hangs level over the ground it follows; position[1] stays that ground
+  // (the shared pose carries altitude separately) and nothing presses on the suspension.
+  if((state.altitude??0)>.1){state.roll=0;state.pitch=0;state.wheelOffsets=(spec?.wheels??CARRIAGE_WHEELS).map(()=>0);return state;}
   state.roll=Math.atan((groundAt(x+c*halfBase*scale,z-s*halfBase*scale)-groundAt(x-c*halfBase*scale,z+s*halfBase*scale))/(2*halfBase*scale));
   state.pitch=-Math.atan((groundAt(x+s*halfTrack*scale,z+c*halfTrack*scale)-groundAt(x-s*halfTrack*scale,z-c*halfTrack*scale))/(2*halfTrack*scale));
   state.wheelOffsets=(spec?.wheels??CARRIAGE_WHEELS).map(()=>0);
@@ -66,6 +69,35 @@ export function stepCarriage(state,environment,input,delta) {
     state.position=next.position;state.yaw=yaw;state.distance+=travelled;
   }
   fitCarriageToGround(state,environment.groundAt,environment.wheelTreads);
+  return state;
+}
+
+// Whether a flying vehicle's hull is clear of buildings and trees at its altitude: the
+// hull's plan (front is -X) sampled at two heights above the ground beneath each point.
+export function hoverClear(state,environment) {
+  const spec=VEHICLES[state.vehicle];if(!spec?.flies)return false;
+  const fly=environment.canFly??((x,_height,z)=>environment.isFree(x,z)),c=Math.cos(state.yaw),s=Math.sin(state.yaw),hl=spec.length/2,hw=spec.width/2;
+  for(const [a,b] of [[0,0],[-hl,0],[hl,0],[0,-hw],[0,hw],[-hl*.7,-hw],[-hl*.7,hw],[hl*.7,-hw],[hl*.7,hw]]) {
+    const x=state.position[0]+a*c+b*s,z=state.position[2]-a*s+b*c,ground=environment.groundAt(x,z);
+    for(const height of [.4,spec.bodyHeight])if(!fly(x,ground+state.altitude+height,z))return false;
+  }
+  return true;
+}
+
+// Lift (Space up, C down, as in flight.js) moves a flying vehicle's altitude target at 4 m/s;
+// the hull follows at up to 3 m/s, under the server's lift budget, never into a blocked sky
+// and never above the flight ceiling. A landing vehicle ignores lift until it is down.
+export function stepHoverLift(state,environment,input,delta) {
+  const spec=VEHICLES[state.vehicle];if(!spec?.flies||!Number.isFinite(delta)||delta<=0)return state;
+  const dt=Math.min(.08,delta),limit=environment.flightCeiling??32,lift=Math.max(-1,Math.min(1,Number(input?.lift)||0));
+  state.altitude??=0;state.liftTarget??=0;state.verticalSpeed??=0;
+  if(state.landing)state.liftTarget=0;else if(lift)state.liftTarget=Math.max(0,Math.min(limit,state.liftTarget+lift*4*dt));
+  const difference=state.liftTarget-state.altitude,desired=Math.sign(difference)*Math.min(3,Math.sqrt(6*Math.abs(difference)));
+  state.verticalSpeed+=Math.max(-3*dt,Math.min(3*dt,desired-state.verticalSpeed));
+  const next=Math.max(0,Math.min(limit,state.altitude+state.verticalSpeed*dt));
+  if(next>state.altitude&&!hoverClear({...state,altitude:next},environment)){state.verticalSpeed=0;state.liftTarget=state.altitude;return state;}
+  state.altitude=next;
+  if(state.altitude<=.02&&state.liftTarget<=0){state.altitude=0;state.verticalSpeed=0;state.landing=false;}
   return state;
 }
 

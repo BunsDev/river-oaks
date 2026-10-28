@@ -21,7 +21,7 @@ test('Pink Rolls-Royce has a compact four-wheel footprint and full-height cabin'
   assert.ok(size.x<4.9&&size.z<1.7&&size.y>1.8,`compact dimensions ${size.toArray()}`);
  } finally { model.dispose(); }
 });
-for(const kind of ['rolls','motorcycle'])test(`${kind}: model, wheels and seats use real-scale vehicle dimensions with bounded rendering`,()=>{
+for(const kind of ['rolls','motorcycle','hover'])test(`${kind}: model, wheels and seats use real-scale vehicle dimensions with bounded rendering`,()=>{
  const model=createRoadVehicle(kind),spec=VEHICLES[kind];
  assert.equal(model.wheels.length,spec.wheels.length);
  assert.equal(model.wheelTreads.length,spec.wheels.length);
@@ -35,10 +35,10 @@ for(const kind of ['rolls','motorcycle'])test(`${kind}: model, wheels and seats 
  model.dispose();assert.equal(model.object.children.length,0);
 });
 
-import { fitCarriageToGround, stepCarriage } from '../src/carriage-motion.js';
+import { fitCarriageToGround, stepCarriage , stepHoverLift, hoverClear } from '../src/carriage-motion.js';
 import { carriageContains, findCarriageParking } from '../src/carriage-parking.js';
 import { readFileSync } from 'node:fs';
-for(const kind of ['rolls','motorcycle'])test(`${kind}: parking, swept driving, steering tyre contact and exit envelope use its own size`,()=>{
+for(const kind of ['rolls','motorcycle','hover'])test(`${kind}: parking, swept driving, steering tyre contact and exit envelope use its own size`,()=>{
  const world=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url))),model=createRoadVehicle(kind);
  const pose={position:[world.walkSpawn[0],0,-world.walkSpawn[1]],flying:false,altitude:0};
  const parked=findCarriageParking(world,pose,[],1,false,kind);assert.ok(parked,'parking near the actual spawn');
@@ -118,5 +118,74 @@ test('the plaza bicycle is a two-wheel frame under two metres with a saddle at t
   assert.ok(model.steering,'the fork steers');
   model.updateSteering(.3);
   assert.ok(Math.abs(model.steering.rotation.y-.3*.6)<1e-9,'the fork turns like the motorcycle');
+ } finally {model.dispose();}
+});
+test('the landowner hover coach stands on unseen contact tyres, floats its pods and carries a rotor and lift light',()=>{
+ const spec=VEHICLES.hover,model=createRoadVehicle('hover');
+ try {
+  assert.equal(spec.hover,true);assert.equal(spec.steeredWheels,0);assert.equal(spec.maxSpeed,9);
+  assert.equal(vehicleKind('hover'),'hover');
+  assert.equal(model.wheels.length,4);assert.equal(model.spinners.length,0);
+  // Every ground contact is road rubber the ground fitter samples, and none of it is drawn.
+  for(const wheel of model.wheels){const meshes=[];wheel.traverse(m=>{if(m.isMesh)meshes.push(m);});assert.equal(meshes.length,1);assert.equal(meshes[0].material.name,'Road tyre rubber');assert.equal(meshes[0].visible,false);}
+  assert.ok(model.wheelTreads.every(samples=>samples.length>50));
+  // The visible pods float: no paint comes within 25 cm of the ground.
+  let lowestPaint=Infinity;model.object.updateMatrixWorld(true);const point=new THREE.Vector3();
+  model.object.traverse(m=>{if(!m.isMesh||!m.visible||m.material.name!=='Seafoam pearl paint')return;const p=m.geometry.attributes.position;for(let i=0;i<p.count;i++){point.fromBufferAttribute(p,i).applyMatrix4(m.matrixWorld);lowestPaint=Math.min(lowestPaint,point.y);}});
+  assert.ok(lowestPaint>.25,`paint reaches ${lowestPaint}`);
+  const size=new THREE.Box3().setFromObject(model.object).getSize(new THREE.Vector3());
+  assert.ok(size.y>2.2&&size.y<spec.height,`height ${size.y}`);
+  assert.ok(size.z>2.9&&size.z<3.3,`rotor span ${size.z}`);
+  const rotor=model.object.getObjectByName('Hover coach rotor'),light=model.object.getObjectByName('Hover coach lift light');
+  assert.ok(rotor&&light,'rotor and lift light exist');
+  let lit=0;light.traverse(m=>{if(m.isMesh){lit++;assert.equal(m.castShadow,false);assert.equal(m.userData.aoExclude,true);}});assert.ok(lit>0);
+  // The rotor idles when parked, spins up under way, and holds still under reduced motion.
+  for(let now=0;now<=3000;now+=16)model.animate(now,0);
+  const idle=rotor.rotation.y;model.animate(3016,0);const idleStep=rotor.rotation.y-idle;assert.ok(idleStep>0,'an idling rotor turns');
+  for(let now=3032;now<=6000;now+=16)model.animate(now,9);
+  const fast=rotor.rotation.y;model.animate(6016,9);const fastStep=rotor.rotation.y-fast;assert.ok(fastStep>idleStep*2,`under way ${fastStep} vs idle ${idleStep}`);
+  for(let now=6032;now<=14000;now+=16)model.animate(now,0,true);
+  const still=rotor.rotation.y;model.animate(14016,0,true);assert.ok(Math.abs(rotor.rotation.y-still)<5e-3,'reduced motion stops the rotor');
+  model.updateSteering(.3);assert.ok(Math.abs(model.steering.rotation.z+.3*2.2)<1e-9,'the yoke turns like the wheel');
+  assert.ok(model.object.getObjectByName('Chrome jewel glints'));
+ } finally {model.dispose();assert.equal(model.object.children.length,0);}
+});
+test('the hover coach parks on the same streets as the car and keeps both lounge seats inside its envelope',()=>{
+ const world=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url))),spec=VEHICLES.hover;
+ const pose={position:[world.walkSpawn[0],0,-world.walkSpawn[1]],flying:false,altitude:0};
+ const parked=findCarriageParking(world,pose,[],1,false,'hover');assert.ok(parked,'parking near the spawn');
+ assert.equal(parked.vehicle,'hover');
+ for(const seat of [spec.driverSeat,spec.passengerSeat])assert.ok(carriageContains({vehicle:'hover',position:[0,0,0],yaw:0},seat[0],seat[1],seat[2]),`seat ${seat} inside the envelope`);
+ assert.notDeepEqual(spec.driverSeat,spec.passengerSeat);
+ assert.equal(spec.driverSeat[1]-spec.driverFloor,spec.passengerSeat[1]-spec.passengerFloor);
+});
+
+test('the hover coach climbs with lift, flies level, stops under a blocked sky, respects the ceiling and lands before anyone steps out',()=>{
+ const model=createRoadVehicle('hover'),spec=VEHICLES.hover;
+ try {
+  let sky=Infinity;
+  const env={groundAt:()=>0,isFree:()=>true,canFly:(x,height,z)=>height<sky,flightCeiling:20,wheelTreads:model.wheelTreads,canOccupy:next=>(next.altitude??0)>.1?hoverClear(next,env):true};
+  const state={vehicle:'hover',position:[0,0,0],yaw:0,speed:0,distance:0,steering:0,altitude:0};
+  fitCarriageToGround(state,env.groundAt,model.wheelTreads);
+  assert.ok(state.wheelOffsets.some(offset=>offset!==0)||state.wheelOffsets.every(offset=>Math.abs(offset)<1e-9),'grounded fit ran');
+  assert.equal(VEHICLES.rolls.flies,undefined,'the car does not fly');
+  stepHoverLift({...state,vehicle:'rolls'},env,{lift:1},1/60);
+  for(let i=0;i<120;i++)stepHoverLift(state,env,{lift:1},1/60);
+  assert.ok(state.altitude>2&&state.altitude<8.01,`climbing ${state.altitude}`);
+  stepCarriage(state,env,{forward:1},1/60);
+  assert.ok(state.position[0]<0,'flies forward');assert.equal(state.roll,0);assert.equal(state.pitch,0);assert.ok(state.wheelOffsets.every(offset=>offset===0),'nothing presses on the suspension in the air');
+  assert.equal(state.position[1],0,'position stays the ground beneath; altitude is separate');
+  // A roof just above the hull stops the climb where it is.
+  sky=state.altitude+spec.bodyHeight+.001;const held=state.altitude;
+  for(let i=0;i<60;i++)stepHoverLift(state,env,{lift:1},1/60);
+  assert.ok(Math.abs(state.altitude-held)<.01,`blocked sky holds ${state.altitude} at ${held}`);
+  sky=Infinity;
+  for(let i=0;i<60*25;i++)stepHoverLift(state,env,{lift:1},1/60);
+  assert.ok(state.altitude<=20&&state.altitude>19.5,`ceiling ${state.altitude}`);
+  // Landing ignores lift and ends on the ground with the flag cleared.
+  state.landing=true;
+  for(let i=0;i<60*15&&state.altitude>0;i++)stepHoverLift(state,env,{lift:1},1/60);
+  assert.equal(state.altitude,0);assert.equal(state.landing,false);
+  fitCarriageToGround(state,env.groundAt,model.wheelTreads);
  } finally {model.dispose();}
 });

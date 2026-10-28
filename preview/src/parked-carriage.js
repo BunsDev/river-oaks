@@ -3,7 +3,7 @@ import { createRoadVehicle } from './road-vehicles.js';
 import { VEHICLES, vehicleKind, drivingInput } from './vehicle-config.js';
 import { createChauffeur, scenicRoute } from './chauffeur.js';
 import { carriageContains, findCarriageParking, vehicleCanOccupy } from './carriage-parking.js';
-import { fitCarriageToGround, stepCarriage, findCarriageExit } from './carriage-motion.js';
+import { fitCarriageToGround, stepCarriage, findCarriageExit, hoverClear, stepHoverLift } from './carriage-motion.js';
 import { createWalkingEnvironment } from './walking.js';
 import { Vector3, Quaternion } from 'three';
 
@@ -13,25 +13,28 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
  let kind='rolls',model=createRoadVehicle(kind);model.object.visible=false;scene.add(model.object);
  const driver=createCarriageDriver({scene,getLocals,getConversation}),chauffeur=createChauffeur({fetcher:requestChauffeur});
  let placement=null,loadedWorld=null,environment=null,companionEnvironment=null,mounted=false,enabled=true,exiting=false,heldControls={};
- const removeObstacle=walking.addObstacle({contains:(...point)=>enabled&&!mounted&&carriageContains(placement,...point)});
+ const airborne=()=>(placement?.altitude??0)>.1;
+ const removeObstacle=walking.addObstacle({contains:(...point)=>enabled&&!mounted&&!airborne()&&carriageContains(placement,...point)});
  const apply=()=>{
-  model.object.position.fromArray(placement.position);model.object.rotation.set(placement.pitch,placement.yaw,placement.roll,'YXZ');
+  model.object.position.fromArray(placement.position);model.object.position.y+=placement.altitude??0;model.object.rotation.set(placement.pitch,placement.yaw,placement.roll,'YXZ');
   const up=new Vector3(0,1,0).applyQuaternion(model.object.quaternion.clone().invert());
   model.wheels.forEach((wheel,i)=>{wheel.position.fromArray(model.spec.wheels[i]).addScaledVector(up,placement.wheelOffsets[i]);wheel.rotation.set(0,i<model.spec.steeredWheels?placement.steering??0:0,placement.distance/model.spec.wheels[i][1],'YXZ');});
   model.updateSteering(placement.steering??0);model.object.updateMatrixWorld(true);
  };
- const canOccupy=next=>vehicleCanOccupy(next,environment,getWorld(),getLocals()??[]);
+ // In the air the hull must clear buildings and trees; on the ground the road rules apply.
+ const canOccupy=next=>(next.altitude??0)>.1?hoverClear(next,environment):vehicleCanOccupy(next,environment,getWorld(),getLocals()??[]);
  const ride={
-  get pose(){return {kind,seat:model.object.localToWorld(new Vector3(...model.spec.passengerSeat)).toArray(),cameraTarget:model.object.localToWorld(new Vector3(-1,1.25,0)).toArray(),seatToFloor:model.spec.passengerSeat[1]-model.spec.passengerFloor,yaw:placement.yaw-Math.PI/2,quaternion:model.object.quaternion.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0,1,0),-Math.PI/2)).toArray(),speed:placement.speed,distance:placement.distance};},
-  step(input,delta){if(!driver.canDrive){placement.speed=0;chauffeur.request({mode:'stop'});return;}const lookahead={...placement,position:[placement.position[0]-Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]+Math.sin(placement.yaw)*2]};const rear={...placement,position:[placement.position[0]+Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]-Math.sin(placement.yaw)*2]};const manual=drivingInput(input);const controls=chauffeur.input(placement,manual.forward||manual.turn||manual.strafe?manual:heldControls,delta,{roadClear:canOccupy(lookahead),rearClear:canOccupy(rear)});if(chauffeur.status.active&&!controls.forward)placement.speed=0;stepCarriage(placement,{groundAt:environment.groundAt,wheelTreads:model.wheelTreads,canOccupy},controls,delta);apply();},
+  get pose(){return {kind,seat:model.object.localToWorld(new Vector3(...model.spec.passengerSeat)).toArray(),cameraTarget:model.object.localToWorld(new Vector3(-1,1.25,0)).toArray(),seatToFloor:model.spec.passengerSeat[1]-model.spec.passengerFloor,yaw:placement.yaw-Math.PI/2,quaternion:model.object.quaternion.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0,1,0),-Math.PI/2)).toArray(),speed:placement.speed,distance:placement.distance,altitude:placement.altitude??0,flying:airborne(),landing:Boolean(placement.landing)};},
+  step(input,delta){if(!driver.canDrive){placement.speed=0;chauffeur.request({mode:'stop'});return;}const lookahead={...placement,position:[placement.position[0]-Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]+Math.sin(placement.yaw)*2]};const rear={...placement,position:[placement.position[0]+Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]-Math.sin(placement.yaw)*2]};const manual=drivingInput(input);if(model.spec.flies){stepHoverLift(placement,environment,{lift:input?.lift},delta);if(airborne())chauffeur.request({mode:'stop'});}const controls=airborne()?manual:chauffeur.input(placement,manual.forward||manual.turn||manual.strafe?manual:heldControls,delta,{roadClear:canOccupy(lookahead),rearClear:canOccupy(rear)});if(chauffeur.status.active&&!controls.forward)placement.speed=0;stepCarriage(placement,{groundAt:environment.groundAt,wheelTreads:model.wheelTreads,canOccupy},controls,delta);apply();},
   brake(){if(placement)placement.speed=0;chauffeur.request({mode:'stop'});heldControls={};},
   takeOver(){if(chauffeur.status.active)this.brake();},
+  land(){if(placement&&airborne()){placement.landing=true;placement.liftTarget=0;return true;}return false;},
   stop(){mounted=false;heldControls={};if(placement)placement.speed=0;chauffeur.request({mode:'stop'});},
  };
  const summon=()=>{
   if(!enabled||mounted||!environment||driver.companion.mode!=='seat')return false;
   const next=findCarriageParking(getWorld(),walking.getPose(),getLocals()??[],1,false,kind);if(!next)return false;
-  chauffeur.request({mode:'stop'});placement={...next,speed:0,distance:0,steering:0};fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);
+  chauffeur.request({mode:'stop'});placement={...next,speed:0,distance:0,steering:0,altitude:0,liftTarget:0,verticalSpeed:0,landing:false};fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);
   apply();model.object.visible=true;driver.configure(getWorld(),placement);return true;
  };
  return {
@@ -40,17 +43,17 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
    const next=vehicleKind(value);if(!next||mounted||driver.companion.mode!=='seat')return false;if(next===kind)return true;
    const parked=environment?findCarriageParking(getWorld(),walking.getPose(),getLocals()??[],1,false,next):null;if(environment&&!parked)return false;
    model.dispose();kind=next;model=createRoadVehicle(kind);model.object.visible=false;scene.add(model.object);placement=null;
-   if(parked){placement={...parked,speed:0,distance:0,steering:0};fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);apply();model.object.visible=enabled;driver.configure(getWorld(),placement);}
+   if(parked){placement={...parked,speed:0,distance:0,steering:0,altitude:0,liftTarget:0,verticalSpeed:0,landing:false};fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);apply();model.object.visible=enabled;driver.configure(getWorld(),placement);}
    chauffeur.request({mode:'stop'});return true;
   },
-  tour(){return mounted&&driver.canDrive&&chauffeur.request({mode:'tour'},scenicRoute(getWorld(),placement));},
+  tour(){return mounted&&driver.canDrive&&!airborne()&&chauffeur.request({mode:'tour'},scenicRoute(getWorld(),placement));},
   setControls(input){if(!mounted)return false;heldControls=drivingInput(input);if(heldControls.forward||heldControls.turn||heldControls.strafe){chauffeur.request({mode:'stop'});}if(heldControls.brake){ride.brake();heldControls={brake:true};}return true;},
   pauseTour(){if(!mounted)return false;const ok=chauffeur.request({mode:'pause'});if(placement)placement.speed=0;return ok;},
   resumeTour(){return mounted&&driver.canDrive&&chauffeur.request({mode:'resume'});},
   park(){ride.brake();if(placement)apply();return mounted;},
   stopTour(){chauffeur.request({mode:'stop'});if(placement)placement.speed=0;},
   setEnabled(value){enabled=value;if(!enabled){if(mounted){const seat=ride.pose.seat;walking.dismount([seat[0],environment.groundAt(seat[0],seat[2]),seat[2]]);}driver.reset();placement=null;loadedWorld=null;model.object.visible=false;driver.object.visible=false;}},
-  get driver(){return driver.object;},get prince(){return driver;},get unicorns(){return [];},get spinners(){return model.spinners;},get placement(){return placement;},get riding(){return mounted;},
+  get driver(){return driver.object;},get prince(){return driver;},get unicorns(){return [];},get spinners(){return model.spinners;},get placement(){return placement;},get riding(){return mounted;},get airborne(){return airborne();},land(){return ride.land();},
   get tyreClearances(){
    if(!placement)return [];model.object.updateWorldMatrix(true,true);const point=new Vector3();
    return model.wheels.map(wheel=>{let gap=Infinity;wheel.traverse(mesh=>{if(!mesh.isMesh||mesh.material.name!=='Road tyre rubber')return;const p=mesh.geometry.attributes.position;for(let i=0;i<p.count;i++){point.fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld);gap=Math.min(gap,point.y-environment.groundAt(point.x,point.z));}});return gap;});
@@ -59,6 +62,8 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   get exiting(){return exiting;},
   async leave(){
    if(!mounted||exiting)return false;
+   // Nobody steps out in mid-air: the coach lands first, then G works as on the ground.
+   if(airborne()){ride.land();return false;}
    const exit=findCarriageExit(placement,environment,getLocals()??[]);if(!exit)return false;
    const seat=ride.pose.seat;ride.brake();exiting=true;
    try {
