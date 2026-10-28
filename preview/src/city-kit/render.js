@@ -205,7 +205,10 @@ function renderCrown(piece, [w, s, e, n], bodyTop, top, batch, detail, m, accent
   batch.box(trim, cx, top + .08, cy, rw + .4, .16, rd + .4);
 }
 
-function renderShell(piece, batch, detail, m, ground, signs) {
+// `forms` (a finish's rounded-form vocabulary, catalog.js KIT_FINISHES) adds facade
+// detail only: canopy noses and capsule sign plates in existing slots, never massing,
+// ground or collision. Without it a shell renders exactly as before.
+function renderShell(piece, batch, detail, m, ground, signs, forms = false) {
   const [w, s, e, n] = piece.rect, style = KIT_STYLES[piece.style] ?? KIT_STYLES['market-row'];
   const wall = m(piece.wall), trim = m(piece.trim), accent = m(style.accent), glass = m('glass'), bronze = m('metal-bronze');
   const top = ground + piece.height, bottom = ground - .4;
@@ -229,6 +232,13 @@ function renderShell(piece, batch, detail, m, ground, signs) {
     const f = faceFrame(piece.rect, face), at = (u, o) => [f.origin[0] + f.along[0] * u + f.out[0] * o, f.origin[1] + f.along[1] * u + f.out[1] * o];
     const yaw = Math.atan2(f.along[1], f.along[0]);
     const put = (target, material, u, o, y, along, height, across) => { const [x, yy] = at(u, o); target.box(material, x, y, yy, along, height, across, yaw); };
+    // A cylinder centred at (u, o, y): `axis` 'along' runs with the face (a canopy nose),
+    // 'out' points away from it (a capsule's round end).
+    const round = (material, u, o, y, radius, length, axis) => {
+      const [x, yy] = at(u, o), geometry = new THREE.CylinderGeometry(radius, radius, length, 14, 1);
+      if (axis === 'along') geometry.rotateZ(Math.PI / 2); else geometry.rotateX(Math.PI / 2);
+      detail.place(material, geometry, x, y, yy, [0, yaw, 0], 'YXZ');
+    };
     // Parapet and coping on every side; profiled cornice on faced sides.
     put(batch, wall, f.length / 2, -.12, bodyTop + .45, f.length, .9, .24);
     put(batch, trim, f.length / 2, -.06, bodyTop + .93, f.length + .12, .08, .4);
@@ -316,6 +326,8 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       put(batch, wall, mid, -.04, ground + 4.19, width + .7, .82, .2);
       put(detail, accent, mid, .82, ground + 3.92, width + .3, .1, 1.62);
       put(detail, accent, mid, 1.6, ground + 3.9, width + .3, .2, .05);
+      // Rounded canopy nose: a jet-age leading edge over the flat fascia strip.
+      if (forms) round(accent, mid, 1.63, ground + 3.9, .11, width + .3, 'along');
       put(detail, m('lamp-glow'), mid, 1.48, ground + 3.85, width + .1, .02, .07);
       for (const t of [-1, 1]) { const [hx, hy] = at(mid + t * width / 3, .78); detail.box(trim, hx, ground + 4.28, hy, .035, .035, 1.62, yaw, .4); }
     }
@@ -335,6 +347,8 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       put(batch, trim, mid, -.04, ground + 3.95, width + .7, .7, .2);
       if (piece.variant === 'canopy') {
         put(detail, accent, mid, 1.0, ground + 3.55, width + .6, .1, 2.0);
+        // Rounded nose along the canopy's front edge (it ends 2.0 m out).
+        if (forms) round(accent, mid, 2.0, ground + 3.55, .09, width + .6, 'along');
         put(detail, bronze, mid - width / 3, .9, ground + 3.95, .04, .8, .04); put(detail, bronze, mid + width / 3, .9, ground + 3.95, .04, .8, .04);
       } else if (piece.variant === 'awning') {
         const [x, y] = at(mid, .7);
@@ -346,7 +360,14 @@ function renderShell(piece, batch, detail, m, ground, signs) {
     if (piece.sign && face === piece.faces?.[0]) {
       const width = Math.min(f.length - 1, 7), [x, y] = at(f.length / 2, .09);
       // Above a canopy (3.6 m) and within the 3.6–4.3 m sign band.
-      signs.push({ name: piece.sign, palette: style.signPalette, width, height: Math.min(.6, width / 8), east: x, up: ground + (piece.variant === 'gallery' ? 4.3 : 3.98), north: y, yaw });
+      const signHeight = Math.min(.6, width / 8), signUp = ground + (piece.variant === 'gallery' ? 4.3 : 3.98);
+      signs.push({ name: piece.sign, palette: style.signPalette, width, height: signHeight, east: x, up: signUp, north: y, yaw });
+      if (forms) {
+        // Capsule sign plate: an ivory band with round ends, just behind the lettering.
+        const plate = signHeight + .16, ends = width / 2 + .05;
+        put(detail, m('trim-ivory'), f.length / 2, .06, signUp, width + .1, plate, .04);
+        for (const side of [-1, 1]) round(m('trim-ivory'), f.length / 2 + side * ends, .06, signUp, plate / 2, .04, 'out');
+      }
       if (style.signage === 'blade') {
         // A plate on a bracket, standing out from the facade, lettered top to bottom on both faces.
         put(detail, bronze, .8, .3, ground + 4.3, .05, .05, .6);
@@ -618,7 +639,7 @@ export function disposeLandscape(groups) {
  */
 export function buildCityKit(plan, { groundAt, ground, landscape = true, plantingMetres = Infinity, finish = 'classic' }) {
   const group = new THREE.Group(); group.name = `City kit: ${plan.id}`; group.userData.finish = finish;
-  const materials = createMaterials(finish), m = materials.get, disposables = [];
+  const materials = createMaterials(finish), m = materials.get, disposables = [], forms = Boolean(kitFinish(finish).forms);
   const blocks = new Map(), blockFor = piece => {
     // Context massing shares one level-of-detail group; blocks get their own.
     const key = piece.piece === 'building/context' ? 'context' : piece.id.split('/')[1];
@@ -656,7 +677,7 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
   const [sw, ss, se, sn] = plan.site;
   flat.box(m('curb-granite'), (sw + se) / 2, ground - 1.9, (ss + sn) / 2, se - sw, 3.4, sn - ss + 30);
   for (const piece of plan.pieces) {
-    if (piece.piece === 'building/shell') { const block = blockFor(piece); renderShell(piece, block.massing, block.detail, m, ground, signs); }
+    if (piece.piece === 'building/shell') { const block = blockFor(piece); renderShell(piece, block.massing, block.detail, m, ground, signs, forms); }
     else if (piece.piece === 'building/context') {
       const [w, s, e, n] = piece.rect, block = blockFor(piece);
       block.massing.box(m(piece.wall ?? 'stucco-ivory'), (w + e) / 2, ground - 1.5 + (piece.height + 1.5) / 2, (s + n) / 2, e - w, piece.height + 1.5, n - s);
