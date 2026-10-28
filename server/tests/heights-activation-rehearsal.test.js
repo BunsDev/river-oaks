@@ -153,6 +153,7 @@ for (const from of [COMMONS_REVISION]) test(`Heights rehearsal from ${from}: act
   const rolled = durable(alice.snapshot), players = Object.fromEntries(alice.snapshot.players.map(player => [player.id, player]));
   check('rollback serves the Commons', rolled.revision === COMMONS_REVISION);
   check('rollback is logged from Heights to the Commons and moves the three occupants', migrations().length === 2 && migrations()[1].includes('"from":"heights"') && migrations()[1].includes('"to":"commons"') && migrations()[1].includes('"moved":3'), migrations());
+  check('the rollback log counts the residents walked home from Heights', /"movedResidents":\d+[,}]/.test(migrations()[1] ?? ''), migrations());
   for (const id of ['alice', 'bob', FLYER]) check(`${id} stands on the Commons`, players[id].position[0] > commons.edge && players[id].position[0] < west && players[id].altitude === 0 && !players[id].sitting, players[id]);
   check('dave keeps his place', JSON.stringify(rolled.players.dave.position) === JSON.stringify(live.players.dave.position), { live: live.players.dave, rolled: rolled.players.dave });
   // erin joined through the overlapping deployment, so the roster may only grow.

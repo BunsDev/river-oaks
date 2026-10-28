@@ -123,8 +123,9 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
     makeRoomFor(verified.user.id);
     if (!enabled) { json(res, 503, { error: 'auth_busy' }); return; }
     makeRoomInTable();
+    // signedInAt marks this sign-in; a refresh keeps it, so in-app deletion can ask for a recent one.
     const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: provider,
-      csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL, githubId: null, login: null };
+      csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL, signedInAt: now(), githubId: null, login: null };
     sessions.set(record.sessionId, record);
     cookies.set(record.cookieHash, record.sessionId);
     if (!identity(verified, record)) {
@@ -152,7 +153,7 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
       || claims.client_id !== clientId) return null;
     const expiresAt = Math.min(claims.exp * 1000, record.expiresAt);
     if (expiresAt <= now()) return null;
-    return { userId: result.user.id, name: nameOf(record.userId, record), email: result.user.email, sessionId: result.sessionId, expiresAt, csrfToken: record.csrfToken };
+    return { userId: result.user.id, name: nameOf(record.userId, record), email: result.user.email, sessionId: result.sessionId, expiresAt, csrfToken: record.csrfToken, signedInAt: record.signedInAt ?? null };
   }
 
   async function authenticateRequest(req, res) {
@@ -311,8 +312,9 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
         if (previous) removeSession(previous);
         makeRoomFor(verified.user.id);
         makeRoomInTable();
+        // The desktop shell exchanges its token right after the browser sign-in and keeps none.
         const record = { sessionId: verified.sessionId, userId: verified.user.id, authMethod: result.authenticationMethod,
-          csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL, githubId: null, login: null };
+          csrfToken: token(), cookieHash: digest(result.sealedSession), expiresAt: now() + SESSION_TTL, signedInAt: now(), githubId: null, login: null };
         sessions.set(record.sessionId, record); cookies.set(record.cookieHash, record.sessionId);
         if (!identity(verified, record)) {
           removeSession(record);
@@ -361,6 +363,12 @@ export function createAuth({ apiKey, clientId, cookiePassword, origin, returnPat
       // Retry cleanup even when an earlier delivery already removed the sessions.
       await onLogout(userId);
     },
+    // In-app deletion (#292): WorkOS deletes the user; one already gone counts as deleted.
+    async deleteProviderUser(userId){
+      if(typeof userId!=='string'||!userId.length||userId.length>200)throw new TypeError('Invalid account');
+      try{await sdk.userManagement.deleteUser(userId);}catch(error){if(error?.status!==404)throw error;}
+    },
+    clearSession(res){setCookie(res,SESSION_COOKIE,'',0);},
     close() { enabled = false; clearInterval(timer); magicStore.close(); states.clear(); verifications.clear(); sessions.clear(); cookies.clear(); },
   };
 }
