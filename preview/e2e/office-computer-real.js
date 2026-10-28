@@ -1,9 +1,9 @@
-async (page, { computerOrigin, computerRevision }) => {
+async (page, { computerOrigin, computerRevision, computerFraming }) => {
  // #487: the office desk against a real TypeSafe Computer checkout's embed child (typesafe-place-embed v1),
  // started by the runner from RIVER_OAKS_COMPUTER_CHECKOUT with TSC_AUTH=off dev users. Synthetic notes only.
  // Not hosted sign-in or a real origin pair: both servers are loopback, and Computer signs in without WorkOS.
  const checks=[],check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);console.log(label);};
- if(!computerOrigin||!computerRevision)throw new Error('Run with RIVER_OAKS_COMPUTER_CHECKOUT=<checkout> pnpm run test:experience office-computer-real.');
+ if(!computerOrigin||!computerRevision||!computerFraming)throw new Error('Run with RIVER_OAKS_COMPUTER_CHECKOUT=<checkout> pnpm run test:experience office-computer-real.');
  check(true,`Computer candidate ${computerRevision.branch} @ ${computerRevision.head}${computerRevision.dirty?' (dirty)':''} on ${computerOrigin}`);
  await page.emulateMedia({reducedMotion:'reduce'});
  const NOTE='Synthetic real-child note 487',LOCAL='Synthetic local-only note 487';
@@ -20,16 +20,16 @@ async (page, { computerOrigin, computerRevision }) => {
  const gate=()=>child().getByRole('main',{name:'Choose your TypeSafe Computer account'});
  const widgets=()=>child().getByRole('article').count();
  const noteTitle=()=>child().getByRole('article',{name:'Note widget'}).first().getByRole('textbox',{name:'Note title'});
- const arrive=async()=>{
-  await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:90000});
-  if(await page.locator('#office-visit').evaluate(n=>n.open)){await page.waitForFunction(()=>document.querySelector('#office-visit')?.dataset.phase==='office',null,{timeout:60000});return;}
-  await page.locator('#office-lobby').waitFor({state:'attached'});await page.locator('#office-lobby').evaluate(b=>b.click());
-  if(await page.locator('#play-tab-office').count())await page.locator('#play-tab-office').click();
-  await page.waitForFunction(()=>document.querySelector('#office-enter')?.disabled===false,null,{timeout:30000});
-  await page.locator('#office-enter').click();
-  await page.waitForFunction(()=>document.querySelector('#office-visit')?.dataset.phase==='office',null,{timeout:60000});
+ const arrive=async(tab=page)=>{
+  await tab.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:90000});
+  if(await tab.locator('#office-visit').evaluate(n=>n.open)){await tab.waitForFunction(()=>document.querySelector('#office-visit')?.dataset.phase==='office',null,{timeout:60000});return;}
+  await tab.locator('#office-lobby').waitFor({state:'attached'});await tab.locator('#office-lobby').evaluate(b=>b.click());
+  if(await tab.locator('#play-tab-office').count())await tab.locator('#play-tab-office').click();
+  await tab.waitForFunction(()=>document.querySelector('#office-enter')?.disabled===false,null,{timeout:30000});
+  await tab.locator('#office-enter').click();
+  await tab.waitForFunction(()=>document.querySelector('#office-visit')?.dataset.phase==='office',null,{timeout:60000});
  };
- const openDesk=async()=>{await page.locator('#office-desk-open').click();await page.locator('#desk-loading').waitFor({state:'hidden'});};
+ const openDesk=async(tab=page)=>{await tab.locator('#office-desk-open').click();await tab.locator('#desk-loading').waitFor({state:'hidden'});};
  // The gate comes first in every frame: Place says account-confirmation and Computer shows no widget.
  const openComputer=async()=>{
   await page.locator('#desk-view-computer').click();await waitState('account-confirmation');
@@ -130,6 +130,13 @@ async (page, { computerOrigin, computerRevision }) => {
  await page.waitForFunction(()=>!document.querySelector('.desk-computer-frame')&&!document.querySelector('#office-desk').open,null,{timeout:10000});
  check(Date.now()-started<5000,`A dropped connection removes Computer at once (${Date.now()-started} ms)`);
  await page.waitForFunction(()=>window.__riverMultiplayer?.().connected,null,{timeout:60000});
+ // The world is rebuilt (Reload world data) with the real child mounted.
+ await arrive();await openDesk();await openComputer();await continueIn();
+ started=Date.now();await page.evaluate(()=>document.querySelector('#reload').click());
+ await page.waitForFunction(()=>!document.querySelector('.desk-computer-frame')&&!document.querySelector('#office-desk').open,null,{timeout:15000});
+ check(Date.now()-started<10000,`Rebuilding the world removes Computer without waiting for it (${Date.now()-started} ms)`);
+ await page.waitForFunction(()=>document.querySelector('#reload')?.disabled===false&&document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:90000});
+ check(await page.evaluate(()=>window.__messageListeners())===listeners,'No Computer listener survives a dropped connection or a world rebuild');
  await arrive();await openDesk();
 
  // Switch: Computer signs out in its frame, and sign-in is a top-level tab Place offers.
@@ -155,6 +162,62 @@ async (page, { computerOrigin, computerRevision }) => {
  await child().getByRole('button',{name:'Add note',exact:true}).click();
  await waitState('signin',30000);
  check(await frames()===0,'An expired Computer session removes the desktop and offers sign-in');
+ await page.locator('#desk-computer-tasks').click();await waitView('tasks');
+ await page.locator('#desk-close').click();await page.waitForFunction(()=>!document.querySelector('#office-desk').open);
+
+ // Two Place accounts in another browser: a visitor, then the next Place account on the same page.
+ // Each browser has its own Computer cookie, so the visitor is a separate Computer dev user.
+ const guestContext=await page.context().browser().newContext({viewport:{width:1280,height:900},reducedMotion:'reduce'});
+ await guestContext.addCookies([{name:'fixture_session',value:'guest',url:page.url()}]);
+ const guest=await guestContext.newPage(),guestErrors=[];guest.on('pageerror',error=>guestErrors.push(error.message));await instrument(guest);
+ const guestChild=()=>guest.frameLocator('.desk-computer-frame');
+ const guestState=value=>guest.waitForFunction(value=>document.querySelector('#office-desk')?.dataset.computer===value,value,{timeout:20000});
+ const guestGate=async()=>{await guest.locator('#desk-view-computer').click();await guestState('account-confirmation');
+  await guestChild().getByRole('main',{name:'Choose your TypeSafe Computer account'}).waitFor();return (await guestChild().getByRole('article').count())===0;};
+ const guestContinue=async()=>{await guestChild().getByRole('button',{name:'Continue'}).click();await guestState('usable');await guestChild().getByRole('article',{name:'Checklist widget'}).waitFor();};
+ const gone=tab=>tab.waitForFunction(()=>!document.querySelector('.desk-computer-frame')&&!document.querySelector('#office-desk').open,null,{timeout:10000});
+ try{
+  await page.locator('#office-access').click();
+  await guest.goto(page.url(),{waitUntil:'commit'});
+  await guest.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:90000});
+  await page.locator('#office-management button').filter({hasText:'Invite resident'}).waitFor({timeout:15000});
+  await page.locator('#office-management button').filter({hasText:'Invite resident'}).click();
+  await arrive(guest);await openDesk(guest);
+  check(await guestGate(),'A visitor gets their own Computer account gate, with nothing behind it');
+  await guestContinue();
+  check(await guestChild().getByRole('article',{name:'Note widget'}).count()===0,'The visitor sees none of the office owner’s Computer notes');
+  const revoked=Date.now();await page.locator('#office-management button').filter({hasText:'Revoke access'}).click();
+  await guest.waitForFunction(()=>!document.querySelector('.desk-computer-frame')&&!document.querySelector('#office-desk').open&&!document.querySelector('#office-visit').open,null,{timeout:10000});
+  check(Date.now()-revoked<5000,`Revocation removes the visitor’s Computer at once (${Date.now()-revoked} ms)`);
+
+  await guestContext.addCookies([{name:'fixture_session',value:'bob',url:page.url()}]);
+  await guest.reload({waitUntil:'commit'});
+  await guest.waitForFunction(()=>window.__riverMultiplayer?.().connected&&window.__riverMultiplayer().selfId==='bob'&&document.querySelector('#canvas-host')?.dataset.playerReady==='true',null,{timeout:90000});
+  await page.locator('#office-management select option',{hasText:'bob'}).waitFor({state:'attached',timeout:15000});
+  await page.locator('#office-management select').selectOption({label:'bob'});await page.locator('#office-management button').filter({hasText:'Invite resident'}).click();
+  await arrive(guest);await openDesk(guest);
+  check(await guest.locator('#desk-start').isVisible(),'A second Place account in the same browser sees only its own tasks');
+  check(await guestGate(),'The next Place account gets a fresh Computer gate, not the previous desktop');
+  await guestContinue();
+  const signedOut=Date.now();
+  await guest.evaluate(()=>fetch('/auth/session').then(r=>r.json()).then(s=>fetch('/auth/logout',{method:'POST',headers:{'X-CSRF-Token':s.csrfToken}})));
+  await gone(guest);
+  check(Date.now()-signedOut<5000,`Place sign-out removes Computer at once (${Date.now()-signedOut} ms)`);
+  check(guestErrors.length===0,`No visitor browser errors: ${guestErrors.join('; ')}`);
+ }finally{await guestContext.close();}
+
+ // Denied framing: Computer's own frame-ancestors refuses this Place, and Place recovers to Tasks.
+ // Last, because the restart forgets Computer's in-memory account sync.
+ await computerFraming.refuse();
+ await page.context().clearCookies({name:'tsc_dev_signed_out'});
+ await openDesk();await page.locator('#desk-view-computer').click();await waitState('failed',25000);
+ check(await frames()===0&&await page.locator('#desk-computer-open').getAttribute('href')===`${computerOrigin}/`&&await page.locator('#desk-computer-continue').textContent()==='Try again','A Computer that refuses this Place offers retry and Open separately, with no frame left behind');
+ await page.locator('#desk-computer-tasks').click();await waitView('tasks');
+ check(await page.locator('#office-desk').getAttribute('data-view')==='tasks'&&await frames()===0,'Tasks open after Computer refuses the frame');
+ await computerFraming.allow();
+ await page.locator('#desk-view-computer').click();await waitState('account-confirmation');await gate().waitFor();
+ check(await frames()===1,'Once Computer lists this Place again, the next open frames it at the account gate');
+ await toTasks();
 
  check(!deskBodies.some(body=>body.includes('Synthetic real-child')||body.includes('Synthetic local-only')),'Computer notes never reach Place task requests');
  check(!/Synthetic (real-child|local-only)/.test(await page.evaluate(()=>JSON.stringify(window.__riverMultiplayer().snapshot))),'Computer notes never appear in the public world snapshot');

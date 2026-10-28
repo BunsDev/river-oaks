@@ -270,16 +270,21 @@ Place. The journey covers:
 - Escape after the palette;
 - a refused save kept as Computer's local copy;
 - ten open, edit and close cycles;
-- visit end and a dropped connection;
+- visit end, a dropped connection and a world rebuild;
 - Switch, with top-level sign-in;
 - a second Computer account in the same browser;
 - an expired session;
+- a visitor in another browser, then revocation;
+- the next Place account in that browser, then Place sign-out;
+- denied framing: Computer restarted without this Place on its list, so its own
+  `frame-ancestors` refuses the frame, and Place recovers to Tasks;
 - privacy of the note text.
 
 It runs on demand, not in CI, because it needs a Computer checkout. It is still not
 hosted WorkOS sign-in or the real origin pair. Its receipt is
-`data/reports/office-computer-real-child-browser.json`: 28 checks against Computer
-8c0240af on 2026-10-27.
+`data/reports/office-computer-real-child-browser.json`: 40 checks against Computer
+8c0240af on 2026-10-28. The fixture journey still covers what the real child can't be
+made to do here: hang during teardown, and a live Place account change on one page.
 
 The fixture is not Computer. It proves Place's behavior against the contract, not
 Computer's hosting, authentication or sync. Both fixture servers run on `127.0.0.1`, and

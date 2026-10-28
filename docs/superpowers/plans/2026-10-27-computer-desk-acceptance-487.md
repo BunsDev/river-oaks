@@ -95,7 +95,16 @@ reported as local, not saved".
   records the choice. The Computer regression was updated to assert that no
   `request-close` is sent. Place needed no change.
 
-The rerun against 8c0240af passed: 28 checks in 72 s,
+The rerun against 8c0240af passed: 28 checks in 72 s.
+
+**Second round (2026-10-28)** added the rows the real child had not covered: world
+rebuild, a visitor in another browser and revocation, the next Place account in that
+browser and Place sign-out, and denied framing. For denied framing, the runner restarts
+Computer with only `https://other-place.example.test` on `TSC_PLACE_ORIGINS`, so
+Computer's own `frame-ancestors` refuses the frame. An earlier attempt used loopback
+port + 1 as the "other" origin. Free ports come out in sequence, so that was Place's own
+port, and Computer correctly allowed the frame. The journey had the bug, not either
+product. The rerun passed 40 checks in 117 s against 8c0240af (clean tree),
 `data/reports/office-computer-real-child-browser.json`.
 
 ## Acceptance matrix
@@ -108,15 +117,15 @@ pair; **D** = physical device or human review.
 | --- | --- | --- | --- | --- | --- |
 | Core journey | pass (#530) | pass | blocked | – | R: gate, note, saved status, destroy, local copy cleared, recreate, recover |
 | Existing Tasks | pass | – | blocked | – | Desk is My tasks only since #496 |
-| Two Place accounts | pass | – | blocked | – | R not run; fixture covers fresh-gate behavior |
+| Two Place accounts | pass | pass | blocked | – | R: visitor in another browser gets their own gate and no owner notes; next Place account in that browser gets its own tasks and a fresh gate. A live account change on one page is fixture only |
 | Two Computer accounts | pass | pass | blocked | – | R: Switch, top-level sign-in, second dev user, cross-account question with nothing behind |
 | Auth and origin pair | – | – | blocked | – | Needs the staged pair; loopback cookies ignore ports |
 | Account expiry | – | pass | blocked | – | R: dev signed-out cookie mid-edit |
-| Place access loss | pass | pass (visit end 101 ms, dropped connection 59 ms) | blocked | – | R: visit end, dropped connection |
+| Place access loss | pass | pass | blocked | – | R (2026-10-28): visit end 67 ms, dropped connection 55 ms, world rebuild 3234 ms, revocation 270 ms, Place sign-out 102 ms. A hung child is fixture only |
 | Interrupted save | pass | pass | blocked | – | R: 503 save → attention → local → recovered → saved |
 | Normal close races | pass | Computer tests | blocked | – | Computer: slow save and a newer close request |
 | Input and focus | pass | pass | blocked | open | R: keys, palette Escape, then top-level Escape |
-| Failure recovery | pass | – | blocked | – | |
+| Failure recovery | pass | pass | blocked | – | R: Computer's `frame-ancestors` refuses this Place → failed, Open separately, Tasks; listed again → gate |
 | Privacy | pass | pass | blocked | – | R: no note text in desk requests or the snapshot; Computer: lifecycle fields only |
 | Narrow/device use | pass (emulated) | Computer phone tests | blocked | open | Not Safari on iOS or a device |
 | Resources | pass | pass | blocked | – | R: ten open/edit/close cycles; one document per visit; listeners back to baseline |
@@ -171,19 +180,30 @@ All runs on 2026-10-27, on this Mac.
 | `node --test preview/tests/office-computer-frame.test.js` | Place main f4dd959a | 15/15 |
 | `pnpm run test:experience office-computer-embed` (fixture) | Place f4dd959a + this branch's runner | passed, 62 checks, 87 s (22:20Z). The receipt was kept out of the repository; the committed fixture receipts are #530's. |
 | `office-computer-real` vs Computer 1ecd2c96 | | failed after 11 checks (the discrepancy above) |
-| `office-computer-real` vs Computer 8c0240af | | passed, 28 checks, 72 s (22:34Z) |
-| `pnpm run verify` (core) | see the PR | see the PR |
+| `office-computer-real` vs Computer 8c0240af | ed075624 | passed, 28 checks, 72 s (2026-10-27 22:34Z) |
+| `pnpm run verify` (core) | ed075624 | pass: 289/289; 4284/4285 (1 skipped); 1047/1325 (278 skipped); 127/132 (5 skipped); Python 170 passed; gitleaks clean |
+| `office-computer-real`, extended | this round | 1st and 2nd attempts failed at denied framing (desk left on the Computer view; port collision, above); 3rd passed, 40 checks, 117 s (2026-10-28) |
+| `check_secrets --all` | this round | no leaks |
+| `pnpm run verify` (core) | this round | pass: 289/289; 4284/4285 (1 skipped); 1047/1325 (278 skipped); 127/132 (5 skipped); Python 170 passed; gitleaks clean |
+| Hosted CI on #718 | ed075624 | all checks green |
 
 ## Gaps
 
 - No staged origin pair, hosted WorkOS sign-in or real cookie separation (#21).
 - No #27 continuity decision for a new Computer host.
 - No Safari on iOS, physical device or human review.
-- R does not yet cover two Place accounts, revocation, world rebuild or denied framing
-  against the real child. The fixture run covers them.
+- R cannot make the real child hang during teardown, and does not cover a live Place
+  account change on one page. The fixture covers both.
+- `pnpm run verify full` (Redis, browser matrix) was not run on this branch.
 
 ## Next action
 
-1. Publish the Place draft PR.
-2. Post the status to #487 and #359.
-3. Ask once for the Phase 3 authorization.
+Val chose to stop before Phase 3 (2026-10-28). The staged pair stays prepared and
+unapplied.
+
+1. Phase 3, only on explicit authorization: apply the proposal above in order, then run
+   the matrix's S column.
+2. Computer #27: decide host continuity before any pilot.
+3. Review of #34 and #718. Both stay drafts; neither merges without authorization.
+4. Retirement: not eligible. `project:inventory` (2026-10-28) shows this branch active
+   with open #718 and an active process. The Computer clone holds open #34.

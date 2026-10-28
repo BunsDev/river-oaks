@@ -74,7 +74,7 @@ try {
       console.log(`Running ${name}`);
       // These repository harnesses are page functions, also used by the browser CLI.
       const source = (await readFile(join(root, `preview/e2e/${name}.js`), 'utf8')).replace(/http:\/\/127\.0\.0\.1:(?:5173|5180|5181)/g, origin);
-      const result = await eval(`(${source})\n//# sourceURL=preview/e2e/${name}.js`)(page, { worldMapEnabled: process.env.VITE_WORLD_MAP === 'true', computerOrigin: computerFixture?.origin, computerRevision: computerFixture?.revision });
+      const result = await eval(`(${source})\n//# sourceURL=preview/e2e/${name}.js`)(page, { worldMapEnabled: process.env.VITE_WORLD_MAP === 'true', computerOrigin: computerFixture?.origin, computerRevision: computerFixture?.revision, computerFraming: computerFixture?.refuseFraming && { refuse: () => computerFixture.refuseFraming(), allow: () => computerFixture.allowFraming() } });
       if (result?.passed === false) throw new Error(result.failure ?? 'Harness reported failure');
       results.push({ name, status: 'passed', seconds: (Date.now() - started) / 1000, result });
       console.log(`Passed ${name}`);
