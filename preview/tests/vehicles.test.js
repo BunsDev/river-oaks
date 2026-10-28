@@ -156,6 +156,19 @@ test('the hover coach parks on the same streets as the car and keeps both lounge
  const parked=findCarriageParking(world,pose,[],1,false,'hover');assert.ok(parked,'parking near the spawn');
  assert.equal(parked.vehicle,'hover');
  for(const seat of [spec.driverSeat,spec.passengerSeat])assert.ok(carriageContains({vehicle:'hover',position:[0,0,0],yaw:0},seat[0],seat[1],seat[2]),`seat ${seat} inside the envelope`);
+ // Full-size riders in the 30% smaller hull: the skin stays below the floor under seated feet
+ // (the ride pose plants them .44 m ahead of the seat, toes beyond) and above a seated head.
+ const model=createRoadVehicle('hover');
+ try {
+  model.object.updateMatrixWorld(true);const shell=[];model.object.traverse(m=>{if(m.isMesh&&m.visible&&['Seafoam pearl paint','Hover coach tinted roof','Hover coach canopy glass'].includes(m.material.name))shell.push(m);});
+  // The skin is single-sided, so the belly is met from below and the roof from above.
+  const first=(origin,direction)=>new THREE.Raycaster(origin,direction).intersectObjects(shell,false)[0]?.point.y??NaN;
+  const skin=(x,z)=>({top:first(new THREE.Vector3(x,4,z),new THREE.Vector3(0,-1,0)),bottom:first(new THREE.Vector3(x,-1,z),new THREE.Vector3(0,1,0))});
+  for(const [seat,floor] of [[spec.driverSeat,spec.driverFloor],[spec.passengerSeat,spec.passengerFloor]]) {
+   for(const dz of [-.12,.12]){const toes=skin(seat[0]-.7,seat[2]+dz);assert.ok(toes.bottom<floor-.04,`hull bottom ${toes.bottom} under the toes of seat ${seat}`);}
+   assert.ok(skin(seat[0],seat[2]).top>seat[1]+.78,`headroom over seat ${seat}`);
+  }
+ } finally {model.dispose();}
  assert.notDeepEqual(spec.driverSeat,spec.passengerSeat);
  assert.equal(spec.driverSeat[1]-spec.driverFloor,spec.passengerSeat[1]-spec.passengerFloor);
 });

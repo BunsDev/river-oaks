@@ -24,10 +24,12 @@ export const VEHICLES = {
  // ground it follows, up to the world's flight ceiling (carriage-motion.js,
  // server/world.js), and it lands before anyone steps out. The pilot holds a
  // yoke that turns like a wheel. The hull is 30% smaller in plan than the
- // reference's, with full-size seats (Val, 2026-10-28).
+ // reference's, with full-size seats (Val, 2026-10-28): the pilot sits on the
+ // centreline ahead of the door, where the nose still clears seated feet, and
+ // the passenger's armchair faces forward opposite the door.
  hover:{kind:'hover',label:'Landowner hover coach',length:4.13,width:1.47,height:2.55,wheelbase:1.72,maxSpeed:9,hover:true,flies:true,steeringLimit:.42,steeredWheels:0,
-  wheels:[[-1.12,.3,-.43],[-1.12,.3,.43],[.6,.3,-.43],[.6,.3,.43]],driverSeat:[-1.19,1.18,.27],passengerSeat:[-.35,1.18,-.29],driverFloor:.81,passengerFloor:.81,bodyHeight:2.3,
-  grips:[[-1.48,1.51,.11],[-1.48,1.51,.43]],steeringPivot:[-1.48,1.51,.27]},
+  wheels:[[-1.12,.3,-.43],[-1.12,.3,.43],[.6,.3,-.43],[.6,.3,.43]],driverSeat:[-.9,1.18,0],passengerSeat:[-.05,1.18,-.3],driverFloor:.81,passengerFloor:.81,bodyHeight:2.3,
+  grips:[[-1.19,1.51,-.16],[-1.19,1.51,.16]],steeringPivot:[-1.19,1.51,0]},
 };
 /** @param {unknown} value @returns {VehicleKind|null} */
 export function vehicleKind(value) { return value==='rolls'||value==='motorcycle'||value==='bicycle'||value==='hover'?value:null; }

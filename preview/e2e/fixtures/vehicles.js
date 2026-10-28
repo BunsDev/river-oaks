@@ -26,7 +26,7 @@ function show(kind,view='front') {
  }
  drivingHands(model.object,model.spec);model.animate(1500,3);
  dress.update(false,0,true);suit.update({carrying:false});
- const distance={rolls:1.12,hover:1.5}[kind]??.65;camera.position.set((view==='front'?-7:7)*distance,3.2*distance,6.4*distance);camera.lookAt(0,{rolls:.8,hover:1.35}[kind]??1,0);
+ const distance={rolls:1.12,hover:1.05}[kind]??.65;camera.position.set((view==='front'?-7:7)*distance,3.2*distance,6.4*distance);camera.lookAt(0,{rolls:.8,hover:1.35}[kind]??1,0);
  renderer.render(scene,camera);document.querySelector('#label').textContent=`JEV / ${model.spec.label.toUpperCase()}`;return {draws:renderer.info.render.calls,triangles:renderer.info.render.triangles};
 }
 const flightHands=createFlightHands(driver.rig.model,driver.object);

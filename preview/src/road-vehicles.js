@@ -303,7 +303,7 @@ export function createRoadVehicle(kind='rolls',{pedalling=false}={}) {
   ball(W(P(0,1.86,1.004)),[.025,.065,.065],light,cabin);
   for(const side of [-1,1])ball(W(P(side*.3,1.7,1.004)),[.05,.07,.08],light,cabin);
   // Four portholes a side behind the door: a chrome ring and a glass disc on the skin (full size, unscaled).
-  for(const side of [-1,1])for(const x of [.65,1.0,1.35,1.68]) {
+  for(const side of [-1,1])for(const x of [.55,.85,1.15,1.45]) {
    const theta=1.2,phi=Math.acos(-(x-CX)/(AR*Math.sin(theta)))*side,point=new THREE.Vector3(...W(P(phi,theta,1.006)));
    const normal=new THREE.Vector3((point.x-CX*S)/((AR*S)**2),(point.y-CY)/(B*B),point.z/((C*S)**2)).normalize();
    const porthole=ring(point.toArray(),.09,.014,silver,cabin);porthole.lookAt(point.clone().add(normal));
@@ -313,8 +313,8 @@ export function createRoadVehicle(kind='rolls',{pedalling=false}={}) {
   const SILL=W(P((D0+D1)/2,DB,1));
   for(let i=0;i<2;i++){const y=SILL[1]-.22*(i+1),z=SILL[2]+.08+.2*(i+1);box([-.43,y,z],[.36,.03,.2],cream,.008,cabin);box([-.43,y-.012,z+.09],[.36,.012,.03],silver,.004,cabin);}
   for(const x of [-.6,-.26])tube([[x,SILL[1]+.02,SILL[2]],[x,SILL[1]-.24,SILL[2]+.3],[x,SILL[1]-.46,SILL[2]+.5]],.012,silver,cabin);
-  // Cream lounge on an elliptical carpet: the pilot's seat and console, the passenger's
-  // armchair opposite the door, a settee along the right flank and a chrome side table.
+  // Cream lounge on an elliptical carpet: the pilot's seat and console on the centreline,
+  // the passenger's armchair opposite the door, a bench across the tail and a chrome side table.
   const FLOOR=spec.driverFloor,fs=Math.sqrt(1-((FLOOR-CY)/B)**2)*.98;
   const floor=add(new THREE.ShapeGeometry(new THREE.Shape(Array.from({length:64},(_,i)=>{const phi=Math.PI*2*i/64;return new THREE.Vector2(CX-axis(phi)*fs*Math.cos(phi),C*fs*Math.sin(phi));}))),carpet,[0,FLOOR,0],[1,1,1],hull);floor.rotation.x=-Math.PI/2;
   const seat=(x,z,width=.52)=>{
@@ -324,11 +324,11 @@ export function createRoadVehicle(kind='rolls',{pedalling=false}={}) {
    for(let i=-2;i<=2;i++)tube([[x-.18,FLOOR+.372,z+i*.1],[x+.16,FLOOR+.372,z+i*.1]],.002,darkLeather,cabin);
   };
   seat(spec.driverSeat[0],spec.driverSeat[2]);seat(spec.passengerSeat[0],spec.passengerSeat[2]);
-  box([.4,FLOOR+.32,-.36],[.7,.10,.34],cream,.045,cabin);
-  box([.4,FLOOR+.6,-.54],[.68,.52,.1],cream,.045,cabin);
-  for(const x of [.22,.58])box([x,FLOOR+.9,-.53],[.26,.15,.1],cream,.04,cabin);
-  add(new THREE.CylinderGeometry(.018,.018,.4,10),silver,[.25,FLOOR+.2,.04],[1,1,1],cabin);
-  add(new THREE.CylinderGeometry(.16,.16,.02,24),silver,[.25,FLOOR+.4,.04],[1,1,1],cabin);
+  // A short bench across the tail where the hull is still tall enough, and a chrome side table aft of the door.
+  box([.7,FLOOR+.32,0],[.5,.10,.5],cream,.045,cabin);
+  const benchBack=box([.93,FLOOR+.54,0],[.12,.40,.44],cream,.045,cabin);benchBack.rotation.z=-.1;
+  add(new THREE.CylinderGeometry(.018,.018,.4,10),silver,[.5,FLOOR+.2,.3],[1,1,1],cabin);
+  add(new THREE.CylinderGeometry(.16,.16,.02,24),silver,[.5,FLOOR+.4,.3],[1,1,1],cabin);
   box([spec.driverSeat[0]-.33,FLOOR+.5,spec.driverSeat[2]],[.2,.14,.42],charcoal,.03,cabin);
   tube([[spec.driverSeat[0]-.33,FLOOR+.56,spec.driverSeat[2]],spec.steeringPivot],.02,silver,cabin);
   steering=new THREE.Group();steering.position.set(...spec.steeringPivot);steering.rotation.y=Math.PI/2;object.add(steering);groups.push(steering);
