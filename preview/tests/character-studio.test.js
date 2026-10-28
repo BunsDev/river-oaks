@@ -64,3 +64,28 @@ test('development always shows the studio; builds still need the release flag', 
   assert.equal(characterStudioShown({ DEV: false, VITE_CHARACTER_STUDIO: 'yes' }), false);
   assert.equal(characterStudioShown({ DEV: false, VITE_CHARACTER_STUDIO: 'true' }), true);
 });
+
+test('making your own: a random start, partial recipe edits, rolls that keep the rest, and a way back to the characters', async () => {
+  const { DEFAULT_RECIPE, RECIPE_CATEGORIES } = await import('../src/character-recipe.js');
+  const confirmed=customizedCharacterDefinition(ownerId,'sable-human',{palette:'rose'}),draft=createCharacterDraft({ownerId,definition:confirmed});
+  let seed=7;const random=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  assert.equal(draft.custom,false);assert.equal(draft.create(random),true);
+  const start=draft.value;assert.equal(start.schemaVersion,3);assert.equal(draft.custom,true);
+  assert.equal(validateCharacterDefinition(start,{ownerId}).ok,true);assert.notDeepEqual(start.parameters,DEFAULT_RECIPE,'the start is a random person');
+  assert.equal(draft.create(random),false,'creating again keeps the person being made');
+  draft.change({recipe:{face:{noseWidth:-40}}});
+  assert.equal(draft.value.parameters.face.noseWidth,-40);
+  assert.deepEqual({...draft.value.parameters.face,noseWidth:start.parameters.face.noseWidth},start.parameters.face,'a slider edit changes only its feature');
+  draft.change({recipe:{body:'man-tailored',height:191}});assert.equal(draft.value.rig,'man-tailored');assert.equal(draft.value.parameters.face.noseWidth,-40);
+  for(const bad of [{recipe:{height:260}},{recipe:{skin:'chrome'}},{recipe:{face:[1]}},{recipe:[]},{recipe:{face:{noseWidth:-40}},palette:'rose'}])assert.throws(()=>draft.change(bad),JSON.stringify(bad));
+  const before=draft.value.parameters;assert.equal(draft.roll(['face','eyes'],random),true);
+  const after=draft.value.parameters;
+  for(const [category,fields] of Object.entries(RECIPE_CATEGORIES))if(!['face','eyes'].includes(category))for(const field of fields)assert.deepEqual(after[field],before[field],`${field} kept`);
+  assert.equal(draft.authored(),true);assert.deepEqual(draft.value,confirmed,'the characters return to the look being worn');
+  assert.equal(draft.create(random),true);assert.deepEqual(draft.value.parameters,after,'and creating returns to the person being made');
+  // Choosing the worn character from your own look returns to that look; another character starts as designed.
+  assert.equal(draft.change({appearanceId:'sable-human'}),true);assert.deepEqual(draft.value,confirmed,'the worn Sable keeps her rose silk');
+  draft.create(random);draft.change({appearanceId:'rowan-human'});assert.equal(draft.value.appearanceId,'rowan-human');assert.equal(draft.value.palette,'authored');
+  while(draft.canUndo)draft.undo();assert.deepEqual(draft.value,confirmed,'undo walks back to the worn look');
+  assert.throws(()=>draft.roll(['wings']));
+});
