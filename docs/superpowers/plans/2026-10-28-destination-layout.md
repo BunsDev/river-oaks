@@ -72,6 +72,8 @@ Results (2026-10-28):
 - A drawing of the exported Nineteenth & Yale region (`.runtime/destination-reference/yale-studio-region.svg.png`, local) shows four blocks of massing, the crossing streets with trees, the court, places and the arrival on Nineteenth's sidewalk.
 - `pnpm run verify` (core), receipt `.runtime/agent/core.json` (revision `8f0c659a`, dirty with the files above), log `.runtime/destination-studio/verify-core-001.log`: passed. agent-tests 289/289; preview-tests 4325 passed, 1 skipped; server-tests 1051 passed, 280 skipped (no Redis); desktop-tests 127 passed, 5 skipped; build, python lint/format/tests (170 passed), demo, secrets passed. Not run: opening the file in a running Studio in a browser, `verify full`, Redis, native.
 
+Delivery: draft PR #734 (https://github.com/BunsDev/river-oaks/pull/734), head `fa083cf9df69bf6fc92f24098608aa29ba6d47c7` (signed; the core receipt above belongs to that tree), base `feat/destination-reference-20261028`. Hosted Verify pending at the time of this note.
+
 Next bridge (increment 4 candidate): the Studio neighborhood compiler's region carries `parcels` with `bounds_m`; `destination reference` can turn a region's parcels into kit quarters, so Studio-drawn parcels decide where kit blocks go.
 
 Gaps after increment 3: plazas and furniture are still typed per item; no bridge yet from Studio parcels to kit quarters. plazas, furniture and tree rows are still typed per item; no bridge from the Studio neighborhood compiler's parcels to kit blocks; the reference adapter reads axis-aligned grids only (curves are reported for hand authoring, by design).
