@@ -1,0 +1,15 @@
+{
+  "id": "typesafe-place-penthouse",
+  "kit": "city-kit-1",
+  "seed": 2026,
+  "hash": "e7f10ab68350e830",
+  "recipeHash": "c11edfa18cd1217f",
+  "overridesHash": "05fc5abaa52000b0",
+  "stats": {
+    "pieces": 110,
+    "buildings": 9,
+    "solids": 46,
+    "materials": 9,
+    "triangles": 133704
+  }
+}
