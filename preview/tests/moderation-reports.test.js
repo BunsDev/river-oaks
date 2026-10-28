@@ -19,9 +19,10 @@ function withDocument(t) {
   globalThis.document = { createElement: tag => new Element(tag) };
 }
 const reply = (value, status = 200) => ({ ok: status < 400, status, json: async () => value });
-const report = (at, reason, reporter, reported, banned = false, staff = false) => ({ at, reason, reporter: { name: reporter }, reported: { id: `user-${reported}`, name: reported, banned, staff } });
-// Answers like /auth/session, /api/moderation/reports and /api/moderation/ban, recording each call.
-function server({ moderator = true, reports = [report('2026-10-26T10:00:00.000Z', 'harassment', 'pat', 'erin')], signedIn = true, list = null, ban = null } = {}) {
+// A listed report as the route sends it; `extra` adds id, content, respondBy, overdue or closed.
+const report = (at, reason, reporter, reported, banned = false, staff = false, extra = {}) => ({ at, reason, reporter: { name: reporter }, reported: { id: `user-${reported}`, name: reported, banned, staff }, ...extra });
+// Answers like /auth/session, /api/moderation/reports, /api/moderation/ban and /api/moderation/reports/close, recording each call.
+function server({ moderator = true, reports = [report('2026-10-26T10:00:00.000Z', 'harassment', 'pat', 'erin')], signedIn = true, list = null, ban = null, close = null } = {}) {
   const calls = [], banned = new Set();
   const fetcher = async (path, options = {}) => {
     calls.push([options.method ?? 'GET', path, options.headers?.['X-CSRF-Token'] ?? null, options.body ? JSON.parse(options.body) : null]);
@@ -32,12 +33,18 @@ function server({ moderator = true, reports = [report('2026-10-26T10:00:00.000Z'
       if (ban) return ban();
       const body = JSON.parse(options.body);if (body.banned) banned.add(body.userId);else banned.delete(body.userId);return reply({ ok: true });
     }
+    if (path === '/api/moderation/reports/close') {
+      if (close) return close();
+      const body = JSON.parse(options.body), item = reports.find(entry => entry.id === body.id);
+      if (!item) return reply({ error: 'That report isn’t here.' }, 404);
+      item.closed = { at: '2026-10-27T12:00:00.000Z', by: 'mod' };item.overdue = false;return reply({ ok: true });
+    }
     throw new Error(`unexpected ${path}`);
   };
   return { fetcher, calls };
 }
 const parts = root => { const [heading, help, status, list] = root.children;return { heading, help, status, list }; };
-const rows = root => parts(root).list.children.map(row => { const [summary, meta, actions] = row.children;return { row, summary: summary.text, meta: meta.text, actions: actions.children }; });
+const rows = root => parts(root).list.children.map(row => { const [summary, meta, content, actions] = row.children;return { row, summary: summary.text, meta: meta.text, content, actions: actions.children }; });
 
 test('residents and signed-out visitors never see the reports group', async t => {
   withDocument(t);
@@ -310,4 +317,50 @@ test('when a ban leaves the group hidden, focus stays in the Account pane', asyn
   await rows(root)[0].actions[0].click();
   assert.equal(root.hidden, true);
   assert.equal(focused, pane);
+});
+
+test('a report shows what it carries, when to respond by, overdue and closed states, and a Close that goes through the server', async t => {
+  withDocument(t);
+  const open = report('2026-10-26T10:00:00.000Z', 'harassment', 'pat', 'erin', false, false, { id: 'report-open', content: { quoted: '<b>go away</b>', chat: [{ at: null, text: 'first' }, { at: '2026-10-26T09:59:00.000Z', text: 'second' }] }, respondBy: '2026-10-27T10:00:00.000Z', overdue: false, closed: null });
+  const overdue = report('2026-10-25T10:00:00.000Z', 'cheating', 'kim', 'sam', false, false, { id: 'report-late', content: null, respondBy: '2026-10-26T10:00:00.000Z', overdue: true, closed: null });
+  const closed = report('2026-10-24T10:00:00.000Z', 'disruption', 'kim', 'mod2', false, true, { id: 'report-done', content: { quoted: 'hmm' }, respondBy: '2026-10-25T10:00:00.000Z', overdue: false, closed: { at: '2026-10-24T12:00:00.000Z', by: 'mod' } });
+  const api = server({ reports: [open, overdue, closed] }), root = createModerationReports({ fetcher: api.fetcher });
+  await root.refresh();
+  const listed = rows(root);
+  assert.deepEqual(listed.map(item => item.row.className), ['moderation-report', 'moderation-report moderation-report-overdue', 'moderation-report moderation-report-closed']);
+  assert.match(listed[0].meta, /^Reported by pat, .*\. Respond by /);
+  assert.equal(listed[0].row.children[1].children[2].getAttribute('datetime'), '2026-10-27T10:00:00.000Z', 'the response target is a time');
+  assert.match(listed[1].meta, /\. Overdue, was due /);
+  assert.match(listed[2].meta, /\. Closed by mod, /);
+  // The quoted text and the chat lines are text, never markup.
+  const [quote, chat] = listed[0].content.children;
+  assert.deepEqual([quote.tagName, quote.textContent], ['BLOCKQUOTE', '<b>go away</b>']);
+  assert.deepEqual([chat.tagName, chat.getAttribute('aria-label'), chat.children.map(line => line.textContent)], ['UL', 'erin’s last messages', ['first', 'second']]);
+  assert.deepEqual(listed[1].content.children, [], 'nothing shown for a report that carries nothing');
+  assert.deepEqual(listed.map(item => item.actions.map(button => button.textContent)), [['Ban erin…', 'Close report'], ['Ban sam…', 'Close report'], []], 'no Close on a closed report; staff can\'t be banned');
+  await listed[1].actions[1].click();
+  assert.deepEqual(api.calls.find(call => call[1] === '/api/moderation/reports/close'), ['POST', '/api/moderation/reports/close', 'token-1', { id: 'report-late' }]);
+  assert.equal(parts(root).status.textContent, 'Report closed.');
+  assert.equal(focused, parts(root).status);
+  assert.deepEqual(rows(root).map(item => [item.row.className, item.actions.map(button => button.textContent)]),
+    [['moderation-report', ['Ban erin…', 'Close report']], ['moderation-report moderation-report-closed', ['Ban sam…']], ['moderation-report moderation-report-closed', []]]);
+  assert.match(rows(root)[1].meta, /\. Closed by mod, /);
+});
+
+test('a Close that is refused says why and keeps the report open; the row shows the change when the list can\'t reload', async t => {
+  withDocument(t);
+  const item = report('2026-10-26T10:00:00.000Z', 'harassment', 'pat', 'erin', false, false, { id: 'report-open', content: null, respondBy: '2026-10-27T10:00:00.000Z', overdue: false, closed: null });
+  const refused = server({ reports: [item], close: () => reply({ error: 'That report isn’t here.' }, 404) }), root = createModerationReports({ fetcher: refused.fetcher });
+  await root.refresh();
+  await rows(root)[0].actions[1].click();
+  assert.equal(parts(root).status.textContent, 'That report isn’t here.');
+  assert.deepEqual(rows(root)[0].actions.map(button => [button.textContent, button.disabled]), [['Ban erin…', false], ['Close report', false]]);
+  let limited = false;
+  const api = server({ list: () => limited ? reply({ moderator: true, error: 'Please wait a moment before refreshing reports.' }, 429) : reply({ moderator: true, reports: [item] }), close: () => { limited = true;return reply({ ok: true }); } });
+  const other = createModerationReports({ fetcher: api.fetcher });
+  await other.refresh();
+  await rows(other)[0].actions[1].click();
+  assert.equal(parts(other).status.textContent, 'Report closed. Please wait a moment before refreshing reports.');
+  assert.deepEqual(rows(other).map(entry => [entry.row.className, entry.actions.map(button => [button.textContent, button.disabled])]), [['moderation-report moderation-report-closed', [['Ban erin…', false]]]]);
+  assert.match(rows(other)[0].meta, /\. Closed by you, /);
 });
