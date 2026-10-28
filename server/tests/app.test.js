@@ -177,6 +177,38 @@ for (const path of ['command','broadcast']) test(`a session expiring mid-visit (
  assert.equal(joins,1,'the reconnect resumes the existing player instead of joining again');
  assert.deepEqual(second.snapshot.players.find(player=>player.id==='one').position,[9,8,0],'the position from before the expiry is kept');
 });
+// A socket keeps the identity it was issued at upgrade, which expires with its sign-in (the
+// browser fixture's hour; a provider access token's lifetime). Before that the town asks the
+// page to move to a fresh socket, as it does for a host's request limit, so the hourly expiry
+// is a hand-over and not a "Connection lost" gate. Before 2026-10-28 the first notice of an
+// expiry was the 4001 close itself, one second of gate for every player every hour.
+test('a session nearing its expiry is asked to move to a fresh socket before the expiry closes it',{timeout:10000},async t=>{
+ const lifetime=1500;
+ const shortAuth={...auth,async authenticate(req){const identity=await auth.authenticate(req);return identity&&{...identity,expiresAt:Date.now()+lifetime};}};
+ const {origin,world}=await fixture(t,{auth:shortAuth});
+ let joins=0;const join=world.join;world.join=identity=>{joins++;return join(identity);};
+ const token=(await (await ticket(origin,'one')).json()).ticket;
+ // Listen before the socket opens: the notice can follow the first snapshot in the same read.
+ const ws=new WebSocket(origin.replace('http','ws')+'/multiplayer?'+new URLSearchParams({ticket:token,protocol:String(WORLD_PROTOCOL_VERSION)}),{headers:{Origin:'http://127.0.0.1',Cookie:'session=one'}});
+ t.after(()=>ws.terminate());
+ const rotated=new Promise(resolve=>ws.on('message',raw=>{const message=JSON.parse(raw);if(message.type==='rotate')resolve({at:Date.now(),message});}));
+ await new Promise((resolve,reject)=>{ws.once('open',resolve);ws.once('error',reject);});
+ const opened=Date.now();
+ const notice=await rotated;
+ assert.ok(notice.at-opened<lifetime,'the notice comes before the sign-in runs out');
+ assert.equal(notice.message.closeInMs,lifetime,'and says how long the socket has');
+ assert.equal(typeof notice.message.connectionId,'string');
+ world.players.get('one').position=[9,8,0];
+ // The page moves to a fresh socket, which re-authenticates (a fresh expiry) and keeps the player.
+ const closed=new Promise(resolve=>ws.once('close',(code,reason)=>resolve([code,String(reason)])));
+ const again=(await (await ticket(origin,'one')).json()).ticket;
+ const second=await connect(origin,again+'&continues='+notice.message.connectionId,'one');t.after(()=>second.ws.terminate());
+ assert.equal(joins,1,'the fresh socket resumes the existing player');
+ assert.deepEqual(second.snapshot.players.find(player=>player.id==='one').position,[9,8,0]);
+ const [code]=await closed;
+ assert.ok([4009,4010,4001].includes(code),`the old socket is retired (${code})`);
+ assert.ok(world.players.has('one'),'and the player stays in the world throughout');
+});
 test('oversized and flooding frames cannot generate unbounded world commands',async t=>{
  const {origin,commands}=await fixture(t);
  const token=(await (await ticket(origin,'one')).json()).ticket;
