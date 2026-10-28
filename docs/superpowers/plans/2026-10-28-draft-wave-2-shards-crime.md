@@ -87,4 +87,17 @@ Step breakdown of the heights job: setup (install, Playwright caches) is under 1
 
 ## Gaps
 
+- #599's evidence comment and the human review packet wait for an increment-5 PR head to bind to: d1 owns `onfoot-encounter-640-inc5-20261027` until 13:00Z (its worktree untouched since 10-27 18:22Z); if d1 is not live by then this session claims the task and opens the PR from `../river-oaks-onfoot-640-inc5-ae`.
+- No `verify full` on `b7df2c6a` + handoff files yet (browser lock shared; queued after the shard-split and Quaternius runs).
+- `preview shared (required)` (14.8 min on `18222a6d`) is now the longest preview job; untouched, listed as decision 5.
+
 ## Decisions for Val
+
+1. **#722 (Quaternius clips)**: d7 holds it under your instruction to it (head moved to `c82d7b53`, a merge of `main`, at 08:3xZ). Nothing for this session unless you move it back.
+2. **Draft-wave landings not covered by the goal's defaults**: #681 (ac's lander, on turn), #692/#685 (iOS draw budget, owner 4c25a886 lease expired 06:00Z), #695/#707 (depth shader, owner 3e live until 12:00Z), the #292 stack (#705 needs your explicit line, #709 lease expired 02:00Z, #714 lease expired 10-27). Tick each you want landed; released ones land through `pnpm run land` only after their core receipts.
+3. **Coordinator idle tick**: #655's stroll planning moved the p95 (second-slowest tick of a 28-tick window) from 33 to 60 ms by redistributing route searches, not by adding work; one tier-1 active gate miss (109.4 > 85.0) on `18222a6d` in the attribution run. Product fix is a per-tick route-search budget in `stepResidentLife` — authorize or leave as a measured finding.
+4. **Night sky for the Crime Feel milestone**: 19:00 renders a daylight sky (clear weather keeps the daytime HDR); the `crime-night` journey passes on HUD and timing but a "night" capture needs an authored sky and lamps. Scope it into increment 6 or accept daylight for the first playable.
+5. **`preview shared (required)` split**: 14.8 min against the 20-min cutoff; splitting its modes the way heights was split is a one-file workflow change. Authorize as a follow-up PR or leave.
+6. **`owner.evadeShownAfterVisitorKeyMs` is null**: peers never see the evade (the snapshot carries no evade state), so the measurement cannot exist until the server publishes it. Accept for the first playable or scope into increment 6.
+7. **`crime-melee-597` worktree is dirty** (Codex cc29 state archived at `~/worktree-backups/river-oaks/crime-release-599-handoff-20261028/`); retirement needs your line since the owner is not live.
+8. **Worktrees `71` and `f1`**: owners' leases expired; release or keep (no undelivered edits found in either; details in the register inventory).
