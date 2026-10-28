@@ -96,6 +96,9 @@ export const KIT_FINISHES = Object.freeze({
   classic: Object.freeze({ label: 'Classic', materials: Object.freeze({}) }),
   'pink-jet-age': Object.freeze({
     label: 'Pink Jet-Age',
+    // Rounded-form vocabulary (render.js renderShell): canopy noses and capsule sign
+    // plates as facade detail in existing slots. Massing, ground and collision never change.
+    forms: true,
     materials: Object.freeze({
       // Ivory shells: every stone and stucco wall keeps its surface and coursing.
       limestone: { color: P.ivory }, 'stucco-ivory': { color: P.ivory }, 'stucco-apricot': { color: '#f3e4d6' },
