@@ -18,7 +18,7 @@ Register task `landowner-hovercraft-20261028`, branch `feat/landowner-hovercraft
 
 ## Files owned
 
-- `preview/src/vehicle-config.js`, `preview/src/road-vehicles.js`, `preview/src/vehicle-glints.js`, `preview/src/driving-hands.js`, `preview/src/player-avatar.js`, `preview/e2e/fixtures/vehicles.js`.
+- `preview/src/vehicle-config.js`, `preview/src/road-vehicles.js`, `preview/src/vehicle-glints.js`, `preview/src/driving-hands.js`, `preview/src/player-avatar.js`, `preview/e2e/fixtures/vehicles.js`, `preview/e2e/hover-coach.js` (hosted `commons` experience shard in `.github/workflows/verify.yml`).
 - `preview/src/office-arrival-architecture.js`, `preview/src/office-arrival-model.js`, `preview/src/office-scene.js`, `preview/src/office-world-scene.js`.
 - `server/chauffeur.js`, `src/river_oaks/chauffeur.py`.
 - Tests: `preview/tests/vehicles.test.js`, `preview/tests/office-arrival-architecture.test.js`, `preview/tests/office-scene.test.js`, `server/tests/world.test.js`, `server/tests/chauffeur.test.js`, `tests/test_chauffeur.py`.
@@ -30,6 +30,7 @@ Register task `landowner-hovercraft-20261028`, branch `feat/landowner-hovercraft
 - [x] `node --test preview/tests/office-arrival-architecture.test.js preview/tests/office-contract.test.js preview/tests/office-scene.test.js preview/tests/office-world-presentation.test.js preview/tests/arrival.test.js preview/tests/office-tower-raise.test.js preview/tests/green-roofs.test.js preview/tests/curb-descent.test.js`: 46 passed, 0 failed (door leaves open only for their landing and clear the office wall; the phase light sweeps up and back with the body absent at the top; teardown releases every geometry, material and texture once).
 - [x] `node --test --test-name-pattern="hover coach|vehicle pose|may fly" server/tests/world.test.js`: 4 passed (guest refused `exclusive_vehicle`; a 7.5 m/s owner move refused as `movement_too_fast` in the car and accepted in the coach; the owner as Kai is refused flight on foot and in the car but flies the coach; the ceiling still binds; a checkpoint keeps the coach aloft and refuses an airborne car).
 - [x] `node --test server/tests/chauffeur.test.js` and `uv run --locked pytest -q tests/test_chauffeur.py`: pass.
+- [ ] `preview/e2e/hover-coach.js` green in the hosted `commons` experience shard on PR #737 (local runs on this host starve; see Results).
 - [x] Fixture screenshots of the reshaped coach and the phase tube against the references: the first queued run (18:51Z, host load 12–13) timed out waiting for both fixtures' ready flags; the rerun (18:59Z–19:04Z, `.runtime/landowner-hovercraft/shots-3/`, `tube/`) rendered both with no page errors. Coach: 165 draws, 790 k triangles against the car's 201 and 875 k. The lounge re-lay below was rendered again at 19:2xZ (`shots-4/`).
 - [x] `pnpm run verify` (core) on the reshaped coach and phase tube before flight and the shrink: passed (receipt `.runtime/agent/core.json`, 18:0xZ).
 - [x] `pnpm run verify` (core) on the final tree with flight and the 30% plan shrink: passed (receipt `.runtime/agent/core.json`, 2026-10-28 18:05Z; preview 4,325 tests, server suites, 171 Python tests, lint). Committed as `0a1c6748`, draft PR #737.
@@ -48,10 +49,10 @@ Register task `landowner-hovercraft-20261028`, branch `feat/landowner-hovercraft
 
 ## Gaps
 
-- No browser journey drives or flies the coach or watches the phase tube yet; `desktop/vehicles-e2e.js` still loops over the car and motorcycle only. On this host (load 14–22 all afternoon) the headless page cannot drain the town's snapshot stream, so the in-game flight evidence is the garage, the parked coach and the boarded ride (`dev-2-try1/`), plus the protocol-level proof from a node websocket client against the same town; the drive and flight in the browser remain to be shown on a quiet host.
+- `preview/e2e/hover-coach.js` is the browser journey for the coach (garage, call, park on four contact tyres, board, drive with the town carrying the owner in the coach, Space climb with the town carrying altitude and a level hull, G lands first, G steps out, town shows the owner on foot). It runs in the hosted `commons` shard and has not yet run green anywhere; no journey watches the phase tube; `desktop/vehicles-e2e.js` still loops over the car and motorcycle only. On this host (load 14–22 all afternoon) the headless page cannot drain the town's snapshot stream, so the in-game flight evidence is the garage, the parked coach and the boarded ride (`dev-2-try1/`), plus the protocol-level proof from a node websocket client against the same town; the drive and flight in the browser remain to be shown on a quiet host.
 - The coach follows the ground beneath it while flying (altitude is relative, as for Jevica's flight) and its hull clearance samples nine plan points at two heights, so a very narrow mast could pass between samples. Jev's smart ride stays on the road; lift stops it.
 - The phase effect hides the body for a beat and draws a light column over it; it does not clip the avatar's materials at the ring, which would need per-material clipping planes on shared rigs.
 
 ## Next step
 
-Watch the hosted `preview` aggregate on the pushed head; when the host is quiet (load under ~8) rerun `.runtime/landowner-hovercraft/dev-run-2.mjs` under the browser lock for the in-browser drive and flight; mark ready only with merge authorization.
+Watch `preview experience (commons)` on the pushed head for the hover-coach journey and fix anything it reports; the stack-rehearsal flake in `preview checks` is red on `main` today (its last four push runs); mark ready only with merge authorization.

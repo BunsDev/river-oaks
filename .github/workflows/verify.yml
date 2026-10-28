@@ -281,8 +281,9 @@ jobs:
             journeys: garden-campus-office garden-campus-suite
           - id: campus-traversal
             journeys: garden-campus-traversal
+          # The landowner hover coach: garage, call, board, drive, climb, land and step out (#737).
           - id: commons
-            journeys: east-garden-commons
+            journeys: east-garden-commons hover-coach
           # Bayou Heights over the Lantern Footbridge (#586 continuation). One journey used to walk
           # in, play, reconnect and walk home: 14-19.5 min on this runner against the 20-min timeout,
           # and twice cancelled at it (f4dd959a, f3b01149). Outbound and return are separate shards.
