@@ -11,12 +11,13 @@ The kit extends existing systems rather than adding a city engine. Movement uses
 | Pieces, styles, materials, conventions, budgets | `shared/city-kit/catalog.js` |
 | Recipe validation, seeded assembly, overrides, provenance, connectivity | `shared/city-kit/assemble.js` |
 | Blocks derived from streets, quarters and reservations | `shared/city-kit/layout.js` |
+| Kit streets from a geographic reference: grid, crop, snap, merge, dropped-road diagnostics | `shared/city-kit/reference.js` |
 | Three.js rendering of a plan | `preview/src/city-kit/render.js` |
 | Recipes, locks | `config/destinations/*.json`, `*.lock.json` |
 | CLI | `scripts/destination.mjs` (`pnpm run destination …`) |
 | In-engine preview of any recipe | `preview/e2e/fixtures/city-kit.html?recipe=<id>&seed=<n>&view=<view>` |
 | Pedestrian-scale screenshot review | `preview/e2e/city-kit-review.js` (shared browser lock) |
-| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/bayou-market-commons.test.js` |
+| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/city-kit-reference.test.js`, `preview/tests/bayou-market-commons.test.js` |
 
 ## Conventions
 
@@ -80,6 +81,15 @@ A recipe may carry a `layout` instead of typing every block rectangle by hand. I
 - **Budget.** The renderer batches each block separately, about twelve draw calls per block beside roughly twenty for the streets and plazas, so a recipe holds about four blocks inside the 70-call budget. The example derives three; a larger site is several recipes, as Studewood and Woodland Heights are north and south recipes.
 - **Freeze.** `destination layout <recipe> --freeze` writes the derived blocks into the recipe as authored blocks and removes the layout, after checking that the frozen recipe places identical pieces, surfaces and solids. Use it when a neighborhood is approved and later edits should be by hand; the recipe hash changes, so lock again.
 
+## Start from a geographic reference
+
+`destination reference <world.json> --site w,s,e,n --id <id>` turns the mapped roads inside a site into a recipe skeleton. The source is any world export with a `roads` list of polylines in local metres (the bundled `preview/public/data/district.json`, a `river-oaks build` world, a Studio region); nothing in it is changed. The site is in the source's frame; its rectangle is turned about its own centre with the grid.
+
+- **Grid.** The dominant heading of the road inside the site, length-weighted and refined to a tenth of a degree, becomes the kit's east axis (`--rotation <deg>` fixes it). Runs of a road within `--tolerance` (5°) of an axis become streets; the run's mean offset is snapped to the half-metre module, its ends are clipped to the site, and the map's `width_m` is the lane (`--lane` when the map has none; `--sidewalk` 3.5 m). Pieces of one way that line up end to end are one street, named after the mapped name.
+- **What is dropped, and why.** Bends and diagonals (with the worst angle), runs shorter than `--min-length` (20 m), corridors that would leave the site, kinds not in `--kinds`, and corridors that overlap a wider or longer street. Each is printed and recorded under `reference.dropped` with its mapped id and length, so a curved street is added by hand, not lost.
+- **Buildings and names.** Mapped buildings inside the site are counted, not reproduced; the kit builds original architecture, and the skeleton's one quarter carries one placeholder name per derived block. Name the shops, add plazas, landmarks and furniture, choose quarters, then `build`.
+- **Provenance.** `reference` records the source file's name and SHA-256, CRS and origin, the site, rotation, tolerance and the mapped roads behind every street. It is part of the recipe, so the plan's recipe hash covers it.
+
 ## Commands
 
 ```sh
@@ -90,13 +100,14 @@ pnpm run destination check                                                      
 pnpm run destination override config/destinations/bayou-market-commons.json bayou-market-commons/garden-court/parcel-2 --set roof='"stepped"' --note "Art pass"
 pnpm run destination preview config/destinations/bayou-market-commons.json        # how to open it in-engine
 pnpm run destination layout config/destinations/layout-grid-example.json          # the land each quarter claims and the blocks it derives; --freeze writes them as authored blocks
+pnpm run destination reference preview/public/data/district.json --site=-2910,-1400,-2760,-1280 --id district-crop   # a recipe skeleton from the mapped roads inside a site
 ```
 
 `build` exits non-zero when a plan exceeds a budget, leaves any walkable sample unconnected, or makes a lantern unreachable. The SVG shows blocks by wall material, faced frontages, solids, tree crowns, lanterns, the landmark and every manually edited piece.
 
 ## Production workflow for the next neighborhood
 
-1. Copy a recipe, choose a site inside an authored manifest location, and lay out streets, plazas and the authored items that matter: landmark, gathering places and activity points. Describe the blocks as quarters in a `layout` (above) and let the streets place them; type a block by hand only where its rectangle must differ from the land its streets leave.
+1. Copy a recipe, or start one with `destination reference` from the mapped roads of the place that inspires it; choose a site inside an authored manifest location, and lay out streets, plazas and the authored items that matter: landmark, gathering places and activity points. Describe the blocks as quarters in a `layout` (above) and let the streets place them; type a block by hand only where its rectangle must differ from the land its streets leave.
 2. Run `destination build`, open the SVG, then open the in-engine preview at pedestrian height (`city-kit.html?recipe=…&view=street`). Try a few seeds and keep the best one.
 3. Fix art direction with overrides and additions, not by editing output. Rebuild, review, then `--lock`.
 4. Compose it into a manifest location with real walking ground (see `shared/commons-destination.js` and `shared/bayou-heights.js`), then add the movement and connectivity tests and a browser journey. When a recipe's ground joins a neighbouring plan, name the seam in `ENTRIES` in `scripts/destination.mjs` so its own connectivity check includes it.

@@ -31,4 +31,22 @@ Gaps and later increments: geographic reference input for city-kit streets (the 
 
 Delivery: draft PR #730 (https://github.com/BunsDev/river-oaks/pull/730), source head `7caa2cd858d6558249bed17efde5e76b8b8fa0da` (signed; the core receipt above belongs to that tree). Hosted Verify pending at the time of this note.
 
-Next step: hosted Verify, review, then land when authorized. Increment 2 candidate: geographic reference input for kit streets.
+Next step: hosted Verify, review, then land when authorized.
+
+## Increment 2: kit streets from a geographic reference
+
+Task `destination-reference-20261028`, branch `feat/destination-reference-20261028` stacked on increment 1 (worktree `/Users/buns/Documents/GitHub/BunsDev/river-oaks-destination-reference`); retarget to `main` after #730 merges.
+
+Objective: `destination reference <world.json> --site w,s,e,n --id <id>` turns the mapped roads inside a site of a world export (the bundled District, a `river-oaks build` world, a Studio region) into a recipe skeleton: the dominant grid becomes the kit's east axis, runs within a tolerance of an axis become streets on the module with the map's width, pieces of one way merge, and every road the kit cannot express (bends, stubs, corridors leaving the site, overlaps, unrequested kinds) is printed and recorded under `reference.dropped` with its reason. One quarter with a placeholder name per derived block, a budget outlook, and source provenance (file name, SHA-256, CRS, origin, site, rotation). Buildings are counted, never reproduced.
+
+Files owned: `shared/city-kit/reference.js` (new), `scripts/destination.mjs` (`reference` command, `--name=value` flags), `preview/tests/city-kit-reference.test.js` and `preview/tests/fixtures/city-kit-reference-grid.json` (new), `docs/city-kit.md` (reference section), this ledger.
+
+Findings: the District export's roads are 86% axis-aligned within 3° over 2.97 km, but it is an apartment complex of loops and footways, not a street grid; the crop at [-2910,-1400,-2760,-1280] keeps five straight lanes, reports Westcreek Lane as bending 12° and yields seven blocks at 348,168 triangles, over the 260,000 budget. That is the right answer for that site: the command says so before anyone names a shop. The synthetic fixture (a grid turned 12° with a bend, a stub, an edge road and a parallel path) proves the turn, snap, merge and every drop reason, and a budget-sized crop of it builds clean.
+
+Results (2026-10-28):
+
+- `node --test preview/tests/city-kit-reference.test.js preview/tests/city-kit-layout.test.js preview/tests/city-kit.test.js`: 26 passed, 0 failed.
+- `pnpm run destination check`: 15 locks reproduce (no committed recipe uses `reference`).
+- `python3 -I scripts/check_secrets.py --all`: no leaks.
+- The rasterized `plan.svg` of the fixture's core crop (`.runtime/destination-reference/plan.svg.png`, local) shows Main Street and Cross Street with four derived blocks facing Main.
+- `pnpm run verify` (core) on this source, receipt `.runtime/agent/core.json` (revision `b64271bb`, dirty with the files above), log `.runtime/destination-reference/verify-core-001.log`: passed. agent-tests 289/289; preview-tests 4320 passed, 1 skipped; server-tests 1051 passed, 280 skipped (no Redis); desktop-tests 127 passed, 5 skipped; build, python lint/format/tests (170 passed), demo and secrets passed. Not run: `verify full` (Redis, browser), browser journeys, native.
