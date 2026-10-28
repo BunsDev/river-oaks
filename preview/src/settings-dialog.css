@@ -90,6 +90,45 @@
 :root[data-theme] .game-hud #settings-dialog .access-tools button:hover { background: var(--hud-tile-hover); }
 :root[data-theme] .game-hud #settings-dialog #access-signout { color: #a33a32; }
 :root[data-theme=dark] .game-hud #settings-dialog #access-signout { color: #ff9f94; }
+/* Support (support-contact.js): shown only when VITE_SUPPORT_CONTACT is set. */
+:root[data-theme] .game-hud #settings-dialog .support-contact > p { margin: 0; color: var(--ink); font-size: 13px; line-height: 1.5; }
+:root[data-theme] .game-hud #settings-dialog .support-contact a { color: var(--hud-action); text-underline-offset: 2px; }
+:root[data-theme=dark] .game-hud #settings-dialog .support-contact a { color: var(--hud-focus); }
+/* Reports (moderation-reports.js): shown only to moderators. Names and times wrap on phones. */
+:root[data-theme] .game-hud #settings-dialog .moderation-reports > p { margin: 0 0 10px; color: var(--hud-muted); font-size: 12.5px; line-height: 1.5; }
+:root[data-theme] .game-hud #settings-dialog .moderation-reports-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+:root[data-theme] .game-hud #settings-dialog .moderation-report { display: grid; gap: 4px; padding: 10px 12px; border-radius: 12px; background: var(--hud-tile); overflow-wrap: anywhere; }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-summary { margin: 0; color: var(--ink); font-size: 13px; font-weight: 600; }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-meta { margin: 0; color: var(--hud-muted); font-size: 12.5px; }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-actions:empty,
+:root[data-theme] .game-hud #settings-dialog .moderation-reports-status:empty,
+:root[data-theme] .game-hud #settings-dialog .moderation-reports[hidden] { display: none; }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-action {
+  min-height: 44px; margin: 0; padding: 0 14px; border: 1px solid var(--hud-hairline); border-radius: 12px; background: var(--hud-raised); box-shadow: none; color: var(--ink); font-size: 13px; font-weight: 500;
+}
+:root[data-theme] .game-hud #settings-dialog .moderation-report-confirm { color: #a33a32; }
+:root[data-theme=dark] .game-hud #settings-dialog .moderation-report-confirm { color: #ff9f94; }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-action:not(:disabled):hover { background: var(--hud-tile-hover); }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-action:disabled { opacity: .55; }
+/* Delete account (account-deletion.js): shown only when the server offers it, last in Account. */
+:root[data-theme] .game-hud #settings-dialog .account-deletion > p { margin: 0 0 10px; color: var(--hud-muted); font-size: 12.5px; line-height: 1.5; }
+:root[data-theme] .game-hud #settings-dialog .account-deletion-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 0 0 10px; }
+:root[data-theme] .game-hud #settings-dialog .account-deletion-form :is(label, input) { grid-column: 1 / -1; }
+:root[data-theme] .game-hud #settings-dialog .account-deletion-form label { font-size: 13px; font-weight: 600; color: var(--ink); }
+:root[data-theme] .game-hud #settings-dialog .account-deletion-form input {
+  min-height: 44px; padding: 0 12px; border: 1px solid var(--hud-hairline); border-radius: 12px; background: var(--hud-tile); color: var(--ink); font: inherit; font-size: 13px;
+}
+:root[data-theme] .game-hud #settings-dialog :is(.account-deletion-open, .account-deletion-submit, .account-deletion-cancel, .account-deletion-continue) {
+  min-height: 44px; margin: 0; padding: 0 14px; border: 0; border-radius: 12px; background: var(--hud-tile); box-shadow: none; color: var(--ink); font-size: 13px; font-weight: 500;
+}
+:root[data-theme] .game-hud #settings-dialog :is(.account-deletion-open, .account-deletion-submit) { color: #a33a32; }
+:root[data-theme=dark] .game-hud #settings-dialog :is(.account-deletion-open, .account-deletion-submit) { color: #ff9f94; }
+:root[data-theme] .game-hud #settings-dialog :is(.account-deletion-open, .account-deletion-submit, .account-deletion-cancel, .account-deletion-continue):not(:disabled):hover { background: var(--hud-tile-hover); }
+:root[data-theme] .game-hud #settings-dialog .account-deletion-submit:disabled { opacity: .55; }
+:root[data-theme] .game-hud #settings-dialog .account-deletion-status:empty,
+:root[data-theme] .game-hud #settings-dialog .account-deletion[hidden],
+:root[data-theme] .game-hud #settings-dialog .account-deletion [hidden] { display: none; }
 :root[data-theme] .game-hud #settings-dialog .panel-footer {
   display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 0; padding: 0 6px 0 14px; border: 0; border-radius: 12px;
   background: var(--hud-tile); color: var(--ink); font-size: 13px;

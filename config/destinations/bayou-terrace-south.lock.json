@@ -1,0 +1,15 @@
+{
+  "id": "bayou-terrace-south",
+  "kit": "city-kit-1",
+  "seed": 1934,
+  "hash": "adcc2814de5968da",
+  "recipeHash": "b5d476fd90f8c65f",
+  "overridesHash": "174b1d836bafee25",
+  "stats": {
+    "pieces": 130,
+    "buildings": 20,
+    "solids": 56,
+    "materials": 9,
+    "triangles": 75452
+  }
+}

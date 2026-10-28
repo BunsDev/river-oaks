@@ -1,12 +1,10 @@
-import { treeSupports } from './tree-placements.js';
 import { createCarriageDriver } from './carriage-driver.js';
 import { createRoadVehicle } from './road-vehicles.js';
 import { VEHICLES, vehicleKind, drivingInput } from './vehicle-config.js';
 import { createChauffeur, scenicRoute } from './chauffeur.js';
-import { carriageContains, carriageFootprint, findCarriageParking } from './carriage-parking.js';
+import { carriageContains, findCarriageParking, vehicleCanOccupy } from './carriage-parking.js';
 import { fitCarriageToGround, stepCarriage, findCarriageExit } from './carriage-motion.js';
 import { createWalkingEnvironment } from './walking.js';
-import { createPedestrianNetwork } from './pedestrian-network.js';
 import { Vector3, Quaternion } from 'three';
 
 // Public name retained for companion integrations.
@@ -14,7 +12,7 @@ import { Vector3, Quaternion } from 'three';
 export function createParkedCarriage({scene,walking,getWorld,getLocals,getConversation,requestExit=async()=>({ok:true}),requestChauffeur,reducedMotion=false}) {
  let kind='rolls',model=createRoadVehicle(kind);model.object.visible=false;scene.add(model.object);
  const driver=createCarriageDriver({scene,getLocals,getConversation}),chauffeur=createChauffeur({fetcher:requestChauffeur});
- let placement=null,loadedWorld=null,environment=null,companionEnvironment=null,network=null,mounted=false,enabled=true,exiting=false,heldControls={};
+ let placement=null,loadedWorld=null,environment=null,companionEnvironment=null,mounted=false,enabled=true,exiting=false,heldControls={};
  const removeObstacle=walking.addObstacle({contains:(...point)=>enabled&&!mounted&&carriageContains(placement,...point)});
  const apply=()=>{
   model.object.position.fromArray(placement.position);model.object.rotation.set(placement.pitch,placement.yaw,placement.roll,'YXZ');
@@ -22,11 +20,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   model.wheels.forEach((wheel,i)=>{wheel.position.fromArray(model.spec.wheels[i]).addScaledVector(up,placement.wheelOffsets[i]);wheel.rotation.set(0,i<model.spec.steeredWheels?placement.steering??0:0,placement.distance/model.spec.wheels[i][1],'YXZ');});
   model.updateSteering(placement.steering??0);model.object.updateMatrixWorld(true);
  };
- const canOccupy=next=>{
-  if(carriageFootprint(next).some(([x,z])=>!environment.isFree(x,z)||environment.roomAt(x,z)||!['road','crossing'].includes(network.classify([x,-z]))))return false;
-  if((getLocals()??[]).some(p=>!p.indoor&&!p.vehicleRole&&carriageContains(next,p.position[0],next.position[1]+1,-p.position[1],.65)))return false;
-  return !(treeSupports(getWorld())).some(tree=>carriageContains(next,tree.position[0],next.position[1]+1,-tree.position[1],.6));
- };
+ const canOccupy=next=>vehicleCanOccupy(next,environment,getWorld(),getLocals()??[]);
  const ride={
   get pose(){return {kind,seat:model.object.localToWorld(new Vector3(...model.spec.passengerSeat)).toArray(),cameraTarget:model.object.localToWorld(new Vector3(-1,1.25,0)).toArray(),seatToFloor:model.spec.passengerSeat[1]-model.spec.passengerFloor,yaw:placement.yaw-Math.PI/2,quaternion:model.object.quaternion.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0,1,0),-Math.PI/2)).toArray(),speed:placement.speed,distance:placement.distance};},
   step(input,delta){if(!driver.canDrive){placement.speed=0;chauffeur.request({mode:'stop'});return;}const lookahead={...placement,position:[placement.position[0]-Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]+Math.sin(placement.yaw)*2]};const rear={...placement,position:[placement.position[0]+Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]-Math.sin(placement.yaw)*2]};const manual=drivingInput(input);const controls=chauffeur.input(placement,manual.forward||manual.turn||manual.strafe?manual:heldControls,delta,{roadClear:canOccupy(lookahead),rearClear:canOccupy(rear)});if(chauffeur.status.active&&!controls.forward)placement.speed=0;stepCarriage(placement,{groundAt:environment.groundAt,wheelTreads:model.wheelTreads,canOccupy},controls,delta);apply();},
@@ -80,7 +74,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
    if(!enabled)return;
    if(placement){apply();model.animate(now,placement.speed,reducedMotion);driver.update(model.object,now,walking.getPosition(),{pose:walking.getPose(),environment:companionEnvironment});}
    const world=getWorld();if(!world||!walking.getPose()||world===loadedWorld)return;
-   loadedWorld=world;environment=createWalkingEnvironment(world);network=createPedestrianNetwork(world);
+   loadedWorld=world;environment=createWalkingEnvironment(world);
    companionEnvironment=createWalkingEnvironment(world,[{contains:(...point)=>Boolean(placement)&&carriageContains(placement,...point)}]);
    driver.reset();placement=null;mounted=false;model.object.visible=false;summon();
   },

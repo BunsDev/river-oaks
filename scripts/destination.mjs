@@ -21,7 +21,10 @@ const readRecipe = path => JSON.parse(readFileSync(resolve(path), 'utf8'));
 const lockPath = path => resolve(path).replace(/\.json$/, '.lock.json');
 const recipePaths = () => readdirSync(recipesDir).filter(name => name.endsWith('.json') && !name.endsWith('.lock.json')).map(name => join(recipesDir, name));
 // Recipes with a hand-authored gateway outside their own walkable ground name it here.
-const ENTRIES = { 'bayou-market-commons': { entry: [0, 0], extraSurfaces: [{ id: 'east-garden-commons/promenade', rect: [-3, -3, 82, 3] }] } };
+const ENTRIES = { 'bayou-market-commons': { entry: [0, 0], extraSurfaces: [{ id: 'east-garden-commons/promenade', rect: [-3, -3, 82, 3] }] },
+  // Bayou Heights (shared/bayou-heights.js): the footbridge landing and Nineteenth Street are composed seams.
+  'bayou-greenway': { entry: [115.5, 0], extraSurfaces: [{ id: 'bayou-heights/footbridge-landing', rect: [150, -3, 154, 3] }] },
+  'yale-icehouse': { entry: [156.5, -62.5], extraSurfaces: [{ id: 'bayou-greenway/greenway/walk', rect: [152, -8, 161, 7.5] }, { id: 'bayou-greenway/nineteenth-west/walk', rect: [152, -7.5, 251, 7.5] }] } };
 
 export function report(plan) {
   const entry = ENTRIES[plan.id] ?? { entry: plan.surfaces[0] ? [(plan.surfaces[0].rect[0] + plan.surfaces[0].rect[2]) / 2, (plan.surfaces[0].rect[1] + plan.surfaces[0].rect[3]) / 2] : [0, 0] };
@@ -117,6 +120,6 @@ else if (command === 'override') override(rest[0], rest[1]);
 else if (command === 'preview') {
   const recipe = readRecipe(rest[0] ?? join(recipesDir, 'bayou-market-commons.json'));
   console.log(`In-engine kit preview: pnpm run dev, then open /e2e/fixtures/city-kit.html?recipe=${recipe.id}`);
-  if (recipe.id === 'bayou-market-commons') console.log('Playable in the town: RIVER_OAKS_DISTRICT_REVISION=east-garden-commons-market-1 pnpm run dev, then walk east from the District arrival.');
+  if (recipe.id === 'bayou-market-commons') console.log('Playable in the town: pnpm run dev serves it (the development town defaults to the full expansion), then walk east from the District arrival.');
 } else { console.error(`usage: destination build|check|override|preview (${pieceCount} kit pieces)`); process.exitCode = 2; }
 function fail() { throw new Error('Pass a recipe .json path'); }

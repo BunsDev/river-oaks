@@ -12,6 +12,8 @@ import { roomPrefixFor, accountPrefixFor, populationKeyFor } from './world-keys.
 import { DEFAULT_WORLD_ID, validateWorldId, worldProtocolVersion } from '../preview/src/world-contract.js';
 import { createWorldRouter } from './world-router.js';
 import { createRedisSocial } from './social.js';
+import { createRedisBlocks } from './blocks.js';
+import { isJevicaAdmin } from './admin.js';
 import { createRedisGroups } from './groups.js';
 import { createRedisProfiles } from './profiles.js';
 import { createRedisEvents } from './events.js';
@@ -21,6 +23,7 @@ import { createRedisAvatarPreferences, legacyDefaultAppearance } from './avatar-
 import { createRedisDesignLibrary } from './design-library.js';
 import { createRedisPresence } from './presence.js';
 import { createRedisCyclingMiles } from './cycling-miles.js';
+import { eraseEach } from './account-erasure.js';
 
 /** Routes a single HTTP origin to persistent world rooms with shared auth. */
 export function createWorldGateway({redis,namespace,worldData,auth,security,waitlist,waitlistAdmins=[],origin,configuredWorldId=DEFAULT_WORLD_ID,
@@ -28,7 +31,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   if (!waitlist) throw new Error('Waitlist is required');
   validateWorldId(configuredWorldId);
   // Default off: approvedSpacesEnabled (RIVER_OAKS_APPROVED_SPACES=1) lets regions place approved furnished spaces (#420).
-  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix,...(approvedSpacesEnabled?{}:{approvedSpaces:APPROVED_SPACES_OFF})}),social=createRedisSocial({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
+  const prefix=`{${namespace}}`,catalog=createRedisWorldCatalog({redis,prefix,...(approvedSpacesEnabled?{}:{approvedSpaces:APPROVED_SPACES_OFF})}),social=createRedisSocial({redis,prefix}),blocks=createRedisBlocks({redis,prefix}),groups=createRedisGroups({redis,prefix}),profiles=createRedisProfiles({redis,prefix}),events=createRedisEvents({redis,prefix}),debugReports=createRedisDebugReports({redis,prefix}),presence=createRedisPresence({redis,prefix});
   // Default off: RIVER_OAKS_WORKPLACE=1 enables the fixture-only workplace (#214).
   const workplace=workplaceEnabled?createWorkplace({store:createRedisWorkplaceStore({redis,prefix}),
     allowed:async id=>!(await security.isBanned(id))&&await waitlist.isApproved(id),
@@ -80,7 +83,7 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
         authorize:async identity=>await auth.isSessionActive(identity.userId,identity.sessionId)
           && await waitlist.isApproved(identity.userId) && !(await security.isBanned(identity.userId))});
       const landmarks=createWorldLandmarks({catalog,storeFor:landmarkStoreFor,worldId:id,worldTitle:meta?.title??data.title});
-      const game=createDistributedServer({characterMetrics:metrics,characterStudioEnabled,assetGateSecret,auth:sharedAuth,room,protocolVersion:worldProtocolVersion(data),worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,groups,profiles,characters,events,workplace,officeDesk,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
+      const game=createDistributedServer({characterMetrics:metrics,characterStudioEnabled,assetGateSecret,auth:sharedAuth,room,protocolVersion:worldProtocolVersion(data),worldTitle:meta?.title??data.title,security,waitlist,waitlistAdmins,debugReports,landmarks,social,blocks,onBlocked:separateEverywhere,groups,profiles,characters,events,workplace,officeDesk,workplaceCronSecret,presence,designLibrary,cyclingMiles,worldDirectory,origin,moderators,trustedProxyIPs,voice,voiceCronSecret,
         ...(address?{address}:{}),...(isAdmin?{isAdmin}:{}),...(connectionLifetime?{connectionLifetime}:{}),...(rotateNoticeMs?{rotateNoticeMs}:{}),...(id===configuredWorldId?{worldCatalog:catalog}:{}),
         ...(id===configuredWorldId?{onApplyRegion:async (regionId,expectedDraftVersion,actorId)=>{
           const target=await worldFor(regionId);
@@ -103,7 +106,48 @@ export function createWorldGateway({redis,namespace,worldData,auth,security,wait
   const admit=req=>{const ip=rateLimitKey(routerAddress(req));return localGate(ip)&&security.allow('access',ip,1000,60_000);};
   const router=createWorldRouter({worldFor,configuredWorldId,handleRequest,admit});
   const metrics=characterMetrics??createCharacterMetrics({enabled:characterMetricsEnabled});
-  return {server:router.server,catalog,worldFor,async disconnectUser(userId,sessionId) {
+  // Account erasure (#292): what this gateway keeps for an account, one named step per
+  // store. Every world in the catalog is reached, loaded here or not.
+  const worldIds=async()=>[...new Set([configuredWorldId,...(await catalog.list()).map(entry=>entry.id)])];
+  // Account erasure (#292). Only a world loaded here or with a durable checkpoint can
+  // hold the account; one that cannot load fails the step, so the run is retried, and
+  // every other world still forgets the account meanwhile.
+  const storedWorld=async id=>await redis.exists(`${roomPrefixFor(namespace,id)}:state`)===1;
+  // Player blocking (#292): a block reaches sockets in every world loaded here, and other
+  // gateways' sockets within five seconds. A greeting or game invitation needs both
+  // residents in the world where the block is made, which is loaded here. Office and home
+  // invitations come from Jevica and last, so a block between her and a resident reaches
+  // every world that is loaded here or has a checkpoint. A world that fails is logged and
+  // skipped; the block itself stands, and new invitations are refused either way.
+  const admin=isAdmin??isJevicaAdmin;
+  // Worlds are reached together, so the request waits for the slowest one, not the sum.
+  async function separateEverywhere(a,b,blocked){
+    const everywhere=blocked&&admin(a)!==admin(b);
+    // Between two residents: the worlds loaded here, and for a block the default world, which
+    // serves the campus, where guest access outlasts either of them being there.
+    await Promise.all((everywhere?await worldIds():[...new Set([...(blocked?[DEFAULT_WORLD_ID]:[]),...worlds.keys()])]).map(async id=>{
+      try {
+        if(!worlds.has(id)&&!await storedWorld(id))return;
+        const world=await worldFor(id);if(!world)throw new Error('World unavailable');
+        await world.game.separateAccounts(a,b,blocked);
+      } catch {console.warn(JSON.stringify({event:'block_separation_incomplete',worldId:id}));}
+    }));
+  }
+  const accountSteps={
+    worlds:async userId=>eraseEach(await worldIds(),async id=>{
+      if(!worlds.has(id)&&!await storedWorld(id))return;
+      const world=await worldFor(id);if(!world)throw new Error('World unavailable');
+      await world.game.forgetAccount(userId);
+    }),
+    landmarks:async userId=>eraseEach(await worldIds(),id=>landmarkStoreFor(id).eraseUser(userId)),
+    social:userId=>social.eraseUser(userId),blocks:userId=>blocks.eraseUser(userId),groups:userId=>groups.eraseUser(userId),profiles:userId=>profiles.eraseUser(userId),
+    events:userId=>events.eraseUser(userId),presence:userId=>presence.eraseUser(userId),debugReports:userId=>debugReports.eraseUser(userId),
+    officeDesk:userId=>officeDesk.eraseUser(userId),designLibrary:userId=>designLibrary.eraseUser(userId),
+    workplace:async userId=>{if(workplace&&(await workplace.erase({userId}))?.ok===false)throw new Error('Workplace erasure busy');},
+  };
+  // A world can still bank ride metres or store a look while it forgets the account.
+  const accountAfterSteps={cyclingMiles:userId=>cyclingMiles.eraseUser(userId),avatarPreferences:userId=>storedAppearance.eraseUser(userId)};
+  return {server:router.server,catalog,worldFor,accountSteps,accountAfterSteps,separateAccounts:separateEverywhere,async disconnectUser(userId,sessionId) {
     const results=await Promise.all([...worlds.values()].map(({game})=>game.disconnectUser(userId,sessionId)));
     if(results.some(result=>result?.ok!==true))throw new Error('Account disconnect incomplete');
   },async close() {

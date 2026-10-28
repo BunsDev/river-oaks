@@ -12,13 +12,13 @@ The District retains its exact existing bounds and identity transform. Entity ID
 
 ## Candidate destination and measurement boundary
 
-The original east-side reservation now contains the authored `east-garden-commons` location and three remaining empty rectangles: `east-garden-reserve`, `east-garden-reserve-north` and `east-garden-reserve-south`. They partition the original envelope without overlap or total-area growth. The Commons registration bounds include its promenade and plaza envelope; only the shared movement contract grants access to actual surfaces within it. The remaining locations are `reserved`, with no entries or playable content. This authored fictional expansion is not a claim about actual Houston land use or approval to alter mapped District geometry.
+The original east-side reservation is now fully authored: the `east-garden-commons`, `bayou-heights`, `studewood`, `bayou-terrace-north` and `bayou-terrace-south` locations. They partition the original envelope without overlap or total-area growth. The authored `woodland-heights` location (land proposal A′) is the first beyond that envelope: a 45 m strip east of Studewood over the same north/south span. The Commons registration bounds include its promenade and plaza envelope; only the shared movement contract grants access to actual surfaces within it. The remaining locations are `reserved`, with no entries or playable content. This authored fictional expansion is not a claim about actual Houston land use or approval to alter mapped District geometry.
 
-The District bounds span 253.944040393926 metres east/west and 290.4306195230893 metres north/south: 73,753.12497580437 m². The original east reservation adds twice that rectangular area; its authored and reserved partitions retain that total. Combined bounds total three times the original bounds area. Buildings, restricted surfaces and disconnected geometry mean these values cannot establish playable area. The 3–5× expansion target applies to measured reachable playable area and remains unverified.
+The District bounds span 253.944040393926 metres east/west and 290.4306195230893 metres north/south: 73,753.12497580437 m². The original east reservation adds twice that rectangular area; its authored and reserved partitions retain that total, so the District and that envelope total three times the original bounds area. Woodland Heights adds 13,069.38 m² of bounds beyond them. Buildings, restricted surfaces and disconnected geometry mean these values cannot establish playable area. The 3–5× expansion target applies to measured reachable playable area and remains unverified.
 
 ## Existing implementation seams
 
-The browser `loadWorld` in `preview/src/main.js` selects the default District or a separate `region-v1` world, then attaches vegetation, the approved gallery and the server-selected Gardens revision. `server/district-data.js` constructs the server District. `server/world.js` enforces the current bounds and movement environment. Both paths now support the opt-in `east-garden-commons-market-1` revision (which superseded `east-garden-commons-blockout-1`), which composes Commons and its [Bayou Market Commons](level-design/expansion/bayou-market-commons.md) destination after Gardens and announces it through existing HTTP/socket revision synchronization. Default revisions are preserved. Existing separate creator worlds are not seamless neighboring locations.
+The browser `loadWorld` in `preview/src/main.js` selects the default District or a separate `region-v1` world, then attaches vegetation, the approved gallery and the server-selected Gardens revision. `server/district-data.js` constructs the server District. `server/world.js` enforces the current bounds and movement environment. Both paths now support the opt-in `east-garden-commons-market-1` revision (which superseded `east-garden-commons-blockout-1`), which composes Commons and its [Bayou Market Commons](level-design/expansion/bayou-market-commons.md) destination after Gardens and announces it through existing HTTP/socket revision synchronization. The opt-in `bayou-heights-1` revision composes [Bayou Heights](level-design/expansion/bayou-heights.md) after the Commons; the browser loads its recipes and scene only for that revision and the next. The opt-in `heights-studewood-1` revision composes [Studewood](level-design/expansion/studewood.md) after Heights, `bayou-terraces-1` composes the [Bayou Terraces](level-design/expansion/bayou-terraces.md) after Studewood, and `woodland-heights-1` composes [Woodland Heights](level-design/expansion/woodland-heights.md) after the terraces; Heights streams their neighborhoods with its own. Default revisions are preserved. Existing separate creator worlds are not seamless neighboring locations.
 
 ## Acceptance still required
 
@@ -82,6 +82,50 @@ The integrated review preserves the published Commons partition and adds malform
 
 [The Phase 1 Mac evidence report](acceptance/phase1-review-20261023.md) records twelve warmed 30-second samples on reviewed head `c2cac2d3`, exact source hashes, raw measurements and matched arrival images. Desktop frame p95 medians were 16.7 ms solo and 50.0 ms with two full clients on the Mac; the phone-sized Mac viewport measured 16.8 ms and 33.4 ms. The desktop two-client result exceeds the proposed 10% allowance against the earlier 33.4 ms sample median. Different host loads and incomplete historical source-hash coverage prevent causal attribution; this is not a passing performance gate. Physical iPhone testing is deferred by the user. The evidence supports a pinned engineering baseline while phase acceptance remains open.
 
+### Bayou Heights
+
+The `bayou-heights-1` revision is sampled from the same District spawn and reached only on foot over the Lantern Footbridge. Fresh measurements at the branch revision recorded in the [task ledger](superpowers/plans/2026-10-24-next-district-586.md):
+
+| Grid spacing | Gardens | Commons | Bayou Heights | Added by Heights | Heights ÷ Gardens |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 m | 46,549 m² | 52,130 m² | 93,904 m² | 41,774 m² | 2.0173× |
+| 0.5 m | 46,477.75 m² | 52,030.75 m² | 93,508 m² | 41,477.25 m² | 2.0119× |
+
+The branch's first commit, its later heads and its merge of #641 and #646 all measure these values. An earlier figure (93,906 and 93,509.75 m²) does not reproduce at any of them. The Gardens baseline reproduces exactly. The fresh Commons sample differs from the historical table above by about 0.13%. That table remains the record of its own revision. Reserved land, upper floors, flight, travel and islands contribute nothing. Bayou Heights reaches the 2× step of the expansion target; the 3–5× range remains open.
+
+### Studewood
+
+The `heights-studewood-1` revision is sampled from the same District spawn and reached on foot along Twentieth or Eighteenth Street from Heights Boulevard. Measured with `node preview/audit/world-expansion-footprint.js --reachable` at the branch revision recorded in the [convergence ledger](superpowers/plans/2026-10-24-convergence-3x.md):
+
+| Grid spacing | Gardens | Bayou Heights | Studewood | Added by Studewood | Studewood ÷ Gardens |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 m | 46,549 m² | 93,904 m² | 114,793 m² | 20,889 m² | 2.4661× |
+| 0.5 m | 46,477.75 m² | 93,508 m² | 114,323.75 m² | 20,815.75 m² | 2.4598× |
+
+At the District's walkable density the two strips then still reserved beside the Commons (24,199.5 m² of bounds) projected to about 2.79×.
+
+### Bayou Terraces
+
+The `bayou-terraces-1` revision is sampled from the same District spawn and reached on foot over the Twentieth and Eighteenth Street footbridges from the Heights greenway. Measured with `node preview/audit/world-expansion-footprint.js --reachable` at the branch revision recorded in the [convergence ledger](superpowers/plans/2026-10-24-convergence-3x.md):
+
+| Grid spacing | Gardens | Studewood | Bayou Terraces | Added by the terraces | Terraces ÷ Gardens |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 m | 46,549 m² | 114,793 m² | 131,707 m² | 16,914 m² | 2.8294× |
+| 0.5 m | 46,477.75 m² | 114,323.75 m² | 131,269.5 m² | 16,945.75 m² | 2.8244× |
+
+No reserved land remained in the original east envelope, so the projection equalled the measurement. The 3× floor needed 8,163.75 m² more reachable ground, about 12,955 m² of new bounds at the District's density.
+
+### Woodland Heights
+
+The `woodland-heights-1` revision is sampled from the same District spawn and reached on foot along Twentieth or Eighteenth Street from Studewood. It is new land (proposal A′): 13,069.38 m² of bounds east of Studewood. Measured with `node preview/audit/world-expansion-footprint.js --reachable` at the branch revision recorded in the [convergence ledger](superpowers/plans/2026-10-24-convergence-3x.md):
+
+| Grid spacing | Gardens | Bayou Terraces | Woodland Heights | Added by Woodland | Woodland ÷ Gardens |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 m | 46,549 m² | 131,707 m² | 142,063 m² | 10,356 m² | 3.0519× |
+| 0.5 m | 46,477.75 m² | 131,269.5 m² | 141,664.25 m² | 10,394.75 m² | 3.0480× |
+
+The same run reproduces every earlier revision's world fingerprint and area: garage, Gardens, Commons, Bayou Heights, Studewood and the terraces. Woodland reaches the 3× floor of the expansion target (139,433.25 m²) with 2,231 m² to spare; the 5× ceiling remains open. `expansionCapacity` now projects from the Woodland total. No reserved land remains, so the projection equals the measurement.
+
 ## First playable destination
 
-[Bayou Market Commons](level-design/expansion/bayou-market-commons.md) (#586) completes the Commons slice with Market Street, two kit-built blocks, the Bayou Green, the Bayou Lantern water tower and the Lantern Walk shared activity. It is built from the [city kit and neighborhood assembly pipeline](city-kit.md) (#584, #585), which also assembles a second, preview-only neighborhood from the same kit. It adds no area beyond the registered Commons bounds, so the 3–5× reachable-area target above remains open. Switching the shared town to it, watching it and rolling it back are covered by [the activation runbook](world-expansion-activation.md), which is rehearsed end to end on an isolated Redis.
+[Bayou Market Commons](level-design/expansion/bayou-market-commons.md) (#586) completes the Commons slice with Market Street, two kit-built blocks, the Bayou Green, the Bayou Lantern water tower and the Lantern Walk shared activity. It is built from the [city kit and neighborhood assembly pipeline](city-kit.md) (#584, #585), which also assembles a second, preview-only neighborhood from the same kit. It adds no area beyond the registered Commons bounds. [Bayou Heights](level-design/expansion/bayou-heights.md) is the next connected district, across the bayou, and promotes that second neighborhood, unchanged in geometry, as its commercial crossroads. Switching the shared town to the Commons, watching it and rolling it back are covered by [the activation runbook](world-expansion-activation.md), which is rehearsed end to end on an isolated Redis.

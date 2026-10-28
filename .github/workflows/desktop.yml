@@ -21,6 +21,7 @@ on:
       - scripts/studio-skill-pack.js
       - package.json
       - pnpm-lock.yaml
+      - pnpm-workspace.yaml
       - .github/workflows/desktop.yml
   pull_request:
     paths:
@@ -29,6 +30,7 @@ on:
       - scripts/studio-skill-pack.js
       - package.json
       - pnpm-lock.yaml
+      - pnpm-workspace.yaml
       - .github/workflows/desktop.yml
 permissions:
   contents: read
@@ -41,9 +43,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
-  # Pull requests that change desktop/ get every platform and the installers. Ones
-  # that only reach this workflow through shared/, package.json or the lockfile
-  # get the Linux leg; main, tags and manual runs always get everything.
+  # Pull requests that change desktop/ or this workflow get every platform and the
+  # installers, and so do ones that change a line naming Electron in package.json,
+  # the lockfile or pnpm-workspace.yaml (see the step). Others that reach this
+  # workflow through shared/ or those files get the Linux leg; main, tags and manual
+  # runs always get everything.
   scope:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -62,8 +66,18 @@ jobs:
         run: |
           full=true
           if [ "$EVENT" = pull_request ]; then
-            files=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename')
-            grep -qE '^(desktop/|\.github/workflows/desktop\.yml$)' <<< "$files" || full=false
+            files=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[] | {filename, patch}')
+            # A changed line in package.json, the lockfile or pnpm-workspace.yaml that
+            # names electron, electron-winstaller or an @electron package counts as a
+            # desktop change, so an Electron bump is built and tested on every platform
+            # (#681). A bump to one of their own dependencies changes no such line and
+            # gets the Linux leg. GitHub leaves out a diff too big to show; that counts
+            # as a desktop change.
+            full=$(jq -s 'any(.[];
+              (.filename | test("^(desktop/|\\.github/workflows/desktop\\.yml$)")) or
+              ((.filename | IN("package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml")) and
+                (.patch == null or any(.patch | split("\n")[];
+                  test("^[-+](.*[^a-z0-9-])?(@electron(-[a-z]+)?/|electron(-winstaller)?([^a-z0-9-]|$))")))))' <<< "$files")
           fi
           if [ "$full" = true ]; then
             echo 'platforms=["windows-latest","ubuntu-latest","macos-latest"]' >> "$GITHUB_OUTPUT"
@@ -175,15 +189,12 @@ jobs:
       - name: Window manager for the Xvfb session
         if: ${{ !cancelled() && runner.os == 'Linux' }}
         run: sudo apt-get update -q && sudo apt-get install -y --no-install-recommends openbox
-      # The runner image pipes core dumps to systemd-coredump. The e2e crashes the
-      # game renderer on purpose, and the kernel keeps that renderer, with its IPC
-      # channel, alive until the collector has read the whole core: about five
-      # minutes here (#371), so Electron reports render-process-gone only then.
-      # With the kernel's own core handling, the job's `ulimit -c 0` applies, no
-      # core is written and the renderer exits at once.
-      - name: Kernel core handling for the deliberate renderer crash
-        if: ${{ !cancelled() && runner.os == 'Linux' }}
-        run: sudo sysctl -w kernel.core_pattern=core
+      # The runner image pipes core dumps to systemd-coredump, as Ubuntu desktops
+      # with it installed do. The e2e's deliberate renderer crash goes through
+      # that pipe, so its unchanged 60 s recovery check, and its check that the
+      # renderer was ended rather than waited for, cover the main process ending
+      # a renderer that is still writing its core (core-dump-watch.js, #370).
+      # Playwright runs this renderer without Chromium's sandbox.
       - name: Development desktop end-to-end (loopback acceptance fixture)
         if: ${{ !cancelled() }}
         id: e2e
@@ -198,7 +209,6 @@ jobs:
           if [ "$RUNNER_OS" = Linux ]; then
             # Mesa under Xvfb with the browser jobs' Chromium GL flags (verify.yml).
             export RIVER_OAKS_DESKTOP_SOFTWARE=1 LIBGL_ALWAYS_SOFTWARE=1 LP_NUM_THREADS=2
-            ulimit -c 0
             xvfb-run -a bash -c 'openbox --sm-disable & sleep 1; exec pnpm run test:desktop:e2e --dev'
           elif [ "$RUNNER_OS" = Windows ]; then
             # No GPU: Chromium draws through Direct3D 11 on Microsoft's software
