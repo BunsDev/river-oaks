@@ -116,6 +116,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     host.dataset.companion=JSON.stringify(value);
   });
   const identity = VISITOR_FORMS[0], form = identity.id;
+  const recipeKey=definition=>definition.schemaVersion===3?JSON.stringify(definition.parameters):null;
+  let loadedRecipe=null;
   let colors=null,selectedDefinition=migrateCharacterAppearance(userId,defaultAppearanceFor(userId)),definitionKey=JSON.stringify(selectedDefinition);
   let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0,presentation=null;
   // Watering: until when, and the planter the body turns toward (scene coordinates).
@@ -154,6 +156,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     selectedDefinition=definition;definitionKey=key;
     const confirmed=definition.appearanceId;
     if(confirmed!==appearance){appearance=confirmed;syncPicker();load();return true;}
+    // A player-made look is its recipe on its own body: a new recipe is a new load.
+    if(changed&&recipeKey(definition)!==loadedRecipe){syncPicker();load();return true;}
     if(changed&&loadedAppearance===appearance)colors?.apply(selectedDefinition);
     syncPicker();return false;
   };
@@ -239,7 +243,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         portraitReady=portrait.decode().then(()=>true,()=>false);
       }
       const avatarIndex=rigProfile==='jevica'?identity.avatar:AVATAR_PROFILES.indexOf(rigProfile);
-      next = await loadResidentAvatar(avatarIndex, 'player', rigProfile,{folk:false,appearanceId:chosenProfile});
+      const recipe=definition.schemaVersion===3?definition.parameters:null;
+      next = await loadResidentAvatar(avatarIndex, 'player', rigProfile,{folk:false,appearanceId:chosenProfile,...(recipe?{recipe}:{})});
       const hasPortrait = await portraitReady;
       if (disposed || generation !== version) {next.dispose();return;}
       const outfitAvatar=next;
@@ -252,7 +257,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       nextColors=createCharacterMaterials(next.object);nextColors.apply(selectedDefinition);
       const firstLoad=!avatar;
       colors?.dispose();outfit?.dispose();vehicle?.dispose();avatar?.dispose();holder.clear();colors=nextColors;avatar = next;outfit = nextOutfit;vehicle = nextVehicle;holder.add(avatar.object,vehicle.object);
-      loadedAppearance=chosenProfile;
+      loadedAppearance=chosenProfile;loadedRecipe=recipeKey(definition);
       next = nextOutfit = nextVehicle = nextColors = null;
       if(firstLoad)toggleCamera(true);
       panel.dataset.form = form;
@@ -273,7 +278,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       panel.querySelector('#player-description').textContent = character.description;
       const referenceLink=panel.querySelector('#player-reference');referenceLink.hidden=!character.reference;referenceLink.href=character.reference??'#';
       status.textContent = '';
-      host.dataset.playerForm = form;host.dataset.playerAppearance=chosenProfile;host.dataset.playerAppearanceForm=character.form;host.dataset.playerReady = 'true';
+      host.dataset.playerForm = form;host.dataset.playerAppearance=chosenProfile;host.dataset.playerLook=loadedRecipe?`${chosenProfile}:${loadedRecipe}`:chosenProfile;host.dataset.playerAppearanceForm=character.form;host.dataset.playerReady = 'true';
       listeners.forEach(listener => listener(form));
     } catch {
       nextColors?.dispose();nextOutfit?.dispose();nextVehicle?.dispose();next?.dispose();

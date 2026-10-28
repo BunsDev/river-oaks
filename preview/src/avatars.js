@@ -13,6 +13,8 @@ import { createEyeTracking } from './eye-tracking.js';
 import { registerSpeechAvatar, speechAvatarPose } from './speech-avatar.js';
 import { applyResidentStyle } from './resident-style.js';
 import { applyResidentHairstyle } from './resident-hairstyle.js';
+import { applyCharacterRecipe } from './character-recipe-look.js';
+import { recipeFaceShapes } from './character-recipe.js';
 import { residentFaceFor, bakeResidentFace } from './resident-face.js';
 import * as THREE from 'three';
 import { createAssetGLTFLoader, prefersHtmlAvatarImages } from './gltf-image-decoder.js';
@@ -142,18 +144,23 @@ export function instantiateAvatar(source, { targetHeight, id, armSpread, face })
 }
 
 // faceRecipe: undefined picks residentFaceFor(id); {} keeps the rig's authored face.
-export async function loadResidentAvatar(index, id, profileOverride, { folk = true, appearanceId = profileOverride, faceRecipe, realism } = {}) {
+// recipe: a player-made character's canonical recipe (character-recipe.js) for its body.
+export async function loadResidentAvatar(index, id, profileOverride, { folk = true, appearanceId = profileOverride, faceRecipe, realism, recipe } = {}) {
   const profile = profileOverride ?? avatarProfile(index), source = await template(profile);
-  const targetHeight = characterFidelityContract(profile)?.targetHeightM ?? (profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025);
-  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, face:faceRecipe??(folk&&id!=='player'?residentFaceFor(id):undefined) });
+  if (recipe && recipe.body !== profile) throw new TypeError('A recipe dresses its own body');
+  const targetHeight = recipe ? recipe.height / 100 : characterFidelityContract(profile)?.targetHeightM ?? (profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025);
+  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, face:recipe?recipeFaceShapes(recipe):faceRecipe??(folk&&id!=='player'?residentFaceFor(id):undefined) });
   const { model, bones, rest } = avatar;
-  if(id !== 'player' && folk) {
+  if(recipe) {
+    try { await applyCharacterRecipe(avatar,recipe,template); }
+    catch(error) { avatar.dispose(); throw error; }
+  } else if(id !== 'player' && folk) {
     try { await applyResidentHairstyle(avatar,id,profile,template); applyResidentStyle(avatar,id); }
     catch(error) { avatar.dispose(); throw error; }
   }
   const root = new THREE.Group();
   root.add(model);
-  const look=(id==='player'||String(id).startsWith('remote-'))&&appearanceId!=='jevica'
+  const look=!recipe&&(id==='player'||String(id).startsWith('remote-'))&&appearanceId!=='jevica'
     ? createRomanceLook(avatar,root,sharedAppearance(appearanceId)) : null;
   const kit=supplyBag(),hand=model.getObjectByName('hand_r');root.add(kit);
   const can=wateringCan();root.add(can);

@@ -43,8 +43,8 @@ test('P12: the lounge carpet is a bold red with a dark swirl, as in IMG_9753-975
 });
 
 test('P17: the auditorium floor is a dark confetti carpet, aisles and rows alike', () => {
-  // The foyer behind the back row, the west aisle, between rows and in front of the front row.
-  for (const [a, d] of [[-4.85, 29.4], [-1.6, 29.4], [4.6, 32.4], [-12, 26.7], [-8.3, 29], [-15.5, 30]]) assert.equal(below(a, d), 'Auditorium: ipic-confetti-carpet', `${a},${d}`);
+  // The cross aisle behind the back row, the west aisle, between rows and in front of the front row.
+  for (const [a, d] of [[-4.85, 29.4], [-3.4, 27.5], [-3.6, 32.4], [-12, 26.7], [-8.3, 29], [-15.5, 30]]) assert.equal(below(a, d), 'Auditorium: ipic-confetti-carpet', `${a},${d}`);
 });
 
 test('P5: the reception sign stacks RIVER OAKS small beside a large DISTRICT', () => {

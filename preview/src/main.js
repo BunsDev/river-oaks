@@ -71,6 +71,7 @@ import { createStorefrontReflections } from './reflections.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from './world-surface.js';
 import { buildStreetFurniture } from './street-furniture.js';
 import { buildPlazaSalon } from './plaza-salon.js';
+import { buildCityBikeRacks } from './city-bike-racks.js';
 import { createPlazaTableGames, seatAtTable } from './plaza-table-games.js';
 import { createPlazaStage } from './plaza-stage.js';
 import { plazaSalonPlan, winePongPoint } from './plaza-salon-plan.js';
@@ -129,7 +130,7 @@ import './play-rail-menu.css';
 import { createPlazaBicycle } from './plaza-bicycle.js';
 import { createCyclingLeaderboard } from './cycling-leaderboard.js';
 import './cycling-leaderboard.css';
-import { plazaSalonRack } from './plaza-salon-plan.js';
+import { bikeRackSlots } from './bike-racks.js';
 import { describeRenderer, describeScene, noteFrame, registerDiagnosticSource, setScreenshotCapture } from './debug-report.js';
 import { venueDoorSites } from './venue-rooms.js';
 import { createAxePanel } from './axe-panel.js';
@@ -200,7 +201,7 @@ let worldDistrictRevision;
 let landmarkAccountId = null;
 let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
-let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
+let plazaSalon = null, cityBikeRacks = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
 let plazaWinePong = null, plazaShuffleboard = null, longTableGame = 'winePong';
@@ -586,7 +587,7 @@ function initializeRenderer() {
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
-  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? []), ...(heightsScene?.userData.shadowProxies ?? [])]);
+  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? []), ...(heightsScene?.userData.shadowProxies ?? []), ...(cityBikeRacks?.userData.shadowProxies ?? [])]);
   sun.shadow.bias = -0.00002;
   sun.shadow.normalBias = 0.018;
   sun.shadow.camera.near = 10;
@@ -650,7 +651,7 @@ function startMultiplayer() {
     getRegionSha256: () => worldRegionSha256,
     getDistrictRevision: () => worldDistrictRevision,
     onHomeAccess: () => districtUI?.refreshAccess(),
-    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
+    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []);cityBikeRacks?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
@@ -736,7 +737,7 @@ function populateWorld(data) {
     buildingMesh?.userData.dispose?.();
     worldGroup.remove(interiorsLayer);
     ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
-    plazaSalon?.userData.rack?.dispose();
+    plazaSalon?.userData.rack?.dispose(); cityBikeRacks?.userData.rack?.dispose();
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
@@ -797,6 +798,9 @@ function populateWorld(data) {
   plazaSalon = buildPlazaSalon(data);
   plazaStage?.setWorld(data);
   worldGroup.add(plazaSalon);
+  // Curbside bike racks around the District (bike-racks.js), beside the plaza's.
+  cityBikeRacks = buildCityBikeRacks(data);
+  worldGroup.add(cityBikeRacks);
   buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   scene.add(worldGroup);
@@ -1501,13 +1505,13 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     deal: (seed, hand) => plazaHearts.deal(seed, hand) } : null;
   window.__riverCyclingBoard = () => cyclingBoard ? { ...cyclingBoard.debug(), mine: cyclingBoard.mine(), open: open => { cyclingBoard.panel.open = open; }, refresh: () => cyclingBoard.refresh() } : null;
   window.__riverCycling = () => plazaBicycle ? { riding: plazaBicycle.riding, slotId: plazaBicycle.slotId, rideMeters: plazaBicycle.rideMeters, lastRideMeters: plazaBicycle.lastRideMeters, yaw: plazaBicycle.placement?.yaw ?? null, prompt: plazaBicycle.prompt()?.kind ?? null,
-    taken: multiplayer?.snapshot?.cycling?.taken ?? [], parked: plazaSalon?.userData.rack?.parked() ?? null,
+    taken: multiplayer?.snapshot?.cycling?.taken ?? [], parked: plazaSalon?.userData.rack?.parked() ?? null, cityParked: cityBikeRacks?.userData.rack?.parked() ?? null,
     // Arrive at a slot's approach by the normal travel path.
     // Arrive at a slot's approach by the normal travel path. Like the seats' goNear, a
     // refused travel (a cooldown, or a spot briefly taken) is retried after a pause, then
     // nearby paving is tried, so a loaded machine does not fail the journey at the rack.
     async goNear(slotId) {
-      const slot = world ? plazaSalonRack(world).find(item => item.id === slotId) : null;
+      const slot = world ? bikeRackSlots(world).find(item => item.id === slotId) : null;
       if (!slot) return { ok: false };
       const environment = walkingEnvironment(), free = ([x, north]) => environment.isFree(x, -north) && !environment.roomAt(x, -north);
       const around = [0.6, 1.1].flatMap(radius => Array.from({ length: 8 }, (_, i) => [slot.approach[0] + Math.sin(i * Math.PI / 4) * radius, slot.approach[1] + Math.cos(i * Math.PI / 4) * radius]));
@@ -1517,6 +1521,14 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
         await new Promise(resolve => setTimeout(resolve, 1100));
       }
       return { ok: false };
+    },
+    // Turn your back to a slot's bike (a walker faces -sin/-cos yaw), so the camera
+    // behind you frames its rack (for journey screenshots).
+    frame(slotId) {
+      const slot = world ? bikeRackSlots(world).find(item => item.id === slotId) : null, pose = walking?.getPose();
+      if (!slot || !pose) return false;
+      walking.setYaw(Math.atan2(slot.x - pose.position[0], -slot.north - pose.position[2]));
+      return true;
     } } : null;
   window.__riverSeatAndWater = () => seatAndWater ? {
     seated: walking?.getPose()?.sitting ? `${walking.getPose().sitting.buildId}:${walking.getPose().sitting.slot}` : null, interaction: seatAndWater.interaction()?.kind ?? null, offered: seatAndWater.interaction()?.targetId ?? null, ...seatAndWater.sites(),
