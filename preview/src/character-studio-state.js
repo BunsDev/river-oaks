@@ -1,6 +1,6 @@
 import { characterDefinitionFor, recipeCharacterDefinition, validateCharacterDefinition } from './character-definition.js';
 import { customizedCharacterDefinition, supportsCharacterColors, CHARACTER_PALETTES, CHARACTER_HAIR } from './character-customization.js';
-import { DEFAULT_RECIPE, rollCharacterRecipe } from './character-recipe.js';
+import { DEFAULT_RECIPE, RECIPE_BODIES, bodyClothes, rollCharacterRecipe } from './character-recipe.js';
 import { SHARED_APPEARANCES, canUseAppearance, defaultAppearanceFor, sharedAppearance } from './shared-appearances.js';
 
 // The editor is a release control in builds (only VITE_CHARACTER_STUDIO=true shows it).
@@ -40,7 +40,9 @@ export function createCharacterDraft({ownerId,definition}){
       if(Object.hasOwn(patch,'recipe')){
         const edit=patch.recipe,base=recipe(),plain=value=>Boolean(value)&&typeof value==='object'&&!Array.isArray(value);
         if(Object.keys(patch).length!==1||!plain(edit)||edit.face!==undefined&&!plain(edit.face))throw new TypeError('Unsupported character edit');
-        return pushRecipe({...base,...edit,face:{...base.face,...edit.face}});
+        // Another body comes in its own clothes unless the edit names them.
+        const clothes=edit.body!==undefined&&edit.body!==base.body&&Object.hasOwn(RECIPE_BODIES,edit.body)?bodyClothes(edit.body):{};
+        return pushRecipe({...base,...clothes,...edit,face:{...base.face,...edit.face}});
       }
       const current=history[cursor],appearanceId=patch.appearanceId??current.appearanceId;
       // From your own look, choosing the character last shown returns to that look, colors included.

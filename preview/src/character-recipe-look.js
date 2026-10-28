@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { EYE_COLORS, HAIR_SHADES, HAIRSTYLE_OPTIONS, OUTFIT_COLORS, SHOE_COLORS, SKIN_TONES } from './character-recipe.js';
 import { HAIRSTYLES, transplantHairstyle } from './resident-hairstyle.js';
 import { HAIR_TEXTURE_MEANS, textureGain } from './resident-style.js';
+import { WARDROBE_MATERIALS, dressFromWardrobe, wearsWardrobe } from './character-wardrobe.js';
 
 // A recipe dresses one avatar instance of its body (avatars.js clones every
 // material per instance, so nothing here reaches the cached rig). Colours are
@@ -20,6 +21,10 @@ export const SKIN_TEXTURES = Object.freeze({
 });
 const GARMENT_MEANS = { female_casualsuit01: [59, 93, 131], female_elegantsuit01: [67, 55, 55], female_casualsuit02: [69, 97, 141], male_casualsuit02: [60, 93, 131], male_elegantsuit01: [41, 41, 41], male_worksuit01: [116, 153, 206] };
 const SHOE_MEANS = { shoes01: [129, 81, 58], shoes02: [98, 96, 90], shoes03: [16, 14, 16], shoes04: [41, 40, 41] };
+// Wardrobe garments a body was not made in tint from their texture's own mean.
+const wardrobeMean = name => Object.hasOwn(WARDROBE_MATERIALS, name) ? WARDROBE_MATERIALS[name].mean : null;
+const garmentMean = name => Object.hasOwn(GARMENT_MEANS, name) ? GARMENT_MEANS[name] : /suit\d/.test(name) ? wardrobeMean(name) : null;
+const shoeMean = name => Object.hasOwn(SHOE_MEANS, name) ? SHOE_MEANS[name] : /^shoes\d/.test(name) ? wardrobeMean(name) : null;
 const SKIN_GAIN = 4, GARMENT_GAIN = 64;
 const named = material => (material.name ?? '').replace(/\.\d+$/, '');
 const skinOf = body => Object.keys(SKIN_TEXTURES).find(name => SKIN_TEXTURES[name].body === body);
@@ -82,6 +87,7 @@ export async function applyCharacterRecipe(avatar, recipe, loadTemplate) {
     transplantHairstyle(avatar, await loadTemplate(HAIRSTYLE_OPTIONS[recipe.hairStyle].body));
     report.hairstyle = recipe.hairStyle;
   }
+  if (wearsWardrobe(recipe)) report.wardrobe = await dressFromWardrobe(avatar, recipe);
   const source = recipeSkinSource(recipe), skinMap = source === report.skin ? null : textureFrom(await loadTemplate(SKIN_TEXTURES[source].body), source);
   for (const [original, material] of avatar.materials) {
     const name = named(original);
@@ -92,10 +98,10 @@ export async function applyCharacterRecipe(avatar, recipe, loadTemplate) {
       material.map = irisTexture(recipe.eyes); material.color.set(0xffffff);
     } else if (Object.hasOwn(HAIR_TEXTURE_MEANS, name)) {
       material.color.setRGB(...textureGain(HAIR_TEXTURE_MEANS[name], new THREE.Color(HAIR_SHADES[recipe.hairColor].color)));
-    } else if (Object.hasOwn(GARMENT_MEANS, name) && OUTFIT_COLORS[recipe.outfitColor].color) {
-      material.color.setRGB(...textureGain(GARMENT_MEANS[name], new THREE.Color(OUTFIT_COLORS[recipe.outfitColor].color), GARMENT_GAIN));
-    } else if (Object.hasOwn(SHOE_MEANS, name) && SHOE_COLORS[recipe.shoeColor].color) {
-      material.color.setRGB(...textureGain(SHOE_MEANS[name], new THREE.Color(SHOE_COLORS[recipe.shoeColor].color), GARMENT_GAIN));
+    } else if (garmentMean(name) && OUTFIT_COLORS[recipe.outfitColor].color) {
+      material.color.setRGB(...textureGain(garmentMean(name), new THREE.Color(OUTFIT_COLORS[recipe.outfitColor].color), GARMENT_GAIN));
+    } else if (shoeMean(name) && SHOE_COLORS[recipe.shoeColor].color) {
+      material.color.setRGB(...textureGain(shoeMean(name), new THREE.Color(SHOE_COLORS[recipe.shoeColor].color), GARMENT_GAIN));
     } else continue;
     material.needsUpdate = true;
   }

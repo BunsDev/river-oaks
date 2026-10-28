@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CUSTOM_APPEARANCE_ID, DEFAULT_RECIPE, FACE_CONTROLS, FACE_LIMIT, FACE_STEP, HAIRSTYLE_OPTIONS, RECIPE_BODIES, RECIPE_CATEGORIES, RECIPE_HEIGHT, SKIN_TONES,
-  characterRecipe, recipeFaceShapes, recipeFrame, rollCharacterRecipe } from '../src/character-recipe.js';
+  bodyClothes, characterRecipe, recipeFaceShapes, recipeFrame, rollCharacterRecipe } from '../src/character-recipe.js';
 import { characterAppearanceFor, characterDefinitionFor, migrateCharacterAppearance, recipeCharacterDefinition, validateCharacterDefinition } from '../src/character-definition.js';
 import { customizedCharacterDefinition } from '../src/character-customization.js';
 import { selectedCharacterFor } from '../src/character-selection-view.js';
@@ -98,7 +98,11 @@ test('rolls are seeded, valid, always change something, and leave other categori
     assert.deepEqual(characterRecipe(next), next);
     if (!categories.length) { assert.deepEqual(next, current); continue; }
     assert.notDeepEqual(next, current, `rolling ${categories} changes the recipe`);
-    const kept = Object.entries(RECIPE_CATEGORIES).filter(([category]) => !categories.includes(category)).flatMap(([, fields]) => fields);
+    // A body of the other frame comes in its own top and bottom; everything else unrolled is kept.
+    const reframed = recipeFrame(next) !== recipeFrame(current);
+    const kept = Object.entries(RECIPE_CATEGORIES).filter(([category]) => !categories.includes(category)).flatMap(([, fields]) => fields)
+      .filter(field => !reframed || !['top', 'bottom'].includes(field));
+    if (reframed && !categories.includes('outfit')) assert.deepEqual([next.top, next.bottom], [bodyClothes(next.body).top, bodyClothes(next.body).bottom]);
     for (const field of kept) assert.deepEqual(next[field], current[field], `${field} is kept while rolling ${categories}`);
     current = next;
   }

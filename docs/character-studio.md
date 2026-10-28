@@ -758,7 +758,9 @@ catalogue `river-oaks-recipes-v1`):
 - **face:** sixteen sliders over the bodies' face targets, in steps of 5, capped at a 0.7
   weight, with left and right moving together;
 - **colours:** skin tone, eye colour, hair colour, outfit colour and shoe colour;
-- **hairstyle:** one of the hairstyles.
+- **hairstyle:** one of the hairstyles;
+- **clothes:** a top and a bottom of the body's frame and any pair of shoes, from the
+  wardrobe (below). A recipe saved before the wardrobe wears its body's own clothes.
 
 Every value is an integer or a catalogue key. The server accepts a publication only if
 rebuilding it from `(ownerId, recipe, revision)` gives exactly the same record, as it
@@ -795,11 +797,38 @@ Builds older than `custom-human` show the account's authored fallback.
 draft or selection. Account deletion removes it with the rest, as described below,
 and no deletion path changes.
 
+**The wardrobe (2026-10-27).** Val authorized the pinned MakeHuman download and a
+Blender 5.2.2 LTS install (the binary hash matches the realistic-humans receipt).
+`scripts/build_character_wardrobe.py` builds one GLB per Studio body under
+`preview/public/assets/characters/wardrobe/`, fitted to that body's exact rig:
+
+- every CC0 suit of the frame (4 feminine, 8 masculine), each split into a top and a
+  bottom. Each connected piece goes whole to the half most of its weight is on, so a
+  jacket keeps its tails; overalls and a shirt sewn to its jeans are cut where their
+  weight changes over;
+- all six shoe pairs;
+- the body's skin below the head with nothing deleted. Each skin vertex carries a
+  `_cover` bit mask of the garments that delete it, with MPFB's conservative mask
+  (only faces a garment wholly deletes go).
+
+Textures are written once (`wardrobe/textures/`), shared by every body, and fetched
+on first wear; `wardrobe.sources.json` records the generator, Blender binary, GLB and
+texture hashes and each texture's mean. The pack has no separate dresses: the pencil
+skirt and the shorts are the skirt-like bottoms.
+
+At runtime (`character-wardrobe.js`) a recipe wearing anything but its body's own
+clothes keeps the shipped head (with its face targets), draws the wardrobe skin less
+what the worn garments cover, and binds the garments to the avatar's skeleton by bone
+name. A figure dressed this way draws seven meshes instead of five. Worn in its own
+clothes through the wardrobe, each body shows the same skin as the shipped rig, and
+its posed garments lie within 1 mm of the shipped suit.
+
 **Not yet available.**
 
-- Separate tops, bottoms, dresses and suits on any body, and more shoes, need the pinned
-  MakeHuman asset download and Blender rebuilds, which await authorization.
-- Body build (slim to broad) and two-tone outfits are planned next.
+- Dresses, hats (the pack's fedoras clash with hair) and face targets on the Jevica and
+  realistic bodies.
+- Body build (slim to broad) and two-tone outfits.
+- The seated drape morphs apply to a body's own garments only.
 
 ### Signed account deletion
 
