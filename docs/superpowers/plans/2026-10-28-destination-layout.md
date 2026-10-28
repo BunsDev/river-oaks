@@ -123,4 +123,4 @@ Where the saving is and is not (2026-10-28, probe `.runtime/destination-pipeline
 
 The Studio journey now also asserts that the Nineteenth & Yale plan it opens reproduces the committed lock hash, so what opens in the Studio is the shipped plan. Local run (`.runtime/destination-pipeline/journey-city-kit-studio-003.log`): passed, plan `5f93716bea65e2b9`, 94 items; the example opened with 93.
 
-Delivery: draft PR #750 (https://github.com/BunsDev/river-oaks/pull/750), heads `c3667dda` (the example) and `e19c9183` (the shipped-world result), both signed; hosted Verify green on both at the first attempt (22 success, 5 skipped). Based on increment 4's branch; lands after #734 and #735.
+Delivery: draft PR #750 (https://github.com/BunsDev/river-oaks/pull/750), heads `c3667dda` (the example), `e19c9183` (the shipped-world result) and `89f40671` (the lock-hash journey assertion and the loose-rectangle finding), all signed; hosted Verify green on each at the first attempt (22 success, 5 skipped). Based on increment 4's branch; lands after #734 and #735.
