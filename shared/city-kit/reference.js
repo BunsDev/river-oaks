@@ -46,6 +46,9 @@ function validateOptions(options) {
   if (rotation !== 'auto' && !(finite(rotation) && Math.abs(rotation) <= REFERENCE_LIMITS.rotation)) fail('rotation must be auto or degrees within ±90');
   const sidewalk = options.sidewalk ?? 3.5, lane = options.lane ?? 6, tolerance = options.tolerance ?? 5, minimumLength = options.minimumLength ?? 20;
   for (const [name, value, low, high] of [['sidewalk', sidewalk, 1, 10], ['lane', lane, 3, 20], ['tolerance', tolerance, 0.5, 15], ['minimumLength', minimumLength, 5, 200]]) if (!(finite(value) && value >= low && value <= high)) fail(`${name} must be ${low}–${high}`);
+  // Street trees and lamps by spacing, opt in: a hand-authored street carries the same `trees`/`lamps` fields.
+  const trees = options.trees ?? null, lamps = options.lamps ?? null;
+  for (const [name, value] of [['trees', trees], ['lamps', lamps]]) if (value !== null && !(finite(value) && value >= 4 && value <= 40)) fail(`${name} ${value}`);
   const kinds = options.kinds ?? null;
   if (kinds !== null && !(Array.isArray(kinds) && kinds.every(kind => typeof kind === 'string'))) fail('kinds must be a list of road kinds');
   const parcels = options.parcels ?? 'quarters';
@@ -54,7 +57,7 @@ function validateOptions(options) {
   if (!idOk(id)) fail(`id ${id}`);
   const style = options.style ?? 'market-row';
   if (!KIT_STYLES[style]) fail(`style ${style}`);
-  return { site, rotation, sidewalk, lane, tolerance, minimumLength, kinds, parcels, id, title: options.title ?? `Reference streets: ${id}`, style, source: options.source ?? {} };
+  return { site, rotation, sidewalk, lane, tolerance, minimumLength, kinds, parcels, id, title: options.title ?? `Reference streets: ${id}`, style, trees, lamps, source: options.source ?? {} };
 }
 
 const heading = ([ax, ay], [bx, by]) => (Math.atan2(by - ay, bx - ax) * 180 / Math.PI + 360) % 180;
@@ -82,7 +85,9 @@ export function dominantRotation(world, site) {
 
 // Build the recipe skeleton. `options.source` carries the file's name and hash for provenance.
 export function referenceRecipe(world, options) {
-  const settings = validateOptions(options), roads = sourceRoads(world), { site, sidewalk, tolerance, minimumLength } = settings;
+  const settings = validateOptions(options), roads = sourceRoads(world), { site, sidewalk, tolerance, minimumLength, trees, lamps } = settings;
+  // Trees start half a spacing in; lamps a metre past half theirs, alternating sides, so the two seldom share a kerb spot.
+  const furnishing = { ...(trees ? { trees: { offset: mm(trees / 2), spacing: trees } } : {}), ...(lamps ? { lamps: { offset: mm(lamps / 2 + 1), spacing: lamps } } : {}) };
   const rotation = settings.rotation === 'auto' ? dominantRotation(world, site).rotation : settings.rotation;
   const width = mm(site[2] - site[0]), height = mm(site[3] - site[1]);
   const cx = (site[0] + site[2]) / 2, cy = (site[1] + site[3]) / 2, cos = Math.cos(-rotation * Math.PI / 180), sin = Math.sin(-rotation * Math.PI / 180);
@@ -156,8 +161,8 @@ export function referenceRecipe(world, options) {
     inspiration: `Patterns only: the street pattern of ${settings.source.name ?? 'the mapped reference'} inside the chosen site, turned ${rotation}° onto the kit grid. Buildings, names and lettering are to be original; the ${buildings} mapped buildings inside the site are counted, not reproduced.`,
     site: [0, 0, width, height],
     streets: kept.map(street => street.axis === 'east'
-      ? { id: street.id, from: [street.extent[0], street.position], to: [street.extent[1], street.position], lane: mm(street.lane), sidewalk: mm(sidewalk) }
-      : { id: street.id, from: [street.position, street.extent[0]], to: [street.position, street.extent[1]], lane: mm(street.lane), sidewalk: mm(sidewalk) }),
+      ? { id: street.id, from: [street.extent[0], street.position], to: [street.extent[1], street.position], lane: mm(street.lane), sidewalk: mm(sidewalk), ...furnishing }
+      : { id: street.id, from: [street.position, street.extent[0]], to: [street.position, street.extent[1]], lane: mm(street.lane), sidewalk: mm(sidewalk), ...furnishing }),
     plazas: [], blocks: [], landmarks: [], furniture: [], context: [],
     layout: { quarters: [], reserved: [] },
     overrides: {}, additions: [],
@@ -194,7 +199,7 @@ export function referenceRecipe(world, options) {
   const openLand = layout ? mm(layout.diagnostics.cells.filter(cell => cell.result === 'open').reduce((sum, cell) => sum + (cell.rect[2] - cell.rect[0]) * (cell.rect[3] - cell.rect[1]), 0)) : 0;
   recipe.reference = {
       source: { name: settings.source.name ?? null, sha256: settings.source.sha256 ?? null, crs: world.crs ?? 'LOCAL:METRES', origin: Array.isArray(world.origin) ? [...world.origin] : null, schema_version: world.schema_version ?? null },
-      site: [...site], rotation, tolerance, module: MODULE, sidewalk, minimumLength, buildings,
+      site: [...site], rotation, tolerance, module: MODULE, sidewalk, minimumLength, trees, lamps, buildings,
       streets: kept.map(street => ({ id: street.id, roads: street.roads.map(road => road.id), name: street.roads[0].name, kind: street.roads[0].kind, width: street.roads[0].width })),
       blocks, openLand, parcels: { source: settings.parcels, quarters: parcels.quarters, dropped: parcels.dropped }, layoutWarnings: layout?.diagnostics.warnings ?? [], layoutError,
       dropped: [...dropped.values()].map(entry => ({ ...entry, reason: entry.reason === 'bends off the grid' ? `bends up to ${entry.worst}° off the grid` : entry.reason, worst: undefined })).sort((a, b) => a.road < b.road ? -1 : a.road > b.road ? 1 : a.reason < b.reason ? -1 : 1),

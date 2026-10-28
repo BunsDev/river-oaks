@@ -52,7 +52,7 @@ test('the layout example opens as a Studio region: streets, massing, trees, plac
 
 test('every committed recipe exports a region Studio and the server accept; thin rear wings and outside context are listed, not widened', () => {
   const names = readdirSync(recipesDir).filter(name => name.endsWith('.json') && !name.endsWith('.lock.json')).map(name => name.replace(/\.json$/, ''));
-  assert.equal(names.length, 15);
+  assert.equal(names.length, 16);
   const report = {};
   for (const name of names) {
     const source = recipe(name), plan = assembleNeighborhood(structuredClone(source));

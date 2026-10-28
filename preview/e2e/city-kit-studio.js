@@ -32,6 +32,15 @@ async page => {
   await page.keyboard.press('Escape'); await page.waitForSelector('body[data-mode="edit"]');
   await page.getByRole('button', { name: 'Frame region', exact: true }).click();
   await page.screenshot({ path: 'output/playwright/city-kit-studio.png' });
+  // A neighborhood nobody drew by hand: the compiler drawing's block as kit blocks (config/destinations/garden-blocks-kit.json) opens the same way.
+  const garden = JSON.parse(readFileSync('config/destinations/garden-blocks-kit.json', 'utf8')), gardenPlan = assembleNeighborhood(structuredClone(garden)), gardenRegion = studioRegion(garden, gardenPlan);
+  page.once('dialog', dialog => dialog.accept()); // the Studio asks before discarding the walked draft
+  await page.locator('#studio-import').setInputFiles({ name: 'garden-blocks-kit.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(gardenRegion.region)) });
+  await page.locator('[data-item="p-middle-cross-0-0-parcel-0"]').waitFor({ timeout: 10000 });
+  const gardenItems = await page.locator('[data-item]').count();
+  check(gardenItems === 1 + gardenRegion.summary.buildings + gardenRegion.summary.trees + gardenRegion.summary.places, `The Garden Blocks (kit) example, derived from the compiler drawing, opens with ${gardenRegion.summary.buildings} buildings on its four parcels (${gardenItems} items)`);
+  await page.getByRole('button', { name: 'Frame region', exact: true }).click();
+  await page.screenshot({ path: 'output/playwright/city-kit-studio-garden-blocks.png' });
   if (errors.length) throw new Error(errors.join('\n'));
-  return { passed: true, checks, scope: 'A built city-kit plan opened in a running World Studio by Open JSON: item list, inspector by stable piece id, walkthrough from the exported arrival.' };
+  return { passed: true, checks, scope: 'Built city-kit plans opened in a running World Studio by Open JSON: item list, inspector by stable piece id, walkthrough from the exported arrival; the compiler-derived Garden Blocks (kit) example too.' };
 }

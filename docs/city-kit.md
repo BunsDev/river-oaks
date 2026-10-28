@@ -18,7 +18,7 @@ The kit extends existing systems rather than adding a city engine. Movement uses
 | CLI | `scripts/destination.mjs` (`pnpm run destination …`) |
 | In-engine preview of any recipe | `preview/e2e/fixtures/city-kit.html?recipe=<id>&seed=<n>&view=<view>` |
 | Pedestrian-scale screenshot review | `preview/e2e/city-kit-review.js` (shared browser lock) |
-| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/city-kit-reference.test.js`, `preview/tests/city-kit-studio.test.js`, `preview/tests/bayou-market-commons.test.js` |
+| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-pipeline.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/city-kit-reference.test.js`, `preview/tests/city-kit-studio.test.js`, `preview/tests/bayou-market-commons.test.js` |
 
 ## Conventions
 
@@ -91,6 +91,21 @@ A recipe may carry a `layout` instead of typing every block rectangle by hand. I
 - **Buildings and names.** Mapped buildings inside the site are counted, not reproduced; the kit builds original architecture, and the skeleton's one quarter carries one placeholder name per derived block. Name the shops, add plazas, landmarks and furniture, choose quarters, then `build`.
 - **Parcels drawn in Studio decide where blocks go.** When the source carries `parcels` with `bounds_m` (a World Studio region, or a candidate from the neighborhood compiler's `scripts/neighborhood.mjs build`), each parcel inside the site becomes a quarter of its own: its bounds turned into the kit frame, snapped to the module and clipped to the site, and an edge within a metre of a street's corridor edge is moved onto it so the parcel's blocks have frontage (the move is reported). Land outside the parcels stays open and is reported as a total, not built on; parcels outside the site or thinner than a bay are listed with the reason. `--parcels ignore` lays one quarter over the site instead. Each quarter faces its streets by the auto rule; set `front` per quarter where the drawing meant otherwise.
 - **Provenance.** `reference` records the source file's name and SHA-256, CRS and origin, the site, rotation, tolerance and the mapped roads behind every street. It is part of the recipe, so the plan's recipe hash covers it.
+- `--trees <m>` and `--lamps <m>` furnish every kept street by spacing (4 to 40 m), the same `trees`/`lamps` fields a hand-authored street carries: trees start half a spacing in, lamps a metre past half theirs and alternate sides. Without them a reference street is bare.
+
+## From a drawing to a walkable neighborhood
+
+The steps above chain. `config/destinations/garden-blocks-kit.json` is the worked example, and `preview/tests/city-kit-pipeline.test.js` reruns it from scratch:
+
+```sh
+node scripts/neighborhood.mjs build --recipe config/neighborhoods/garden-blocks.json --out .runtime/candidate
+pnpm run destination reference .runtime/candidate/region.json --site=-8,-8,84,84 --style=garden-court --trees=8 --lamps=14 --id=garden-blocks-kit --title="Garden Blocks (kit)" --out=config/destinations/garden-blocks-kit.json
+# name the shops in the recipe, then
+pnpm run destination build config/destinations/garden-blocks-kit.json --lock
+pnpm run destination check
+```
+
+The compiler's drawing (six roads, sixteen parcels) is deterministic. The reference step keeps the four streets and four parcels inside the site, snaps parcel edges to the street corridors, and writes the recipe with a placeholder name per block and a budget line. The build derives four blocks of 32 shells on the parcels, 56 street trees and 16 lamps, locks the plan and writes `studio-region.json`, which World Studio opens with **Open JSON** (the `city-kit-studio` journey does so in a browser). What the author typed: four site numbers, one style, two spacings and eight shop names. What the tools wrote: 80 numbers of streets, furnishing and quarters, 236 pieces. The hand-authored Nineteenth & Yale crossroads, the same size, types 70 numbers for its streets, plaza, blocks, landmark and furniture, each block rectangle kept flush to a street by hand.
 
 ## Open a plan in World Studio
 
