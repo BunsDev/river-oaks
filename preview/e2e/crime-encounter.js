@@ -35,7 +35,16 @@ async page => {
   const shoot = async (tab, name) => { const path = `output/playwright/crime-encounter-${name}.png`; await tab.screenshot({ path }); shots.push(path); };
   const dusk = tab => tab.evaluate(() => { const input = document.querySelector('#sun-hour'); input.value = input.max; input.dispatchEvent(new Event('input', { bubbles: true }));
     document.querySelector('#weather').value = 'clear'; document.querySelector('#weather').dispatchEvent(new Event('change', { bubbles: true })); return { hour: Number(input.value), max: Number(input.max), shown: document.querySelector('#sun-time')?.textContent }; });
-  const goTo = (tab, east, north) => tab.evaluate(([x, n]) => window.__riverSeatAndWater().goTo(x, n), [east, north]);
+  // Travel has a 1 s cooldown on the town (TRAVEL_COOLDOWN_MS); a refused step is tried again.
+  const goTo = async (tab, east, north) => {
+    let reply = null;
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      reply = await tab.evaluate(([x, n]) => window.__riverSeatAndWater().goTo(x, n), [east, north]);
+      if (reply?.error !== 'travel_cooldown') return reply;
+      await tab.waitForTimeout(300);
+    }
+    return reply;
+  };
   const face = (tab, east, north) => tab.evaluate(([x, n]) => window.__riverSeatAndWater().face(x, n), [east, north]);
   const approach = async (tab, [east, north], reach) => {
     for (const [dx, dn] of [[1.2, 0], [0, 1.2], [0, -1.2], [-1.2, 0], [2, 0], [0, 2], [-2, 0], [0, -2]]) {
@@ -55,17 +64,26 @@ async page => {
   const pursuer = state => state.police.units.find(unit => unit.targetId === state.selfId);
   // The evade key, timed against the town's own remaining windup as crime-shared does: `lead` ms
   // before contact, inside the 350 ms window with room for delivery.
-  const evadeAt = async (tab, kind, lead = 340) => {
+  // The window is 350 ms. A key reaches the town 5–250 ms after the press: the socket is direct,
+  // but the town's loop can be inside a long step (route searches run 100–200 ms under load), so
+  // the delay varies from one telegraph to the next (run 7: a U 340 ms ahead of a grab's contact
+  // was too late; run 8: a U 420 ms ahead of a counter's contact was too early). Each telegraph
+  // is therefore timed from a probe: a command the town refuses at once measures the round trip
+  // through the loop as it is now, and the key goes that delay plus 160 ms ahead of the contact.
+  const evadeAt = async (tab, kind) => {
     const pending = await tab.waitForFunction(kind => { const m = window.__riverMultiplayer(), s = m.snapshot;
       if (kind === 'counter') { const counter = s?.crime?.actions?.find(item => item.kind === 'counter' && item.targetId === m.selfId && item.outcome === null && item.phase === 'windup'); return counter && { id: counter.id, remainingMs: counter.remainingMs, contactAt: performance.now() + counter.remainingMs }; }
       const unit = s?.police?.units?.find(unit => unit.targetId === m.selfId && unit.state === 'grab'); return unit && { id: unit.id, remainingMs: unit.remainingMs, contactAt: performance.now() + unit.remainingMs }; }, kind, { polling: 16, timeout: 25000 }).then(handle => handle.jsonValue()).catch(() => null);
     if (!pending) return { seen: null };
-    if (pending.remainingMs < lead + 30) return { ...pending, late: true };
+    const probe = await tab.evaluate(async () => { const t0 = performance.now(); const reply = await window.__riverMultiplayerCommand({ type: 'attack', targetId: 'encounter-probe', attackKind: 'melee', attackId: 'encounter-probe' }).catch(error => ({ ok: false, error: String(error) })); return { roundTripMs: Math.round(performance.now() - t0), error: reply?.error ?? reply?.message ?? null }; });
+    const lead = Math.max(200, probe.roundTripMs + 160);
+    const remainingNow = pending.contactAt - await tab.evaluate(() => performance.now());
+    if (remainingNow < lead + 30) return { ...pending, probe, lead, late: true };
     await tab.locator('#canvas-host').focus();
-    await tab.waitForFunction(at => performance.now() >= at, pending.contactAt - lead, { polling: 16 });
+    await tab.waitForFunction(at => performance.now() >= at, pending.contactAt - lead, { polling: 8 });
     await tab.evaluate(kind => { window.__enc.evadeKeyAt[kind] = performance.timeOrigin + performance.now(); }, kind);
     await tab.keyboard.press('KeyU');
-    return { ...pending, pressed: true };
+    return { ...pending, probe, lead, pressed: true };
   };
   const videoOf = async (tab, name) => { const video = tab.video(); if (!video) return null; const path = await video.path(); return { path, name }; };
   try {
@@ -381,13 +399,83 @@ async page => {
     const peer4 = await witness.evaluate(() => ({ surrenderShown: window.__enc.surrenderAt !== null, arrestShown: window.__enc.arrestAt !== null }));
     row('voluntary surrender (browser)', 'pass', { witness: peer4 });
 
-    // Rows the authored zones cannot show. The lane and Westcreek contain no sight-blocking geometry
+    // 5. Boundary transitions inside a windup, and stars under observation. Travel is a server-side
+    // move that lands at once, so a strike can be started on the keyboard and the town asked to
+    // move the player out of the danger zone before the 300 ms contact recheck.
+    await visitor.waitForFunction(id => { const r = window.__riverMultiplayer().snapshot.crime.targets.find(item => item.id === id); return r && r.health > 0 && !r.down; }, RIVAL, { timeout: 30000 });
+    const arrived5 = await approach(visitor, [RX, RN], 1.5);
+    check(arrived5, 'The visitor walks back to the rival a third time');
+    await face(visitor, RX, RN);
+    await hud.getByRole('button', { name: 'Shove Service lane rival T' }).waitFor();
+    const safeSpot = [Math.round(final.self.position[0]), Math.round(final.self.position[1])];
+    const beforeZone = await town(visitor);
+    await visitor.waitForTimeout(1100); // past the travel cooldown of the approach (run 9: travel_cooldown)
+    await visitor.locator('#canvas-host').focus();
+    await visitor.keyboard.press('KeyT');
+    const zoneTravel = await visitor.evaluate(async spot => { const t0 = performance.now(); const reply = await window.__riverMultiplayerCommand({ type: 'travel', position: spot }); return { ok: reply?.ok, error: reply?.error ?? null, replyMs: Math.round(performance.now() - t0) }; }, safeSpot);
+    await visitor.waitForTimeout(1500);
+    const afterZone = await town(visitor);
+    const zoneStrike = [...afterZone.actions].reverse().find(action => action.kind === 'strike' && action.actorId === afterZone.selfId);
+    const zoneDetail = { travel: zoneTravel, strike: zoneStrike && { id: zoneStrike.id, outcome: zoneStrike.outcome, reason: zoneStrike.reason ?? null }, rivalHealth: [beforeZone.rival.health, afterZone.rival.health], stars: [stars(beforeZone), stars(afterZone)], distanceFromRival: Math.round(distance(afterZone.self.position, [RX, RN])), combat: await visitor.evaluate(() => document.querySelector('#canvas-host').dataset.combat ?? ''), held: await visitor.locator('[data-walk-key].held').count() };
+    console.log(`crime-encounter zone-in-windup: ${JSON.stringify(zoneDetail)}`);
+    if (zoneTravel.ok) {
+      check(zoneStrike && zoneStrike.outcome !== 'hit' && afterZone.rival.health === beforeZone.rival.health && stars(afterZone) === stars(beforeZone) && zoneDetail.distanceFromRival > 10 && zoneDetail.combat === '' && zoneDetail.held === 0,
+        `Leaving the danger zone inside the windup cancels the strike at contact: nothing lands, no star, nothing held (${JSON.stringify(zoneDetail)})`);
+      row('safe-zone transition during windup (browser)', 'pass', zoneDetail);
+    } else row('safe-zone transition during windup (browser)', 'not-run', { reason: `the town refused travel during the windup: ${zoneTravel.error}`, ...zoneDetail });
+    await shoot(visitor, 'zone-visitor');
+
+    // Stars under observation: wanted, pursued and evading every grab for longer than the 30 s
+    // decay, the star stays; out of the zone and out of sight it cools off on the decay clock.
+    const arrived6 = await approach(visitor, [RX, RN], 1.5);
+    check(arrived6, 'The visitor walks back to the rival a fourth time');
+    await face(visitor, RX, RN);
+    await hud.getByRole('button', { name: 'Shove Service lane rival T' }).waitFor();
+    const starsBeforeWatch = stars(await town(visitor));
+    await visitor.locator('#canvas-host').focus(); await visitor.keyboard.press('KeyT');
+    await visitor.waitForFunction(before => { const m = window.__riverMultiplayer(); return (m.snapshot.crime.wanted.find(([id]) => id === m.selfId)?.[1] ?? 0) > before; }, starsBeforeWatch, { timeout: 6000 });
+    const watchedFrom = Date.now(), starsWatched = stars(await town(visitor));
+    const stepBack = await goTo(visitor, RX + 5, RN + 2); await face(witness, RX + 5, RN + 2);
+    const stepped = await town(visitor);
+    check(stepBack?.ok !== false && distance(stepped.self.position, [RX, RN]) > 4, `The visitor steps out of the rival's reach to be watched (${JSON.stringify({ stepBack, distance: Math.round(distance(stepped.self.position, [RX, RN]) * 10) / 10 })})`);
+    await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.police.units.some(unit => unit.targetId === m.selfId); }, null, { timeout: 20000 });
+    const grabs = [];
+    while (Date.now() - watchedFrom < 36000) {
+      const grab = await evadeAt(visitor, 'grab');
+      grabs.push(grab);
+      if (grab.seen === null) break;
+      // Let this grab resolve before looking for the next, then see whether it took hold.
+      await visitor.waitForFunction(id => { const m = window.__riverMultiplayer(), unit = m.snapshot.police.units.find(unit => unit.id === id); return !unit || unit.state !== 'grab'; }, grab.id, { timeout: 3000 }).catch(() => {});
+      const state = await town(visitor);
+      grab.resolved = { subdued: state.police.subdued.includes(state.selfId), stars: stars(state), health: state.self.health };
+      if (grab.resolved.subdued) break;
+    }
+    const watched = await town(visitor);
+    console.log(`crime-encounter watched: ${JSON.stringify({ starsWatched, grabs })}`);
+    const watchDetail = { starsAtStrike: starsWatched, starsAfterMs: Date.now() - watchedFrom, starsAfter: stars(watched), grabsEvaded: grabs.filter(g => g.pressed).length, grabs, observedBy: watched.police.units.filter(unit => unit.targetId === watched.selfId).map(unit => unit.state), subdued: watched.police.subdued.includes(watched.selfId) };
+    check(watchDetail.starsAfterMs >= 36000 && !watchDetail.subdued && watchDetail.observedBy.length > 0 && watchDetail.starsAfter === starsWatched,
+      `Stars do not cool off under observation: ${starsWatched} star after ${Math.round(watchDetail.starsAfterMs / 1000)} s of pursuit and ${watchDetail.grabsEvaded} evaded grabs (${JSON.stringify(watchDetail)})`);
+    await shoot(visitor, 'watched-visitor'); await shoot(witness, 'watched-witness');
+    await goTo(visitor, safeSpot[0], safeSpot[1]);
+    const leftAt = Date.now();
+    await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return !m.snapshot.police.units.some(unit => unit.targetId === m.selfId); }, null, { timeout: 10000 });
+    await visitor.waitForTimeout(15000);
+    const midway = stars(await town(visitor));
+    const cooled = await visitor.waitForFunction(before => { const m = window.__riverMultiplayer(); return (m.snapshot.crime.wanted.find(([id]) => id === m.selfId)?.[1] ?? 0) < before; }, starsWatched, { timeout: 40000 }).then(() => Date.now() - leftAt).catch(() => null);
+    const coolDetail = { starsAt15s: midway, cooledAfterMs: cooled, starsNow: stars(await town(visitor)) };
+    check(midway === starsWatched && cooled !== null && cooled >= 20000 && cooled <= 45000, `Out of the zone and out of sight the star cools off on the 30 s clock (${JSON.stringify(coolDetail)})`);
+    row('stars held under observation (browser)', 'pass', { ...watchDetail, cooling: coolDetail });
+
+    // Rows a browser cannot show. The lane and Westcreek contain no sight-blocking geometry
     // (preview walking environment probe: 0 of 27,200 and 0 of 19,320 free points hidden from the
-    // officer post; no blocked pair), and leaving a zone cancels pursuit, so search after sight
-    // loss, escape by concealment and stars held under observation have server proof only.
+    // officer post; no blocked pair), so search after sight loss and escape by concealment have
+    // server proof only. Flight belongs to one owner's appearance (canFlyAs), so a development
+    // identity cannot change altitude inside a windup: a raw move with altitude is refused as
+    // flight_not_allowed. Writer takeover needs a second world process and a switching proxy in
+    // front of the page; the Redis suites prove it on real transports.
     row('perception-led search after sight loss (browser)', 'not-run', { reason: 'no sight-blocking geometry inside either authored danger zone; server/tests/police.test.js and police-capture.test.js cover it' });
-    row('stars held under observation (browser)', 'not-run', { reason: 'an observed participant is grabbed within the 30 s decay; server/tests/police-capture.test.js covers it' });
-    row('altitude and safe-ground transitions during windup (browser)', 'not-run', { reason: 'a 300 ms windup cannot be crossed by browser travel; server/tests/crime-phases.test.js and crime.test.js cover it' });
+    row('altitude transition during windup (browser)', 'not-run', { reason: 'flight is refused for development identities (canFlyAs); server/tests/crime-phases.test.js and crime.test.js cover altitude at contact' });
+    row('writer takeover mid-pursuit (browser)', 'not-run', { reason: 'needs two world processes behind a switching proxy; server/tests/redis-room.test.js (an upgraded coordinator takes over an older lease) and world-policy-transport.test.js (an older writer is fenced) cover it on real Redis transports' });
 
     await emergencyOff();
     const [v, w] = await Promise.all([visitor, witness].map(tab => tab.evaluate(() => { clearInterval(window.__encPoll); const n = window.__enc; n.done = true; return { fps: Math.round(n.frames / ((performance.timeOrigin + performance.now() - n.framesFrom) / 1000)), frames: n.frames }; })));

@@ -276,9 +276,36 @@ Measurements, not budgets:
   (3); the officer, having lost the player for that second, was in `search` and the pursuit went on.
 - **Focus loss with W held**: 1.60 → 0.00 m/s, no held key left.
 - **Voluntary surrender**: hands up on both screens, arrest shown to the witness, safe arrival.
+- **Run 10 on the same tree plus two more episodes** (2026-10-28 16:14–16:17Z, 37 checks in
+  201 s, frame time p50 37 / p95 55 ms; receipt `data/reports/crime-encounter-shared.json`, videos
+  `crime-encounter-run10-{visitor,witness}.webm`, about 200 s each). Every run-6 row again
+  (walk 257 / 325 ms, sprint 277 / 361 ms to 90 % and to stop; 228/228 moving frames with a foot
+  planted; counter evaded; reconnect 1320 ms; blur 1.61 → 0.00 m/s), then:
+  - **Safe-zone transition inside the windup**: T on the keyboard, and 20 ms later the town moved
+    the visitor 149 m out of the danger zone by travel; at contact the strike resolved
+    `cancelled` / `not_danger_zone`, rival health 100 → 100, stars 0 → 0, no combat framing,
+    nothing held.
+  - **Stars held under observation**: one star, out of the rival's reach, pursued; **11 grabs
+    evaded with U over 36.4 s** while watched (health 100 throughout) and the star stayed; after
+    travelling out of the zone the pursuit ended, the star was still there at 15 s and cooled off
+    **30.1 s** after leaving (`starDecayMs` 30 s from the last observation).
+  - Timing the key: a U pressed a fixed 340 ms before the estimated contact lost a grab under
+    load (run 7) and 420 ms before lost a counter on a quiet loop (run 8), because a key reaches
+    the town 5–250 ms after the press (the loop can be inside a 100–200 ms route search). The
+    journey now sends a command the town refuses at once just as the telegraph appears, measures
+    the round trip (1–8 ms in run 10) and presses that far plus 160 ms ahead of the contact. In
+    run 10 the first grab after the surrender offer was seen with 86 ms left, too late to time,
+    so that row reads not-run while the observation episode evaded eleven.
+  - Runs 7–9 failed on the harness (the fixed lead; the town's 1 s travel cooldown refusing the
+    step out of the zone and the step back from the rival, so the rival's counters wore the
+    visitor down and the officer arrested a downed player); each log is kept.
 - **Not run in a browser, with the reason in the receipt**: search after sight loss around
-  geometry and stars held under observation (neither authored danger zone contains a
-  sight-blocking surface: a chest-height sight-line probe over every free point of the south
-  service lane and Westcreek Lane found none hidden from the officer post and no blocked pair,
-  and leaving a zone cancels pursuit); altitude and safe-ground transitions inside a 300 ms
-  windup. The server suites cover all three.
+  geometry (neither authored danger zone contains a sight-blocking surface: a chest-height
+  sight-line probe over every free point of the south service lane and Westcreek Lane found none
+  hidden from the officer post and no blocked pair, and leaving a zone cancels pursuit);
+  altitude inside a windup (flight belongs to one owner's appearance, `canFlyAs`, so a
+  development identity's altitude is refused as `flight_not_allowed`); writer takeover
+  mid-pursuit (needs two world processes behind a switching proxy; the Redis suites prove it on
+  real transports: 37 pass, 0 fail, 0 skipped on 2026-10-28, including one hit seen by every
+  client once through retries, reconnects and writer replacement). The server suites cover all
+  three.

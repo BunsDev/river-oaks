@@ -239,3 +239,33 @@ paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs 
   concealment escape needs zone geometry; the hour is daylight at 19:00.
 - Next: draft PR stacked on #710; hosted checks; `pnpm run verify full` from a detached snapshot
   of the pushed head with isolated Redis; the #599 matrix (#731) consumes these receipts.
+- **Writer takeover and fencing on real transports** (2026-10-28 15:00Z, `REDIS_URL=redis://127.0.0.1:16603/5`,
+  this session's isolated Redis; log `writer-takeover-suites.log` in the session scratchpad):
+  `node --test server/tests/redis-room.test.js server/tests/world-policy-transport.test.js
+  server/tests/crime-transport.test.js server/tests/police-world.test.js` → **37 pass, 0 fail,
+  0 skipped**, among them "redis: one hit is seen by every client once, through retries,
+  reconnects and writer replacement", "redis: police, authenticated surrender and one arrest
+  agree across clients and writer replacement", "an upgraded coordinator takes over an older
+  lease without waiting for its TTL", "coordinators: a v13 town committed by an older writer is
+  fenced…" and "redis: owner rules … survive reconnect and writer replacement". A browser-level
+  takeover (two world processes behind a switching proxy in front of the page) is not built;
+  the journey records that row not-run with this reason.
+- **Encounter runs 7–10** (two more episodes: safe-zone transition inside the windup by server
+  travel, stars held under observation; the not-run rows rewritten with exact reasons and a
+  writer-takeover row):
+  7. 15:03Z fail, harness: U 340 ms ahead of a grab's estimated contact reached the town late
+     under load (31 → 25 load averages), the grab landed and the arrest wiped the stars.
+  8. 15:20Z fail, harness: U 420 ms ahead of a counter's contact on a quiet loop was too early.
+     Replaced the fixed lead by a per-telegraph round-trip probe plus 160 ms.
+  9. 15:45Z fail, harness: the town's 1 s travel cooldown refused the step out of the zone
+     (`travel_cooldown`) and the step back from the rival, so the rival's counters wore the
+     visitor down (100 → 20) and the officer arrested the downed player. Travel retries through
+     the cooldown; the windup challenge waits it out.
+  10. **16:14–16:17Z pass, 37/37 checks in 201 s** (receipt `.runtime/evidence-640/
+      crime-encounter-run10-receipt.json`, videos `crime-encounter-run10-{visitor,witness}.webm`,
+      hashes appended to `crime-encounter-run6-SHA256SUMS`): safe-zone transition during windup
+      pass (`cancelled` / `not_danger_zone`, nothing lands); stars held under observation pass (11
+      evaded grabs over 36.4 s, star kept; cooled 30.1 s after leaving); the first grab after the
+      surrender offer was seen with 86 ms left, so "grab evaded" reads not-run in this run (pass
+      in run 6, and eleven evaded in the observation episode). Logs for 7–10 under
+      `.runtime/evidence-640/`.

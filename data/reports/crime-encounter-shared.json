@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-10-28T14:36:21.240Z",
+  "createdAt": "2026-10-28T16:24:01.238Z",
   "status": "passed",
   "modes": [
     "development"
@@ -10,53 +10,59 @@
     {
       "name": "crime-encounter",
       "status": "passed",
-      "seconds": 124.931,
+      "seconds": 201.33,
       "result": {
         "passed": true,
         "checks": [
           "All three browsers show the latest authored hour (19:00; the control ends at 19:00)",
           "Owner, visitor and witness are three identities",
           "The witness reaches the lane and faces the stretch the visitor walks",
-          "Walk then sprint on the local figure: 1.65 then 3.2 m/s (town budget 1.65 / 3.2) {\"samples\":380,\"frameMsP50\":35,\"frameMsP95\":54,\"walk\":{\"peakSpeed\":1.65,\"msTo90Percent\":258,\"msToStop\":360},\"sprint\":{\"peakSpeed\":3.2,\"msTo90Percent\":243,\"msToStop\":380},\"turn\":{\"degrees\":91,\"seconds\":0.998},\"strafe\":{\"peakSpeed\":1.65,\"travelVersusBodyDegrees\":90,\"bodyYawChangeDegrees\":0},\"back\":{\"peakSpeed\":1.65,\"bodyYawChangeDegrees\":0},\"continuity\":{\"worstFigureMetresPerSecondBetweenFrames\":4.53,\"worstCameraMetresPerSecondBetweenFrames\":8.33},\"feet\":{\"movingFrames\":229,\"framesWithAFootPlanted\":229,\"framesWithNoFootPlanted\":0,\"worstIkErrorMetres\":0}}",
-          "The figure stops after the key is released (walk 360 ms, sprint 380 ms)",
-          "A held turn key turns the body (91° in 0.998 s)",
+          "Walk then sprint on the local figure: 1.65 then 3.2 m/s (town budget 1.65 / 3.2) {\"samples\":382,\"frameMsP50\":37,\"frameMsP95\":55,\"walk\":{\"peakSpeed\":1.65,\"msTo90Percent\":257,\"msToStop\":325},\"sprint\":{\"peakSpeed\":3.2,\"msTo90Percent\":277,\"msToStop\":361},\"turn\":{\"degrees\":91,\"seconds\":0.993},\"strafe\":{\"peakSpeed\":1.65,\"travelVersusBodyDegrees\":90,\"bodyYawChangeDegrees\":0},\"back\":{\"peakSpeed\":1.65,\"bodyYawChangeDegrees\":0},\"continuity\":{\"worstFigureMetresPerSecondBetweenFrames\":4.11,\"worstCameraMetresPerSecondBetweenFrames\":8.12},\"feet\":{\"movingFrames\":228,\"framesWithAFootPlanted\":228,\"framesWithNoFootPlanted\":0,\"worstIkErrorMetres\":0}}",
+          "The figure stops after the key is released (walk 325 ms, sprint 361 ms)",
+          "A held turn key turns the body (91° in 0.993 s)",
           "Strafing moves the figure (1.65 m/s) sideways of the body (travel 90° off the facing) without turning it (0°)",
           "Backing up keeps the facing (0°)",
-          "No figure or camera jump between frames (worst 4.53 and 8.33 m/s)",
-          "The witness kept the visitor on screen (311 of 380 frames) and saw them move without freezing (0 frozen of 264 moving frames)",
+          "No figure or camera jump between frames (worst 4.11 and 8.12 m/s)",
+          "The witness kept the visitor on screen (312 of 382 frames) and saw them move without freezing (0 frozen of 268 moving frames)",
           "The visitor arrives within arm's reach of the service lane rival",
           "The keyboard strike lands at contact: 25 damage and one star (health 75, stars 1)",
-          "A timed evade (U) beats the rival's counter: [{\"id\":\"counter:3\",\"remainingMs\":647,\"contactAt\":81422.69999999925,\"pressed\":true,\"outcome\":\"evaded\"}]",
+          "A timed evade (U) beats the rival's counter: [{\"id\":\"counter:2\",\"remainingMs\":37,\"contactAt\":75888.80000000075,\"probe\":{\"roundTripMs\":1,\"error\":\"unknown_target\"},\"lead\":200,\"late\":true},{\"id\":\"counter:3\",\"remainingMs\":749,\"contactAt\":78248.60000000149,\"probe\":{\"roundTripMs\":1,\"error\":\"unknown_target\"},\"lead\":200,\"pressed\":true,\"outcome\":\"evaded\"}]",
           "An officer pursues the wanted visitor",
           "The witness sees the officer as a figure",
-          "The telegraphed grab is avoidable: {\"id\":\"police:0\",\"remainingMs\":850,\"contactAt\":90583.5,\"pressed\":true}",
+          "The telegraphed grab is avoidable: {\"id\":\"police:0\",\"remainingMs\":86,\"contactAt\":79666.90000000224,\"probe\":{\"roundTripMs\":1,\"error\":\"unknown_target\"},\"lead\":200,\"late\":true}",
           "A grab that lands takes hold of the visitor (resisted capture)",
           "Arrest returns the visitor to the safe arrival (149 m away) with full health",
           "Combat framing exits after the capture: nothing published, no held input",
           "The visitor walks back to the rival",
-          "A resident startles and runs from the wanted visitor: Ima Hogg",
+          "A resident startles and runs from the wanted visitor: Amara",
           "Emergency off during pursue: the officer stands down, every hold is released, the visitor walks again and earned stars stay ({\"duringState\":\"pursue\",\"starsBeforeOff\":1,\"starsAfterOff\":1,\"walkedAfterOff\":true,\"unitsOnVisitor\":[],\"subdued\":false})",
           "The visitor walks back to the rival once more",
           "A repeated attack ID returns the same action every time, never a second strike ({\"first\":{\"ok\":true,\"error\":null,\"phase\":\"windup\",\"replayed\":false},\"second\":{\"ok\":true,\"replayed\":true,\"id\":\"strike:7\",\"firstId\":\"strike:7\"},\"late\":{\"ok\":true,\"replayed\":true,\"outcome\":\"hit\",\"id\":\"strike:7\"}})",
           "Three sends of one attack ID: at most one hit (health 25 → 0, stars 2 → 3)",
           "A repeated evade ID replays without a new window ({\"first\":{\"ok\":true,\"error\":null,\"remainingMs\":350},\"again\":{\"ok\":true,\"replayed\":true,\"remainingMs\":0}})",
-          "The socket dropped mid-pursuit and came back in 1103 ms with the same identity and stars (3)",
+          "The socket dropped mid-pursuit and came back in 1320 ms with the same identity and stars (3)",
           "The pursuit continues after the reconnect (officer search)",
-          "Losing window focus with W held releases the key and stops the figure (1.60 → 0.00 m/s)",
+          "Losing window focus with W held releases the key and stops the figure (1.61 → 0.00 m/s)",
           "Voluntary surrender ends in the same safe recovery",
+          "The visitor walks back to the rival a third time",
+          "Leaving the danger zone inside the windup cancels the strike at contact: nothing lands, no star, nothing held ({\"travel\":{\"ok\":true,\"error\":null,\"replyMs\":20},\"strike\":{\"id\":\"strike:8\",\"outcome\":\"cancelled\",\"reason\":\"not_danger_zone\"},\"rivalHealth\":[100,100],\"stars\":[0,0],\"distanceFromRival\":149,\"combat\":\"\",\"held\":0})",
+          "The visitor walks back to the rival a fourth time",
+          "The visitor steps out of the rival's reach to be watched ({\"stepBack\":{\"type\":\"result\",\"requestId\":\"28\",\"ok\":true,\"player\":{\"health\":100,\"office\":null,\"interaction\":null,\"id\":\"dev-e89c4bd518ac\",\"name\":\"juniper-dev\",\"appearance\":\"sable-human\",\"movement\":\"upright\",\"gesture\":null,\"performing\":false,\"canBuild\":false,\"canGrantWishes\":false,\"canSetWorldPolicy\":false,\"vehicle\":null,\"sitting\":null,\"position\":[-2795,-1438,18.032284307790142],\"yaw\":1.5707963267948966,\"altitude\":0,\"buildingId\":null,\"levelId\":null,\"voice\":{\"space\":\"outdoor\",\"id\":null}}},\"distance\":5.4})",
+          "Stars do not cool off under observation: 1 star after 36 s of pursuit and 11 evaded grabs ({\"starsAtStrike\":1,\"starsAfterMs\":36378,\"starsAfter\":1,\"grabsEvaded\":11,\"grabs\":[{\"id\":\"police:0\",\"remainingMs\":849,\"contactAt\":131590.19999999925,\"probe\":{\"roundTripMs\":6,\"error\":\"unknown_target\"},\"lead\":200,\"pressed\":true,\"resolved\":{\"subdued\":false,\"stars\":1,\"health\":100}},{\"id\":\"police:0\",\"remainingMs\":747,\"contactAt\":134541.1000000015,\"probe\":{\"roundTripMs\":1,\"error\":\"unknown_target\"},\"lead\":200,\"pressed\":true,\"resolved\":{\"subdued\":false,\"stars\":1,\"health\":100}},{\"id\":\"police:0\",\"remainingMs\":849,\"contactAt\":137517.5,\"probe\":{\"roundTripMs\":2,\"error\":\"unknown_target\"},\"lead\":200,\"pressed\":true,\"resolved\":{\"subdued\":false,\"stars\":1,\"health\":100}},{\"id\":\"police:0\",\"remainingMs\":728,\"contactAt\":140460.80000000075,\"probe\":{\"roundTripMs\":1,\"error\":\"unknown_target\"},\"lead\":200,\"pressed\":true,\"resolved\":{\"subdued\":false,\"stars\":1,\"health\":100}},{\"id\":\"police:0\",\"remainingMs\":799,\"contactAt\":143423.90000000224,\"probe\":{\"roundTripMs\":1,\"error\":\"unknown_target\"},\"lead\":200,\"pressed\":true,\"resolved\":{\"subdued\":false,\"stars\":1,\"health\":100}},{\"id\":\"police:0\",\"remainingMs\":900,\"contactAt\":146384.30000000075,\"probe\":{\"roundTripMs\":2,\"error\":\"unknown_target\"},\"lead\":200,\"pressed\":true,\"resolved\":{\"subdued\":false,\"stars\":1,\"health\":100}},{\"id\":\"police:0\",\"remainingMs\":798,\"contactAt\":149342.69999999925,\"probe\":{\"roundTripMs\":1,\"error\":\"unknown_target\"},\"lead\":200,\"pressed\":true,\"resolved\":{\"subdued\":false,\"stars\":1,\"health\":100}},{\"id\":\"police:0\",\"remainingMs\":900,\"contactAt\":152292.19999999925,\"probe\":{\"roundTripMs\":2,\"error\":\"unknown_target\"},\"lead\":200,\"pressed\":true,\"resolved\":{\"subdued\":false,\"stars\":1,\"health\":100}},{\"id\":\"police:0\",\"remainingMs\":799,\"contactAt\":155258,\"probe\":{\"roundTripMs\":1,\"error\":\"unknown_target\"},\"lead\":200,\"pressed\":true,\"resolved\":{\"subdued\":false,\"stars\":1,\"health\":100}},{\"id\":\"police:0\",\"remainingMs\":849,\"contactAt\":158187.69999999925,\"probe\":{\"roundTripMs\":1,\"error\":\"unknown_target\"},\"lead\":200,\"pressed\":true,\"resolved\":{\"subdued\":false,\"stars\":1,\"health\":100}},{\"id\":\"police:0\",\"remainingMs\":747,\"contactAt\":161124,\"probe\":{\"roundTripMs\":2,\"error\":\"unknown_target\"},\"lead\":200,\"pressed\":true,\"resolved\":{\"subdued\":false,\"stars\":1,\"health\":100}}],\"observedBy\":[\"pursue\"],\"subdued\":false})",
+          "Out of the zone and out of sight the star cools off on the 30 s clock ({\"starsAt15s\":1,\"cooledAfterMs\":30099,\"starsNow\":0})",
           "No page errors: "
         ],
         "evidence": {
           "hour": "19:00",
           "viewport": "1280x860",
           "identities": {
-            "owner": "dev-9578031ce5fa",
-            "visitor": "dev-b27c3b276ff6",
-            "witness": "dev-04b1af0fdbe4"
+            "owner": "dev-dd6d5bf1cac0",
+            "visitor": "dev-e89c4bd518ac",
+            "witness": "dev-bdee7e908cf2"
           },
           "animationFramesPerSecond": {
-            "visitor": 30,
-            "witness": 30,
+            "visitor": 28,
+            "witness": 29,
             "window": "from the observers' install to the end, screenshots and video included"
           },
           "rows": [
@@ -65,22 +71,22 @@
               "status": "pass",
               "detail": {
                 "local": {
-                  "samples": 380,
-                  "frameMsP50": 35,
-                  "frameMsP95": 54,
+                  "samples": 382,
+                  "frameMsP50": 37,
+                  "frameMsP95": 55,
                   "walk": {
                     "peakSpeed": 1.65,
-                    "msTo90Percent": 258,
-                    "msToStop": 360
+                    "msTo90Percent": 257,
+                    "msToStop": 325
                   },
                   "sprint": {
                     "peakSpeed": 3.2,
-                    "msTo90Percent": 243,
-                    "msToStop": 380
+                    "msTo90Percent": 277,
+                    "msToStop": 361
                   },
                   "turn": {
                     "degrees": 91,
-                    "seconds": 0.998
+                    "seconds": 0.993
                   },
                   "strafe": {
                     "peakSpeed": 1.65,
@@ -92,42 +98,44 @@
                     "bodyYawChangeDegrees": 0
                   },
                   "continuity": {
-                    "worstFigureMetresPerSecondBetweenFrames": 4.53,
-                    "worstCameraMetresPerSecondBetweenFrames": 8.33
+                    "worstFigureMetresPerSecondBetweenFrames": 4.11,
+                    "worstCameraMetresPerSecondBetweenFrames": 8.12
                   },
                   "feet": {
-                    "movingFrames": 229,
-                    "framesWithAFootPlanted": 229,
+                    "movingFrames": 228,
+                    "framesWithAFootPlanted": 228,
                     "framesWithNoFootPlanted": 0,
                     "worstIkErrorMetres": 0
                   }
                 },
                 "peer": {
-                  "samples": 380,
-                  "onScreenFrames": 311,
-                  "worstMetresPerSecondBetweenFrames": 5.1,
-                  "movingFrames": 264,
+                  "samples": 382,
+                  "onScreenFrames": 312,
+                  "worstMetresPerSecondBetweenFrames": 4.73,
+                  "movingFrames": 268,
                   "frozenFramesWhileMoving": 0,
-                  "framesWithAFootPlanted": 264,
-                  "movingFramesWithFeet": 264,
-                  "peakDrawnSpeed": 5.1
+                  "framesWithAFootPlanted": 268,
+                  "movingFramesWithFeet": 268,
+                  "peakDrawnSpeed": 4.73
                 }
               }
             },
             {
               "name": "grab evaded (U at contact)",
-              "status": "pass",
+              "status": "not-run",
               "detail": {
                 "firstGrab": {
                   "id": "police:0",
-                  "remainingMs": 850,
-                  "contactAt": 90583.5,
-                  "pressed": true
+                  "remainingMs": 86,
+                  "contactAt": 79666.90000000224,
+                  "probe": {
+                    "roundTripMs": 1,
+                    "error": "unknown_target"
+                  },
+                  "lead": 200,
+                  "late": true
                 },
-                "settled": {
-                  "state": "pursue",
-                  "subdued": false
-                }
+                "reason": "the telegraph was seen too late to time the key"
               }
             },
             {
@@ -135,21 +143,21 @@
               "status": "pass",
               "detail": {
                 "visitor": {
-                  "inputToPublishedMs": 351,
-                  "inputToPoseMs": 358,
-                  "inputToHitSnapshotMs": 789,
-                  "hitSnapshotAfterTownContactMs": 140,
-                  "counterTelegraphAfterHitMs": 605,
-                  "evadeKeyToPoseMs": 74,
-                  "grabTelegraphShownAt": 1793198274271.6,
-                  "subduedAfterGrabTelegraphMs": 11616
+                  "inputToPublishedMs": 337,
+                  "inputToPoseMs": 335,
+                  "inputToHitSnapshotMs": 657,
+                  "hitSnapshotAfterTownContactMs": 21,
+                  "counterTelegraphAfterHitMs": 797,
+                  "evadeKeyToPoseMs": 72,
+                  "grabTelegraphShownAt": 1793204879296.3,
+                  "subduedAfterGrabTelegraphMs": 8736
                 },
                 "witness": {
-                  "strikeShownAfterKeyMs": 394,
-                  "contactShownAfterTownContactMs": 8,
-                  "flinchAfterTownContactMs": 153,
-                  "counterShownAfterVisitorTelegraphMs": 7,
-                  "grabShownAfterVisitorTelegraphMs": 34,
+                  "strikeShownAfterKeyMs": 459,
+                  "contactShownAfterTownContactMs": 19,
+                  "flinchAfterTownContactMs": 19,
+                  "counterShownAfterVisitorTelegraphMs": 24,
+                  "grabShownAfterVisitorTelegraphMs": 5,
                   "arrestShown": true
                 }
               }
@@ -158,10 +166,10 @@
               "name": "civilian reaction",
               "status": "pass",
               "detail": {
-                "id": "local-20",
-                "name": "Ima Hogg",
+                "id": "local-10",
+                "name": "Amara",
                 "distanceFromVisitor": 1.2,
-                "fled": 1.83,
+                "fled": 1.96,
                 "witness": {
                   "reaction": "flee",
                   "drawn": null
@@ -222,7 +230,7 @@
               "name": "reconnect mid-pursuit (browser)",
               "status": "pass",
               "detail": {
-                "reconnectMs": 1103,
+                "reconnectMs": 1320,
                 "starsBefore": 3,
                 "starsAfter": 3,
                 "officerAfter": "search"
@@ -232,7 +240,7 @@
               "name": "focus loss with a held key (browser)",
               "status": "pass",
               "detail": {
-                "movingSpeed": 1.6,
+                "movingSpeed": 1.61,
                 "stoppedSpeed": 0
               }
             },
@@ -247,6 +255,230 @@
               }
             },
             {
+              "name": "safe-zone transition during windup (browser)",
+              "status": "pass",
+              "detail": {
+                "travel": {
+                  "ok": true,
+                  "error": null,
+                  "replyMs": 20
+                },
+                "strike": {
+                  "id": "strike:8",
+                  "outcome": "cancelled",
+                  "reason": "not_danger_zone"
+                },
+                "rivalHealth": [
+                  100,
+                  100
+                ],
+                "stars": [
+                  0,
+                  0
+                ],
+                "distanceFromRival": 149,
+                "combat": "",
+                "held": 0
+              }
+            },
+            {
+              "name": "stars held under observation (browser)",
+              "status": "pass",
+              "detail": {
+                "starsAtStrike": 1,
+                "starsAfterMs": 36378,
+                "starsAfter": 1,
+                "grabsEvaded": 11,
+                "grabs": [
+                  {
+                    "id": "police:0",
+                    "remainingMs": 849,
+                    "contactAt": 131590.19999999925,
+                    "probe": {
+                      "roundTripMs": 6,
+                      "error": "unknown_target"
+                    },
+                    "lead": 200,
+                    "pressed": true,
+                    "resolved": {
+                      "subdued": false,
+                      "stars": 1,
+                      "health": 100
+                    }
+                  },
+                  {
+                    "id": "police:0",
+                    "remainingMs": 747,
+                    "contactAt": 134541.1000000015,
+                    "probe": {
+                      "roundTripMs": 1,
+                      "error": "unknown_target"
+                    },
+                    "lead": 200,
+                    "pressed": true,
+                    "resolved": {
+                      "subdued": false,
+                      "stars": 1,
+                      "health": 100
+                    }
+                  },
+                  {
+                    "id": "police:0",
+                    "remainingMs": 849,
+                    "contactAt": 137517.5,
+                    "probe": {
+                      "roundTripMs": 2,
+                      "error": "unknown_target"
+                    },
+                    "lead": 200,
+                    "pressed": true,
+                    "resolved": {
+                      "subdued": false,
+                      "stars": 1,
+                      "health": 100
+                    }
+                  },
+                  {
+                    "id": "police:0",
+                    "remainingMs": 728,
+                    "contactAt": 140460.80000000075,
+                    "probe": {
+                      "roundTripMs": 1,
+                      "error": "unknown_target"
+                    },
+                    "lead": 200,
+                    "pressed": true,
+                    "resolved": {
+                      "subdued": false,
+                      "stars": 1,
+                      "health": 100
+                    }
+                  },
+                  {
+                    "id": "police:0",
+                    "remainingMs": 799,
+                    "contactAt": 143423.90000000224,
+                    "probe": {
+                      "roundTripMs": 1,
+                      "error": "unknown_target"
+                    },
+                    "lead": 200,
+                    "pressed": true,
+                    "resolved": {
+                      "subdued": false,
+                      "stars": 1,
+                      "health": 100
+                    }
+                  },
+                  {
+                    "id": "police:0",
+                    "remainingMs": 900,
+                    "contactAt": 146384.30000000075,
+                    "probe": {
+                      "roundTripMs": 2,
+                      "error": "unknown_target"
+                    },
+                    "lead": 200,
+                    "pressed": true,
+                    "resolved": {
+                      "subdued": false,
+                      "stars": 1,
+                      "health": 100
+                    }
+                  },
+                  {
+                    "id": "police:0",
+                    "remainingMs": 798,
+                    "contactAt": 149342.69999999925,
+                    "probe": {
+                      "roundTripMs": 1,
+                      "error": "unknown_target"
+                    },
+                    "lead": 200,
+                    "pressed": true,
+                    "resolved": {
+                      "subdued": false,
+                      "stars": 1,
+                      "health": 100
+                    }
+                  },
+                  {
+                    "id": "police:0",
+                    "remainingMs": 900,
+                    "contactAt": 152292.19999999925,
+                    "probe": {
+                      "roundTripMs": 2,
+                      "error": "unknown_target"
+                    },
+                    "lead": 200,
+                    "pressed": true,
+                    "resolved": {
+                      "subdued": false,
+                      "stars": 1,
+                      "health": 100
+                    }
+                  },
+                  {
+                    "id": "police:0",
+                    "remainingMs": 799,
+                    "contactAt": 155258,
+                    "probe": {
+                      "roundTripMs": 1,
+                      "error": "unknown_target"
+                    },
+                    "lead": 200,
+                    "pressed": true,
+                    "resolved": {
+                      "subdued": false,
+                      "stars": 1,
+                      "health": 100
+                    }
+                  },
+                  {
+                    "id": "police:0",
+                    "remainingMs": 849,
+                    "contactAt": 158187.69999999925,
+                    "probe": {
+                      "roundTripMs": 1,
+                      "error": "unknown_target"
+                    },
+                    "lead": 200,
+                    "pressed": true,
+                    "resolved": {
+                      "subdued": false,
+                      "stars": 1,
+                      "health": 100
+                    }
+                  },
+                  {
+                    "id": "police:0",
+                    "remainingMs": 747,
+                    "contactAt": 161124,
+                    "probe": {
+                      "roundTripMs": 2,
+                      "error": "unknown_target"
+                    },
+                    "lead": 200,
+                    "pressed": true,
+                    "resolved": {
+                      "subdued": false,
+                      "stars": 1,
+                      "health": 100
+                    }
+                  }
+                ],
+                "observedBy": [
+                  "pursue"
+                ],
+                "subdued": false,
+                "cooling": {
+                  "starsAt15s": 1,
+                  "cooledAfterMs": 30099,
+                  "starsNow": 0
+                }
+              }
+            },
+            {
               "name": "perception-led search after sight loss (browser)",
               "status": "not-run",
               "detail": {
@@ -254,17 +486,17 @@
               }
             },
             {
-              "name": "stars held under observation (browser)",
+              "name": "altitude transition during windup (browser)",
               "status": "not-run",
               "detail": {
-                "reason": "an observed participant is grabbed within the 30 s decay; server/tests/police-capture.test.js covers it"
+                "reason": "flight is refused for development identities (canFlyAs); server/tests/crime-phases.test.js and crime.test.js cover altitude at contact"
               }
             },
             {
-              "name": "altitude and safe-ground transitions during windup (browser)",
+              "name": "writer takeover mid-pursuit (browser)",
               "status": "not-run",
               "detail": {
-                "reason": "a 300 ms windup cannot be crossed by browser travel; server/tests/crime-phases.test.js and crime.test.js cover it"
+                "reason": "needs two world processes behind a switching proxy; server/tests/redis-room.test.js (an upgraded coordinator takes over an older lease) and world-policy-transport.test.js (an older writer is fenced) cover it on real Redis transports"
               }
             }
           ],
@@ -289,15 +521,18 @@
             "output/playwright/crime-encounter-after-off-visitor.png",
             "output/playwright/crime-encounter-after-off-witness.png",
             "output/playwright/crime-encounter-surrender-visitor.png",
-            "output/playwright/crime-encounter-surrender-witness.png"
+            "output/playwright/crime-encounter-surrender-witness.png",
+            "output/playwright/crime-encounter-zone-visitor.png",
+            "output/playwright/crime-encounter-watched-visitor.png",
+            "output/playwright/crime-encounter-watched-witness.png"
           ],
           "videos": [
             {
-              "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-onfoot-640-inc5-3d/output/playwright/crime-encounter-video/page@29525e9eb92d6dd65f98d3e8bfde8f52.webm",
+              "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-onfoot-640-inc5-3d/output/playwright/crime-encounter-video/page@645729e80467feb55510eb76defc2bfe.webm",
               "name": "visitor"
             },
             {
-              "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-onfoot-640-inc5-3d/output/playwright/crime-encounter-video/page@16c785561c5b5046e47ab55c5d21ec74.webm",
+              "path": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-onfoot-640-inc5-3d/output/playwright/crime-encounter-video/page@4fbd8d73fe6c8a60eb6b491330e85ae6.webm",
               "name": "witness"
             }
           ]
