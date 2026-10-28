@@ -13,3 +13,7 @@ Results (2026-10-28):
 - `node --test preview/tests/city-kit-plaza-rows.test.js preview/tests/city-kit.test.js`: 18 passed, 0 failed: positions and ids of six benches, five lamps and a north-running tree row; solids; determinism; an override turning one bench and suppressing another by row id; six validation refusals; a bench off the ground refused; the shipped Nineteenth & Yale, Commons and greenway hashes unchanged.
 - `pnpm run destination check`: 19 locks reproduce (main now carries 19 recipes). `python3 -I scripts/check_secrets.py --all`: no leaks.
 - `pnpm run verify` (core), receipt `.runtime/agent/core.json` (revision `36e906b2`, dirty with the files above), log `.runtime/destination-plaza/verify-core-001.log`: passed. agent-tests 289/289; preview-tests 4342 passed, 1 skipped; server-tests 1077 passed, 283 skipped (no Redis); desktop-tests 127 passed, 5 skipped; build, python lint/format/tests (170 passed), demo, secrets passed. Not run: `verify full`, Redis, browser, native.
+
+Delivery: draft PR #736 (https://github.com/BunsDev/river-oaks/pull/736), source head `518f1968` (signed; the core receipt above belongs to that tree). Hosted Verify pending at the time of this note.
+
+Next step: hosted Verify, review, then land when authorized.
