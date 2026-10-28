@@ -71,4 +71,6 @@ Results (2026-10-28):
 - `pnpm run destination check`: 15 locks reproduce. `python3 -I scripts/check_secrets.py --all`: no leaks.
 - `pnpm run verify` (core), receipt `.runtime/agent/core.json` (revision `8f0c659a`, dirty with the files above), log `.runtime/destination-parcels/verify-core-001.log`: passed. agent-tests 289/289; preview-tests 4322 passed, 1 skipped; server-tests 1051 passed, 280 skipped (no Redis); desktop-tests 127 passed, 5 skipped; build, python lint/format/tests (170 passed), demo, secrets passed. Not run: `verify full`, Redis, browser, native.
 
+Delivery: draft PR #735 (https://github.com/BunsDev/river-oaks/pull/735), head `3c708abcfacab67c6df8ba7f3e699897818ee9d5` (signed; the core receipt above belongs to that tree), base `feat/destination-reference-20261028`. Hosted Verify pending at the time of this note.
+
 Gaps after increment 2: World Studio cannot open a city-kit plan; plazas, furniture and tree rows are still typed per item; no bridge from the Studio neighborhood compiler's parcels to kit blocks; the reference adapter reads axis-aligned grids only (curves are reported for hand authoring, by design).
