@@ -3,6 +3,7 @@ import manifest from '../public/data/world-manifest.json' with { type: 'json' };
 import { locationWorldBounds } from './world-manifest.js';
 import { validateCommonsRegistration } from './east-garden-commons-world.js';
 import { createSpatialChunkStream } from './spatial-chunk-stream.js';
+import { COMMONS_NAME, MARKET_NAME } from './world-location-label.js';
 
 // Counts owned buffer storage; no shared District resources enter this chunk.
 function geometryBytes(group) {
@@ -16,18 +17,20 @@ function geometryBytes(group) {
 
 // `layout` is the Commons layout to present; Bayou Heights passes the restored Commons
 // with its bayou opened for the footbridge (heights-stream.js).
-export function createCommonsStream({ world, layout: presented = world.eastGardenCommons, parent, onStatus = () => {}, onScene = () => {}, now,
-  loadModule = () => import('./east-garden-commons.js') }) {
+export function createCommonsStream({ world, layout: presented = world.eastGardenCommons, parent, onStatus = () => {}, onScene = () => {}, now = () => performance.now(),
+  visibilityLingerMs = 15000, loadModule = () => import('./east-garden-commons.js') }) {
   const layout = validateCommonsRegistration(manifest, presented);
   const location = manifest.locations.find(item => item.id === layout.id);
   const [west, south, east, north] = locationWorldBounds(location);
   const gatewayNorth = location.entries.find(entry => entry.id === 'district-promenade').position_m[1];
+  // The notices name what the HUD names: the Market once it is composed.
+  const name = layout.destination ? MARKET_NAME : COMMONS_NAME;
   // Published Market includes a 30 m tower and landscape beyond its walkable
   // site. This conservative presentation envelope is separate from authority.
   const margin = layout.destination ? 45 : 0, height = layout.destination ? 40 : 5;
   const visualBounds = new Box3(new Vector3(west - margin, Math.min(...layout.edgeHeights) - 1, -north - margin), new Vector3(east + margin, layout.ground + height, -south + margin));
   const frustum = new Frustum(), viewMatrix = new Matrix4();
-  let status = '';
+  let status = '', lastVisibleAt = -Infinity;
   const announce = text => { if (text !== status) { status = text; onStatus(text); } };
   const stream = createSpatialChunkStream({
     chunks: [{ id: location.id, bounds: locationWorldBounds(location), estimatedBytes: layout.destination ? 3 * 1024 * 1024 : 65536 }],
@@ -63,17 +66,23 @@ export function createCommonsStream({ world, layout: presented = world.eastGarde
       }
       // A visible destination is a required presentation chunk even beyond the
       // walking prefetch radius. The scheduler still enforces the same ceiling.
-      stream.update(visible ? [...points, [(west + east) / 2, (south + north) / 2]] : points);
+      // It stays required for a while after leaving view: beyond the retention
+      // radius a glance away and back would otherwise rebuild the whole Market
+      // (megabytes of geometry and landscape) on every turn of the camera.
+      const time = now();
+      if (visible) lastVisibleAt = time;
+      const inView = visible || time - lastVisibleAt < visibilityLingerMs;
+      stream.update(inView ? [...points, [(west + east) / 2, (south + north) / 2]] : points);
       const chunk = stream.debug().chunks[0];
       const player = points[0];
       const atGateway = player && Math.abs(player[0] - layout.edge) < 30 && Math.abs(player[1] - gatewayNorth) < 15;
       const occupying = player && player[0] > layout.edge && player[0] <= east && player[1] >= south && player[1] <= north;
-      if ((atGateway || occupying) && chunk.state === 'stalled') announce('East Garden Commons loading has stalled. You can return west to the District while the connection recovers.');
-      else if ((atGateway || occupying) && chunk.state === 'failed') announce('East Garden Commons is still loading. Retrying automatically; you can return to the District.');
+      if ((atGateway || occupying) && chunk.state === 'stalled') announce(`${name} loading has stalled. You can return west to the District while the connection recovers.`);
+      else if ((atGateway || occupying) && chunk.state === 'failed') announce(`${name} is still loading. Retrying automatically; you can return to the District.`);
       else if ((atGateway || occupying) && !stream.ready(layout.id)) announce(occupying
-        ? 'Loading East Garden Commons… You can return west while it loads.'
-        : 'Loading East Garden Commons… Please wait at the promenade.');
-      else if (atGateway) announce(player[0] > layout.edge ? 'River Oaks District ← Follow the promenade west' : 'East Garden Commons → Follow the promenade east');
+        ? `Loading ${name}… You can return west while it loads.`
+        : `Loading ${name}… Please wait at the promenade.`);
+      else if (atGateway) announce(player[0] > layout.edge ? 'River Oaks District ← Follow the promenade west' : `${name} → Follow the promenade east`);
       else announce('');
     },
     ready: () => stream.ready(layout.id),
@@ -87,7 +96,7 @@ export function createCommonsStream({ world, layout: presented = world.eastGarde
       // eastward progress remain blocked until presentation is available.
       return from?.[0] > layout.edge - .35 && to[0] <= from[0] + 1e-9;
     },
-    debug: () => ({ ...stream.debug(), status, geometryBudgetBytes: 16 * 1024 * 1024, visualBounds: [visualBounds.min.toArray(), visualBounds.max.toArray()] }),
+    debug: () => ({ ...stream.debug(), status, geometryBudgetBytes: 16 * 1024 * 1024, visibilityLingerMs, lastVisibleAt, visualBounds: [visualBounds.min.toArray(), visualBounds.max.toArray()] }),
     dispose() { stream.dispose(); announce(''); },
   };
 }
