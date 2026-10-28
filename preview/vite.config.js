@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
 import { sharedTownDevServer } from '../server/vite-town.js';
 import { bridgeDevServer } from './vite-bridge.js';
+import { buildInputs, buildOutDir, buildTarget } from './build-target.js';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
@@ -9,6 +10,9 @@ import { readFileSync } from 'node:fs';
 // commit (Vercel provides it; local builds ask git).
 const commit = process.env.VERCEL_GIT_COMMIT_SHA || (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); } catch { return 'unknown'; } })();
 const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+// `web` (default) builds the deployed site; `play` builds the play entry alone for a
+// packaged host (preview/build-target.js). The build records which one it is.
+const target = buildTarget();
 
 const townPort = Number(process.env.RIVER_OAKS_DEV_TOWN_PORT ?? 8787);
 if (!Number.isInteger(townPort) || townPort < 1 || townPort > 65535) throw new Error('RIVER_OAKS_DEV_TOWN_PORT must be a TCP port.');
@@ -21,7 +25,7 @@ const envDir = process.env.RIVER_OAKS_ACCEPTANCE_FIXTURE === '1' ? false : fileU
 
 export default defineConfig({
   plugins: [sharedTownDevServer({ port: townPort }), bridgeDevServer()],
-  define: { __RIVER_OAKS_BUILD__: JSON.stringify({ version, commit }) },
+  define: { __RIVER_OAKS_BUILD__: JSON.stringify({ version, commit, target }) },
   root: fileURLToPath(new URL('.', import.meta.url)),
   envDir,
   server: {
@@ -53,8 +57,8 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../dist/preview',
+    outDir: buildOutDir(target),
     emptyOutDir: true,
-    rolldownOptions: { input: { index: fileURLToPath(new URL('./index.html', import.meta.url)), studio: fileURLToPath(new URL('./studio.html', import.meta.url)) }, output: { codeSplitting: { groups: [{ name: 'three', test: /node_modules\/three/ }, { name: 'livekit', test: /node_modules\/(livekit-client|@livekit)/ }] } } },
+    rolldownOptions: { input: buildInputs(target, new URL('./', import.meta.url)), output: { codeSplitting: { groups: [{ name: 'three', test: /node_modules\/three/ }, { name: 'livekit', test: /node_modules\/(livekit-client|@livekit)/ }] } } },
   },
 });
