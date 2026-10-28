@@ -182,3 +182,10 @@
 @media (max-width: 640px) and (pointer: coarse) {
   :root[data-theme] .game-hud #settings-dialog .settings-layout [role=tab] { min-height: 44px; }
 }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-content { display: grid; gap: 4px; }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-content:empty { display: none; }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-quote { margin: 0; padding: 6px 10px; border-left: 3px solid var(--hud-muted); color: var(--ink); font-size: 12.5px; line-height: 1.5; overflow-wrap: anywhere; }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-chat { margin: 0; padding: 0 0 0 16px; color: var(--hud-muted); font-size: 12.5px; line-height: 1.5; overflow-wrap: anywhere; }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-overdue .moderation-report-meta { color: #a33a32; }
+:root[data-theme=dark] .game-hud #settings-dialog .moderation-report-overdue .moderation-report-meta { color: #ff9f94; }
+:root[data-theme] .game-hud #settings-dialog .moderation-report-closed { opacity: .7; }

@@ -55,6 +55,6 @@ test('moderation routes go to the configured world', async t => {
   const router = createWorldRouter({configuredWorldId: 'moon-garden', worldFor: async id => { asked.push(id);return null; }});
   await new Promise(resolve => router.server.listen(0, '127.0.0.1', resolve));t.after(() => router.close());
   const base = `http://127.0.0.1:${router.server.address().port}`;
-  for (const path of ['/api/moderation/ban', '/api/moderation/reports', '/api/moderation/reports?world=river-oaks']) assert.equal((await fetch(`${base}${path}`)).status, 404);
-  assert.deepEqual(asked, ['moon-garden', 'moon-garden', 'moon-garden']);
+  for (const path of ['/api/moderation/ban', '/api/moderation/reports', '/api/moderation/reports?world=river-oaks', '/api/moderation/reports/close']) assert.equal((await fetch(`${base}${path}`)).status, 404);
+  assert.deepEqual(asked, ['moon-garden', 'moon-garden', 'moon-garden', 'moon-garden']);
 });
