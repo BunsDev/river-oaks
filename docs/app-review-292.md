@@ -17,7 +17,7 @@ the binary is marked **native**.
 | --- | --- | --- | --- |
 | 1.2 | Filter objectionable content | A server-side filter screens town chat, direct messages, groups, events, profiles and usernames before they're stored, on both servers (this change). Voice isn't filtered | Met in source; the list and the mode are Decision 1 |
 | 1.2 | Report offensive content, respond in time | Residents can be reported from the roster, including one who has left. A report keeps the quoted text and the reported account's last chat lines, records when it should be answered by, is posted to the moderators' inbox (`MODERATION_NOTIFY_URL`), and stays listed in Settings → Account → Reports until a moderator closes it (this change). Messages, events and groups can't be reported | Met in source; the inbox, its owner and the response time are Decision 2 |
-| 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The Block button is built but not wired into the client | **Gap, blocking** (client owner) |
+| 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The roster now offers Block/Unblock and Settings → Account lists blocked residents | Integrated in source; fixture verification and native acceptance remain distinct |
 | 1.2 | Published contact information | Settings → Account → Support, once `VITE_SUPPORT_CONTACT` is set (this change). Not on the sign-in or waitlist pages | Needs a value; **gap** before approval |
 | 5.1.1(v) | Delete the account in the app | In-app deletion behind a default-off flag (#666), webhook erasure (#661) | Met in source, off |
 | 5.1.1(v) | Revoke social credentials; no social tokens kept off the device | WorkOS can return the resident's GitHub token, which the server then uses | **Decision** |
@@ -58,11 +58,15 @@ every field in the list above, apart from voice, before any store sees it:
   can’t be used here." (names: "That name can’t be used here.").
 - **How it matches.** Whole words and short phrases from `config/content-filter.json`,
   after folding case, accents, look-alike digits and symbols (`k1ll`, `f@g`, Cyrillic
-  and Greek look-alikes), spaced-out letters (`k i l l`) and a run-together phrase
-  (`killyourself`). Nothing inside a longer word matches, so ordinary words that
-  contain a term are left alone. Images aren't screened: residents can't post any.
+  and Greek look-alikes), zero-width characters inside a word, letters spaced out one
+  by one (`k i l l`) and a run-together phrase (`killyourself`). A plain `-s` plural of a
+  term matches; other forms are listed on their own. Not folded: letters spaced in
+  groups (`ki ll`), repeated letters (`kiiill`) or leetspeak beyond the look-alike table.
+  Nothing inside a longer word matches, so ordinary words that contain a term are left
+  alone. Text longer than 4,000 characters is refused unscreened rather than passed
+  (every field's own cap is far lower). Images aren't screened: residents can't post any.
 - **Policy.** `refuse` lists the terms; `mask` names the fields where a match is
-  replaced by asterisks instead of refused (never usernames). The shipped list holds
+  replaced by asterisks (`∗`) instead of refused (never usernames). The shipped list holds
   severe slurs and direct threats, as a starting point. `RIVER_OAKS_CONTENT_FILTER=off`
   turns the filter off; `RIVER_OAKS_CONTENT_FILTER_FILE` replaces the list with a file
   of the same shape, and a missing or malformed file stops the server at start.
@@ -142,15 +146,19 @@ accounts, so the list offers no Ban for them; lifting a ban on one still works. 
 the shared intake), `preview/tests/moderation-reports.test.js` and the routing cases in
 `server/tests/vercel-routing.test.js` and `server/tests/hardening-router-admission.test.js`.
 
-**Blocking. Gap, blocking.** [Player blocking](player-blocking.md) (#665) is enforced
+**Blocking. Integrated in source.** [Player blocking](player-blocking.md) (#665) is enforced
 on the server. It covers chat, gestures, greetings, contacts, direct messages,
 profiles, group messages, invitations, travel, private places and Garden campus guest
-access, and it holds across reconnects and worlds. But residents can't make a block yet. The Block button for
-the roster and the blocked list for Settings (`preview/src/player-blocks.js`) are
-built and tested, but not wired in: `preview/src/multiplayer-client.js` and
-`preview/src/main.js` belong to other active tasks. Until their owners make the four
-calls listed in that page, a block can only be made through `/api/blocks/*`. Voice
-isn't covered: the device mute is the only control today
+access, and it holds across reconnects and worlds. Residents can now use Block/Unblock
+beside Report in the player roster and manage their blocked list in Settings → Account.
+The multiplayer client owns authenticated attachment, reconnect refresh and teardown;
+the Account pane offers refresh and reports failures without false success. Session
+and attempt fences prevent stale replies or a pending sign-out from rebinding another
+session's list. The implementation and fixture evidence are recorded in
+`docs/superpowers/plans/2026-10-27-player-blocking-ui-292.md`; live auth, hosted routing,
+physical-device and human accessibility acceptance are separate. This integration
+does not close this App Review issue or authorize an iOS release. Voice isn't covered:
+the device mute is the only control today
 ([Decision 1 there](player-blocking.md)).
 
 **Contact. Needs a value, and a gap before approval.** `VITE_SUPPORT_CONTACT`, set at
