@@ -18,7 +18,7 @@ The kit extends existing systems rather than adding a city engine. Movement uses
 | CLI | `scripts/destination.mjs` (`pnpm run destination …`) |
 | In-engine preview of any recipe | `preview/e2e/fixtures/city-kit.html?recipe=<id>&seed=<n>&view=<view>` |
 | Pedestrian-scale screenshot review | `preview/e2e/city-kit-review.js` (shared browser lock) |
-| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-pipeline.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/city-kit-reference.test.js`, `preview/tests/city-kit-studio.test.js`, `preview/tests/bayou-market-commons.test.js` |
+| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-pipeline.test.js`, `preview/tests/city-kit-shipped-quarters.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/city-kit-reference.test.js`, `preview/tests/city-kit-studio.test.js`, `preview/tests/bayou-market-commons.test.js` |
 
 ## Conventions
 
@@ -81,6 +81,9 @@ A recipe may carry a `layout` instead of typing every block rectangle by hand. I
 - **Diagnostics.** The plan's `provenance.layout` records the layout hash, the land count, each derived block's rectangle, front and sides, and warnings. `destination build` writes `layout.json` with every piece of land, its bounding streets and coverage, what became of it and why (open, too narrow, too shallow, partly off a street, a split that could not happen), prints the warnings, and outlines derived blocks with dashes and open or skipped land in red in `plan.svg`. `destination layout <recipe>` prints the same as a table.
 - **Budget.** The renderer batches each block separately, about twelve draw calls per block beside roughly twenty for the streets and plazas, so a recipe holds about four blocks inside the 70-call budget. The example derives three; a larger site is several recipes, as Studewood and Woodland Heights are north and south recipes.
 - **Freeze.** `destination layout <recipe> --freeze` writes the derived blocks into the recipe as authored blocks and removes the layout, after checking that the frozen recipe places identical pieces, surfaces and solids. Use it when a neighborhood is approved and later edits should be by hand; the recipe hash changes, so lock again.
+
+Against the shipped world (`preview/tests/city-kit-shipped-quarters.test.js`): eleven committed neighborhoods, 24 blocks, derive the same plan and lock hash from quarters as from their hand-authored blocks, with only the artistic fields carried over (style, ranges, names, `front`, `sides`, `court`). The two terrace studio rows were hand-placed half a metre off Terrace Lane; a quarter flush to the lane moves every shell that half metre, and six rear wings, half a metre deeper, gain a bay. Two rules make the shipped courts and edges derivable: hand-placed furniture may stand in a derived block's court (open ground), and a stated `front` on the site's own edge faces the neighbouring recipe's street, with a warning.
+
 
 ## Start from a geographic reference
 

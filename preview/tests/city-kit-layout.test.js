@@ -141,9 +141,15 @@ test('diagnostics name open land, land too shallow or narrow, partial frontages 
   const partial = derive(short);
   assert.match(partial.diagnostics.warnings.join('\n'), /only \d+% of its north frontage is on a street|open land|too shallow/);
   assert.ok(partial.blocks.length >= 3);
-  // Explicit fronts: a side with no street, or a street that does not bound the land, is an error that names the land.
+  // Explicit fronts: a side with no street is an error that names the land, unless that side is the site's own
+  // edge, where the stated front faces the neighbouring recipe's street with a warning; a street that does
+  // not bound the land is an error too.
   const sideless = grid(); sideless.layout.quarters[1].front = 'south';
-  assert.throws(() => assembleNeighborhood(sideless), /quarter south-row: land 0,0,53\.5,42\.5 has no street on its south side/);
+  const edged = derive(sideless);
+  assert.match(edged.diagnostics.warnings.join('\n'), /south-row 0,0,53\.5,42\.5: faces the site edge on its south side; the street beyond lies in the neighbouring recipe/);
+  assert.ok(edged.blocks.some(block => block.id.startsWith('south-row') && block.front === 'south'));
+  const inland = grid(); inland.layout.quarters[1].rect = [0, 4, 53.5, 42.5]; inland.layout.quarters[1].front = 'south';
+  assert.throws(() => assembleNeighborhood(inland), /quarter south-row: land 0,4,53\.5,42\.5 has no street on its south side/);
   const elsewhere = grid(); elsewhere.layout.quarters[1].front = 'back-lane';
   assert.throws(() => assembleNeighborhood(elsewhere), /street back-lane does not bound land/);
   // `split: none` keeps one block facing the main street even between two streets.
