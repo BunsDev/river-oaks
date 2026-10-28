@@ -80,7 +80,8 @@ export function createCommonsStream({ world, layout: presented = world.eastGarde
     allowsStep(from, to) {
       if (!to?.slice(0, 2).every(Number.isFinite)) return false;
       // Beyond the Commons (Bayou Heights, bayou-heights-1) that location's own stream gates presentation.
-      if (stream.ready(layout.id) || to[0] <= layout.edge - .35 || to[0] > east + .35) return true;
+      // The Bayou Terraces (bayou-terraces-1) beside the Commons are gated by the Heights stream too.
+      if (stream.ready(layout.id) || to[0] <= layout.edge - .35 || to[0] > east + .35 || to[1] < south - .35 || to[1] > north + .35) return true;
       // A restored player may need to move sideways around a planter before
       // retreating west. Existing collision still applies; entry and further
       // eastward progress remain blocked until presentation is available.

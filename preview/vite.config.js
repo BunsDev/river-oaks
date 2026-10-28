@@ -37,6 +37,8 @@ export default defineConfig({
       '/api/landmarks': townHttp,
       '/api/social': townHttp,
       '/api/groups': townHttp,
+      '/api/blocks': townHttp,
+      '/api/account': townHttp,
       '/api/events': townHttp,
       '/api/profile': townHttp,
       '/api/workos': townHttp,

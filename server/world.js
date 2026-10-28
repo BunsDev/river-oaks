@@ -17,7 +17,7 @@ import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
 import { buildKind, buildGeometry, buildYaw, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, BUILD_REASONS, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.js';
 import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
-import { plazaSalonRack } from '../preview/src/plaza-salon-plan.js';
+import { bikeRackSlots } from '../preview/src/bike-racks.js';
 import { objectCollider, blocksPlayer, blocksResident } from '../preview/src/creator-object.js';
 import { verifyApprovedSpaceRoutes } from '../preview/src/approved-space-plan.js';
 import { cafeSeat, plazaSalonPlan } from '../preview/src/plaza-salon-plan.js';
@@ -251,10 +251,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const suiteAdmits=(player,seat,time=now())=>campus.suiteAccess(player.id,seat.unitId,time).ok;
   const campusWorkstation=player=>Boolean(player?.sitting && (campusWorkstations.has(player.sitting.buildId)
     || suiteSeats.get(player.sitting.buildId)?.workstation && suiteAdmits(player,suiteSeats.get(player.sitting.buildId))));
-  // The plaza bike rack: a slot is held by at most one player (player.cycling),
+  // The bike racks (bike-racks.js): a slot is held by at most one player (player.cycling),
   // exactly as a seat is. Metres ride on the player until the transport drains
   // them into the account store (drainRides), so a disconnect loses nothing.
-  const rackSlots=new Map(plazaSalonRack(worldData).map(slot=>[slot.id,slot]));
+  const rackSlots=new Map(bikeRackSlots(worldData).map(slot=>[slot.id,slot]));
   const slotHolder=slotId=>[...players.values()].find(p=>p.cycling===slotId)??null;
   const takenSlots=()=>[...players.values()].filter(p=>p.cycling).map(p=>p.cycling).sort();
   // Banked metres are process-local and not checkpointed: the transports drain
@@ -611,6 +611,43 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     tableGames.forget(userId);cafeGames.forget(userId);dartsGames.forget(userId);axeGames.forget(userId);
     revision++;
     return true;
+  }
+  // A visitor whose home invitation ended steps out onto the street.
+  function leaveHome(peer,storeId,time) {
+    const privateRoom=peer && restrictedRoomAt(peer.position[0],peer.position[1]);
+    if (privateRoom?.storeId!==storeId) return;
+    const store=worldData.stores.find(item=>item.id===storeId);
+    const outside=storefrontSpot(worldData,store,'leave',{isFree:(x,z)=>environment.isFree(x,z) && !environment.roomAt(x,z)});
+    peer.position=[outside[0],outside[1],environment.groundAt(outside[0],-outside[1])];
+    releaseBike(peer);
+    peer.altitude=0;peer.buildingId=null;peer.levelId=null;peer.vehicle=null;peer.sitting=null;
+    peer.poseAt=time;peer.moveBudget=peer.liftBudget=0.1;
+    peer.gesture=null;peer.gestureUntil=0;focus.delete(peer.id);
+  }
+  // Player blocking (#292): a greeting or game invitation between the two ends, and so
+  // does campus guest access either way. Only Jevica's accounts invite residents into
+  // offices and private homes, so a block between one of them and a resident also ends
+  // the resident's invitations, and steps them out. New ones are refused while the
+  // block lasts. The revision moves only when something ended.
+  function separate(a,b) {
+    const greeting=interactions.snapshot().some(item=>[a,b].includes(item.fromId)&&[a,b].includes(item.toId));
+    if (greeting) {interactions.cancel(a);revision++;}
+    const invited=[tableGames,cafeGames,dartsGames,axeGames].map(games=>games.separate(a,b)).some(Boolean);
+    const time=now();
+    let ended=campus.separate(a,b,time);
+    if (isAdmin(a)!==isAdmin(b)) {
+      const resident=isAdmin(a)?b:a;
+      ended=offices.forget(resident)||ended;
+      for (const [storeId,guests] of [...homeGuests]) {
+        if (!guests.includes(resident)) continue;
+        const rest=guests.filter(id=>id!==resident);
+        if (rest.length) homeGuests.set(storeId,rest); else homeGuests.delete(storeId);
+        leaveHome(players.get(resident),storeId,time);
+        ended=true;
+      }
+    }
+    if (ended) revision++;
+    return greeting||invited||ended;
   }
   function reachable(player, local) {
     if (offices.has(player.id))return false;
@@ -1079,16 +1116,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if (!guests.includes(message.peerId)) return reject('not_invited');
       if (guests.length===1) homeGuests.delete(message.storeId);
       else homeGuests.set(message.storeId,guests.filter(id=>id!==message.peerId));
-      const peer=players.get(message.peerId),privateRoom=peer && restrictedRoomAt(peer.position[0],peer.position[1]);
-      if (privateRoom?.storeId===message.storeId) {
-        const store=worldData.stores.find(item=>item.id===message.storeId);
-        const outside=storefrontSpot(worldData,store,'leave',{isFree:(x,z)=>environment.isFree(x,z) && !environment.roomAt(x,z)});
-        peer.position=[outside[0],outside[1],environment.groundAt(outside[0],-outside[1])];
-        releaseBike(peer);
-        peer.altitude=0;peer.buildingId=null;peer.levelId=null;peer.vehicle=null;peer.sitting=null;
-        peer.poseAt=time;peer.moveBudget=peer.liftBudget=0.1;
-        peer.gesture=null;peer.gestureUntil=0;focus.delete(peer.id);
-      }
+      leaveHome(players.get(message.peerId),message.storeId,time);
       revision++;
       return {ok:true,storeId:message.storeId,peerId:message.peerId,granted:false};
     }
@@ -1616,7 +1644,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
   const listPlaces = () => placesOf(worldData);
-  return {worldId,protocolVersion,approvedSpaceRoutesBlocked:()=>approvedSpaceRoutesBlocked(),join,rename,leave,forgetAccount,command,step,snapshot,checkpoint,restore,reset,
+  return {worldId,protocolVersion,approvedSpaceRoutesBlocked:()=>approvedSpaceRoutesBlocked(),join,rename,leave,forgetAccount,separate,command,step,snapshot,checkpoint,restore,reset,
     // World rules (#596): the public rule and the one violence decision for #597's attacks.
     worldPolicy:publicWorldPolicy,violenceFor,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.
