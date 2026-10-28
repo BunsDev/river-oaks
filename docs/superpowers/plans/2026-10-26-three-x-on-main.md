@@ -234,7 +234,15 @@ ABBA detail:
    - District stack: all six merged, #670 last as `a1fa945a`.
    - #292 stack: all five merged.
 2. **3× on `main`:** met. `woodland-heights-1` is 3.048× at 0.5 m.
-3. **Acceptance pass:** done on a5857cf4, with the caveats above; comments posted on #638 and #587.
+3. **Acceptance pass:** round 1 ran on `a5857cf4`, before #670 landed. Round 2 ran on the final `main`, `5541f831`, which contains #670 `a1fa945a`. The host was held awake, and `pmset` shows no sleep, wake or dark-wake events from 18:19Z on 10-27 to 00:49Z on 10-28. Round 2 results:
+   - **Rehearsals:** both Commons rehearsals and the Heights rehearsal passed (Heights receipt `ed94130c`).
+   - **Journeys:** world-gate-587, east-garden-commons and the four district journeys passed (`bf8bc7e9`).
+   - **District ABBA:** five-rejoin protocol, A = `2d63637f`, B = `5541f831`, order A1 B1 B2 A2 under one lock. Every budgeted metric was within allowance (`16a15cf1`).
+   - **`verify full`:** the first run failed (`64443d87`). Every stage passed except Redis, which started at load 20.9 and had 3 failures out of 1,367: both activation rehearsals and the refused-district lease test. One isolated rerun of those three files at load 11.4 passed 11/11 (`714478d7`).
+   - **world-streaming on `5541f831`:** failed twice. The first run failed "Repeated travel creates no extra multiplayer connections", and the cause is unconfirmed. The rerun failed at Eviction 5: player 0 ended facing the Commons, the mechanism #703 guards.
+   - **world-streaming on `18222a6d`** (`main` after #703): passed (`9ba2a92b`).
+   - **Evidence comments:** #638 6457682578 and #587 6457682951.
+   - **Archive:** 33 files with verified SHA256SUMS at `~/worktree-backups/river-oaks/evidence-three-x-on-main-20261026/acceptance-5541f831-18222a6d/`.
 4. **Retirement:** every e9-landed PR is delivered with evidence, and its ref and worktree are retired through the guarded prune: #660, #686, #689, #661, #662, #663, #665, #673, #666, #667, #682. Still preserved: the three acceptance snapshots (Decision 5).
 5. **#292 lane:** complete.
 6. **Handoff:** this ledger and the Decisions below.
@@ -247,7 +255,8 @@ ABBA detail:
 | --- | --- | --- | --- |
 | #670 retirement | Merged as `a1fa945a`; the register task and local branch belong to 3e | 3e | 3e marks `next-district-586-support-20261024` delivered and releases the branch at its exact tip; then guarded prune (comment 6449621420) |
 | Acceptance snapshots `scratchpad/accept-pre`, `accept-final`, `accept-ws` (task `three-x-acceptance-snapshots-20261027`) | Detached; retiring needs `--cancel-stale` | e9 | Decision 5. Receipts are already archived |
-| world-streaming lap-12 cause | Mechanism reproduced by 71: facing the Commons at the far point keeps it resident; lap 12 itself wasn't observed | 71 | The guard (`e89b1505`) is in flight under 71's authority |
+| world-streaming connection-count failure (round 2, run 1 on `5541f831`) | Not reproduced. The rerun on `5541f831` failed on the facing mechanism instead, and the run on `18222a6d` after #703 passed | e9 (reported) | Watch for a recurrence. The first log is in the round-2 archive |
+| #670 branch retirement (`feat/resident-heights-20261025`, `feat/resident-locations-20261024`) | 3e marked the task delivered but holds retirement until Val authorizes it. Ignored evidence must be archived first; the locations branch differs from #655's merged head | 3e | Decision 9 |
 
 ## Decisions for Val
 
@@ -267,11 +276,12 @@ ABBA detail:
    - **Update:** after the reproduction, river-oaks-71 is taking the guard forward as draft #703 under its own Phase 3 authority (fix recurring flakes without loosening checks): a draft PR, an independent review, the hosted world-streaming shard, then the land queue.
      - The waits, the 120 s timeout and every assertion are unchanged. Only the walk's incidental final facing becomes the precondition the stream needs.
      - e9 agrees it doesn't loosen the check.
-     - No longer waiting on Val unless 71 holds it.
+     - Resolved: #703 merged as `18222a6d` at 22:53Z on 10-27, and world-streaming passed on it in round 2.
 8. **Activation:** #587 conditions 4 (visual and device sign-off) and 5 (production state) for the 3× world.
+9. **3e's #670 retirement.** Authorize river-oaks-3e to archive its evidence, release `feat/resident-heights-20261025` and `feat/resident-locations-20261024` at their exact tips, and run the guarded `project:prune`. The second branch needs aggregate review, because its tip `4629280` differs from #655's merged head `5ad0384b`.
 
 ## Next action
 
-- Val: Decisions 3, 4, 5 and 8 (7 only if 71 holds #703).
-- 3e: record #670's delivery and release its branch.
+- Val: Decisions 3, 4, 5, 8 and 9.
+- Decision 5 now also covers the round-2 snapshot `river-oaks-accept-final-5541f831`, which is at `18222a6d`.
 - Nothing else is open for e9 under this goal.
