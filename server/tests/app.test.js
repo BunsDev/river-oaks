@@ -18,11 +18,11 @@ const auth = {
 };
 async function fixture(t,options={},staticRoot='/nonexistent'){
   const waitlist=options?.isApproved?options:options.waitlist??approvedWaitlist;
-  const {landmarks=createMemoryLandmarks(),social=createMemorySocial(),groups=createMemoryGroups(),worldId='river-oaks'}=options?.isApproved?{}:options;
+  const {landmarks=createMemoryLandmarks(),social=createMemorySocial(),groups=createMemoryGroups(),worldId='river-oaks',auth:authority=auth}=options?.isApproved?{}:options;
   const players=new Map();let commands=0;
-  const world={players,join(i){players.set(i.userId,{id:i.userId,name:i.name,position:[5,7,0],yaw:.3});return {ok:true};},leave(id){players.delete(id);},command(){commands++;return {ok:true};},step(){},snapshot(){return {type:'snapshot',players:[...players.values()],locals:[],wishes:{}};}};
+  const world={players,join(i){players.set(i.userId,{id:i.userId,name:i.name,position:[5,7,0],yaw:.3});return {ok:true};},leave(id){players.delete(id);},rename(i){const player=players.get(i.userId);if(player)player.name=i.name;return player??null;},command(){commands++;return {ok:true};},step(){},snapshot(){return {type:'snapshot',players:[...players.values()],locals:[],wishes:{}};}};
   world.worldId=worldId;
-  const app=createGameServer({auth,world,landmarks,social,groups,waitlist,origin:'http://127.0.0.1',staticRoot});
+  const app=createGameServer({auth:authority,world,landmarks,social,groups,waitlist,origin:'http://127.0.0.1',staticRoot});
   await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
   const origin=`http://127.0.0.1:${app.server.address().port}`;
   t.after(()=>app.close());
@@ -150,6 +150,32 @@ test('pending waitlist approval blocks tickets and revocation closes an active p
  const code=await new Promise(resolve=>ws.once('close',resolve));
  assert.equal(code,4001);
  assert.equal((await ticket(origin,'one')).status,403);
+});
+// A session that expires mid-visit (the next command or the broadcast loop notices) closes the
+// socket with 4001 but keeps the player in the world for the departure grace, so the secure
+// reconnect resumes where they were. Before 2026-10-27 the command path removed the player at
+// once and the reconnect re-joined at the District spawn, moving a Market visitor ~180 m.
+for (const path of ['command','broadcast']) test(`a session expiring mid-visit (${path} path) reconnects where the player was`,async t=>{
+ const issued=[];
+ const recordingAuth={...auth,async authenticate(req){const identity=await auth.authenticate(req);if(identity)issued.push(identity);return identity;}};
+ const {origin,world}=await fixture(t,{auth:recordingAuth});
+ let joins=0;const join=world.join;world.join=identity=>{joins++;return join(identity);};
+ const token=(await (await ticket(origin,'one')).json()).ticket;
+ const {ws}=await connect(origin,token,'one');t.after(()=>ws.terminate());
+ world.players.get('one').position=[9,8,0];
+ const closed=new Promise(resolve=>ws.once('close',(code,reason)=>resolve([code,String(reason)])));
+ // Expire the socket's identity just after a broadcast, so the next command (or the next
+ // broadcast, 200 ms later) is the first to notice.
+ await new Promise(resolve=>ws.once('message',resolve));
+ for(const identity of issued)identity.expiresAt=Date.now()-1;
+ if(path==='command')ws.send(JSON.stringify({type:'pose',position:[9,8,0],yaw:0,altitude:0}));
+ const [code,reason]=await closed;
+ assert.equal(code,4001);assert.equal(reason,'Session expired. Reconnecting securely.');
+ assert.ok(world.players.has('one'),'the player stays in the world for the departure grace');
+ const again=(await (await ticket(origin,'one')).json()).ticket;
+ const second=await connect(origin,again,'one');t.after(()=>second.ws.terminate());
+ assert.equal(joins,1,'the reconnect resumes the existing player instead of joining again');
+ assert.deepEqual(second.snapshot.players.find(player=>player.id==='one').position,[9,8,0],'the position from before the expiry is kept');
 });
 test('oversized and flooding frames cannot generate unbounded world commands',async t=>{
  const {origin,commands}=await fixture(t);

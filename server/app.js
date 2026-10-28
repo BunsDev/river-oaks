@@ -411,7 +411,11 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           let approved = false;
           try { approved = await waitlist.isApproved(identity.userId); } catch { /* Storage fails closed. */ }
           if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
-          if(identity.expiresAt<=now() || isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
+          // An expired session ends the socket the way the broadcast loop does: the player stays in
+          // the world for the departure grace, so the secure reconnect resumes where they were
+          // instead of re-joining at the District spawn. A ban or ended approval still removes them.
+          if(identity.expiresAt<=now())return ws.close(4001,'Session expired. Reconnecting securely.');
+          if(isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
           let equipObservation=null;
           try {
             const message=slot.message;
