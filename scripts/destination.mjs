@@ -7,10 +7,12 @@
 //   pnpm run destination check
 //   pnpm run destination override <recipe.json> <piece-id> (--set key=value ... | --suppress) [--note text]
 //   pnpm run destination preview <recipe.json>
+//   pnpm run destination layout <recipe.json> [--freeze]   # the land each quarter claims and the blocks it derives
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs';
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assembleNeighborhood, canonicalJSON, walkableConnectivity } from '../shared/city-kit/assemble.js';
+import { assembleNeighborhood, canonicalJSON, validateRecipe, walkableConnectivity } from '../shared/city-kit/assemble.js';
+import { expandLayout } from '../shared/city-kit/layout.js';
 import { KIT_CONVENTIONS, KIT_PIECES } from '../shared/city-kit/catalog.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..'), recipesDir = join(root, 'config/destinations');
@@ -37,19 +39,30 @@ export function report(plan) {
     connectivity: { reached: connectivity.reached, walkableSamples: connectivity.total, ratio: Number(connectivity.ratio.toFixed(5)),
       lanterns: plan.lanterns.map(lantern => ({ id: lantern.id, reachable: [[-1, 0], [1, 0], [0, -1], [0, 1]].some(([dx, dy]) => connectivity.reachable([lantern.at[0] + dx, lantern.at[1] + dy])) })) },
     unsigned: plan.pieces.filter(piece => piece.piece === 'building/shell' && piece.faces?.length && piece.sign === null && !piece.id.endsWith('/rear')).map(piece => piece.id),
+    ...(plan.provenance.layout ? { layout: plan.provenance.layout } : {}),
   };
 }
 
-export function svg(plan) {
+// The land a layout found, its bounding streets and what became of it; null without a layout.
+export function layoutDiagnostics(recipe) {
+  const layout = expandLayout(validateRecipe(structuredClone(recipe)));
+  return layout ? { ...layout.diagnostics, derived: layout.blocks } : null;
+}
+
+// Shop names such as "Iron & Ivy" must be escaped inside SVG titles.
+const text = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+export function svg(plan, layout = null) {
   const [w, s, e, n] = plan.site, pad = 8, scale = 6, width = (e - w + pad * 2) * scale, height = (n - s + pad * 2) * scale;
   const X = x => ((x - w + pad) * scale).toFixed(1), Y = y => ((n + pad - y) * scale).toFixed(1);
-  const box = (r, fill, extra = '') => `<rect x="${X(r[0])}" y="${Y(r[3])}" width="${((r[2] - r[0]) * scale).toFixed(1)}" height="${((r[3] - r[1]) * scale).toFixed(1)}" fill="${fill}" ${extra}/>`;
+  // A titled rectangle closes with </rect>; an untitled one is self-closing. Titles are escaped text.
+  const box = (r, fill, extra = '', title = null) => `<rect x="${X(r[0])}" y="${Y(r[3])}" width="${((r[2] - r[0]) * scale).toFixed(1)}" height="${((r[3] - r[1]) * scale).toFixed(1)}" fill="${fill}" ${extra}${title === null ? '/>' : `><title>${text(title)}</title></rect>`}`;
   const colours = { 'street/shared-lane': '#8f7f78', 'street/intersection': '#8f7f78', 'street/crosswalk': '#a59a92', 'street/sidewalk': '#d6d2c9', 'street/court': '#e8e1d2', 'landscape/lawn': '#9fbf86', 'landscape/bayou': '#5f8d84', 'landscape/hedge': '#4d6b4a', 'building/context': '#c9c2b6', 'landscape/planter': '#7f9d6c' };
   const walls = { 'brick-rose': '#c98e88', 'brick-umber': '#a9826e', 'stucco-ivory': '#efe5d0', 'stucco-apricot': '#e3b48c' };
   const body = [];
   for (const piece of plan.pieces) if (piece.rect && colours[piece.piece]) body.push(box(piece.rect, colours[piece.piece]));
   for (const piece of plan.pieces) if (piece.piece === 'building/shell') {
-    body.push(box(piece.rect, walls[piece.wall] ?? '#ccc', `stroke="#1f454a" stroke-width="1.5"><title>${piece.id} · ${piece.storeys} storeys · ${piece.roof}${piece.sign ? ` · ${piece.sign}` : ''}</title></rect`.replace(/\/>$/, '>')));
+    body.push(box(piece.rect, walls[piece.wall] ?? '#ccc', 'stroke="#1f454a" stroke-width="1.5"', `${piece.id} · ${piece.storeys} storeys · ${piece.roof}${piece.sign ? ` · ${piece.sign}` : ''}`));
     for (const face of piece.faces ?? []) {
       const [a, b, c, d] = piece.rect, line = { south: [a, b, c, b], north: [a, d, c, d], east: [c, b, c, d], west: [a, b, a, d] }[face];
       body.push(`<line x1="${X(line[0])}" y1="${Y(line[1])}" x2="${X(line[2])}" y2="${Y(line[3])}" stroke="#317b7d" stroke-width="4"/>`);
@@ -57,28 +70,33 @@ export function svg(plan) {
   }
   for (const solid of plan.solids) body.push(box(solid.rect, '#3b352e'));
   for (const piece of plan.pieces) if (piece.at && piece.piece === 'landscape/street-tree') body.push(`<circle cx="${X(piece.at[0])}" cy="${Y(piece.at[1])}" r="${(piece.radius * scale).toFixed(1)}" fill="#5c7f4c" fill-opacity=".45"/>`);
-  for (const lantern of plan.lanterns) body.push(`<circle cx="${X(lantern.at[0])}" cy="${Y(lantern.at[1])}" r="9" fill="#ffbf66" stroke="#1f454a" stroke-width="2"><title>${lantern.name}</title></circle>`);
+  for (const lantern of plan.lanterns) body.push(`<circle cx="${X(lantern.at[0])}" cy="${Y(lantern.at[1])}" r="9" fill="#ffbf66" stroke="#1f454a" stroke-width="2"><title>${text(lantern.name)}</title></circle>`);
   for (const piece of plan.pieces) if (piece.piece === 'landmark/water-tower') body.push(`<circle cx="${X(piece.at[0])}" cy="${Y(piece.at[1])}" r="${(4 * scale).toFixed(1)}" fill="none" stroke="#317b7d" stroke-width="5"/>`);
   for (const piece of plan.pieces) if (piece.override) {
     const [x, y] = piece.at ?? [(piece.rect[0] + piece.rect[2]) / 2, (piece.rect[1] + piece.rect[3]) / 2];
-    body.push(`<circle cx="${X(x)}" cy="${Y(y)}" r="6" fill="#c0392b"><title>manual ${piece.override}: ${piece.id}</title></circle>`);
+    body.push(`<circle cx="${X(x)}" cy="${Y(y)}" r="6" fill="#c0392b"><title>manual ${piece.override}: ${text(piece.id)}</title></circle>`);
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width.toFixed(0)} ${height.toFixed(0)}" width="${width.toFixed(0)}" height="${height.toFixed(0)}"><title>${plan.id} · seed ${plan.seed} · ${plan.hash}</title><rect width="100%" height="100%" fill="#f4efe6"/>${body.join('')}</svg>\n`;
+  // Derived blocks are outlined with dashes; land a layout left open or skipped is outlined in red.
+  for (const block of plan.provenance.layout?.blocks ?? []) body.push(box(block.rect, 'none', 'stroke="#1f454a" stroke-width="2" stroke-dasharray="8 5"', `derived ${block.id} · faces ${block.front}${block.sides.length ? ` · sides ${block.sides.join(', ')}` : ''}`));
+  for (const cell of layout?.cells ?? []) if (cell.result === 'open' || cell.result === 'skipped') body.push(box(cell.rect, 'none', 'stroke="#c0392b" stroke-width="2" stroke-dasharray="3 4"', `${cell.result} land${cell.quarter ? ` (${cell.quarter})` : ''}${cell.reason ? `: ${cell.reason}` : ''}`));
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width.toFixed(0)} ${height.toFixed(0)}" width="${width.toFixed(0)}" height="${height.toFixed(0)}"><title>${text(plan.id)} · seed ${plan.seed} · ${plan.hash}</title><rect width="100%" height="100%" fill="#f4efe6"/>${body.join('')}</svg>\n`;
 }
 
 function build(path) {
   const recipe = readRecipe(path), seed = flag('--seed') === null ? recipe.seed : Number(flag('--seed'));
   const plan = assembleNeighborhood(recipe, { seed }), out = resolve(flag('--out') ?? join(root, '.runtime/destinations', `${plan.id}-${seed}`));
   mkdirSync(out, { recursive: true });
-  const summary = report(plan);
+  const summary = report(plan), layout = layoutDiagnostics(recipe);
   writeFileSync(join(out, 'plan.json'), `${canonicalJSON(plan)}\n`);
-  writeFileSync(join(out, 'plan.svg'), svg(plan));
+  writeFileSync(join(out, 'plan.svg'), svg(plan, layout));
   writeFileSync(join(out, 'report.json'), `${JSON.stringify(summary, null, 2)}\n`);
+  if (layout) { writeFileSync(join(out, 'layout.json'), `${JSON.stringify(layout, null, 2)}\n`); for (const warning of layout.warnings) console.warn(`layout: ${warning}`); }
   if (has('--lock')) {
     if (seed !== recipe.seed) throw new Error('Lock only the recipe seed');
     writeFileSync(lockPath(path), `${JSON.stringify({ id: plan.id, kit: plan.kit, seed, hash: plan.hash, recipeHash: plan.provenance.recipeHash, overridesHash: plan.provenance.overridesHash, stats: plan.stats }, null, 2)}\n`);
   }
-  console.log(JSON.stringify({ out, hash: plan.hash, seed, stats: plan.stats, budgetsWithin: summary.budgets.within, connectivity: summary.connectivity.ratio, overrides: plan.provenance.overrides }, null, 2));
+  console.log(JSON.stringify({ out, hash: plan.hash, seed, stats: plan.stats, budgetsWithin: summary.budgets.within, connectivity: summary.connectivity.ratio, overrides: plan.provenance.overrides,
+    ...(layout ? { layout: { cells: layout.cells.length, derived: layout.derived.map(block => block.id), warnings: layout.warnings.length } } : {}) }, null, 2));
   if (!summary.budgets.within || summary.connectivity.ratio < 1 || summary.connectivity.lanterns.some(item => !item.reachable)) process.exitCode = 1;
 }
 
@@ -113,13 +131,34 @@ function override(path, id) {
   console.log(`Recorded override for ${id}; plan ${plan.hash}. Review, then run build --lock.`);
 }
 
+// Show the land a layout claims and the blocks it derives. `--freeze` writes those
+// blocks into the recipe as authored blocks and removes the layout: the plan's
+// pieces, surfaces and solids stay identical, and later edits are by hand.
+function layoutCommand(path) {
+  const recipe = readRecipe(path), layout = layoutDiagnostics(recipe);
+  if (!layout) { console.log(`${basename(path)} has no layout; its ${recipe.blocks?.length ?? 0} blocks are authored.`); return; }
+  const side = (cell, name) => cell.streets?.[name]?.streets.map(street => `${street.id}${cell.streets[name].coverage < 1 - 1e-6 ? ` (${Math.round(cell.streets[name].coverage * 100)}%)` : ''}`).join('+') || '-';
+  console.log(['land (w,s,e,n)', 'quarter', 'north', 'south', 'east', 'west', 'result', 'blocks'].join('\t'));
+  for (const cell of layout.cells) console.log([cell.rect.join(','), cell.quarter ?? '-', side(cell, 'north'), side(cell, 'south'), side(cell, 'east'), side(cell, 'west'), cell.result + (cell.reason ? ` (${cell.reason})` : ''), cell.blocks.join(' ') || '-'].join('\t'));
+  for (const block of layout.derived) console.log(`derived ${block.id}: ${block.style}, faces ${block.front}${block.sides ? `, sides ${block.sides.join(', ')}` : ''}, ${block.names.length} names, rect ${block.rect.join(',')}`);
+  for (const warning of layout.warnings) console.warn(`warning: ${warning}`);
+  if (!has('--freeze')) return;
+  const before = assembleNeighborhood(recipe), frozen = { ...recipe, blocks: [...(recipe.blocks ?? []), ...layout.derived] };
+  delete frozen.layout;
+  const after = assembleNeighborhood(frozen), geometry = plan => canonicalJSON({ pieces: plan.pieces, surfaces: plan.surfaces, solids: plan.solids, lanterns: plan.lanterns });
+  if (geometry(before) !== geometry(after)) throw new Error('Frozen blocks do not reproduce the derived plan; nothing written');
+  writeFileSync(resolve(path), `${JSON.stringify(frozen, null, 2)}\n`);
+  console.log(`Froze ${layout.derived.length} derived blocks into ${basename(path)} and removed its layout; identical pieces, surfaces and solids. Review, then run build --lock.`);
+}
+
 const pieceCount = Object.keys(KIT_PIECES).length;
 if (command === 'build') build(rest.find(arg => arg.endsWith('.json')) ?? fail());
 else if (command === 'check') check();
 else if (command === 'override') override(rest[0], rest[1]);
+else if (command === 'layout') layoutCommand(rest.find(arg => arg.endsWith('.json')) ?? fail());
 else if (command === 'preview') {
   const recipe = readRecipe(rest[0] ?? join(recipesDir, 'bayou-market-commons.json'));
   console.log(`In-engine kit preview: pnpm run dev, then open /e2e/fixtures/city-kit.html?recipe=${recipe.id}`);
   if (recipe.id === 'bayou-market-commons') console.log('Playable in the town: pnpm run dev serves it (the development town defaults to the full expansion), then walk east from the District arrival.');
-} else { console.error(`usage: destination build|check|override|preview (${pieceCount} kit pieces)`); process.exitCode = 2; }
+} else { console.error(`usage: destination build|check|override|preview|layout (${pieceCount} kit pieces)`); process.exitCode = 2; }
 function fail() { throw new Error('Pass a recipe .json path'); }
