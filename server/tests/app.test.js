@@ -196,7 +196,7 @@ test('a session nearing its expiry is asked to move to a fresh socket before the
  const opened=Date.now();
  const notice=await rotated;
  assert.ok(notice.at-opened<lifetime,'the notice comes before the sign-in runs out');
- assert.equal(notice.message.closeInMs,lifetime,'and says how long the socket has');
+ assert.ok(notice.message.closeInMs>lifetime-100&&notice.message.closeInMs<=lifetime,`and says how long the socket has (${notice.message.closeInMs} ms)`);
  assert.equal(typeof notice.message.connectionId,'string');
  world.players.get('one').position=[9,8,0];
  // The page moves to a fresh socket, which re-authenticates (a fresh expiry) and keeps the player.

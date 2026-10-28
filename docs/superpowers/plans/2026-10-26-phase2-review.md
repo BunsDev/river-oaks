@@ -94,6 +94,8 @@ Taken over on 2026-10-28 at 15:30 UTC by `claude:river-oaks-75 (97b0b7a7)` under
 
 - 2026-10-28 15:20–17:10 UTC (river-oaks-75): takeover recorded in the register; independent read of the scheduler, both adapters, the walking guards, the server pose handler, socket lifecycle and client reconnect paths; traced the hourly expiry to the browser fixture; merged main `36e906b2` (signed `ca9c27c7`); added the pre-expiry rotation and the refreshing notice with regressions; socket, client-notice, streaming and rotation suites green (above). Host load 29–38 at 15:20 UTC fell to about 10 by 17:10 UTC; two other sessions' `verify full` runs hold the host.
 
+- 2026-10-28 17:10–17:30 UTC: `10fb7056` pushed; hosted run 40733111922 failed only `preview checks` (test:server): the new expiry case asserted `closeInMs` equal to the 1,500 ms lifetime and the runner ticked a millisecond (1499); every other check (25) passed. Assertion loosened to a 100 ms range, re-pushed; the journey on this head is still waiting for the shared browser lock, so its hashes are unaffected.
+
 - 15:41–16:48 UTC: journey run 7 (server fix + harness detail) PASSED 290/290: 22 trips, 22 evictions, heap 1.008 / 1.028, 0 violations, 0 detours, both 4001 closes "Session expired. Reconnecting securely." with players resuming in place, 90 crossings smooth, hashes unchanged; load 10–17 so loaded p95 reached 66.7 ms (p50 33.4). Receipt published as journey-merged-8336cc52-run7; secrets scan clean.
 
 ## Results, gaps and next step
