@@ -104,6 +104,20 @@ test('a crop of the bundled District keeps its straight lanes and reports the cu
   assert.ok(recipe.reference.blocks >= 3);
 });
 
+test('a World Studio region package is a reference as it is exported: its ring road becomes four streets', () => {
+  // preview/public/data/sample-region.json is the Studio sample (schema-v1 creator region: roads with points, width_m, kind).
+  const region = JSON.parse(readFileSync(join(root, 'preview/public/data/sample-region.json'), 'utf8'));
+  const recipe = referenceRecipe(region, { id: 'sample-region', site: region.bounds_m, source: { name: 'sample-region.json' } });
+  assert.equal(recipe.reference.rotation, 0);
+  assert.deepEqual(recipe.streets.map(street => [street.id, ...street.from, ...street.to, street.lane]), [
+    ['garden-promenade', 30, 30, 162, 30, 4], ['moon-lane', 14, 96, 178, 96, 8.4], ['garden-promenade-2', 30, 162, 162, 162, 4], ['garden-promenade-3', 30, 30, 30, 162, 4], ['garden-promenade-4', 162, 30, 162, 162, 4]]);
+  assert.deepEqual(recipe.reference.dropped, []);
+  assert.equal(recipe.reference.source.crs, 'LOCAL:METRES', 'a region without a CRS is local metres');
+  assert.equal(recipe.reference.buildings, 4);
+  assert.ok(recipe.reference.blocks > 4, 'the whole sample is more than one recipe holds; the budget line says so');
+  validateRecipe(structuredClone(recipe));
+});
+
 test('destination reference writes the skeleton with the source hash, and build accepts it', () => {
   const dir = mkdtempSync(join(tmpdir(), 'city-kit-reference-')), out = join(dir, 'grid-demo.json');
   const run = args => execFileSync(process.execPath, [join(root, 'scripts/destination.mjs'), ...args], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
