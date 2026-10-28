@@ -5,11 +5,15 @@ This page describes how River Oaks embeds TypeSafe Computer in Jevica's office d
 lifecycle contract that Computer's embed mode implements
 ([TypeSafeAI/typesafe-computer#33](https://github.com/TypeSafeAI/typesafe-computer/issues/33)).
 
-**Status.** Place side: implemented and tested against a deterministic local child
-fixture. Computer side: no embed build exists yet; `docs/PLACE_EMBED.md` has not been
-published in the Computer repository. Until Computer adopts or amends this contract,
-version 1 below is Place's proposal. No hosted origin is configured, and the deployed
-Place frame policy still blocks every Computer frame (see [Staged blockers](#staged-blockers)).
+**Status.**
+
+- **Place side:** implemented and tested against a deterministic local child fixture.
+- **Computer side:** a candidate embed build is in draft
+  [TypeSafeAI/typesafe-computer#34](https://github.com/TypeSafeAI/typesafe-computer/pull/34)
+  (8c0240af, 2026-10-27). Its `docs/PLACE_EMBED.md` adopts version 1 below unchanged.
+  `office-computer-real` runs the desk against it locally (see [Verification](#verification)).
+- **Hosting:** no hosted origin is configured, and the deployed Place frame policy
+  still blocks every Computer frame (see [Staged blockers](#staged-blockers)).
 
 ## Ownership
 
@@ -255,6 +259,33 @@ no shared scope to preserve.
 `RIVER_OAKS_EXPERIENCE_BROWSER=webkit` runs the same journey in Playwright's WebKit (Safari's
 engine on desktop). That is not iOS or a touch device.
 
+`RIVER_OAKS_COMPUTER_CHECKOUT=<checkout> pnpm run test:experience office-computer-real`
+runs the desk against a real Computer checkout instead, built with `npm run
+build:renderer`. The runner starts that checkout's `server.js` on its own loopback
+origin, with `TSC_AUTH=off` dev users and in-memory sync, and `TSC_PLACE_ORIGINS` naming
+Place. The journey covers:
+
+- Computer's real account gate on every frame;
+- a note's account save, then recovery after the frame and Computer's local copy are gone;
+- Escape after the palette;
+- a refused save kept as Computer's local copy;
+- ten open, edit and close cycles;
+- visit end, a dropped connection and a world rebuild;
+- Switch, with top-level sign-in;
+- a second Computer account in the same browser;
+- an expired session;
+- a visitor in another browser, then revocation;
+- the next Place account in that browser, then Place sign-out;
+- denied framing: Computer restarted without this Place on its list, so its own
+  `frame-ancestors` refuses the frame, and Place recovers to Tasks;
+- privacy of the note text.
+
+It runs on demand, not in CI, because it needs a Computer checkout. It is still not
+hosted WorkOS sign-in or the real origin pair. Its receipt is
+`data/reports/office-computer-real-child-browser.json`: 40 checks against Computer
+8c0240af on 2026-10-28. The fixture journey still covers what the real child can't be
+made to do here: hang during teardown, and a live Place account change on one page.
+
 The fixture is not Computer. It proves Place's behavior against the contract, not
 Computer's hosting, authentication or sync. Both fixture servers run on `127.0.0.1`, and
 cookies ignore ports. The journey therefore cannot show that Place and Computer
@@ -265,10 +296,8 @@ cookies stay apart; that needs the real host pair (#21).
 These must be resolved before a hosted pilot (tracked in
 [combined acceptance #487](https://github.com/BunsDev/river-oaks/issues/487)):
 
-1. **Computer embed build (#33).**
-   - Publish `docs/PLACE_EMBED.md` matching or amending version 1.
-   - Ship the child and its account gate.
-   - Record its revision here.
+1. **Computer embed build (#33).** Candidate in draft #34 (8c0240af), with
+   `docs/PLACE_EMBED.md` adopting version 1. Not merged or deployed.
 2. **Hosting (#21).**
    - Prove the actual origin pair: same-site, separate origins.
    - Repair the staging WorkOS registrations.
