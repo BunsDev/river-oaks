@@ -15,7 +15,7 @@ The kit extends existing systems rather than adding a city engine. Movement uses
 | CLI | `scripts/destination.mjs` (`pnpm run destination …`) |
 | In-engine preview of any recipe | `preview/e2e/fixtures/city-kit.html?recipe=<id>&seed=<n>&view=<view>` |
 | Pedestrian-scale screenshot review | `preview/e2e/city-kit-review.js` (shared browser lock) |
-| Tests | `preview/tests/city-kit.test.js`, `preview/tests/bayou-market-commons.test.js` |
+| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-plaza-rows.test.js`, `preview/tests/bayou-market-commons.test.js` |
 
 ## Conventions
 
@@ -56,6 +56,8 @@ Manual artistic edits live in the recipe as intent, never as edited generated ou
 - A shop name pinned by an override leaves the generator's name pool, so no other shop repeats it. When a block has more shopfronts than names, the remainder stay unsigned rather than duplicating a name.
 
 Overrides are applied after generation by stable ID. If a different seed no longer produces an overridden ID, the plan reports that ID under `provenance.overrides.orphaned`. The override itself stays in the recipe. Every plan records the kit version, seed, recipe hash, overrides hash and the applied, orphaned and added lists. Plans are canonical JSON with a browser-safe 64-bit hash, identical in Node and the browser.
+
+A plaza derives its trees, benches and lamps by the row: `treeRows`, `benchRows` and `lampRows` each take a line (`y` with `from`/`to` along x, or `x` along y), a `spacing` and, for furniture, a `yaw`, instead of an entry per item. Derived ids are stable (`<plaza>/bench-row-<row>-<n>`), so overrides address them, and a row that leaves the plaza's ground fails the build like any solid off walkable ground. Hand-placed `furniture` still works beside rows for the pieces that matter.
 
 ## Commands
 

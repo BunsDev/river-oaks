@@ -96,7 +96,14 @@ export function validateRecipe(recipe) {
     if (street.bands !== undefined && !(street.bands.spacing > 0 && street.bands.offset >= 0)) fail(`street ${street.id} bands`);
     streets.set(street.id, street);
   }
-  for (const plaza of recipe.plazas ?? []) { unique('plaza', plaza.id); if (!rectOk(plaza.rect)) fail(`plaza ${plaza.id}`); }
+  for (const plaza of recipe.plazas ?? []) {
+    unique('plaza', plaza.id); if (!rectOk(plaza.rect)) fail(`plaza ${plaza.id}`);
+    // A row derives its items from one line: `y` with `from`/`to` along x (east-running) or `x` along y.
+    for (const key of ['treeRows', 'benchRows', 'lampRows']) for (const [i, row] of (plaza[key] ?? []).entries()) {
+      const axis = (row?.x !== undefined ? 1 : 0) + (row?.y !== undefined ? 1 : 0);
+      if (!row || axis !== 1 || !Number.isFinite(row.x ?? row.y) || !Number.isFinite(row.from) || !Number.isFinite(row.to) || row.from > row.to || !(row.spacing > 0) || (row.to - row.from) / row.spacing > 64 || (row.yaw !== undefined && !Number.isFinite(row.yaw))) fail(`plaza ${plaza.id} ${key} ${i}`);
+    }
+  }
   for (const block of recipe.blocks ?? []) {
     unique('block', block.id);
     if (!KIT_STYLES[block.style]) fail(`block ${block.id} style`);
@@ -237,14 +244,22 @@ function assemblePlaza(recipe, plaza, seed, pieces, walks) {
   pieces.push({ id: `${base}/paving`, piece: 'street/court', rect: [...plaza.rect] });
   (plaza.lawns ?? []).forEach((rect, i) => pieces.push({ id: `${base}/lawn-${i}`, piece: 'landscape/lawn', rect: [...rect] }));
   (plaza.hedges ?? []).forEach((rect, i) => pieces.push({ id: `${base}/hedge-${i}`, piece: 'landscape/hedge', rect: [...rect] }));
-  for (const [i, row] of (plaza.treeRows ?? []).entries()) {
-    let index = 0;
-    for (let x = row.from; x <= row.to + 1e-6; x += row.spacing) {
-      const id = `${base}/tree-row-${i}-${index++}`, random = streamFor(seed, id);
-      pieces.push({ id, piece: 'landscape/street-tree', at: [mm(x), row.y], height: mm(random.between(9, 13)), radius: mm(random.between(3.4, 4.6)), yaw: mm(random.between(0, Math.PI * 2)) });
-      pieces.push({ id: `${id}/pit`, piece: 'landscape/tree-pit', rect: rectAround([mm(x), row.y], [1.6, 1.6]) });
-    }
+  for (const [i, row] of (plaza.treeRows ?? []).entries()) for (const [index, at] of rowPoints(row).entries()) {
+    const id = `${base}/tree-row-${i}-${index}`, random = streamFor(seed, id);
+    pieces.push({ id, piece: 'landscape/street-tree', at, height: mm(random.between(9, 13)), radius: mm(random.between(3.4, 4.6)), yaw: mm(random.between(0, Math.PI * 2)) });
+    pieces.push({ id: `${id}/pit`, piece: 'landscape/tree-pit', rect: rectAround(at, [1.6, 1.6]) });
   }
+  // Benches and lamps by the row, like trees: one line and a spacing instead of an item each.
+  // Derived ids are stable (`<plaza>/bench-row-<row>-<n>`), so overrides address them.
+  for (const [i, row] of (plaza.benchRows ?? []).entries()) for (const [index, at] of rowPoints(row).entries()) pieces.push({ id: `${base}/bench-row-${i}-${index}`, piece: 'furniture/bench', at, yaw: mm(row.yaw ?? 0) });
+  for (const [i, row] of (plaza.lampRows ?? []).entries()) for (const [index, at] of rowPoints(row).entries()) pieces.push({ id: `${base}/lamp-row-${i}-${index}`, piece: 'furniture/lamp', at, yaw: mm(row.yaw ?? 0) });
+}
+
+// The points of a row: along x at `y` (east-running) or along y at `x` (north-running), `from` to `to` every `spacing`.
+function rowPoints(row) {
+  const points = [];
+  for (let v = row.from; v <= row.to + 1e-6; v += row.spacing) points.push(row.x === undefined ? [mm(v), mm(row.y)] : [mm(row.x), mm(v)]);
+  return points;
 }
 
 // Where an east street crosses a north street, paving is clipped to the crossing
