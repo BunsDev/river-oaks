@@ -130,6 +130,8 @@ function signAtlas(keys) {
     context.fillText(name, 512, row * 128 + 66);
   });
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 4;
+  // The plan owns and disposes its atlas; the stream counts owned textures (heights-stream.js).
+  texture.userData.owned = true;
   return { texture, uv };
 }
 
@@ -445,7 +447,7 @@ function renderWaterTower(piece, m, ground, batch) {
     const context = canvas.getContext('2d'); context.fillStyle = '#f5eee0'; context.fillRect(0, 0, 2048, 128);
     context.fillStyle = '#1f454a'; context.font = '700 84px Georgia, serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
     const words = piece.lettering ?? 'BAYOU MARKET'; context.fillText(`★ ${words} ★`, 512, 68); context.fillText(`★ ${words} ★`, 1536, 68);
-    texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 4;
+    texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 4; texture.userData.owned = true;
   }
   const band = new THREE.MeshStandardMaterial({ map: texture, color: texture ? '#ffffff' : '#f5eee0', roughness: .7 }); band.name = 'city-kit/tower-lettering';
   own(new THREE.CylinderGeometry(3.94, 3.94, 1.3, 48, 1, true), band, x, 20.1, y);
@@ -542,7 +544,8 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
   const overlay = name => { const material = m(name).clone(); material.polygonOffset = true; material.polygonOffsetFactor = -2; material.polygonOffsetUnits = -2; material.name = `${m(name).name}:overlay`; disposables.push(material); return material; };
   const groundPiece = { 'street/shared-lane': ['lane-brick', 0], 'street/intersection': ['lane-brick', 0], 'street/crosswalk': ['lane-brick', 0], 'street/sidewalk': ['paver-sidewalk', 0], 'street/court': ['plaza-stone', 0], 'landscape/lawn': ['lawn', 1], 'street/flush-curb': ['curb-granite', 2], 'street/band': ['porcelain', 2], 'street/channel': ['steel-black', 2], 'landscape/tree-pit': ['porcelain', 3] };
   // Tree pits match the District's (street-furniture.js): a cast-iron grate in a pale stone surround.
-  const grateTexture = treeGrateTexture(), grate = new THREE.MeshStandardMaterial({ map: grateTexture, roughness: .55, metalness: .6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
+  const grateTexture = treeGrateTexture(); grateTexture.userData.owned = true;
+  const grate = new THREE.MeshStandardMaterial({ map: grateTexture, roughness: .55, metalness: .6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
   grate.name = 'city-kit/tree-grate'; disposables.push(grate);
   const overlays = new Map();
   const clipStreet = plan.pieces.find(p => p.piece === 'street/court' && p.id.endsWith('/paving'))?.rect;

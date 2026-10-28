@@ -36,6 +36,8 @@ Each measured eviction released all 21,672 Commons buffer bytes and its three ge
 
 The module cache may retain the imported JavaScript after eviction. Eviction removes the group and disposes its owned geometries and materials; the next visit reconstructs those resources without fetching a second successful module. Current Commons geometry has no textures. Extend byte accounting before adding textures, render targets or other owned allocations; the existing buffer ceiling is not a total-memory guarantee.
 
+Bayou Heights, Studewood, the Bayou Terraces and Woodland Heights stream through the same scheduler as fifteen chunks under one 16 MiB geometry ceiling (`preview/src/heights-stream.js`). Each city-kit neighborhood also owns textures it builds and disposes itself: its sign atlas (1024 px by 128 px per distinct sign, mipmapped), tower lettering and tree grate; `render.js` marks them `userData.owned`, and the stream reports their bytes as `measuredTextureBytes` and `residentTextureBytes` beside the geometry figures. The atlases can outweigh a neighborhood's geometry (Nineteenth and Yale: 20 signs, about 13.3 MiB against a 3.45 MiB geometry estimate), so the geometry ceiling is not a total-memory bound; the texture figures are the measured input for deciding a total ceiling, and admission is unchanged until that decision. On the Terraces revisions, where the terraces meet the District edge, District points anchor nothing in Heights; once everyone is back in the District the whole presentation streams out, as it does on `bayou-heights-1`, while an update with no valid position still evicts nothing.
+
 The scheduler sorts candidates by distance and then chunk ID, applies resident and byte limits before starting work, and fences stale or cancelled completions. Rapid exit/reentry cannot create additional physical requests while an uncooperative import remains unresolved. A timed-out import reports a stall and permits retreat; it resumes normal retries after settlement. A permanently unresolved browser import cannot be repaired by starting unlimited replacement imports.
 
 ## Movement and recovery
@@ -48,6 +50,8 @@ Run these commands from the repository root. Browser commands use the shared loc
 
 ```sh
 node --test preview/tests/spatial-chunk-stream.test.js preview/tests/commons-stream.test.js preview/tests/continuous-walk-582.test.js preview/tests/world-manifest.test.js preview/tests/east-garden-commons.test.js server/tests/east-garden-commons.test.js
+node --test preview/tests/heights-stream.test.js preview/tests/woodland-heights.test.js
+pnpm run test:experience bayou-terraces
 pnpm run test:experience world-streaming
 node preview/audit/world-streaming-matched.js
 node preview/audit/world-streaming-simulation.js .runtime/world-streaming/simulation-current.json
@@ -56,6 +60,8 @@ pnpm run verify full
 ```
 
 The full gate needs an isolated Redis service and the browser prerequisites described in [the agent workflow](agent-workflow.md). Run it through the documented browser-lock wrapper when other local browser jobs are queued, so queue waiting precedes individual test deadlines. Never substitute a Redis skip or a queued task for execution evidence.
+
+The Heights suite walks twenty footbridge round trips and three laps along the whole chain to Woodland Heights with the real builders, checking bounded bytes, exact disposal of every owned geometry, material and texture, identical laps and no duplicate groups. The Terraces journey travels both players home to the District at its end and waits for Heights and its owned textures to be released.
 
 The browser journey records two complete route warm-ups followed by twenty measured round trips for two clients, with full eviction on every return. A third fixture client first takes the module failure and both context-loss probes (during the pending import and on the resident Commons), then evicts, reloads and re-crosses once, and leaves before the two bounded clients connect: a context restore makes Three.js count every GPU resource again on its next draw, so a restored client's counts can't be compared with its warm-ups. The journey reconnects one bounded player, checks mutual rendered avatars, identity, appearance, camera/position continuity and unchanged documents, then checks a peer on the Commons remains on an unloaded observer's World Map. Every lap checks exact Commons group counts, unique remote avatar IDs, owned-buffer release, pending loads, stable District inventories and loaded/evicted scene/GPU counts. Warmed reference allowances are +20 objects, +20 geometries and +10 textures; the initial gateway alone is not a comparable GPU baseline because Three.js uploads resident District resources on first rendered use along the route.
 
