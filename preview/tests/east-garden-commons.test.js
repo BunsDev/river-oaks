@@ -36,7 +36,11 @@ test('empty reservation stays blocked; plaza obstacles, flight and placement agr
   assert.equal(environment.isFree(layout.edge+15,1335),true);
   assert.equal(environment.isFree(layout.edge+15,1315),false);
   assert.equal(environment.isAreaFree(layout.edge+15,1335,4),false);
-  assert.equal(environment.canFly(layout.edge+15,50,1315),false);
+  // The market row's 4.6 m rear wing now stands on that reservation: Jevica flies over its roof,
+  // not through it, and the reserve beyond the modelled blocks stays closed to flight.
+  assert.equal(environment.canFly(layout.edge+15,50,1315),true);
+  assert.equal(environment.canFly(layout.edge+15,layout.ground+4.6+1,1315),false);
+  assert.equal(environment.canFly(layout.edge+9,50,1450),false);
   for(const solid of layout.solids){
     const x=(solid.rect[0]+solid.rect[2])/2,n=(solid.rect[1]+solid.rect[3])/2;
     assert.equal(environment.isFree(x,-n),false,solid.id);
