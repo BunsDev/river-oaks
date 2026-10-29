@@ -357,3 +357,5 @@ paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs 
   (preview unit, the shards and the aggregate all green); the Desktop workflow ran on the same
   push. The runtime files are identical to `700bddb2`; every commit after it adds test harness,
   journey, receipt, script-guard or documentation files only.
+- **Hosted on `6f29ed03`** (this ledger note, docs only): Verify run 40963684097 success on attempt 1,
+  19 jobs. The register and the #599 matrix (#731) cite it as the current draft head.
