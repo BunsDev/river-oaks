@@ -7,6 +7,7 @@
 //     Bayou Lantern water tower -> seated green bench and the pavilion chess table. Derived
 //     from the placed destination (shared/commons-destination.js) by piece id, in source
 //     metres [east, north, altitude], so the cameras follow the layout rather than a copy.
+import { KIT_FINISHES } from '../../shared/city-kit/catalog.js';
 import { campusToScene } from '../../shared/garden-campus-layout.js';
 
 // day and dusk match garden-campus-render-common.mjs HOURS. The client's #sun-hour slider stops
@@ -15,12 +16,15 @@ import { campusToScene } from '../../shared/garden-campus-layout.js';
 export const ROUTE_HOURS = Object.freeze({ day: 15, dusk: 18.5, night: 19 });
 export const CLIENT_LATEST_HOUR = 19;
 export const GRAPHICS = Object.freeze(['sharp', 'smooth']);
-// Finishes the live world can draw. R1 (#749) added `finish` to buildCityKit, but neither the
-// Commons (east-garden-commons.js) nor the campus passes one yet, so only the classic look is
-// reachable in the browser.
-// TODO(#747 follow-up): when the live world accepts a finish (URL or localStorage), add it here
-// and apply it in pink-jet-age-routes.mjs openRoutes() before the first capture.
-export const LIVE_FINISHES = Object.freeze(['classic']);
+// Finishes the live world can draw: every catalog finish. The client reads `?finish=` once per
+// load (render-quality.js readFinishPreference, #742) and passes it to the Commons, the Heights
+// and the Gardens campus (#741), so the runner opens the page with it (districtPath).
+export const LIVE_FINISHES = Object.freeze(Object.keys(KIT_FINISHES));
+/** The audited page's address for a finish; classic is explicit, so a stored choice never leaks in. */
+export const districtPath = (finish = 'classic') => {
+  if (!LIVE_FINISHES.includes(finish)) throw new Error(`Unknown finish ${finish}`);
+  return `/?render-audit=1&finish=${encodeURIComponent(finish)}`;
+};
 export const EYE = 1.68, SEATED_EYE = 1.2;
 
 const gardens = (id, stop, subject, position, target, fov, levelId = null) =>
@@ -95,7 +99,7 @@ export function validateCameras(cameras) {
   return cameras;
 }
 
-/** --graphics=sharp|smooth, --hours=day,dusk,night, --cameras=id,id, --finish=classic, --out=dir. */
+/** --graphics=sharp|smooth, --hours=day,dusk,night, --cameras=id,id, --finish=classic|pink-jet-age, --out=dir. */
 export function routeOptions(args, now = new Date()) {
   const options = { graphics: 'sharp', hours: Object.keys(ROUTE_HOURS), cameras: null, finish: 'classic', out: null }, seen = new Set();
   for (const arg of args) {
@@ -106,7 +110,7 @@ export function routeOptions(args, now = new Date()) {
     if (key === 'hours') { options.hours = value.split(','); if (!options.hours.every(label => Object.hasOwn(ROUTE_HOURS, label))) throw new Error(`Invalid or duplicate option: ${arg}`); }
     if (key === 'cameras') options.cameras = value.split(',');
     if (key === 'finish') {
-      if (!LIVE_FINISHES.includes(value)) throw new Error(`Finish ${value} is not wired into the live world yet; only ${LIVE_FINISHES.join(', ')} can be captured (see the TODO in pink-jet-age-routes-plan.mjs)`);
+      if (!LIVE_FINISHES.includes(value)) throw new Error(`Finish ${value} is not a catalog finish; the live world draws ${LIVE_FINISHES.join(', ')}`);
       options.finish = value;
     }
     if (key === 'out') options.out = value;

@@ -65,7 +65,7 @@ export async function launch({ vsync = true } = {}) {
 
 // One authenticated page on the district, ready for audit views. Returns { context, page,
 // errors, manifest, firstEntry }.
-export async function openDistrict(browser, fixture, revision, { viewport = { width: 1280, height: 800 }, graphics = 'smooth', hideInterface = false, exposeCampus = true, districtRevision = null } = {}) {
+export async function openDistrict(browser, fixture, revision, { viewport = { width: 1280, height: 800 }, graphics = 'smooth', hideInterface = false, exposeCampus = true, districtRevision = null, path = '/?render-audit=1' } = {}) {
   // Every revision after the garage composes the campus (server/district-data.js).
   const served = servedRevision(revision, districtRevision);
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
@@ -83,7 +83,7 @@ export async function openDistrict(browser, fixture, revision, { viewport = { wi
   let manifest = null;
   page.on('response', async response => { if (response.url().includes('/api/world-data?world=river-oaks')) manifest = await response.json().catch(() => null); });
   const started = Date.now();
-  await page.goto(`${fixture.origin}/?render-audit=1`, { waitUntil: 'commit' });
+  await page.goto(`${fixture.origin}${path}`, { waitUntil: 'commit' });
   for (let attempt = 0; ; attempt++) {
     const state = await page.waitForFunction(() => document.querySelector('#loading')?.classList.contains('error') ? 'error'
       : document.querySelector('#canvas-host')?.dataset.playerReady === 'true' && window.__riverRenderAudit && 'ready', null, { timeout: 300000 }).then(handle => handle.jsonValue());
