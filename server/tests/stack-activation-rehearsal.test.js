@@ -102,9 +102,10 @@ test('Stack rehearsal from Gardens: up one step at a time, occupants in every di
     // The first join of a freshly booted node waits on that node's boot work: loading the room
     // from Redis and, after a stack step, migrating the checkpoint to the revision now served.
     // The one-step rollback from Woodland Heights to Gardens is the longest (1.6 s locally at
-    // load 6, every other step under 1.4 s); hosted runners failed its 8 s wait on main pushes
-    // 36e906b2, e5cfada6 and 7cc1fb87 and on docs-only PR heads (#754). Thirty seconds is a
-    // margin for the runner, not a behavior change: a node that never answers still fails here.
+    // load 6, every other step under 1.4 s); on hosted runners it outlived the 7 s request
+    // window and the node closed the join with 1013 (#754). redis-room.js now pays that load
+    // outside the first request's budget, so the join waits for it; thirty seconds here is a
+    // margin for the runner, not a behavior change: a node that never answers still fails.
     // When the snapshot never comes, say what did: the socket's open and close, the first
     // message types, and the node's own log lines for this epoch (migration events, refusals),
     // so a hosted failure attributes itself instead of reading as a slow runner.

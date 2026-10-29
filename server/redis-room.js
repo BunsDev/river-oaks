@@ -20,7 +20,7 @@ import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract
 import { placesOf } from '../preview/src/places.js';
 import { createRideFlush } from './ride-flush.js';
 
-const LEASE_MS=5000, REPLY_MS=15000, REQUEST_MS=7000, TICK_MS=200;
+const LEASE_MS=5000, REPLY_MS=15000, REQUEST_MS=7000, LOAD_MS=20000, TICK_MS=200;
 // The lease token's generation (see createRedisRoom): plain rooms write it, selection-aware rooms one more.
 export const WRITER_GENERATION=21;
 // A player whose socket left (or whose edge stopped reporting) keeps their place, seat and
@@ -546,11 +546,19 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     let serialized;
     try {serialized=JSON.stringify({id:requestId,operation});}catch{return rejected('invalid_operation');}
     if(Buffer.byteLength(serialized)>8192)return rejected('invalid_operation');
-    const deadline=performance.now()+REQUEST_MS;
     const timeoutResult=()=>({...rejected('request_timeout'),message:'Request outcome is pending. Refresh the town before retrying.'});
+    // A room without a loaded state is about to take the lease and load the durable checkpoint,
+    // migrating it to the revision this deployment serves: after a stack rollback that is the
+    // longest tick a room runs (walking every occupant home took 1.6 s locally and past the
+    // response window on a loaded hosted runner, #754). That boot work is paid once per lease,
+    // not from the first request's budget: the deadline starts once the room is loaded, or after
+    // LOAD_MS if it still is not, and the race below allows for the same load.
+    const loading=!cached,budget=REQUEST_MS+(loading?LOAD_MS:0);
     let timer;
     const execute=async()=>{
       if(!await redis.eval(ENQUEUE,1,keys.queue,MAX_QUEUE,serialized))return rejected('queue_full');
+      if(loading)await Promise.race([tick(),delay(LOAD_MS)]);
+      const deadline=performance.now()+REQUEST_MS;
       while(performance.now()<deadline) {
         // A follower drives acquisition as well: if the previous function stopped,
         // its lease expires and accepted durable operations can still complete.
@@ -565,7 +573,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     // Also bound a stalled Redis call or authorization/commit; the durable queue
     // remains authoritative when the response deadline expires first.
     try {
-      return await Promise.race([execute(),new Promise(resolve=>{timer=setTimeout(()=>resolve(timeoutResult()),REQUEST_MS);})]);
+      return await Promise.race([execute(),new Promise(resolve=>{timer=setTimeout(()=>resolve(timeoutResult()),budget);})]);
     } finally {clearTimeout(timer);}
   }
 
