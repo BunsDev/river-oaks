@@ -65,6 +65,10 @@ export const stableHash = value => {
   return fnv32(text, 2166136261).toString(16).padStart(8, '0') + fnv32(text, 3735928559).toString(16).padStart(8, '0');
 };
 // mulberry32 per stable ID.
+// What a plan puts on the ground, independent of the recipe that produced it: the
+// lock records it so a recipe rewrite (authored blocks as quarters) proves itself.
+export const geometryHash = plan => stableHash({ pieces: plan.pieces, surfaces: plan.surfaces, solids: plan.solids, lanterns: plan.lanterns, stats: plan.stats });
+
 export function streamFor(seed, id) {
   let state = fnv32(`${seed}:${id}`, 2166136261);
   const next = () => {

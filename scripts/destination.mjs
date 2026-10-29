@@ -14,7 +14,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 
 import { createHash } from 'node:crypto';
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assembleNeighborhood, canonicalJSON, validateRecipe, walkableConnectivity } from '../shared/city-kit/assemble.js';
+import { assembleNeighborhood, canonicalJSON, geometryHash, validateRecipe, walkableConnectivity } from '../shared/city-kit/assemble.js';
 import { expandLayout } from '../shared/city-kit/layout.js';
 import { referenceRecipe, dominantRotation } from '../shared/city-kit/reference.js';
 import { studioRegion } from '../shared/city-kit/studio.js';
@@ -109,7 +109,7 @@ function build(path) {
   } catch (error) { console.warn(`studio: no region written: ${error.message}`); studio = { error: error.message }; }
   if (has('--lock')) {
     if (seed !== recipe.seed) throw new Error('Lock only the recipe seed');
-    writeFileSync(lockPath(path), `${JSON.stringify({ id: plan.id, kit: plan.kit, seed, hash: plan.hash, recipeHash: plan.provenance.recipeHash, overridesHash: plan.provenance.overridesHash, stats: plan.stats }, null, 2)}\n`);
+    writeFileSync(lockPath(path), `${JSON.stringify({ id: plan.id, kit: plan.kit, seed, hash: plan.hash, geometry: geometryHash(plan), recipeHash: plan.provenance.recipeHash, overridesHash: plan.provenance.overridesHash, stats: plan.stats }, null, 2)}\n`);
   }
   console.log(JSON.stringify({ out, hash: plan.hash, seed, stats: plan.stats, budgetsWithin: summary.budgets.within, studio, connectivity: summary.connectivity.ratio, overrides: plan.provenance.overrides,
     ...(layout ? { layout: { cells: layout.cells.length, derived: layout.derived.map(block => block.id), warnings: layout.warnings.length } } : {}) }, null, 2));
@@ -121,9 +121,9 @@ function check() {
   for (const path of recipePaths()) {
     if (!existsSync(lockPath(path))) continue;
     const lock = JSON.parse(readFileSync(lockPath(path), 'utf8')), plan = assembleNeighborhood(readRecipe(path));
-    const ok = lock.hash === plan.hash;
+    const geometry = geometryHash(plan), ok = lock.hash === plan.hash && (lock.geometry === undefined || lock.geometry === geometry);
     if (!ok) failed++;
-    console.log(`${ok ? 'ok  ' : 'DIFF'} ${basename(path)} ${plan.hash}${ok ? '' : ` (lock ${lock.hash}; recipe ${lock.recipeHash === plan.provenance.recipeHash ? 'same' : 'changed'}, overrides ${lock.overridesHash === plan.provenance.overridesHash ? 'same' : 'changed'}; rerun build --lock after review)`}`);
+    console.log(`${ok ? 'ok  ' : 'DIFF'} ${basename(path)} ${plan.hash}${ok ? '' : ` (lock ${lock.hash}; geometry ${lock.geometry === undefined ? 'unrecorded' : lock.geometry === geometry ? 'same' : 'changed'}; recipe ${lock.recipeHash === plan.provenance.recipeHash ? 'same' : 'changed'}, overrides ${lock.overridesHash === plan.provenance.overridesHash ? 'same' : 'changed'}; rerun build --lock after review)`}`);
   }
   if (failed) process.exitCode = 1;
 }
