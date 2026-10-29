@@ -10,12 +10,16 @@ The kit extends existing systems rather than adding a city engine. Movement uses
 | --- | --- |
 | Pieces, styles, materials, finishes, conventions, budgets | `shared/city-kit/catalog.js` |
 | Recipe validation, seeded assembly, overrides, provenance, connectivity | `shared/city-kit/assemble.js` |
+| Blocks derived from streets, quarters and reservations | `shared/city-kit/layout.js` |
+| Kit streets from a geographic reference: grid, crop, snap, merge, dropped-road diagnostics | `shared/city-kit/reference.js` |
+| A plan as a World Studio region (Open JSON), checked against Studio's limits | `shared/city-kit/studio.js` |
+| Production effort, measured: typed values per recipe and the cost of one street edit in each form | `shared/city-kit/effort.js`, `data/reports/city-kit-effort.json` |
 | Three.js rendering of a plan | `preview/src/city-kit/render.js` |
 | Recipes, locks | `config/destinations/*.json`, `*.lock.json` |
 | CLI | `scripts/destination.mjs` (`pnpm run destination …`) |
 | In-engine preview of any recipe | `preview/e2e/fixtures/city-kit.html?recipe=<id>&seed=<n>&view=<view>&finish=<finish>` |
 | Pedestrian-scale screenshot review | `preview/e2e/city-kit-review.js` (shared browser lock) |
-| Tests | `preview/tests/city-kit.test.js`, `preview/tests/bayou-market-commons.test.js` |
+| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-pipeline.test.js`, `preview/tests/city-kit-effort.test.js`, `preview/tests/city-kit-shipped-quarters.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/city-kit-plaza-rows.test.js`, `preview/tests/city-kit-reference.test.js`, `preview/tests/city-kit-studio.test.js`, `preview/tests/bayou-market-commons.test.js` |
 
 ## Conventions
 
@@ -75,23 +79,105 @@ Manual artistic edits live in the recipe as intent, never as edited generated ou
 
 Overrides are applied after generation by stable ID. If a different seed no longer produces an overridden ID, the plan reports that ID under `provenance.overrides.orphaned`. The override itself stays in the recipe. Every plan records the kit version, seed, recipe hash, overrides hash and the applied, orphaned and added lists. Plans are canonical JSON with a browser-safe 64-bit hash, identical in Node and the browser.
 
+A plaza derives its trees, benches and lamps by the row: `treeRows`, `benchRows` and `lampRows` each take a line (`y` with `from`/`to` along x, or `x` along y), a `spacing` and, for furniture, a `yaw`, instead of an entry per item. Derived ids are stable (`<plaza>/bench-row-<row>-<n>`), so overrides address them, and a row that leaves the plaza's ground fails the build like any solid off walkable ground. Hand-placed `furniture` still works beside rows for the pieces that matter.
+
+## Derive blocks from streets
+
+A recipe may carry a `layout` instead of typing every block rectangle by hand. Its `quarters` state the artistic constraints for an area of the site: style, parcel depth, storeys and bay ranges, a pool of original shop names, and optionally a `court`, an explicit `front` or `sides`, and `split`. Its `reserved` rectangles keep ground out of generation. Derivation runs inside `assembleNeighborhood`, so the in-engine preview, locks, overrides, budgets, connectivity and every runtime composition see derived blocks exactly as authored ones. See `config/destinations/layout-grid-example.json` for a worked example and `pnpm run destination layout <recipe>` for its diagnostics.
+
+```json
+"layout": {
+  "quarters": [
+    { "id": "north-row", "rect": [0, 57.5, 120, 97], "style": "market-row", "depth": [12, 16], "storeys": [1, 2], "bays": [5, 7], "names": ["Pecan & Pearl", "…"] },
+    { "id": "south-row", "rect": [0, 0, 120, 42.5], "style": "heights-row", "depth": [11, 16], "storeys": [1, 2], "bays": [4.5, 6.5], "names": ["Cypress Supply", "…"] }
+  ],
+  "reserved": [{ "id": "chapel-yard", "rect": [0, 0, 33.5, 14] }]
+}
+```
+
+- **Land.** Every street's corridor (lane plus both sidewalks), every plaza, authored block, context massing and reservation is cut out of the site. What remains is split into rectangles along street and quarter edges; the split that leaves fewer frontages partly off a street wins. A quarter claims the land inside its `rect` (a quarter without one claims the rest); its edges also cut land, so a quarter can divide one row into two styles. Land no quarter claims is reported as open and left empty.
+- **Frontage.** A block faces the main street bounding its land: the widest, then the longest frontage, then north, south, east, west. A street on the opposite side as well splits the land into two back-to-back blocks on the module midline, when both halves are at least the quarter's minimum parcel depth; `"split": "none"` keeps one block. A quarter can name its `front` explicitly, as a street id or a side, for the garden court that should open onto the quieter cross street. Corner blocks face a crossing street that fully bounds their side (`sides`), unless the quarter lists its own.
+- **Names and IDs.** The quarter's name pool is shared out along its blocks by frontage length, so no shop name repeats. A quarter that yields one block names it; several blocks are `<quarter>-<street>-<side>-<offset>`, where the offset is the block's distance in metres from the site's west or south edge, so land added elsewhere does not rename a block. Overrides and additions address derived pieces by the same stable IDs as authored ones, and a changed street reports an override whose parcel no longer exists under `provenance.overrides.orphaned`.
+- **What never moves.** Streets, plazas, landmarks, furniture, authored blocks, overrides and additions. A landmark or furnishing standing on land a block would cover is refused with the block's name and the remedy (a plaza or a reservation), instead of being built over. Derived blocks never overlap each other, a street, a plaza or an authored block; the generator checks this and fails rather than emitting a broken plan.
+- **Diagnostics.** The plan's `provenance.layout` records the layout hash, the land count, each derived block's rectangle, front and sides, and warnings. `destination build` writes `layout.json` with every piece of land, its bounding streets and coverage, what became of it and why (open, too narrow, too shallow, partly off a street, a split that could not happen), prints the warnings, and outlines derived blocks with dashes and open or skipped land in red in `plan.svg`. `destination layout <recipe>` prints the same as a table.
+- **Budget.** The renderer batches each block separately, about twelve draw calls per block beside roughly twenty for the streets and plazas, so a recipe holds about four blocks inside the 70-call budget. The example derives three; a larger site is several recipes, as Studewood and Woodland Heights are north and south recipes.
+- **Freeze.** `destination layout <recipe> --freeze` writes the derived blocks into the recipe as authored blocks and removes the layout, after checking that the frozen recipe places identical pieces, surfaces and solids. Use it when a neighborhood is approved and later edits should be by hand; the recipe hash changes, so lock again.
+
+Against the shipped world (`preview/tests/city-kit-shipped-quarters.test.js`): sixteen committed neighborhoods, 30 blocks, derive the same plan from quarters as from their hand-authored blocks, with only the artistic fields carried over (style, ranges, names, `front`, `sides`, `court`). The two terrace studio rows were hand-placed half a metre off Terrace Lane; a quarter flush to the lane moves every shell that half metre, and six rear wings, half a metre deeper, gain a bay. The reproduction keeps each block's rectangle: most of them stop short of their land by design at district seams and site edges, so loosening the rectangles moves their walls; the saving is for new neighborhoods, where the kit's placement is accepted. Two rules make the shipped courts and edges derivable: hand-placed furniture may stand in a derived block's court (open ground), and a stated `front` on the site's own edge faces the neighbouring recipe's street, with a warning.
+
+
+## Start from a geographic reference
+
+`destination reference <world.json> --site w,s,e,n --id <id>` turns the mapped roads inside a site into a recipe skeleton. The source is any world export with a `roads` list of polylines in local metres: the bundled `preview/public/data/district.json`, a `river-oaks build` world, or a World Studio region as **Export JSON** writes it (`preview/public/data/sample-region.json` is one); nothing in it is changed. The site is in the source's frame; its rectangle is turned about its own centre with the grid.
+
+- **Grid.** The dominant heading of the road inside the site, length-weighted and refined to a tenth of a degree, becomes the kit's east axis (`--rotation <deg>` fixes it). Runs of a road within `--tolerance` (5°) of an axis become streets; the run's mean offset is snapped to the half-metre module, its ends are clipped to the site, and the map's `width_m` is the lane (`--lane` when the map has none; `--sidewalk` 3.5 m). Pieces of one way that line up end to end are one street, named after the mapped name.
+- **What is dropped, and why.** Bends and diagonals (with the worst angle), runs shorter than `--min-length` (20 m), corridors that would leave the site, kinds not in `--kinds`, and corridors that overlap a wider or longer street. Each is printed and recorded under `reference.dropped` with its mapped id and length, so a curved street is added by hand, not lost.
+- **Buildings and names.** Mapped buildings inside the site are counted, not reproduced; the kit builds original architecture, and the skeleton's one quarter carries one placeholder name per derived block. Name the shops, add plazas, landmarks and furniture, choose quarters, then `build`.
+- **Parcels drawn in Studio decide where blocks go.** When the source carries `parcels` with `bounds_m` (a World Studio region, or a candidate from the neighborhood compiler's `scripts/neighborhood.mjs build`), each parcel inside the site becomes a quarter of its own: its bounds turned into the kit frame, snapped to the module and clipped to the site, and an edge within a metre of a street's corridor edge is moved onto it so the parcel's blocks have frontage (the move is reported). Land outside the parcels stays open and is reported as a total, not built on; parcels outside the site or thinner than a bay are listed with the reason. `--parcels ignore` lays one quarter over the site instead. Each quarter faces its streets by the auto rule; set `front` per quarter where the drawing meant otherwise.
+- **Provenance.** `reference` records the source file's name and SHA-256, CRS and origin, the site, rotation, tolerance and the mapped roads behind every street. It is part of the recipe, so the plan's recipe hash covers it.
+- `--trees <m>` and `--lamps <m>` furnish every kept street by spacing (4 to 40 m), the same `trees`/`lamps` fields a hand-authored street carries: trees start half a spacing in, lamps a metre past half theirs and alternate sides. Without them a reference street is bare.
+
+## From a drawing to a walkable neighborhood
+
+The steps above chain. `config/destinations/garden-blocks-kit.json` is the worked example, and `preview/tests/city-kit-pipeline.test.js` reruns it from scratch:
+
+```sh
+node scripts/neighborhood.mjs build --recipe config/neighborhoods/garden-blocks.json --out .runtime/candidate
+pnpm run destination reference .runtime/candidate/region.json --site=-8,-8,84,84 --style=garden-court --trees=8 --lamps=14 --id=garden-blocks-kit --title="Garden Blocks (kit)" --out=config/destinations/garden-blocks-kit.json
+# name the shops in the recipe, then
+pnpm run destination build config/destinations/garden-blocks-kit.json --lock
+pnpm run destination check
+```
+
+The compiler's drawing (six roads, sixteen parcels) is deterministic. The reference step keeps the four streets and four parcels inside the site, snaps parcel edges to the street corridors, and writes the recipe with a placeholder name per block and a budget line. The build derives four blocks of 32 shells on the parcels, 56 street trees and 16 lamps, locks the plan and writes `studio-region.json`, which World Studio opens with **Open JSON** (the `city-kit-studio` journey does so in a browser). What the author typed: four site numbers, one style, two spacings and eight shop names. What the tools wrote: 80 numbers of streets, furnishing and quarters, 236 pieces. The hand-authored Nineteenth & Yale crossroads, the same size, types 70 numbers for its streets, plaza, blocks, landmark and furniture, each block rectangle kept flush to a street by hand.
+
+## Production effort, measured
+
+`pnpm run destination effort` measures the two things the kit is for, on every committed recipe, and `--write` refreshes `data/reports/city-kit-effort.json`, which `preview/tests/city-kit-effort.test.js` holds to the recipes. The counts are values an author must type and keep consistent (numbers everywhere, names in name fields), split into the massing the kit can derive (streets, blocks, quarters) and the dressing that stays hand-typed by design in every form (plazas, landmarks, furniture).
+
+| Shipped world as authored, 2026-10-29 | |
+| --- | --- |
+| Recipes with blocks, blocks, shells | 18, 32, 354 |
+| Massing numbers typed (streets and blocks) | 697, about 2 per shell |
+| All typed values | 2607 numbers and 205 names |
+| Reference example (`garden-blocks-kit`): typed by the author | 4 site numbers, 2 spacings, 1 style, 8 names for 32 shells (0.19 numbers per shell) |
+| Reference example: written by the tools | 80 numbers of streets, furnishing and quarters |
+
+One art-direction change, every street 2 m wider, applied to each shipped recipe in both forms:
+
+| | As authored | As quarters |
+| --- | --- | --- |
+| Block rectangles to retype | 32 (128 numbers), every block of every recipe | 0 |
+| Shells left standing in the street if nothing is retyped | 180, and the assembler does not refuse them | 0 |
+| Shells after the edit | 354 in the street or retyped | 314 on the land the wider streets leave |
+
+The shipped recipes stay as authored (their rectangles are the art direction, see the loose-rectangle note above), so this is the cost they carry per street edit, not a change to them. The quarter form that `city-kit-shipped-quarters.test.js` proves reproduces each plan takes the edit for free; a recipe started from a reference types a tenth of the massing numbers per shell of the hand-authored crossroads.
+
+## Open a plan in World Studio
+
+`destination build` also writes `studio-region.json`: the plan as a schema-v1 creator region that World Studio opens with **Open JSON** and the server's region package compiler accepts. Streets are roads with their lanes (a lane under 6 m is a footway); every building shell is a box of its footprint and height, named by its stable piece id; street and plaza trees keep their crowns; the landmark, plazas and streets are places; the blocks, authored and derived, are parcels; the arrival stands on the widest street's sidewalk. The bounds pad the site by 2 m, because Studio keeps everything 1 m inside. It is a review view: walk it, mark places, measure; edits go back into the recipe as overrides by piece id, never into this file. Kit pieces under 4 m a side (rear wings) and context massings beyond the region are listed under `omitted` in the console summary, never widened. A plan Studio would refuse (more than 80 buildings, no street, fewer than four places) is refused here with the reason.
+
 ## Commands
 
 ```sh
-pnpm run destination build config/destinations/bayou-market-commons.json   # plan.json, plan.svg, report.json under .runtime/destinations/<id>-<seed>/
+pnpm run destination build config/destinations/bayou-market-commons.json   # plan.json, plan.svg, report.json, studio-region.json under .runtime/destinations/<id>-<seed>/
 pnpm run destination build config/destinations/nineteenth-and-yale.json --seed 78
 pnpm run destination build config/destinations/bayou-market-commons.json --lock   # after review: update the committed lock
 pnpm run destination check                                                       # every committed lock still reproduces
 pnpm run destination override config/destinations/bayou-market-commons.json bayou-market-commons/garden-court/parcel-2 --set roof='"stepped"' --note "Art pass"
 pnpm run destination preview config/destinations/bayou-market-commons.json        # how to open it in-engine
+pnpm run destination layout config/destinations/layout-grid-example.json          # the land each quarter claims and the blocks it derives; --freeze writes them as authored blocks
+pnpm run destination effort [config/destinations/<recipe>.json ...] [--write]    # typed values per recipe and the cost of one street edit, as authored and as quarters; --write refreshes data/reports/city-kit-effort.json
+pnpm run destination reference preview/public/data/district.json --site=-2910,-1400,-2760,-1280 --id district-crop   # a recipe skeleton from the mapped roads inside a site
+pnpm run destination reference data/generated/neighborhoods/garden-001/region.json --site=-96,-96,8,8 --id garden-sw   # a Studio compiler candidate: its parcels become quarters
 ```
 
 `build` exits non-zero when a plan exceeds a budget, leaves any walkable sample unconnected, or makes a lantern unreachable. The SVG shows blocks by wall material, faced frontages, solids, tree crowns, lanterns, the landmark and every manually edited piece.
 
 ## Production workflow for the next neighborhood
 
-1. Copy a recipe, choose a site inside an authored manifest location, and lay out streets, plazas and blocks with the authored items that matter: landmark, gathering places and activity points.
-2. Run `destination build`, open the SVG, then open the in-engine preview at pedestrian height (`city-kit.html?recipe=…&view=street`). Try a few seeds and keep the best one.
+1. Copy a recipe, or start one with `destination reference` from the mapped roads of the place that inspires it; choose a site inside an authored manifest location, and lay out streets, plazas and the authored items that matter: landmark, gathering places and activity points. Describe the blocks as quarters in a `layout` (above) and let the streets place them; type a block by hand only where its rectangle must differ from the land its streets leave.
+2. Run `destination build`, open the SVG, open `studio-region.json` in World Studio (**Open JSON**) to walk the massing and mark places, then open the in-engine preview at pedestrian height (`city-kit.html?recipe=…&view=street`). Try a few seeds and keep the best one.
 3. Fix art direction with overrides and additions, not by editing output. Rebuild, review, then `--lock`.
 4. Compose it into a manifest location with real walking ground (see `shared/commons-destination.js` and `shared/bayou-heights.js`), then add the movement and connectivity tests and a browser journey. When a recipe's ground joins a neighbouring plan, name the seam in `ENTRIES` in `scripts/destination.mjs` so its own connectivity check includes it.
 
