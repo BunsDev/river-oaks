@@ -18,6 +18,7 @@
     "test:security:e2e": "node scripts/browser-lock.mjs 'security browser tests' -- node --test preview/e2e/email-access.test.js preview/e2e/debug-readout.test.js",
     "test:reflections:webgl": "node scripts/browser-lock.mjs 'reflections' -- node preview/e2e/reflections-webgl.js",
     "test:screening": "node preview/e2e/ipic-screening-runner.mjs",
+    "test:crime:takeover": "node preview/e2e/crime-takeover-runner.js",
     "test:trees:webgl": "node scripts/browser-lock.mjs 'landscape trees' -- node preview/e2e/landscape-trees.js",
     "assets:trees": "node scripts/prepare_ez_tree.js",
     "server": "node --env-file-if-exists=.env server/start.js",

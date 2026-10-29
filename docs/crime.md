@@ -299,13 +299,48 @@ Measurements, not budgets:
   - Runs 7–9 failed on the harness (the fixed lead; the town's 1 s travel cooldown refusing the
     step out of the zone and the step back from the rival, so the rival's counters wore the
     visitor down and the officer arrested a downed player); each log is kept.
-- **Not run in a browser, with the reason in the receipt**: search after sight loss around
-  geometry (neither authored danger zone contains a sight-blocking surface: a chest-height
-  sight-line probe over every free point of the south service lane and Westcreek Lane found none
-  hidden from the officer post and no blocked pair, and leaving a zone cancels pursuit);
-  altitude inside a windup (flight belongs to one owner's appearance, `canFlyAs`, so a
-  development identity's altitude is refused as `flight_not_allowed`); writer takeover
-  mid-pursuit (needs two world processes behind a switching proxy; the Redis suites prove it on
-  real transports: 37 pass, 0 fail, 0 skipped on 2026-10-28, including one hit seen by every
-  client once through retries, reconnects and writer replacement). The server suites cover all
-  three.
+- **The three rows the encounter could not show, in one run on two world processes
+  (crime-takeover, run 6, 2026-10-29 03:18–03:20Z, 25 checks in 115 s)**: `pnpm run
+  test:crime:takeover` with `REDIS_URL` naming an isolated Redis runs
+  `preview/e2e/crime-takeover-runner.js`: two `server/tests/takeover-world.js` processes (the
+  browser fixture's loopback identities on `createWorldGateway`, one Redis namespace) behind a
+  plain TCP relay on the Vite town port, so the page, its `/auth`, `/api` and `/multiplayer`
+  traffic reach whichever process the relay names. The runner's page is the Jevica fixture owner
+  (rules; the one identity that may fly), alice the visitor (recorded,
+  `output/playwright/crime-takeover-video/crime-takeover-run6-visitor.webm`), bob the witness.
+  Receipt `data/reports/crime-takeover-shared.json`; a copy with hashes under
+  `.runtime/evidence-640/crime-takeover-run6-*`.
+  - **Search after sight loss, by distance** (the lane is 213 m long; an officer sees 35 m): with
+    the officer at stand-off and alice in view, a server travel moved her 85 m east, still inside
+    the lane. 290 ms later the officer was in `search`, standing within 0.6 m of the spot she was
+    last seen on (0 m at its nearest) and 85 m from her, turning on the spot for 7.9 s with her
+    star kept, then `return`; back within 35 m she was seen and pursued again to 2.2 m. Runs 2
+    and 3 showed the rule's other side: an officer still walking to the strike spot, facing
+    away, had never seen her at the new spot and searched the strike spot instead, standing on it
+    and sweeping at the 90°/s rate; the journey had mis-read that as the last-seen point. The
+    server-only probe `.runtime/evidence-640/search-probe.mjs` reaches the spot in 2 s in both
+    timings.
+  - **Writer takeover mid-pursuit**: wanted and pursued 25 m from the officer, alice sent one
+    evade id to world A; A was killed with SIGKILL (gone in 12 ms) and the relay switched to B.
+    The visitor, witness and owner pages reconnected through it in 5.6, 6.1 and 5.4 s with the
+    same identities, her position (0 m drift), one star, rival health 50, her health 100 and the
+    rules still on; B held a new lease; the officer came back `pursue`, read `search` for a moment
+    and was `pursue` again 2.5 s later. The same evade id sent to B replied `replayed` with the
+    window spent: the action had been committed and carried over in the checkpoint. The witness
+    still drew her and the officer; the surrender offer, keyboard surrender, arrest and safe
+    recovery, and the owner's emergency off, all went through B.
+  - **Altitude inside the windup**: the owner pressed B (take-off) and 150 ms later the raw
+    attack went while the local figure was 0.11 m up; the town accepted it on its last pose, on
+    the ground (110 ms reply), and at contact found the attacker airborne: `miss` /
+    `attack_on_foot`, rival health 100 → 100, no star. Run 5, the same sequence under a 209–378 ms
+    loop, landed two of three: the airborne pose reached the town after the contact, because
+    flight poses are acknowledged one at a time (`multiplayer-client.js`), and the town struck
+    from the last pose it had. That is contact resolved on the authoritative pose, recorded as a
+    finding for the lane rather than a rule violation.
+  - Runs 1–5 failed on the harness (public units carry no last-seen field; the last-seen spot
+    mis-read; a grab landing before the far step; the strike looked up by a field public actions
+    do not carry); each log and receipt is under `.runtime/evidence-640/crime-takeover-run{1..5}-*`.
+  - Escape by concealment still has no browser row: neither authored danger zone contains a
+    sight-blocking surface (the chest-height sight-line probe found no free point hidden from
+    the officer post), so only sight loss by distance is shown; `server/tests/police.test.js`
+    and `police-capture.test.js` cover concealment geometry.

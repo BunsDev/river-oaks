@@ -305,3 +305,32 @@ paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs 
     (40710075919) lost its heights shard to the 20-minute cutoff and was superseded by the push.
   - Not proven by any of the above: production, live auth, native Unreal, target GPU, human
     accessibility (Val's device pass pending), a browser-level writer takeover (Redis suites only).
+- **Takeover journey (2026-10-29 03:03–03:21Z, `crime-takeover`, new harness)**: the three
+  not-run rows of the encounter shown in a browser. Files: `server/tests/takeover-world.js` (a
+  Redis-coordinated world on the browser fixture's identities, loopback only),
+  `preview/e2e/crime-takeover-runner.js` (two worlds on one isolated Redis namespace behind a
+  switching TCP relay on the Vite town port; `RIVER_OAKS_DEV_TOWN=off`), `preview/e2e/crime-takeover.js`,
+  `package.json` (`test:crime:takeover`), `data/reports/crime-takeover-shared.json`. Runs:
+  1. 03:03Z fail, harness: public police units carry no `lastSeen` (the journey read it).
+  2. 03:06Z fail, harness: the officer stood 4.3 m from the spot the journey called last seen.
+  3. 03:10Z fail, harness, with positions sampled: the officer stood on the strike spot
+     (RX+1.2, RN), where it had last seen the visitor, sweeping at 90°/s for 8 s; the journey had
+     sent the visitor away before the officer had her in view at the new spot. Writer takeover
+     passed in this run already. Server-only probe `.runtime/evidence-640/search-probe.mjs`
+     (both timings reach the spot in 2 s, log `search-probe-71bb8d5a.log`).
+  4. 03:13Z fail, harness: the far step moved 0 m (reply not recorded; the officer's grab had
+     landed first); the step now records its reply and retries.
+  5. 03:15Z journey passed its search and takeover rows (118 s); altitude read not-run because
+     the strike was looked up by `startedAt`, which public actions do not carry. Its attempts are
+     the finding above: two of three airborne strikes landed before the airborne pose reached
+     the town (209–378 ms loop).
+  6. **03:18Z pass, 25/25 checks in 115 s**: search after sight loss (290 ms to `search`, 0 m
+     from the last-seen spot, 85 m from the visitor, 7.9 s, star kept, `return`, pursued again at
+     2.2 m); writer takeover (SIGKILL in 12 ms, relay switched, reconnects 5.6 / 6.1 / 5.4 s,
+     identity, position, star, health, rival health and rules identical, new lease on B, officer
+     `pursue` → `search` → `pursue` within 2.5 s, evade id `replayed` from the checkpoint, witness
+     draws both, surrender and emergency off through B); altitude inside the windup (`miss` /
+     `attack_on_foot` on the first attempt, nothing landed, no star). Receipt
+     `crime-takeover-run6-receipt.json`, video `crime-takeover-run6-visitor.webm` (115 s), hashes
+     in `crime-takeover-run6-SHA256SUMS`, all under `.runtime/evidence-640/`.
+  Not shown in a browser: escape by concealment (no sight-blocking geometry in either zone).
