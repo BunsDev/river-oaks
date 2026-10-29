@@ -8,16 +8,19 @@
 //   pnpm run destination override <recipe.json> <piece-id> (--set key=value ... | --suppress) [--note text]
 //   pnpm run destination preview <recipe.json>
 //   pnpm run destination layout <recipe.json> [--freeze]   # the land each quarter claims and the blocks it derives
+//   pnpm run destination reference <world.json> --site w,s,e,n --id <id> [--out recipe.json]   # a recipe skeleton from mapped roads
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assembleNeighborhood, canonicalJSON, validateRecipe, walkableConnectivity } from '../shared/city-kit/assemble.js';
 import { expandLayout } from '../shared/city-kit/layout.js';
+import { referenceRecipe, dominantRotation } from '../shared/city-kit/reference.js';
 import { KIT_CONVENTIONS, KIT_PIECES } from '../shared/city-kit/catalog.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..'), recipesDir = join(root, 'config/destinations');
 const [command, ...rest] = process.argv.slice(2);
-const flag = name => { const i = rest.indexOf(name); return i < 0 ? null : rest[i + 1]; };
+const flag = name => { const i = rest.indexOf(name); if (i >= 0) return rest[i + 1]; const joined = rest.find(arg => arg.startsWith(`${name}=`)); return joined ? joined.slice(name.length + 1) : null; };
 const has = name => rest.includes(name);
 const readRecipe = path => JSON.parse(readFileSync(resolve(path), 'utf8'));
 const lockPath = path => resolve(path).replace(/\.json$/, '.lock.json');
@@ -151,14 +154,45 @@ function layoutCommand(path) {
   console.log(`Froze ${layout.derived.length} derived blocks into ${basename(path)} and removed its layout; identical pieces, surfaces and solids. Review, then run build --lock.`);
 }
 
+// Turn the mapped roads inside a site into a recipe skeleton: streets on the kit grid,
+// one quarter with placeholder names, and a `reference` record of what was kept,
+// merged, dropped and why. The author then names the shops, adds plazas and
+// landmarks, and runs build. Nothing in the source file is changed.
+function reference(path) {
+  const site = (flag('--site') ?? fail('--site w,s,e,n')).split(',').map(Number), id = flag('--id') ?? 'reference';
+  const number = (name, fallback) => flag(name) === null ? fallback : Number(flag(name));
+  const bytes = readFileSync(resolve(path)), world = JSON.parse(bytes.toString('utf8'));
+  const options = { id, site, title: flag('--title') ?? undefined, style: flag('--style') ?? undefined, rotation: flag('--rotation') === null || flag('--rotation') === 'auto' ? 'auto' : Number(flag('--rotation')),
+    tolerance: number('--tolerance', undefined), sidewalk: number('--sidewalk', undefined), lane: number('--lane', undefined), minimumLength: number('--min-length', undefined),
+    kinds: flag('--kinds') ? flag('--kinds').split(',') : null, source: { name: basename(path), sha256: createHash('sha256').update(bytes).digest('hex') } };
+  for (const key of Object.keys(options)) if (options[key] === undefined) delete options[key];
+  const grid = dominantRotation(world, site), recipe = referenceRecipe(world, options), ref = recipe.reference;
+  console.log(`${basename(path)}: ${world.roads.length} mapped roads; grid turned ${ref.rotation}° (${Math.round(grid.aligned * 100)}% of ${grid.length} m of road inside the site runs with it); site ${recipe.site[2]}×${recipe.site[3]} m; ${ref.buildings} mapped buildings inside, counted only.`);
+  console.log(['street', 'from', 'to', 'lane', 'roads'].join('\t'));
+  for (const street of recipe.streets) { const roads = ref.streets.find(entry => entry.id === street.id); console.log([street.id, street.from.join(','), street.to.join(','), street.lane, `${roads.roads.length}× ${roads.name ?? roads.roads[0]}`].join('\t')); }
+  for (const entry of ref.dropped) console.warn(`dropped ${entry.name ?? entry.road} (${entry.road}, ${entry.length} m): ${entry.reason}`);
+  if (ref.layoutError) console.warn(`layout: ${ref.layoutError}`);
+  for (const warning of ref.layoutWarnings) console.warn(`layout: ${warning}`);
+  // The budget outlook before anyone names a shop: the kit holds about four blocks per recipe.
+  try {
+    const plan = assembleNeighborhood(structuredClone(recipe)), limit = KIT_CONVENTIONS.budgets.trianglesPerNeighborhood;
+    console.log(`budget: ${plan.stats.triangles} of ${limit} triangles${plan.stats.triangles > limit ? ' (over: narrow the site or split it into several recipes)' : ''}; ${ref.blocks} blocks (about four fit the draw-call budget)`);
+  } catch (error) { console.warn(`budget: the skeleton does not assemble: ${error.message}`); }
+  const out = resolve(flag('--out') ?? join(root, '.runtime/destinations', `${id}-reference`, 'recipe.json'));
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, `${JSON.stringify(recipe, null, 2)}\n`);
+  console.log(`${recipe.streets.length} streets, ${ref.dropped.length} roads dropped, ${ref.blocks} blocks from one quarter with placeholder names. Wrote ${out}; name the shops, add plazas and landmarks, then run build.`);
+}
+
 const pieceCount = Object.keys(KIT_PIECES).length;
 if (command === 'build') build(rest.find(arg => arg.endsWith('.json')) ?? fail());
 else if (command === 'check') check();
 else if (command === 'override') override(rest[0], rest[1]);
 else if (command === 'layout') layoutCommand(rest.find(arg => arg.endsWith('.json')) ?? fail());
+else if (command === 'reference') reference(rest.find(arg => arg.endsWith('.json')) ?? fail());
 else if (command === 'preview') {
   const recipe = readRecipe(rest[0] ?? join(recipesDir, 'bayou-market-commons.json'));
   console.log(`In-engine kit preview: pnpm run dev, then open /e2e/fixtures/city-kit.html?recipe=${recipe.id}`);
   if (recipe.id === 'bayou-market-commons') console.log('Playable in the town: pnpm run dev serves it (the development town defaults to the full expansion), then walk east from the District arrival.');
-} else { console.error(`usage: destination build|check|override|preview|layout (${pieceCount} kit pieces)`); process.exitCode = 2; }
-function fail() { throw new Error('Pass a recipe .json path'); }
+} else { console.error(`usage: destination build|check|override|preview|layout|reference (${pieceCount} kit pieces)`); process.exitCode = 2; }
+function fail(what = 'a recipe .json path') { throw new Error(`Pass ${what}`); }
