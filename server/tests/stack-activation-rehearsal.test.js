@@ -93,17 +93,23 @@ test('Stack rehearsal from Gardens: up one step at a time, occupants in every di
     const { ticket } = await response.json();
     const ws = new WebSocket(`${node.base.replace('http:', 'ws:')}/multiplayer?ticket=${ticket}&world=river-oaks&protocol=3`, { headers });
     sockets.add(ws);
-    let snapshot = null, sequence = 0;
-    const pending = new Map();
+    let snapshot = null, sequence = 0, opened = null, closed = null, first = null;
+    const pending = new Map(), received = [], started = Date.now();
     ws.on('error', () => {});
-    ws.on('message', raw => { const value = JSON.parse(raw); if (value.type === 'snapshot') snapshot = value; if (value.type === 'result') pending.get(value.requestId)?.(value); });
+    ws.on('open', () => { opened = Date.now() - started; });
+    ws.on('close', (code, reason) => { closed = { code, reason: String(reason), afterMs: Date.now() - started }; });
+    ws.on('message', raw => { const value = JSON.parse(raw); first ??= Date.now() - started; if (received.length < 12) received.push(value.type); if (value.type === 'snapshot') snapshot = value; if (value.type === 'result') pending.get(value.requestId)?.(value); });
     // The first join of a freshly booted node waits on that node's boot work: loading the room
     // from Redis and, after a stack step, migrating the checkpoint to the revision now served.
     // The one-step rollback from Woodland Heights to Gardens is the longest (1.6 s locally at
     // load 6, every other step under 1.4 s); hosted runners failed its 8 s wait on main pushes
     // 36e906b2, e5cfada6 and 7cc1fb87 and on docs-only PR heads (#754). Thirty seconds is a
     // margin for the runner, not a behavior change: a node that never answers still fails here.
-    await until(() => snapshot, `${id} snapshot on ${node.revision}@${node.epoch}`, 600);
+    // When the snapshot never comes, say what did: the socket's open and close, the first
+    // message types, and the node's own log lines for this epoch (migration events, refusals),
+    // so a hosted failure attributes itself instead of reading as a slow runner.
+    await until(() => snapshot || closed, `${id} snapshot on ${node.revision}@${node.epoch}`, 600);
+    if (!snapshot) assert.fail(`${id} snapshot on ${node.revision}@${node.epoch}: ${JSON.stringify({ waitedMs: Date.now() - started, openedAfterMs: opened, firstMessageAfterMs: first, received, closed, readyState: ws.readyState, log: logs.slice(-12) })}`);
     const send = message => new Promise((resolve, reject) => {
       const requestId = String(++sequence), timer = setTimeout(() => { pending.delete(requestId); reject(new Error(`${message.type} timed out`)); }, 8000);
       pending.set(requestId, value => { clearTimeout(timer); pending.delete(requestId); resolve(value); });
