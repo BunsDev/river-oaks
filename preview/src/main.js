@@ -93,7 +93,7 @@ import { createPlazaChineseCheckers } from './plaza-chinese-checkers.js';
 import { createPlazaXiangqi } from './plaza-xiangqi.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
-import { createQualityControl } from './render-quality.js';
+import { createQualityControl, readFinishPreference } from './render-quality.js';
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
 import { createPhotoMode } from './photo-mode.js';
@@ -176,6 +176,8 @@ const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'o
 // The penthouse skyline (office-skyline.js); ?office-skyline=off compares without it in development.
 // Functional software acceptance omits the live exterior workload.
 const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.search).get('office-skyline') === 'off';
+// The Commons and Heights city-kit finish: classic unless opted in (render-quality.js, #742).
+const cityKitFinish = readFinishPreference();
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 // East Garden Commons and its assembled destination, when the revision composes them.
@@ -792,8 +794,8 @@ function populateWorld(data) {
   worldGroup.add(furniture);
   const heights = data.eastGardenCommons?.heights ? heightsStreams : null;
   if (data.eastGardenCommons) commonsStream = createCommonsStream({ world: data, ...(heights ? { layout: heights.heightsCommonsLayout(data.eastGardenCommons) } : {}),
-    parent: worldGroup, onScene: scene => { commonsScene = scene; }, onStatus: text => showStreamNotice('commons', text) });
-  if (heights) heightsStream = heights.createHeightsStream({ world: data, parent: worldGroup, onScene: scene => { heightsScene = scene; },
+    parent: worldGroup, finish: cityKitFinish, onScene: scene => { commonsScene = scene; }, onStatus: text => showStreamNotice('commons', text) });
+  if (heights) heightsStream = heights.createHeightsStream({ world: data, parent: worldGroup, finish: cityKitFinish, onScene: scene => { heightsScene = scene; },
     onStatus: text => showStreamNotice('heights', text) });
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
   plazaSalon = buildPlazaSalon(data);
@@ -1343,7 +1345,9 @@ if (import.meta.env.DEV) window.__riverSpatialStream = () => {
   };
   return { ...commonsStream?.debug(), objects, inventory: { district: (worldGroup?.children ?? []).map(inventory), other: scene.children.filter(item => item !== worldGroup).map(inventory) }, district: { world: worldGroup?.uuid, ground: layers.ground?.uuid, buildings: buildingMesh?.uuid }, camera: camera.position.toArray(),
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
-    renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls };
+    renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls,
+    // The opted-in kit finish and what each attached part was built with (#742).
+    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [] } };
 };
 if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
 if (import.meta.env.DEV) window.__riverExteriorCull = () => {

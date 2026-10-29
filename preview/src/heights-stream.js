@@ -63,6 +63,13 @@ export const HEIGHTS_CHUNK_BYTES = {
   'typesafe-place-north': 2.25 * MiB, 'typesafe-place-penthouse': 3.25 * MiB, 'typesafe-place-uptown': 2.7 * MiB,
   'typesafe-place-green': 2.55 * MiB, 'typesafe-place-south': 2.6 * MiB,
 };
+// A kit finish that adds geometry overrides only the chunks it outgrows, so classic streaming is
+// unchanged. Pink Jet-Age's rounded forms measure 2.32 MiB for TypeSafe Place north and 2.88 MiB
+// for uptown (#742).
+export const HEIGHTS_FINISH_CHUNK_BYTES = {
+  'pink-jet-age': { 'typesafe-place-north': 2.35 * MiB, 'typesafe-place-uptown': 2.9 * MiB },
+};
+export const heightsChunkBytes = (id, finish = 'classic') => HEIGHTS_FINISH_CHUNK_BYTES[finish]?.[id] ?? HEIGHTS_CHUNK_BYTES[id];
 // Each neighborhood composed after Heights' own adds its street trees and planted beds to the
 // shared part. Allowances per placement err high, so the shared estimate grows with them.
 export const HEIGHTS_SHARED_PLACEMENT_BYTES = { tree: 4 * 1024, planter: 10 * 1024 };
@@ -97,10 +104,11 @@ export function ownedTextureBytes(group) {
 /**
  * Streams Bayou Heights' presentation like the Commons (commons-stream.js), in parts: the
  * landmarks, trees and planting the neighborhoods share, and each neighborhood. The scene
- * passed to onScene holds whichever are attached.
+ * passed to onScene holds whichever are attached. `finish` is the presentation-only kit
+ * finish (render-quality.js readFinishPreference) every part is built with.
  */
 export function createHeightsStream({ world, parent, onStatus = () => {}, onScene = () => {}, now = () => performance.now(),
-  loadModule = () => import('./bayou-heights.js') }) {
+  finish, loadModule = () => import('./bayou-heights.js') }) {
   const layout = validateHeightsRegistration(manifest, world.eastGardenCommons), { plans } = layout.heights;
   const location = manifest.locations.find(item => item.id === layout.heights.id);
   // Studewood (heights-studewood-1) streams as two more Heights neighborhoods, east to its own edge,
@@ -134,7 +142,7 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
     return bytes + trees.length * HEIGHTS_SHARED_PLACEMENT_BYTES.tree + planters.length * HEIGHTS_SHARED_PLACEMENT_BYTES.planter;
   }, HEIGHTS_CHUNK_BYTES[SHARED]);
   const chunks = [{ id: SHARED, bounds: sharedBounds, estimatedBytes: sharedBytes },
-    ...plans.map(plan => ({ id: idOf(plan), plan, bounds: plan.site, estimatedBytes: HEIGHTS_CHUNK_BYTES[plan.id] ?? 3 * MiB }))];
+    ...plans.map(plan => ({ id: idOf(plan), plan, bounds: plan.site, estimatedBytes: heightsChunkBytes(plan.id, finish) ?? 3 * MiB }))];
   // A neighborhood's view box reaches over its tallest building: TypeSafe Place's towers stand 71 m.
   const boxes = plans.map(plan => { const [w, s, e, n] = plan.site, tallest = Math.max(26, ...plan.pieces.filter(piece => piece.piece === 'building/shell').map(piece => piece.height));
     return [plan, new Box3(new Vector3(w, layout.ground - 4, -n), new Vector3(e, layout.ground + tallest + 4, -s))]; });
@@ -162,7 +170,7 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
       const module = await loadModule();
       // Imports cannot be aborted, but a stale import must never allocate a scene.
       if (signal.aborted) throw new Error('Cancelled Heights load');
-      const group = chunk.plan ? module.buildHeightsNeighborhood(layout, chunk.plan) : module.buildHeightsLandscape(layout);
+      const group = chunk.plan ? module.buildHeightsNeighborhood(layout, chunk.plan, { finish }) : module.buildHeightsLandscape(layout, { finish });
       let disposed = false;
       const dispose = () => { if (!disposed) { disposed = true; group.userData.dispose(); } };
       signal.addEventListener('abort', dispose, { once: true });
