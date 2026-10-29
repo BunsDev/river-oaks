@@ -10,12 +10,13 @@ The kit extends existing systems rather than adding a city engine. Movement uses
 | --- | --- |
 | Pieces, styles, materials, finishes, conventions, budgets | `shared/city-kit/catalog.js` |
 | Recipe validation, seeded assembly, overrides, provenance, connectivity | `shared/city-kit/assemble.js` |
+| Blocks derived from streets, quarters and reservations | `shared/city-kit/layout.js` |
 | Three.js rendering of a plan | `preview/src/city-kit/render.js` |
 | Recipes, locks | `config/destinations/*.json`, `*.lock.json` |
 | CLI | `scripts/destination.mjs` (`pnpm run destination …`) |
 | In-engine preview of any recipe | `preview/e2e/fixtures/city-kit.html?recipe=<id>&seed=<n>&view=<view>&finish=<finish>` |
 | Pedestrian-scale screenshot review | `preview/e2e/city-kit-review.js` (shared browser lock) |
-| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-plaza-rows.test.js`, `preview/tests/bayou-market-commons.test.js` |
+| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/city-kit-plaza-rows.test.js`, `preview/tests/bayou-market-commons.test.js` |
 
 ## Conventions
 
@@ -75,6 +76,28 @@ Overrides are applied after generation by stable ID. If a different seed no long
 
 A plaza derives its trees, benches and lamps by the row: `treeRows`, `benchRows` and `lampRows` each take a line (`y` with `from`/`to` along x, or `x` along y), a `spacing` and, for furniture, a `yaw`, instead of an entry per item. Derived ids are stable (`<plaza>/bench-row-<row>-<n>`), so overrides address them, and a row that leaves the plaza's ground fails the build like any solid off walkable ground. Hand-placed `furniture` still works beside rows for the pieces that matter.
 
+## Derive blocks from streets
+
+A recipe may carry a `layout` instead of typing every block rectangle by hand. Its `quarters` state the artistic constraints for an area of the site: style, parcel depth, storeys and bay ranges, a pool of original shop names, and optionally a `court`, an explicit `front` or `sides`, and `split`. Its `reserved` rectangles keep ground out of generation. Derivation runs inside `assembleNeighborhood`, so the in-engine preview, locks, overrides, budgets, connectivity and every runtime composition see derived blocks exactly as authored ones. See `config/destinations/layout-grid-example.json` for a worked example and `pnpm run destination layout <recipe>` for its diagnostics.
+
+```json
+"layout": {
+  "quarters": [
+    { "id": "north-row", "rect": [0, 57.5, 120, 97], "style": "market-row", "depth": [12, 16], "storeys": [1, 2], "bays": [5, 7], "names": ["Pecan & Pearl", "…"] },
+    { "id": "south-row", "rect": [0, 0, 120, 42.5], "style": "heights-row", "depth": [11, 16], "storeys": [1, 2], "bays": [4.5, 6.5], "names": ["Cypress Supply", "…"] }
+  ],
+  "reserved": [{ "id": "chapel-yard", "rect": [0, 0, 33.5, 14] }]
+}
+```
+
+- **Land.** Every street's corridor (lane plus both sidewalks), every plaza, authored block, context massing and reservation is cut out of the site. What remains is split into rectangles along street and quarter edges; the split that leaves fewer frontages partly off a street wins. A quarter claims the land inside its `rect` (a quarter without one claims the rest); its edges also cut land, so a quarter can divide one row into two styles. Land no quarter claims is reported as open and left empty.
+- **Frontage.** A block faces the main street bounding its land: the widest, then the longest frontage, then north, south, east, west. A street on the opposite side as well splits the land into two back-to-back blocks on the module midline, when both halves are at least the quarter's minimum parcel depth; `"split": "none"` keeps one block. A quarter can name its `front` explicitly, as a street id or a side, for the garden court that should open onto the quieter cross street. Corner blocks face a crossing street that fully bounds their side (`sides`), unless the quarter lists its own.
+- **Names and IDs.** The quarter's name pool is shared out along its blocks by frontage length, so no shop name repeats. A quarter that yields one block names it; several blocks are `<quarter>-<street>-<side>-<offset>`, where the offset is the block's distance in metres from the site's west or south edge, so land added elsewhere does not rename a block. Overrides and additions address derived pieces by the same stable IDs as authored ones, and a changed street reports an override whose parcel no longer exists under `provenance.overrides.orphaned`.
+- **What never moves.** Streets, plazas, landmarks, furniture, authored blocks, overrides and additions. A landmark or furnishing standing on land a block would cover is refused with the block's name and the remedy (a plaza or a reservation), instead of being built over. Derived blocks never overlap each other, a street, a plaza or an authored block; the generator checks this and fails rather than emitting a broken plan.
+- **Diagnostics.** The plan's `provenance.layout` records the layout hash, the land count, each derived block's rectangle, front and sides, and warnings. `destination build` writes `layout.json` with every piece of land, its bounding streets and coverage, what became of it and why (open, too narrow, too shallow, partly off a street, a split that could not happen), prints the warnings, and outlines derived blocks with dashes and open or skipped land in red in `plan.svg`. `destination layout <recipe>` prints the same as a table.
+- **Budget.** The renderer batches each block separately, about twelve draw calls per block beside roughly twenty for the streets and plazas, so a recipe holds about four blocks inside the 70-call budget. The example derives three; a larger site is several recipes, as Studewood and Woodland Heights are north and south recipes.
+- **Freeze.** `destination layout <recipe> --freeze` writes the derived blocks into the recipe as authored blocks and removes the layout, after checking that the frozen recipe places identical pieces, surfaces and solids. Use it when a neighborhood is approved and later edits should be by hand; the recipe hash changes, so lock again.
+
 ## Commands
 
 ```sh
@@ -84,13 +107,14 @@ pnpm run destination build config/destinations/bayou-market-commons.json --lock 
 pnpm run destination check                                                       # every committed lock still reproduces
 pnpm run destination override config/destinations/bayou-market-commons.json bayou-market-commons/garden-court/parcel-2 --set roof='"stepped"' --note "Art pass"
 pnpm run destination preview config/destinations/bayou-market-commons.json        # how to open it in-engine
+pnpm run destination layout config/destinations/layout-grid-example.json          # the land each quarter claims and the blocks it derives; --freeze writes them as authored blocks
 ```
 
 `build` exits non-zero when a plan exceeds a budget, leaves any walkable sample unconnected, or makes a lantern unreachable. The SVG shows blocks by wall material, faced frontages, solids, tree crowns, lanterns, the landmark and every manually edited piece.
 
 ## Production workflow for the next neighborhood
 
-1. Copy a recipe, choose a site inside an authored manifest location, and lay out streets, plazas and blocks with the authored items that matter: landmark, gathering places and activity points.
+1. Copy a recipe, choose a site inside an authored manifest location, and lay out streets, plazas and the authored items that matter: landmark, gathering places and activity points. Describe the blocks as quarters in a `layout` (above) and let the streets place them; type a block by hand only where its rectangle must differ from the land its streets leave.
 2. Run `destination build`, open the SVG, then open the in-engine preview at pedestrian height (`city-kit.html?recipe=…&view=street`). Try a few seeds and keep the best one.
 3. Fix art direction with overrides and additions, not by editing output. Rebuild, review, then `--lock`.
 4. Compose it into a manifest location with real walking ground (see `shared/commons-destination.js` and `shared/bayou-heights.js`), then add the movement and connectivity tests and a browser journey. When a recipe's ground joins a neighbouring plan, name the seam in `ENTRIES` in `scripts/destination.mjs` so its own connectivity check includes it.

@@ -7,6 +7,7 @@
 // after generation by stable ID: regeneration re-derives everything else and
 // reports, never drops, an override whose target no longer exists.
 import { KIT_CONVENTIONS, KIT_MATERIALS, KIT_PIECES, KIT_STYLES, KIT_VERSION, kitPiece } from './catalog.js';
+import { expandLayout, validateLayout } from './layout.js';
 
 const MODULE = KIT_CONVENTIONS.module;
 const mm = value => Math.round(value * 1000) / 1000;
@@ -124,6 +125,8 @@ export function validateRecipe(recipe) {
     if (Object.keys(override).some(key => !['set', 'suppress', 'note'].includes(key))) fail(`override ${id} keys`);
     for (const key of Object.keys(override.set ?? {})) if (!SETTABLE.has(key)) fail(`override ${id} cannot set ${key}`);
   }
+  // Quarters and reservations that derive further blocks from the streets (layout.js).
+  validateLayout(recipe);
   return recipe;
 }
 
@@ -319,6 +322,10 @@ function applyOverrides(recipe, pieces) {
 export function assembleNeighborhood(source, { seed = source?.seed } = {}) {
   const recipe = validateRecipe(structuredClone(source));
   if (!Number.isInteger(seed) || seed < 0 || seed >= 2 ** 32) fail('seed');
+  // The recipe hash is the authored intent: derived blocks are a function of it.
+  const recipeHash = stableHash({ ...recipe, seed: undefined, overrides: undefined, additions: undefined });
+  const layout = expandLayout(recipe);
+  if (layout) { recipe.blocks = [...(recipe.blocks ?? []), ...layout.blocks]; validateRecipe(recipe); }
   const generated = [], walks = [];
   const pinned = new Set(Object.values(recipe.overrides ?? {}).map(override => override.set?.sign).filter(Boolean));
   for (const street of recipe.streets ?? []) assembleStreet(recipe, street, seed, generated, walks);
@@ -351,9 +358,11 @@ export function assembleNeighborhood(source, { seed = source?.seed } = {}) {
   for (const material of materials) if (!KIT_MATERIALS[material]) fail(`unknown material ${material}`);
   const plan = {
     id: recipe.id, kit: KIT_VERSION, seed, site: [...recipe.site],
-    provenance: { recipe: recipe.id, recipeHash: stableHash({ ...recipe, seed: undefined, overrides: undefined, additions: undefined }),
+    provenance: { recipe: recipe.id, recipeHash,
       overridesHash: stableHash({ overrides: recipe.overrides ?? {}, additions: recipe.additions ?? [] }), inspiration: recipe.inspiration ?? null,
-      overrides: { applied, orphaned, added: (recipe.additions ?? []).map(item => `${recipe.id}/manual/${item.id}`) } },
+      overrides: { applied, orphaned, added: (recipe.additions ?? []).map(item => `${recipe.id}/manual/${item.id}`) },
+      // Only recipes with a layout record one: plans without it keep their committed hashes.
+      ...(layout ? { layout: { hash: stableHash(recipe.layout), cells: layout.diagnostics.cells.length, blocks: layout.diagnostics.blocks, warnings: layout.diagnostics.warnings } } : {}) },
     pieces, surfaces, solids, lanterns,
     stats: { pieces: pieces.length, buildings: pieces.filter(piece => piece.piece === 'building/shell').length, solids: solids.length, materials: materials.size, triangles: Math.round(triangles) },
   };
