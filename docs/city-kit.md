@@ -12,12 +12,13 @@ The kit extends existing systems rather than adding a city engine. Movement uses
 | Recipe validation, seeded assembly, overrides, provenance, connectivity | `shared/city-kit/assemble.js` |
 | Blocks derived from streets, quarters and reservations | `shared/city-kit/layout.js` |
 | Kit streets from a geographic reference: grid, crop, snap, merge, dropped-road diagnostics | `shared/city-kit/reference.js` |
+| A plan as a World Studio region (Open JSON), checked against Studio's limits | `shared/city-kit/studio.js` |
 | Three.js rendering of a plan | `preview/src/city-kit/render.js` |
 | Recipes, locks | `config/destinations/*.json`, `*.lock.json` |
 | CLI | `scripts/destination.mjs` (`pnpm run destination …`) |
 | In-engine preview of any recipe | `preview/e2e/fixtures/city-kit.html?recipe=<id>&seed=<n>&view=<view>&finish=<finish>` |
 | Pedestrian-scale screenshot review | `preview/e2e/city-kit-review.js` (shared browser lock) |
-| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/city-kit-plaza-rows.test.js`, `preview/tests/city-kit-reference.test.js`, `preview/tests/bayou-market-commons.test.js` |
+| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/city-kit-plaza-rows.test.js`, `preview/tests/city-kit-reference.test.js`, `preview/tests/city-kit-studio.test.js`, `preview/tests/bayou-market-commons.test.js` |
 
 ## Conventions
 
@@ -109,10 +110,14 @@ A recipe may carry a `layout` instead of typing every block rectangle by hand. I
 - **Parcels drawn in Studio decide where blocks go.** When the source carries `parcels` with `bounds_m` (a World Studio region, or a candidate from the neighborhood compiler's `scripts/neighborhood.mjs build`), each parcel inside the site becomes a quarter of its own: its bounds turned into the kit frame, snapped to the module and clipped to the site, and an edge within a metre of a street's corridor edge is moved onto it so the parcel's blocks have frontage (the move is reported). Land outside the parcels stays open and is reported as a total, not built on; parcels outside the site or thinner than a bay are listed with the reason. `--parcels ignore` lays one quarter over the site instead. Each quarter faces its streets by the auto rule; set `front` per quarter where the drawing meant otherwise.
 - **Provenance.** `reference` records the source file's name and SHA-256, CRS and origin, the site, rotation, tolerance and the mapped roads behind every street. It is part of the recipe, so the plan's recipe hash covers it.
 
+## Open a plan in World Studio
+
+`destination build` also writes `studio-region.json`: the plan as a schema-v1 creator region that World Studio opens with **Open JSON** and the server's region package compiler accepts. Streets are roads with their lanes (a lane under 6 m is a footway); every building shell is a box of its footprint and height, named by its stable piece id; street and plaza trees keep their crowns; the landmark, plazas and streets are places; the blocks, authored and derived, are parcels; the arrival stands on the widest street's sidewalk. The bounds pad the site by 2 m, because Studio keeps everything 1 m inside. It is a review view: walk it, mark places, measure; edits go back into the recipe as overrides by piece id, never into this file. Kit pieces under 4 m a side (rear wings) and context massings beyond the region are listed under `omitted` in the console summary, never widened. A plan Studio would refuse (more than 80 buildings, no street, fewer than four places) is refused here with the reason.
+
 ## Commands
 
 ```sh
-pnpm run destination build config/destinations/bayou-market-commons.json   # plan.json, plan.svg, report.json under .runtime/destinations/<id>-<seed>/
+pnpm run destination build config/destinations/bayou-market-commons.json   # plan.json, plan.svg, report.json, studio-region.json under .runtime/destinations/<id>-<seed>/
 pnpm run destination build config/destinations/nineteenth-and-yale.json --seed 78
 pnpm run destination build config/destinations/bayou-market-commons.json --lock   # after review: update the committed lock
 pnpm run destination check                                                       # every committed lock still reproduces
@@ -128,7 +133,7 @@ pnpm run destination reference data/generated/neighborhoods/garden-001/region.js
 ## Production workflow for the next neighborhood
 
 1. Copy a recipe, or start one with `destination reference` from the mapped roads of the place that inspires it; choose a site inside an authored manifest location, and lay out streets, plazas and the authored items that matter: landmark, gathering places and activity points. Describe the blocks as quarters in a `layout` (above) and let the streets place them; type a block by hand only where its rectangle must differ from the land its streets leave.
-2. Run `destination build`, open the SVG, then open the in-engine preview at pedestrian height (`city-kit.html?recipe=…&view=street`). Try a few seeds and keep the best one.
+2. Run `destination build`, open the SVG, open `studio-region.json` in World Studio (**Open JSON**) to walk the massing and mark places, then open the in-engine preview at pedestrian height (`city-kit.html?recipe=…&view=street`). Try a few seeds and keep the best one.
 3. Fix art direction with overrides and additions, not by editing output. Rebuild, review, then `--lock`.
 4. Compose it into a manifest location with real walking ground (see `shared/commons-destination.js` and `shared/bayou-heights.js`), then add the movement and connectivity tests and a browser journey. When a recipe's ground joins a neighbouring plan, name the seam in `ENTRIES` in `scripts/destination.mjs` so its own connectivity check includes it.
 
