@@ -14,13 +14,15 @@ import { CLIENT_ADDRESS, createClientAddress, rateLimitKey } from './client-addr
 import { ADMITTED } from './world-router.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { createDebugReportRoutes } from './debug-report-routes.js';
-import { STAFF_BAN_REFUSED, createModerationReportsRoute, staffAccount } from './moderation-reports.js';
+import { REPORT_UNAVAILABLE, STAFF_BAN_REFUSED, closeRequest, createModerationReportsRoute, staffAccount, submitReport } from './moderation-reports.js';
+import { RESPONSE_HOURS } from './moderation-notify.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, acceptsWorldProtocol, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
 import { groupAction } from './groups-api.js';
 import { loadHidden, screenCommand, viewFor } from './blocks.js';
+import { defaultContentFilter, screenText } from './content-filter.js';
 import { blockAction } from './blocks-api.js';
 import { profileAction } from './profile-api.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
@@ -46,10 +48,10 @@ const json = (res, status, value) => {
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
 export function createDistributedServer({ auth, room, protocolVersion: worldProtocol = WORLD_PROTOCOL_VERSION, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, blocks = null, onBlocked = null, blockSyncMs = 5000, groups = null, profiles = null, characters = null, characterStudioEnabled = true, characterMetrics = null, events = null, workplace = null, officeDesk = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
-  trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
+  trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now, moderationNotifier = null, responseHours = RESPONSE_HOURS,
   connectionLifetime = 270_000, rotateNoticeMs = ROTATE_NOTICE_MS, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
   // cyclingMiles: accepted for the leaderboard route (PR 2); the room owner flushes rides.
-  cyclingMiles = null } = {}) {
+  cyclingMiles = null, contentFilter = defaultContentFilter() } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
@@ -121,7 +123,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
   // Moderators read saved player reports (#292).
   const staff = staffAccount({ moderators, admins: waitlistAdmins, isAdmin });
   const handleModerationReports = createModerationReportsRoute({ auth, moderators, isBanned: id => security.isBanned(id), isApproved: id => waitlist.isApproved(id),
-    allow: id => security.allow('moderation_reports', id, 30, 60_000), reports: except => security.reports(undefined, except), usernameOf: id => waitlist.usernameOf?.(id) ?? null, isStaff: staff });
+    allow: id => security.allow('moderation_reports', id, 30, 60_000), reports: except => security.reports(undefined, except), usernameOf: id => waitlist.usernameOf?.(id) ?? null, isStaff: staff, responseHours, now });
   // Sends the committed view. The snapshot is serialized once per broadcast, not
   // once per connection; `only` limits it to one connection (a command's sender).
   function publish(view, only = null) {
@@ -271,7 +273,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             const place=await room.resolvePlace(placeId);
             return place?{world:{id:worldId,title:worldTitle},place}:null;
           },
-          allowWrite: id => security.allow('social', id, 12, 60_000), blocks });
+          allowWrite: id => security.allow('social', id, 12, 60_000), blocks, contentFilter });
         return json(res, result.status, result.value);
       }
       if (path.startsWith('/api/blocks/') && req.method === 'POST') {
@@ -290,13 +292,13 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
         const result=await groupAction({action:path.slice('/api/groups/'.length),identity,groups,social,
-          readBody:()=>body(req),allowWrite:id=>security.allow('groups',id,24,60_000),blocks});
+          readBody:()=>body(req),allowWrite:id=>security.allow('groups',id,24,60_000),blocks,contentFilter});
         return json(res,result.status,result.value);
       }
       if (path.startsWith('/api/events/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
-        const result=await eventAction({action:path.slice('/api/events/'.length),identity,events,isAdmin,readBody:()=>body(req),
+        const result=await eventAction({action:path.slice('/api/events/'.length),identity,events,isAdmin,contentFilter,readBody:()=>body(req),
           resolveVenue:async placeId=>{
             const place=await room.resolvePlace(placeId);
             return place?{worldId,worldTitle,placeId:place.id,placeName:place.name}:null;
@@ -342,7 +344,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
               ? view.snapshot.players.find(player => player.id === peerId) : null;
           },
-          allowWrite: id => security.allow('profile', id, 6, 60_000), blocks });
+          allowWrite: id => security.allow('profile', id, 6, 60_000), blocks, contentFilter });
         return json(res, result.status, result.value);
       }
       if (path === '/api/moderation/ban' && req.method === 'POST') {
@@ -363,6 +365,19 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
           await workplace?.suspend(data.userId);
           await onBan?.(data.userId);
         }
+        return json(res, 200, { ok: true });
+      }
+      // A moderator closes a report they have dealt with (#292).
+      if (path === '/api/moderation/reports/close' && req.method === 'POST') {
+        const identity = await authorized(req, res); if (!identity) return;
+        if (!moderatorIds.has(identity.userId)) return json(res, 403, { error: 'Moderator access required.' });
+        let data;
+        try { data = await body(req); } catch { return json(res, 400, { error: 'Invalid report.' }); }
+        const id = closeRequest(data);
+        if (!id) return json(res, 400, { error: 'Invalid report.' });
+        let closed = false;
+        try { closed = await security.closeReport({ id, actorId: identity.userId }); } catch { return json(res, 503, { error: REPORT_UNAVAILABLE }); }
+        if (!closed) return json(res, 404, { error: 'That report isn’t here.' });
         return json(res, 200, { ok: true });
       }
       json(res, 404, { error: 'Not found' });
@@ -485,12 +500,19 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             if (command.type === 'report') {
               const view = await room.read();
               const self = view?.connections.find(item => item.userId === identity.userId);
-              const target = view?.connections.some(item => item.userId === command.playerId);
-              const ok = self?.connectionId === connectionId && target && command.playerId !== identity.userId
-                && ['disruption', 'harassment', 'cheating'].includes(command.reason)
-                && await security.report({ reporterId: identity.userId, targetId: command.playerId, reason: command.reason });
-              send(ws, { type: 'result', requestId, ok: Boolean(ok), message: ok ? 'Report saved.' : 'Report could not be submitted.' });
+              if (self?.connectionId !== connectionId) { send(ws, { type: 'result', requestId, ok: false, message: 'Report could not be submitted.' }); return; }
+              // security.report limits saved reports to three a minute per reporter.
+              const result = await submitReport({ reporterId: identity.userId, message: command, present: id => view.connections.some(item => item.userId === id), chat: view.snapshot?.chat,
+                usernameOf: id => waitlist.usernameOf?.(id) ?? null, save: entry => security.report({ reporterId: entry.reporterId, targetId: entry.reportedId, reason: entry.reason, id: entry.id, content: entry.content, respondBy: entry.respondBy, at: entry.at }),
+                notifier: moderationNotifier, responseHours, now });
+              send(ws, { type: 'result', requestId, ...result });
               return;
+            }
+            // Town chat is screened by the content filter (#292) at the gateway, where blocks are screened too.
+            if (command.type === 'chat' && typeof command.text === 'string') {
+              const text = screenText(contentFilter, 'chat', command.text);
+              if (!text.ok) { send(ws, { type: 'result', requestId, ok: false, error: 'chat_filtered', message: text.message }); return; }
+              command.text = text.text;
             }
             const screened = await screenCommand(blocks, identity.userId, command, isAdmin);
             if (screened.refusal) { send(ws, { type: 'result', requestId, ...screened.refusal }); return; }

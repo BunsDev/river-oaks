@@ -15,9 +15,9 @@ the binary is marked **native**.
 
 | Guideline | What it asks | Where River Oaks is | Status |
 | --- | --- | --- | --- |
-| 1.2 | Filter objectionable content | Length limits and control-character checks only; no content filter | **Gap, blocking** |
-| 1.2 | Report offensive content, respond in time | Residents can be reported from the roster, and reports are saved. Moderators read them, newest first, in Settings → Account → Reports and can ban from there (this change). Messages, events and groups can't be reported; nobody is told | **Gap, blocking** |
-| 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The Block button is built but not wired into the client | **Gap, blocking** (client owner) |
+| 1.2 | Filter objectionable content | A server-side filter screens town chat, direct messages, groups, events, profiles and usernames before they're stored, on both servers (this change). Voice isn't filtered | Met in source; the list and the mode are Decision 1 |
+| 1.2 | Report offensive content, respond in time | Residents can be reported from the roster, including one who has left. A report keeps the quoted text and the reported account's last chat lines, records when it should be answered by, is posted to the moderators' inbox (`MODERATION_NOTIFY_URL`), and stays listed in Settings → Account → Reports until a moderator closes it (this change). Messages, events and groups can't be reported | Met in source; the inbox, its owner and the response time are Decision 2 |
+| 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The roster now offers Block/Unblock and Settings → Account lists blocked residents | Integrated in source; fixture verification and native acceptance remain distinct |
 | 1.2 | Published contact information | Settings → Account → Support, once `VITE_SUPPORT_CONTACT` is set (this change). Not on the sign-in or waitlist pages | Needs a value; **gap** before approval |
 | 5.1.1(v) | Delete the account in the app | In-app deletion behind a default-off flag (#666), webhook erasure (#661) | Met in source, off |
 | 5.1.1(v) | Revoke social credentials; no social tokens kept off the device | WorkOS can return the resident's GitHub token, which the server then uses | **Decision** |
@@ -43,44 +43,82 @@ What residents create that others see:
 Builds are catalog items placed in approved spaces, with no free text. World Studio
 drafts stay on the device.
 
-**Filtering. Gap, blocking.** Every text field is limited in length and refuses
-control characters; everything but direct messages also refuses direction
-overrides. Nothing filters objectionable words or images, and Apple asks
-for "a method for filtering objectionable material from being posted". A server-side
-filter on every field in the list above, apart from voice, would cover the text. What it matches, and whether it refuses or masks, is a content-policy
-choice (Decision 1). Voice can't be filtered as it happens; blocking, the device mute
-and reports cover it.
+**Filtering. Met in source; the policy is Decision 1.** Every text field is limited in
+length and refuses control characters; everything but direct messages also refuses
+direction overrides. Apple asks for "a method for filtering objectionable material from
+being posted", so a server-side content filter (`server/content-filter.js`) now screens
+every field in the list above, apart from voice, before any store sees it:
 
-**Reports. Gap, blocking.** The roster's **Report** button
+- **Where.** The chat command at both gateways, before blocks are screened; `send` in
+  `social-api.js`; `create` and `send` in `groups-api.js`; `create` in `events-api.js`;
+  `save` in `profile-api.js` (tagline, bio, pronouns and each interest); and `setUsername`
+  in both waitlist stores. The world and the client are unchanged. A refused write is
+  400 with `{ error, reason: 'filtered' }`; a refused chat line is the socket result
+  `chat_filtered`. The resident sees "That message can’t be sent here." or "That text
+  can’t be used here." (names: "That name can’t be used here.").
+- **How it matches.** Whole words and short phrases from `config/content-filter.json`,
+  after folding case, accents, look-alike digits and symbols (`k1ll`, `f@g`, Cyrillic
+  and Greek look-alikes), zero-width characters inside a word, letters spaced out one
+  by one (`k i l l`) and a run-together phrase (`killyourself`). A plain `-s` plural of a
+  term matches; other forms are listed on their own. Not folded: letters spaced in
+  groups (`ki ll`), repeated letters (`kiiill`) or leetspeak beyond the look-alike table.
+  Nothing inside a longer word matches, so ordinary words that contain a term are left
+  alone. Text longer than 4,000 characters is refused unscreened rather than passed
+  (every field's own cap is far lower). Images aren't screened: residents can't post any.
+- **Policy.** `refuse` lists the terms; `mask` names the fields where a match is
+  replaced by asterisks (`∗`) instead of refused (never usernames). The shipped list holds
+  severe slurs and direct threats, as a starting point. `RIVER_OAKS_CONTENT_FILTER=off`
+  turns the filter off; `RIVER_OAKS_CONTENT_FILTER_FILE` replaces the list with a file
+  of the same shape, and a missing or malformed file stops the server at start.
+- **Tests.** `server/tests/content-filter.test.js` (matching, masking, configuration)
+  and `server/tests/content-filter-routes.test.js` (every field over HTTP and WebSocket
+  on the town, and on the hosted gateway with Redis).
+
+Voice can't be filtered as it happens; blocking, the device mute and reports cover it.
+The filter matches words, not meaning: reports and blocking handle the rest.
+
+**Reports. Met in source.** The roster's **Report** button
 (`preview/src/multiplayer-client.js`) sends the socket command
-`{ type: 'report', playerId, reason }`. Both servers accept `disruption`,
-`harassment` or `cheating`, about a resident who is connected and isn't the reporter.
-A blocked resident can be reported, and can report. The limit is three a minute per
-reporter, counted differently: the town counts every attempt, refused ones included;
-the hosted path counts saved reports per clock minute, so up to six can land across a
-minute's end.
+`{ type: 'report', playerId, reason }`, and may add `text`, the line the reporter is
+pointing at. Both servers accept `disruption`, `harassment` or `cheating`, about anyone
+but the reporter who is connected, who spoke in the town's recent chat (someone who has
+left), or who has a username; an id nobody here has had is refused. A blocked resident
+can be reported, and can report. The limit is three a minute per reporter, counted
+differently: the town counts every attempt, refused ones included; the hosted path
+counts saved reports per clock minute, so up to six can land across a minute's end.
+The shared path is `submitReport` in `server/moderation-reports.js`.
+
+Each saved report has an `id`, carries `content` (the quoted text, cleaned and cut to
+280 characters, and the reported account's last three chat lines, together at most
+1,200 bytes), and records `respondBy`, `MODERATION_RESPONSE_HOURS` after it was saved
+(24 by default).
 
 | Server | Where a report goes | Test |
 | --- | --- | --- |
-| Standalone town | A `report` line in `${MODERATION_FILE}.audit.jsonl` (`server/moderation.js`), with `userId` for the reported resident | `server/tests/reports.test.js` |
-| Hosted | The shared Redis audit list `<prefix>:audit` (`server/redis-security.js`), with `targetId` for the reported resident | `server/tests/reports.test.js`, with Redis |
+| Standalone town | A `report` line in `${MODERATION_FILE}.audit.jsonl` (`server/moderation.js`), with `userId` for the reported resident; closed reports in `MODERATION_FILE` | `server/tests/reports.test.js` |
+| Hosted | The shared Redis audit list `<prefix>:audit` (`server/redis-security.js`), with `targetId` for the reported resident; closed reports in `<prefix>:reports:closed` | `server/tests/reports.test.js`, with Redis |
 
-The reporter used to read "Report sent to the town moderators." Nothing is sent to
-anyone, and nobody yet owns reading reports, so both servers now say only "Report
-saved." The client shows the server's text, so its owner's file doesn't change.
+**Moderators are told.** After the save, the report is posted as JSON
+(`{ type: 'report', id, at, reason, reporter, reported, content, respondBy }`, both
+accounts as `{ id, name }`) to `MODERATION_NOTIFY_URL`, with `MODERATION_NOTIFY_TOKEN`
+as a bearer token (`server/moderation-notify.js`). The endpoint is whatever reaches the
+moderators: a chat tool's incoming webhook, an email relay, a ticket queue. River Oaks
+has no outbound email of its own (sign-in codes are WorkOS's), so the provider behind
+the URL is Decision 2. Sends are bounded to 20 in ten minutes across all reporters,
+time out after five seconds, never follow a redirect, and never change the reporter's
+answer: a failed send is logged by report id, and the report stays saved and listed.
+Nothing is sent when the URL is unset. The reporter reads "Report saved."; the client
+shows the server's text, so its owner's file doesn't change.
 
 Still missing:
-- **Nobody is told.** No email, no notification, no queue.
-- **The button always sends `disruption`.** The file is owned by
-  `outdoor-residents-admin-controls-20261024`; a reason choice is for that task.
-- **A report carries no content.** It doesn't include the chat line or profile text
-  it's about.
-- **Only connected residents can be reported.** Someone who has left can't be.
+- **The button always sends `disruption`** and no `text`. The file is owned by
+  `outdoor-residents-admin-controls-20261024`; a reason choice and a quote are for
+  that task.
 - **Only residents can be reported.** A direct message, a group or a public event
   can't be.
 - **Saved reports can be lost unread.** The hosted list keeps the newest 10,000 bans,
   unbans and reports together. The town renames its log to `.previous` at 5 MB,
-  replacing the one before.
+  replacing the one before. The inbox notice is the copy that outlives both.
 
 **Moderators read reports in the app.** `GET /api/moderation/reports` reads where each
 server already saves reports: the town's audit log and the log it rotated at 5 MB, or
@@ -89,30 +127,38 @@ names, the reported account's id, and whether that account is banned or is staff
 reporter is sent only as a shown name, which for an account without a username includes
 its id. A report about the moderator reading is left out before the newest 200 are
 taken, so it doesn't push a row off their list; any other moderator sees it.
+Each listed report carries its `id`, `content`, `respondBy` (a report saved before
+response targets reads as due 24 hours after it was saved), `overdue`, and `closed`
+(`{ at, by }` or null). Open reports come first, newest first, then closed ones.
 Settings → Account → Reports shows
 them to approved accounts in `MODERATOR_USER_IDS`, up to 30 reads a minute each;
 anyone else gets `{ moderator: false }` and sees nothing, even when a request fails. Each
-row offers Ban…, which asks once, or Lift ban, through the existing
-`/api/moderation/ban`. The route only reads: it marks nothing as handled and keeps
-nothing new. A moderator can't ban their own account, and the ban route refuses to ban
-a moderator, a waitlist admin or one of Jevica's owner accounts, so the list offers no
-Ban for them; lifting a ban on one still works. Tests:
+row shows the quoted text and the chat lines as text, when to respond by (or that it is
+overdue, or who closed it), and offers Ban…, which asks once, or Lift ban, through the
+existing `/api/moderation/ban`, and **Close report**, which posts the id to
+`/api/moderation/reports/close` with the session token. A closed report keeps its
+line in both logs, is audited as `report_closed`, and is listed last; closing an id
+that no saved report has is a 404. A moderator can't ban their own account, and the
+ban route refuses to ban a moderator, a waitlist admin or one of Jevica's owner
+accounts, so the list offers no Ban for them; lifting a ban on one still works. Tests:
 `server/tests/moderation-reports.test.js` (both servers, Redis for the hosted one),
-`preview/tests/moderation-reports.test.js` and the routing cases in
+`server/tests/moderation-notify.test.js` (the inbox over a local HTTP server, bounds,
+the shared intake), `preview/tests/moderation-reports.test.js` and the routing cases in
 `server/tests/vercel-routing.test.js` and `server/tests/hardening-router-admission.test.js`.
 
-Proposed next increment: keep the reported content with the report, and keep reports
-until a moderator closes them. Response time and ownership are Decision 2.
-
-**Blocking. Gap, blocking.** [Player blocking](player-blocking.md) (#665) is enforced
+**Blocking. Integrated in source.** [Player blocking](player-blocking.md) (#665) is enforced
 on the server. It covers chat, gestures, greetings, contacts, direct messages,
 profiles, group messages, invitations, travel, private places and Garden campus guest
-access, and it holds across reconnects and worlds. But residents can't make a block yet. The Block button for
-the roster and the blocked list for Settings (`preview/src/player-blocks.js`) are
-built and tested, but not wired in: `preview/src/multiplayer-client.js` and
-`preview/src/main.js` belong to other active tasks. Until their owners make the four
-calls listed in that page, a block can only be made through `/api/blocks/*`. Voice
-isn't covered: the device mute is the only control today
+access, and it holds across reconnects and worlds. Residents can now use Block/Unblock
+beside Report in the player roster and manage their blocked list in Settings → Account.
+The multiplayer client owns authenticated attachment, reconnect refresh and teardown;
+the Account pane offers refresh and reports failures without false success. Session
+and attempt fences prevent stale replies or a pending sign-out from rebinding another
+session's list. The implementation and fixture evidence are recorded in
+`docs/superpowers/plans/2026-10-27-player-blocking-ui-292.md`; live auth, hosted routing,
+physical-device and human accessibility acceptance are separate. This integration
+does not close this App Review issue or authorize an iOS release. Voice isn't covered:
+the device mute is the only control today
 ([Decision 1 there](player-blocking.md)).
 
 **Contact. Needs a value, and a gap before approval.** `VITE_SUPPORT_CONTACT`, set at
@@ -246,15 +292,21 @@ Recommended: leave Computer out of iOS v1 (Decision 5).
 
 ## Decisions for Val
 
-1. **Content filter.** What a filter matches in chat, profiles and names, and whether
-   it refuses or masks. Recommended: refuse a short list of slurs and threats on the
-   server, and let reports and blocking handle the rest.
+1. **Content filter.** The filter is built and on by default. Decide the list in
+   `config/content-filter.json` (keep, cut or extend the shipped slurs and threats) and
+   whether any field, chat in particular, should mask instead of refuse (`mask`).
+   Recommended: keep refusing, keep the list short, and let reports and blocking
+   handle the rest.
 2. **Moderation.** Who reads reports, how fast, and where a threat or child-safety
    report goes. In the US, a provider that finds apparent child sexual abuse material
-   must report it to NCMEC. Recommended: name an owner and a 24-hour target. The
-   moderators' Reports list above is built. Name at least two moderators: a
-   report about a moderator is shown only to the others, so with one, nobody sees it
-   in the app.
+   must report it to NCMEC. The routing is built: set `MODERATION_NOTIFY_URL` (and
+   `MODERATION_NOTIFY_TOKEN`) to whatever reaches the moderators, since River Oaks
+   sends no email of its own; a chat tool's incoming webhook is the least to set up,
+   an email relay (a Marketplace provider, or a Zap that mails) if email is wanted.
+   Set `MODERATION_RESPONSE_HOURS` to the promised response time (24 by default; the
+   list marks a report overdue past it). Recommended: name an owner and keep the
+   24-hour target. Name at least two moderators: a report about a moderator is shown
+   only to the others, so with one, nobody sees it in the app.
 3. **Support contact.** The address or page for `VITE_SUPPORT_CONTACT` and App Store
    Connect.
 4. **Sign-in on iOS (4.8).** Add Sign in with Apple, or offer only email codes there.
