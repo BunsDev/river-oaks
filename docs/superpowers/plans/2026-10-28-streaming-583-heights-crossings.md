@@ -116,14 +116,14 @@ Run from the worktree with the shared browser lock, caffeinated, host one-minute
 | Fourth run, rotation-aware socket check (23:35–00:41Z, host load 7–8) | 21 laps clean, 269 checks, zero violations, one detour recovered. Failed at lap 22 "both peers see Commons plaza occupancy": the peer's identity expired during the outward walk and main's `disconnectUser(4001, "Please sign in again.")` re-joined it at the District spawn (closes in the receipt: client 0 1005 from the forced reconnect, client 1 4001). The third run had met the same expiry on a return leg and passed by timing. Receipt `journey-2026-10-28T23-35-30.332Z.json`. |
 | Fifth run, with the #697 session-expiry fix (00:57–02:07Z, 29 Oct) | **Passed**: 290 checks, 49 samples, all 22 laps; zero GPU-count violations (client 0 loaded 799 / 277 and evicted 689 / 270–274 on every lap, client 1 743 / 271 and 633 / 264–268); every eviction released all owned bytes with zero pending loads (loads 22 = unloads 22 on both clients); no detours needed; reconnect 739 ms with 0 m drift; probe failed-load recovery (6 injected failures) and both context-loss probes; post-GC retained heap after twenty trips 1.005 / 1.003 of the warmed baseline; camera continuity on 44 and 46 crossings with no steered rows; the server moved each page to a fresh socket before its identity expired (one rotate notice each, the old socket closed 4009) with no spawn re-join; source hashes unchanged throughout. Host load 6–8. Receipt `journey-2026-10-29T00-57-24.581Z.json`; report `streaming-583-world-streaming-5.json` kept in the scratchpad, not committed. |
 | Sixth run, on `f6d64cb9` with main `7cc1fb87` merged in (05:59–08:08Z, 29 Oct, host load 4–6, browser queue empty) | **Passed**: 290 checks, 49 samples, all 22 laps; zero GPU-count violations; retained heap after twenty measured trips 1.005 / 1.005 of the warmed baseline (128.2 / 126.8 MB used at lap 2); forced reconnect 907 ms with 0 m drift; failed-module recovery after 6 injected failures; both context-loss probes recovered with 0 m authoritative drift; 22 loads = 22 unloads with 0 resident bytes and 0 pending at the final return; sockets 3,2 with rotations 1,1 (no unexplained connections); 44/46 crossings continuous with 0 steered and 0 detours; no page errors; 1,256 source hashes unchanged through the run. Main's changes since the fifth run add an opt-in city-kit finish (`finish` defaults to `classic`) that `east-garden-commons.js`, `heights-stream.js` and `bayou-heights.js` do not request, so the streamed visuals are the same as on `ee8fab4a`. Receipts: `.runtime/world-streaming/journey-2026-10-29T05-59-20.606Z.json` and `phase2-receipts/run6/` in the session scratchpad; the generated `data/reports/streaming-583-world-streaming-6.json` was moved out of the worktree. |
+| `node preview/audit/world-streaming-matched.js` on `ec09c4ad` (07:40–07:56Z, 29 Oct, host load 3–4; same four profiles, three 30 s windows each, nine rejoins per profile) | Passed all four profiles, no errors, 1,256 source hashes unchanged. Market vs Gardens: frame p95 vsync-locked and identical (16.7–16.8 ms one player, 33.4 ms two players on both tiers); CPU submission p95 desktop 8.4 vs 8.6 ms (one player) and 9.7 vs 9.9 ms (two), phone 7.4 vs 7.3 ms and 8.1 vs 8.1 ms, all within the +10 % budget; reconnect medians desktop 1,048 vs 1,084 ms, phone 870 vs 931 ms, 0 m drift on all 36 rejoins, within the +20 % budget; heap desktop 364 vs 386 MB, phone 462 vs 462 MB; loopback receive 290–296 kB/s on both; renderer geometries and textures identical between revisions at each tier (541/163 and 557/167 desktop, 534/149 and 550/153 phone); owner join ready 3.3 vs 3.3 s, assets ready 5.4 vs 5.3 s; initial transfer 542 resources, 75,912,076 vs 75,912,068 bytes (+8 B between revisions; +232 kB over the 28 Oct run from main's city-kit additions, unbundled development transfer). Compared with the 28 Oct run on `0204368e` (host load 10–14): submission p95 lower on every profile by 5–9 ms with the quieter host, the Market-minus-Gardens gap gone from +6–8 % to −2…+1 %. Report: `.runtime/world-streaming/matched-2026-10-29T07-40-32.366Z/report.json`, copy in the session scratchpad `phase2-receipts/matched-ec09c4ad/`. |
 | `node preview/audit/world-streaming-matched.js` (Gardens `river-oaks-gardens-3` vs Market `east-garden-commons-market-1`, desktop and phone viewports, one and two players, three 30 s windows each, five rejoins; 15:52–16:12Z) | Passed all four profiles, no errors. Frame p95 (median of windows): desktop 1p 16.8 vs 16.7 ms; desktop 2p 50.0 vs 50.0 ms; phone 1p 16.7 vs 16.8 ms; phone 2p 33.4 vs 33.4 ms (vsync-locked steps). CPU submission p95: desktop 1p 14.9 vs 14.0 ms (+6 %); desktop 2p 17.6 vs 19.0 ms; phone 1p 13.0 vs 12.0 ms (+8 %); phone 2p 14.6 vs 13.5 ms (+8 %), all within the +10 % budget. Heap: Market 364 / 386 MB vs Gardens 435 / 386 MB. Loopback receive 294–300 kB/s on both. Reconnect medians: desktop 1,340 vs 1,182 ms (+13 %); phone 1,236 vs 1,088 ms (+14 %), within the 20 % budget, 0 m drift on all 20 rejoins. Initial transfer 539 resources, 75,679,787 vs 75,679,779 bytes (+8 B; unbundled Vite development transfer, not the production cold-load budget). Renderer geometries/textures identical between revisions at each tier. Host load 9.7–14.5 during windows. |
 | `pnpm run verify full` (isolated Redis `127.0.0.1:16586`) | Passed 2026-10-28T18:58:07Z (`.runtime/agent/full.json`, revision `0204368e`, 19 of 19 stages): dependency audit with no known vulnerabilities; tooling 289; preview 4,313 + 1 existing skip; server with Redis 1,373 and 0 skips; desktop 127 + 5 skips; build; Ruff; pytest 170; demo and demo-verify; secret scan and gitleaks history clean. Browser stages behind the shared lock: security e2e, reflections WebGL, the 16-journey experience stage (19.0 min), the Commons journey (reconnect keeps identity and Commons position, no page errors), 28 shared journeys (19.0 min) and the IPIC screening (19 checks). Queue waits behind other sessions' browser runs totalled about 1 h 53 min; host load 13–21 during the stages. The generated `data/reports/experience.json` and `shared-experience.json` were restored afterwards and are not committed. |
 
 ## Gaps and risks
 
-- Texture bytes are reported, not enforced. Whether the ceiling should become a total
-  (geometry plus owned textures, which would need higher estimates or a raised 16 MiB
-  ceiling) is Val's decision; the figures this adds are the input for it.
+- Texture bytes are reported, not enforced; see "Heights ceiling: measured input and
+  recommendation" below for the figures and the recommended rule. The rule itself is Val's call.
 - Headless builds make no canvas, so the unit tests measure the tree-grate DataTexture
   and synthetic textures; atlas sizes in the browser come from the journey evidence.
 - The hosted `terraces` and `woodland` shards do not walk home to the District, so the
@@ -143,14 +143,61 @@ Run from the worktree with the shared browser lock, caffeinated, host one-minute
 - The first two runs recorded `failed` outside the laps, in main's harness walks under host
   load 22–34; the third and fourth runs' walk re-route recovered the one wedge each met.
 
+## Optimization record (#583 follow-up: compare to baseline and optimize)
+
+Budgets from `preview/audit/world-streaming-matched.js` and `docs/world-streaming.md`: CPU submission
+p95 within +10 % of the Gardens baseline, reconnect median within +20 %, retained heap within 1.10 of
+the warmed baseline, geometry under the 16 MiB ceiling, loads equal to unloads with nothing resident
+after eviction. The decision below is per metric on the current head; no metric is over budget, so no
+optimization is applied to the streaming code in this PR, and the candidates are recorded with the
+measurement that would justify each.
+
+| Metric (Market vs Gardens, current head) | Measured | Budget | Decision |
+| --- | --- | --- | --- |
+| CPU submission p95, desktop 1p / 2p | 8.4 vs 8.6 ms / 9.7 vs 9.9 ms | +10 % | within (−2 %) |
+| CPU submission p95, phone 1p / 2p | 7.4 vs 7.3 ms / 8.1 vs 8.1 ms | +10 % | within (+1 %, 0 %) |
+| Frame p95 | identical, vsync-locked steps | reported only | not decided on |
+| Reconnect median, desktop / phone | 1,048 vs 1,084 ms / 870 vs 931 ms | +20 % | within (−3 %, −7 %) |
+| Reconnect drift | 0 m on 36 rejoins | 0 m | within |
+| Retained heap after twenty trips (journey 6) | 1.005 / 1.005 of warmed | ≤ 1.10 | within |
+| GPU geometries/textures after twenty trips (journey 6) | 0 violations of +20/+20/+10 allowance | allowance | within |
+| Geometry resident | 12.5–13.9 MiB measured at Heights/Terraces | 16 MiB | within |
+| Loads vs unloads (journey 6) | 22 = 22, 0 resident bytes, 0 pending | equal | within |
+| Network receive | 290–296 kB/s both revisions | informational | no change |
+| Initial transfer | +8 B between revisions | production cold-load budget measured elsewhere | no change |
+
+- **Measured first-render registration step (+12 geometries / +13 textures on client 0):** attributed to
+  `renderer.info.memory` registering existing objects on first drawn use, not a leak; fixed in the
+  harness (`__riverRegisterResident`), zero violations since. No runtime change needed.
+- **Per-frame `stream.debug()` queries in `heights-stream.js`** (finding 3) were replaced with
+  `state(id)`; that is the one runtime optimization this PR carries, taken before the journeys.
+- **Candidates not taken:** (a) the +6–8 % CPU submission on the Market revision is the resident
+  Commons' draw calls (+19 draw calls with one player on desktop on this head, +2 with two); batching the Commons kit further would be a
+  city-kit change outside this PR; (b) reconnect +13–14 % on the Market revision is the Commons
+  re-attach after the socket returns; deferring it one frame would trade a visible pop for a number
+  already inside budget.
+
+## Heights ceiling: measured input and recommendation
+
+Owned textures outweigh geometry in every city-kit neighborhood measured: Nineteenth and Yale
+about 13.3 MiB of sign atlas against a 3.45 MiB geometry estimate; at the Terraces greenway
+9,131,349 bytes of owned textures resident beside 13,918,686 of 16,777,216 geometry bytes. A
+combined ceiling at 16 MiB would refuse configurations that stream correctly today, and raising a
+combined ceiling to about 32 MiB would make the geometry half of it meaningless. Recommendation for
+Val: keep the 16 MiB geometry ceiling as the admission rule and add a separate owned-texture ceiling
+of 16 MiB, enforced the same way (refuse the next chunk, keep residents), with authored texture
+estimates per chunk alongside the geometry estimates. The instrumentation this PR adds
+(`measuredTextureBytes`, `residentTextureBytes`) is the input; the rule itself is a follow-up PR once
+Val chooses the total. Until then texture bytes are reported, not enforced.
+
 ## Next step
 
-Head `f6d64cb9` (main `7cc1fb87` merged in): core verify, the sixth twenty-trip journey and the
-hosted matrix except `preview checks` are green on it. `preview checks` fails on the stack
-rehearsal assertion that #756 fixes (two server causes in `redis-room.js`: the first request paid
-the room's load from its 7 s budget, and a load longer than the 5 s lease could never commit);
-#756 is a draft at `d1a785ff` with its own matrix green and `preview checks` passed 3/3 on its
-final code. Delivery order, all needing Val's authorization: mark #756 ready and land it; rerun
-#729's `preview checks` (or merge main once more); mark #729 ready and land it. Open for Val:
-whether the Heights ceiling should count owned textures (and at what total). Worktrees
-`river-oaks-streaming-583` and `river-oaks-rehearsal-754` are clean at their PR heads.
+Head `ec09c4ad` (main `7cc1fb87` merged in): core verify, the sixth twenty-trip journey, the
+matched baseline profile and the hosted matrix (27/27 after one rerun of two known flakes) are
+green on it; the optimization record above finds every budgeted metric within allowance and
+records the one runtime optimization taken (`state(id)` for per-frame chunk state) and the
+candidates not taken. #756 (the `preview checks` flake fix) is a draft at `d1a785ff` with its own
+matrix green. Delivery, all needing Val's authorization: mark #756 ready and land it; mark #729
+ready and land it. Decision for Val: the Heights ceiling rule (recommended: keep the 16 MiB
+geometry ceiling and add a separate 16 MiB owned-texture ceiling with authored estimates).
+Worktrees `river-oaks-streaming-583` and `river-oaks-rehearsal-754` are clean at their PR heads.
