@@ -10,22 +10,25 @@ import { validateTerracesRegistration } from './bayou-terraces-world.js';
 import { terracesBaseLayout } from '../../shared/woodland-heights.js';
 import { inWoodlandHeights } from '../../shared/woodland-heights-layout.js';
 import { validateWoodlandRegistration } from './woodland-heights-world.js';
+import { woodlandBaseLayout } from '../../shared/typesafe-place.js';
+import { validateTypeSafeRegistration } from './typesafe-place-world.js';
 import { createSpatialChunkStream } from './spatial-chunk-stream.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
 import { cityKitLandscape } from './city-kit/render.js';
 
-// Loaded only for bayou-heights-1, heights-studewood-1, bayou-terraces-1 and woodland-heights-1 (main.js), with the composition they need.
+// Loaded only for bayou-heights-1, heights-studewood-1, bayou-terraces-1, woodland-heights-1 and typesafe-place-1 (main.js), with the composition they need.
 export { attachBayouHeights } from './bayou-heights-world.js';
 export { attachStudewood } from './studewood-world.js';
 export { attachBayouTerraces } from './bayou-terraces-world.js';
 export { attachWoodlandHeights } from './woodland-heights-world.js';
+export { attachTypeSafePlace } from './typesafe-place-world.js';
 
 /**
  * The Commons as Heights presents it: the restored Commons layout, bayou opened for the
  * footbridge. Its planted beds draw within 60 m, as Heights' own do (HEIGHTS_PLANTING_METRES):
  * seen across the bayou, the Commons' beds at every distance are about a million triangles.
  */
-const heightsOnly = layout => layout.woodland ? heightsOnly(terracesBaseLayout(layout)) : layout.terraces ? heightsOnly(studewoodBaseLayout(layout)) : layout.studewood ? heightsBaseLayout(layout) : layout;
+const heightsOnly = layout => layout.typesafe ? heightsOnly(woodlandBaseLayout(layout)) : layout.woodland ? heightsOnly(terracesBaseLayout(layout)) : layout.terraces ? heightsOnly(studewoodBaseLayout(layout)) : layout.studewood ? heightsBaseLayout(layout) : layout;
 export const heightsCommonsLayout = layout => ({ ...commonsBaseLayout(heightsOnly(layout)), destination: layout.destination,
   plantingMetres: KIT_CONVENTIONS.lod.treeMetres[1] });
 
@@ -55,7 +58,18 @@ export const HEIGHTS_CHUNK_BYTES = {
   'bayou-terrace-north': 2.9 * MiB, 'bayou-terrace-south': 2.15 * MiB,
   // Woodland Heights (woodland-heights-1) in the luxury kit, measured headless at 1.77 and 1.34 MiB.
   'woodland-heights-north': 1.9 * MiB, 'woodland-heights-south': 1.45 * MiB,
+  // TypeSafe Place (typesafe-place-1), split at Place Avenue so each tower's half streams on its
+  // own, measured headless at 2.12, 3.02, 2.54, 2.40 and 2.40 MiB.
+  'typesafe-place-north': 2.25 * MiB, 'typesafe-place-penthouse': 3.25 * MiB, 'typesafe-place-uptown': 2.7 * MiB,
+  'typesafe-place-green': 2.55 * MiB, 'typesafe-place-south': 2.6 * MiB,
 };
+// A kit finish that adds geometry overrides only the chunks it outgrows, so classic streaming is
+// unchanged. Pink Jet-Age's rounded forms measure 2.32 MiB for TypeSafe Place north and 2.88 MiB
+// for uptown (#742).
+export const HEIGHTS_FINISH_CHUNK_BYTES = {
+  'pink-jet-age': { 'typesafe-place-north': 2.35 * MiB, 'typesafe-place-uptown': 2.9 * MiB },
+};
+export const heightsChunkBytes = (id, finish = 'classic') => HEIGHTS_FINISH_CHUNK_BYTES[finish]?.[id] ?? HEIGHTS_CHUNK_BYTES[id];
 // Each neighborhood composed after Heights' own adds its street trees and planted beds to the
 // shared part. Allowances per placement err high, so the shared estimate grows with them.
 export const HEIGHTS_SHARED_PLACEMENT_BYTES = { tree: 4 * 1024, planter: 10 * 1024 };
@@ -71,19 +85,39 @@ function geometryBytes(group) {
 }
 
 /**
+ * Bytes of the textures a chunk made and disposes itself, which render.js marks `userData.owned`:
+ * each neighborhood's sign atlas, tower lettering and tree grate. Shared kit maps and the halo
+ * stay out, as they survive eviction. Mipmaps add a third. Reported beside the geometry
+ * ceiling, not yet enforced by it: the atlases alone can outweigh a neighborhood's geometry.
+ */
+export function ownedTextureBytes(group) {
+  const textures = new Set();
+  group.traverse(item => {
+    for (const material of [item.material].flat().filter(Boolean)) for (const value of Object.values(material)) if (value?.isTexture && value.userData?.owned) textures.add(value);
+  });
+  return [...textures].reduce((bytes, texture) => {
+    const { width = 0, height = 0 } = texture.image ?? {};
+    return bytes + Math.round(width * height * 4 * (texture.generateMipmaps ? 4 / 3 : 1));
+  }, 0);
+}
+
+/**
  * Streams Bayou Heights' presentation like the Commons (commons-stream.js), in parts: the
  * landmarks, trees and planting the neighborhoods share, and each neighborhood. The scene
- * passed to onScene holds whichever are attached.
+ * passed to onScene holds whichever are attached. `finish` is the presentation-only kit
+ * finish (render-quality.js readFinishPreference) every part is built with.
  */
 export function createHeightsStream({ world, parent, onStatus = () => {}, onScene = () => {}, now = () => performance.now(),
-  loadModule = () => import('./bayou-heights.js') }) {
+  finish, loadModule = () => import('./bayou-heights.js') }) {
   const layout = validateHeightsRegistration(manifest, world.eastGardenCommons), { plans } = layout.heights;
   const location = manifest.locations.find(item => item.id === layout.heights.id);
   // Studewood (heights-studewood-1) streams as two more Heights neighborhoods, east to its own edge,
   // and Woodland Heights (woodland-heights-1) as two more, east to the edge beyond it.
   if (layout.studewood) validateStudewoodRegistration(manifest, layout);
   if (layout.woodland) validateWoodlandRegistration(manifest, layout);
-  const own = locationWorldBounds(location), easternmost = layout.woodland ?? layout.studewood;
+  // TypeSafe Place (typesafe-place-1) streams as five more, east to its own edge.
+  if (layout.typesafe) validateTypeSafeRegistration(manifest, layout);
+  const own = locationWorldBounds(location), easternmost = layout.typesafe ?? layout.woodland ?? layout.studewood;
   const bounds = easternmost ? [own[0], own[1], easternmost.bounds[2], own[3]] : own, [west, south, east, north] = bounds;
   // The Bayou Terraces (bayou-terraces-1) stream as two more neighborhoods west of the bayou, gated like the rest.
   if (layout.terraces) validateTerracesRegistration(manifest, layout);
@@ -98,15 +132,21 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
   const terracePlans = new Set(layout.terraces?.plans.map(plan => plan.id) ?? []), onTerracePlan = point => gated(point) && terracePlans.has(planAt(point).id);
   // With the terraces at the District edge, District points must not stream them: from the District, Heights stays unloaded.
   const inDistrict = point => Boolean(layout.terraces) && point[0] < layout.edge;
+  // With everyone in the District nothing anchors Heights, and it all streams out: the scheduler
+  // keeps a scene when given no valid point at all (an invalid position must not evict), so a
+  // point beyond the retention distance of every chunk stands in for "no anchor".
+  const away = [sharedBounds[0] - 1000, sharedBounds[1] - 1000];
   const inWoodland = point => inWoodlandHeights(layout, point[0]);
   const sharedBytes = plans.slice(layout.studewood?.planStart ?? plans.length).reduce((bytes, plan) => {
     const { trees, planters } = cityKitLandscape(plan, { groundAt: () => layout.ground, ground: layout.ground });
     return bytes + trees.length * HEIGHTS_SHARED_PLACEMENT_BYTES.tree + planters.length * HEIGHTS_SHARED_PLACEMENT_BYTES.planter;
   }, HEIGHTS_CHUNK_BYTES[SHARED]);
   const chunks = [{ id: SHARED, bounds: sharedBounds, estimatedBytes: sharedBytes },
-    ...plans.map(plan => ({ id: idOf(plan), plan, bounds: plan.site, estimatedBytes: HEIGHTS_CHUNK_BYTES[plan.id] ?? 3 * MiB }))];
-  const boxes = plans.map(plan => { const [w, s, e, n] = plan.site; return [plan, new Box3(new Vector3(w, layout.ground - 4, -n), new Vector3(e, layout.ground + 30, -s))]; });
-  const frustum = new Frustum(), viewMatrix = new Matrix4(), forward = new Vector3(), measured = {}, seen = new Map();
+    ...plans.map(plan => ({ id: idOf(plan), plan, bounds: plan.site, estimatedBytes: heightsChunkBytes(plan.id, finish) ?? 3 * MiB }))];
+  // A neighborhood's view box reaches over its tallest building: TypeSafe Place's towers stand 71 m.
+  const boxes = plans.map(plan => { const [w, s, e, n] = plan.site, tallest = Math.max(26, ...plan.pieces.filter(piece => piece.piece === 'building/shell').map(piece => piece.height));
+    return [plan, new Box3(new Vector3(w, layout.ground - 4, -n), new Vector3(e, layout.ground + tallest + 4, -s))]; });
+  const frustum = new Frustum(), viewMatrix = new Matrix4(), forward = new Vector3(), measured = {}, measuredTextures = {}, seen = new Map();
   const scene = new Group(), neighborhoods = new Map(), drawn = new Set();
   let shared = null, status = '';
   scene.name = 'Bayou Heights'; scene.userData.shadowProxies = [];
@@ -130,19 +170,19 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
       const module = await loadModule();
       // Imports cannot be aborted, but a stale import must never allocate a scene.
       if (signal.aborted) throw new Error('Cancelled Heights load');
-      const group = chunk.plan ? module.buildHeightsNeighborhood(layout, chunk.plan) : module.buildHeightsLandscape(layout);
+      const group = chunk.plan ? module.buildHeightsNeighborhood(layout, chunk.plan, { finish }) : module.buildHeightsLandscape(layout, { finish });
       let disposed = false;
       const dispose = () => { if (!disposed) { disposed = true; group.userData.dispose(); } };
       signal.addEventListener('abort', dispose, { once: true });
       try {
         await group.userData.ready;
         if (signal.aborted) throw new Error('Cancelled Heights landscape load');
-        return { group, bytes: geometryBytes(group), dispose };
+        return { group, bytes: geometryBytes(group), textureBytes: ownedTextureBytes(group), dispose };
       } catch (error) { dispose(); throw error; }
       finally { signal.removeEventListener('abort', dispose); }
     },
-    attach(chunk, { group, bytes }) {
-      scene.add(group); measured[chunk.id] = bytes;
+    attach(chunk, { group, bytes, textureBytes }) {
+      scene.add(group); measured[chunk.id] = bytes; measuredTextures[chunk.id] = textureBytes;
       if (chunk.plan) { neighborhoods.set(chunk.plan.id, group); drawn.add(chunk.plan.id); } else shared = group;
     },
     detach(chunk, { group }) {
@@ -151,7 +191,7 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
     },
   });
   const presented = point => stream.ready(SHARED) && stream.ready(idOf(planAt(point)));
-  const state = id => stream.debug().chunks.find(chunk => chunk.id === id).state;
+  const state = id => stream.state(id);
   return {
     update(points, camera) {
       const wanted = points.filter(point => !inDistrict(point));
@@ -181,7 +221,7 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
           wanted.push([edge[0] + (eye[0] - edge[0]) * step, edge[1] + (eye[1] - edge[1]) * step]);
         }
       }
-      stream.update(wanted);
+      stream.update(wanted.length || !points.some(point => point?.slice(0, 2).every(Number.isFinite)) ? wanted : [away]);
       const player = points[0];
       const terrace = player && onTerracePlan(player), inside = player && (terrace || player[0] > west - .35 && player[0] <= east && player[1] >= south && player[1] <= north);
       const atBridge = player && Math.abs(player[0] - west) < 30 && Math.abs(player[1] - entry[1]) < 15;
@@ -196,6 +236,8 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
     },
     /** Whether the footbridge into Heights is presented. */
     ready: () => presented(entry),
+    /** One chunk's lifecycle state (spatial-chunk-stream.js), by its id. */
+    state: id => stream.state(id),
     allowsStep(from, to) {
       if (!to?.slice(0, 2).every(Number.isFinite)) return false;
       if (!gated(to) || presented(to)) return true;
@@ -207,8 +249,14 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
       return Boolean(from) && gated(from) && !presented(from) && (onTerracePlan(from) ? to[0] >= from[0] - 1e-9
         : inWoodland(from) && inWoodland(to) || to[0] <= from[0] + 1e-9);
     },
-    debug: () => ({ ...stream.debug(), status, geometryBudgetBytes: HEIGHTS_MAX_BYTES, measuredBytes: { ...measured },
-      estimatedBytes: Object.fromEntries(chunks.map(chunk => [chunk.id, chunk.estimatedBytes])) }),
+    debug: () => {
+      const inner = stream.debug();
+      return { ...inner, status, geometryBudgetBytes: HEIGHTS_MAX_BYTES, measuredBytes: { ...measured },
+        estimatedBytes: Object.fromEntries(chunks.map(chunk => [chunk.id, chunk.estimatedBytes])),
+        // Owned textures of the chunks attached now, beside the geometry the ceiling counts.
+        measuredTextureBytes: { ...measuredTextures },
+        residentTextureBytes: inner.chunks.reduce((bytes, chunk) => bytes + (chunk.state === 'ready' ? measuredTextures[chunk.id] ?? 0 : 0), 0) };
+    },
     dispose() { stream.dispose(); scene.removeFromParent(); onScene(null); announce(''); },
   };
 }

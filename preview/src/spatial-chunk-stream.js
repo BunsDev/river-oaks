@@ -86,6 +86,8 @@ export function createSpatialChunkStream({ chunks, load, attach, detach,
       }
     },
     ready(id) { return !disposed && entries.get(id)?.state === 'ready'; },
+    // The lifecycle state of one chunk, for callers that ask every frame; debug() builds the whole picture.
+    state(id) { return disposed ? 'absent' : entries.get(id)?.state ?? null; },
     retry(id) { const entry = entries.get(id); if (entry?.state === 'failed') entry.retryAt = 0; },
     debug() {
       return { disposed, residentBytes, pending: pending.size, loads, unloads, failures, lastLoadMs,

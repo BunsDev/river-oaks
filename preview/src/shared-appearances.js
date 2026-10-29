@@ -59,9 +59,16 @@ export const DEFAULT_SHARED_APPEARANCE='jevica';
 export const DEFAULT_GUEST_APPEARANCE='sable-human';
 export const JEVICA_OWNER_USER_IDS=JEVICA_ACCOUNT_IDS;
 export const isJevicaOwner=isJevicaAccount;
-const appearanceById=new Map(SHARED_APPEARANCES.map(appearance=>[appearance.id,appearance]));
+// A player-made human (character-recipe.js). It is not an authored look, so it
+// stays out of the catalogue and its pickers; a published recipe selects it, and
+// its rig comes from that recipe (`rig` here is only the unrecipied fallback).
+export const CUSTOM_CHARACTER={id:'custom',name:'Your own',title:'River Oaks resident',species:'Human',accent:'#8a7f72',variants:[{id:'recipe',label:'Your own look'}]};
+export const CUSTOM_APPEARANCE={name:CUSTOM_CHARACTER.name,accent:CUSTOM_CHARACTER.accent,label:'Your own · river oaks resident · human',role:'River Oaks resident · human',
+  id:'custom-human',character:'custom',variant:'recipe',form:'human',rig:'woman-daywear',kind:'human',recipe:true,
+  description:'A person of your own making: their face, skin, eyes, height, hair and colours are chosen in the Character Studio.'};
+const appearanceById=new Map([...SHARED_APPEARANCES,CUSTOM_APPEARANCE].map(appearance=>[appearance.id,appearance]));
 export const sharedAppearance=id=>appearanceById.get(id)??(Object.hasOwn(LEGACY_APPEARANCES,id)?appearanceById.get(LEGACY_APPEARANCES[id]):null)??null;
-export const sharedCharacter=id=>characterById.get(id)??null;
+export const sharedCharacter=id=>characterById.get(id)??(id===CUSTOM_CHARACTER.id?CUSTOM_CHARACTER:null);
 export const canFlyAs=(userId,id)=>isJevicaOwner(userId)&&sharedAppearance(id)?.character==='jevica';
 export const canUseAppearance=(userId,id)=>{
   const appearance=sharedAppearance(id);

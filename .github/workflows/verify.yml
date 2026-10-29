@@ -272,7 +272,7 @@ jobs:
         # spatial-streets alone takes about as long as the other journeys combined.
         shard:
           - id: streets
-            journeys: spatial-streets world-studio
+            journeys: spatial-streets world-studio city-kit-studio
           - id: places
             journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation office-desk office-visit office-lift-ride office-computer-embed
           # The Gardens campus revision: leases, workstations and the private desk (#510), and
@@ -283,9 +283,13 @@ jobs:
             journeys: garden-campus-traversal
           - id: commons
             journeys: east-garden-commons
-          # Bayou Heights over the Lantern Footbridge (#586 continuation), in its own shard.
+          # Bayou Heights over the Lantern Footbridge (#586 continuation). One journey used to walk
+          # in, play, reconnect and walk home: 14-19.5 min on this runner against the 20-min timeout,
+          # and twice cancelled at it (f4dd959a, f3b01149). Outbound and return are separate shards.
           - id: heights
             journeys: bayou-heights
+          - id: heights-return
+            journeys: bayou-heights-return
           # Studewood beyond Heights Boulevard (toward 3x), in its own shard.
           - id: studewood
             journeys: studewood

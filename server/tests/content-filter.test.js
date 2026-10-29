@@ -10,9 +10,9 @@ const policy = { refuse: ['blort', 'kill yourself', "i'll end you"], mask: [] };
 
 test('matches whole words after folding case, accents, look-alikes, spacing and run-together letters', () => {
   const filter = createContentFilter(policy);
-  for (const text of ['blort', 'You blort!', 'BLORT', 'Blört', 'bl0rt', 'b l o r t', 'blorts', 'B.L.O.R.T', 'Кill yourself', 'killyourself', 'k i l l y o u r s e l f', 'please KILL  YOURSELF now', 'I’ll end you', 'ill end you'])
+  for (const text of ['blort', 'You blort!', 'BLORT', 'Blört', 'bl0rt', 'b l o r t', 'blorts', 'B.L.O.R.T', 'Кill yourself', 'killyourself', 'k i l l y o u r s e l f', 'please KILL  YOURSELF now', 'I’ll end you', 'ill end you', 'ki\u200Bll yourself', 'bl\u200Co\u200Drt', 'kill\u2060 yourself'])
     assert.equal(filter.screen('chat', text).ok, false, text);
-  for (const text of ['blorting', 'unblort', 'blortish', 'kill the lights yourself', 'yourself kill', 'bl0rt3d', '2026', 'hello there', 'I will end this', ''])
+  for (const text of ['blorting', 'unblort', 'blortish', 'blortes', 'kill the lights yourself', 'yourself kill', 'bl0rt3d', '2026', 'hello there', 'I will end this', ''])
     assert.equal(filter.screen('chat', text).ok, true, text);
 });
 
@@ -54,7 +54,21 @@ test('findFiltered and maskFiltered report original ranges, longest phrase first
   assert.deepEqual(found, [{ term: "i'll end you", start: 0, end: 12, ranges: [[0, 4], [5, 8], [9, 12]] }]);
   assert.equal(maskFiltered("I'll end you", found), '∗∗∗∗ ∗∗∗ ∗∗∗');
   assert.deepEqual(findFiltered('', []), []);
-  assert.deepEqual(findFiltered('x'.repeat(5000), []), []);
+});
+
+test('an "-es" plural is not inferred, so "spic" leaves "spices" alone', () => {
+  const filter = createContentFilter({ refuse: ['spic', 'spics'], mask: [] });
+  for (const text of ['I love Indian spices', 'the spice market', 'spiced tea']) assert.equal(filter.screen('chat', text).ok, true, text);
+  for (const text of ['spic', 'spics']) assert.equal(filter.screen('chat', text).ok, false, text);
+});
+
+test('text past the scan limit is refused rather than passed unscreened', () => {
+  const filter = createContentFilter(policy);
+  const long = `${'x'.repeat(4000)} blort`;
+  assert.equal(long.length > 4000, true);
+  assert.deepEqual(filter.screen('chat', long), { ok: false, reason: 'filtered', message: 'That message can’t be sent here.', term: null });
+  assert.equal(filter.screen('profile', 'y'.repeat(4000)).ok, true, 'the limit itself still scans');
+  assert.deepEqual(findFiltered(long, []), [], 'findFiltered alone does not scan past the limit; screen refuses first');
 });
 
 test('the environment turns the filter off or replaces the list from a file', async () => {
