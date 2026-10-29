@@ -37,7 +37,11 @@ export function validateLayout(recipe) {
   const layout = recipe.layout;
   if (layout === undefined || layout === null) return null;
   if (!layout || typeof layout !== 'object' || Array.isArray(layout)) fail('layout must be an object');
-  for (const key of Object.keys(layout)) if (!['quarters', 'reserved'].includes(key)) fail(`unknown layout key ${key}`);
+  for (const key of Object.keys(layout)) if (!['quarters', 'reserved', 'open', 'migrated'].includes(key)) fail(`unknown layout key ${key}`);
+  // Land no quarter claims is a warning for a recipe under construction; a recipe
+  // whose seams and verges are ground by design says so once with `open: "ground"`.
+  if (layout.open !== undefined && layout.open !== 'warn' && layout.open !== 'ground') fail('layout.open must be warn or ground');
+  if (layout.migrated !== undefined && !(layout.migrated && typeof layout.migrated === 'object' && typeof layout.migrated.geometry === 'string' && Number.isInteger(layout.migrated.blocks))) fail('layout.migrated records the authored blocks and their geometry hash');
   const streets = new Set((recipe.streets ?? []).map(street => street.id)), ids = new Set();
   const quarters = layout.quarters ?? [];
   if (!Array.isArray(quarters) || !quarters.length) fail('layout needs at least one quarter');
@@ -164,7 +168,7 @@ export function expandLayout(recipe) {
   }
   const derived = [];
   const open = decompose(fine, xs, ys, -1, corridors);
-  for (const rect of open) { cells.push({ rect: rect.map(mm), quarter: null, result: 'open', blocks: [] }); warnings.push(`open land ${rect.map(mm).join(',')}: no quarter claims it`); }
+  for (const rect of open) { cells.push({ rect: rect.map(mm), quarter: null, result: 'open', blocks: [] }); if (layout.open !== 'ground') warnings.push(`open land ${rect.map(mm).join(',')}: no quarter claims it`); }
   quarters.forEach((quarter, index) => {
     // Reading order on a map: north to south, then west to east.
     const rects = decompose(fine, xs, ys, index, corridors).map(rect => rect.map(mm)).sort((a, b) => b[3] - a[3] || a[0] - b[0]);

@@ -107,82 +107,6 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "market-row",
-      "style": "luxe-modern",
-      "rect": [
-        3.5,
-        7,
-        44.5,
-        40
-      ],
-      "front": "south",
-      "sides": [
-        "east",
-        "west"
-      ],
-      "depth": [
-        12,
-        15
-      ],
-      "storeys": [
-        2,
-        3
-      ],
-      "bays": [
-        4.5,
-        6.5
-      ],
-      "names": [
-        "Teal Door Books",
-        "Paletas Lucero",
-        "Little Kiln Ceramics",
-        "Lantern Lane Coffee",
-        "Bayou Bloom Florist",
-        "Pecan Street Bakery"
-      ]
-    },
-    {
-      "id": "garden-court",
-      "style": "luxe-court",
-      "rect": [
-        3.5,
-        -40,
-        44.5,
-        -7
-      ],
-      "front": "north",
-      "sides": [
-        "east",
-        "west"
-      ],
-      "depth": [
-        14,
-        17
-      ],
-      "storeys": [
-        1,
-        3
-      ],
-      "bays": [
-        5,
-        7.5
-      ],
-      "court": {
-        "at": 0.5,
-        "width": 12,
-        "depth": 10
-      },
-      "names": [
-        "Cypress & Clay",
-        "Gulf Breeze Records",
-        "Magnolia Press",
-        "White Oak Cycles",
-        "Verbena Tea House"
-      ]
-    }
-  ],
   "landmarks": [
     {
       "id": "bayou-lantern-tower",
@@ -616,5 +540,88 @@
       ],
       "note": "Hand-placed outside White Oak Cycles' corner."
     }
-  ]
+  ],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "market-row",
+        "rect": [
+          3.5,
+          7,
+          44.5,
+          40
+        ],
+        "style": "luxe-modern",
+        "depth": [
+          12,
+          15
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          4.5,
+          6.5
+        ],
+        "names": [
+          "Teal Door Books",
+          "Paletas Lucero",
+          "Little Kiln Ceramics",
+          "Lantern Lane Coffee",
+          "Bayou Bloom Florist",
+          "Pecan Street Bakery"
+        ],
+        "front": "south",
+        "sides": [
+          "east",
+          "west"
+        ]
+      },
+      {
+        "id": "garden-court",
+        "rect": [
+          3.5,
+          -40,
+          44.5,
+          -7
+        ],
+        "style": "luxe-court",
+        "depth": [
+          14,
+          17
+        ],
+        "storeys": [
+          1,
+          3
+        ],
+        "bays": [
+          5,
+          7.5
+        ],
+        "names": [
+          "Cypress & Clay",
+          "Gulf Breeze Records",
+          "Magnolia Press",
+          "White Oak Cycles",
+          "Verbena Tea House"
+        ],
+        "court": {
+          "at": 0.5,
+          "width": 12,
+          "depth": 10
+        },
+        "front": "north",
+        "sides": [
+          "east",
+          "west"
+        ]
+      }
+    ],
+    "migrated": {
+      "blocks": 2,
+      "geometry": "f0c1ce10921e2c7a"
+    }
+  }
 }

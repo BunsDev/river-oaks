@@ -13,6 +13,7 @@ The kit extends existing systems rather than adding a city engine. Movement uses
 | Blocks derived from streets, quarters and reservations | `shared/city-kit/layout.js` |
 | Kit streets from a geographic reference: grid, crop, snap, merge, dropped-road diagnostics | `shared/city-kit/reference.js` |
 | A plan as a World Studio region (Open JSON), checked against Studio's limits | `shared/city-kit/studio.js` |
+| Authored blocks as quarters, proven by the lock's geometry hash | `shared/city-kit/migrate.js` |
 | Production effort, measured: typed values per recipe and the cost of one street edit in each form | `shared/city-kit/effort.js`, `data/reports/city-kit-effort.json` |
 | Three.js rendering of a plan | `preview/src/city-kit/render.js` |
 | Recipes, locks | `config/destinations/*.json`, `*.lock.json` |
@@ -103,7 +104,7 @@ A recipe may carry a `layout` instead of typing every block rectangle by hand. I
 - **Budget.** The renderer batches each block separately, about twelve draw calls per block beside roughly twenty for the streets and plazas, so a recipe holds about four blocks inside the 70-call budget. The example derives three; a larger site is several recipes, as Studewood and Woodland Heights are north and south recipes.
 - **Freeze.** `destination layout <recipe> --freeze` writes the derived blocks into the recipe as authored blocks and removes the layout, after checking that the frozen recipe places identical pieces, surfaces and solids. Use it when a neighborhood is approved and later edits should be by hand; the recipe hash changes, so lock again.
 
-Against the shipped world (`preview/tests/city-kit-shipped-quarters.test.js`): sixteen committed neighborhoods, 30 blocks, derive the same plan from quarters as from their hand-authored blocks, with only the artistic fields carried over (style, ranges, names, `front`, `sides`, `court`). The two terrace studio rows were hand-placed half a metre off Terrace Lane; a quarter flush to the lane moves every shell that half metre, and six rear wings, half a metre deeper, gain a bay. The reproduction keeps each block's rectangle: most of them stop short of their land by design at district seams and site edges, so loosening the rectangles moves their walls; the saving is for new neighborhoods, where the kit's placement is accepted. Two rules make the shipped courts and edges derivable: hand-placed furniture may stand in a derived block's court (open ground), and a stated `front` on the site's own edge faces the neighbouring recipe's street, with a warning.
+The shipped world is migrated (`preview/tests/city-kit-shipped-quarters.test.js`): sixteen committed neighborhoods, 30 blocks, were rewritten from hand-authored blocks to quarters by `destination migrate`, which keeps each block's land and artistic fields (style, ranges, names, `court`), drops the `front` and `sides` the auto rule reproduces (six rows take the rule; 24 quarters still state the front the author chose), and proves itself against `geometry`, the hash of the ground (pieces, surfaces, solids, lanterns, stats) that every lock recorded on the authored form first. The migrated recipes put the same ground piece for piece; their plan hashes changed because the recipe did. Each says `open: "ground"` because its seams and verges are ground by design, and carries `migrated: { blocks, geometry }`. The two terrace studio rows were hand-placed half a metre off Terrace Lane, so no quarter form reproduces them and they stay authored: a quarter flush to the lane moves every shell that half metre, and six rear wings, half a metre deeper, gain a bay. The migration kept every rectangle: no shipped block fills its land out to the streets, so a loose rectangle would move its walls; the rectangles are the art direction. Two rules make the shipped courts and edges derivable: hand-placed furniture may stand in a derived block's court (open ground), and a stated `front` on the site's own edge faces the neighbouring recipe's street, with a warning. `destination layout <recipe> --freeze` is the reverse: the derived blocks written back as authored ones.
 
 
 ## Start from a geographic reference
@@ -129,29 +130,30 @@ pnpm run destination build config/destinations/garden-blocks-kit.json --lock
 pnpm run destination check
 ```
 
-The compiler's drawing (six roads, sixteen parcels) is deterministic. The reference step keeps the four streets and four parcels inside the site, snaps parcel edges to the street corridors, and writes the recipe with a placeholder name per block and a budget line. The build derives four blocks of 32 shells on the parcels, 56 street trees and 16 lamps, locks the plan and writes `studio-region.json`, which World Studio opens with **Open JSON** (the `city-kit-studio` journey does so in a browser). What the author typed: four site numbers, one style, two spacings and eight shop names. What the tools wrote: 80 numbers of streets, furnishing and quarters, 236 pieces. The hand-authored Nineteenth & Yale crossroads, the same size, types 70 numbers for its streets, plaza, blocks, landmark and furniture, each block rectangle kept flush to a street by hand.
+The compiler's drawing (six roads, sixteen parcels) is deterministic. The reference step keeps the four streets and four parcels inside the site, snaps parcel edges to the street corridors, and writes the recipe with a placeholder name per block and a budget line. The build derives four blocks of 32 shells on the parcels, 56 street trees and 16 lamps, locks the plan and writes `studio-region.json`, which World Studio opens with **Open JSON** (the `city-kit-studio` journey does so in a browser). What the author typed: four site numbers, one style, two spacings and eight shop names. What the tools wrote: 80 numbers of streets, furnishing and quarters, 236 pieces. The Nineteenth & Yale crossroads, the same size, types 70 numbers for its streets, plaza, quarters, landmark and furniture, each quarter rectangle kept flush to a street by hand when its blocks were authored (it is migrated now, with the same rectangles).
 
 ## Production effort, measured
 
 `pnpm run destination effort` measures the two things the kit is for, on every committed recipe, and `--write` refreshes `data/reports/city-kit-effort.json`, which `preview/tests/city-kit-effort.test.js` holds to the recipes. The counts are values an author must type and keep consistent (numbers everywhere, names in name fields), split into the massing the kit can derive (streets, blocks, quarters) and the dressing that stays hand-typed by design in every form (plazas, landmarks, furniture).
 
-| Shipped world as authored, 2026-10-29 | |
+| Shipped world, 2026-10-29 (16 recipes migrated to quarters, 2 authored) | |
 | --- | --- |
 | Recipes with blocks, blocks, shells | 18, 32, 354 |
-| Massing numbers typed (streets and blocks) | 697, about 2 per shell |
+| Massing numbers typed (streets, blocks and quarters) | 697, about 2 per shell |
+| Frontage words typed (`front`, `sides`) | 43, down from 64: the migration dropped 21 of the 60 in its 30 blocks |
 | All typed values | 2607 numbers and 205 names |
 | Reference example (`garden-blocks-kit`): typed by the author | 4 site numbers, 2 spacings, 1 style, 8 names for 32 shells (0.19 numbers per shell) |
 | Reference example: written by the tools | 80 numbers of streets, furnishing and quarters |
 
-One art-direction change, every street 2 m wider, applied to each shipped recipe in both forms:
+One art-direction change, every street 2 m wider, applied to each shipped recipe in both forms (a migrated recipe's authored form is its derived blocks frozen):
 
-| | As authored | As quarters |
+| | With authored blocks | As quarters |
 | --- | --- | --- |
 | Block rectangles to retype | 32 (128 numbers), every block of every recipe | 0 |
 | Shells left standing in the street if nothing is retyped | 180, and the assembler does not refuse them | 0 |
 | Shells after the edit | 354 in the street or retyped | 314 on the land the wider streets leave |
 
-The shipped recipes stay as authored (their rectangles are the art direction, see the loose-rectangle note above), so this is the cost they carry per street edit, not a change to them. The quarter form that `city-kit-shipped-quarters.test.js` proves reproduces each plan takes the edit for free; a recipe started from a reference types a tenth of the massing numbers per shell of the hand-authored crossroads.
+Sixteen of the eighteen take the edit for free now that they are quarters; the two terrace recipes still carry the authored cost. The migration itself saved no numbers (every rectangle stayed, see the loose-rectangle note above) and 21 frontage words; its gain is every later street edit. A recipe started from a reference types a tenth of the massing numbers per shell of the hand-authored crossroads.
 
 ## Open a plan in World Studio
 
@@ -163,10 +165,11 @@ The shipped recipes stay as authored (their rectangles are the art direction, se
 pnpm run destination build config/destinations/bayou-market-commons.json   # plan.json, plan.svg, report.json, studio-region.json under .runtime/destinations/<id>-<seed>/
 pnpm run destination build config/destinations/nineteenth-and-yale.json --seed 78
 pnpm run destination build config/destinations/bayou-market-commons.json --lock   # after review: update the committed lock
-pnpm run destination check                                                       # every committed lock still reproduces
+pnpm run destination check                                                       # every committed lock still reproduces, plan hash and geometry hash
 pnpm run destination override config/destinations/bayou-market-commons.json bayou-market-commons/garden-court/parcel-2 --set roof='"stepped"' --note "Art pass"
 pnpm run destination preview config/destinations/bayou-market-commons.json        # how to open it in-engine
 pnpm run destination layout config/destinations/layout-grid-example.json          # the land each quarter claims and the blocks it derives; --freeze writes them as authored blocks
+pnpm run destination migrate config/destinations/<recipe>.json [--write]        # authored blocks as quarters in the leanest form that reproduces the lock's geometry; --write rewrites the recipe and its lock
 pnpm run destination effort [config/destinations/<recipe>.json ...] [--write]    # typed values per recipe and the cost of one street edit, as authored and as quarters; --write refreshes data/reports/city-kit-effort.json
 pnpm run destination reference preview/public/data/district.json --site=-2910,-1400,-2760,-1280 --id district-crop   # a recipe skeleton from the mapped roads inside a site
 pnpm run destination reference data/generated/neighborhoods/garden-001/region.json --site=-96,-96,8,8 --id garden-sw   # a Studio compiler candidate: its parcels become quarters

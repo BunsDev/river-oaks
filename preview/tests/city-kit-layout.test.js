@@ -5,7 +5,7 @@ import { mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assembleNeighborhood, canonicalJSON, validateRecipe, walkableConnectivity } from '../../shared/city-kit/assemble.js';
+import { geometryHash, assembleNeighborhood, canonicalJSON, validateRecipe, walkableConnectivity } from '../../shared/city-kit/assemble.js';
 import { expandLayout, streetCorridor, validateLayout } from '../../shared/city-kit/layout.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
 import { buildCityKit } from '../src/city-kit/render.js';
@@ -21,21 +21,23 @@ const overlaps = (a, b) => a[0] < b[2] - 1e-6 && b[0] < a[2] - 1e-6 && a[1] < b[
 // A recipe like the example, with its own quarters so a test can shape them.
 const grid = (changes = {}) => ({ ...structuredClone(example), ...changes });
 
-test('quarters reproduce the hand-authored Nineteenth & Yale crossroads piece for piece', () => {
-  // Three rows face Nineteenth, the main street, by the auto rule; the garden court
-  // deliberately faces the quieter cross street, which its quarter states.
-  const quarters = yale.blocks.map(block => ({ id: block.id, rect: block.rect, style: block.style, depth: block.depth, storeys: block.storeys, bays: block.bays, names: block.names,
-    ...(block.court ? { court: block.court, front: 'yale-walk' } : {}) }));
-  const byLayout = { ...yale, blocks: [], layout: { quarters } };
-  const authored = assembleNeighborhood(yale), derived = assembleNeighborhood(byLayout);
-  assert.equal(geometry(derived), geometry(authored));
-  assert.deepEqual(derived.provenance.overrides, authored.provenance.overrides);
+test('the migrated Nineteenth & Yale crossroads derives its four blocks from quarters: three rows face Nineteenth by the auto rule, the garden court states its front', () => {
+  // Migrated by `destination migrate` (increment 8): the quarters keep each block's land and
+  // artistic fields; the fronts and sides that the auto rule reproduces were dropped.
+  assert.equal(yale.blocks, undefined);
+  assert.deepEqual(yale.layout.quarters.map(quarter => [quarter.id, quarter.front ?? 'auto', quarter.sides ?? 'auto']),
+    [['northwest-row', 'auto', 'auto'], ['northeast-row', 'auto', 'auto'], ['southwest-row', 'auto', 'auto'], ['southeast-court', 'west', 'auto']]);
+  const derived = assembleNeighborhood(structuredClone(yale)), lock = read('nineteenth-and-yale.lock');
   assert.deepEqual(derived.provenance.layout.blocks.map(block => [block.id, block.front, block.sides]),
     [['northwest-row', 'south', ['east']], ['northeast-row', 'south', ['west']], ['southwest-row', 'north', ['east']], ['southeast-court', 'west', ['north']]]);
   assert.deepEqual(derived.provenance.layout.warnings, []);
+  assert.equal(derived.hash, lock.hash);
+  assert.equal(geometryHash(derived), lock.geometry, 'the ground the authored blocks put down, recorded before the migration');
+  assert.equal(yale.layout.migrated.geometry, lock.geometry);
   // Hand-authored recipes carry no layout provenance, so their committed hashes stand.
+  const terrace = read('bayou-terrace-north'), authored = assembleNeighborhood(terrace);
   assert.equal(authored.provenance.layout, undefined);
-  assert.equal(authored.hash, read('nineteenth-and-yale.lock').hash);
+  assert.equal(authored.hash, read('bayou-terrace-north.lock').hash);
 });
 
 test('the example grid derives blocks that face the main street, split back to back and face crossing streets at corners', () => {

@@ -70,9 +70,9 @@ test('the locked plan places buildings on every parcel and becomes a Studio regi
 
 test('what the author typed: four site numbers, a style, two spacings and eight names, against the 70 of the hand-authored crossroads', () => {
   const yale = read(join(root, 'config/destinations/nineteenth-and-yale.json'));
-  const typedByHand = numbers({ streets: yale.streets, plazas: yale.plazas, blocks: yale.blocks, landmarks: yale.landmarks, furniture: yale.furniture });
+  const typedByHand = numbers({ streets: yale.streets, plazas: yale.plazas, layout: { quarters: yale.layout.quarters }, landmarks: yale.landmarks, furniture: yale.furniture });
   const generated = numbers({ streets: committed.streets, layout: committed.layout });
-  assert.equal(typedByHand, 70, 'Nineteenth & Yale types 70 numbers for its streets, plaza, 4 blocks, landmark and furniture');
+  assert.equal(typedByHand, 70, 'Nineteenth & Yale, migrated to quarters, still types 70 numbers for its streets, plaza, 4 quarters, landmark and furniture');
   assert.equal(generated, 80, 'the tools wrote the streets, their furnishing and the quarters of the example');
   assert.equal(committed.layout.quarters.flatMap(q => q.names).length, 8);
   console.log(`typed by hand for Nineteenth & Yale: ${typedByHand} numbers; typed for Garden Blocks (kit): 4 site numbers, 1 style, 2 spacings, 8 names; tools wrote ${generated} numbers and placed 32 buildings, 56 trees and 16 lamps`);
