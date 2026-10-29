@@ -353,3 +353,7 @@ paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs 
   guard. The `c1f58ffb` run (40811842027) was superseded by the push; the `b757d195` run
   (40812794923) ended 17 success / 2 failure (preview unit and the aggregate). Fixed by adding the
   guard; the run on the fixed head is recorded below.
+- **Hosted on `21872147`** (the guard fix): Verify run 40945602993 **success on attempt 1, 19 jobs**
+  (preview unit, the shards and the aggregate all green); the Desktop workflow ran on the same
+  push. The runtime files are identical to `700bddb2`; every commit after it adds test harness,
+  journey, receipt, script-guard or documentation files only.
