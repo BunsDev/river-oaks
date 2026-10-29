@@ -272,7 +272,7 @@ jobs:
         # spatial-streets alone takes about as long as the other journeys combined.
         shard:
           - id: streets
-            journeys: spatial-streets world-studio
+            journeys: spatial-streets world-studio city-kit-studio
           - id: places
             journeys: contextual-first-visit store-intro photo-mode rail-navigation places-guide destination-minimap spatial-circulation office-desk office-visit office-lift-ride office-computer-embed
           # The Gardens campus revision: leases, workstations and the private desk (#510), and
