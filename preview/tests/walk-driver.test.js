@@ -20,7 +20,7 @@ const inputEnd=inputSource.indexOf("  host.addEventListener('blur', clear);",inp
 assert.ok(inputStart>=0&&inputEnd>inputStart);
 const installInput=new Function('host','document','keys','isGameplayKey','transport','dialogueOpen','getVoice',`const active=true; ${inputSource.slice(inputStart,inputEnd)}`);
 const savedWindow=globalThis.window;
-const run=async(makeDriver,latencyMs,fps,releaseDuringFast=false,offset=null)=>{
+const run=async(makeDriver,latencyMs,fps,releaseDuringFast=false,offset=null,inputLatencyMs=latencyMs)=>{
   let clock=1000,frameClock=0,mouseX=0,mouseDown=false;
   const start=[target[0]+(offset??(releaseDuringFast?8:.8)),target[1]],yaw=Math.PI/2,keys=new Set(),physicalKeys=new Set();
   const host=new EventTarget(),doc=new EventTarget(),win=new EventTarget();
@@ -33,12 +33,14 @@ const run=async(makeDriver,latencyMs,fps,releaseDuringFast=false,offset=null)=>{
   assert.ok(Math.hypot(state.position[0]-start[0],state.position[2]+start[1])<1e-9);
   const advance=ms=>{clock+=ms;frameClock+=ms;while(frameClock>=1000/fps){stepWalking(state,env,{forward:keys.has('KeyW')?1:0,fast:keys.has('ShiftLeft')},1/fps);frameClock-=1000/fps;}};
   const snapshot=()=>({id:'fixture',position:[state.position[0],-state.position[2],env.groundAt(state.position[0],state.position[2])],yaw:state.yaw});
-  globalThis.window={__riverCarriage:()=>({pose:state}),__riverMultiplayer:()=>({selfId:'fixture',snapshot:{players:[snapshot()]}})};
+  globalThis.window={__riverCarriage:()=>({pose:state}),__riverMultiplayer:()=>({selfId:'fixture',snapshot:{players:[snapshot()]}}),
+    // The next frame's callback, at that frame's time.
+    requestAnimationFrame:callback=>{advance(1000/fps-frameClock);callback(clock);}};
   const tab={
-    keyboard:{down:async code=>{const repeat=physicalKeys.has(code);physicalKeys.add(code);host.dispatchEvent(keyEvent('keydown',code,repeat));advance(latencyMs);},up:async code=>{physicalKeys.delete(code);doc.dispatchEvent(keyEvent('keyup',code));advance(latencyMs);}},
+    keyboard:{down:async code=>{const repeat=physicalKeys.has(code);physicalKeys.add(code);host.dispatchEvent(keyEvent('keydown',code,repeat));advance(inputLatencyMs);},up:async code=>{physicalKeys.delete(code);doc.dispatchEvent(keyEvent('keyup',code));advance(inputLatencyMs);}},
     mouse:{move:async x=>{if(mouseDown)state.yaw-=(x-mouseX)*.003;mouseX=x;advance(latencyMs);},down:async()=>{mouseDown=true;advance(latencyMs);},up:async()=>{mouseDown=false;advance(latencyMs);}},
     locator:()=>({focus:async()=>advance(latencyMs),boundingBox:async()=>{advance(latencyMs);return{x:0,y:0,width:1280,height:900};}}),
-    evaluate:async(fn,arg)=>{const result=structuredClone(fn(arg));advance(latencyMs);return result;},
+    evaluate:async(fn,arg)=>{const result=structuredClone(await fn(arg));advance(latencyMs);return result;},
     waitForTimeout:async ms=>{advance(ms);if(releaseDuringFast&&!releaseInjections&&physicalKeys.has('KeyW')){win.dispatchEvent(new Event('blur'));releaseInjections++;}},
     waitForFunction:async(fn,arg,options)=>{const deadline=clock+(options?.timeout??10000);while(!fn(arg)){advance(1000/fps);if(clock>deadline)throw new Error('predicate timeout');}advance(latencyMs);},
   };
@@ -56,6 +58,22 @@ for(const latencyMs of [100,150,200])test(`near waypoint reaches15cm with9fps an
     assert.ok(result.remaining<=.15,`arrival beyond15cm: ${result.remaining}`);
     assert.equal(result.routes,1);
     assert.ok(result.simulatedMs<120000,'keep the existing waypoint deadline');
+  }finally{globalThis.window=savedWindow;}
+});
+
+// Hosted CPU-rendered runners can fall to one to three frames a second. A slow press shorter
+// than a frame is released before any frame reads it and moves nothing: two hosted runs
+// ended 0.21 m short of a waypoint after 12 and 94 such presses (bayou-heights-return,
+// bayou-terraces, 2026-10-28/29). Key events reach the browser in milliseconds while page
+// evaluations wait for the starved main thread, so input latency is modelled apart from
+// observation latency. The driver holds the key until the walker has moved.
+for(const [fps,latencyMs] of [[1,1000],[2,500],[3,333]])test(`near waypoint reaches15cm at ${fps}fps with ${latencyMs}ms observation and 5ms input latency`,async()=>{
+  try{
+    const result=await run(driver,latencyMs,fps,false,.21,5);
+    assert.equal(result.status,'passed',result.error??'waypoint failed');
+    assert.ok(result.remaining<=.15,`arrival beyond15cm: ${result.remaining}`);
+    assert.equal(result.routes,1);
+    assert.ok(result.simulatedMs<30000,`the last 0.21 m took ${result.simulatedMs} ms of a 120 s waypoint deadline`);
   }finally{globalThis.window=savedWindow;}
 });
 
@@ -92,13 +110,14 @@ const runPair=async(makeDriver,latencyMs,fps,act=(driver,tab,label)=>driver.walk
     const start=[target[0]+offset,target[1]];assert.ok(env.isFree(start[0],-start[1]));
     page.state=createWalkingState(env,start,-Math.PI/2);
     page.snapshot=()=>({id:'fixture',position:[page.state.position[0],-page.state.position[2],env.groundAt(page.state.position[0],page.state.position[2])],yaw:page.state.yaw});
-    const window={__riverCarriage:()=>({pose:page.state}),__riverMultiplayer:()=>({selfId:'fixture',snapshot:{players:[page.snapshot()]}})};
+    const window={__riverCarriage:()=>({pose:page.state}),__riverMultiplayer:()=>({selfId:'fixture',snapshot:{players:[page.snapshot()]}}),
+      requestAnimationFrame:callback=>{advance(1000/fps-page.frameClock);callback(clock);}};
     const inPage=fn=>{globalThis.window=window;return fn();};
     page.tab={
       keyboard:{down:async code=>{const repeat=page.physicalKeys.has(code);page.physicalKeys.add(code);page.host.dispatchEvent(keyEvent('keydown',code,repeat));advance(latencyMs);},up:async code=>{page.physicalKeys.delete(code);page.doc.dispatchEvent(keyEvent('keyup',code));advance(latencyMs);}},
       mouse:{move:async x=>{if(page.mouseDown&&page.captured)page.state.yaw-=(x-page.mouseX)*.003;page.mouseX=x;advance(latencyMs);},down:async()=>{page.mouseDown=true;page.captured=lastPress===null||lastPress===name;lastPress=name;advance(latencyMs);},up:async()=>{page.mouseDown=false;advance(latencyMs);}},
       locator:()=>({focus:async()=>advance(latencyMs),boundingBox:async()=>{advance(latencyMs);return{x:0,y:0,width:1280,height:900};}}),
-      evaluate:async(fn,arg)=>{const result=structuredClone(inPage(()=>fn(arg)));advance(latencyMs);return result;},
+      evaluate:async(fn,arg)=>{const result=structuredClone(await inPage(()=>fn(arg)));advance(latencyMs);return result;},
       waitForTimeout:async ms=>advance(ms),
       waitForFunction:async(fn,arg,options)=>{const deadline=clock+(options?.timeout??10000);while(!inPage(()=>fn(arg))){advance(1000/fps);if(clock>deadline)throw new Error('predicate timeout');}advance(latencyMs);},
     };
