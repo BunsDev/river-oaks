@@ -374,6 +374,32 @@ testRedis('a slow first load is paid once per lease, not from the first request\
   assert.deepEqual((await room.read()).snapshot.players.map(player=>player.id),['alice']);
 });
 
+testRedis('a load that outlives the lease is prepared before the lease and still commits',async t=>{
+  const f=await setup(t),prefix=`{river-oaks:test:${randomUUID()}}`,sha=c=>c.repeat(64);
+  const catalog=slow=>({get:async()=>({regionSha256:sha('a')}),getRegion:async()=>{if(slow)await delay(6000);return worldData;}});
+  const first=createRedisRoom({redis:f.redis,prefix,worldId:'garden-2',worldData,regionSha256:sha('a'),regionCatalog:catalog(false),authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
+  assert.equal((await first.request({type:'join',identity:f.identity('alice'),connectionId:'alice-socket'})).ok,true);
+  await first.close();
+  // The stored checkpoint names a region the next deployment no longer ships, so its load fetches
+  // the region from the catalog; six seconds there outlives the five-second lease. Taken under
+  // the lease, that load could never commit: the fence saw the lease expire, the next tick
+  // repeated the load, and the first join timed out (#754).
+  const key=`${prefix}:state`,stored=JSON.parse(inflateSync(await f.redis.getBuffer(key)));
+  await f.redis.set(key,deflateSync(JSON.stringify({...stored,regionSha256:sha('a')})));
+  const logs=[];t.mock.method(console,'info',message=>logs.push(message));
+  const next=createRedisRoom({redis:f.redis,prefix,worldId:'garden-2',worldData,regionSha256:sha('b'),regionCatalog:catalog(true),authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
+  try {
+    const started=performance.now(),result=await next.request({type:'join',identity:f.identity('bob'),connectionId:'bob-socket'});
+    assert.equal(result.ok,true,JSON.stringify(result));
+    assert.ok(performance.now()-started<12000,'one load, not a repeated one');
+    assert.deepEqual((await next.read()).snapshot.players.map(player=>player.id).sort(),['alice','bob']);
+    assert.equal(await f.redis.get(`${prefix}:lease`)!==null,true,'the committing lease is held');
+  } finally {
+    await next.close();
+    const keys=await f.redis.keys(`${prefix}:*`);if(keys.length)await f.redis.del(...keys);
+  }
+});
+
 testRedis('owned ticks use two Redis round trips and throttled ticks do not refetch full views',async t=>{
   const f=await setup(t);let tracking=false;const calls=[];
   const proxy=new Proxy(f.redis,{get(target,key){const value=target[key];if(typeof value!=='function')return value;return async(...args)=>{if(tracking)calls.push(key);return value.apply(target,args);};}});

@@ -171,30 +171,26 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     lastView=buffer?unpack(buffer):null;
     return lastView;
   }
-  async function runTick() {
-    if(closed)return null;
-    if(performance.now()-lastAttempt<TICK_MS)return lastView;
-    lastAttempt=performance.now();
-    const [ownership,stored,batch,otherView]=await redis.evalBuffer(ACQUIRE,4,keys.lease,keys.state,keys.queue,keys.view,token,LEASE_MS,BATCH_SIZE,cached?'0':'1');
-    if(!ownership){cached=null;lastView=otherView?unpack(otherView):null;return lastView;}
-    // A fresh lease always reloads durable state, even for this process's token.
-    // A tentative mutation is reusable only after its fenced commit succeeds.
-    if(ownership===2)cached=null;
-    const time=now();
-    let previous=cached?.previous??null,connections=cached?.connections??new Map();
-    if(!cached && stored) {
-      previous=unpack(stored);
-    }
-    let currentData=cached?.currentData??worldData;
-    let currentHash=cached?.currentHash??previous?.regionSha256??regionSha256;
-    if(!cached && previous?.regionSha256 && previous.regionSha256!==regionSha256) {
+  // Loading a durable checkpoint builds the served world and migrates the checkpoint to this
+  // deployment's revision: synchronous work that a stack rollback stretches past the lease
+  // (walking every occupant home took over ten seconds on a loaded hosted runner, #754). Under
+  // the lease that work can never commit: the fence sees the lease expire first, the next tick
+  // repeats the load, and the room never serves. So a room without a loaded state prepares the
+  // world before taking the lease and uses it afterwards when the stored bytes are unchanged;
+  // the lease then covers only the batch and the commit. Refusals (another region, an invalid
+  // checkpoint, a newer district epoch) surface the same way, only once the lease is held.
+  async function prepare(stored) {
+    const previous=stored?unpack(stored):null,connections=new Map();
+    let currentData=worldData;
+    let currentHash=previous?.regionSha256??regionSha256;
+    if(previous?.regionSha256 && previous.regionSha256!==regionSha256) {
       if(!regionCatalog || (await regionCatalog.get(worldId))?.regionSha256!==previous.regionSha256)
         throw new Error('Invalid durable town region');
       currentData=await regionCatalog.getRegion(worldId);
     }
-    let world=cached?.world??createSharedWorld(currentData,worldOptions);
+    const world=createSharedWorld(currentData,worldOptions);
     let districtMigration = null;
-    if(!cached && previous) {
+    if(previous) {
       let checkpointReason = 'unknown';
       if(!record(previous) || !(previous.version===1 && worldId===DEFAULT_WORLD_ID || [2,...(characters?[3]:[])].includes(previous.version) && previous.worldId===worldId)
         || !Number.isSafeInteger(previous.revision) || previous.revision<0
@@ -252,6 +248,30 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if(connections.size!==world.players.size)throw new Error('Invalid durable town roster');
     }
+    return {bytes:stored,previous,connections,currentData,currentHash,world,districtMigration};
+  }
+  const generationOf=owner=>Number(/^v(\d+):/.exec(owner)?.[1]??2);
+  async function runTick() {
+    if(closed)return null;
+    if(performance.now()-lastAttempt<TICK_MS)return lastView;
+    lastAttempt=performance.now();
+    let loaded=null;
+    if(!cached) {
+      // Only when this process would take the lease: a follower keeps reading the view. A
+      // refusal here is retried under the lease below, where it has always been raised.
+      const owner=await redis.get(keys.lease);
+      if(!owner || owner===token || generationOf(owner)<generationOf(token))
+        loaded=await prepare(await redis.getBuffer(keys.state)).catch(()=>null);
+    }
+    const [ownership,stored,batch,otherView]=await redis.evalBuffer(ACQUIRE,4,keys.lease,keys.state,keys.queue,keys.view,token,LEASE_MS,BATCH_SIZE,cached?'0':'1');
+    if(!ownership){cached=null;lastView=otherView?unpack(otherView):null;return lastView;}
+    // A fresh lease always reloads durable state, even for this process's token.
+    // A tentative mutation is reusable only after its fenced commit succeeds.
+    if(ownership===2)cached=null;
+    const time=now();
+    if(!cached && !(loaded && (stored?loaded.bytes!==null&&stored.equals(loaded.bytes):loaded.bytes===null)))loaded=await prepare(stored);
+    const {previous,connections,currentData:loadedData,currentHash:loadedHash,world:loadedWorld,districtMigration}=cached?{...cached,districtMigration:null}:loaded;
+    let currentData=loadedData,currentHash=loadedHash,world=loadedWorld;
     const {pending:pendingSelections,versions:selectionVersions}=restoreSelections(previous,Boolean(characters));
     for(const userId of selectionVersions.keys())if(!world.players.has(userId))throw new Error('Invalid durable character selection');
     // Cache only within this commit: presence and queued commands share current

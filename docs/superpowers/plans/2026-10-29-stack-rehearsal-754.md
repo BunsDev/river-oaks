@@ -1,4 +1,4 @@
-# Stack rehearsal: pay the room's first load outside the join budget (#754)
+# Stack rehearsal: load the room before the lease and outside the join budget (#754)
 
 Task `stack-rehearsal-754-20261029`, branch `fix/stack-rehearsal-754-20261029`, worktree
 `river-oaks-rehearsal-754` created at main `7cc1fb87` on 2026-10-29.
@@ -42,14 +42,41 @@ districts). That load is synchronous CPU work, so on a loaded 4-vCPU runner it h
 loop past the 7 s timer, which fired at 11.6 s and bounced the join. Not a slow test wait: the
 first visitor after a deploy whose migration outlives 7 s is refused by the server itself.
 
+**Second attribution on `e48fb42b` (hosted run 40817470699, 2026-10-29 04:23–04:35Z), with the
+request-budget fix in place.** The same assertion: closed `1013 The town cannot accept this
+connection.` at 18,303 ms, waited 23,561 ms, no message, and the node's log still ending at the
+Woodland migration, so the rollback node had not committed within 23 s either. The join's budget
+was now 27 s, so a plain slow load cannot explain an 18 s refusal; a load that is repeated can.
+`ACQUIRE` sets the lease for `LEASE_MS` (5 s) and the fenced `COMMIT` refuses once the lease has
+expired; the load under the lease is synchronous and took about 11 s on the runner, so the first
+commit was fenced out, `cached` was cleared, the next tick repeated the whole load (about 7 s,
+warm), and the 7 s response deadline that started after the first load fired at 18 s. A load
+longer than the lease could never commit: the room never served that deployment on that runner.
+Locally the load is 1.6 s, under the lease, so the condition never appears here.
+
 ## Change
 
-- `server/redis-room.js`: a request that finds the room without a loaded state (`cached` null:
+- `server/redis-room.js` (`runTick`): a room without a loaded state (`cached` null) now loads
+  before taking the lease: it reads the lease key, and when the lease is free, its own or an
+  older writer generation (the cases where `ACQUIRE` would grant it), it reads the stored
+  checkpoint and runs the whole `prepare` step (unpack, region lookup, world construction,
+  checkpoint validation and district migration, presence and roster checks) with no lease held.
+  `ACQUIRE` then returns the stored bytes; if they equal the prepared bytes the prepared world is
+  used, otherwise the load runs again under the lease as before. The lease covers only the batch
+  and the commit. A follower (another live writer holds the lease) does not load and keeps
+  reading the view, as before. A refusal from the pre-lease load (`Invalid durable …`) is
+  dropped and re-raised by the load under the lease, so refusals surface exactly where they did.
+- `server/redis-room.js` (`request`): a request that finds the room without a loaded state (`cached` null:
   a fresh process, a lost lease or a failed commit) first awaits the loading tick, bounded by a new
   `LOAD_MS` (20 s), and only then starts its `REQUEST_MS` response deadline; the outer race timer
   grows by the same allowance for that request only. A loaded room's budget is unchanged (7 s).
   A follower (another process holds the lease) is unchanged: its tick returns at once without
   loading. Errors from the loading tick (`Invalid durable …`) still propagate as before.
+- `server/tests/redis-room.test.js`: a new test stores a checkpoint naming a region the next
+  deployment no longer ships and gives that deployment a catalog whose region fetch takes 6 s
+  (longer than the 5 s lease); the first join must succeed in one load with the lease held at
+  the commit. Against main's `redis-room.js` it fails with `request_timeout` after 7.0 s; with
+  the change it passes in 6.0 s.
 - `server/tests/redis-room.test.js`: the stalled-commit test now stalls the commit of a loaded
   room (alice joined, bob's commit stalls) so it keeps proving the 7 s deadline and that the
   tentative join is not published; a new test holds the lease acquisition 7.5 s past the request
@@ -74,7 +101,19 @@ Local checks use the isolated Redis at `127.0.0.1:16586`; host one-minute load 3
 | `REDIS_URL=… node --test server/tests/stack-activation-rehearsal.test.js` ×2 | fix (uncommitted) | Passed twice, 29.1 s and 28.9 s. |
 | `REDIS_URL=… pnpm run test:server` (whole server suite with Redis) | fix (uncommitted) | 1,403 passed, 0 failed, 0 skipped (119 s), with the new and reworked room tests included. |
 | `pnpm run verify` (core) | fix (uncommitted) | Passed 2026-10-29T04:06:38Z (`.runtime/agent/core.json`): tooling 289; preview 4,348 + 1 existing skip; server 1,077 + 284 Redis skips (covered by the row above); desktop 127 + 5 skips; Ruff; pytest 170; demo and demo-verify; secret scan clean. |
-| Hosted checks on the fix | fix | `8e6668cb` 27/27 success (run 40815957232); `preview checks` passed first attempt (04:07–04:22Z), rehearsal 44.5 s on the runner, the new room tests 7.0 s and 7.5 s. One sample against a one-in-four failure rate on main; the ledger-only push after this adds a second. |
+| `node --test server/tests/redis-room.test.js` (pre-lease load, before the new test) | pre-lease load (uncommitted) | 22 passed, 0 failed, 0 skipped. |
+| `node --test server/tests/stack-activation-rehearsal.test.js` | pre-lease load (uncommitted) | Passed. |
+| New lease test against main's `redis-room.js` (file swapped for the run only) | main | Failed: `request_timeout` after 7.0 s, as #754 does on the runner. |
+| New lease test with the change | pre-lease load (uncommitted) | Passed in 6.0 s. |
+| `node --test server/tests/stack-activation-rehearsal.test.js` (final code) | final (uncommitted) | Passed, 29.4 s. |
+| `REDIS_URL=… pnpm run test:server` (final code) | final (uncommitted) | 1,404 passed, 0 failed, 0 skipped (125 s), the lease test included. |
+| `pnpm run verify` (core, final code) | final (uncommitted) | Passed 2026-10-29T04:52:17Z (`.runtime/agent/core.json`): tooling 289; preview 4,348 + 1 existing skip; server 1,077 + 285 Redis skips (covered by the row above); desktop 127 + 5 skips; Ruff; pytest; demo and demo-verify; secret scan clean. |
+| Hosted checks on the final code | final | Pending at commit time; recorded in PR #756 once the run finishes. |
+| Hosted checks on the request-budget fix alone | `8e6668cb` | `8e6668cb` 27/27 success (run 40815957232); `preview checks` passed first attempt (04:07–04:22Z), rehearsal 44.5 s on the runner, the new room tests 7.0 s and 7.5 s. |
+
+Hosted checks on `e48fb42b` (ledger-only over `8e6668cb`): 26/27, `preview checks` failed the
+same assertion with the diagnostic quoted under Finding (1013 at 18.3 s), rehearsal 48.0 s on
+the runner. That run is the evidence for the second attribution.
 
 Main's `preview checks` job on its last twelve Verify runs (2026-10-28 12:59–21:04Z): failed on
 `36e906b2`, `e5cfada6` and `7cc1fb87`, passed on the other nine (the `be166248` run failed
@@ -82,19 +121,25 @@ elsewhere). About one in four main runs, every other run late in the day.
 
 ## Gaps
 
-- The loading allowance (`LOAD_MS`, 20 s) is chosen from one hosted sample (the timer fired at
-  11.6 s) with margin under the rehearsal's 30 s first-snapshot wait; a runner slower than that
-  still fails the rehearsal, now with the socket close and log in the message. The combined
+- The loading allowance (`LOAD_MS`, 20 s) is chosen from two hosted samples (loads of about
+  11 s) with margin under the rehearsal's 30 s first-snapshot wait; a runner slower than that
+  still fails the rehearsal, now with the socket close and log in the message. The load itself
+  is synchronous, so a request's timer cannot fire while it runs; the allowance matters at the
+  first await after it. The combined
   budget for a request that both loads and stalls (`LOAD_MS + REQUEST_MS`, 27 s) is not covered
   by a test: proving it costs 27 s per run, and the stalled-commit test covers the loaded-room
   deadline that matters in steady state.
 - Hosted `preview checks` passes about three runs in four on main without the fix, so one green
-  hosted run on the fix is weak evidence; main after landing is the statistic.
+  hosted run is weak evidence; `8e6668cb` passed once and its ledger push failed, which is what
+  found the lease cause. Main after landing is the statistic.
+- The pre-lease load reads the lease key and the state once more per unloaded tick (two extra
+  Redis round trips, only while the room has no loaded state); the round-trip test for owned
+  ticks still passes because a loaded room's tick is unchanged.
 - Warming the configured world's room at gateway boot (before `listen`) would move the load
   ahead of the first visitor entirely; not done here, since the lease may still be held by the
   draining deployment during overlap and the request-side fix covers every reload path.
 
 ## Next step
 
-Watch the second hosted sample (this ledger push) and PR #729's `preview checks` once this lands.
-Mark ready and land only with Val's authorization.
+Watch hosted `preview checks` on the final head and, after it, PR #729's. Mark ready and land
+only with Val's authorization.
