@@ -766,7 +766,7 @@ function populateWorld(data) {
   }
   worldGroup = new THREE.Group();
   // Facades, arcade rails and neon dissolve near the camera, like trees, so a take-off beside the shops never fills the view.
-  buildingMesh = seeThroughNearCameraIn(buildDistrictBuildings(data));
+  buildingMesh = seeThroughNearCameraIn(buildDistrictBuildings(data, { kitFinish: cityKitFinish }));
   const ground=buildGround(data.eastGardenCommons?{...data,bounds_m:data.eastGardenCommons.districtBounds}:data),roads=buildRoads(data);
   const streetEnvironment=createWalkingEnvironment(data);
   // The Gardens' platform is campus space: no street sidewalk, bench or fountain is generated on it.
@@ -1339,7 +1339,7 @@ if (import.meta.env.DEV) window.__riverSpatialStream = () => {
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
     renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls,
     // The opted-in kit finish and what each attached part was built with (#742).
-    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [] } };
+    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null } };
 };
 if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
 if (import.meta.env.DEV) window.__riverExteriorCull = () => {

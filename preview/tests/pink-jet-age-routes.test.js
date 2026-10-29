@@ -3,7 +3,9 @@ import test from 'node:test';
 import { CAMPUS_BODY, campusLevels, campusSupportAt } from '../../shared/garden-campus-layout.js';
 import { createCommonsLayout, insideRect } from '../../shared/east-garden-commons-layout.js';
 import { composeCommonsDestination } from '../../shared/commons-destination.js';
-import { BLANK_LUMA_SPREAD, ROUTE_HOURS, commonsCameras, gardensCameras, imageVerdict, routeOptions, scenePose, validateCameras, validateReport, viewName } from '../e2e/pink-jet-age-routes-plan.mjs';
+import { KIT_FINISHES } from '../../shared/city-kit/catalog.js';
+import { readFinishPreference } from '../src/render-quality.js';
+import { BLANK_LUMA_SPREAD, LIVE_FINISHES, ROUTE_HOURS, commonsCameras, districtPath, gardensCameras, imageVerdict, routeOptions, scenePose, validateCameras, validateReport, viewName } from '../e2e/pink-jet-age-routes-plan.mjs';
 
 // A synthetic District edge and flat edge heights: the same composition the client runs.
 const layout = composeCommonsDestination(createCommonsLayout({ districtBounds: [-2920, -1457, -2666.3, -1167], edgeHeights: Array(13).fill(18.4) }));
@@ -60,7 +62,8 @@ test('options pin graphics and hours, accept only finishes the live world can dr
   assert.deepEqual(routeOptions([], now), { graphics: 'sharp', hours: ['day', 'dusk', 'night'], cameras: null, finish: 'classic', out: '.runtime/pink-jet-age-r9/2026-10-28T20-00-00-000Z' });
   assert.deepEqual(routeOptions(['--graphics=smooth', '--hours=dusk', '--cameras=a01-arrival-e1', '--finish=classic', '--out=/tmp/x'], now),
     { graphics: 'smooth', hours: ['dusk'], cameras: ['a01-arrival-e1'], finish: 'classic', out: '/tmp/x' });
-  assert.throws(() => routeOptions(['--finish=pink']), /not wired into the live world/);
+  assert.equal(routeOptions(['--finish=pink-jet-age'], now).finish, 'pink-jet-age');
+  assert.throws(() => routeOptions(['--finish=pink']), /not a catalog finish/);
   for (const args of [['--graphics=auto'], ['--hours=noon'], ['--graphics=sharp', '--graphics=smooth'], ['--fps=60']]) assert.throws(() => routeOptions(args), /Invalid or duplicate/, args.join(' '));
   assert.ok(ROUTE_HOURS.night <= 19 && ROUTE_HOURS.dusk < ROUTE_HOURS.night && ROUTE_HOURS.day < ROUTE_HOURS.dusk);
 });
@@ -79,4 +82,16 @@ test('a flat frame is blank, a dim one dark, and the report needs one measured v
   assert.throws(() => validateReport({ ...report, views: views.map((view, i) => i ? view : { ...view, image: { verdict: 'blank' } }) }), /image blank/);
   assert.throws(() => validateReport({ ...report, views: views.map((view, i) => i ? view : { ...view, calls: null }) }), /calls/);
   assert.throws(() => validateReport({ ...report, finish: '' }), /finish/);
+});
+
+test('the runner opens the page with the finish the client reads, for every catalog finish', () => {
+  assert.deepEqual(LIVE_FINISHES, Object.keys(KIT_FINISHES));
+  for (const finish of LIVE_FINISHES) {
+    const path = districtPath(finish), search = path.slice(path.indexOf('?'));
+    assert.ok(new URLSearchParams(search).has('render-audit'), path);
+    // A stored opt-in never leaks into a classic capture: the address names it.
+    assert.equal(readFinishPreference({ search, storage: { getItem: () => finish === 'classic' ? 'pink-jet-age' : 'classic' } }), finish, path);
+  }
+  assert.equal(districtPath(), '/?render-audit=1&finish=classic');
+  assert.throws(() => districtPath('neon'), /Unknown finish/);
 });

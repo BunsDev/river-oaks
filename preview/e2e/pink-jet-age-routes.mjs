@@ -3,7 +3,7 @@
 // revision (it composes the Gardens campus too), one authenticated page with the interface
 // hidden, a pinned graphics preset and the cameras and hours in pink-jet-age-routes-plan.mjs.
 //   node preview/e2e/pink-jet-age-routes.mjs [--graphics=sharp|smooth] [--hours=day,dusk,night]
-//     [--cameras=id,id] [--finish=classic] [--out=dir]
+//     [--cameras=id,id] [--finish=classic|pink-jet-age] [--out=dir]
 // Writes <out>/<camera>-<hour>.png, sheet-gardens.jpg and sheet-commons.jpg (cameras by hour)
 // and report.json: served revision, HEAD, graphics, finish, the glow the hour set, per-view
 // draw calls, triangles, frame interval p50/p95, CPU p50 and a luma check that rejects a black
@@ -19,7 +19,7 @@ import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 import { loadDistrictData } from '../../server/district-data.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { campusGlow, launch, openDistrict, sample, setHour, startFixture } from './garden-campus-render-common.mjs';
-import { CLIENT_LATEST_HOUR, ROUTE_HOURS, commonsCameras, gardensCameras, imageVerdict, routeOptions, scenePose, validateCameras, validateReport, viewName } from './pink-jet-age-routes-plan.mjs';
+import { CLIENT_LATEST_HOUR, ROUTE_HOURS, commonsCameras, districtPath, gardensCameras, imageVerdict, routeOptions, scenePose, validateCameras, validateReport, viewName } from './pink-jet-age-routes-plan.mjs';
 
 const options = routeOptions(process.argv.slice(2));
 const revision = COMMONS_REVISION, world = await loadDistrictData({ districtRevision: revision });
@@ -51,10 +51,11 @@ try {
   browser = await launch();
   const meter = await browser.newPage();
   fixture = await startFixture('commons', { districtRevision: revision });
-  session = await openDistrict(browser, fixture, 'commons', { districtRevision: revision, graphics: options.graphics, hideInterface: true });
+  session = await openDistrict(browser, fixture, 'commons', { districtRevision: revision, graphics: options.graphics, hideInterface: true, path: districtPath(options.finish) });
   const { page, errors, firstEntry } = session;
-  // TODO(#747 follow-up): apply options.finish here once the live world accepts one; only
-  // 'classic' passes routeOptions today, and it is what the client already draws.
+  // The page must have drawn the requested finish, or the capture is mislabelled.
+  const appliedFinish = await page.evaluate(() => globalThis.__gardenCampusRoot?.userData.kitFinish ?? null);
+  if (appliedFinish !== options.finish) throw new Error(`asked for ${options.finish}, the campus drew ${appliedFinish}`);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => {});
   for (const [label, hour] of Object.entries(hours)) {
     await setHour(page, hour);
@@ -85,7 +86,7 @@ try {
     await sheet.setContent(`<style>body{margin:0;background:#111;font:11px system-ui;color:#ddd;display:grid;grid-template-columns:repeat(${labels.length},1fr);gap:4px;padding:4px}figure{margin:0}img{width:100%;display:block}figcaption{padding:2px 4px}</style>${cells.join('')}`);
     await sheet.screenshot({ path: `${output}/sheet-${route}.jpg`, type: 'jpeg', quality: 75, fullPage: true });
   }
-  const report = { status: 'passed', head, dirty, revision, graphics: options.graphics, finish: options.finish, hours, viewport: [1280, 800], deviceScaleFactor: 1,
+  const report = { status: 'passed', head, dirty, revision, graphics: options.graphics, finish: options.finish, campusFinish: appliedFinish, hours, viewport: [1280, 800], deviceScaleFactor: 1,
     nightNote: `The client's #sun-hour stops at ${CLIENT_LATEST_HOUR}:00 (twilight 1); there is no later night, so night is pinned there.`,
     firstEntry, cameras, views, finishedAt: new Date().toISOString(),
     limits: 'Local loopback fixture, interface hidden, 1280x800 at DPR 1; residents move between views; frame times are this host under its recorded load (vsync on), not a device budget. Not a human visual review.' };
