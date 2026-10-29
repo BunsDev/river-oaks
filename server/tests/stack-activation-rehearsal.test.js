@@ -97,7 +97,13 @@ test('Stack rehearsal from Gardens: up one step at a time, occupants in every di
     const pending = new Map();
     ws.on('error', () => {});
     ws.on('message', raw => { const value = JSON.parse(raw); if (value.type === 'snapshot') snapshot = value; if (value.type === 'result') pending.get(value.requestId)?.(value); });
-    await until(() => snapshot, `${id} snapshot on ${node.revision}@${node.epoch}`);
+    // The first join of a freshly booted node waits on that node's boot work: loading the room
+    // from Redis and, after a stack step, migrating the checkpoint to the revision now served.
+    // The one-step rollback from Woodland Heights to Gardens is the longest (1.6 s locally at
+    // load 6, every other step under 1.4 s); hosted runners failed its 8 s wait on main pushes
+    // 36e906b2, e5cfada6 and 7cc1fb87 and on docs-only PR heads (#754). Thirty seconds is a
+    // margin for the runner, not a behavior change: a node that never answers still fails here.
+    await until(() => snapshot, `${id} snapshot on ${node.revision}@${node.epoch}`, 600);
     const send = message => new Promise((resolve, reject) => {
       const requestId = String(++sequence), timer = setTimeout(() => { pending.delete(requestId); reject(new Error(`${message.type} timed out`)); }, 8000);
       pending.set(requestId, value => { clearTimeout(timer); pending.delete(requestId); resolve(value); });
