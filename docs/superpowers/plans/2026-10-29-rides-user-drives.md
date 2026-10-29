@@ -76,8 +76,11 @@
   garment-bake receipt tests (`avatars.js` and `vehicle-config.js` are bake inputs); the five
   bakes were rerun with `--write` and only the `*-morph-receipt.json` files changed (no morph data).
 - `preview/tests/motorcycle-rider.test.js`: 3/3 on the real rigs (inside preview-tests above).
-- Browser (`multiplayer-exclusivity` in the shared `required` set): queued from a detached
-  snapshot behind the shared browser lock; result recorded below when it lands.
+- Browser: `RIVER_OAKS_SHARED_JOURNEY=multiplayer-exclusivity node preview/e2e/shared-runner.js required`
+  from a detached `git archive` snapshot of 91305bc4 behind the shared browser lock
+  (Chromium, ANGLE Metal, full rendering), 2026-10-29 17:56 CDT: **Passed multiplayer-exclusivity**
+  (guest garage = motorcycle only, "Call your ride" / "Ride", smart drive hidden; the guest's
+  motorcycle pose accepted by the town; no Jev; HUD "Riding"; owner flow unchanged).
 
 ## Gaps
 
@@ -89,4 +92,4 @@
 
 ## Next step
 
-Draft PR open; browser journey queued; hosted checks to observe.
+Draft PR #767 open; local browser journey passed; observe hosted checks; mark ready only with authorization.
