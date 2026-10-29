@@ -8,17 +8,19 @@
 //   pnpm run destination override <recipe.json> <piece-id> (--set key=value ... | --suppress) [--note text]
 //   pnpm run destination preview <recipe.json>
 //   pnpm run destination layout <recipe.json> [--freeze]   # the land each quarter claims and the blocks it derives
+//   pnpm run destination migrate <recipe.json> [--write]   # authored blocks as quarters in the leanest form that reproduces the lock geometry; --write rewrites the recipe and its lock
 //   pnpm run destination effort [recipe.json ...] [--write]   # what each recipe makes an author type and what one street edit costs, as authored and as quarters
 //   pnpm run destination reference <world.json> --site w,s,e,n --id <id> [--parcels ignore] [--trees 8 --lamps 14] [--out recipe.json]   # a recipe skeleton from mapped roads (and parcels)
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, resolve, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assembleNeighborhood, canonicalJSON, validateRecipe, walkableConnectivity } from '../shared/city-kit/assemble.js';
+import { assembleNeighborhood, canonicalJSON, geometryHash, validateRecipe, walkableConnectivity } from '../shared/city-kit/assemble.js';
 import { expandLayout } from '../shared/city-kit/layout.js';
 import { referenceRecipe, dominantRotation } from '../shared/city-kit/reference.js';
 import { studioRegion } from '../shared/city-kit/studio.js';
 import { measureWorld } from '../shared/city-kit/effort.js';
+import { migrateRecipe } from '../shared/city-kit/migrate.js';
 import { KIT_CONVENTIONS, KIT_PIECES } from '../shared/city-kit/catalog.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..'), recipesDir = join(root, 'config/destinations');
@@ -109,21 +111,23 @@ function build(path) {
   } catch (error) { console.warn(`studio: no region written: ${error.message}`); studio = { error: error.message }; }
   if (has('--lock')) {
     if (seed !== recipe.seed) throw new Error('Lock only the recipe seed');
-    writeFileSync(lockPath(path), `${JSON.stringify({ id: plan.id, kit: plan.kit, seed, hash: plan.hash, recipeHash: plan.provenance.recipeHash, overridesHash: plan.provenance.overridesHash, stats: plan.stats }, null, 2)}\n`);
+    writeLock(path, plan);
   }
   console.log(JSON.stringify({ out, hash: plan.hash, seed, stats: plan.stats, budgetsWithin: summary.budgets.within, studio, connectivity: summary.connectivity.ratio, overrides: plan.provenance.overrides,
     ...(layout ? { layout: { cells: layout.cells.length, derived: layout.derived.map(block => block.id), warnings: layout.warnings.length } } : {}) }, null, 2));
   if (!summary.budgets.within || summary.connectivity.ratio < 1 || summary.connectivity.lanterns.some(item => !item.reachable)) process.exitCode = 1;
 }
 
+const writeLock = (path, plan) => writeFileSync(lockPath(path), `${JSON.stringify({ id: plan.id, kit: plan.kit, seed: plan.seed, hash: plan.hash, geometry: geometryHash(plan), recipeHash: plan.provenance.recipeHash, overridesHash: plan.provenance.overridesHash, stats: plan.stats }, null, 2)}\n`);
+
 function check() {
   let failed = 0;
   for (const path of recipePaths()) {
     if (!existsSync(lockPath(path))) continue;
     const lock = JSON.parse(readFileSync(lockPath(path), 'utf8')), plan = assembleNeighborhood(readRecipe(path));
-    const ok = lock.hash === plan.hash;
+    const geometry = geometryHash(plan), ok = lock.hash === plan.hash && (lock.geometry === undefined || lock.geometry === geometry);
     if (!ok) failed++;
-    console.log(`${ok ? 'ok  ' : 'DIFF'} ${basename(path)} ${plan.hash}${ok ? '' : ` (lock ${lock.hash}; recipe ${lock.recipeHash === plan.provenance.recipeHash ? 'same' : 'changed'}, overrides ${lock.overridesHash === plan.provenance.overridesHash ? 'same' : 'changed'}; rerun build --lock after review)`}`);
+    console.log(`${ok ? 'ok  ' : 'DIFF'} ${basename(path)} ${plan.hash}${ok ? '' : ` (lock ${lock.hash}; geometry ${lock.geometry === undefined ? 'unrecorded' : lock.geometry === geometry ? 'same' : 'changed'}; recipe ${lock.recipeHash === plan.provenance.recipeHash ? 'same' : 'changed'}, overrides ${lock.overridesHash === plan.provenance.overridesHash ? 'same' : 'changed'}; rerun build --lock after review)`}`);
   }
   if (failed) process.exitCode = 1;
 }
@@ -216,13 +220,30 @@ function effort(paths) {
     console.log([entry.id, entry.form, entry.blocks, entry.shells, entry.typed.massing.numbers, entry.perShell ?? '-', `${entry.typed.author.numbers}+${entry.typed.author.names} names`, entry.typed.tools.numbers,
       `${cell('authored', 'blocksToRetype')} (${cell('authored', 'numbersToRetype')})`, cell('authored', 'shellsInStreet'), cell('quarters', 'blocksToRetype'), cell('quarters', 'shellsInStreet'), change.quarters ? `${change.quarters.shells}/${change.shellsBefore}` : '-'].join('\t'));
   }
-  const { shipped } = world;
-  console.log(`shipped as authored: ${shipped.recipes} recipes, ${shipped.blocks} blocks, ${shipped.shells} shells; ${shipped.massing.numbers} typed numbers of streets and blocks (${Math.round(shipped.massing.numbers / shipped.shells * 100) / 100} per shell), ${shipped.typed.numbers} in all with ${shipped.typed.names} names`);
-  console.log(`${world.edit}: as authored, ${shipped.authored.blocksToRetype} rectangles (${shipped.authored.numbersToRetype} numbers) to retype or ${shipped.authored.shellsInStreet} shells stand in the street unrefused; as quarters, ${shipped.quarters.blocksToRetype} to retype and ${shipped.quarters.shellsInStreet} in the street, ${shipped.quarters.shells} shells on the land that remains`);
+  const { shipped, migrated } = world;
+  console.log(`shipped (${migrated.recipes} migrated to quarters, ${shipped.recipes - migrated.recipes} authored): ${shipped.recipes} recipes, ${shipped.blocks} blocks, ${shipped.shells} shells; ${shipped.massing.numbers} typed numbers of streets and blocks (${Math.round(shipped.massing.numbers / shipped.shells * 100) / 100} per shell), ${shipped.typed.numbers} in all with ${shipped.typed.names} names and ${shipped.typed.words} frontage words (${migrated.frontageWords} in the ${migrated.blocks} migrated blocks)`);
+  console.log(`${world.edit}: with authored blocks, ${shipped.authored.blocksToRetype} rectangles (${shipped.authored.numbersToRetype} numbers) to retype or ${shipped.authored.shellsInStreet} shells stand in the street unrefused; as quarters, ${shipped.quarters.blocksToRetype} to retype and ${shipped.quarters.shellsInStreet} in the street, ${shipped.quarters.shells} shells on the land that remains`);
   if (!has('--write')) return;
   mkdirSync(dirname(effortReport), { recursive: true });
   writeFileSync(effortReport, `${JSON.stringify({ generatedBy: 'pnpm run destination effort --write', ...world }, null, 2)}\n`);
   console.log(`Wrote ${effortReport}`);
+}
+
+// Authored blocks as quarters, proven by the geometry hash the lock recorded on the
+// authored form. `--write` rewrites the recipe and its lock (new plan hash, same geometry).
+function migrate(path) {
+  const recipe = readRecipe(path), result = migrateRecipe(recipe);
+  if (!result.recipe) { console.log(`${basename(path)} stays authored: ${result.reason}`); process.exitCode = 1; return; }
+  const lock = existsSync(lockPath(path)) ? JSON.parse(readFileSync(lockPath(path), 'utf8')) : null;
+  if (lock?.geometry && lock.geometry !== result.geometry) throw new Error(`${basename(path)}: the authored recipe no longer reproduces its lock geometry ${lock.geometry}; run check first`);
+  for (const block of result.blocks) console.log(`${block.id}: ${block.form}${block.rect ? `, rect ${block.rect.join(',')}` : ''}`);
+  const { before, after } = result.typed;
+  console.log(`${basename(path)}: ${result.blocks.length} blocks as quarters; geometry ${result.geometry} unchanged, plan ${result.hash.before} -> ${result.hash.after}; typed ${before.numbers} numbers, ${before.names} names, ${before.words} frontage words -> ${after.numbers}, ${after.names}, ${after.words}${result.warnings.length ? `; ${result.warnings.length} warnings` : ''}`);
+  for (const warning of result.warnings) console.warn(`layout: ${warning}`);
+  if (!has('--write')) return;
+  writeFileSync(resolve(path), `${JSON.stringify(result.recipe, null, 2)}\n`);
+  writeLock(path, assembleNeighborhood(structuredClone(result.recipe)));
+  console.log(`Wrote ${basename(path)} and its lock. Review the diff, then run destination check.`);
 }
 
 const pieceCount = Object.keys(KIT_PIECES).length;
@@ -232,10 +253,11 @@ else if (command === 'override') override(rest[0], rest[1]);
 else if (command === 'layout') layoutCommand(rest.find(arg => arg.endsWith('.json')) ?? fail());
 else if (command === 'reference') reference(rest.find(arg => arg.endsWith('.json')) ?? fail());
 else if (command === 'effort') effort(rest.filter(arg => arg.endsWith('.json')));
+else if (command === 'migrate') migrate(rest.find(arg => arg.endsWith('.json')) ?? fail());
 else if (command === 'preview') {
   const recipe = readRecipe(rest[0] ?? join(recipesDir, 'bayou-market-commons.json'));
   console.log(`In-engine kit preview: pnpm run dev, then open /e2e/fixtures/city-kit.html?recipe=${recipe.id}`);
   console.log(`World Studio: pnpm run destination build ${rest[0] ?? 'config/destinations/bayou-market-commons.json'}, then Open JSON on studio-region.json from the build directory.`);
   if (recipe.id === 'bayou-market-commons') console.log('Playable in the town: pnpm run dev serves it (the development town defaults to the full expansion), then walk east from the District arrival.');
-} else { console.error(`usage: destination build|check|override|preview|layout|reference|effort (${pieceCount} kit pieces)`); process.exitCode = 2; }
+} else { console.error(`usage: destination build|check|override|preview|layout|reference|migrate|effort (${pieceCount} kit pieces)`); process.exitCode = 2; }
 function fail(what = 'a recipe .json path') { throw new Error(`Pass ${what}`); }

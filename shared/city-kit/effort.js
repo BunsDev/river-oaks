@@ -16,8 +16,8 @@
 // the land the wider streets leave and nothing is retyped.
 //
 // Pure arithmetic on the recipe, so the committed report reproduces.
-import { assembleNeighborhood } from './assemble.js';
-import { streetCorridor } from './layout.js';
+import { assembleNeighborhood, validateRecipe } from './assemble.js';
+import { expandLayout, streetCorridor } from './layout.js';
 
 const EPS = 1e-6;
 export const WIDEN_METRES = 2;
@@ -25,18 +25,20 @@ export const WIDEN_METRES = 2;
 const overlaps = (a, b) => a[0] < b[2] - EPS && b[0] < a[2] - EPS && a[1] < b[3] - EPS && b[1] < a[3] - EPS;
 const NAME_KEYS = new Set(['names', 'name', 'lettering', 'sign']);
 
-// Numbers and names anywhere under a value. `ids`, `piece`, `style` and the frontage
+// Numbers, names and frontage words (front, sides, split) anywhere under a value. `ids`, `piece`, `style` and the frontage
 // words are choices too, but each is one word picked from a short list, not a value
 // that must agree with the geometry around it.
+const WORD_KEYS = new Set(['front', 'sides', 'split']);
+const none = () => ({ numbers: 0, names: 0, words: 0 });
 export function countTyped(value, key = null) {
-  if (typeof value === 'number') return { numbers: 1, names: 0 };
-  if (typeof value === 'string') return { numbers: 0, names: NAME_KEYS.has(key) ? 1 : 0 };
-  if (Array.isArray(value)) return value.reduce((n, v) => add(n, countTyped(v, key)), { numbers: 0, names: 0 });
-  if (value && typeof value === 'object') return Object.entries(value).reduce((n, [k, v]) => add(n, countTyped(v, k)), { numbers: 0, names: 0 });
-  return { numbers: 0, names: 0 };
+  if (typeof value === 'number') return { numbers: 1, names: 0, words: 0 };
+  if (typeof value === 'string') return { numbers: 0, names: NAME_KEYS.has(key) ? 1 : 0, words: WORD_KEYS.has(key) ? 1 : 0 };
+  if (Array.isArray(value)) return WORD_KEYS.has(key) ? { numbers: 0, names: 0, words: 1 } : value.reduce((n, v) => add(n, countTyped(v, key)), none());
+  if (value && typeof value === 'object') return Object.entries(value).reduce((n, [k, v]) => add(n, countTyped(v, k)), none());
+  return none();
 }
-const add = (a, b) => ({ numbers: a.numbers + b.numbers, names: a.names + b.names });
-const sum = counts => counts.reduce(add, { numbers: 0, names: 0 });
+const add = (a, b) => ({ numbers: a.numbers + b.numbers, names: a.names + b.names, words: a.words + b.words });
+const sum = counts => counts.reduce(add, none());
 
 const SECTIONS = ['streets', 'plazas', 'blocks', 'layout', 'landmarks', 'furniture', 'additions', 'overrides'];
 const REFERENCE_DEFAULTS = { trees: null, lamps: null, lane: 6, sidewalk: 3.5, tolerance: 5, minimumLength: 20 };
@@ -45,21 +47,23 @@ const REFERENCE_DEFAULTS = { trees: null, lamps: null, lane: 6, sidewalk: 3.5, t
 // the part the kit can derive: streets, blocks and quarters; plazas, landmarks and
 // furniture stay hand-typed by design in every form.
 export function typedValues(recipe) {
-  const sections = Object.fromEntries(SECTIONS.map(section => [section, countTyped(recipe[section] ?? null)]));
+  // A layout's `open` policy and `migrated` provenance are not typed values.
+  const typedPart = section => (section === 'layout' && recipe.layout ? { quarters: recipe.layout.quarters, reserved: recipe.layout.reserved } : recipe[section] ?? null);
+  const sections = Object.fromEntries(SECTIONS.map(section => [section, countTyped(typedPart(section))]));
   const total = sum(Object.values(sections));
-  let tools = { numbers: 0, names: 0 }, author = total, options = null;
+  let tools = none(), author = total, options = null;
   if (recipe.reference) {
     // The reference step wrote the streets with their furnishing and the quarters'
     // rectangles and ranges; the author typed the site, the spacings they asked
     // for, and the names (placeholders until then).
     const quarters = recipe.layout?.quarters ?? [];
     const written = sum([countTyped(recipe.streets ?? []), ...quarters.map(({ rect, depth, storeys, bays }) => countTyped({ rect, depth, storeys, bays }))]);
-    tools = { numbers: written.numbers, names: 0 };
+    tools = { numbers: written.numbers, names: 0, words: 0 };
     // Spacings are typed when asked for; the other knobs count only when they left their defaults.
     options = Object.entries(REFERENCE_DEFAULTS).filter(([name, fallback]) => Number.isFinite(recipe.reference[name]) && recipe.reference[name] !== fallback).map(([name]) => name);
-    author = { numbers: total.numbers - written.numbers + 4 + options.length, names: total.names };
+    author = { numbers: total.numbers - written.numbers + 4 + options.length, names: total.names, words: total.words };
   }
-  const massing = recipe.reference ? { numbers: 4 + options.length, names: author.names } : sum([sections.streets, sections.blocks, sections.layout]);
+  const massing = recipe.reference ? { numbers: 4 + options.length, names: author.names, words: total.words } : sum([sections.streets, sections.blocks, sections.layout]);
   return { sections, total, massing, author, tools, ...(options ? { options: ['site', ...options, 'style'] } : {}) };
 }
 
@@ -68,6 +72,15 @@ export const quarterOf = ({ id, rect, style, depth, storeys, bays, names, court,
 export function quarterForm(recipe) {
   if (recipe.layout || !recipe.blocks?.length) return structuredClone(recipe);
   return { ...structuredClone(recipe), blocks: [], layout: { quarters: recipe.blocks.map(quarterOf), reserved: [] } };
+}
+
+// The authored form of a layout recipe: its derived blocks frozen as authored ones,
+// the reverse of `destination migrate`, so a migrated recipe's edit cost is measured
+// against the blocks it would otherwise still type.
+export function frozenForm(recipe) {
+  if (!recipe.layout) return structuredClone(recipe);
+  const { layout: _layout, ...rest } = structuredClone(recipe), expanded = expandLayout(validateRecipe(structuredClone(recipe)));
+  return { ...rest, blocks: [...(rest.blocks ?? []), ...expanded.blocks] };
 }
 
 export function widenStreets(recipe, metres = WIDEN_METRES) {
@@ -85,27 +98,29 @@ const tryAssemble = recipe => { try { return { plan: assembleNeighborhood(recipe
 export function changeCost(recipe, metres = WIDEN_METRES) {
   const before = shells(assembleNeighborhood(structuredClone(recipe))).length;
   const edited = widenStreets(recipe, metres), corridors = (edited.streets ?? []).map(street => streetCorridor(street, edited.site));
+  void edited;
   const inStreet = plan => shells(plan).filter(piece => corridors.some(corridor => overlaps(piece.rect, corridor))).length;
   const form = (candidate, authoredBlocks) => {
     const hit = authoredBlocks.filter(block => corridors.some(corridor => overlaps(block.rect, corridor)));
     const { plan, error } = tryAssemble(candidate);
     return { blocksToRetype: hit.length, numbersToRetype: hit.length * 4, ...(plan ? { shells: shells(plan).length, shellsInStreet: inStreet(plan), warnings: plan.provenance?.layout?.warnings?.length ?? 0 } : { error }) };
   };
-  return { edit: `every street ${metres} m wider`, shellsBefore: before, authored: form(edited, edited.blocks ?? []), quarters: form(widenStreets(quarterForm(recipe), metres), []) };
+  const authored = widenStreets(frozenForm(recipe), metres);
+  return { edit: `every street ${metres} m wider`, shellsBefore: before, authored: form(authored, authored.blocks ?? []), quarters: form(widenStreets(quarterForm(recipe), metres), []) };
 }
 
 export function measureEffort(recipe) {
   const plan = assembleNeighborhood(structuredClone(recipe)), typed = typedValues(recipe), placed = shells(plan).length;
-  return { id: recipe.id, form: recipe.layout ? (recipe.reference ? 'reference' : 'layout') : 'authored', blocks: (recipe.blocks ?? []).length + (plan.provenance?.layout?.blocks?.length ?? 0),
+  return { id: recipe.id, form: recipe.layout ? (recipe.layout.migrated ? 'migrated' : recipe.reference ? 'reference' : 'layout') : 'authored', blocks: (recipe.blocks ?? []).length + (plan.provenance?.layout?.blocks?.length ?? 0),
     shells: placed, typed, perShell: placed ? Math.round(typed.massing.numbers / placed * 100) / 100 : null, change: recipe.blocks?.length || recipe.layout ? changeCost(recipe) : null };
 }
 
 // Every recipe at once, with the totals the docs quote.
 export function measureWorld(recipes) {
   const entries = recipes.map(measureEffort).sort((a, b) => a.id.localeCompare(b.id));
-  const authored = entries.filter(entry => entry.form === 'authored' && entry.change);
+  const authored = entries.filter(entry => (entry.form === 'authored' || entry.form === 'migrated') && entry.change), migrated = entries.filter(entry => entry.form === 'migrated');
   const total = key => authored.reduce((n, entry) => n + (entry.change[key.form][key.field] ?? 0), 0);
-  return { edit: `every street ${WIDEN_METRES} m wider`, recipes: entries, shipped: { recipes: authored.length, blocks: authored.reduce((n, e) => n + e.blocks, 0), shells: authored.reduce((n, e) => n + e.shells, 0),
+  return { edit: `every street ${WIDEN_METRES} m wider`, recipes: entries, migrated: { recipes: migrated.length, blocks: migrated.reduce((n, e) => n + e.blocks, 0), frontageWords: migrated.reduce((n, e) => n + e.typed.sections.layout.words, 0) }, shipped: { recipes: authored.length, blocks: authored.reduce((n, e) => n + e.blocks, 0), shells: authored.reduce((n, e) => n + e.shells, 0),
     typed: sum(authored.map(e => e.typed.author)), massing: sum(authored.map(e => e.typed.massing)),
     authored: { blocksToRetype: total({ form: 'authored', field: 'blocksToRetype' }), numbersToRetype: total({ form: 'authored', field: 'numbersToRetype' }), shellsInStreet: total({ form: 'authored', field: 'shellsInStreet' }) },
     quarters: { blocksToRetype: total({ form: 'quarters', field: 'blocksToRetype' }), numbersToRetype: 0, shellsInStreet: total({ form: 'quarters', field: 'shellsInStreet' }), shells: total({ form: 'quarters', field: 'shells' }) } } };
