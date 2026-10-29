@@ -25,7 +25,8 @@ async page => {
   await mkdir('.runtime/world-streaming', { recursive: true });
   let outcome = 'running', failure = null;
   const origin = 'http://127.0.0.1:5173', checks = [], samples = [], errors = [], crossings = [], resourceViolations = [], reconnects = [], graphicsRecoveries = [], retainedHeaps = [];
-  const checkpoint = () => writeFile(checkpointPath, JSON.stringify({ outcome, failure, sourceSha256, finalSourceSha256, checks, samples, crossings, resourceViolations, reconnects, graphicsRecoveries, retainedHeaps }, null, 2) + '\n');
+  const detours = [];
+  const checkpoint = () => writeFile(checkpointPath, JSON.stringify({ outcome, failure, sourceSha256, finalSourceSha256, checks, samples, crossings, resourceViolations, reconnects, graphicsRecoveries, retainedHeaps, detours }, null, 2) + '\n');
   console.log(`Journey checkpoints: ${checkpointPath}`);
   const check = (ok, label) => { if (!ok) throw new Error(label); checks.push(label); console.log(label); };
   const peerContext = await page.context().browser().newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
@@ -74,7 +75,11 @@ async page => {
   // The faces of different pages take turns (walk-driver.js); this journey's walk turns itself.
   // Walking yaw: 0 faces north and +π/2 west (stepWalking in walking.js).
   const { createWalkDriver } = await import('./walk-driver.js');
-  const { face } = createWalkDriver({ self, routes: [] }), WEST = Math.PI / 2;
+  const { face: driverFace } = createWalkDriver({ self, routes: [] }), WEST = Math.PI / 2;
+  const steering = (tab, label) => tab.evaluate(label => { window.__streamProbe.steering = label; }, label);
+  // A seam crossing while the harness turns or unwedges the player is the harness steering, not the
+  // seam (the probe tags crossings with the steering label; the continuity check skips those rows).
+  const face = async (tab, heading, label) => { await steering(tab, `face ${label}`); try { await driverFace(tab, heading, label); } finally { await steering(tab, null); } };
   const point = tab => tab.evaluate(() => window.__riverCarriage().pose);
   let failLoads = true, failedRequests = 0, deferModule = true, pendingModuleRequested;
   const moduleRequested = new Promise(resolve => { pendingModuleRequested = resolve; }), pendingModules = [];
@@ -94,7 +99,7 @@ async page => {
     });
     await tab.emulateMedia({ reducedMotion: 'reduce' });
     await tab.addInitScript(edge => {
-      window.__streamProbe = { sockets: [], received: 0, sent: 0, frames: [], crossings: [], notices: [], timeOrigin: performance.timeOrigin };
+      window.__streamProbe = { sockets: [], closes: [], rotations: 0, received: 0, sent: 0, frames: [], crossings: [], notices: [], steering: null, timeOrigin: performance.timeOrigin };
       // Preserve resource entries across the long journey; the default buffer
       // can otherwise hide later module requests behind initial asset traffic.
       performance.setResourceTimingBufferSize(10000);
@@ -102,7 +107,14 @@ async page => {
       window.WebSocket = class extends Native {
         constructor(...args) { super(...args); if (new URL(args[0], location.href).pathname === '/multiplayer') {
           window.__streamProbe.sockets.push(this);
-          this.addEventListener('message', event => { window.__streamProbe.received += typeof event.data === 'string' ? new TextEncoder().encode(event.data).length : event.data.size ?? event.data.byteLength ?? 0; });
+          // Every town socket's end, with the code and reason the page saw, so an extra socket can be explained.
+          this.addEventListener('close', event => { window.__streamProbe.closes.push({ at: performance.now(), code: event.code, reason: event.reason, wasClean: event.wasClean, socket: window.__streamProbe.sockets.indexOf(this) }); });
+          this.addEventListener('message', event => {
+            window.__streamProbe.received += typeof event.data === 'string' ? new TextEncoder().encode(event.data).length : event.data.size ?? event.data.byteLength ?? 0;
+            // The server retires every connection at its lifetime with a rotate notice; the
+            // client opens the replacement itself, so planned rotations are expected sockets.
+            if (typeof event.data === 'string' && event.data.startsWith('{"type":"rotate"')) window.__streamProbe.rotations += 1;
+          });
         } }
         send(data) { window.__streamProbe.sent += typeof data === 'string' ? new TextEncoder().encode(data).length : data.byteLength ?? 0; return super.send(data); }
       };
@@ -120,7 +132,8 @@ async page => {
             const cameraStep = Math.hypot(...view.camera.map((v, i) => v - previous.view.camera[i]));
             const playerStep = Math.hypot(...pose.position.map((v, i) => v - previous.pose.position[i]));
             const directionDot = view.direction.reduce((sum, v, i) => sum + v * previous.view.direction[i], 0);
-            window.__streamProbe.crossings.push({ cameraStep, playerStep, directionDot, deltaMs: time - last });
+            // A crossing during a harness turn or wedge recovery is the harness steering, not the seam.
+            window.__streamProbe.crossings.push({ cameraStep, playerStep, directionDot, deltaMs: time - last, at: time, steering: window.__streamProbe.steering });
           }
           previous = { pose, view };
         }
@@ -135,23 +148,41 @@ async page => {
     if (await tab.locator('#panel-toggle').getAttribute('aria-expanded') === 'true') await tab.locator('#panel-toggle').click();
     if (await tab.locator('.visit-tools').evaluate(node => node.open)) await tab.locator('.visit-tools-toggle').click();
   };
-  const walk = async (tab, targets, label) => {
+  // Keyboard bursts and drag turns arrive late when the host is loaded, so a straight run can
+  // overshoot into a building or a nook (both 2026-10-28 runs ended wedged this way at host load
+  // 22 and 34). When a target stops getting closer for a while, or the player has entered a room,
+  // re-route from where the player actually is: through the District navigation for District
+  // targets, and via the promenade gate for a target beyond the seam, which has no navigation route.
+  const walk = async (tab, targets, label, depth = 0) => {
     for (const target of targets) {
       const deadline = Date.now() + 180000;
+      let best = Infinity, improvedAt = Date.now(), recoveries = 0;
       for (;;) {
         const pose = await point(tab), dx = target[0] - pose.position[0], dz = -target[1] - pose.position[2], distance = Math.hypot(dx, dz);
         if (distance < .15) break;
         if (Date.now() > deadline) throw new Error(`${label} stalled: ${JSON.stringify({ target, pose, stream: await tab.evaluate(() => window.__riverSpatialStream()) })}`);
+        if (distance < best - .25) { best = distance; improvedAt = Date.now(); }
+        else if (depth < 2 && recoveries < 8 && (Date.now() - improvedAt > 12000 || pose.roomId)) {
+          const here = (await self(tab)).position.slice(0, 2);
+          const detour = clearRoute(here, target) ?? (target[0] > edge ? clearRoute(here, [edge - 2, target[1]]) : null);
+          detours.push({ label, target, from: here, roomId: pose.roomId ?? null, bestMetres: best, route: detour?.length ?? 0, recoveries });
+          console.log(`${label}: no progress for ${((Date.now() - improvedAt) / 1000).toFixed(0)} s at ${here.map(v => v.toFixed(1))}${pose.roomId ? ` in room ${pose.roomId}` : ''}; ${detour ? `detour of ${detour.length} waypoints` : 'no route from here, backing away'}`);
+          if (detour?.length) await walk(tab, detour, `${label} detour`, depth + 1);
+          // Wedged against something with no route from here: back away and sidestep before re-aiming.
+          else await unwedge(tab, recoveries);
+          recoveries += 1; best = Infinity; improvedAt = Date.now();
+          continue;
+        }
         const heading = Math.atan2(-dx, -dz), difference = Math.atan2(Math.sin(heading - pose.yaw), Math.cos(heading - pose.yaw));
         if (Math.abs(difference) > .035) {
           const box = await tab.locator('#canvas-host').boundingBox(), x = box.x + box.width * .5, y = box.y + box.height * .4;
           await tab.mouse.move(x, y); await tab.mouse.down(); await tab.mouse.move(x + Math.max(-box.width * .35, Math.min(box.width * .35, -difference / .003)), y, { steps: 3 }); await tab.mouse.up(); continue;
         }
         await tab.locator('#canvas-host').focus();
-        const fast = distance > 2;
+        const fast = distance > 6;
         if (fast) await tab.keyboard.down('ShiftLeft');
         await tab.keyboard.down('KeyW');
-        await tab.waitForTimeout(Math.min(450, Math.max(30, distance * (fast ? 110 : 230))));
+        await tab.waitForTimeout(Math.min(300, Math.max(30, distance * (fast ? 110 : 230))));
         await tab.keyboard.up('KeyW'); await tab.keyboard.up('ShiftLeft');
       }
     }
@@ -159,12 +190,25 @@ async page => {
     await tab.waitForFunction(target => { const town = window.__riverMultiplayer(), p = town.snapshot.players.find(p => p.id === town.selfId); return Math.hypot(p.position[0] - target[0], p.position[1] - target[1]) < .8; }, target);
     console.log(label);
   };
+  const unwedge = async (tab, attempt) => {
+    await steering(tab, `unwedge ${attempt}`);
+    await tab.locator('#canvas-host').focus();
+    await tab.keyboard.down('KeyS'); await tab.waitForTimeout(700); await tab.keyboard.up('KeyS');
+    const side = attempt % 2 ? 'KeyA' : 'KeyD';
+    await tab.keyboard.down(side); await tab.waitForTimeout(500 + 250 * Math.floor(attempt / 2)); await tab.keyboard.up(side);
+    await steering(tab, null);
+  };
+  // GPU counters register a geometry or texture on first drawn use, so a resident figure or prop
+  // first entering view mid-journey stepped the counts (+12 geometries, +9 textures on 2026-10-28)
+  // without any scene change. Every sample first draws each visible object once (main.js, dev only),
+  // so the counts compare registered-resident scenes and a step means a retained or added resource.
   const measure = async label => {
+    const registered = await Promise.all(tabs.map(tab => tab.evaluate(() => window.__riverRegisterResident?.() ?? null)));
     const rows = await Promise.all(tabs.map(tab => tab.evaluate(() => {
       const probe = window.__streamProbe, stream = window.__riverSpatialStream(), frames = [...probe.frames].sort((a, b) => a - b);
       return { ...stream, time: performance.now(), heapBytes: performance.memory?.usedJSHeapSize ?? null,
         frameSamples: frames.length, frameMaxMs: frames.at(-1), frameP50: frames[Math.floor(frames.length * .5)], frameP95: frames[Math.floor(frames.length * .95)],
-        receivedBytes: probe.received, sentBytes: probe.sent, socketCount: probe.sockets.length,
+        receivedBytes: probe.received, sentBytes: probe.sent, socketCount: probe.sockets.length, rotations: probe.rotations, closes: [...probe.closes],
         viewport: [innerWidth, innerHeight, devicePixelRatio],
         quality: document.querySelector('#canvas-host')?.dataset.quality,
         pipeline: document.querySelector('#canvas-host')?.dataset.pipeline,
@@ -175,6 +219,7 @@ async page => {
         transferBytes: performance.getEntriesByType('resource').reduce((sum, item) => sum + item.transferSize, 0),
         documentStable: probe.timeOrigin === performance.timeOrigin };
     })));
+    rows.forEach((row, i) => { row.registered = registered[i]; });
     samples.push({ label, clients: rows }); await checkpoint(); return rows;
   };
   const mutuallyVisible = async () => {
@@ -361,10 +406,21 @@ async page => {
     check(true, 'World map lists a peer on the Commons while the observer has it unloaded');
     await walk(peer, [[edge - 8, -1336]], 'Peer returns to the District');
     const final = await measure('Final return');
-    check(final.every((state, i) => state.socketCount === baseline[i].socketCount + (i === 0 ? 1 : 0)), 'Repeated travel creates no extra multiplayer connections');
+    // A seventy-minute journey crosses the server's connection lifetime: the server sends a rotate
+    // notice and closes with 4010, and the client opens the replacement itself (connection-close.js).
+    // Sockets beyond the one forced reconnect must each be explained by a rotation or by a planned
+    // server close the page recovered from (1000 moved, 1012 update, 4001 session expiry, 4010 rotation).
+    const planned = new Set([1000, 1012, 4001, 4010]);
+    const unexplained = final.map((state, i) => state.socketCount - baseline[i].socketCount - (i === 0 ? 1 : 0) - (state.rotations - baseline[i].rotations));
+    const explained = final.map((state, i) => state.closes.filter(close => close.socket >= (i === 0 ? 1 : 0)));
+    if (unexplained.some(n => n !== 0)) console.log(`Extra sockets: ${JSON.stringify(final.map((state, i) => ({ client: i, extra: unexplained[i], rotations: state.rotations, closes: state.closes })))}`);
+    check(final.every((state, i) => unexplained[i] === 0 || explained[i].length >= unexplained[i] && explained[i].every(close => planned.has(close.code))), `Repeated travel creates no extra multiplayer connections beyond the forced reconnect and planned rotations (sockets ${final.map(state => state.socketCount)}, rotations ${final.map(state => state.rotations)})`);
     await page.screenshot({ path: 'output/playwright/world-streaming-return.png' });
     const continuity = await Promise.all(tabs.map(tab => tab.evaluate(() => window.__streamProbe.crossings)));
-    check(continuity.every(rows => rows.length >= totalTrips * 2 && rows.every(row => row.directionDot > .9 && row.cameraStep < row.playerStep + 1.5)), 'All warm-up and measured crossings preserve camera direction and continuous position');
+    const smooth = row => row.directionDot > .9 && row.cameraStep < row.playerStep + 1.5;
+    const rough = continuity.map((rows, client) => rows.filter(row => !row.steering && !smooth(row)).map(row => ({ client, ...row })));
+    const steered = continuity.map((rows, client) => rows.filter(row => row.steering).map(row => ({ client, ...row })));
+    check(continuity.every(rows => rows.length >= totalTrips * 2) && rough.every(rows => rows.length === 0), `All warm-up and measured crossings preserve camera direction and continuous position (counts ${continuity.map(rows => rows.length)}, steered ${steered.map(rows => rows.length)}): ${JSON.stringify(rough.flat())}`);
     check(errors.length === 0, `No page errors: ${errors.join('; ')}`);
     check(resourceViolations.length === 0, `Scene and GPU object bounds across twenty measured trips after two recorded warm-ups: ${JSON.stringify(resourceViolations)}`);
     const heapRatios = retainedHeaps[1].clients.map((usage, i) => usage.usedSize / retainedHeaps[0].clients[i].usedSize);
@@ -372,7 +428,7 @@ async page => {
     finalSourceSha256 = await sourceHashes();
     check(JSON.stringify(finalSourceSha256) === JSON.stringify(sourceSha256), 'Runtime and harness source hashes stay unchanged throughout the journey');
     outcome = 'passed';
-    return { sourceSha256, finalSourceSha256, checks, samples, crossings, continuity, reconnects, graphicsRecoveries, retainedHeaps, heapRatios, failedRequests, scope: 'Two bounded Chromium fixture clients that never lose their context, after a third fixture client takes a failed Commons import, actual context loss/restore during pending Commons import and active presentation, and one eviction/reload cycle after the restore, then leaves; one bounded client reconnects; two recorded route warm-ups followed by 20 measured full keyboard round trips to the Commons plaza with chunk eviction on every District return; real loopback authority. Runtime.getHeapUsage usedSize is isolate-wide JavaScript heap measured at equivalent post-GC evicted states; backing storage and embedder heap are separate counters, not included in this ratio. Rolling frame observations can include GC and decide no timing gate. Buffer bytes are exact geometry storage, not total GPU memory. No physical-device, hosted or human accessibility acceptance.' };
+    return { sourceSha256, finalSourceSha256, checks, samples, crossings, continuity, rough, steered, detours, reconnects, graphicsRecoveries, retainedHeaps, heapRatios, failedRequests, scope: 'Two bounded Chromium fixture clients that never lose their context, after a third fixture client takes a failed Commons import, actual context loss/restore during pending Commons import and active presentation, and one eviction/reload cycle after the restore, then leaves; one bounded client reconnects; two recorded route warm-ups followed by 20 measured full keyboard round trips to the Commons plaza with chunk eviction on every District return; real loopback authority. Runtime.getHeapUsage usedSize is isolate-wide JavaScript heap measured at equivalent post-GC evicted states; backing storage and embedder heap are separate counters, not included in this ratio. Rolling frame observations can include GC and decide no timing gate. Buffer bytes are exact geometry storage, not total GPU memory. No physical-device, hosted or human accessibility acceptance.' };
   } catch (error) { outcome = 'failed'; failure = error.message; throw error; }
   finally {
     deferModule = false;
