@@ -237,8 +237,8 @@ paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs 
 - Gaps: no human has watched the recordings (the disposition row stays open); the published
   strike latency under three browsers on one host (351 ms) is a measurement, not a budget;
   concealment escape needs zone geometry; the hour is daylight at 19:00.
-- Next: draft PR stacked on #710; hosted checks; `pnpm run verify full` from a detached snapshot
-  of the pushed head with isolated Redis; the #599 matrix (#731) consumes these receipts.
+- Next: done below (draft #732, hosted checks, `verify full` and `verify browser` on `700bddb2`);
+  the #599 matrix (#731) consumes these receipts.
 - **Writer takeover and fencing on real transports** (2026-10-28 15:00Z, `REDIS_URL=redis://127.0.0.1:16603/5`,
   this session's isolated Redis; log `writer-takeover-suites.log` in the session scratchpad):
   `node --test server/tests/redis-room.test.js server/tests/world-policy-transport.test.js
@@ -269,3 +269,39 @@ paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs 
       surrender offer was seen with 86 ms left, so "grab evaded" reads not-run in this run (pass
       in run 6, and eleven evaded in the observation episode). Logs for 7–10 under
       `.runtime/evidence-640/`.
+- **Gates on `700bddb2`** (clean tree, `.runtime/agent/<profile>.json` receipts copied under
+  `.runtime/evidence-640/`; no single-run green `verify full` receipt exists for this head, each
+  stage is reported by the run that produced it):
+  - `pnpm run verify full` attempt 1, 16:31–17:39Z with isolated Redis (`redis://127.0.0.1:16603/7`),
+    host load 17–21: **failed** at `experience` (`ETIMEDOUT` at the 20-minute stage budget after
+    15/17 journeys, killed inside `garden-campus-suite`). Passed before it: dependency-audit,
+    agent-tests, preview-tests (4307 pass / 1 skip), server-redis-tests (1362 pass / 0 fail /
+    0 skipped), desktop-tests (127 / 5 skipped), build, python-lint, python-format, python-tests,
+    demo, demo-verify, secrets, secret-history, security-browser, reflections. Not run:
+    experience-commons, shared, ipic-screening. `data/reports/experience.json` restored. Log
+    `verify-full-700bddb2-attempt1.log`.
+  - `pnpm run verify browser` attempt 1, started 22:04Z after waiting for load under 8 / 10
+    (started at 3.98 / 8.16), finished 2026-10-29 00:57Z: build, security-browser, reflections,
+    **experience passed (16/16 journeys, 961 s)**, experience-commons passed (246 s); **shared
+    failed** on 1 of 29 journeys, `crime-residents`: "Esme then runs (town state): undefined m/s"
+    (the startled resident did not reach run speed within the 12 s wait; the journey's own note
+    names cornering, a blocked step or the route search as causes); ipic-screening not run.
+    The increment-5 diff touches no client or server runtime file, and the hosted
+    `preview shared (development)` shard passed on this head. Receipt and log
+    `verify-browser-700bddb2-attempt1-{receipt.json,log}`, failed report
+    `shared-experience-700bddb2-attempt1-failed.json`.
+  - Shared stage rerun once, `pnpm run test:shared` 2026-10-29 00:58–02:24Z at load 6.7 / 6.8:
+    **29/29 passed**, `crime-residents` in 20.3 s; then `node preview/e2e/ipic-screening-runner.mjs`
+    02:24–02:25Z **passed** (19 checks, converged after 5 ms, paused spread 0 ms). Log
+    `verify-browser-700bddb2-shared-attempt2-ipic.log`, report
+    `shared-experience-700bddb2-attempt2.json`; `data/reports/shared-experience.json` restored.
+    The `crime-residents` first failure is a flee-timing flake, not fixed here: one failure in
+    two local runs plus the hosted pass; it is routed to the residents journey (#708 lane) if it
+    recurs.
+  - Hosted (PR #732): Verify run 40726781752 on `700bddb2`: `preview experience (heights)` failed
+    on attempt 1 (`bayou-heights: alice home: stalled`, not touched by this diff), rerun once with
+    `gh run rerun 40726781752 --failed`, attempt 2 passed 17:02–17:20Z; final 21 success /
+    5 skipped / 0 failed. Desktop run 40726781917 success. The earlier Verify run on `149567d7`
+    (40710075919) lost its heights shard to the 20-minute cutoff and was superseded by the push.
+  - Not proven by any of the above: production, live auth, native Unreal, target GPU, human
+    accessibility (Val's device pass pending), a browser-level writer takeover (Redis suites only).
