@@ -89,6 +89,15 @@ jobs:
       - run: pnpm run test:server
         env:
           REDIS_URL: redis://127.0.0.1:6379
+          RIVER_OAKS_REHEARSAL_RECEIPT: .runtime/stack-rehearsal.json
+      - name: Stack rehearsal timing evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: stack-rehearsal-attempt-${{ github.run_attempt }}
+          retention-days: 7
+          path: .runtime/stack-rehearsal.json
+          include-hidden-files: true
       - run: pnpm run test:desktop
       # Each browser job used to download Chromium from Playwright's CDN; restore
       # the browsers by Playwright version instead. Install still adds the system

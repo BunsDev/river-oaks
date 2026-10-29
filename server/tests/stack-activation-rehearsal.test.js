@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { monitorEventLoopDelay } from 'node:perf_hooks';
+import { waitForRehearsalSnapshot } from './helpers/stack-rehearsal-observation.js';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { WebSocket } from 'ws';
@@ -54,16 +56,46 @@ test('Stack rehearsal from Gardens: up one step at a time, occupants in every di
   const host = new URL(process.env.REDIS_URL).hostname;
   assert.ok(['127.0.0.1', 'localhost', '::1'].includes(host), 'the rehearsal only runs against a loopback, disposable Redis');
   const namespace = `river-oaks:stack-rehearsal:${randomUUID()}`, redis = new Redis(process.env.REDIS_URL), security = createRedisSecurity({ redis, prefix: `{${namespace}}` });
-  const stateKey = `${roomPrefixFor(namespace)}:state`, sockets = new Set(), logs = [], receipt = { from: DISTRICT_REVISION_GARDENS, to: WOODLAND_REVISION, namespace, phases: [], checks: [], steps: [] };
+  const stateKey = `${roomPrefixFor(namespace)}:state`, sockets = new Set(), logs = [], receipt = { from: DISTRICT_REVISION_GARDENS, to: WOODLAND_REVISION, namespace, phases: [], checks: [], steps: [], joins: [], redisTimings: [], status: 'running' };
+  const started = performance.now(), loop = monitorEventLoopDelay({ resolution: 20 }); loop.enable();
+  // Observe only fixed command classifications and durations, never tokens or payloads.
+  const leases = new Map();
+  for (const method of ['eval', 'evalBuffer']) {
+    const evaluate = redis[method].bind(redis);
+    redis[method] = async (...args) => {
+      const script = String(args[0]), kind = script.includes('COMMIT_ROOM') ? 'commit' : script.includes('local owner =') ? 'acquire' : null;
+      if (!kind) return evaluate(...args);
+      const token = args[2 + Number(args[1])], at = performance.now();
+      const heldMs = leases.has(token) ? Math.round(at - leases.get(token)) : null;
+      const result = await evaluate(...args);
+      if (kind === 'acquire' && Number(result?.[0])) leases.set(token, performance.now());
+      if (kind === 'commit') receipt.redisTimings.push({ kind, epoch: receipt.joins.at(-1)?.epoch, elapsedMs: Math.round(performance.now() - at), heldMs, committed: Number(result) === 1 });
+      return result;
+    };
+  }
   const info = console.info, warn = console.warn; console.info = (...args) => { logs.push(args.join(' ')); }; console.warn = (...args) => { logs.push(args.join(' ')); };
   const gateways = new Set();
   t.after(async () => {
     console.info = info; console.warn = warn;
-    if (process.env.RIVER_OAKS_REHEARSAL_DEBUG) info(logs.filter(line => line.includes('event')).join('\n'));
-    for (const ws of sockets) ws.terminate();
-    for (const gateway of gateways) await gateway.close();
-    security.close();
-    const keys = await redis.keys(`*${namespace}*`); if (keys.length) await redis.del(...keys); await redis.quit();
+    loop.disable();
+    receipt.elapsedMs = Math.round(performance.now() - started);
+    receipt.eventLoopMaxMs = Math.round(loop.max / 1e6);
+    if (receipt.status === 'running') receipt.status = 'failed';
+    const commits = receipt.redisTimings;
+    t.diagnostic(JSON.stringify({ event: 'stack_rehearsal_timing', status: receipt.status, elapsedMs: receipt.elapsedMs, eventLoopMaxMs: receipt.eventLoopMaxMs, maxLeaseHeldMs: Math.max(0, ...commits.map(item => item.heldMs ?? 0)), rejectedCommits: commits.filter(item => !item.committed).length, lastJoin: receipt.joins.at(-1), ...(receipt.status === 'failed' ? { gatewayEvents: logs.slice(-15) } : {}) }));
+    try {
+      if (process.env.RIVER_OAKS_REHEARSAL_RECEIPT) {
+        const path = process.env.RIVER_OAKS_REHEARSAL_RECEIPT;
+        await mkdir(dirname(path), { recursive: true });
+        await writeFile(path, JSON.stringify({ ...receipt, migrationLogs: logs, finishedAt: new Date().toISOString() }, null, 2));
+      }
+      if (process.env.RIVER_OAKS_REHEARSAL_DEBUG) info(logs.filter(line => line.includes('event')).join('\n'));
+    } finally {
+      for (const ws of sockets) ws.terminate();
+      for (const gateway of gateways) await gateway.close();
+      security.close();
+      const keys = await redis.keys(`*${namespace}*`); if (keys.length) await redis.del(...keys); await redis.quit();
+    }
   });
   const data = {}, worldFor = async revision => data[revision] ??= await loadDistrictData({ districtRevision: revision });
   const layouts = Object.fromEntries(await Promise.all(STACK.map(async ([revision]) => [revision, (await worldFor(revision)).eastGardenCommons])));
@@ -87,8 +119,11 @@ test('Stack rehearsal from Gardens: up one step at a time, occupants in every di
     const windows = await redis.keys(`{${namespace}}:limit:tickets:*`); if (windows.length) await redis.del(...windows);
   }
   async function join(node, id) {
+    const timing = { id, revision: node.revision, epoch: node.epoch }, ticketAt = performance.now();
+    receipt.joins.push(timing);
     const headers = { Origin: origin, Cookie: `fixture=${id}`, 'X-CSRF-Token': 'fixture-csrf' };
     const response = await fetch(`${node.base}/api/multiplayer/ticket`, { method: 'POST', headers });
+    timing.ticketMs = Math.round(performance.now() - ticketAt); timing.ticketStatus = response.status;
     assert.equal(response.status, 200, `${id} ticket on ${node.revision}@${node.epoch}`);
     const { ticket } = await response.json();
     const ws = new WebSocket(`${node.base.replace('http:', 'ws:')}/multiplayer?ticket=${ticket}&world=river-oaks&protocol=3`, { headers });
@@ -97,7 +132,7 @@ test('Stack rehearsal from Gardens: up one step at a time, occupants in every di
     const pending = new Map();
     ws.on('error', () => {});
     ws.on('message', raw => { const value = JSON.parse(raw); if (value.type === 'snapshot') snapshot = value; if (value.type === 'result') pending.get(value.requestId)?.(value); });
-    await until(() => snapshot, `${id} snapshot on ${node.revision}@${node.epoch}`);
+    await waitForRehearsalSnapshot(ws, { label: `${id} snapshot on ${node.revision}@${node.epoch}`, timing });
     const send = message => new Promise((resolve, reject) => {
       const requestId = String(++sequence), timer = setTimeout(() => { pending.delete(requestId); reject(new Error(`${message.type} timed out`)); }, 8000);
       pending.set(requestId, value => { clearTimeout(timer); pending.delete(requestId); resolve(value); });
@@ -181,8 +216,8 @@ test('Stack rehearsal from Gardens: up one step at a time, occupants in every di
   check('the one-step rollback keeps accounts and chat', JSON.stringify(Object.keys(durable(alice.snapshot).players).sort()) === JSON.stringify(Object.keys(occupied.players).sort()) && JSON.stringify(durable(alice.snapshot).chat) === JSON.stringify(occupied.chat));
   await stop(node);
   const rolledBytes = await stateBytes();
-  const stale = await boot(WOODLAND_REVISION, step), staleJoin = await (async () => { try { return await join(stale, 'bob'); } catch (error) { return { refused: error.message }; } })();
-  check('a superseded Woodland deployment cannot re-take the town', !staleJoin.snapshot, staleJoin.refused ?? staleJoin.snapshot?.districtRevision);
+  const stale = await boot(WOODLAND_REVISION, step), staleJoin = await (async () => { try { return await join(stale, 'bob'); } catch (error) { return { refused: error.message, closeCode: error.closeCode }; } })();
+  check('a superseded Woodland deployment cannot re-take the town', !staleJoin.snapshot && staleJoin.closeCode === 1013, staleJoin.refused ?? staleJoin.snapshot?.districtRevision);
   await stale.gateway.close(); for (const ws of sockets) ws.terminate(); sockets.clear();
   check('and leaves the rolled-back town unchanged', (await stateBytes()) === rolledBytes && rolledBytes !== null);
   node = null;
@@ -214,9 +249,5 @@ test('Stack rehearsal from Gardens: up one step at a time, occupants in every di
   check('accounts and chat survive the whole stack', JSON.stringify(Object.keys(durable(alice.snapshot).players).sort()) === JSON.stringify(Object.keys(before.players).sort()) && JSON.stringify(durable(alice.snapshot).chat) === JSON.stringify(before.chat));
   check('thirteen deploys, twelve migrations, one each', step === 13 && migrations().length === 12, { deploys: step, migrations: migrations().length });
   receipt.migrationLogs = migrations();
-  if (process.env.RIVER_OAKS_REHEARSAL_RECEIPT) {
-    const path = process.env.RIVER_OAKS_REHEARSAL_RECEIPT;
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify({ ...receipt, finishedAt: new Date().toISOString() }, null, 2));
-  }
+  receipt.status = 'passed';
 });

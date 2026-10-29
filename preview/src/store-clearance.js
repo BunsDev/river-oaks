@@ -28,16 +28,20 @@ export function clearStandingStations(room) {
       &&!boxes.some(b=>a>b.a0-radius&&a<b.a1+radius&&d>b.d0-radius&&d<b.d1+radius)
       &&room.people.every(other=>other===person||Math.hypot(a-other.a,d-other.d)>=0.55);
     if(free(person.a,person.d))continue;
-    const candidates=[];
+    let clear=null, nearest=Infinity;
     const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
-    const add=(a,d)=>candidates.push([clamp(a,room.aMin+margin,room.aMax-margin),clamp(d,margin,room.depth-margin)]);
+    const add=(a,d)=>{
+      a=clamp(a,room.aMin+margin,room.aMax-margin);d=clamp(d,margin,room.depth-margin);
+      // Keep the nearest free candidate in authored order, including ties. Sorting
+      // the entire grid recomputed distances O(n log n) times during cold recovery.
+      const distance=Math.hypot(a-person.a,d-person.d);
+      if(distance<nearest&&free(a,d)){clear=[a,d];nearest=distance;}
+    };
     add(person.a,person.d);
     // Exact edges preserve nearby stations instead of snapping every person to
     // a grid. The grid finds gaps between intersecting fixture footprints.
     for(const box of boxes){add(box.a0-margin,person.d);add(box.a1+margin,person.d);add(person.a,box.d0-margin);add(person.a,box.d1+margin);}
     for(let a=room.aMin+margin;a<room.aMax-margin;a+=0.1)for(let d=margin;d<room.depth-margin;d+=0.1)add(a,d);
-    candidates.sort((a,b)=>Math.hypot(a[0]-person.a,a[1]-person.d)-Math.hypot(b[0]-person.a,b[1]-person.d));
-    const clear=candidates.find(([a,d])=>free(a,d));
     if(clear){
       const station=person.role==='staff'&&person.pose==='attend'?room.fixtures.filter(f=>['counter','desk','reception','concession'].includes(f.kind))
         .sort((a,b)=>Math.hypot(a.a-person.a,a.d-person.d)-Math.hypot(b.a-person.a,b.d-person.d))[0]:null;
