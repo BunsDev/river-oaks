@@ -1,7 +1,8 @@
 // Quarters against the shipped world (#585): every committed neighborhood's
 // hand-authored blocks, rewritten as quarters with the same artistic fields
 // (style, ranges, names, front, sides, court), derive the same plan piece for
-// piece. The two that do not were hand-placed half a metre off their lane.
+// piece (the five Typesafe Place recipes landed on main after the probe). The two that
+// do not were hand-placed half a metre off their lane.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -19,7 +20,7 @@ const quarterOf = ({ id, rect, style, depth, storeys, bays, names, court, front,
 const byQuarters = (recipe, quarters = recipe.blocks.map(quarterOf)) => ({ ...structuredClone(recipe), blocks: [], layout: { quarters, reserved: [] } });
 const shells = plan => plan.pieces.filter(piece => piece.piece.startsWith('building/'));
 
-test('eleven shipped neighborhoods, 24 blocks, derive the same plan from quarters as from their authored blocks', () => {
+test('sixteen shipped neighborhoods, 30 blocks, derive the same plan from quarters as from their authored blocks', () => {
   // The plan hash covers the recipe too, so it differs by construction; the geometry is the proof.
   const identical = [], authoredBlocks = [];
   for (const name of names) {
@@ -29,8 +30,8 @@ test('eleven shipped neighborhoods, 24 blocks, derive the same plan from quarter
     assert.equal(geometry(derived), geometry(authored), name);
     identical.push(name); authoredBlocks.push(recipe.blocks.length);
   }
-  assert.deepEqual(identical, ['bayou-market-commons', 'heights-boulevard-north', 'heights-boulevard-south', 'nineteenth-and-yale', 'studewood-north', 'studewood-south', 'woodland-heights-north', 'woodland-heights-south', 'yale-icehouse', 'yale-street-north', 'yale-street-south']);
-  assert.equal(authoredBlocks.reduce((a, b) => a + b, 0), 24);
+  assert.deepEqual(identical, ['bayou-market-commons', 'heights-boulevard-north', 'heights-boulevard-south', 'nineteenth-and-yale', 'studewood-north', 'studewood-south', 'typesafe-place-green', 'typesafe-place-north', 'typesafe-place-penthouse', 'typesafe-place-south', 'typesafe-place-uptown', 'woodland-heights-north', 'woodland-heights-south', 'yale-icehouse', 'yale-street-north', 'yale-street-south']);
+  assert.equal(authoredBlocks.reduce((a, b) => a + b, 0), 30);
 });
 
 test('the terrace studio rows sit half a metre off Terrace Lane by hand; a quarter flush to the lane moves every shell that half metre, and six rear wings gain a bay', () => {
