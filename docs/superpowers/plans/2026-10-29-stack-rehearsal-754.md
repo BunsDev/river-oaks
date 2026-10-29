@@ -74,7 +74,7 @@ Local checks use the isolated Redis at `127.0.0.1:16586`; host one-minute load 3
 | `REDIS_URL=… node --test server/tests/stack-activation-rehearsal.test.js` ×2 | fix (uncommitted) | Passed twice, 29.1 s and 28.9 s. |
 | `REDIS_URL=… pnpm run test:server` (whole server suite with Redis) | fix (uncommitted) | 1,403 passed, 0 failed, 0 skipped (119 s), with the new and reworked room tests included. |
 | `pnpm run verify` (core) | fix (uncommitted) | Passed 2026-10-29T04:06:38Z (`.runtime/agent/core.json`): tooling 289; preview 4,348 + 1 existing skip; server 1,077 + 284 Redis skips (covered by the row above); desktop 127 + 5 skips; Ruff; pytest 170; demo and demo-verify; secret scan clean. |
-| Hosted checks on the fix | fix | Pending at commit time; recorded in PR #756 once the run finishes. |
+| Hosted checks on the fix | fix | `8e6668cb` 27/27 success (run 40815957232); `preview checks` passed first attempt (04:07–04:22Z), rehearsal 44.5 s on the runner, the new room tests 7.0 s and 7.5 s. One sample against a one-in-four failure rate on main; the ledger-only push after this adds a second. |
 
 Main's `preview checks` job on its last twelve Verify runs (2026-10-28 12:59–21:04Z): failed on
 `36e906b2`, `e5cfada6` and `7cc1fb87`, passed on the other nine (the `be166248` run failed
@@ -96,5 +96,5 @@ elsewhere). About one in four main runs, every other run late in the day.
 
 ## Next step
 
-Finish the local gate (Redis server suite, core verify), commit signed, push, and watch hosted
-`preview checks` on the fix head. Mark ready and land only with Val's authorization.
+Watch the second hosted sample (this ledger push) and PR #729's `preview checks` once this lands.
+Mark ready and land only with Val's authorization.
