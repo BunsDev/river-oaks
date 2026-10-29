@@ -77,23 +77,35 @@ every request anyway.
 `preview/src/player-blocks.js` holds the block list and two controls. One is a
 Block/Unblock button in each roster row, beside Report: Block asks once more before it
 takes effect, Unblock acts at once. The other is a blocked-residents list for
-Settings → Account. `preview/tests/player-blocks.test.js` covers both. The module
-isn't wired into the client yet, because `preview/src/multiplayer-client.js` and
-`preview/src/main.js` belong to another task. Wiring it takes four calls:
+Settings → Account. `multiplayer-client.js` now attaches the authenticated request
+function, with the current world and CSRF token, and reloads the list on connection.
+It mounts the button after Report for every other player, forgets removed rows, and
+detaches on sign-out, terminal connection loss and disposal. The Account pane in
+`sidebar.js` shows the list, refreshes when opened, and offers Refresh after errors.
+`main.js` needs no change: the multiplayer client already owns the roster.
 
-1. When the town client signs in, attach its request function, then call `refresh()`;
-   call `attach(null)` on sign-out:
+The controls never filter shared state locally. A successful announcement requires
+the server's `{ ok: true }` and a confirmed list containing the resulting state.
+A failed write or failed reload shows the error, not a success. A write can have
+persisted even when its reply or reload failed; Refresh checks what the server holds.
+Malformed list replies cannot turn an unknown or previously loaded list into an empty
+one. An initial load failure leaves roster actions disabled until a successful refresh.
 
-   ```js
-   sharedBlockList().attach((action, data) => api(`/api/blocks/${action}?world=${encodeURIComponent(worldId)}`,
-     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data ?? {}) }));
-   ```
-2. After the Report button, call `blockUI.rosterButton(row, player)`.
-3. Where rows are removed, call `blockUI.forgetRow(id)`.
-4. In the Account pane of `preview/src/sidebar.js`, add
-   `group('Blocked residents', [createBlockedPlayersSettings({ blocks: sharedBlockList() })])`.
+Attachments carry a session generation. An earlier session's mutation cannot refresh
+the next session, and its callbacks cannot announce there. An older list read cannot
+replace a newer one. Reattachment cancels outstanding confirmations. Removed rows
+and disposed controls ignore late replies. Only the client owning an attachment can
+detach it; a stale HTTP 401 cannot clear a newer client's list. Auth replies are fenced
+by attempt and logout epoch, and reconnect cannot restore private blocks during a
+pending sign-out. Failed sign-out recovery requires a fresh authenticated session.
 
-Until then a block can only be made through the routes.
+Regressions: `preview/tests/player-blocks.test.js`, the real-client transport journey
+`player-blocking-lifecycle`, and the rendered two-resident `player-blocking` journey.
+The latter is in the required shared suite; select it with
+`RIVER_OAKS_SHARED_JOURNEY=player-blocking pnpm run test:shared required`.
+Select `development-world` instead for the standalone town's second-world case.
+Fixture evidence does not establish live WorkOS, hosted routing, physical iOS,
+VoiceOver, proximity-voice coverage, or App Review readiness.
 
 ## Storage and how a block reaches every socket
 

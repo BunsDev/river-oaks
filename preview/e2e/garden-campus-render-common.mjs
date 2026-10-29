@@ -43,8 +43,11 @@ export const glCounters = () => {
 
 // The fixture can miss its 30 s startup window under heavy host load; retry it. `root` serves
 // another checkout (a baseline copy with its own node_modules) through its own fixture.
-export async function startFixture(revision, { attempts = 3, root = null } = {}) {
-  const env = { VITE_SHARED_SOFTWARE_RENDERING: '0', ...(revision === 'gardens' ? { RIVER_OAKS_DISTRICT_REVISION: DISTRICT_REVISION_GARDENS } : {}) };
+// `districtRevision` serves any other campus-bearing revision (the Commons and later ones).
+const servedRevision = (revision, districtRevision) => districtRevision ?? (revision === 'gardens' ? DISTRICT_REVISION_GARDENS : null);
+export async function startFixture(revision, { attempts = 3, root = null, districtRevision = null } = {}) {
+  const served = servedRevision(revision, districtRevision);
+  const env = { VITE_SHARED_SOFTWARE_RENDERING: '0', ...(served ? { RIVER_OAKS_DISTRICT_REVISION: served } : {}) };
   const { startBrowserFixture } = await import(root ? pathToFileURL(`${root}/preview/e2e/fixture-server.js`).href : './fixture-server.js');
   for (let attempt = 1; ; attempt++) {
     try { return await startBrowserFixture({ env }); } catch (error) {
@@ -62,7 +65,9 @@ export async function launch({ vsync = true } = {}) {
 
 // One authenticated page on the district, ready for audit views. Returns { context, page,
 // errors, manifest, firstEntry }.
-export async function openDistrict(browser, fixture, revision, { viewport = { width: 1280, height: 800 }, graphics = 'smooth', hideInterface = false, exposeCampus = true } = {}) {
+export async function openDistrict(browser, fixture, revision, { viewport = { width: 1280, height: 800 }, graphics = 'smooth', hideInterface = false, exposeCampus = true, districtRevision = null } = {}) {
+  // Every revision after the garage composes the campus (server/district-data.js).
+  const served = servedRevision(revision, districtRevision);
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
   await context.addCookies([{ name: 'fixture_session', value: 'owner', url: fixture.origin }]);
   await context.addInitScript(value => localStorage.setItem('river-oaks-graphics', value), graphics);
@@ -87,8 +92,8 @@ export async function openDistrict(browser, fixture, revision, { viewport = { wi
     await page.locator('#reload').evaluate(button => button.click());
   }
   const firstEntry = { readyMs: Date.now() - started, ...(await page.evaluate(() => ({ gl: { ...window.__glCost }, memory: window.__riverRenderAudit.graphics().memory }))) };
-  assert.equal(manifest?.districtRevision ?? null, revision === 'gardens' ? DISTRICT_REVISION_GARDENS : null, `${revision}: the town served the expected revision`);
-  if (exposeCampus) assert.equal(await page.evaluate(() => Boolean(globalThis.__gardenCampusRoot)), revision === 'gardens', `${revision}: campus root present only on the campus revision`);
+  assert.equal(manifest?.districtRevision ?? null, served, `${revision}: the town served the expected revision`);
+  if (exposeCampus) assert.equal(await page.evaluate(() => Boolean(globalThis.__gardenCampusRoot)), served !== null, `${revision}: campus root present only on a campus revision`);
   if (hideInterface) await page.addStyleTag({ content: 'body * { visibility: hidden !important; } #canvas-host, #canvas-host * { visibility: visible !important; }' });
   return { context, page, errors, manifest, firstEntry };
 }
