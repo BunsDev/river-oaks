@@ -48,11 +48,13 @@ function validateOptions(options) {
   for (const [name, value, low, high] of [['sidewalk', sidewalk, 1, 10], ['lane', lane, 3, 20], ['tolerance', tolerance, 0.5, 15], ['minimumLength', minimumLength, 5, 200]]) if (!(finite(value) && value >= low && value <= high)) fail(`${name} must be ${low}–${high}`);
   const kinds = options.kinds ?? null;
   if (kinds !== null && !(Array.isArray(kinds) && kinds.every(kind => typeof kind === 'string'))) fail('kinds must be a list of road kinds');
+  const parcels = options.parcels ?? 'quarters';
+  if (!['quarters', 'ignore'].includes(parcels)) fail('parcels must be quarters or ignore');
   const id = options.id ?? 'reference';
   if (!idOk(id)) fail(`id ${id}`);
   const style = options.style ?? 'market-row';
   if (!KIT_STYLES[style]) fail(`style ${style}`);
-  return { site, rotation, sidewalk, lane, tolerance, minimumLength, kinds, id, title: options.title ?? `Reference streets: ${id}`, style, source: options.source ?? {} };
+  return { site, rotation, sidewalk, lane, tolerance, minimumLength, kinds, parcels, id, title: options.title ?? `Reference streets: ${id}`, style, source: options.source ?? {} };
 }
 
 const heading = ([ax, ay], [bx, by]) => (Math.atan2(by - ay, bx - ax) * 180 / Math.PI + 360) % 180;
@@ -157,24 +159,57 @@ export function referenceRecipe(world, options) {
       ? { id: street.id, from: [street.extent[0], street.position], to: [street.extent[1], street.position], lane: mm(street.lane), sidewalk: mm(sidewalk) }
       : { id: street.id, from: [street.position, street.extent[0]], to: [street.position, street.extent[1]], lane: mm(street.lane), sidewalk: mm(sidewalk) }),
     plazas: [], blocks: [], landmarks: [], furniture: [], context: [],
-    layout: { quarters: [{ id: 'quarter', style: settings.style, depth: [12, 16], storeys: [1, 2], bays: [4.5, 7], names: [] }], reserved: [] },
+    layout: { quarters: [], reserved: [] },
     overrides: {}, additions: [],
   };
-  // Count the blocks the skeleton's one quarter yields, so its name pool has one placeholder per block.
-  const quarter = recipe.layout.quarters[0];
-  quarter.names = Array.from({ length: 256 }, (_, i) => `Placeholder ${i + 1}`);
+  // Quarters: one per mapped parcel with bounds (a Studio region or a neighborhood-compiler
+  // candidate), turned into the kit frame, snapped to the module and clipped to the site, so
+  // parcels drawn in Studio decide where kit blocks go; otherwise one quarter over the site.
+  const constraints = { style: settings.style, depth: [12, 16], storeys: [1, 2], bays: [4.5, 7] };
+  const parcels = { quarters: [], dropped: [] };
+  if (settings.parcels === 'quarters') for (const parcel of parcelsOf(world)) {
+    const corners = [[parcel.bounds_m[0], parcel.bounds_m[1]], [parcel.bounds_m[2], parcel.bounds_m[1]], [parcel.bounds_m[2], parcel.bounds_m[3]], [parcel.bounds_m[0], parcel.bounds_m[3]]].map(local);
+    const rect = [snap(Math.max(0, Math.min(...corners.map(c => c[0])))), snap(Math.max(0, Math.min(...corners.map(c => c[1])))), snap(Math.min(width, Math.max(...corners.map(c => c[0])))), snap(Math.min(height, Math.max(...corners.map(c => c[1]))))];
+    // A parcel drawn a sidewalk's width from its street meets the kit's corridor edge, so its blocks have frontage.
+    const snapped = [];
+    for (const [i, axis] of [[0, 'north'], [1, 'east'], [2, 'north'], [3, 'east']]) for (const street of kept) if (street.axis === axis) for (const edge of [street.position - street.outer, street.position + street.outer]) {
+      if (Math.abs(rect[i] - edge) > EPS && Math.abs(rect[i] - edge) <= 1 + EPS) { snapped.push(`${['west', 'south', 'east', 'north'][i]} ${rect[i]} to ${mm(edge)} (${street.id})`); rect[i] = mm(edge); }
+    }
+    const quarterId = slug(parcel.id);
+    if (rect[2] - rect[0] < KIT_CONVENTIONS.bay.min || rect[3] - rect[1] < KIT_CONVENTIONS.bay.min) { parcels.dropped.push({ parcel: parcel.id, reason: rect[2] <= rect[0] || rect[3] <= rect[1] ? 'outside the site' : `only ${mm(rect[2] - rect[0])} × ${mm(rect[3] - rect[1])} m inside the site` }); continue; }
+    if (!idOk(quarterId) || parcels.quarters.some(entry => entry.id === quarterId)) { parcels.dropped.push({ parcel: parcel.id, reason: `quarter id ${quarterId} is invalid or repeated` }); continue; }
+    parcels.quarters.push({ id: quarterId, parcel: parcel.id, name: parcel.name ?? null, rect: [...rect], snapped });
+    recipe.layout.quarters.push({ id: quarterId, rect, ...constraints, names: [] });
+  }
+  if (!recipe.layout.quarters.length) recipe.layout.quarters.push({ id: 'quarter', ...constraints, names: [] });
+  // Count the blocks each quarter yields, so its name pool has one placeholder per block.
+  for (const quarter of recipe.layout.quarters) quarter.names = Array.from({ length: 256 }, (_, i) => `Placeholder ${i + 1}`);
   let layout = null, layoutError = null;
   try { layout = expandLayout(recipe); } catch (error) { layoutError = error.message; }
   const blocks = layout?.blocks.length ?? 0;
-  quarter.names = Array.from({ length: Math.max(1, blocks) }, (_, i) => `Placeholder shop ${i + 1}`);
+  for (const quarter of recipe.layout.quarters) {
+    const count = layout ? layout.diagnostics.cells.filter(cell => cell.quarter === quarter.id).reduce((sum, cell) => sum + cell.blocks.length, 0) : 0;
+    quarter.names = Array.from({ length: Math.max(1, count) }, (_, i) => `Placeholder shop ${i + 1}`);
+  }
+  const openLand = layout ? mm(layout.diagnostics.cells.filter(cell => cell.result === 'open').reduce((sum, cell) => sum + (cell.rect[2] - cell.rect[0]) * (cell.rect[3] - cell.rect[1]), 0)) : 0;
   recipe.reference = {
       source: { name: settings.source.name ?? null, sha256: settings.source.sha256 ?? null, crs: world.crs ?? 'LOCAL:METRES', origin: Array.isArray(world.origin) ? [...world.origin] : null, schema_version: world.schema_version ?? null },
       site: [...site], rotation, tolerance, module: MODULE, sidewalk, minimumLength, buildings,
       streets: kept.map(street => ({ id: street.id, roads: street.roads.map(road => road.id), name: street.roads[0].name, kind: street.roads[0].kind, width: street.roads[0].width })),
-      blocks, layoutWarnings: layout?.diagnostics.warnings ?? [], layoutError,
+      blocks, openLand, parcels: { source: settings.parcels, quarters: parcels.quarters, dropped: parcels.dropped }, layoutWarnings: layout?.diagnostics.warnings ?? [], layoutError,
       dropped: [...dropped.values()].map(entry => ({ ...entry, reason: entry.reason === 'bends off the grid' ? `bends up to ${entry.worst}° off the grid` : entry.reason, worst: undefined })).sort((a, b) => a.road < b.road ? -1 : a.road > b.road ? 1 : a.reason < b.reason ? -1 : 1),
   };
   return recipe;
+}
+
+// Mapped parcels with axis-aligned bounds (Studio regions, neighborhood-compiler candidates); GIS parcels with rings are not land to build on here.
+function parcelsOf(world) {
+  if (!Array.isArray(world.parcels)) return [];
+  const ids = new Set();
+  return world.parcels.filter(parcel => parcel && typeof parcel.id === 'string' && Array.isArray(parcel.bounds_m) && parcel.bounds_m.length === 4 && parcel.bounds_m.every(finite) && parcel.bounds_m[0] < parcel.bounds_m[2] && parcel.bounds_m[1] < parcel.bounds_m[3])
+    .filter(parcel => { if (ids.has(parcel.id)) fail(`parcel ids must be unique (${parcel.id})`); ids.add(parcel.id); return true; })
+    .map(parcel => ({ id: parcel.id, name: typeof parcel.name === 'string' ? parcel.name : null, bounds_m: parcel.bounds_m }))
+    .sort((a, b) => a.id < b.id ? -1 : 1);
 }
 
 // A segment with both ends outside the site can still cross it.
