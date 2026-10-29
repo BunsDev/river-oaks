@@ -66,7 +66,68 @@ export const KIT_MATERIALS = Object.freeze({
   'bronze-satin': { color: '#7a6040', roughness: .3, metalness: .85 },
   'lamp-teal': { color: '#1f454a', roughness: .5, metalness: .65 },
   'opal-glow': { color: '#c9fff0', emissive: '#c9fff0', emissiveIntensity: 2.2, roughness: .4 },
+  // TypeSafe Place (typesafe-place-1): pearl stone and warm concrete residences, rose-gold
+  // metal, blush canvas, planted roofs, and the pink light the neighborhood is known by.
+  'stone-pearl': { surface: 'pavement', color: '#ece6dd', tile: 5, textureContrast: .26 },
+  'concrete-warm': { surface: 'stone', color: '#d3cabc', tile: 4, textureContrast: .3 },
+  'rose-gold': { color: '#c48a80', roughness: .32, metalness: .85 },
+  'canvas-blush': { color: '#e3a1b4', roughness: .9 },
+  'glass-rail': { color: '#a9c8c9', roughness: .05, metalness: .2, glass: true },
+  // Homes lit from within: a warm pane among the reflective glass.
+  'glass-lit': { color: '#4d4a44', roughness: .25, emissive: '#ffb76b', emissiveIntensity: .2 },
+  planting: { surface: 'grass', color: '#557f45', tile: 1.2, textureContrast: .5 },
+  'neon-rose': { color: '#ff6fae', emissive: '#ff4f9a', emissiveIntensity: 1.8, roughness: .4 },
+  'ribbon-rose': { color: '#e4589b', roughness: .3, metalness: .35, emissive: '#ff3f8f', emissiveIntensity: .3 },
 });
+
+// Pink Jet-Age (#738, #739): the approved optimistic retrofuturist direction. TypeSafe
+// pink is fixed; the supporting roles are proposals, so they live here as named roles
+// rather than replacing every token in the client.
+export const PINK_JET_AGE = Object.freeze({
+  pink: '#F486A1', ivory: '#F7F1E8', mintGlass: '#BFE2DE', chrome: '#BCC5C8', garden: '#4A6A55', ink: '#24242A',
+});
+
+// Finishes recolour material slots at render time. A finish never changes a plan, its
+// hash, a lock, a piece ID, geometry, collision or a recipe override: it only replaces
+// fields of the named slot specs. `classic` is the default and changes nothing, so a
+// caller reverts by omitting the option. Slots a finish leaves out keep their spec.
+const P = PINK_JET_AGE;
+export const KIT_FINISHES = Object.freeze({
+  classic: Object.freeze({ label: 'Classic', materials: Object.freeze({}) }),
+  'pink-jet-age': Object.freeze({
+    label: 'Pink Jet-Age',
+    // Rounded-form vocabulary (render.js renderShell): canopy noses and capsule sign
+    // plates as facade detail in existing slots. Massing, ground and collision never change.
+    forms: true,
+    materials: Object.freeze({
+      // Ivory shells: every stone and stucco wall keeps its surface and coursing.
+      limestone: { color: P.ivory }, 'stucco-ivory': { color: P.ivory }, 'stucco-apricot': { color: '#f3e4d6' },
+      'stone-pearl': { color: P.ivory }, 'concrete-warm': { color: '#ede3d6' }, porcelain: { color: P.ivory }, 'trim-ivory': { color: P.ivory },
+      // Brick warms toward the brand rose instead of turning flat pink.
+      'brick-rose': { color: '#d9a1a8' }, 'brick-umber': { color: '#b98f84' },
+      // Pink leads on fascias, floor plates, sills and canopies; it never covers a whole wall.
+      'trim-teal': { color: P.pink, roughness: .5 }, 'trim-deep-teal': { color: P.pink, roughness: .5 }, 'trim-mint': { color: P.pink, roughness: .5 },
+      'canvas-teal': { color: P.pink }, 'canvas-rose': { color: P.pink }, 'canvas-apricot': { color: P.ivory }, 'canvas-blush': { color: P.pink },
+      // Restrained chrome replaces brass accents: satin, not mirror. The luxury styles'
+      // satin bronze (gallery canopies, ribbon fins, court floor plates) becomes pink
+      // lacquer, otherwise those streets would show no pink at all (matched review, #749).
+      'metal-brass': { color: P.chrome, roughness: .3, metalness: .9 }, 'bronze-satin': { color: P.pink, roughness: .45, metalness: 0 },
+      'rose-gold': { color: P.chrome, roughness: .3, metalness: .9 }, 'metal-bronze': { color: '#8e979b', roughness: .38, metalness: .8 },
+      // Ink, not black, for mullions, edging and lamp columns.
+      'steel-black': { color: P.ink }, 'lamp-teal': { color: P.ink },
+      // Mint glass. Reflective panes take a muted grey-mint: a saturated tint plus the sky
+      // reflection read as cyan in the matched review. Rails carry the lighter role.
+      'glass-dark': { color: '#7a9591' }, glass: { color: '#6e9f99' }, 'glass-rail': { color: P.mintGlass },
+      planting: { color: P.garden },
+    }),
+  }),
+});
+
+export function kitFinish(name = 'classic') {
+  const finish = KIT_FINISHES[name];
+  if (!finish) throw new Error(`Unknown kit finish ${name}`);
+  return finish;
+}
 
 // Architectural styles choose materials and preferred variants. Distinction comes
 // from massing, rhythm and frontage depth as much as colour.
@@ -93,6 +154,25 @@ export const KIT_STYLES = Object.freeze({
     wall: ['limestone'], trim: 'bronze-satin', accent: 'metal-brass',
     storefronts: ['loggia', 'gallery', 'loggia'], awnings: ['canvas-rose'],
     windows: 'tall', roofs: ['reveal', 'stepped'], setback: 0, signage: 'blade', signPalette: 'noir',
+  },
+  // TypeSafe Place: residential towers and mid-rises with a balcony slab and a glass rail on
+  // every storey, gallery lobbies, and a pink light band at the crown.
+  'place-tower': {
+    wall: ['stone-pearl', 'concrete-warm'], trim: 'steel-black', accent: 'rose-gold',
+    storefronts: ['gallery'], awnings: ['canvas-blush'],
+    windows: 'balcony', roofs: ['crown'], setback: 0, signage: 'letters', signPalette: 'noir',
+  },
+  'place-residence': {
+    wall: ['stone-pearl', 'concrete-warm'], trim: 'steel-black', accent: 'rose-gold',
+    storefronts: ['gallery', 'loggia'], awnings: ['canvas-blush'],
+    windows: 'balcony', roofs: ['garden'], setback: 0, signage: 'letters', signPalette: 'noir',
+  },
+  // Everyday retail: pearl stone shop rows with blush awnings, every roof a garden. One wall,
+  // roof and awning material each keeps a row's draw calls within the kit budget.
+  'place-retail': {
+    wall: ['stone-pearl'], trim: 'steel-black', accent: 'rose-gold',
+    storefronts: ['gallery', 'awning', 'canopy'], awnings: ['canvas-blush'],
+    windows: 'ribbon', roofs: ['garden'], setback: 0, signage: 'letters', signPalette: 'noir',
   },
   'heights-row': {
     wall: ['stucco-apricot', 'brick-umber'], trim: 'trim-deep-teal', accent: 'metal-bronze',
@@ -127,6 +207,11 @@ export const KIT_PIECES = Object.freeze({
   'roof/sawtooth': { family: 'roof', collision: 'none', triangles: 220 },
   // A thin black-steel coping over a shadow reveal: no cornice.
   'roof/reveal': { family: 'roof', collision: 'none', triangles: 72 },
+  // A planted roof inside the parapet: lawn, raised beds and a pergola. Nothing rises more
+  // than 1.9 m above the roof, inside the 3.1 m flight margin over every roof.
+  'roof/garden': { family: 'roof', collision: 'none', triangles: 420 },
+  // The top two storeys set back behind terraces, under a pink light band.
+  'roof/crown': { family: 'roof', collision: 'none', triangles: 360 },
   'landscape/street-tree': { family: 'landscape', collision: 'solid', footprint: [.6, .6], height: 2.5, triangles: 0 },
   'landscape/tree-pit': { family: 'landscape', collision: 'none', triangles: 40 },
   'landscape/planter': { family: 'landscape', collision: 'solid', height: .5, triangles: 60 },
@@ -141,6 +226,8 @@ export const KIT_PIECES = Object.freeze({
   // board. Its front (counter side) faces yaw's −v, like a bench's seat.
   'furniture/market-stall': { family: 'furniture', collision: 'solid', footprint: [3.6, 2.4], height: 2.8, triangles: 700 },
   'landmark/water-tower': { family: 'landmark', collision: 'solid', footprint: [7, 7], height: 27, triangles: 3200 },
+  // The Neighborhood Green's public art: a looped pink ribbon on a stone plinth.
+  'landmark/ribbon': { family: 'landmark', collision: 'solid', footprint: [4, 4], height: 8.6, triangles: 4200 },
   // Edges: a planted hedge stops walking; a bayou and context massing give the
   // boundary a reason and a skyline. Context massing is visual only, never ground.
   'landscape/hedge': { family: 'landscape', collision: 'solid', height: .95, triangles: 60 },

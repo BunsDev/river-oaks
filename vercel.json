@@ -56,7 +56,7 @@
   "functions": {
     "api/server.js": {
       "maxDuration": 300,
-      "includeFiles": "{preview/public/data/district*.json,src/river_oaks/chauffeur-policy.json}"
+      "includeFiles": "{preview/public/data/district*.json,src/river_oaks/chauffeur-policy.json,config/content-filter.json}"
     }
   },
   "regions": [
@@ -169,6 +169,10 @@
     {
       "source": "/api/moderation/reports",
       "destination": "/api/server?_river_path=/api/moderation/reports"
+    },
+    {
+      "source": "/api/moderation/reports/close",
+      "destination": "/api/server?_river_path=/api/moderation/reports/close"
     },
     {
       "source": "/api/waitlist/status",
