@@ -52,6 +52,7 @@
     "pretest:security:e2e": "node scripts/enforce-pnpm.mjs",
     "pretest:reflections:webgl": "node scripts/enforce-pnpm.mjs",
     "pretest:screening": "node scripts/enforce-pnpm.mjs",
+    "pretest:crime:takeover": "node scripts/enforce-pnpm.mjs",
     "pretest:trees:webgl": "node scripts/enforce-pnpm.mjs",
     "preassets:trees": "node scripts/enforce-pnpm.mjs",
     "preserver": "node scripts/enforce-pnpm.mjs",

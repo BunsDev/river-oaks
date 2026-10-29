@@ -348,3 +348,8 @@ paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs 
   ipic-screening (89 s). Receipt `verify-full-71bb8d5a-attempt2-receipt.json` and log
   `verify-full-71bb8d5a-attempt2.log` under `.runtime/evidence-640/`. The takeover commit
   `c1f58ffb` on top adds only test harness, journey, receipt and docs files.
+- **Hosted on `c1f58ffb` and `b757d195`**: `preview unit` failed in `scripts/tests/pnpm-policy.test.js`
+  ("guards each public script"): the new `test:crime:takeover` script had no `pretest:crime:takeover`
+  guard. The `c1f58ffb` run (40811842027) was superseded by the push; the `b757d195` run
+  (40812794923) ended 17 success / 2 failure (preview unit and the aggregate). Fixed by adding the
+  guard; the run on the fixed head is recorded below.
