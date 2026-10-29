@@ -108,7 +108,7 @@ Local checks use the isolated Redis at `127.0.0.1:16586`; host one-minute load 3
 | `node --test server/tests/stack-activation-rehearsal.test.js` (final code) | final (uncommitted) | Passed, 29.4 s. |
 | `REDIS_URL=… pnpm run test:server` (final code) | final (uncommitted) | 1,404 passed, 0 failed, 0 skipped (125 s), the lease test included. |
 | `pnpm run verify` (core, final code) | final (uncommitted) | Passed 2026-10-29T04:52:17Z (`.runtime/agent/core.json`): tooling 289; preview 4,348 + 1 existing skip; server 1,077 + 285 Redis skips (covered by the row above); desktop 127 + 5 skips; Ruff; pytest; demo and demo-verify; secret scan clean. |
-| Hosted checks on the final code | final | Pending at commit time; recorded in PR #756 once the run finishes. |
+| Hosted checks on the final code | final | `01eaf6d3` 27/27 success (run 40820205987); `preview checks` passed first attempt (04:52–05:07Z), rehearsal 43.8 s on the runner, the lease test 6.0 s. The ledger-only push after this adds a second sample. |
 | Hosted checks on the request-budget fix alone | `8e6668cb` | `8e6668cb` 27/27 success (run 40815957232); `preview checks` passed first attempt (04:07–04:22Z), rehearsal 44.5 s on the runner, the new room tests 7.0 s and 7.5 s. |
 
 Hosted checks on `e48fb42b` (ledger-only over `8e6668cb`): 26/27, `preview checks` failed the
