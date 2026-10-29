@@ -56,146 +56,6 @@
     }
   ],
   "plazas": [],
-  "blocks": [
-    {
-      "id": "northwest-row",
-      "style": "heights-row",
-      "rect": [
-        0,
-        71.5,
-        50.5,
-        128
-      ],
-      "front": "south",
-      "sides": [
-        "east"
-      ],
-      "depth": [
-        11,
-        16
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        6
-      ],
-      "names": [
-        "Sawtooth Supply",
-        "Iron & Ivy",
-        "Two Pecans Diner",
-        "Gilded Spoke",
-        "Fig & Flint",
-        "Sunday Press"
-      ]
-    },
-    {
-      "id": "northeast-row",
-      "style": "market-row",
-      "rect": [
-        63.5,
-        71.5,
-        115,
-        128
-      ],
-      "front": "south",
-      "sides": [
-        "west"
-      ],
-      "depth": [
-        12,
-        14
-      ],
-      "storeys": [
-        2,
-        3
-      ],
-      "bays": [
-        5,
-        7
-      ],
-      "names": [
-        "Heron Hardware",
-        "Calico Tailors",
-        "Brick Oven Rosa",
-        "Juniper Vintage",
-        "Lark Optics"
-      ]
-    },
-    {
-      "id": "southwest-row",
-      "style": "heights-row",
-      "rect": [
-        0,
-        0,
-        50.5,
-        56.5
-      ],
-      "front": "north",
-      "sides": [
-        "east"
-      ],
-      "depth": [
-        12,
-        18
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        5,
-        7.5
-      ],
-      "names": [
-        "Moonflower Market",
-        "Copper Kettle",
-        "Tin Roof Records",
-        "Little Bayou Toys",
-        "Ochre Studio"
-      ]
-    },
-    {
-      "id": "southeast-court",
-      "style": "garden-court",
-      "rect": [
-        63.5,
-        0,
-        115,
-        56.5
-      ],
-      "front": "west",
-      "sides": [
-        "north"
-      ],
-      "depth": [
-        14,
-        16
-      ],
-      "storeys": [
-        2,
-        3
-      ],
-      "bays": [
-        5,
-        7
-      ],
-      "court": {
-        "at": 0.45,
-        "width": 11,
-        "depth": 9
-      },
-      "names": [
-        "Jasmine Hall",
-        "Rosewater Books",
-        "Cedar Tea Room",
-        "Mint Bicycle Co.",
-        "Laurel Ceramics"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -234,5 +94,137 @@
       "note": "The workshop corner keeps its sawtooth roof whatever the seed."
     }
   },
-  "additions": []
+  "additions": [],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "northwest-row",
+        "rect": [
+          0,
+          71.5,
+          50.5,
+          128
+        ],
+        "style": "heights-row",
+        "depth": [
+          11,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          6
+        ],
+        "names": [
+          "Sawtooth Supply",
+          "Iron & Ivy",
+          "Two Pecans Diner",
+          "Gilded Spoke",
+          "Fig & Flint",
+          "Sunday Press"
+        ]
+      },
+      {
+        "id": "northeast-row",
+        "rect": [
+          63.5,
+          71.5,
+          115,
+          128
+        ],
+        "style": "market-row",
+        "depth": [
+          12,
+          14
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          5,
+          7
+        ],
+        "names": [
+          "Heron Hardware",
+          "Calico Tailors",
+          "Brick Oven Rosa",
+          "Juniper Vintage",
+          "Lark Optics"
+        ]
+      },
+      {
+        "id": "southwest-row",
+        "rect": [
+          0,
+          0,
+          50.5,
+          56.5
+        ],
+        "style": "heights-row",
+        "depth": [
+          12,
+          18
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          5,
+          7.5
+        ],
+        "names": [
+          "Moonflower Market",
+          "Copper Kettle",
+          "Tin Roof Records",
+          "Little Bayou Toys",
+          "Ochre Studio"
+        ]
+      },
+      {
+        "id": "southeast-court",
+        "rect": [
+          63.5,
+          0,
+          115,
+          56.5
+        ],
+        "style": "garden-court",
+        "depth": [
+          14,
+          16
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          5,
+          7
+        ],
+        "names": [
+          "Jasmine Hall",
+          "Rosewater Books",
+          "Cedar Tea Room",
+          "Mint Bicycle Co.",
+          "Laurel Ceramics"
+        ],
+        "court": {
+          "at": 0.45,
+          "width": 11,
+          "depth": 9
+        },
+        "front": "west"
+      }
+    ],
+    "migrated": {
+      "blocks": 4,
+      "geometry": "2e05bf8475d0be92"
+    }
+  }
 }

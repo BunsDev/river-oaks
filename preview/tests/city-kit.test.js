@@ -49,7 +49,7 @@ test('a seed varies only what the recipe leaves open', () => {
     assert.deepEqual(piecesOf(plan, 'bayou-market-commons/bayou-lantern-tower'), piecesOf(base, 'bayou-market-commons/bayou-lantern-tower'));
   }
   // Streams are per stable ID: re-rhythming one block leaves the other's pieces unchanged.
-  const changed = structuredClone(commons); changed.blocks[1].bays = [6, 7.5]; changed.blocks[1].storeys = [2, 3];
+  const changed = structuredClone(commons); changed.layout.quarters[1].bays = [6, 7.5]; changed.layout.quarters[1].storeys = [2, 3];
   const regenerated = assembleNeighborhood(changed);
   assert.notDeepEqual(piecesOf(regenerated, 'bayou-market-commons/garden-court/'), piecesOf(base, 'bayou-market-commons/garden-court/'));
   assert.deepEqual(piecesOf(regenerated, 'bayou-market-commons/market-row/'), piecesOf(base, 'bayou-market-commons/market-row/'));
@@ -80,7 +80,7 @@ test('invalid recipes and overrides fail with a reason instead of producing a br
     [recipe => { recipe.overrides['bayou-market-commons/market-row/parcel-0'] = { set: { glass: 'mirror' } }; }, /cannot set glass/],
     [recipe => { recipe.overrides['elsewhere/piece'] = { suppress: true }; }, /stable piece ID/],
     [recipe => { recipe.additions.push({ id: 'bench-in-shop', piece: 'furniture/bench', at: [20, 12] }); }, /not inside walkable ground/],
-    [recipe => { recipe.blocks[0].style = 'brutalist'; }, /style/],
+    [recipe => { recipe.layout.quarters[0].style = 'brutalist'; }, /style/],
     [recipe => { recipe.streets[0].to = [47, 5]; }, /must run east/],
     [recipe => { recipe.kit = 'city-kit-0'; }, /kit must be/],
     [recipe => { recipe.furniture.push({ ...recipe.furniture[0] }); }, /item id/],
