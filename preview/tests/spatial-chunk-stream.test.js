@@ -123,3 +123,17 @@ test('invalid positions do not evict a valid scene and invalid definitions fail 
   assert.throws(() => harness({ chunks: [chunk('a'), chunk('a')] }), /chunk/i);
   assert.throws(() => harness({ maxConcurrent: 0 }), /limit/i);
 });
+
+test('state(id) follows one chunk without building the debug picture: absent, loading, ready, failed, stalled, disposed', async () => {
+  let offline = false, hanging = false;
+  const h = harness({ load: async () => { if (offline) throw new Error('offline'); if (hanging) return new Promise(() => {}); return h.resource(); } });
+  const agree = expected => { assert.equal(h.stream.state('a'), expected); assert.equal(h.stream.debug().chunks[0].state, expected); };
+  agree('absent'); assert.equal(h.stream.state('nowhere'), null);
+  h.stream.update([[5, 5]]); agree('loading');
+  await flush(); agree('ready');
+  h.stream.update([[100, 5]]); agree('absent');
+  offline = true; h.stream.update([[5, 5]]); await flush(); agree('failed');
+  offline = false; hanging = true; h.tick(100); h.stream.update([[5, 5]]); agree('loading');
+  h.tick(500); h.stream.update([[5, 5]]); agree('stalled');
+  h.stream.dispose(); assert.equal(h.stream.state('a'), 'absent');
+});

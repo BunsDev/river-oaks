@@ -72,79 +72,6 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "twentieth-north-west",
-      "style": "place-retail",
-      "rect": [
-        559,
-        117.5,
-        619,
-        129.5
-      ],
-      "front": "south",
-      "sides": [
-        "east",
-        "west"
-      ],
-      "depth": [
-        10,
-        12
-      ],
-      "storeys": [
-        2,
-        3
-      ],
-      "bays": [
-        6,
-        7.5
-      ],
-      "names": [
-        "Keyof Locksmith",
-        "Declared Deli",
-        "Mapped Travel",
-        "Never Late Laundry",
-        "Spread Operator Yoga",
-        "Partial Pantry",
-        "Pick and Omit Cheese"
-      ]
-    },
-    {
-      "id": "twentieth-north-east",
-      "style": "place-retail",
-      "rect": [
-        637,
-        117.5,
-        702.5,
-        129.5
-      ],
-      "front": "south",
-      "sides": [
-        "west"
-      ],
-      "depth": [
-        10,
-        12
-      ],
-      "storeys": [
-        2,
-        3
-      ],
-      "bays": [
-        6,
-        7.5
-      ],
-      "names": [
-        "Assertion Hair Studio",
-        "Template Literal Print",
-        "Overload Fitness",
-        "Abstract Class Art",
-        "Type Alias Tea",
-        "Strict Null Pharmacy",
-        "Indexed Access Bank"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -278,5 +205,82 @@
       "variant": "gallery",
       "awning": "canvas-blush"
     }
-  ]
+  ],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "twentieth-north-west",
+        "rect": [
+          559,
+          117.5,
+          619,
+          129.5
+        ],
+        "style": "place-retail",
+        "depth": [
+          10,
+          12
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          6,
+          7.5
+        ],
+        "names": [
+          "Keyof Locksmith",
+          "Declared Deli",
+          "Mapped Travel",
+          "Never Late Laundry",
+          "Spread Operator Yoga",
+          "Partial Pantry",
+          "Pick and Omit Cheese"
+        ],
+        "front": "south",
+        "sides": [
+          "east",
+          "west"
+        ]
+      },
+      {
+        "id": "twentieth-north-east",
+        "rect": [
+          637,
+          117.5,
+          702.5,
+          129.5
+        ],
+        "style": "place-retail",
+        "depth": [
+          10,
+          12
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          6,
+          7.5
+        ],
+        "names": [
+          "Assertion Hair Studio",
+          "Template Literal Print",
+          "Overload Fitness",
+          "Abstract Class Art",
+          "Type Alias Tea",
+          "Strict Null Pharmacy",
+          "Indexed Access Bank"
+        ],
+        "front": "south"
+      }
+    ],
+    "migrated": {
+      "blocks": 2,
+      "geometry": "ca693b37e58d6b15"
+    }
+  }
 }
