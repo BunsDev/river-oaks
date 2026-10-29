@@ -32,6 +32,7 @@ async page => {
     if(await tab.locator('.visit-tools').evaluate(node=>node.open))await tab.locator('.visit-tools-toggle').click();
   };
   const { createWalkDriver } = await import('./walk-driver.js');
+  const { greenwayReturn } = await import('./bayou-terraces-routes.js');
   const { walk } = createWalkDriver({self,routes,refusals:'__heightsRefusals'});
   const command=(tab,message)=>tab.evaluate(message=>window.__riverMultiplayerCommand(message),message);
   const chunk=(tab,id)=>tab.evaluate(id=>window.__riverBayouHeights()?.stream?.chunks.find(chunk=>chunk.id===id)?.state??null,id);
@@ -93,8 +94,8 @@ async page => {
     const reconnectMs=Date.now()-reconnectStart;
 
     // Back over the footbridge to the greenway, one player at a time, as the Heights journey does on CPU-rendered CI.
-    await walk(peer,[at([96,124]),at([100,110]),at([156.5,110])],'alice greenway');
-    await walk(page,[at([101,128]),at([101,112]),at([156.5,112])],'owner greenway');
+    await walk(peer,greenwayReturn.alice.map(at),'alice greenway');
+    await walk(page,greenwayReturn.owner.map(at),'owner greenway');
     check((await self(page)).position[0]>bank&&(await self(peer)).position[0]>bank,'Both players walked back over the footbridge to the greenway');
     check(await page.evaluate(()=>{const notices=window.__heightsNotices,terraces=notices.indexOf('Entering Bayou Terraces');
       return terraces>=0&&notices.indexOf('Entering Bayou Heights',terraces)>terraces;}),'Returning names Bayou Heights');
