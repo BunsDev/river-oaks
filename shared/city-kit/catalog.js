@@ -80,6 +80,55 @@ export const KIT_MATERIALS = Object.freeze({
   'ribbon-rose': { color: '#e4589b', roughness: .3, metalness: .35, emissive: '#ff3f8f', emissiveIntensity: .3 },
 });
 
+// Pink Jet-Age (#738, #739): the approved optimistic retrofuturist direction. TypeSafe
+// pink is fixed; the supporting roles are proposals, so they live here as named roles
+// rather than replacing every token in the client.
+export const PINK_JET_AGE = Object.freeze({
+  pink: '#F486A1', ivory: '#F7F1E8', mintGlass: '#BFE2DE', chrome: '#BCC5C8', garden: '#4A6A55', ink: '#24242A',
+});
+
+// Finishes recolour material slots at render time. A finish never changes a plan, its
+// hash, a lock, a piece ID, geometry, collision or a recipe override: it only replaces
+// fields of the named slot specs. `classic` is the default and changes nothing, so a
+// caller reverts by omitting the option. Slots a finish leaves out keep their spec.
+const P = PINK_JET_AGE;
+export const KIT_FINISHES = Object.freeze({
+  classic: Object.freeze({ label: 'Classic', materials: Object.freeze({}) }),
+  'pink-jet-age': Object.freeze({
+    label: 'Pink Jet-Age',
+    // Rounded-form vocabulary (render.js renderShell): canopy noses and capsule sign
+    // plates as facade detail in existing slots. Massing, ground and collision never change.
+    forms: true,
+    materials: Object.freeze({
+      // Ivory shells: every stone and stucco wall keeps its surface and coursing.
+      limestone: { color: P.ivory }, 'stucco-ivory': { color: P.ivory }, 'stucco-apricot': { color: '#f3e4d6' },
+      'stone-pearl': { color: P.ivory }, 'concrete-warm': { color: '#ede3d6' }, porcelain: { color: P.ivory }, 'trim-ivory': { color: P.ivory },
+      // Brick warms toward the brand rose instead of turning flat pink.
+      'brick-rose': { color: '#d9a1a8' }, 'brick-umber': { color: '#b98f84' },
+      // Pink leads on fascias, floor plates, sills and canopies; it never covers a whole wall.
+      'trim-teal': { color: P.pink, roughness: .5 }, 'trim-deep-teal': { color: P.pink, roughness: .5 }, 'trim-mint': { color: P.pink, roughness: .5 },
+      'canvas-teal': { color: P.pink }, 'canvas-rose': { color: P.pink }, 'canvas-apricot': { color: P.ivory }, 'canvas-blush': { color: P.pink },
+      // Restrained chrome replaces brass accents: satin, not mirror. The luxury styles'
+      // satin bronze (gallery canopies, ribbon fins, court floor plates) becomes pink
+      // lacquer, otherwise those streets would show no pink at all (matched review, #749).
+      'metal-brass': { color: P.chrome, roughness: .3, metalness: .9 }, 'bronze-satin': { color: P.pink, roughness: .45, metalness: 0 },
+      'rose-gold': { color: P.chrome, roughness: .3, metalness: .9 }, 'metal-bronze': { color: '#8e979b', roughness: .38, metalness: .8 },
+      // Ink, not black, for mullions, edging and lamp columns.
+      'steel-black': { color: P.ink }, 'lamp-teal': { color: P.ink },
+      // Mint glass. Reflective panes take a muted grey-mint: a saturated tint plus the sky
+      // reflection read as cyan in the matched review. Rails carry the lighter role.
+      'glass-dark': { color: '#7a9591' }, glass: { color: '#6e9f99' }, 'glass-rail': { color: P.mintGlass },
+      planting: { color: P.garden },
+    }),
+  }),
+});
+
+export function kitFinish(name = 'classic') {
+  const finish = KIT_FINISHES[name];
+  if (!finish) throw new Error(`Unknown kit finish ${name}`);
+  return finish;
+}
+
 // Architectural styles choose materials and preferred variants. Distinction comes
 // from massing, rhythm and frontage depth as much as colour.
 export const KIT_STYLES = Object.freeze({
