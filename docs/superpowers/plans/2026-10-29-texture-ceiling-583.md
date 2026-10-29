@@ -50,7 +50,8 @@ next dependency, not taken here.
 | `node --test preview/tests/spatial-chunk-stream.test.js preview/tests/heights-stream.test.js` | 23/23 pass |
 | Neighbouring suites (commons-stream, bayou-terraces, studewood, typesafe-place, woodland-heights, kit-finish-live) | 63/63 pass |
 | `pnpm run verify` (core, host load 13–19) | passed: 289/289, 4647 pass + 35 todo + 1 skip of 4683, 1080 pass + 285 skip of 1365, 127 pass + 5 skip of 132, Python 170 passed; receipt `.runtime/agent/core.json` |
-| Browser journey (atlas measure under estimate with a real canvas) | pending |
+| Browser journey (atlas measure under estimate with a real canvas) | Hosted `preview experience (terraces)` on PR #761 head `3b1df404` (job 123770581561): passed; owned textures measured greenway 2,818,048 B (estimate 2,874,410), north terrace 6,313,301 B (estimate 6,439,567), 9,131,349 of 33,554,432 B resident; new check `The owned textures sit within the Heights texture ceiling and each neighborhood within its estimate` passed. Local run not taken: host load 19–33 all evening (fixture page starves above 12). |
+| Hosted matrix on `3b1df404` (PR #761) | 27/27 success, aggregate `preview` success, no reruns (2026-10-29, 22:30–23:40Z) |
 
 ## Gaps
 
@@ -61,4 +62,4 @@ next dependency, not taken here.
 
 ## Next step
 
-Core verify, browser journey evidence, draft PR with hosted checks.
+This ledger commit is docs-only on top of `3b1df404`; its own hosted run must be read before landing. Landing (ready, lander) needs Val's authorization; the register task `texture-ceiling-583-20261029` holds PR 761. Next dependency if a 16 MiB texture figure is wanted: shrink the sign-atlas rows (512 px halves every estimate) and re-measure.
