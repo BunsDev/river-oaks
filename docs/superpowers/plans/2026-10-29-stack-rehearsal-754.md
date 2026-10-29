@@ -33,7 +33,7 @@ that never answers still fails, 22 s later than before, inside the test timeout.
 | --- | --- |
 | `REDIS_URL=redis://127.0.0.1:16586 node --test server/tests/stack-activation-rehearsal.test.js` ×2 | Passed twice, 57.9 s and 59.4 s whole-test (the earlier two unfixed local passes took 37.9 s and 37.5 s; local duration varies with host load, matching the 42–59 s hosted spread). |
 | `pnpm run verify` (core) | undefined |
-| Hosted `preview checks` on the PR head | HOSTED_PLACEHOLDER |
+| Hosted checks on `65bdec99` (PR #756) | 27/27 success; `preview checks` passed first attempt (02:55–03:05Z), where main's last two pushes and four #729 heads had failed it. One run is one sample; main after landing is the statistic. |
 
 ## Gaps
 
