@@ -340,7 +340,14 @@ Measurements, not budgets:
   - Runs 1–5 failed on the harness (public units carry no last-seen field; the last-seen spot
     mis-read; a grab landing before the far step; the strike looked up by a field public actions
     do not carry); each log and receipt is under `.runtime/evidence-640/crime-takeover-run{1..5}-*`.
-  - Escape by concealment still has no browser row: neither authored danger zone contains a
-    sight-blocking surface (the chest-height sight-line probe found no free point hidden from
-    the officer post), so only sight loss by distance is shown; `server/tests/police.test.js`
-    and `police-capture.test.js` cover concealment geometry.
+  - Escape by concealment still has no browser row, and on `e09ed8d5` it cannot have one with the
+    authored zones (server-only probes of 2026-10-29, `.runtime/evidence-640/conceal/`): a 2 m grid
+    inside both danger zones has no blocked point, and none of 26,848 sampled chest-height sight
+    lines within 35 m is blocked (westcreek-lane 8,317 pairs, south-service-lane 18,531). The
+    nearest free spot hidden from an officer standing in the lane is the alley at (-2799, -1414),
+    behind the corner at (-2802, -1422), which is north of the lane's edge (-1425): staged in the
+    shared world, the visitor stepping there left the zone, so the officer returned at once (an
+    officer only keeps a target that is wanted inside a danger zone) and despawned 0.35 s later.
+    A hiding place therefore needs a content decision (a sight-blocking prop inside the lane, or a
+    zone that includes the alley), not a runtime change; `server/tests/police.test.js` and
+    `police-capture.test.js` cover the concealment geometry rule itself.

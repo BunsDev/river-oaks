@@ -333,7 +333,12 @@ paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs 
      `attack_on_foot` on the first attempt, nothing landed, no star). Receipt
      `crime-takeover-run6-receipt.json`, video `crime-takeover-run6-visitor.webm` (115 s), hashes
      in `crime-takeover-run6-SHA256SUMS`, all under `.runtime/evidence-640/`.
-  Not shown in a browser: escape by concealment (no sight-blocking geometry in either zone).
+  Not shown in a browser: escape by concealment. Probed server-side on `e09ed8d5` (2026-10-29,
+  `.runtime/evidence-640/conceal/`: `zones.mjs`, `pairs.mjs`, `scenario.mjs` with logs): no blocked
+  point and no blocked sight line inside either danger zone (26,848 pairs within 35 m); the nearest
+  hidden free spot is the alley at (-2799, -1414) outside the lane, and stepping there released the
+  pursuit at once (target no longer in a danger zone). Needs a content decision (prop in the lane or
+  a zone covering the alley); stays open, not a runtime defect.
 - **`pnpm run verify full` attempt 2, green end to end** (2026-10-29 02:48:45–03:32:20Z, isolated
   Redis `redis://127.0.0.1:16603/8`, `caffeinate -s`, host load 4.2 at the start and up to 14.9
   at the end while the takeover journey and hosted runs shared the machine): run from a
@@ -359,3 +364,4 @@ paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs 
   journey, receipt, script-guard or documentation files only.
 - **Hosted on `6f29ed03`** (this ledger note, docs only): Verify run 40963684097 success on attempt 1,
   19 jobs. The register and the #599 matrix (#731) cite it as the current draft head.
+- **Hosted on `e09ed8d5`** (docs only): Verify run 40965631665 success on attempt 1, 19 jobs.
