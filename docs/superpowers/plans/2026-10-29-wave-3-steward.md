@@ -31,6 +31,7 @@ Goal: Val, 2026-10-29 ~22:12Z, "proceed with your recommendations" on the wave-3
   - `docs/app-review-292.md`: kept #716's final readiness rows, plus #711's integrated Block row; the intro and review-notes line no longer call Block a gap.
 - Signed merge `a0cd049f` (verified `G` against a scratch allowed-signers file). Focused `support-contact` + `player-blocks` tests 17/17. Core verify on `a0cd049f`: passed (unit 289/289, preview 4,646 of 4,682 pass with 0 failed, server 1,080 of 1,365 with Redis-gated skips and 0 failed, 127 of 132). Pushed `13cd0a84..a0cd049f` to `feat/support-contact-gate-292-20261027` at ~22:22Z.
 - Mark ready: `gh pr ready 716` failed twice with "GraphQL: API rate limit already exceeded" (22:22Z and 22:26Z), although `rate_limit` reported 3,154 and then 2,824 GraphQL calls left. A direct `markPullRequestReadyForReview` mutation was refused by this session's permission classifier. #716 stays a draft until Val marks it ready or allows the call; then `pnpm run land 716`.
+- **Landed.** Val ran `gh pr ready 716`; REST then showed `draft:false`, `clean`. `pnpm run land 716` passed Verify on `a0cd049f` and merged it as **`c09cbabc`**. Production deployment 7426902521: `success`. `pr-sweep-lander-20261028` is marked delivered with this evidence. Primary `main` fast-forwarded to `c09cbabc` for the dev server.
 - Predecessor scratch retired (22:30Z): `../river-oaks-pr691-merge` (`8805a07b`) and `../river-oaks-pr715-merge` (`2de0bf5c`), both tips in `main`. Retired with `project:prune --cancel-stale --detached-path ... --apply` after clean dry runs. Archives `~/worktree-backups/river-oaks/cancel-detached-r9rED6` and `cancel-detached-TGCLIv` (manifest status `cancelled-local`). Worktree registrations are gone.
 
 ## Round 2: preview shared split
@@ -78,7 +79,6 @@ Change: a `required-characters` mode (same server setup as `required`) takes the
 
 ## Gaps
 
-- #716 isn't landed: it needs the ready flip (see round 1).
 - The tick re-measure was taken at load 13–25 and proves nothing either way. No quiet-host A/B was run.
 - The split's hosted durations aren't measured yet (they need the PR's first run). `required` without the character journeys wasn't run locally; they ran last in that mode and each restarted the server first, so the remaining order is unchanged.
 - `tick-remeasure-snapshot-20261029` (scratchpad `tick-main`, detached `39a5f302`, one untracked harness copy) can't be cancelled until its 12 h touch window ends (after 10-30 10:30Z): `project:prune --cancel-stale --detached-path <path> --expected-head 39a5f30272ea620ce692b95fcc15a8c69b9aff9f`.
@@ -89,7 +89,7 @@ This list replaces the open lists in #724 (draft-wave-2) and the `docs/register-
 
 **Landing (each goes through `pnpm run land <pr>` after a core receipt on its head and all hosted checks):**
 
-1. **#716** (support contact under the gate, last of the #292 stack): resolved and pushed at `a0cd049f`, core passed. Mark it ready (`gh pr ready 716`), or allow this session to make that call, and it lands.
+1. ~~#716~~: done, merged as `c09cbabc`.
 2. **#722** Quaternius clips: say "land #722".
 3. **Crime stack #708 → #710 → #732** and the matrix **#731**: d1's leases are expired; 3d owns #732/#731 and is live. Say whether 3d lands the stack or a steward does.
 4. **#695 + #707** depth audit and hardening (3e, ended): land, or hand them to a named session.
