@@ -8,7 +8,7 @@
 //   pnpm run destination override <recipe.json> <piece-id> (--set key=value ... | --suppress) [--note text]
 //   pnpm run destination preview <recipe.json>
 //   pnpm run destination layout <recipe.json> [--freeze]   # the land each quarter claims and the blocks it derives
-//   pnpm run destination reference <world.json> --site w,s,e,n --id <id> [--parcels ignore] [--out recipe.json]   # a recipe skeleton from mapped roads (and parcels)
+//   pnpm run destination reference <world.json> --site w,s,e,n --id <id> [--parcels ignore] [--trees 8 --lamps 14] [--out recipe.json]   # a recipe skeleton from mapped roads (and parcels)
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, resolve, dirname, basename } from 'node:path';
@@ -174,7 +174,7 @@ function reference(path) {
   const number = (name, fallback) => flag(name) === null ? fallback : Number(flag(name));
   const bytes = readFileSync(resolve(path)), world = JSON.parse(bytes.toString('utf8'));
   const options = { id, site, title: flag('--title') ?? undefined, style: flag('--style') ?? undefined, rotation: flag('--rotation') === null || flag('--rotation') === 'auto' ? 'auto' : Number(flag('--rotation')),
-    tolerance: number('--tolerance', undefined), sidewalk: number('--sidewalk', undefined), lane: number('--lane', undefined), minimumLength: number('--min-length', undefined),
+    tolerance: number('--tolerance', undefined), sidewalk: number('--sidewalk', undefined), lane: number('--lane', undefined), minimumLength: number('--min-length', undefined), trees: number('--trees', undefined), lamps: number('--lamps', undefined),
     kinds: flag('--kinds') ? flag('--kinds').split(',') : null, parcels: flag('--parcels') ?? undefined, source: { name: basename(path), sha256: createHash('sha256').update(bytes).digest('hex') } };
   for (const key of Object.keys(options)) if (options[key] === undefined) delete options[key];
   const grid = dominantRotation(world, site), recipe = referenceRecipe(world, options), ref = recipe.reference;

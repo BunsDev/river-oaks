@@ -100,6 +100,14 @@ function decompose(fine, xs, ys, label, corridors) {
 }
 
 // Which streets bound each side of a rectangle, and how much of the side they cover.
+// The court's footprint as the assembler lays it out: `width` wide at `at` along the frontage, `depth` in from the front.
+function insideCourt(block, [x, y]) {
+  const [x0, y0, x1, y1] = block.rect, { at, width, depth } = block.court, snap = value => Math.round(value * 2) / 2, along = block.front === 'north' || block.front === 'south';
+  const centre = snap(along ? x0 + (x1 - x0) * at : y0 + (y1 - y0) * at), a0 = centre - snap(width) / 2, a1 = centre + snap(width) / 2;
+  const inFront = { north: y1 - depth <= y && y <= y1, south: y0 <= y && y <= y0 + depth, east: x1 - depth <= x && x <= x1, west: x0 <= x && x <= x0 + depth }[block.front];
+  return inFront && (along ? x >= a0 && x <= a1 : y >= a0 && y <= a1);
+}
+
 function boundingStreets(rect, corridors) {
   const [x0, y0, x1, y1] = rect, bounds = {};
   for (const side of SIDES) {
@@ -186,7 +194,10 @@ export function expandLayout(recipe) {
           fronts = [main];
         }
       } else if (SIDES.includes(front)) {
-        if (!bounded(front)) fail(`quarter ${quarter.id}: land ${rect.join(',')} has no street on its ${front} side`);
+        // A stated front on the site's own edge faces the street of the neighbouring recipe (Yale Icehouse faces north out of its site).
+        const edge = { north: Math.abs(rect[3] - site[3]) < EPS, south: Math.abs(rect[1] - site[1]) < EPS, east: Math.abs(rect[2] - site[2]) < EPS, west: Math.abs(rect[0] - site[0]) < EPS }[front];
+        if (!bounded(front) && !edge) fail(`quarter ${quarter.id}: land ${rect.join(',')} has no street on its ${front} side`);
+        if (!bounded(front)) warnings.push(`${quarter.id} ${rect.join(',')}: faces the site edge on its ${front} side; the street beyond lies in the neighbouring recipe`);
         fronts = [front];
       } else {
         const side = SIDES.find(item => bounds[item].streets.some(street => street.id === front));
@@ -236,7 +247,8 @@ export function expandLayout(recipe) {
   for (const item of [...(recipe.landmarks ?? []), ...(recipe.furniture ?? [])]) {
     const [x, y] = item.at ?? [(item.rect[0] + item.rect[2]) / 2, (item.rect[1] + item.rect[3]) / 2];
     const block = derived.find(entry => x > entry.rect[0] + EPS && x < entry.rect[2] - EPS && y > entry.rect[1] + EPS && y < entry.rect[3] - EPS);
-    if (block) fail(`${item.id} stands inside derived block ${block.id}; keep it on a street or plaza, or reserve its ground in layout.reserved`);
+    // A court is open ground: hand-placed court furniture may stand in it, as in an authored court block.
+    if (block && !(block.court && insideCourt(block, [x, y]))) fail(`${item.id} stands inside derived block ${block.id}; keep it on a street or plaza, or reserve its ground in layout.reserved`);
   }
   const seen = new Set();
   for (const { id } of derived) {
