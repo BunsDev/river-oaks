@@ -334,3 +334,17 @@ paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs 
      `crime-takeover-run6-receipt.json`, video `crime-takeover-run6-visitor.webm` (115 s), hashes
      in `crime-takeover-run6-SHA256SUMS`, all under `.runtime/evidence-640/`.
   Not shown in a browser: escape by concealment (no sight-blocking geometry in either zone).
+- **`pnpm run verify full` attempt 2, green end to end** (2026-10-29 02:48:45–03:32:20Z, isolated
+  Redis `redis://127.0.0.1:16603/8`, `caffeinate -s`, host load 4.2 at the start and up to 14.9
+  at the end while the takeover journey and hosted runs shared the machine): run from a
+  `git archive` snapshot of `71bb8d5a` in the session scratchpad so the worktree stayed free
+  for the takeover journey. The snapshot's own commit (`4a5ea1f0`, receipt revision, clean)
+  holds the same blob for every one of the 3,440 tracked files except `.env.example`, which its
+  `.gitignore` kept out of the commit (the file was on disk). **All 19 stages passed**:
+  dependency-audit, agent-tests (289/289), preview-tests (4307 pass / 1 skip), server-redis-tests
+  (1362 pass / 0 fail / 0 skipped), desktop-tests, build, python-lint, python-format,
+  python-tests, demo, demo-verify, secrets, secret-history, security-browser, reflections,
+  experience (16/16 journeys, 921 s), experience-commons (242 s), shared (29/29, 1021 s),
+  ipic-screening (89 s). Receipt `verify-full-71bb8d5a-attempt2-receipt.json` and log
+  `verify-full-71bb8d5a-attempt2.log` under `.runtime/evidence-640/`. The takeover commit
+  `c1f58ffb` on top adds only test harness, journey, receipt and docs files.
