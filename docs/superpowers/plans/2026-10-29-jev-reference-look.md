@@ -72,7 +72,27 @@ identity.
   preview 4682 run / 4646 pass / 0 fail / 1 skipped, server 1365 run / 1080 pass /
   0 fail / 285 skipped (Redis/live auth), desktop 132 / 127 pass / 5 skipped, secrets
   clean. Receipt `.runtime/agent/core.json`.
-- Likeness journey: see the snapshot run below.
+- Browser, from a detached snapshot at `6c0d7ca8` under the shared browser lock
+  (Chromium, Metal, 2026-10-29): `jev-reference-likeness` passed; `carriage-driver`
+  (61 s) and `carriage-companion` (38 s) passed with the resting wings.
+- Likeness against the reference (baseline thresholds IoU ≥ 0.55, every region ΔE ≤ 40):
+
+  | Measure | Value |
+  | --- | --- |
+  | Silhouette IoU (wings included) | 0.565 |
+  | ΔE hair / face | 31.5 / 9.2 |
+  | ΔE tunic chest / placket / belt | 22.9 / 14.2 / 13.0 |
+  | ΔE bracer left / right | 14.9 / 13.6 |
+  | ΔE trousers thigh / shin | 36.1 / 28.0 |
+  | ΔE sandal strap | 26.1 |
+  | ΔE wing right / left | 5.0 / 12.7 |
+
+  The largest gaps are the trousers (rendered paler and pinker than the painted
+  deep rose under studio light), the hair (the sample lands on lit strands of a short
+  cut, not the reference's dark curls) and the sandal sample (straps leave trouser
+  between them). Silhouette differences: shorter hair, wings that fold behind rather
+  than rise above the shoulders, and the A-pose of the rig versus the illustration's
+  wider stance.
 
 ## Gaps
 
@@ -83,4 +103,4 @@ identity.
 
 ## Next step
 
-Run focused tests, the core gate and the likeness journey; publish as a draft PR.
+Human visual review of the draft PR's composite; tune trousers, hair and wing silhouette if wanted.
