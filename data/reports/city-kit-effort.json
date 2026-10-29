@@ -11,52 +11,64 @@
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 44,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "layout": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 137,
-            "names": 4
+            "names": 4,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 201,
-          "names": 4
+          "names": 4,
+          "words": 0
         },
         "massing": {
           "numbers": 20,
-          "names": 0
+          "names": 0,
+          "words": 0
         },
         "author": {
           "numbers": 201,
-          "names": 4
+          "names": 4,
+          "words": 0
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": null,
@@ -64,59 +76,71 @@
     },
     {
       "id": "bayou-market-commons",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 2,
       "shells": 25,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 12,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 36,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 23,
-            "names": 11
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 23,
+            "names": 11,
+            "words": 4
           },
           "landmarks": {
             "numbers": 2,
-            "names": 2
+            "names": 2,
+            "words": 0
           },
           "furniture": {
             "numbers": 78,
-            "names": 9
+            "names": 9,
+            "words": 0
           },
           "additions": {
             "numbers": 2,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 1,
-            "names": 1
+            "names": 1,
+            "words": 0
           }
         },
         "total": {
           "numbers": 154,
-          "names": 23
+          "names": 23,
+          "words": 4
         },
         "massing": {
           "numbers": 35,
-          "names": 11
+          "names": 11,
+          "words": 4
         },
         "author": {
           "numbers": 154,
-          "names": 23
+          "names": 23,
+          "words": 4
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 1.4,
@@ -135,7 +159,7 @@
           "numbersToRetype": 0,
           "shells": 25,
           "shellsInStreet": 0,
-          "warnings": 3
+          "warnings": 0
         }
       }
     },
@@ -148,52 +172,64 @@
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 32,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
             "numbers": 10,
-            "names": 7
+            "names": 7,
+            "words": 2
           },
           "layout": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 66,
-            "names": 2
+            "names": 2,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 128,
-          "names": 9
+          "names": 9,
+          "words": 2
         },
         "massing": {
           "numbers": 30,
-          "names": 7
+          "names": 7,
+          "words": 2
         },
         "author": {
           "numbers": 128,
-          "names": 9
+          "names": 9,
+          "words": 2
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 0.88,
@@ -225,52 +261,64 @@
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 32,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
             "numbers": 10,
-            "names": 5
+            "names": 5,
+            "words": 2
           },
           "layout": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 57,
-            "names": 2
+            "names": 2,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 119,
-          "names": 7
+          "names": 7,
+          "words": 2
         },
         "massing": {
           "numbers": 30,
-          "names": 5
+          "names": 5,
+          "words": 2
         },
         "author": {
           "numbers": 119,
-          "names": 7
+          "names": 7,
+          "words": 2
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 1.5,
@@ -302,52 +350,64 @@
         "sections": {
           "streets": {
             "numbers": 40,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "layout": {
             "numbers": 40,
-            "names": 8
+            "names": 8,
+            "words": 0
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 80,
-          "names": 8
+          "names": 8,
+          "words": 0
         },
         "massing": {
           "numbers": 6,
-          "names": 8
+          "names": 8,
+          "words": 0
         },
         "author": {
           "numbers": 6,
-          "names": 8
+          "names": 8,
+          "words": 0
         },
         "tools": {
           "numbers": 80,
-          "names": 0
+          "names": 0,
+          "words": 0
         },
         "options": [
           "site",
@@ -361,11 +421,11 @@
         "edit": "every street 2 m wider",
         "shellsBefore": 32,
         "authored": {
-          "blocksToRetype": 0,
-          "numbersToRetype": 0,
-          "shells": 30,
-          "shellsInStreet": 0,
-          "warnings": 1
+          "blocksToRetype": 4,
+          "numbersToRetype": 16,
+          "shells": 32,
+          "shellsInStreet": 20,
+          "warnings": 0
         },
         "quarters": {
           "blocksToRetype": 0,
@@ -378,59 +438,71 @@
     },
     {
       "id": "heights-boulevard-north",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 2,
       "shells": 21,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 42,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 20,
-            "names": 9
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 20,
+            "names": 9,
+            "words": 4
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 48,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 110,
-          "names": 9
+          "names": 9,
+          "words": 4
         },
         "massing": {
           "numbers": 62,
-          "names": 9
+          "names": 9,
+          "words": 4
         },
         "author": {
           "numbers": 110,
-          "names": 9
+          "names": 9,
+          "words": 4
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 2.95,
@@ -449,65 +521,77 @@
           "numbersToRetype": 0,
           "shells": 17,
           "shellsInStreet": 0,
-          "warnings": 4
+          "warnings": 0
         }
       }
     },
     {
       "id": "heights-boulevard-south",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 2,
       "shells": 17,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 36,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 20,
-            "names": 7
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 20,
+            "names": 7,
+            "words": 4
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 36,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 92,
-          "names": 7
+          "names": 7,
+          "words": 4
         },
         "massing": {
           "numbers": 56,
-          "names": 7
+          "names": 7,
+          "words": 4
         },
         "author": {
           "numbers": 92,
-          "names": 7
+          "names": 7,
+          "words": 4
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 3.29,
@@ -526,7 +610,7 @@
           "numbersToRetype": 0,
           "shells": 12,
           "shellsInStreet": 0,
-          "warnings": 5
+          "warnings": 0
         }
       }
     },
@@ -539,52 +623,64 @@
         "sections": {
           "streets": {
             "numbers": 28,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 36,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "layout": {
             "numbers": 20,
-            "names": 19
+            "names": 19,
+            "words": 0
           },
           "landmarks": {
             "numbers": 2,
-            "names": 2
+            "names": 2,
+            "words": 0
           },
           "furniture": {
             "numbers": 15,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 1,
-            "names": 1
+            "names": 1,
+            "words": 0
           }
         },
         "total": {
           "numbers": 102,
-          "names": 22
+          "names": 22,
+          "words": 0
         },
         "massing": {
           "numbers": 48,
-          "names": 19
+          "names": 19,
+          "words": 0
         },
         "author": {
           "numbers": 102,
-          "names": 22
+          "names": 22,
+          "words": 0
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 1.09,
@@ -592,10 +688,10 @@
         "edit": "every street 2 m wider",
         "shellsBefore": 44,
         "authored": {
-          "blocksToRetype": 0,
-          "numbersToRetype": 0,
+          "blocksToRetype": 3,
+          "numbersToRetype": 12,
           "shells": 44,
-          "shellsInStreet": 0,
+          "shellsInStreet": 25,
           "warnings": 0
         },
         "quarters": {
@@ -609,59 +705,71 @@
     },
     {
       "id": "nineteenth-and-yale",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 4,
       "shells": 43,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 43,
-            "names": 21
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 43,
+            "names": 21,
+            "words": 1
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 7,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 1
+            "names": 1,
+            "words": 0
           }
         },
         "total": {
           "numbers": 70,
-          "names": 22
+          "names": 22,
+          "words": 1
         },
         "massing": {
           "numbers": 63,
-          "names": 21
+          "names": 21,
+          "words": 1
         },
         "author": {
           "numbers": 70,
-          "names": 22
+          "names": 22,
+          "words": 1
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 1.47,
@@ -686,59 +794,71 @@
     },
     {
       "id": "studewood-north",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 1,
       "shells": 7,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 48,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 10,
-            "names": 5
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 10,
+            "names": 5,
+            "words": 0
           },
           "landmarks": {
             "numbers": 2,
-            "names": 2
+            "names": 2,
+            "words": 0
           },
           "furniture": {
             "numbers": 86,
-            "names": 3
+            "names": 3,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 166,
-          "names": 10
+          "names": 10,
+          "words": 0
         },
         "massing": {
           "numbers": 30,
-          "names": 5
+          "names": 5,
+          "words": 0
         },
         "author": {
           "numbers": 166,
-          "names": 10
+          "names": 10,
+          "words": 0
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 4.29,
@@ -757,65 +877,77 @@
           "numbersToRetype": 0,
           "shells": 6,
           "shellsInStreet": 0,
-          "warnings": 4
+          "warnings": 0
         }
       }
     },
     {
       "id": "studewood-south",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 2,
       "shells": 16,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 48,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 20,
-            "names": 10
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 20,
+            "names": 10,
+            "words": 2
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 57,
-            "names": 3
+            "names": 3,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 145,
-          "names": 13
+          "names": 13,
+          "words": 2
         },
         "massing": {
           "numbers": 40,
-          "names": 10
+          "names": 10,
+          "words": 2
         },
         "author": {
           "numbers": 145,
-          "names": 13
+          "names": 13,
+          "words": 2
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 2.5,
@@ -834,65 +966,77 @@
           "numbersToRetype": 0,
           "shells": 13,
           "shellsInStreet": 0,
-          "warnings": 4
+          "warnings": 0
         }
       }
     },
     {
       "id": "typesafe-place-green",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 1,
       "shells": 9,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 14,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 44,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 10,
-            "names": 7
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 10,
+            "names": 7,
+            "words": 2
           },
           "landmarks": {
             "numbers": 3,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 57,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 14,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 142,
-          "names": 7
+          "names": 7,
+          "words": 2
         },
         "massing": {
           "numbers": 24,
-          "names": 7
+          "names": 7,
+          "words": 2
         },
         "author": {
           "numbers": 142,
-          "names": 7
+          "names": 7,
+          "words": 2
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 2.67,
@@ -911,65 +1055,77 @@
           "numbersToRetype": 0,
           "shells": 6,
           "shellsInStreet": 0,
-          "warnings": 4
+          "warnings": 0
         }
       }
     },
     {
       "id": "typesafe-place-north",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 1,
       "shells": 6,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 14,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 52,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 10,
-            "names": 6
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 10,
+            "names": 6,
+            "words": 2
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 33,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 7,
-            "names": 1
+            "names": 1,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 116,
-          "names": 7
+          "names": 7,
+          "words": 2
         },
         "massing": {
           "numbers": 24,
-          "names": 6
+          "names": 6,
+          "words": 2
         },
         "author": {
           "numbers": 116,
-          "names": 7
+          "names": 7,
+          "words": 2
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 4,
@@ -988,65 +1144,77 @@
           "numbersToRetype": 0,
           "shells": 1,
           "shellsInStreet": 0,
-          "warnings": 5
+          "warnings": 1
         }
       }
     },
     {
       "id": "typesafe-place-penthouse",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 1,
       "shells": 9,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 32,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 10,
-            "names": 8
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 10,
+            "names": 8,
+            "words": 1
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 21,
-            "names": 2
+            "names": 2,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 103,
-          "names": 10
+          "names": 10,
+          "words": 1
         },
         "massing": {
           "numbers": 30,
-          "names": 8
+          "names": 8,
+          "words": 1
         },
         "author": {
           "numbers": 103,
-          "names": 10
+          "names": 10,
+          "words": 1
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 3.33,
@@ -1065,65 +1233,77 @@
           "numbersToRetype": 0,
           "shells": 3,
           "shellsInStreet": 0,
-          "warnings": 4
+          "warnings": 1
         }
       }
     },
     {
       "id": "typesafe-place-south",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 1,
       "shells": 9,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 10,
-            "names": 7
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 10,
+            "names": 7,
+            "words": 1
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 28,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 14,
-            "names": 1
+            "names": 1,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 92,
-          "names": 8
+          "names": 8,
+          "words": 1
         },
         "massing": {
           "numbers": 30,
-          "names": 7
+          "names": 7,
+          "words": 1
         },
         "author": {
           "numbers": 92,
-          "names": 8
+          "names": 8,
+          "words": 1
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 3.33,
@@ -1142,65 +1322,77 @@
           "numbersToRetype": 0,
           "shells": 8,
           "shellsInStreet": 0,
-          "warnings": 4
+          "warnings": 0
         }
       }
     },
     {
       "id": "typesafe-place-uptown",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 2,
       "shells": 21,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 10,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 16,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 20,
-            "names": 14
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 20,
+            "names": 14,
+            "words": 3
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 18,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 21,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 85,
-          "names": 14
+          "names": 14,
+          "words": 3
         },
         "massing": {
           "numbers": 30,
-          "names": 14
+          "names": 14,
+          "words": 3
         },
         "author": {
           "numbers": 85,
-          "names": 14
+          "names": 14,
+          "words": 3
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 1.43,
@@ -1219,65 +1411,77 @@
           "numbersToRetype": 0,
           "shells": 21,
           "shellsInStreet": 0,
-          "warnings": 8
+          "warnings": 4
         }
       }
     },
     {
       "id": "woodland-heights-north",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 2,
       "shells": 12,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 200,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 20,
-            "names": 6
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 20,
+            "names": 6,
+            "words": 2
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 101,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 56,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 397,
-          "names": 6
+          "names": 6,
+          "words": 2
         },
         "massing": {
           "numbers": 40,
-          "names": 6
+          "names": 6,
+          "words": 2
         },
         "author": {
           "numbers": 397,
-          "names": 6
+          "names": 6,
+          "words": 2
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 3.33,
@@ -1296,65 +1500,77 @@
           "numbersToRetype": 0,
           "shells": 8,
           "shellsInStreet": 0,
-          "warnings": 14
+          "warnings": 2
         }
       }
     },
     {
       "id": "woodland-heights-south",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 2,
       "shells": 10,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 160,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 20,
-            "names": 6
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 20,
+            "names": 6,
+            "words": 2
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 81,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 42,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 323,
-          "names": 6
+          "names": 6,
+          "words": 2
         },
         "massing": {
           "numbers": 40,
-          "names": 6
+          "names": 6,
+          "words": 2
         },
         "author": {
           "numbers": 323,
-          "names": 6
+          "names": 6,
+          "words": 2
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 4,
@@ -1373,65 +1589,77 @@
           "numbersToRetype": 0,
           "shells": 6,
           "shellsInStreet": 0,
-          "warnings": 12
+          "warnings": 2
         }
       }
     },
     {
       "id": "yale-icehouse",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 2,
       "shells": 33,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 24,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 23,
-            "names": 20
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 23,
+            "names": 20,
+            "words": 1
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 139,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 1,
-            "names": 1
+            "names": 1,
+            "words": 0
           }
         },
         "total": {
           "numbers": 207,
-          "names": 21
+          "names": 21,
+          "words": 1
         },
         "massing": {
           "numbers": 43,
-          "names": 20
+          "names": 20,
+          "words": 1
         },
         "author": {
           "numbers": 207,
-          "names": 21
+          "names": 21,
+          "words": 1
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 1.3,
@@ -1450,65 +1678,77 @@
           "numbersToRetype": 0,
           "shells": 33,
           "shellsInStreet": 0,
-          "warnings": 5
+          "warnings": 2
         }
       }
     },
     {
       "id": "yale-street-north",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 3,
       "shells": 34,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 28,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 30,
-            "names": 16
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 30,
+            "names": 16,
+            "words": 6
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 36,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 114,
-          "names": 16
+          "names": 16,
+          "words": 6
         },
         "massing": {
           "numbers": 50,
-          "names": 16
+          "names": 16,
+          "words": 6
         },
         "author": {
           "numbers": 114,
-          "names": 16
+          "names": 16,
+          "words": 6
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 1.47,
@@ -1527,65 +1767,77 @@
           "numbersToRetype": 0,
           "shells": 32,
           "shellsInStreet": 0,
-          "warnings": 1
+          "warnings": 0
         }
       }
     },
     {
       "id": "yale-street-south",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 2,
       "shells": 28,
       "typed": {
         "sections": {
           "streets": {
             "numbers": 20,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "plazas": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "blocks": {
-            "numbers": 20,
-            "names": 10
+            "numbers": 0,
+            "names": 0,
+            "words": 0
           },
           "layout": {
-            "numbers": 0,
-            "names": 0
+            "numbers": 20,
+            "names": 10,
+            "words": 4
           },
           "landmarks": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "furniture": {
             "numbers": 4,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "additions": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           },
           "overrides": {
             "numbers": 0,
-            "names": 0
+            "names": 0,
+            "words": 0
           }
         },
         "total": {
           "numbers": 44,
-          "names": 10
+          "names": 10,
+          "words": 4
         },
         "massing": {
           "numbers": 40,
-          "names": 10
+          "names": 10,
+          "words": 4
         },
         "author": {
           "numbers": 44,
-          "names": 10
+          "names": 10,
+          "words": 4
         },
         "tools": {
           "numbers": 0,
-          "names": 0
+          "names": 0,
+          "words": 0
         }
       },
       "perShell": 1.43,
@@ -1604,22 +1856,29 @@
           "numbersToRetype": 0,
           "shells": 26,
           "shellsInStreet": 0,
-          "warnings": 1
+          "warnings": 0
         }
       }
     }
   ],
+  "migrated": {
+    "recipes": 16,
+    "blocks": 30,
+    "frontageWords": 39
+  },
   "shipped": {
     "recipes": 18,
     "blocks": 32,
     "shells": 354,
     "typed": {
       "numbers": 2607,
-      "names": 205
+      "names": 205,
+      "words": 43
     },
     "massing": {
       "numbers": 697,
-      "names": 175
+      "names": 175,
+      "words": 43
     },
     "authored": {
       "blocksToRetype": 32,
