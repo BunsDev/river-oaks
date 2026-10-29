@@ -1,7 +1,8 @@
 import { accountName } from '../preview/src/resident-names.js';
+import { screenText } from './content-filter.js';
 
 /** A profile is readable through an in-world encounter or an accepted contact. */
-export async function profileAction({action,identity,worldId,profiles,social,readBody,visiblePlayer,allowWrite,blocks=null}) {
+export async function profileAction({action,identity,worldId,profiles,social,readBody,visiblePlayer,allowWrite,blocks=null,contentFilter=null}) {
   if(!profiles)return {status:503,value:{error:'Profiles are unavailable.'}};
   if(!['view','save','claim-intro'].includes(action))return {status:404,value:{error:'Not found.'}};
   let data;
@@ -15,6 +16,11 @@ export async function profileAction({action,identity,worldId,profiles,social,rea
   }
   if(action==='save') {
     if(!await allowWrite(identity.userId))return {status:429,value:{error:'Please wait before saving your profile again.'}};
+    // The content filter (#292) screens every profile text other residents read.
+    if(data && typeof data==='object' && !Array.isArray(data)) {
+      for(const key of ['tagline','bio','pronouns']){const screened=screenText(contentFilter,'profile',data[key]);if(!screened.ok)return {status:400,value:{error:screened.message,reason:screened.reason}};data={...data,[key]:screened.text};}
+      if(Array.isArray(data.interests)){const interests=[];for(const value of data.interests){const screened=screenText(contentFilter,'profile',value);if(!screened.ok)return {status:400,value:{error:screened.message,reason:screened.reason}};interests.push(screened.text);}data={...data,interests};}
+    }
     const result=await profiles.save(identity.userId,data);
     return result.ok?{status:200,value:result}:{status:result.reason==='invalid_profile'?400:409,
       value:{error:result.reason}};

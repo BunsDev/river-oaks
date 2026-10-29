@@ -8,15 +8,15 @@ The kit extends existing systems rather than adding a city engine. Movement uses
 
 | Concern | File |
 | --- | --- |
-| Pieces, styles, materials, conventions, budgets | `shared/city-kit/catalog.js` |
+| Pieces, styles, materials, finishes, conventions, budgets | `shared/city-kit/catalog.js` |
 | Recipe validation, seeded assembly, overrides, provenance, connectivity | `shared/city-kit/assemble.js` |
 | Blocks derived from streets, quarters and reservations | `shared/city-kit/layout.js` |
 | Three.js rendering of a plan | `preview/src/city-kit/render.js` |
 | Recipes, locks | `config/destinations/*.json`, `*.lock.json` |
 | CLI | `scripts/destination.mjs` (`pnpm run destination …`) |
-| In-engine preview of any recipe | `preview/e2e/fixtures/city-kit.html?recipe=<id>&seed=<n>&view=<view>` |
+| In-engine preview of any recipe | `preview/e2e/fixtures/city-kit.html?recipe=<id>&seed=<n>&view=<view>&finish=<finish>` |
 | Pedestrian-scale screenshot review | `preview/e2e/city-kit-review.js` (shared browser lock) |
-| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/bayou-market-commons.test.js` |
+| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/city-kit-plaza-rows.test.js`, `preview/tests/bayou-market-commons.test.js` |
 
 ## Conventions
 
@@ -43,6 +43,22 @@ The kit extends existing systems rather than adding a city engine. Movement uses
 
 Three styles combine these pieces: `market-row` (rose and umber brick, teal trim, canopies and awnings, arched windows, cornices), `garden-court` (ivory stucco, mint trim, loggias, tall windows, stepped parapets, blade signs) and `heights-row` (apricot stucco and umber brick, deep-teal trim, awnings, paired windows, sawtooth roofs).
 
+## Finishes
+
+A finish recolours the kit's material slots at render time. It is the shared style contract for the Pink Jet-Age redesign (#738, #739). Neighborhood packages use it rather than authoring their own colours.
+
+```js
+buildCityKit(plan, { groundAt, ground, finish: 'pink-jet-age' });   // default: 'classic'
+```
+
+- **What a finish may change.** `KIT_FINISHES[name].materials` maps a slot name to `color`, `roughness` and `metalness` only. A finish never changes a slot's PBR surface, glass or lantern behaviour. It also never changes a plan, its hash, a lock, a piece ID, geometry, collision or a recipe override. The tests check all of this, so `destination check` still reproduces every lock.
+- **Cost.** Slot names are the same under every finish. Batching, draw calls, material counts and triangles are therefore identical, which is tested for the Commons and Yale recipes. Each build owns its materials, and `userData.dispose()` releases them however often callers switch.
+- **Reverting.** `classic` is the default and is empty. A caller reverts by omitting the option, and no saved or authored data has to change. `group.userData.finish` and every kit material's `userData.finish` record which finish is active.
+- **Palette.** `PINK_JET_AGE` names the roles. The approved brand colour is TypeSafe pink `#F486A1`. Ivory `#F7F1E8`, mint glass `#BFE2DE`, chrome `#BCC5C8`, garden `#4A6A55` and ink `#24242A` are proposed supporting roles.
+- **Where the colours go.** Pink goes on fascias, floor plates, sills, canopies and awnings, never a whole wall. Stone and stucco shells turn ivory. Brick warms toward rose. Brass becomes satin chrome. The luxury styles' satin bronze (gallery canopies, ribbon fins, court floor plates) becomes pink lacquer; without it, those streets show no pink at all, and a test now requires pink in every storefront block's facade detail. Mullions and lamp columns become ink. Reflective upper glass takes a muted grey-mint, because a saturated tint plus the sky reflection reads as cyan, while rails carry the lighter mint.
+- **Rounded forms.** A finish with `forms: true` (Pink Jet-Age) adds facade detail. Canopy and gallery canopies get a rounded nose along their front edge, and each primary shop sign gets an ivory capsule plate with round ends behind its lettering. Forms use existing slots and live only in the per-block detail batches, so they hide past 120 m. Massing, ground, furniture, signs and collision stay identical, which is tested. They add under 12,000 triangles and at most one shared slot per neighborhood, and they stay inside the 70-draw-call budget. Porthole, fin and ring-light forms are not built yet. Consumer packages should request them through this file rather than authoring their own.
+- **Review.** Add `&finish=pink-jet-age` to the fixture URL and compare the same `view` and seed under `classic` and `pink-jet-age`.
+
 ## Recipes, seeds and overrides
 
 A recipe names its kit version, seed, site rectangle, streets (east- or north-running), plazas (lawns, hedges, tree rows), blocks (rectangle, front, faced sides, depth/storey/bay ranges, a pool of shop names, an optional court), landmarks, furniture, visual-only context, `overrides` and `additions`. See `config/destinations/bayou-market-commons.json`.
@@ -57,6 +73,8 @@ Manual artistic edits live in the recipe as intent, never as edited generated ou
 - A shop name pinned by an override leaves the generator's name pool, so no other shop repeats it. When a block has more shopfronts than names, the remainder stay unsigned rather than duplicating a name.
 
 Overrides are applied after generation by stable ID. If a different seed no longer produces an overridden ID, the plan reports that ID under `provenance.overrides.orphaned`. The override itself stays in the recipe. Every plan records the kit version, seed, recipe hash, overrides hash and the applied, orphaned and added lists. Plans are canonical JSON with a browser-safe 64-bit hash, identical in Node and the browser.
+
+A plaza derives its trees, benches and lamps by the row: `treeRows`, `benchRows` and `lampRows` each take a line (`y` with `from`/`to` along x, or `x` along y), a `spacing` and, for furniture, a `yaw`, instead of an entry per item. Derived ids are stable (`<plaza>/bench-row-<row>-<n>`), so overrides address them, and a row that leaves the plaza's ground fails the build like any solid off walkable ground. Hand-placed `furniture` still works beside rows for the pieces that matter.
 
 ## Derive blocks from streets
 

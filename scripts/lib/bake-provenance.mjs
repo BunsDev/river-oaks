@@ -11,6 +11,8 @@ const avatarInputs = [
   'preview/src/avatar-skeletons.js',
   'preview/src/avatar-stance.js',
   'preview/src/avatars.js',
+  'preview/src/bicycle-crank.js',
+  'preview/src/bicycle-rider.js',
   'preview/src/bodice-fitting.js',
   'preview/src/boot-fitting.js',
   'preview/src/character-bodice-fit.js',
@@ -24,6 +26,7 @@ const avatarInputs = [
   'preview/src/conversation-motion.js',
   'preview/src/costume-batching.js',
   'preview/src/drape-geometry.js',
+  'preview/src/driving-hands.js',
   'preview/src/eye-tracking.js',
   'preview/src/facial-motion.js',
   'preview/src/foot-placement.js',
@@ -52,6 +55,7 @@ const avatarInputs = [
   'preview/src/speech-avatar.js',
   'preview/src/speech-track.js',
   'preview/src/upper-body-gait.js',
+  'preview/src/vehicle-config.js',
   'preview/src/vesper-skirt-geometry.js'
 ];
 
