@@ -55,8 +55,10 @@ export function validateCharacterDefinition(value, { ownerId } = {}) {
     ? customizedCharacterDefinition(ownerId,value.appearanceId,{revision:value.revision,palette:value.palette,hair:value.hair})
     : characterDefinitionFor(ownerId,value.appearanceId,{revision:value.revision}); }
   catch { return { ok:false, error:'invalid_character_definition' }; }
-  // Legacy aliases are migrated on read, never published as a new identity.
-  if (!equal(value,canonical)) return { ok:false, error:'invalid_character_definition' };
+  // Legacy aliases are migrated on read, never published as a new identity. A recipe
+  // record from before the build existed (2026-10-26) is read as a neutral build.
+  const compared = value.schemaVersion===3 && record(value.parameters) && !Object.hasOwn(value.parameters,'build') ? {...value,parameters:{...value.parameters,build:0}} : value;
+  if (!equal(compared,canonical)) return { ok:false, error:'invalid_character_definition' };
   return { ok:true, definition:canonical };
 }
 
