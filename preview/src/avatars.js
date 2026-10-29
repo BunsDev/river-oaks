@@ -16,7 +16,7 @@ import { registerSpeechAvatar, speechAvatarPose } from './speech-avatar.js';
 import { applyResidentStyle } from './resident-style.js';
 import { applyResidentHairstyle } from './resident-hairstyle.js';
 import { applyCharacterRecipe } from './character-recipe-look.js';
-import { recipeFaceShapes } from './character-recipe.js';
+import { recipeFaceShapes, recipeWidth } from './character-recipe.js';
 import { residentFaceFor, bakeResidentFace } from './resident-face.js';
 import * as THREE from 'three';
 import { createAssetGLTFLoader, prefersHtmlAvatarImages } from './gltf-image-decoder.js';
@@ -100,10 +100,12 @@ export function shareSkeletons(model) { return [...shareAvatarSkeletons(model)];
 // One independently skinned clone of a cached template. Joint axes are expressed
 // in each bone's rest frame so poses can be authored in the character's terms:
 // x pitches forward/back, y turns, z tilts sideways.
-export function instantiateAvatar(source, { targetHeight, id, armSpread, face }) {
+// width: a recipe's build (character-recipe.js recipeWidth), scaling the figure's
+// east/west and front/back axes while the standing height stays targetHeight.
+export function instantiateAvatar(source, { targetHeight, id, armSpread, face, width = 1 }) {
   const model = clone(source.scene), materials = new Map(), skeletons = shareAvatarSkeletons(model);
   const scale = targetHeight/source.height;
-  model.scale.setScalar(scale); model.position.y=-source.floor*scale;
+  model.scale.set(scale*width, scale, scale*width); model.position.y=-source.floor*scale;
   model.traverse(item => {
     if (id !== undefined) item.userData.localId=id;
     if (!item.isMesh) return;
@@ -151,7 +153,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const profile = profileOverride ?? avatarProfile(index), source = await template(profile);
   if (recipe && recipe.body !== profile) throw new TypeError('A recipe dresses its own body');
   const targetHeight = recipe ? recipe.height / 100 : characterFidelityContract(profile)?.targetHeightM ?? (profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025);
-  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, face:recipe?recipeFaceShapes(recipe):faceRecipe??(folk&&id!=='player'?residentFaceFor(id):undefined) });
+  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, width:recipe?recipeWidth(recipe):1, face:recipe?recipeFaceShapes(recipe):faceRecipe??(folk&&id!=='player'?residentFaceFor(id):undefined) });
   const { model, bones, rest } = avatar;
   if(recipe) {
     try { await applyCharacterRecipe(avatar,recipe,template); }
