@@ -8,6 +8,7 @@
 //   pnpm run destination override <recipe.json> <piece-id> (--set key=value ... | --suppress) [--note text]
 //   pnpm run destination preview <recipe.json>
 //   pnpm run destination layout <recipe.json> [--freeze]   # the land each quarter claims and the blocks it derives
+//   pnpm run destination effort [recipe.json ...] [--write]   # what each recipe makes an author type and what one street edit costs, as authored and as quarters
 //   pnpm run destination reference <world.json> --site w,s,e,n --id <id> [--parcels ignore] [--trees 8 --lamps 14] [--out recipe.json]   # a recipe skeleton from mapped roads (and parcels)
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -17,6 +18,7 @@ import { assembleNeighborhood, canonicalJSON, validateRecipe, walkableConnectivi
 import { expandLayout } from '../shared/city-kit/layout.js';
 import { referenceRecipe, dominantRotation } from '../shared/city-kit/reference.js';
 import { studioRegion } from '../shared/city-kit/studio.js';
+import { measureWorld } from '../shared/city-kit/effort.js';
 import { KIT_CONVENTIONS, KIT_PIECES } from '../shared/city-kit/catalog.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..'), recipesDir = join(root, 'config/destinations');
@@ -202,16 +204,38 @@ function reference(path) {
   console.log(`${recipe.streets.length} streets, ${ref.dropped.length} roads dropped, ${ref.blocks} blocks from one quarter with placeholder names. Wrote ${out}; name the shops, add plazas and landmarks, then run build.`);
 }
 
+// Production effort, measured: typed values per recipe (and who typed them), and the
+// cost of one art-direction change in the authored form against the quarter form.
+// `--write` refreshes the committed report that city-kit-effort.test.js holds to.
+const effortReport = join(root, 'data/reports/city-kit-effort.json');
+function effort(paths) {
+  const world = measureWorld((paths.length ? paths : recipePaths()).map(readRecipe));
+  console.log(['recipe', 'form', 'blocks', 'shells', 'massing typed', 'per shell', 'author typed', 'tools wrote', `${world.edit}: retype`, 'in street', 'as quarters: retype', 'in street', 'shells'].join('\t'));
+  for (const entry of world.recipes) {
+    const change = entry.change ?? {}, cell = (form, key) => change[form]?.[key] ?? '-';
+    console.log([entry.id, entry.form, entry.blocks, entry.shells, entry.typed.massing.numbers, entry.perShell ?? '-', `${entry.typed.author.numbers}+${entry.typed.author.names} names`, entry.typed.tools.numbers,
+      `${cell('authored', 'blocksToRetype')} (${cell('authored', 'numbersToRetype')})`, cell('authored', 'shellsInStreet'), cell('quarters', 'blocksToRetype'), cell('quarters', 'shellsInStreet'), change.quarters ? `${change.quarters.shells}/${change.shellsBefore}` : '-'].join('\t'));
+  }
+  const { shipped } = world;
+  console.log(`shipped as authored: ${shipped.recipes} recipes, ${shipped.blocks} blocks, ${shipped.shells} shells; ${shipped.massing.numbers} typed numbers of streets and blocks (${Math.round(shipped.massing.numbers / shipped.shells * 100) / 100} per shell), ${shipped.typed.numbers} in all with ${shipped.typed.names} names`);
+  console.log(`${world.edit}: as authored, ${shipped.authored.blocksToRetype} rectangles (${shipped.authored.numbersToRetype} numbers) to retype or ${shipped.authored.shellsInStreet} shells stand in the street unrefused; as quarters, ${shipped.quarters.blocksToRetype} to retype and ${shipped.quarters.shellsInStreet} in the street, ${shipped.quarters.shells} shells on the land that remains`);
+  if (!has('--write')) return;
+  mkdirSync(dirname(effortReport), { recursive: true });
+  writeFileSync(effortReport, `${JSON.stringify({ generatedBy: 'pnpm run destination effort --write', ...world }, null, 2)}\n`);
+  console.log(`Wrote ${effortReport}`);
+}
+
 const pieceCount = Object.keys(KIT_PIECES).length;
 if (command === 'build') build(rest.find(arg => arg.endsWith('.json')) ?? fail());
 else if (command === 'check') check();
 else if (command === 'override') override(rest[0], rest[1]);
 else if (command === 'layout') layoutCommand(rest.find(arg => arg.endsWith('.json')) ?? fail());
 else if (command === 'reference') reference(rest.find(arg => arg.endsWith('.json')) ?? fail());
+else if (command === 'effort') effort(rest.filter(arg => arg.endsWith('.json')));
 else if (command === 'preview') {
   const recipe = readRecipe(rest[0] ?? join(recipesDir, 'bayou-market-commons.json'));
   console.log(`In-engine kit preview: pnpm run dev, then open /e2e/fixtures/city-kit.html?recipe=${recipe.id}`);
   console.log(`World Studio: pnpm run destination build ${rest[0] ?? 'config/destinations/bayou-market-commons.json'}, then Open JSON on studio-region.json from the build directory.`);
   if (recipe.id === 'bayou-market-commons') console.log('Playable in the town: pnpm run dev serves it (the development town defaults to the full expansion), then walk east from the District arrival.');
-} else { console.error(`usage: destination build|check|override|preview|layout|reference (${pieceCount} kit pieces)`); process.exitCode = 2; }
+} else { console.error(`usage: destination build|check|override|preview|layout|reference|effort (${pieceCount} kit pieces)`); process.exitCode = 2; }
 function fail(what = 'a recipe .json path') { throw new Error(`Pass ${what}`); }

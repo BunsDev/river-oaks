@@ -13,12 +13,13 @@ The kit extends existing systems rather than adding a city engine. Movement uses
 | Blocks derived from streets, quarters and reservations | `shared/city-kit/layout.js` |
 | Kit streets from a geographic reference: grid, crop, snap, merge, dropped-road diagnostics | `shared/city-kit/reference.js` |
 | A plan as a World Studio region (Open JSON), checked against Studio's limits | `shared/city-kit/studio.js` |
+| Production effort, measured: typed values per recipe and the cost of one street edit in each form | `shared/city-kit/effort.js`, `data/reports/city-kit-effort.json` |
 | Three.js rendering of a plan | `preview/src/city-kit/render.js` |
 | Recipes, locks | `config/destinations/*.json`, `*.lock.json` |
 | CLI | `scripts/destination.mjs` (`pnpm run destination …`) |
 | In-engine preview of any recipe | `preview/e2e/fixtures/city-kit.html?recipe=<id>&seed=<n>&view=<view>&finish=<finish>` |
 | Pedestrian-scale screenshot review | `preview/e2e/city-kit-review.js` (shared browser lock) |
-| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-pipeline.test.js`, `preview/tests/city-kit-shipped-quarters.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/city-kit-plaza-rows.test.js`, `preview/tests/city-kit-reference.test.js`, `preview/tests/city-kit-studio.test.js`, `preview/tests/bayou-market-commons.test.js` |
+| Tests | `preview/tests/city-kit.test.js`, `preview/tests/city-kit-pipeline.test.js`, `preview/tests/city-kit-effort.test.js`, `preview/tests/city-kit-shipped-quarters.test.js`, `preview/tests/city-kit-layout.test.js`, `preview/tests/city-kit-plaza-rows.test.js`, `preview/tests/city-kit-reference.test.js`, `preview/tests/city-kit-studio.test.js`, `preview/tests/bayou-market-commons.test.js` |
 
 ## Conventions
 
@@ -128,6 +129,28 @@ pnpm run destination check
 
 The compiler's drawing (six roads, sixteen parcels) is deterministic. The reference step keeps the four streets and four parcels inside the site, snaps parcel edges to the street corridors, and writes the recipe with a placeholder name per block and a budget line. The build derives four blocks of 32 shells on the parcels, 56 street trees and 16 lamps, locks the plan and writes `studio-region.json`, which World Studio opens with **Open JSON** (the `city-kit-studio` journey does so in a browser). What the author typed: four site numbers, one style, two spacings and eight shop names. What the tools wrote: 80 numbers of streets, furnishing and quarters, 236 pieces. The hand-authored Nineteenth & Yale crossroads, the same size, types 70 numbers for its streets, plaza, blocks, landmark and furniture, each block rectangle kept flush to a street by hand.
 
+## Production effort, measured
+
+`pnpm run destination effort` measures the two things the kit is for, on every committed recipe, and `--write` refreshes `data/reports/city-kit-effort.json`, which `preview/tests/city-kit-effort.test.js` holds to the recipes. The counts are values an author must type and keep consistent (numbers everywhere, names in name fields), split into the massing the kit can derive (streets, blocks, quarters) and the dressing that stays hand-typed by design in every form (plazas, landmarks, furniture).
+
+| Shipped world as authored, 2026-10-29 | |
+| --- | --- |
+| Recipes with blocks, blocks, shells | 18, 32, 354 |
+| Massing numbers typed (streets and blocks) | 697, about 2 per shell |
+| All typed values | 2607 numbers and 205 names |
+| Reference example (`garden-blocks-kit`): typed by the author | 4 site numbers, 2 spacings, 1 style, 8 names for 32 shells (0.19 numbers per shell) |
+| Reference example: written by the tools | 80 numbers of streets, furnishing and quarters |
+
+One art-direction change, every street 2 m wider, applied to each shipped recipe in both forms:
+
+| | As authored | As quarters |
+| --- | --- | --- |
+| Block rectangles to retype | 32 (128 numbers), every block of every recipe | 0 |
+| Shells left standing in the street if nothing is retyped | 180, and the assembler does not refuse them | 0 |
+| Shells after the edit | 354 in the street or retyped | 314 on the land the wider streets leave |
+
+The shipped recipes stay as authored (their rectangles are the art direction, see the loose-rectangle note above), so this is the cost they carry per street edit, not a change to them. The quarter form that `city-kit-shipped-quarters.test.js` proves reproduces each plan takes the edit for free; a recipe started from a reference types a tenth of the massing numbers per shell of the hand-authored crossroads.
+
 ## Open a plan in World Studio
 
 `destination build` also writes `studio-region.json`: the plan as a schema-v1 creator region that World Studio opens with **Open JSON** and the server's region package compiler accepts. Streets are roads with their lanes (a lane under 6 m is a footway); every building shell is a box of its footprint and height, named by its stable piece id; street and plaza trees keep their crowns; the landmark, plazas and streets are places; the blocks, authored and derived, are parcels; the arrival stands on the widest street's sidewalk. The bounds pad the site by 2 m, because Studio keeps everything 1 m inside. It is a review view: walk it, mark places, measure; edits go back into the recipe as overrides by piece id, never into this file. Kit pieces under 4 m a side (rear wings) and context massings beyond the region are listed under `omitted` in the console summary, never widened. A plan Studio would refuse (more than 80 buildings, no street, fewer than four places) is refused here with the reason.
@@ -142,6 +165,7 @@ pnpm run destination check                                                      
 pnpm run destination override config/destinations/bayou-market-commons.json bayou-market-commons/garden-court/parcel-2 --set roof='"stepped"' --note "Art pass"
 pnpm run destination preview config/destinations/bayou-market-commons.json        # how to open it in-engine
 pnpm run destination layout config/destinations/layout-grid-example.json          # the land each quarter claims and the blocks it derives; --freeze writes them as authored blocks
+pnpm run destination effort [config/destinations/<recipe>.json ...] [--write]    # typed values per recipe and the cost of one street edit, as authored and as quarters; --write refreshes data/reports/city-kit-effort.json
 pnpm run destination reference preview/public/data/district.json --site=-2910,-1400,-2760,-1280 --id district-crop   # a recipe skeleton from the mapped roads inside a site
 pnpm run destination reference data/generated/neighborhoods/garden-001/region.json --site=-96,-96,8,8 --id garden-sw   # a Studio compiler candidate: its parcels become quarters
 ```
