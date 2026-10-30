@@ -301,9 +301,26 @@ async page => {
       .sort((a, b) => distance(a.position, state3.self.position) - distance(b.position, state3.self.position)).slice(0, 3);
     let reacted = null, reactedPeer = null, drawnStartle = null;
     for (const candidate of candidates) {
-      const where = await approach(visitor, candidate.position, 4);
+      // The witness draws residents only within 30 m on a low-tier or CPU-drawn client
+      // (resident-figures.js): it waits about 12 m from this one until the figure is drawn,
+      // since the startle lasts one second and a figure can take longer to load.
+      const near = (await town(visitor)).locals.find(local => local.id === candidate.id) ?? candidate, lane = distance(near.position, [RX, RN]);
+      // Travel refuses blocked points: try 12 m, then 10 and 14 m along the same line.
+      let placed = null;
+      for (const metres of [12, 10, 14]) {
+        const k = Math.min(1, metres / Math.max(lane, 1e-6));
+        placed = await goTo(witness, near.position[0] + (RX - near.position[0]) * k, near.position[1] + (RN - near.position[1]) * k);
+        if (placed?.ok !== false) break;
+      }
+      if (placed?.ok === false) continue;
+      const drawn = await witness.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === `resident:${id}` && item.ready), candidate.id, { timeout: 12000 }).then(() => true).catch(() => false);
+      if (!drawn) continue;
+      // Where they are now: they may have walked on while the figure loaded.
+      const now = (await town(visitor)).locals.find(local => local.id === candidate.id);
+      if (!now || now.life?.reaction !== null) continue;
+      const where = await approach(visitor, now.position, 4);
       if (!where) continue;
-      await face(witness, candidate.position[0], candidate.position[1]);
+      await face(witness, now.position[0], now.position[1]);
       const startled = await visitor.waitForFunction(id => { const local = window.__riverMultiplayer().snapshot.locals.find(item => item.id === id); return local?.life?.reaction === 'startle' && local; }, candidate.id, { timeout: 8000 }).then(handle => handle.jsonValue()).catch(() => null);
       if (!startled) continue;
       // What the witness's screen draws while the town says startle (review of #732: drawn was recorded, never checked).

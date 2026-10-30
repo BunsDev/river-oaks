@@ -435,3 +435,37 @@ Local, development shared runner, fixture identities; logs, reports and `SHA256S
 (development)` shard on `5a9f5ff4` and `26a04c38` and passed. One `crime-encounter` failure is
 cited, not hidden: it sits 0.1 point under the bar on a loaded host and is outside the edited
 checks; the rerun passed.
+
+
+### Hosted heights-return regression and the resident figure budget (2026-10-30)
+
+- **Symptom.** `preview experience (heights-return)` failed on 6 of 11 first attempts on the stack
+  heads (`d6bdf888`, `26a04c38`, `8e318f84`, `ea94928e`, `1a3c1233`, `350073e0`'s base), against
+  0 of 65 on other pull requests and 1 of 36 on main pushes since 10-28. Every failure was alice's
+  first waypoint home timing out at 120 s. Her input-authority trace showed no main-thread stalls
+  (samples every 250 ms) and a uniform 0.45 m/s with Shift held, against about 0.9 m/s on main.
+- **Ruled out.** Server step and snapshot cost (main and #708 equal, 0.29-0.36 ms p50); drawn
+  geometry in the west view (local probe: +47 draw calls, +0.7 % triangles, one more figure);
+  local CPU rendering could not be reproduced at host load 30-50.
+- **Hosted A/B** (narrow dispatch of the shard only, branch deleted afterwards):
+  `ea94928e` as is 4/5 passed, alice home 213-235 s, owner 149-161 s; resident figures capped
+  at 0, 5/5 passed, 186-215 s and 125-137 s.
+- **Fix** (`92d7336a`): a low-tier client (`fidelityTierForQuality`) or the CPU acceptance
+  renderer animates at most three neighbours within 30 m; the full tier keeps eight within 120 m.
+  Same shard x5 on `92d7336a`: 4/5 passed, alice home 114-217 s; the one failure stopped 0.24 m
+  short on slow presses (the near-target stall main also shows), not the half-speed walk.
+- **Journeys.** `crime-residents` (#708) and `crime-encounter` (#732) now stop about 12 m from
+  the resident until its figure is drawn, because a CPU-drawn client draws only within 30 m.
+- **Reviews of the budget** (two independent reads of `92d7336a`, the #710 merge `9c39b3b0` and
+  the witness change): no defect in the budget; the #710 merge drops nothing. Addressed in
+  `e61e56a1` and here: both journeys approach the resident's position re-read after the figure
+  loads and skip one that already reacted; figure waits are 12 s (one star cools after 30 s
+  unobserved); the witness checks the travel reply and tries 12, 10 and 14 m; the step-down test
+  proves the cap removes drawn figures. Noted, unchanged: three drawn residents within ~17 m can
+  keep a new one out on the low budget (the journey moves on); "smooth" maps to the standard tier.
+- **Witness journey.** `crime-encounter` attempt 1 (load 30) failed the unchanged section-2 camera
+  continuity bar (8.74 against 8 m/s); attempt 2 on `ae085d5d` plus this change, load 8.6-16,
+  passed (`.runtime/evidence-640/journeys-20261030/`).
+- **Signing.** The lander's guard refused #708 on the unsigned `567d8514` (10-29). Every
+  descendant across #708/#710/#732 was re-created signed with identical trees; the render-audit
+  fix is now `b19456ec`.
