@@ -179,23 +179,23 @@ const byTheme = (light, dark) => ({ light, dark });
 // foreground and the stack it sits on; `min` is the WCAG threshold for that use.
 const PAIRS = [
   // Smoked-glass sheets: Map/People/Settings launchers, Explore and People spaces, Play dock, walking console, chat dock.
-  { id: 'sheet-ink', uses: 'sheet text', fg: 'var(--ink)', surfaces: [glass()], min: TEXT, where: 'hud-glass.css:98; game-hud.css:43,115' },
-  { id: 'sheet-hud-muted', uses: 'place line, More, chat subtitle', fg: 'var(--hud-muted)', surfaces: [glass()], min: TEXT, where: 'hud-glass.css:218-219; game-hud.css:121' },
+  { id: 'sheet-ink', uses: 'sheet text', fg: 'var(--ink)', surfaces: [glass()], min: TEXT, where: 'hud-glass.css:104; game-hud.css:43,115' },
+  { id: 'sheet-hud-muted', uses: 'place line, More, chat subtitle', fg: 'var(--hud-muted)', surfaces: [glass()], min: TEXT, where: 'hud-glass.css:224-225; game-hud.css:121' },
   { id: 'sheet-muted', uses: 'chat status and empty chat (legacy --muted)', fg: 'var(--muted)', surfaces: [glass()], min: TEXT, where: 'game-hud.css:131-132' },
-  { id: 'tile-ink', uses: 'secondary actions, dock cards, chat messages', fg: 'var(--ink)', surfaces: [glass('var(--hud-tile)')], min: TEXT, where: 'hud-glass.css:208; play-rail-menu.css:41; game-hud.css:126' },
-  { id: 'tile-hud-muted', uses: 'pane body, bird cams, disabled chat send', fg: 'var(--hud-muted)', surfaces: [glass('var(--hud-tile)')], min: TEXT, where: 'play-rail-menu.css:43,67; hud-glass.css:281' },
-  { id: 'tile-hover-ink', uses: 'hovered secondary actions and tabs', fg: 'var(--ink)', surfaces: [glass('var(--hud-tile-hover)')], min: TEXT, where: 'hud-glass.css:211; play-rail-menu.css:11' },
-  { id: 'raised-ink', uses: 'pane buttons, people pills, chat input, held pad', fg: 'var(--ink)', surfaces: [glass('var(--hud-raised)'), glass('var(--hud-tile)', 'var(--hud-raised)')], min: TEXT, where: 'play-rail-menu.css:44; hud-glass.css:214,275; game-hud.css:129' },
-  { id: 'keycap-ink', uses: 'keycaps', fg: 'var(--ink)', surfaces: [glass('var(--hud-key-bg)'), glass('var(--hud-tile)', 'var(--hud-key-bg)')], min: TEXT, where: 'hud-glass.css:126-128,145-147' },
+  { id: 'tile-ink', uses: 'secondary actions, dock cards, chat messages', fg: 'var(--ink)', surfaces: [glass('var(--hud-tile)')], min: TEXT, where: 'hud-glass.css:214; play-rail-menu.css:41; game-hud.css:126' },
+  { id: 'tile-hud-muted', uses: 'pane body, bird cams, disabled chat send', fg: 'var(--hud-muted)', surfaces: [glass('var(--hud-tile)')], min: TEXT, where: 'play-rail-menu.css:43,67; hud-glass.css:287' },
+  { id: 'tile-hover-ink', uses: 'hovered secondary actions and tabs', fg: 'var(--ink)', surfaces: [glass('var(--hud-tile-hover)')], min: TEXT, where: 'hud-glass.css:217; play-rail-menu.css:11' },
+  { id: 'raised-ink', uses: 'pane buttons, people pills, chat input, held pad', fg: 'var(--ink)', surfaces: [glass('var(--hud-raised)'), glass('var(--hud-tile)', 'var(--hud-raised)')], min: TEXT, where: 'play-rail-menu.css:44; hud-glass.css:220,281; game-hud.css:129' },
+  { id: 'keycap-ink', uses: 'keycaps', fg: 'var(--ink)', surfaces: [glass('var(--hud-key-bg)'), glass('var(--hud-tile)', 'var(--hud-key-bg)')], min: TEXT, where: 'hud-glass.css:132-134,151-153' },
   { id: 'context-chip', uses: 'activity context chip', fg: 'var(--ink)', surfaces: [glass('color-mix(in srgb, var(--hud-action) 18%, transparent)')], min: TEXT, where: 'play-rail-menu.css:35' },
   { id: 'chat-accent', uses: 'chat unread count and author (accent)', fg: 'var(--accent)', surfaces: [glass(), glass('var(--hud-tile)')], min: TEXT, where: 'game-hud.css:123,127' },
   { id: 'chat-jump', uses: 'chat jump (accent on accent-soft)', fg: 'var(--accent)', surfaces: [glass('var(--accent-soft)')], min: TEXT, where: 'game-hud.css:133' },
-  { id: 'action-fill', uses: 'primary prompt, selected Play tab, office enter, chat send', fg: 'var(--hud-on-action)', surfaces: [['var(--hud-action)']], min: TEXT, where: 'hud-glass.css:202; play-rail-menu.css:12,56; game-hud.css:130' },
-  { id: 'action-keycap', uses: 'primary prompt keycap', fg: 'var(--hud-on-action)', surfaces: [['var(--hud-action)', 'rgb(255 255 255 / .16)']], min: TEXT, where: 'hud-glass.css:217' },
-  { id: 'community-primary', uses: 'community primary (on-accent)', fg: 'var(--on-accent)', surfaces: [['var(--accent)']], min: TEXT, where: 'playground-theme.css:22; hud-glass.css:174' },
+  { id: 'action-fill', uses: 'primary prompt, selected Play tab, office enter, chat send', fg: 'var(--hud-on-action)', surfaces: [['var(--hud-action)']], min: TEXT, where: 'hud-glass.css:208; play-rail-menu.css:12,56; game-hud.css:130' },
+  { id: 'action-keycap', uses: 'primary prompt keycap', fg: 'var(--hud-on-action)', surfaces: [['var(--hud-action)', 'var(--hud-action-key)']], min: TEXT, where: 'hud-glass.css:223' },
+  { id: 'community-primary', uses: 'community primary (on-accent)', fg: 'var(--on-accent)', surfaces: [['var(--accent)']], min: TEXT, where: 'playground-theme.css:22; hud-glass.css:180' },
   { id: 'places-error', uses: 'places status error (raw red)', fg: byTheme('#b3261e', '#ffb4ab'), surfaces: [glass()], min: TEXT, where: 'places-guide.css:42,138-139' },
-  { id: 'movement-legend', uses: 'movement legend (raw #c9c5d2)', fg: '#c9c5d2', surfaces: [glass()], min: TEXT, where: 'visual-finish.css:238 on hud-glass.css:92' },
-  { id: 'sheet-focus', uses: 'focus ring on sheets', fg: 'var(--hud-focus)', surfaces: [glass(), glass('var(--hud-tile)')], min: UI, where: 'hud-glass.css:109-113; game-hud.css:141-142' },
+  { id: 'movement-legend', uses: 'movement legend', fg: 'var(--hud-muted)', surfaces: [glass()], min: TEXT, where: 'visual-finish.css:239 on hud-glass.css:98' },
+  { id: 'sheet-focus', uses: 'focus ring on sheets', fg: 'var(--hud-focus)', surfaces: [glass(), glass('var(--hud-tile)')], min: UI, where: 'hud-glass.css:115-119; game-hud.css:141-142' },
   // Map button and town gate: liquid glass (a gradient between the two tints).
   { id: 'map-button-ink', uses: 'Map button label (liquid glass)', fg: 'var(--liquid-ink)', surfaces: liquid(), min: TEXT, where: 'game-hud.css:53-55' },
   { id: 'map-button-keycap', uses: 'Map button keycap (--muted on liquid glass)', fg: 'var(--muted)', surfaces: liquid(), min: TEXT, where: 'game-hud.css:49,53-55' },
@@ -222,22 +222,17 @@ const PAIRS = [
   { id: 'signin-on-pink', uses: 'text on pink buttons', fg: 'var(--gate-on-pink)', surfaces: [['var(--gate-pink)'], ['var(--gate-pink-hover)']], min: TEXT, where: 'access-gate.css:87,91,110-111,115', gate: true },
 ];
 
-// Pairs that fail today. Colours are not changed in this slice: each stays visible as a
-// todo until the R8 treatment fixes it, the ledger records the measurement, and the test
-// below fails once a gap passes so its entry is removed and the pair becomes enforced.
-// OPAQUE fails on an opaque surface, whatever is behind the HUD. BOUND fails only when the
-// translucent sheet is composited over pure black or white (its backdrop filter ignored),
-// and passes with reduced transparency; measure it in the browser before calling it a defect.
-const OPAQUE = 'below threshold on an opaque surface';
+// Pairs that fail today. Each stays visible as a todo until a treatment fixes it, the
+// ledger records the measurement, and the test below fails once a gap passes so its entry
+// is removed and the pair becomes enforced. The four opaque-surface gaps (action-fill dark,
+// action-keycap, movement-legend light, gate-town-primary light) were fixed and are
+// enforced: docs/superpowers/plans/2026-10-29-pink-jet-age-r8-hud-skin.md.
+// BOUND fails only when the translucent sheet is composited over pure black or white (its
+// backdrop filter ignored), and passes with reduced transparency; measure it in the
+// browser before calling it a defect.
 const BOUND = 'below threshold only under the black/white backdrop bound';
-const LIGHT = SCENARIOS.filter(s => s.theme === 'light').map(s => s.name);
-const DARK = SCENARIOS.filter(s => s.theme === 'dark').map(s => s.name);
 const gaps = (id, reason, scenarios) => scenarios.map(scenario => [`${id}|${scenario}`, reason]);
 const KNOWN_GAPS = new Map([
-  ...gaps('action-fill', OPAQUE, DARK),
-  ...gaps('action-keycap', OPAQUE, [...LIGHT, ...DARK]),
-  ...gaps('movement-legend', OPAQUE, LIGHT),
-  ...gaps('gate-town-primary', OPAQUE, LIGHT),
   ...gaps('sheet-muted', BOUND, ['light']),
   ...gaps('tile-hud-muted', BOUND, ['light', 'dark']),
   ...gaps('raised-ink', BOUND, ['dark']),
