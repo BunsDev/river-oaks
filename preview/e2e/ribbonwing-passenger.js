@@ -75,19 +75,27 @@ async page => {
   await host(alice).focus();await alice.keyboard.press('KeyG');await alice.waitForTimeout(400);
   check((await me(alice)).passengerOf===OWNER,'G aloft does not drop alice from the craft');
   // A roll with a passenger: alice's view rolls with the craft and bob keeps her in the seat.
+  // alice's page records her view's tilt on every frame it draws. Sampled from here, 14 reads
+  // each saw only the latest of a slow page's frames and missed the middle of the 2.6 s roll: a
+  // hosted run measured 1.06 rad (run 41069203704). Every frame of a page drawing one a second
+  // falls within a fifth of the roll's middle, at 1.42 rad or more.
+  await alice.evaluate(()=>{const roll=window.__rollView={tilt:0,frames:0,stopped:false};const tick=()=>{const q=window.__riverCarriage().pose.riding?.quaternion;
+    if(q){const [x,,z]=q;roll.tilt=Math.max(roll.tilt,Math.acos(Math.max(-1,Math.min(1,1-2*(x*x+z*z)))));roll.frames++;}if(!roll.stopped)requestAnimationFrame(tick);};requestAnimationFrame(tick);});
   await host(page).focus();await page.keyboard.press('Digit1');
   await page.waitForFunction(()=>window.__riverCarriage().maneuver?.kind==='roll',{},{timeout:10000});
-  let aliceTilt=0,bobDrift=0,samples=0;
+  let bobDrift=0,samples=0;
   for(let i=0;i<14;i++){
-    const [view,seen]=await Promise.all([alice.evaluate(()=>window.__riverCarriage().pose.riding?.quaternion??null),bob.evaluate(id=>{const s=window.__riverRibbonwingSeat(),h=s.holders[id],seat=Object.values(s.seats).find(Boolean);return h&&seat?{h:h.position,seat}:null;},aliceId)]);
-    if(view){const [x,,z]=view;aliceTilt=Math.max(aliceTilt,Math.acos(Math.max(-1,Math.min(1,1-2*(x*x+z*z)))));}
+    const seen=await bob.evaluate(id=>{const s=window.__riverRibbonwingSeat(),h=s.holders[id],seat=Object.values(s.seats).find(Boolean);return h&&seat?{h:h.position,seat}:null;},aliceId);
     if(seen){bobDrift=Math.max(bobDrift,gap(seen.h,seen.seat));samples++;}
     await page.waitForTimeout(170);
   }
-  check(aliceTilt>1.2,`alice's view rolls with the craft (max tilt ${aliceTilt.toFixed(2)} rad)`);
   check(samples>8&&bobDrift<.05,`bob draws alice in the passenger seat through the roll (max ${bobDrift.toFixed(3)} m off over ${samples} samples)`);
   await page.waitForFunction(()=>window.__riverCarriage().maneuver===null,{},{timeout:10000});
   await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return !m.snapshot.players.find(p=>p.id===m.selfId)?.maneuver;},{},{timeout:10000});
+  // alice's page has drawn the whole roll once its own snapshot shows the craft out of it.
+  await alice.waitForFunction(owner=>!window.__riverMultiplayer().snapshot.players.find(p=>p.id===owner)?.maneuver,OWNER,{timeout:10000});
+  const aliceRoll=await alice.evaluate(()=>{window.__rollView.stopped=true;return window.__rollView;});
+  check(aliceRoll.tilt>1.2,`alice's view rolls with the craft (max tilt ${aliceRoll.tilt.toFixed(2)} rad over ${aliceRoll.frames} frames)`);
   const [pilotAfter,aliceAfter]=await Promise.all([me(page),me(alice)]);
   check(aliceAfter.passengerOf===OWNER&&Math.abs(aliceAfter.altitude-pilotAfter.altitude)<.01,'After the roll alice is still aboard at the pilot\'s altitude');
   // Land; alice steps out beside the craft and walks on.
