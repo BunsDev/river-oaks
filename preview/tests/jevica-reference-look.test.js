@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { loadCharacterRig } from './helpers/character-rig.js';
 import { instantiateAvatar } from '../src/avatars.js';
 import { createJevicaCostume } from '../src/jevica-costume.js';
-import { SUIT, PUMP, MAKEUP, upperHull } from '../src/jevica-suit.js';
+import { SUIT, PUMP, MAKEUP, BANGS, upperHull } from '../src/jevica-suit.js';
 
 // Val's 2026-10-29 reference look on the real hero rig: a blazer and trousers cut
 // from her own skin, a peplum, a collar with its brooch, lilies, earrings, heels
@@ -232,4 +232,30 @@ test('makeup: rose lips about the mouth line and a soft blush, on her own copy o
     // Pinker than skin: red kept, green pulled down more than blue.
     assert.ok(MAKEUP.lips[0] === 1 && MAKEUP.lips[1] < MAKEUP.lips[2]);
   } finally { costume.dispose(); rig.dispose(); bare.dispose(); }
+});
+
+test('bangs: a fringe in front of her forehead, ending just above the brows, moving with her head', async () => {
+  const { object, rig, costume, body } = await dressed();
+  try {
+    const { mesh, browTop } = costume.suit.bangs;
+    assert.equal(mesh.name, 'Jevica bangs');
+    assert.equal(mesh.material.alphaTest, .5, 'strand tips are cut by alpha');
+    // Every fringe point, brought back into the skin's frame, stands in front of the forehead and above the brows.
+    object.updateMatrixWorld(true);
+    const p = mesh.geometry.attributes.position, skin = body.geometry.attributes.position, point = new THREE.Vector3();
+    let lowest = Infinity, behind = 0;
+    for (let i = 0; i < p.count; i++) {
+      body.worldToLocal(mesh.localToWorld(point.fromBufferAttribute(p, i)));
+      lowest = Math.min(lowest, point.y);
+      // The nearest skin vertex in front of the forehead must not be in front of the fringe.
+      for (let k = 0; k < skin.count; k += 7) if (Math.abs(skin.getX(k) - point.x) < .003 && Math.abs(skin.getY(k) - point.y) < .003 && skin.getZ(k) > point.z + .001) { behind++; break; }
+    }
+    assert.ok(lowest > browTop - BANGS.sides - .001 && lowest < browTop + BANGS.gap + .001, `the fringe ends at ${lowest.toFixed(3)} m, brows top at ${browTop.toFixed(3)} m`);
+    assert.ok(behind < p.count * .05, `${behind} of ${p.count} fringe points sit behind the skin (only the tucked top row may)`);
+    // Pinned to the head: turning the head carries the fringe.
+    const head = rig.model.getObjectByName('head'), before = mesh.getWorldQuaternion(new THREE.Quaternion());
+    head.rotation.y += .5; rig.model.updateMatrixWorld(true); costume.update(false, 2000);
+    const turned = mesh.getWorldQuaternion(new THREE.Quaternion()).angleTo(before);
+    assert.ok(Math.abs(turned - .5) < .05, `the fringe turns ${turned.toFixed(3)} rad with a 0.5 rad head turn`);
+  } finally { costume.dispose(); rig.dispose(); }
 });
