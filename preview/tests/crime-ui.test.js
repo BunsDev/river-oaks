@@ -214,6 +214,48 @@ test('the HUD waits for the snapshot outcome, retries once with the same ID, and
 });
 
 
+test('the HUD publishes the town\'s combat state, the focus and the telegraph for the local figure (#640 increment 4)', async t => {
+  const rival = { id: 'rival:westcreek', name: 'Westcreek rival', appearance: 'sable-human', position: [-2908, -1320, 0], yaw: 0, health: 100, maxHealth: 100, incapacitated: false, staggered: false, engagedId: null };
+  const { defaultWorldPolicy, clockMinute, dangerActive } = await import('../src/world-policy.js');
+  const base = defaultWorldPolicy(), rules = { ...base, violence: { ...base.violence, mode: 'forced', zones: ['westcreek-lane'] } };
+  const worldPolicy = { ...rules, minute: clockMinute(rules.clock), active: dangerActive(rules) };
+  const town = { connected: true, selfId: 'a', snapshot: { revision: 1, worldId: 'river-oaks', worldPolicy, players: [{ id: 'a', position: [-2906.8, -1320, 0], levelId: null, health: 100 }], crime: { targets: [rival], wanted: [], actions: [] }, police: { units: [], surrendered: [], subdued: [], eligible: [] } } };
+  const { ui, hud, find, keys } = await harness(t, town, async message => ({ ok: true, evade: { direction: 'back', remainingMs: 350 } }));
+  ui.sync();
+  assert.deepEqual([hud.dataset.combatState, hud.dataset.combatFocus, hud.dataset.telegraph], [undefined, undefined, undefined], 'nothing is published while nothing happens');
+  const strike = { id: 'strike:1', kind: 'strike', actorId: 'a', targetId: rival.id, phase: 'windup', remainingMs: 200, outcome: null, reason: null, direction: [-1, 0] };
+  town.snapshot = { ...town.snapshot, revision: 2, crime: { ...town.snapshot.crime, actions: [strike] } };
+  ui.sync();
+  const published = JSON.parse(hud.dataset.combatState);
+  assert.equal(published.kind, 'strike'); assert.equal(published.id, 'strike:1'); assert.ok(Math.abs(published.progress - 100 / 900) < .02, `progress from the phase: ${published.progress}`);
+  assert.deepEqual(published.facing, [-1, 0]); assert.deepEqual(JSON.parse(hud.dataset.combatFocus), rival.position);
+  assert.equal(hud.dataset.telegraph, undefined, 'a strike of one\'s own is no telegraph');
+  // The rival telegraphs: the cue goes up, and an admitted evade is published with its side.
+  town.snapshot = { ...town.snapshot, revision: 3, crime: { ...town.snapshot.crime, targets: [{ ...rival, engagedId: 'a', yaw: -Math.PI / 2 }], actions: [{ id: 'counter:2', kind: 'counter', actorId: rival.id, targetId: 'a', phase: 'windup', remainingMs: 700, outcome: null, reason: null, direction: [1, 0] }] } };
+  ui.sync();
+  assert.equal(hud.dataset.telegraph, 'counter');
+  assert.equal(hud.dataset.combatState, undefined, 'engaged with no action of their own: a facing alone is not published as a pose');
+  keys.events.keydown({ code: 'KeyU', repeat: false, target: {}, preventDefault() {}, stopImmediatePropagation() {} });
+  await new Promise(resolve => setImmediate(resolve));
+  ui.sync();
+  const evading = JSON.parse(hud.dataset.combatState);
+  assert.equal(evading.kind, 'evade'); assert.equal(evading.side, 'back'); assert.ok(evading.progress < .1);
+  // An officer reaching: the telegraph says so; arrested, the figure surrenders and the focus is the officer.
+  town.snapshot = { ...town.snapshot, revision: 4, crime: { targets: [rival], wanted: [['a', 1]], actions: [] }, police: { units: [{ id: 'police:0', position: [-2905.4, -1320, 0], yaw: -Math.PI / 2, targetId: 'a', state: 'grab', remainingMs: 400 }], surrendered: [], subdued: [], eligible: ['a'] } };
+  await new Promise(resolve => setTimeout(resolve, 360));
+  ui.sync();
+  assert.equal(hud.dataset.telegraph, 'grab');
+  assert.equal(hud.dataset.combatState, undefined, 'the evade window has passed and nothing else is shown');
+  town.snapshot = { ...town.snapshot, revision: 5, police: { units: [{ id: 'police:0', position: [-2905.4, -1320, 0], yaw: -Math.PI / 2, targetId: 'a', state: 'arrest' }], surrendered: [], subdued: ['a'], eligible: ['a'] } };
+  ui.sync();
+  assert.equal(JSON.parse(hud.dataset.combatState).kind, 'surrender'); assert.deepEqual(JSON.parse(hud.dataset.combatFocus), [-2905.4, -1320, 0]); assert.equal(hud.dataset.telegraph, undefined);
+  // Peaceful and released: everything is cleared.
+  town.snapshot = { ...town.snapshot, revision: 6, crime: { targets: [rival], wanted: [], actions: [] }, police: { units: [], surrendered: [], subdued: [], eligible: [] } };
+  ui.sync();
+  assert.deepEqual([hud.dataset.combatState, hud.dataset.combatFocus, hud.dataset.telegraph], [undefined, undefined, undefined]);
+  assert.ok(find('crime-evade'), 'the evade button is the same for touch and key');
+});
+
 test('a cancelled counter stops the warning, and an officer reaching to grab is said in words (#640)', () => {
   const counter = { id: 'counter:3', kind: 'counter', actorId: 'rival:westcreek', targetId: 'a', direction: [1, 0], reason: null };
   assert.match(describeAction({ ...counter, phase: 'windup', outcome: null }, 'Westcreek rival', 'a'), /winding up to strike back/);

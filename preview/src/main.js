@@ -10,6 +10,7 @@ import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
 import { residentFigureBudget, residentFigures } from './resident-figures.js';
 import { fidelityTierForQuality } from './character-fidelity-runtime.js';
+import { combatStateFor } from './combat-motion.js';
 // The resident ids drawn last snapshot (#640): resident-figures.js keeps the set stable at the cut.
 let drawnResidents = new Set();
 // Fewer, nearer neighbours on a low-tier client and on the CPU acceptance renderer (resident-figures.js).
@@ -675,7 +676,12 @@ function startMultiplayer() {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
       const self = players.find(player => player.id === selfId);
       // Authored rivals (#597), officers (#598) and nearby outdoor residents (#640) draw like players, from the town's state only.
-      remotePlayers.sync([...players.filter(p=>!p.office),...(players.length?[...rivalFigures(multiplayer?.snapshot?.crime),...policeFigures(multiplayer?.snapshot?.police),...residents(multiplayer?.snapshot?.locals,self?.position)]:[])], selfId);
+      const town=multiplayer?.snapshot??{};
+      // #640 increment 4: each figure carries the town's combat state for its renderer; a figure the
+      // combat state (a pose, or just facing an opponent) drops the legacy gesture so the two never
+      // stack and a rival's fading flinch never pops into the old stagger pose.
+      const fighting=figure=>{const combat=combatStateFor(figure.id,town);return combat?{...figure,combat,gesture:null}:figure;};
+      remotePlayers.sync([...players.filter(p=>!p.office).map(fighting),...(players.length?[...rivalFigures(town.crime).map(fighting),...policeFigures(town.police).map(fighting),...residents(town.locals,self?.position)]:[])], selfId);
       officeUI?.sync(players,selfId);
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);

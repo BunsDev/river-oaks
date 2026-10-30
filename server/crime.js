@@ -48,7 +48,8 @@ const inArc = (direction, from, to) => {
   const vector = flat(from, to), length = Math.hypot(vector[0], vector[1]);
   return length < 1e-6 || (direction[0] * vector[0] + direction[1] * vector[1]) / length >= Math.cos(R.arcDegrees * Math.PI / 180) - 1e-9;
 };
-const onFoot = player => !(player.sitting || player.vehicle || player.cycling || player.performing || player.altitude > 0.1 || player.levelId);
+// A passenger is aboard even on a landed craft (vehicle null, altitude ~0), so passengerOf counts too.
+const onFoot = player => !(player.sitting || player.vehicle || player.passengerOf || player.cycling || player.performing || player.altitude > 0.1 || player.levelId);
 
 /**
  * groundAt(east, north) places the rivals; decide(attacker, target, targetType) is the world

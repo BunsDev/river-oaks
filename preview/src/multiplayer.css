@@ -262,6 +262,10 @@ body.theater-seated .greeting-prompt { visibility: hidden; }
 .crime-attack:disabled, .crime-surrender:disabled { opacity: .5; cursor: not-allowed; }
 .crime-attack:focus-visible, .crime-surrender:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .crime-attack kbd { display: inline-grid; place-items: center; min-width: 24px; height: 24px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 12px; }
+/* #640 increment 4: a counter or a grab is coming (the HUD names which); the evade pulses until contact. */
+.crime-hud[data-telegraph] .crime-evade { animation: crime-telegraph .45s ease-in-out infinite alternate; }
+@keyframes crime-telegraph { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); } to { box-shadow: 0 0 0 6px transparent; } }
+@media (prefers-reduced-motion: reduce) { .crime-hud[data-telegraph] .crime-evade { animation: none; outline: 2px solid var(--accent); outline-offset: 3px; } }
 @media (prefers-reduced-motion: reduce) { .crime-health span { transition: none; } }
 @media (max-width: 600px) { .crime-hud { top: 56px; left: 12px; } }
 @media (max-width: 700px) and (min-height: 501px) { .crime-hud { top: 240px; } }
