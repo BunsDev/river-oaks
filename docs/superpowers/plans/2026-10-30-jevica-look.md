@@ -138,3 +138,42 @@ the button:
 **Still a gap.** The blazer is still a copy of her skin: no lapel roll, no seams, and the bust
 is still shaped (rounder, not flat). A real cut garment mesh would need new modelled assets.
 No human review.
+
+## Increment 3: makeup (task `jevica-makeup-20261030`, stacked on #815)
+
+**Why only makeup.** Her rig carries only the two blink morphs, with no MPFB face-shape
+targets. Reshaping her face the supported way means rebuilding her rig with
+`build_facial_candidates.py --faces jevica`. That needs the MPFB and Faceunits packs in
+`data/raw/characters`, which is empty on this machine. AGENTS.md forbids downloading asset
+packs without authorization, so face shapes wait for Val. Makeup needs no new assets.
+
+**What changes.** `applyJevicaMakeup` in `preview/src/jevica-suit.js` paints rose lips and a
+soft blush as vertex colours on the costume's own copy of her skin. Realism tiers leave
+vertex colours alone, and the shared rig is untouched.
+- **Landmarks** come from her midline profile: nose tip 1.407 m, under the nose 1.392,
+  upper lip 1.386, mouth line 1.377, lower lip 1.371.
+- **Lips:** an ellipse about the mouth line, front surface only. Its half-width is 0.78 of
+  half the pupils' spacing (2.2 cm).
+- **Blush:** a Gaussian disc on each cheek, just outside the pupil line.
+
+**First try.** The eye meshes' outer width was used as the pupils' spacing, which made the
+mouth 3.4 cm wide. It was corrected before any capture was kept.
+
+**Results:**
+- Likeness:
+  - skin-face ΔE 12.0 → 9.0;
+  - mean ΔE 17.2 → 16.9;
+  - IoU 0.598.
+- Close-ups from the front and three-quarter: the tint follows the lip line, and the blush is faint.
+- `jevica-gown`, `jevica-waist`, `jewel-optics`, `gown-sampling` and `gown-contact-samples` pass.
+- Node: 21/21. The new test checks:
+  - landmark order;
+  - mouth width;
+  - the lip tint stays within the lip box;
+  - the blush covers more than 200 vertices;
+  - her copy of the skin, not the shared rig.
+
+**Gaps.**
+- Her face shape (eyes, jaw, nose) and bangs are unchanged: shapes wait on the asset packs,
+  and bangs need new hair cards.
+- No human review.
