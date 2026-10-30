@@ -263,9 +263,9 @@ function renderShell(piece, batch, detail, m, ground, signs, shared = new Set(),
   if (piece.storeys > 1) solid(upper, groundTop + .26, bodyTop, wall);
   else if (top > groundTop + .3) solid(cut(.02), groundTop + .26, top, wall);
   // Roof membrane inside the parapet, on whichever deck is uppermost: on one storey the floor
-  // plate is the roof. A garden roof's membrane is lawn.
+  // plate is the roof. A garden roof's membrane is lawn; a crown's terrace slab is its roof.
   const deck = Math.max(bodyTop, groundTop + .28);
-  solid([w + .24, s + .24, e - .24, n - .24], deck - .02, deck + .08, m(piece.roof === 'garden' ? 'lawn' : 'roof-membrane'));
+  if (!crown) solid([w + .24, s + .24, e - .24, n - .24], deck - .02, deck + .08, m(piece.roof === 'garden' ? 'lawn' : 'roof-membrane'));
   // Floor plate between storefront and upper facade, and the loggia soffit: a slab edge standing
   // proud of the walls and parapets, except at a party wall, where it stops inside its own wall
   // rather than overlapping the neighbour's plate.
@@ -316,9 +316,11 @@ function renderShell(piece, batch, detail, m, ground, signs, shared = new Set(),
       for (let i = 0; i <= spans; i++) put(batch, wall, Math.min(L - .25, Math.max(.25, i * span)), -inset / 2, groundTop + rise / 2, .5, rise, inset);
       for (let storey = 1; storey < bodyStoreys; storey++) {
         const floor = groundTop + (storey - 1) * U;
-        put(batch, m('glass-dark'), L / 2, -inset + .03, floor + U / 2 + .1, L - .5, U - .5, .04);
+        // Each glass layer stands 8 cm proud of the one behind it (the core wall, then the dark
+        // sheet), enough to hold its depth order out to the audit's 120 m (depth-layer-audit.js).
+        put(batch, m('glass-dark'), L / 2, -inset + .06, floor + U / 2 + .1, L - .5, U - .5, .04);
         for (let i = 0; i < spans; i++) if ((Math.imul(storey * 31 + i * 17 + Math.round(L * 7), 2654435761) >>> 28) < 4)
-          put(batch, m('glass-lit'), (i + .5) * span, -inset + .06, floor + U / 2 + .1, span - .5, U - .5, .02);
+          put(batch, m('glass-lit'), (i + .5) * span, -inset + .15, floor + U / 2 + .1, span - .5, U - .5, .02);
         put(batch, trim, L / 2, depth / 2 - .05, floor + .12, L - .2, .24, depth);
         put(detail, m('glass-rail'), L / 2, depth - .07, floor + .78, L - .4, 1.05, .03);
       }
