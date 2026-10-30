@@ -127,7 +127,7 @@ test('a retried attack ID returns the same action: never restarted, never landed
   assert.deepEqual([second.ok, second.replayed ?? false], [true, false]);
   // Checkpoint mid-windup; the restored town resolves it once and replays it.
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 17);
+  assert.equal(saved.version, 18);
   const back = town({ restore: saved, time: f.clock.time });
   assert.deepEqual(back.world.snapshot().crime, f.world.snapshot().crime);
   assert.equal(back.attack(ALICE, { attackId: 'alice-retry-0002' }).action.id, second.action.id);
@@ -260,7 +260,7 @@ test('v17 checkpoints keep pending actions, participants and evades; v16 towns r
   const f = town();open(f);landed(f);f.later(R.hitReactionMs + 100);
   f.evade(ALICE, { direction: 'right', evadeId: 'alice-saved-0001' });
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 17);
+  assert.equal(saved.version, 18);
   const back = town({ restore: saved, time: f.clock.time });
   assert.deepEqual(back.world.snapshot().crime, f.world.snapshot().crime);
   assert.equal(back.evade(ALICE, { direction: 'right', evadeId: 'alice-saved-0001' }).replayed, true);

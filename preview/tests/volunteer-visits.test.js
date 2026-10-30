@@ -25,6 +25,17 @@ test('an existing resident walks around a building and resolves a visit only aft
   assert.equal(state.jobs.length,0);assert.equal(state.helpBudget,3);assert.equal(state.locals.length,9,'No extra crowd is created');
 });
 
+test('a resident reacting to trouble (#640) is not drafted as a helper; the next neighbour is',()=>{
+  const {state,life,helper}=create();
+  helper.life.reaction={kind:'flee',from:[0,0],until:life.elapsed+6};helper.life.reactionCooldownUntil=life.elapsed+10;
+  advance(life,1);
+  // Every other neighbour here has priority, so the visit simply waits rather than drafting the runner.
+  assert.notEqual(state.jobs[0].helperId,helper.id,'the fleeing resident is not drafted');
+  assert.deepEqual([helper.life.visitId,helper.life.helping],[undefined,undefined]);
+  helper.life.reaction=null;advance(life,1);
+  assert.equal(state.jobs[0].helperId,helper.id,'once calm, they take it');
+});
+
 test('pausing the scenario and a storm hold physical visits; clearing the storm resumes the route',()=>{
   const {state,life,helper,local}=create();advance(life,3);state.running=false;
   const position=[...helper.position],elapsed=state.elapsed;advance(life,5);
