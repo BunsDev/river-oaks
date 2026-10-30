@@ -365,3 +365,30 @@ paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs 
 - **Hosted on `6f29ed03`** (this ledger note, docs only): Verify run 40963684097 success on attempt 1,
   19 jobs. The register and the #599 matrix (#731) cite it as the current draft head.
 - **Hosted on `e09ed8d5`** (docs only): Verify run 40965631665 success on attempt 1, 19 jobs.
+- **Hosted on `c4e91bf0`** (docs only): Verify run 40969887197 success on attempt 1, 19 jobs.
+- **Profiles and load on the final candidate (2026-10-30, Apple M5 Max, Chromium 156 Metal; host
+  load 7–24 from other projects, recorded per arm; measurements, not budgets).**
+  - `preview/tests/combat-timing.test.js` on `c4e91bf0`: 1/1 pass (30/60/120 Hz × RTT 0/100/200 ms
+    with jitter and stalls; same deterministic seeds as on `aeb95f85`).
+  - `server/crime-workload.js` 1/8/16/32, two 20 s runs per tier, sustained mode: `c4e91bf0` vs
+    `origin/main` `ca0b3e1a` (scratch snapshot `8685f7e7` = `ca0b3e1a` plus the probe, which main
+    lacks). Admissions, outcomes and police caps identical (strikes 8/160/320/640, police max 3/6/6/6);
+    snapshot +1,546 bytes per tier, checkpoint −50; step p95 1.36–1.82 ms vs 1.45–1.62 ms, step max
+    94–120 ms vs 99–117 ms, two or three steps over 50 ms per run on both. Attempt 1 of both arms
+    failed on the harness (main has no probe; the candidate arm then could not read the missing main
+    report); logs kept. Report `crime-workload-c4e91bf0.json` (baseline embedded), hashes in
+    `crime-workload-c4e91bf0-SHA256SUMS`.
+  - `preview/audit/rendered-multiplayer.js` 1/8/16/32 desktop 1280×800 and phone viewport 390×844:
+    **first failure** on `c4e91bf0`: `10 !== 0` at the final peer assertion of the one-player tier
+    (residents are remote figures since #708 and three of the audit's four counts were filtered);
+    fixed in `ed66dbf4` (the fourth count, plus separate loaded players and residents). Main's own
+    audit cannot converge on main (two non-player remotes, no `kind` field; routed as #778); the main
+    arm used the same audit identifying players by id (`rendered-multiplayer-main-arm-audit.js`).
+    Main, candidate, candidate, main order (A1 01:09Z, B1 00:54Z, B2 01:14Z, A2 01:18Z), all eight tiers
+    passed in every arm, no page errors. Desktop submission p95 A1/B1/B2/A2: 1 player
+    11.7/13.9/11.7/13.6 ms, 8 players 14.1/18.0/12.7/18.1, 16 players 19.8/26.8/17.2/23.3, 32 players
+    30.6/34.0/24.2/30.5; frames over 33 ms at 32 players 144/188/95/160. B2 matches or beats A1 and
+    A2 (load 21–24) matches B1, so the spread follows host load and order, not the candidate: no
+    demonstrated render regression. Frame p95 is 16.7 ms at one player and 33 ms (30 fps) from 16
+    players on both heads on this host, against at most 16.8 ms on 2026-10-24 on a quiet host; the
+    absolute render budget stays unproven until a quiet-host run.
