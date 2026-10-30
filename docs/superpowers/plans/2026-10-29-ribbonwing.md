@@ -412,6 +412,37 @@ Not covered:
 - No one has listened to the sounds; the tests prove bounds, not how they sound.
 - No device audio test.
 
+## In-town cost and disposal
+
+`preview/e2e/ribbonwing-lifetime.js` is a diagnostic journey, not in the hosted shards. Run it with:
+
+```
+node scripts/browser-lock.mjs 'ribbonwing lifetime' -- pnpm run test:experience ribbonwing-lifetime
+```
+
+As the owner, it calls the Ribbonwing and the motorcycle in turn, six Ribbonwing calls in all. Changing the ride disposes the old model. Two runs passed on 2026-10-29, at host load 23–25:
+
+| Measure | Run 1 | Run 2 |
+| --- | --- | --- |
+| Renderer geometries before / after | 570 / 570 | 570 / 570 |
+| Renderer textures before / after | 167 / 167 | 167 / 167 |
+| Craft-owned resources while parked | 30 geometries, 1 texture | 30 geometries, 1 texture |
+| Geometries on each parked call | 600 every call | 600 every call |
+| Collected heap growth over the cycles (bound 12 MB) | 3.0 MB | 3.7 MB |
+| fps, motorcycle in view | 60.7 | 53.8 |
+| fps, Ribbonwing in view | 60.0 | 56.8 |
+| Page errors | none | none |
+
+- The 1 craft texture is the procedural detail map.
+- The heap growth is bounded, not zero. It was not attributed with heap snapshots, so a small per-build retention is not ruled out.
+- Frame rate is load-dependent and reported only. Whole-frame calls and triangles shift with where the craft parks and the camera's view, so they are not a cost measure. The model's own cost is in `ribbonwing.test.js`: near 57 draws and 92k triangles.
+
+Not measured:
+
+- GPU time.
+- Device or mobile frame rates.
+- Many Ribbonwings at once.
+
 ## Rollback
 
 Revert the increment's merge commit. The `hover` kind, its server rules and the
