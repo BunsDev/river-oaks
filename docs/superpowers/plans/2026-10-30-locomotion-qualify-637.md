@@ -221,6 +221,32 @@ Independent review of part 2 (subagent, its own probes against 87d0d44f):
     285 skipped (Redis); desktop 132, 0 fail, 5 skipped; Python 215 passed; build, lint and
     secrets passed.
 
+### Rendered two-client journey (part 2)
+
+`RIVER_OAKS_SHARED_JOURNEY=locomotion-peer node preview/e2e/shared-runner.js development`, run on
+the #811 head (both passed). Then the same run with main's `foot-placement.js` and `avatars.js`
+swapped in and restored afterwards, as a rendered baseline. Setup: Chromium, full rendering, ANGLE
+Metal on the M5 Max, about 41 Hz. Two development clients on one machine; their brisk walk is
+3.2 m/s.
+
+| phase | main local | main peer | part 2 local | part 2 peer |
+|---|---|---|---|---|
+| walk | 1.62 m/s, 4.10 steps/s | 1.52, 3.51 | 1.51, 3.51 | 1.58, 4.09 |
+| brisk | 3.62 m/s, 7.81 steps/s | 3.44, 7.81 | 3.12, 2.83 | 3.35, 4.25 |
+
+- Planted-foot travel: 1.3/1.2 cm on main, 1.2/1.0 cm on part 2. Foot error is 0 on both.
+- The peer's brisk window includes its walk-to-run transition: `RUN_SUSTAIN`, plus the peer's
+  pacing from a 2.1 m/s p05, so its rate sits between the run's 2.8 and the shuffle.
+- Inspected frames:
+  - The side-on observer view shows the peer running, with the legs wide apart and a forward knee.
+  - The following camera sits behind the walker and foreshortens the stride.
+  - At 10 fps, main's 7.8 steps/s shuffle aliases into plausible stills, so the frames alone
+    do not prove the change. The rendered step rate does.
+  - No garment poke-through was visible at this size, but the mini dress is about 40 px tall in
+    the observer view.
+- Not a human feel review. The receipt is not committed (`data/reports` restored); videos are
+  in the worktree's `output/playwright/locomotion-peer-branch/`.
+
 ## Checks (part 1)
 
 - `node --test preview/tests/locomotion-qualify.test.js`: 4/4. On main the stair and seat tests
@@ -242,7 +268,8 @@ Independent review of part 2 (subagent, its own probes against 87d0d44f):
 
 ## Not covered / next
 
-- Rendered two-client journey (`locomotion-peer`): not run; the browser queue was 4 deep and
-  host load was 50-60. A stair and seat transition are not part of that journey.
+- Rendered two-client journey (`locomotion-peer`): run for part 2 against a main baseline (above).
+  It covers walking, reversing, strafing, stopping and brisk movement, but no stair or seat, so
+  the part 1 fixes have no rendered evidence.
 - Human review of the stair climb and stand-up: none.
 - Physical devices: none.
