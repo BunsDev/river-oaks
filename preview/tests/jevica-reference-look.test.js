@@ -278,7 +278,7 @@ test('the lapels lie on the blazer front, not behind it', async () => {
   } finally { costume.dispose(); rig.dispose(); }
 });
 
-test('a rose-gold vine winds unbroken up each lapel, between the piped edges', async () => {
+test('a rose-gold vine winds unbroken up each lapel, between the piped edges, with leaves', async () => {
   const { rig, costume } = await dressed();
   try {
     for (const lapel of costume.suit.lapels) {
@@ -292,6 +292,13 @@ test('a rose-gold vine winds unbroken up each lapel, between the piped edges', a
         if (best > .5) lit++;
       }
       assert.equal(lit, vineRows, `${lapel.name}: the vine shows in ${lit} of ${vineRows} rows`);
+      // Leaves branch off it: some rows cross the stem and a leaf as two separate runs.
+      let branched = 0;
+      for (let r = 0; r < rows; r++) {
+        let runs = 0, on = false; for (let c = 2; c < columns - 2; c++) { const now = piping.getX(r * columns + c) > .5; if (now && !on) runs++; on = now; }
+        if (runs >= 2) branched++;
+      }
+      assert.ok(branched >= 4, `${lapel.name}: ${branched} rows cross a leaf beside the stem`);
     }
   } finally { costume.dispose(); rig.dispose(); }
 });

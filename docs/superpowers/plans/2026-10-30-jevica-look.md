@@ -245,7 +245,20 @@ edge, piped rose-gold. The notched outline now reads in front and three-quarter 
 - Core verify passed again: agent 294/294; preview 4773 pass, 1 skipped; server 1110 pass,
   285 skipped; desktop 127 pass, 5 skipped.
 
+**Follow-up: leaves.**
+- Five leaves branch off each vine on alternating sides: pointed ellipses 11 mm by 4 mm,
+  leaning 40° up and out. The vine widened to 2.4 mm half-width, and the grid went to
+  22 by 121.
+- The first leaf try was too fine to see at chest-camera distance.
+- A test counts rows that cross a leaf beside the stem: 6 on the right lapel with leaves,
+  0 with the leaves removed. The threshold is 4.
+- Likeness: IoU 0.598 is unchanged. Mean ΔE is 17.2, and jacket-chest is 12.7 (it sits on
+  the lapel).
+- Core verify passed: agent 294/294; preview 4773 pass, 1 skipped; server 1110 pass,
+  285 skipped; desktop 127 pass, 5 skipped.
+
 **Gaps.**
-- The vine is a single winding line, not the reference's branching leafy filigree.
+- The filigree is a vine with simple leaves, painted onto the lapel. The reference's
+  is raised, with curling tendrils.
 - The lapel is a rolled ribbon pinned to the chest, not a separate collar piece.
 - No human review.
