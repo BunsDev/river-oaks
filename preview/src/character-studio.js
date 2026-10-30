@@ -3,7 +3,7 @@ import { createCharacterDraft } from './character-studio-state.js';
 import { createCharacterPreview } from './character-studio-preview.js';
 import { CHARACTER_PALETTES, CHARACTER_HAIR } from './character-customization.js';
 import { validateCharacterDefinition, migrateStoredCharacterDefinition } from './character-definition.js';
-import { describeLook, studioChoices, studioRoster } from './character-studio-guide.js';
+import { STUDIO_TIER_LABELS, describeLook, studioChoices, studioRoster } from './character-studio-guide.js';
 import { RECIPE_CATEGORY_LABELS, buildText, recipeEdit, recipeMarkup, renderRecipe, unlockedCategories } from './character-studio-recipe.js';
 import { CUSTOM_CHARACTER, appearanceFor, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './character-studio.css';
@@ -23,7 +23,10 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
       ${recipeMarkup()}
       <fieldset class="cs-step" data-cs-authored data-cs-wardrobe-step><legend><span class="cs-step-mark" aria-hidden="true">2</span>Choose a wardrobe</legend>
         <fieldset class="cs-wardrobe" data-cs-wardrobe hidden><legend>Wardrobe</legend><div class="cs-segments" data-cs-variants></div></fieldset></fieldset>
-      <fieldset class="cs-step" data-cs-authored><legend><span class="cs-step-mark" data-cs-color-step aria-hidden="true">3</span>Add color</legend><div class="cs-colors" data-cs-colors>
+      <fieldset class="cs-step" data-cs-realism hidden><legend><span class="cs-step-mark" data-cs-realism-step aria-hidden="true">2</span>Choose detail</legend>
+        <div class="cs-segments" data-cs-tiers></div><p class="cs-help" data-cs-tier-status></p>
+        <p class="cs-help">Realistic people come as fitted bundles. These stay as designed:</p><ul class="cs-locked" data-cs-locked></ul></fieldset>
+      <fieldset class="cs-step" data-cs-authored data-cs-color-set><legend><span class="cs-step-mark" data-cs-color-step aria-hidden="true">3</span>Add color</legend><div class="cs-colors" data-cs-colors>
         <fieldset data-palette><legend>Dress color</legend><div class="cs-swatches">${Object.entries(CHARACTER_PALETTES).map(([id,item])=>`<label class="cs-swatch" data-palette="${id}" title="${item.label}" style="--cs-swatch:${item.color}"><input type="radio" name="cs-palette" value="${id}" aria-label="${item.label}"></label>`).join('')}</div><p data-palette-name></p></fieldset>
         <fieldset data-hair><legend>Hair color</legend><div class="cs-swatches">${Object.entries(CHARACTER_HAIR).map(([id,item])=>`<label class="cs-swatch" data-hair="${id}" title="${item.label}" style="--cs-swatch:${item.color}"><input type="radio" name="cs-hair" value="${id}" aria-label="${item.label}"></label>`).join('')}</div><p data-hair-name></p></fieldset></div>
         <p class="cs-help" data-compatibility></p></fieldset>
@@ -35,7 +38,7 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     <footer class="cs-footer"><div class="cs-account"><p data-account-status role="status" aria-live="polite">Connecting to your saved looks…</p><p>Save a private draft, or wear this look for others in town to see. Favorites stay on this device.</p><div class="cs-account-recovery"><button type="button" data-retry hidden>Retry</button><button type="button" data-refresh hidden>Check saved account</button><button type="button" data-load-draft hidden>Use saved draft</button></div></div><div class="cs-save-actions"><button type="button" data-cancel>Discard edits</button><button type="button" data-save disabled>Save draft</button><button type="button" data-wear disabled>Wear in town</button><button type="button" data-keep>Close studio</button></div></footer>`;
   document.body.append(dialog);
   const $=selector=>dialog.querySelector(selector),status=$('.cs-status'),stage=$('.cs-preview');
-  let draft=null,preview=null,retained=null,baseline=null,comparing=false,spinning=false,returnFocus=null,closed=false;
+  let draft=null,preview=null,retained=null,baseline=null,comparing=false,spinning=false,returnFocus=null,closed=false,realismReport=null;
   // Categories kept by Surprise me, and whether this visit has had its random start.
   // A visit (this tab's session) starts from someone new once. Reloads and world travel keep the worn look, so
   // reopening after a reconnect or a trip shows the saved customization.
@@ -60,15 +63,27 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
       variants.dataset.csFor=person.id;
       variants.replaceChildren(...choices.variants.map(variant=>{const label=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span');input.type='radio';input.name='cs-variant';input.value=variant.id;text.textContent=variant.label;label.append(input,text);return label;}));
     }
-    $('[data-cs-wardrobe]').hidden=choices.variants.length<2;$('[data-cs-wardrobe-step]').hidden=choices.variants.length<2;$('[data-cs-color-step]').textContent=choices.variants.length<2?'2':'3';
+    $('[data-cs-wardrobe]').hidden=choices.variants.length<2;$('[data-cs-wardrobe-step]').hidden=choices.variants.length<2;$('[data-cs-color-step]').textContent=$('[data-cs-realism-step]').textContent=choices.variants.length<2?'2':'3';
+    // A realistic person offers the contract's detail tiers in place of colors, and
+    // names each capability the contract leaves out, with its reason.
+    const realism=choices.realism,tiers=$('[data-cs-tiers]'),locks=$('[data-cs-locked]');
+    if(realism&&tiers.dataset.csFor!==person.id){
+      tiers.dataset.csFor=locks.dataset.csFor=person.id;
+      tiers.replaceChildren(...realism.tiers.map(tier=>{const label=document.createElement('label'),input=document.createElement('input'),text=document.createElement('span');input.type='radio';input.name='cs-tier';input.value=tier;text.textContent=STUDIO_TIER_LABELS[tier];label.append(input,text);return label;}));
+      locks.replaceChildren(...realism.locked.map(item=>{
+        const row=document.createElement('li'),button=document.createElement('button'),reason=document.createElement('span');
+        button.type='button';button.dataset.locked=item.control;button.setAttribute('aria-disabled','true');button.textContent=item.label;
+        reason.id=`cs-locked-${item.control}`;reason.textContent=item.reason;button.setAttribute('aria-describedby',reason.id);row.append(button,reason);return row;}));
+    }
     // Radios mirror the staged definition, so a rejected or undone choice snaps back.
-    const selected={'cs-character':person.id,'cs-variant':choices.variant,'cs-palette':value.palette??'authored','cs-hair':value.hair??'authored'};
+    const selected={'cs-character':person.id,'cs-variant':choices.variant,'cs-palette':value.palette??'authored','cs-hair':value.hair??'authored','cs-tier':draft.tier};
     for(const input of dialog.querySelectorAll('.cs-controls input[type=radio]'))input.checked=input.value===selected[input.name];
     // Your own and the authored characters are two views of one draft.
     const custom=draft.custom;dialog.dataset.mode=custom?'create':'characters';
     $('.cs-intro').textContent=custom?'Start from someone new. Roll anything, keep what you love.':'Start with someone you love. Make the look yours.';
     $('[data-cs-create]').hidden=!custom;$('[data-remix]').hidden=custom;
-    for(const node of dialog.querySelectorAll('[data-cs-authored]'))if(custom)node.hidden=true;else if(!node.matches('[data-cs-wardrobe-step]'))node.hidden=false;
+    for(const node of dialog.querySelectorAll('[data-cs-authored]'))if(custom)node.hidden=true;else if(!node.matches('[data-cs-wardrobe-step]'))node.hidden=node.matches('[data-cs-color-set]')&&Boolean(realism);
+    $('[data-cs-realism]').hidden=custom||!realism;renderRealism(person);
     if(custom){renderRecipe($('[data-cs-create]'),value.parameters,locked);dialog.dataset.recipe=JSON.stringify(value.parameters);}else delete dialog.dataset.recipe;
     $('[data-remix]').textContent=`Remix ${person.name}`;
     $('[data-cs-summary-name]').textContent=person.name;$('[data-cs-summary-title]').textContent=person.title;
@@ -82,17 +97,28 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     $('[data-undo]').disabled=!draft.canUndo;$('[data-redo]').disabled=!draft.canRedo;
     $('[data-compare]').setAttribute('aria-pressed',String(comparing));$('[data-comparing]').hidden=!comparing;
     $('[data-look]').textContent=sharedAppearance(shown.appearanceId).label;
-    dialog.dataset.appearance=value.appearanceId;dialog.dataset.palette=value.palette;dialog.dataset.hair=value.hair;
+    dialog.dataset.appearance=value.appearanceId;dialog.dataset.palette=value.palette;dialog.dataset.hair=value.hair;dialog.dataset.tier=draft.tier;
     // The preview image names the look it shows, including the original during before/after.
-    stage.querySelector('canvas')?.setAttribute('aria-label',`${comparing?'Original look':'Live preview'}: ${describeLook(shown)}`);
-    preview?.setDefinition(shown);renderAccount();
+    const shownTier=comparing?draft.originalTier:draft.tier;
+    stage.querySelector('canvas')?.setAttribute('aria-label',`${comparing?'Original look':'Live preview'}: ${describeLook(shown,{tier:shownTier})}`);
+    preview?.setDefinition(shown,{tier:shownTier});renderAccount();
   };
+  // What the preview actually draws, including a missing-map fallback, said in place.
+  function renderRealism(person=sharedCharacter(studioChoices(ownerId,draft.value.appearanceId).character)){
+    const node=$('[data-cs-tier-status]'),report=realismReport;
+    const drawn=report&&STUDIO_TIER_LABELS[report.tier]?STUDIO_TIER_LABELS[report.tier]:null;
+    node.textContent=!drawn?'Preparing the detail preview…'
+      :report.fallback&&report.tier!==report.requestedTier?`${STUDIO_TIER_LABELS[report.requestedTier]} needs a detail map that could not load, so this preview uses ${drawn}.`
+      :report.fallback?`A detail map could not load, so ${drawn} draws without it.`
+      :`Previewing at ${drawn} on this device. Others see ${person.name} at their own graphics setting; your saved look does not change.`;
+    if(report?.fallback)node.dataset.fallback=report.fallback;else delete node.dataset.fallback;
+  }
   const change=patch=>{try{draft.change(patch);comparing=false;}catch{status.textContent='That combination is not available. Choose one of the fitted options.';}render();};
   // Undo, redo, Surprise me and favorites change the look without moving focus,
   // so screen readers hear the result here. Direct radio choices announce themselves.
   const announce=text=>{const region=$('[data-cs-announce]');region.textContent='';requestAnimationFrame(()=>{region.textContent=text;});};
   const step=(action,verb)=>{
-    action();comparing=false;render();announce(`${verb}: ${describeLook(draft.value)}.`);
+    action();comparing=false;render();announce(`${verb}: ${describeLook(draft.value,{tier:draft.tier})}.`);
     // An undo can hide the focused swatch or disable the focused button; keep keyboard focus in the Studio.
     const active=document.activeElement;
     if(!dialog.contains(active)||active.closest('[hidden]')||active.disabled)
@@ -148,7 +174,8 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     onOpen();dialog.showModal();readFavorites();showFavorites();
     $('[name=pose]').value='idle';$('[name=pose]').disabled=reducedMotion;$('[data-turntable]').disabled=reducedMotion;$('[data-turntable]').setAttribute('aria-pressed','false');$('#cs-yaw').value='0';
     $('[name=framing]').value='full';$('[name=lighting]').value='day';
-    try{preview=createCharacterPreview({host:stage,ownerId,reducedMotion,onStatus:setStatus});}
+    realismReport=null;
+    try{preview=createCharacterPreview({host:stage,ownerId,reducedMotion,onStatus:setStatus,onRealism:report=>{realismReport=report;if(draft&&dialog.open&&studioChoices(ownerId,draft.value.appearanceId).realism)renderRealism();}});}
     catch{setStatus('error');}
     render();
     renderAccount();refreshOnOpen=true;refreshAccount();
@@ -167,7 +194,7 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     const look=sharedAppearance(draft.value.appearanceId),key=input.name.slice(3);
     if(key==='character')change({appearanceId:appearanceFor(input.value,{form:look.form})?.id});
     else if(key==='form'||key==='variant')change({appearanceId:appearanceFor(look.character,{form:look.form,variant:look.variant,[key]:input.value})?.id});
-    else if(key==='palette'||key==='hair')change({[key]:input.value});
+    else if(key==='palette'||key==='hair'||key==='tier')change({[key]:input.value});
   });
   $('[data-portrait]').addEventListener('click',async()=>{
     if(!preview||portraitPending)return;
@@ -181,7 +208,9 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     finally{portraitPending=false;$('[data-portrait]').disabled=stage.dataset.ready!=='true';}
   });
   $('[data-undo]').addEventListener('click',()=>step(()=>draft.undo(),'Undone'));$('[data-redo]').addEventListener('click',()=>step(()=>draft.redo(),'Redone'));
-  $('[data-compare]').addEventListener('click',()=>{comparing=!comparing;render();announce(comparing?`Showing the original: ${describeLook(draft.original)}.`:`Showing your edit: ${describeLook(draft.value)}.`);});
+  $('[data-compare]').addEventListener('click',()=>{comparing=!comparing;render();announce(comparing?`Showing the original: ${describeLook(draft.original,{tier:draft.originalTier})}.`:`Showing your edit: ${describeLook(draft.value,{tier:draft.tier})}.`);});
+  // A locked control stays focusable so its reason is read; activating it repeats the reason.
+  $('[data-cs-locked]').addEventListener('click',event=>{const button=event.target.closest('[data-locked]');if(button)status.textContent=`${button.textContent} stays as designed. ${$(`#cs-locked-${button.dataset.locked}`).textContent}`;});
   $('[data-remix]').addEventListener('click',()=>step(()=>draft.remix(),'Remix'));$('[data-random]').addEventListener('click',()=>{
     if(!draft.custom){step(()=>draft.randomize(),'Surprise');return;}
     const categories=unlockedCategories(locked);

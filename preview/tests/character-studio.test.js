@@ -90,3 +90,27 @@ test('making your own: a random start, partial recipe edits, rolls that keep the
   while(draft.canUndo)draft.undo();assert.deepEqual(draft.value,confirmed,'undo walks back to the worn look');
   assert.throws(()=>draft.roll(['wings']));
 });
+
+test('a realistic detail tier is undoable history that never enters the definition',()=>{
+  const morgan=characterDefinitionFor(ownerId,'morgan-human'),draft=createCharacterDraft({ownerId,definition:morgan}),canonical=JSON.stringify(morgan);
+  assert.equal(draft.tier,'auto');assert.equal(draft.originalTier,'auto');
+  assert.equal(draft.change({tier:'low'}),true);assert.equal(draft.tier,'low');
+  assert.equal(draft.change({tier:'low'}),false,'choosing the same tier adds no step');
+  draft.change({tier:'high'});
+  // The look is unchanged at every tier: what Save draft and Wear send is canonical.
+  assert.equal(JSON.stringify(draft.value),canonical);assert.equal(JSON.stringify(draft.original),canonical);
+  assert.equal(Object.hasOwn(draft.value,'tier'),false);assert.equal(validateCharacterDefinition(draft.value,{ownerId}).ok,true);
+  draft.undo();assert.equal(draft.tier,'low');draft.undo();assert.equal(draft.tier,'auto');assert.equal(draft.canUndo,false);
+  draft.redo();draft.redo();assert.equal(draft.tier,'high');
+  // Moving to Imani keeps the chosen detail; a stylized look previews at auto and refuses tiers.
+  draft.change({appearanceId:'imani-human'});assert.equal(draft.tier,'high');assert.equal(draft.value.appearanceId,'imani-human');
+  draft.change({appearanceId:'sable-human'});assert.equal(draft.tier,'auto');
+  for(const patch of [{tier:'high'},{tier:'off'},{tier:'ultra'},{tier:'high',palette:'rose'}])assert.throws(()=>draft.change(patch),/Unsupported/);
+  draft.undo();assert.equal(draft.tier,'high');
+  for(const patch of [{tier:'off'},{tier:'ultra'},{tier:'low',appearanceId:'jevica'}])assert.throws(()=>draft.change(patch),/Unsupported/);
+  // A realistic tier grants no appearance: Jevica stays refused.
+  assert.throws(()=>draft.change({appearanceId:'jevica'}));
+  // Your own recipe has no realistic tier either.
+  draft.create(()=>.5);assert.equal(draft.tier,'auto');
+  draft.reset();assert.equal(draft.tier,'auto');assert.equal(JSON.stringify(draft.value),canonical);
+});

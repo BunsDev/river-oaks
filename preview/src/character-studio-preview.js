@@ -8,8 +8,11 @@ import { createCharacterMaterials } from './character-studio-materials.js';
 import { validateCharacterDefinition } from './character-definition.js';
 import { sharedAppearance } from './shared-appearances.js';
 import { studioBackdrop, watchStudioTheme } from './character-studio-theme.js';
+import { isRealisticHumanRig } from './character-fidelity-contract.js';
+import { fidelityTierForQuality } from './character-fidelity-runtime.js';
+import { characterQualitySnapshot, subscribeCharacterQuality } from './character-quality.js';
 
-export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatus=()=>{}}){
+export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatus=()=>{},onRealism=()=>{}}){
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
@@ -37,6 +40,24 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
   // A player-made look is its recipe on its own body: a new recipe is a new load.
   const lookKey=definition=>definition.schemaVersion===3?`${definition.appearanceId}:${JSON.stringify(definition.parameters)}`:definition.appearanceId;
   let stature=1;
+  // A realistic look draws at the Studio's chosen tier; 'auto' follows the graphics
+  // setting as the town does. The tier is this viewer's only, never the definition's.
+  let tier='auto';
+  const resolvedTier=()=>tier==='auto'?fidelityTierForQuality(characterQualitySnapshot()):tier;
+  const realistic=definition=>Boolean(definition)&&isRealisticHumanRig(definition.rig);
+  const showRealism=report=>{
+    host.dataset.realismTier=report?.tier??'off';host.dataset.realismRequested=report?.requestedTier??'off';
+    if(report?.fallback)host.dataset.realismFallback=report.fallback;else delete host.dataset.realismFallback;
+    onRealism(report?{tier:report.tier,requestedTier:report.requestedTier,choice:tier,...(report.fallback?{fallback:report.fallback}:{})}:null);
+  };
+  async function applyTier(){
+    const current=avatar;if(!current||!realistic(wanted)||!current.setRealismTier)return;
+    const report=await current.setRealismTier(resolvedTier());
+    // A newer avatar, tier or teardown owns the result now.
+    if(disposed||current!==avatar||report?.requestedTier!==resolvedTier())return;
+    showRealism(report);renderDirty=true;
+  }
+  const unsubscribeQuality=subscribeCharacterQuality(()=>{if(tier==='auto')applyTier().catch(()=>{});});
   const release=()=>{colors?.dispose();costume?.dispose();avatar?.dispose();avatar?.object.removeFromParent();avatar=costume=colors=null;loadedId=null;};
   async function load(){
     if(loading||disposed)return;loading=true;
@@ -46,7 +67,7 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
           onStatus('loading');host.dataset.ready='false';
           let next,nextCostume;
           try{
-            next=await loadResidentAvatar(Math.max(0,AVATAR_PROFILES.indexOf(definition.rig)),`remote-studio-${definition.appearanceId}`,definition.rig,{folk:false,appearanceId:definition.appearanceId,faceRecipe:{},...(definition.schemaVersion===3?{recipe:definition.parameters}:{})});
+            next=await loadResidentAvatar(Math.max(0,AVATAR_PROFILES.indexOf(definition.rig)),`remote-studio-${definition.appearanceId}`,definition.rig,{folk:false,appearanceId:definition.appearanceId,faceRecipe:{},...(definition.schemaVersion===3?{recipe:definition.parameters}:{}),...(realistic(definition)?{realism:resolvedTier()}:{})});
             if(sharedAppearance(definition.appearanceId).costume==='jevica')nextCostume=createPlayerCostume(next,'jevica');
             return {avatar:next,costume:nextCostume,colors:createCharacterMaterials(next.object)};
           }catch(error){nextCostume?.dispose();next?.dispose();throw error;}
@@ -56,6 +77,7 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
           resource.colors.apply(definition);release();avatar=resource.avatar;costume=resource.costume;colors=resource.colors;loadedId=lookKey(definition);scene.add(avatar.object);
           stature=definition.schemaVersion===3?definition.parameters.height/170:1;
           host.dataset.ready='true';host.dataset.appearance=definition.appearanceId;host.dataset.loadedLook=loadedId;onStatus('ready');renderDirty=true;previous=null;distance=0;
+          showRealism(realistic(definition)?avatar.realismReport:null);if(realistic(definition))applyTier().catch(()=>{});
         },onError:()=>{if(!disposed){onStatus('error');host.dataset.ready='false';}},
       });
     }finally{loading=false;}
@@ -81,13 +103,14 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
     if(!reducedMotion||renderDirty){renderer.render(scene,camera);renderDirty=false;}
   };frame=requestAnimationFrame(draw);
   return {
-    setDefinition(value){const result=validateCharacterDefinition(value,{ownerId});if(!result.ok)throw new TypeError(result.error);wanted=result.definition;
-      if(loadedId===lookKey(wanted)){colors.apply(wanted);renderDirty=true;}else load();},
+    setDefinition(value,{tier:next='auto'}={}){const result=validateCharacterDefinition(value,{ownerId});if(!result.ok)throw new TypeError(result.error);wanted=result.definition;
+      const retier=next!==tier;tier=next;
+      if(loadedId===lookKey(wanted)){colors.apply(wanted);renderDirty=true;if(retier)applyTier().catch(()=>{});}else load();},
     async capturePortrait(){
       if(disposed||loading||!avatar)throw new Error('Wait for the preview to finish loading.');
       let hero;
       try{
-        hero=await createCharacterHero({definition:wanted,ownerId});
+        hero=await createCharacterHero({definition:wanted,ownerId,...(realistic(wanted)?{realism:resolvedTier()}:{})});
         if(disposed)throw new Error('Studio closed during portrait preparation.');
         const result=await characterPortraitPNG({renderer,scene:hero.scene,camera:hero.camera});
         if(disposed)throw new Error('Studio closed during portrait capture.');
@@ -98,6 +121,6 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
       if(['idle','walk','wave'].includes(options.pose))pose=options.pose;if(['full','portrait'].includes(options.framing))framing=options.framing;
       if(options.lighting){const warm=options.lighting==='warm';lighting=warm?'warm':'neutral';key.color.set(warm?'#ffd1a6':'#fff0df');fill.intensity=warm?1.6:2;paint();}
       renderDirty=true;},
-    dispose(){disposed=true;unwatchTheme();cancelAnimationFrame(frame);resize.disconnect();visibility.disconnect();release();pedestal.geometry.dispose();pedestal.material.dispose();key.shadow.dispose();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();},
+    dispose(){disposed=true;unsubscribeQuality();unwatchTheme();cancelAnimationFrame(frame);resize.disconnect();visibility.disconnect();release();pedestal.geometry.dispose();pedestal.material.dispose();key.shadow.dispose();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();},
   };
 }
