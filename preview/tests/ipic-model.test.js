@@ -33,3 +33,16 @@ test('the escalator well and landing stone never shares a plane with their plast
   assert.deepEqual(fights.map(fight => `${fight.a} × ${fight.b} at ${fight.at.map(v => v.toFixed(2))}`), []);
   group.userData.dispose?.();
 });
+
+test('the lift doors, mural, back-bar wall and wine fridges stand clear of what is behind them', async () => {
+  const [{ buildIpicInterior }, { findDepthFights }] = await Promise.all([import('../src/ipic-interior.js'), import('../src/depth-layer-audit.js')]);
+  const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
+  const room = planStoreRooms(world).find(r => r.interior);
+  const group = buildIpicInterior(room, { textures: false, local: true });
+  group.updateMatrixWorld(true);
+  // Each stood 5 mm to 4.75 cm off its backing (2026-10-30): the fridge glass on its cabinet, the burgundy
+  // wall on the lounge's timber, the mural on its black wall and the bronze lift doors on their surround.
+  const fights = findDepthFights(group).filter(fight => /wine-fridge|burgundy-booths|book-spine-mural|ipic-bronze/.test(`${fight.a} ${fight.b}`));
+  assert.deepEqual(fights.map(fight => `${fight.a} × ${fight.b} at ${fight.at.map(v => v.toFixed(2))}`), []);
+  group.userData.dispose?.();
+});
