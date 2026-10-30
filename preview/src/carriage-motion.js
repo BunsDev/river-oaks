@@ -40,9 +40,11 @@ export function fitCarriageToGround(state,groundAt,wheelTreads) {
   state.position[1]=groundAt(x,z);
   // Airborne, the hull hangs level over the ground it follows; position[1] stays that ground
   // (the shared pose carries altitude separately) and nothing presses on the suspension.
-  if((state.altitude??0)>.1){state.roll=0;state.pitch=0;state.wheelOffsets=(spec?.wheels??CARRIAGE_WHEELS).map(()=>0);return state;}
+  if((state.altitude??0)>.1){state.roll=state.flightPitch??0;state.pitch=state.flightBank??0;state.wheelOffsets=(spec?.wheels??CARRIAGE_WHEELS).map(()=>0);return state;}
   state.roll=Math.atan((groundAt(x+c*halfBase*scale,z-s*halfBase*scale)-groundAt(x-c*halfBase*scale,z+s*halfBase*scale))/(2*halfBase*scale));
   state.pitch=-Math.atan((groundAt(x+s*halfTrack*scale,z+c*halfTrack*scale)-groundAt(x-s*halfTrack*scale,z-c*halfTrack*scale))/(2*halfTrack*scale));
+  // Local X is the two-wheeler longitudinal axis. Solve contacts after banking.
+  if(state.vehicle==='motorcycle')state.pitch+=state.lean??0;
   state.wheelOffsets=(spec?.wheels??CARRIAGE_WHEELS).map(()=>0);
   // World-vertical suspension leaves every contact sample's X/Z unchanged.
   // One solve is exact, including road seams that would defeat iteration along
@@ -55,15 +57,37 @@ export function stepCarriage(state,environment,input,delta) {
   if(!Number.isFinite(delta)||delta<=0)return state;
   const duration=Math.min(.08,delta),steps=Math.ceil(duration*120),dt=duration/steps;
   const controls=drivingInput(input),spec=VEHICLES[state.vehicle];
-  if(controls.brake){state.speed=0;fitCarriageToGround(state,environment.groundAt,environment.wheelTreads);return state;}
+  if(controls.brake){state.speed=0;state.lean=(state.lean??0)*Math.exp(-8*duration);state.yawRate=0;state.flightBank=(state.flightBank??0)*Math.exp(-5*duration);state.flightPitch=(state.flightPitch??0)*Math.exp(-5*duration);fitCarriageToGround(state,environment.groundAt,environment.wheelTreads);return state;}
   const forward=controls.forward,turn=Math.max(-1,Math.min(1,controls.turn-controls.strafe));
   for(let i=0;i<steps;i++) {
     const top=controls.sprint||!spec?.cruiseSpeed?(spec?.maxSpeed??4):spec.cruiseSpeed;
     const target=forward*(forward<0?1.4:top);
-    state.speed+=(target-state.speed)*(1-Math.exp(-(forward?2:5)*dt));
+    if(state.vehicle==='motorcycle') {
+      // Bounded throttle and engine braking, stronger braking before reversing.
+      const rate=!forward?3:Math.sign(target)!==Math.sign(state.speed)&&state.speed!==0?7:4.5;
+      state.speed+=Math.max(-rate*dt,Math.min(rate*dt,target-state.speed));
+    } else if(spec?.flies&&(state.altitude??0)>.1) {
+      const rate=!forward?1.8:target*state.speed<0?5:3;
+      state.speed+=Math.max(-rate*dt,Math.min(rate*dt,target-state.speed));
+    } else state.speed+=(target-state.speed)*(1-Math.exp(-(forward?2:5)*dt));
     if(Math.abs(state.speed)<.0001)state.speed=0;
     state.steering=(state.steering??0)+(turn*(spec?.steeringLimit??.25)-(state.steering??0))*(1-Math.exp(-8*dt));
-    const travelled=state.speed*dt,yaw=state.yaw+(spec?Math.tan(state.steering)*travelled/spec.wheelbase:turn*travelled/3.4*.75);
+    if(state.vehicle==='motorcycle') {
+      const lateral=state.speed*state.speed*Math.tan(state.steering)/spec.wheelbase;
+      const lean=Math.max(-.5,Math.min(.5,Math.atan(lateral/9.81)));
+      state.lean=(state.lean??0)+(lean-(state.lean??0))*(1-Math.exp(-8*dt));
+    }
+    const flying=spec?.flies&&(state.altitude??0)>.1;
+    if(flying){
+      const rate=(state.steering/spec.steeringLimit)*(.9-.35*Math.min(1,Math.abs(state.speed)/spec.maxSpeed));
+      state.yawRate=(state.yawRate??0)+(rate-(state.yawRate??0))*(1-Math.exp(-6*dt));
+      const clearance=Math.max(0,Math.min(1,(state.altitude-1)/3));
+      const bank=Math.max(-.32,Math.min(.32,Math.atan(state.speed*state.yawRate/9.81)))*clearance;
+      const pitch=-Math.max(-.18,Math.min(.18,Math.atan2(state.verticalSpeed??0,Math.max(3,Math.abs(state.speed)))*Math.min(1,Math.abs(state.speed)/3)))*clearance;
+      state.flightBank=(state.flightBank??0)+(bank-(state.flightBank??0))*(1-Math.exp(-5*dt));
+      state.flightPitch=(state.flightPitch??0)+(pitch-(state.flightPitch??0))*(1-Math.exp(-5*dt));
+    }else{state.yawRate=0;state.flightBank=0;state.flightPitch=0;}
+    const travelled=state.speed*dt,yaw=state.yaw+(flying?state.yawRate*dt:(spec?Math.tan(state.steering)*travelled/spec.wheelbase:turn*travelled/3.4*.75));
     const next={...state,position:[state.position[0]-Math.cos(yaw)*travelled,state.position[1],state.position[2]+Math.sin(yaw)*travelled],yaw};
     if(!environment.canOccupy(next)){state.speed=0;break;}
     state.position=next.position;state.yaw=yaw;state.distance+=travelled;
@@ -89,15 +113,19 @@ export function hoverClear(state,environment) {
 // and never above the flight ceiling. A landing vehicle ignores lift until it is down.
 export function stepHoverLift(state,environment,input,delta) {
   const spec=VEHICLES[state.vehicle];if(!spec?.flies||!Number.isFinite(delta)||delta<=0)return state;
-  const dt=Math.min(.08,delta),limit=environment.flightCeiling??32,lift=Math.max(-1,Math.min(1,Number(input?.lift)||0));
+  const duration=Math.min(.08,delta),steps=Math.ceil(duration*120),dt=duration/steps,limit=environment.flightCeiling??32;
+  const value=Number(input?.lift),lift=Number.isFinite(value)?Math.max(-1,Math.min(1,value)):0;
   state.altitude??=0;state.liftTarget??=0;state.verticalSpeed??=0;
-  if(state.landing)state.liftTarget=0;else if(lift)state.liftTarget=Math.max(0,Math.min(limit,state.liftTarget+lift*4*dt));
-  const difference=state.liftTarget-state.altitude,desired=Math.sign(difference)*Math.min(3,Math.sqrt(6*Math.abs(difference)));
-  state.verticalSpeed+=Math.max(-3*dt,Math.min(3*dt,desired-state.verticalSpeed));
-  const next=Math.max(0,Math.min(limit,state.altitude+state.verticalSpeed*dt));
-  if(next>state.altitude&&!hoverClear({...state,altitude:next},environment)){state.verticalSpeed=0;state.liftTarget=state.altitude;return state;}
-  state.altitude=next;
-  if(state.altitude<=.02&&state.liftTarget<=0){state.altitude=0;state.verticalSpeed=0;state.landing=false;}
+  for(let i=0;i<steps;i++){
+    if(state.landing)state.liftTarget=0;else if(lift)state.liftTarget=Math.max(0,Math.min(limit,state.liftTarget+lift*4*dt));
+    const difference=state.liftTarget-state.altitude,desired=Math.sign(difference)*Math.min(3,Math.sqrt(6*Math.abs(difference)));
+    state.verticalSpeed+=Math.max(-3*dt,Math.min(3*dt,desired-state.verticalSpeed));
+    let next=Math.max(0,Math.min(limit,state.altitude+state.verticalSpeed*dt));
+    if((state.liftTarget-state.altitude)*(state.liftTarget-next)<=0){next=state.liftTarget;state.verticalSpeed=0;}
+    if(next!==state.altitude&&!hoverClear({...state,altitude:next},environment)){state.verticalSpeed=0;state.liftTarget=state.altitude;break;}
+    state.altitude=next;
+    if(state.altitude<=.02&&state.liftTarget<=0){state.altitude=0;state.verticalSpeed=0;state.landing=false;break;}
+  }
   return state;
 }
 
