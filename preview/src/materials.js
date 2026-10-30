@@ -74,10 +74,13 @@ export function physicalSurface(name, { tileSize = 4, instanced = false, variati
         return mix(mix(roHash(cell), roHash(cell + vec2(1.0, 0.0)), f.x), mix(roHash(cell + vec2(0.0, 1.0)), roHash(cell + vec2(1.0, 1.0)), f.x), f.y);
       }
       void main() {`)
+      // vMapUv exists only with a map.
       .replace('#include <map_fragment>', `#include <map_fragment>
-      vec2 roMeters = vMapUv * ${tileSize.toFixed(4)};
-      float roNoise = 0.25 * roValueNoise(roMeters / 3.1) + 0.4 * roValueNoise(mat2(0.83, -0.56, 0.56, 0.83) * roMeters / 19.0) + 0.35 * roValueNoise(mat2(0.31, 0.95, -0.95, 0.31) * roMeters / 131.0);
-      diffuseColor.rgb *= 1.0 + ${variation.toFixed(4)} * (roNoise - 0.5);`);
+      #ifdef USE_MAP
+        vec2 roMeters = vMapUv * ${tileSize.toFixed(4)};
+        float roNoise = 0.25 * roValueNoise(roMeters / 3.1) + 0.4 * roValueNoise(mat2(0.83, -0.56, 0.56, 0.83) * roMeters / 19.0) + 0.35 * roValueNoise(mat2(0.31, 0.95, -0.95, 0.31) * roMeters / 131.0);
+        diffuseColor.rgb *= 1.0 + ${variation.toFixed(4)} * (roNoise - 0.5);
+      #endif`);
     if (textureContrast !== 1) shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
       #ifdef USE_MAP
         diffuseColor.rgb = mix(diffuse * 0.5, diffuseColor.rgb, ${textureContrast.toFixed(4)});

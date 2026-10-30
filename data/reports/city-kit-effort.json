@@ -165,7 +165,7 @@
     },
     {
       "id": "bayou-terrace-north",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 1,
       "shells": 34,
       "typed": {
@@ -181,14 +181,14 @@
             "words": 0
           },
           "blocks": {
-            "numbers": 10,
-            "names": 7,
-            "words": 2
-          },
-          "layout": {
             "numbers": 0,
             "names": 0,
             "words": 0
+          },
+          "layout": {
+            "numbers": 14,
+            "names": 7,
+            "words": 3
           },
           "landmarks": {
             "numbers": 0,
@@ -212,19 +212,19 @@
           }
         },
         "total": {
-          "numbers": 128,
+          "numbers": 132,
           "names": 9,
-          "words": 2
+          "words": 3
         },
         "massing": {
-          "numbers": 30,
+          "numbers": 34,
           "names": 7,
-          "words": 2
+          "words": 3
         },
         "author": {
-          "numbers": 128,
+          "numbers": 132,
           "names": 9,
-          "words": 2
+          "words": 3
         },
         "tools": {
           "numbers": 0,
@@ -232,7 +232,7 @@
           "words": 0
         }
       },
-      "perShell": 0.88,
+      "perShell": 1,
       "change": {
         "edit": "every street 2 m wider",
         "shellsBefore": 34,
@@ -248,13 +248,13 @@
           "numbersToRetype": 0,
           "shells": 34,
           "shellsInStreet": 0,
-          "warnings": 5
+          "warnings": 0
         }
       }
     },
     {
       "id": "bayou-terrace-south",
-      "form": "authored",
+      "form": "migrated",
       "blocks": 1,
       "shells": 20,
       "typed": {
@@ -270,14 +270,14 @@
             "words": 0
           },
           "blocks": {
-            "numbers": 10,
-            "names": 5,
-            "words": 2
-          },
-          "layout": {
             "numbers": 0,
             "names": 0,
             "words": 0
+          },
+          "layout": {
+            "numbers": 14,
+            "names": 5,
+            "words": 3
           },
           "landmarks": {
             "numbers": 0,
@@ -301,19 +301,19 @@
           }
         },
         "total": {
-          "numbers": 119,
+          "numbers": 123,
           "names": 7,
-          "words": 2
+          "words": 3
         },
         "massing": {
-          "numbers": 30,
+          "numbers": 34,
           "names": 5,
-          "words": 2
+          "words": 3
         },
         "author": {
-          "numbers": 119,
+          "numbers": 123,
           "names": 7,
-          "words": 2
+          "words": 3
         },
         "tools": {
           "numbers": 0,
@@ -321,7 +321,7 @@
           "words": 0
         }
       },
-      "perShell": 1.5,
+      "perShell": 1.7,
       "change": {
         "edit": "every street 2 m wider",
         "shellsBefore": 20,
@@ -337,7 +337,7 @@
           "numbersToRetype": 0,
           "shells": 20,
           "shellsInStreet": 0,
-          "warnings": 5
+          "warnings": 0
         }
       }
     },
@@ -1862,23 +1862,23 @@
     }
   ],
   "migrated": {
-    "recipes": 16,
-    "blocks": 30,
-    "frontageWords": 39
+    "recipes": 18,
+    "blocks": 32,
+    "frontageWords": 45
   },
   "shipped": {
     "recipes": 18,
     "blocks": 32,
     "shells": 354,
     "typed": {
-      "numbers": 2607,
+      "numbers": 2615,
       "names": 205,
-      "words": 43
+      "words": 45
     },
     "massing": {
-      "numbers": 697,
+      "numbers": 705,
       "names": 175,
-      "words": 43
+      "words": 45
     },
     "authored": {
       "blocksToRetype": 32,
