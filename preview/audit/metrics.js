@@ -36,3 +36,17 @@ export function auditOptions(args) {
 export function gestureWait(remainingMs) {
   return { delayMs: Math.max(1, Math.ceil(Math.min(1700, remainingMs))), finish: remainingMs <= 1700 };
 }
+
+// The remote-figure registry also draws the town's own figures: authored rivals
+// (#597) and police units (#598), and more may follow. A tier counts players by
+// the authoritative roster's ids, never by registry length, and waits until every
+// figure the page draws, player or not, has loaded. Self-contained: the audit
+// serializes it into the page for waitForFunction.
+export function peerRoster(town, count) {
+  const players = town?.snapshot?.players ?? [], ids = new Set(players.map(player => player.id)), remotes = town?.remotes ?? [];
+  const peers = remotes.filter(remote => ids.has(remote.id) && remote.id !== town?.selfId), figures = remotes.filter(remote => !ids.has(remote.id));
+  const peerIds = new Set(peers.map(peer => peer.id));
+  const converged = Boolean(town?.connected) && players.length === count && peerIds.size === count - 1
+    && players.every(player => player.id === town.selfId || peerIds.has(player.id)) && remotes.every(remote => remote.ready);
+  return { converged, peers, figures };
+}
