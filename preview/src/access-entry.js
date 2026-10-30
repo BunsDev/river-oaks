@@ -4,6 +4,7 @@ import { installDiagnostics, registerDiagnosticSource } from './debug-report.js'
 import { startArtRotation } from './access-art-rotation.js';
 import { generatedUsername } from './generated-username.js';
 import { answeredFetch, reloadAfterFailedCheck } from './access-recheck.js';
+import { createGateSupport } from './support-contact.js';
 
 // Problem reports start collecting with the sign-in page, so a failure before the
 // game loads is still in the report.
@@ -26,6 +27,9 @@ const INVITE_HELP = {
 // The steps take the kicker's place above the title, as a progress row: steps before the
 // visitor's own are done (data-done), theirs is current (aria-current).
 const kicker = $('#access-kicker'), waiting = $('#access-waiting');
+// The published support contact (#292) under the gate's footer, in every gate state; nothing when unset.
+const support = createGateSupport(import.meta.env?.VITE_SUPPORT_CONTACT);
+if (support) gate.querySelector('.access-footer')?.after(support);
 function showJourney(step, kickerShown = !step) {
   journey.hidden = !step; kicker.hidden = !kickerShown;
   let reached = !step;
