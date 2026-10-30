@@ -24,7 +24,7 @@ test('the policy defaults to this origin and keeps its restrictive directives', 
   for (const [name, value] of [['object-src', ["'none'"]], ['base-uri', ["'self'"]], ['form-action', ["'self'"]], ['frame-ancestors', ["'none'"]], ['connect-src', ["'self'", 'data:', 'blob:', 'https://*.livekit.cloud', 'wss://*.livekit.cloud']]])
     assert.deepEqual(directives[name], value, name);
   assert.deepEqual(directives['script-src'], ["'self'", 'https://challenges.cloudflare.com'], 'scripts: this origin and Turnstile only');
-  assert.deepEqual(directives['frame-src'], ['https://challenges.cloudflare.com'], 'frames: Turnstile only');
+  assert.deepEqual(directives['frame-src'], ['https://challenges.cloudflare.com', 'https://typesafe-computer.vercel.app'], 'frames: Turnstile and the hosted TypeSafe Computer desk (docs/office-computer-embed.md)');
   assert.equal(/'unsafe-eval'|'unsafe-inline'/.test(directives['script-src'].join(' ')), false, 'no inline or eval scripts');
   assert.equal(Object.values(directives).flat().some(value => value === '*' || value === 'https:' || value === 'http:'), false, 'no wildcard sources');
 });

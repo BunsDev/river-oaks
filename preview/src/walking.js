@@ -85,9 +85,6 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   // Imported collision-only worlds have no roof metadata; retain a finite safe cap.
   if(!roofs.length)for(const ring of polygons)roofs.push({ring,top:Math.max(...ring.map(([x,z])=>terrainHeight(world.terrain,x,-z)))+23.1});
   for(const roof of roofs)Object.assign(roof,{minX:Math.min(...roof.ring.map(p=>p[0]))-flightRadius,maxX:Math.max(...roof.ring.map(p=>p[0]))+flightRadius,minZ:Math.min(...roof.ring.map(p=>p[1]))-flightRadius,maxZ:Math.max(...roof.ring.map(p=>p[1]))+flightRadius});
-  // A stable district altitude ceiling prevents corrections as terrain changes
-  // beneath the bubble. Client motion and shared pose/checkpoint validation use it.
-  const flightCeiling=Math.max(32,...roofs.map(roof=>roof.top+5-Math.min(...roof.ring.map(([x,z])=>groundAt(x,z)))));
   // Plaza salon furniture (plaza-salon-plan.js) and the curbside bike rack bars
   // (bike-racks.js) block bodies and low flight like a placed object. One box
   // around the plaza and one per rack keep every other query to a few compares.
@@ -129,8 +126,28 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   const commons=world.eastGardenCommons;
   const commonsFlight=commons?[...commons.solids,{rect:commons.pavilion.rect,height:commons.pavilion.clearHeight+commons.pavilion.roofThickness}]:[];
   const commonsFlightAt=bucketBoxes(commonsFlight,({rect:[w,s,e,n]})=>[w-flightRadius,s-flightRadius,e+flightRadius,n+flightRadius]);
+  // Composed-district buildings (the Commons and every plan east of it) are not walking surfaces,
+  // but Jevica flies over their roofs: each footprint is flight ground, and its roof (highest
+  // ground under it, plus its height and the 3.1m roof margin) blocks the bubble below.
+  const commonsRoofs=commons?[commons.destination,...Object.values(commons).flatMap(value=>Array.isArray(value?.plans)?value.plans:[])]
+    .flatMap(plan=>plan?.pieces??[]).filter(piece=>piece.piece.startsWith('building/')).map(({rect,height})=>{
+      const [w,s,e,n]=rect;
+      const under=[[w,s],[e,s],[e,n],[w,n],[(w+e)/2,(s+n)/2]].map(([east,north])=>groundAt(east,-north));
+      return {rect,top:Math.max(...under)+height+3.1,floor:Math.min(...under)};
+    }):[];
+  // A stable district altitude ceiling prevents corrections as terrain changes
+  // beneath the bubble. Client motion and shared pose/checkpoint validation use it.
+  // Composed-district roofs count too, so TypeSafe Place's towers raise it (typesafe-place-1 only).
+  const flightCeiling=Math.max(32,...roofs.map(roof=>roof.top+5-Math.min(...roof.ring.map(([x,z])=>groundAt(x,z)))),...commonsRoofs.map(roof=>roof.top+5-roof.floor));
+  const commonsRoofsAt=bucketBoxes(commonsRoofs,({rect:[w,s,e,n]})=>[w-flightRadius,s-flightRadius,e+flightRadius,n+flightRadius]);
+  const flightRing=[[0,0],...Array.from({length:8},(_,i)=>[Math.cos(i*Math.PI/4)*flightRadius,Math.sin(i*Math.PI/4)*flightRadius])];
+  // The bubble stays over modelled ground (surfaces and roofs), never the empty reserve around them.
+  const commonsFlightAllows=(east,north)=>commonsAllows(commons,east,north,flightRadius)
+    || flightRing.every(([de,dn])=>commonsAllows(commons,east+de,north+dn,0)
+      || commonsRoofsAt(east+de,north+dn).some(roof=>insideRect(roof.rect,east+de,north+dn)));
   const canFly = (x, altitude, z) => {
-    if(!commonsAllows(commons,x,-z,flightRadius))return false;
+    if(!commonsFlightAllows(x,-z))return false;
+    if(commonsRoofsAt(x,-z).some(roof=>insideRect(roof.rect,x,-z,-flightRadius)&&altitude<=roof.top))return false;
     if(commonsFlightAt(x,-z).some(solid=>insideRect(solid.rect,x,-z,-flightRadius)&&altitude<=commons.ground+solid.height+3.1))return false;
     if(levelId!==null)return false;
     if(x<west+flightRadius || x>east-flightRadius || z<-north+flightRadius || z>-south-flightRadius) return false;

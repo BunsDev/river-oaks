@@ -17,7 +17,8 @@ import { CLIENT_ADDRESS, createClientAddress, rateLimitKey } from './client-addr
 import { createRateLimiter, SIGN_INS_PER_ADDRESS, SIGN_IN_WINDOW } from './rate-limit.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { createDebugReportRoutes } from './debug-report-routes.js';
-import { STAFF_BAN_REFUSED, createModerationReportsRoute, staffAccount } from './moderation-reports.js';
+import { REPORT_UNAVAILABLE, STAFF_BAN_REFUSED, closeRequest, createModerationReportsRoute, staffAccount, submitReport } from './moderation-reports.js';
+import { RESPONSE_HOURS } from './moderation-notify.js';
 import { createMemoryDebugReports } from './debug-reports.js';
 import { protectedGameAsset } from './game-assets.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, acceptsWorldProtocol, validateWorldId } from '../preview/src/world-contract.js';
@@ -32,6 +33,7 @@ import { securityHeaders } from './security-headers.js';
 import { createVoiceRoutes } from './voice-routes.js';
 import { createRideFlush } from './ride-flush.js';
 import { loadHidden, screenCommand, viewFor } from './blocks.js';
+import { defaultContentFilter, screenText } from './content-filter.js';
 import { blockAction } from './blocks-api.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
 import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, continuedConnection, retireAfter, rotateNotice } from './connection-close.js';
@@ -39,7 +41,7 @@ import { ROTATE_NOTICE_MS, UPDATE_CLOSE, closeForUpdate, continuedConnection, re
 const types = { '.webm':'video/webm','.mp4':'video/mp4','.vtt':'text/vtt; charset=utf-8','.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.hdr':'application/octet-stream','.svg':'image/svg+xml','.woff2':'font/woff2' };
 const equal = (a,b) => typeof a==='string' && typeof b==='string' && Buffer.byteLength(a)===Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res,status,value) => { res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value)); };
-export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, blocks = null, onBlocked = null, blockSyncMs = 5000, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), avatarPreferences = null, characters = null, characterStudioEnabled = true, characterMetrics = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, connectionLifetime = 0, rotateNoticeMs = ROTATE_NOTICE_MS, cyclingMiles = null, cyclingFlushMs = 30000 }) {
+export function createGameServer({ debugReports = createMemoryDebugReports(), auth, world, worldTitle = world.title, landmarks, social = null, groups = null, profiles = null, blocks = null, onBlocked = null, blockSyncMs = 5000, events = null, workplace = null, officeDesk = createMemoryOfficeDesk(), avatarPreferences = null, characters = null, characterStudioEnabled = true, characterMetrics = null, presence = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, regionSha256 = null, onBan = null, origin, staticRoot, moderation, waitlist, waitlistAdmins = [], moderators = [], trustedProxyIPs = [], now = Date.now, onMove = null, voice = null, voiceReconcileMs = 1000, departureGraceMs = 30000, connectionLifetime = 0, rotateNoticeMs = ROTATE_NOTICE_MS, cyclingMiles = null, cyclingFlushMs = 30000, contentFilter = defaultContentFilter(), moderationNotifier = null, responseHours = RESPONSE_HOURS }) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId=validateWorldId(world.worldId??DEFAULT_WORLD_ID);
   const matchesWorld=url=>(url.searchParams.get('world')??(worldId===DEFAULT_WORLD_ID?DEFAULT_WORLD_ID:null))===worldId;
@@ -107,7 +109,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   // Moderators read saved player reports (#292).
   const moderationReads = createRateLimiter(30,60000), staff = staffAccount({ moderators, admins: waitlistAdmins, isAdmin });
   const handleModerationReports = createModerationReportsRoute({ auth, moderators, isBanned: async id => isBanned(id), isApproved: id => waitlist.isApproved(id),
-    allow: async id => moderationReads(id), reports: moderation?.reports ? except => moderation.reports(undefined, except) : null, usernameOf: id => waitlist.usernameOf?.(id) ?? null, isStaff: staff });
+    allow: async id => moderationReads(id), reports: moderation?.reports ? except => moderation.reports(undefined, except) : null, usernameOf: id => waitlist.usernameOf?.(id) ?? null, isStaff: staff, responseHours, now });
   async function body(req,max=4096) {
     let size=0,chunks=[];
     for await (const chunk of req) {size+=chunk.length;if(size>max)throw new Error('Request too large');chunks.push(chunk);}
@@ -221,7 +223,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             const place=world.resolvePlace(placeId);
             return place?{world:{id:worldId,title:worldTitle},place}:null;
           },
-          allowWrite:id=>socialWrites(id),blocks});
+          allowWrite:id=>socialWrites(id),blocks,contentFilter});
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/blocks/') && req.method==='POST') {
@@ -237,13 +239,13 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
         const result=await groupAction({action:pathname.slice('/api/groups/'.length),identity,groups,social,
-          readBody:()=>body(req),allowWrite:id=>groupWrites(id),blocks});
+          readBody:()=>body(req),allowWrite:id=>groupWrites(id),blocks,contentFilter});
         return json(res,result.status,result.value);
       }
       if (pathname.startsWith('/api/events/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});
-        const result=await eventAction({action:pathname.slice('/api/events/'.length),identity,events,isAdmin,readBody:()=>body(req),
+        const result=await eventAction({action:pathname.slice('/api/events/'.length),identity,events,isAdmin,contentFilter,readBody:()=>body(req),
           resolveVenue:async placeId=>{
             const place=world.resolvePlace(placeId);
             return place?{worldId,worldTitle,placeId:place.id,placeName:place.name}:null;
@@ -279,7 +281,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const result=await profileAction({action:pathname.slice('/api/profile/'.length),identity,worldId,profiles,social,readBody:()=>body(req),
           visiblePlayer:async(user,peerId)=>connections.get(user.userId)?.identity.sessionId===user.sessionId
             ? snapshot().players.find(player=>player.id===peerId) : null,
-          allowWrite:id=>socialWrites(id),blocks});
+          allowWrite:id=>socialWrites(id),blocks,contentFilter});
         return json(res,result.status,result.value);
       }
       if (pathname==='/api/moderation/ban' && req.method==='POST') {
@@ -291,6 +293,17 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         if(data.banned) await waitlist.revokeInvites?.({userId:data.userId,actorId:identity.userId});
         await moderation.setBanned(data.userId,data.banned,identity.userId);
         if(data.banned){disconnectUser(data.userId,4003,'This account cannot join the town.');await workplace?.suspend(data.userId);await onBan?.(data.userId);}
+        return json(res,200,{ok:true});
+      }
+      // A moderator closes a report they have dealt with (#292).
+      if (pathname==='/api/moderation/reports/close' && req.method==='POST') {
+        const identity=await authorized(req,res);if(!identity)return;
+        if (!moderatorIds.has(identity.userId) || !moderation?.closeReport) return json(res,403,{error:'Moderator access required.'});
+        const id=closeRequest(await body(req));
+        if(!id)return json(res,400,{error:'Invalid report.'});
+        let closed=false;
+        try{closed=await moderation.closeReport(id,identity.userId);}catch{return json(res,503,{error:REPORT_UNAVAILABLE});}
+        if(!closed)return json(res,404,{error:'That report isn’t here.'});
         return json(res,200,{ok:true});
       }
       if (pathname.startsWith('/api/') || pathname.startsWith('/auth/')) return json(res,404,{error:'Not found'});
@@ -390,7 +403,12 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         if(blocks)void loadHidden(blocks,connection,identity.userId).catch(()=>{});
         old?.ws.close(4009,'This account joined in another tab.');
         // Off by default here; a host with a request limit sets it, and the page moves to a fresh socket first.
-        const retire=retireAfter(ws,connectionLifetime,{noticeMs:rotateNoticeMs,notify:()=>{if(connections.get(identity.userId)===connection)send(ws,rotateNotice(connectionLifetime,rotateNoticeMs,token));}});
+        // A socket keeps the identity it was issued at upgrade, which expires with the sign-in it
+        // came from (an hour in the browser fixture, a provider access token's lifetime), so the
+        // page is asked to move before then too: the fresh socket re-authenticates and the player
+        // never sees a gate. A page that does not move still meets the expiry close below.
+        const sessionMs=identity.expiresAt-now(),lifetime=connectionLifetime>0?Math.min(connectionLifetime,sessionMs):sessionMs;
+        const retire=retireAfter(ws,lifetime,{noticeMs:rotateNoticeMs,notify:()=>{if(connections.get(identity.userId)===connection)send(ws,rotateNotice(lifetime,rotateNoticeMs,token));}});
         // A page moving from another socket brings its voice lease along (voice.js continueConnection).
         if(voice&&continues)void voice.continueConnection({userId:identity.userId,from:continues,to:token});
         ws.on('error',()=>{});ws.on('pong',()=>{connection.alive=true;});
@@ -418,14 +436,21 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           let approved = false;
           try { approved = await waitlist.isApproved(identity.userId); } catch { /* Storage fails closed. */ }
           if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
-          if(identity.expiresAt<=now() || isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
+          // An expired session ends the socket the way the broadcast loop does: the player stays in
+          // the world for the departure grace, so the secure reconnect resumes where they were
+          // instead of re-joining at the District spawn. A ban or ended approval still removes them.
+          if(identity.expiresAt<=now())return ws.close(4001,'Session expired. Reconnecting securely.');
+          if(isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
           let equipObservation=null;
           try {
             const message=slot.message;
             if(!message)throw new Error('Invalid');
             if(message.type==='report') {
-              if(!moderation || !reports(identity.userId) || !['disruption','harassment','cheating'].includes(message.reason) || !connections.has(message.playerId) || message.playerId===identity.userId)return send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report could not be submitted.'});
-              moderation.report(identity.userId,message.playerId,message.reason).then(()=>send(ws,{type:'result',requestId:message.requestId,ok:true,message:'Report saved.'}),()=>send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report unavailable. Try again.'}));return;
+              // Every attempt counts toward the reporter's three a minute, refused ones included.
+              if(!moderation || !reports(identity.userId))return send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report could not be submitted.'});
+              const result=await submitReport({reporterId:identity.userId,message,present:id=>connections.has(id),chat:world.snapshot().chat,usernameOf:id=>waitlist.usernameOf?.(id)??null,
+                save:async entry=>{await moderation.report(entry.reporterId,entry.reportedId,entry.reason,{id:entry.id,content:entry.content,respondBy:entry.respondBy,at:entry.at});return true;},notifier:moderationNotifier,responseHours,now});
+              return send(ws,{type:'result',requestId:message.requestId,...result});
             }
             const {requestId,selection,...command}=message;
             if(command.type==='character'||selection!==undefined)equipObservation=observeCharacterEquip(characterMetrics);
@@ -434,6 +459,8 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             if(selection!==undefined&&(!characterSelection||!isCharacterSelection(command))){const result={ok:false,error:'invalid_character_operation'};equipObservation?.result(result);return send(ws,{type:'result',requestId,...result});}
             if(characterSelection?.hasPending(identity.userId)){const result={ok:false,error:'character_selection_pending'};equipObservation?.result(result);return send(ws,{type:'result',requestId,...result});}
             if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN){equipObservation?.aborted();return;}
+            // Town chat is screened by the content filter (#292) at the gateway, where blocks are screened too.
+            if(command.type==='chat' && typeof command.text==='string'){const text=screenText(contentFilter,'chat',command.text);if(!text.ok)return send(ws,{type:'result',requestId,ok:false,error:'chat_filtered',message:text.message});command.text=text.text;}
             const screened=await screenCommand(blocks,identity.userId,command,isAdmin);
             if(screened.refusal)return send(ws,{type:'result',requestId,...screened.refusal});
             const result=characterSelection&&isCharacterSelection(command)

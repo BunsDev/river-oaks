@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { KIT_CONVENTIONS, KIT_MATERIALS, KIT_STYLES } from '../../../shared/city-kit/catalog.js';
+import { KIT_CONVENTIONS, KIT_MATERIALS, KIT_STYLES, kitFinish } from '../../../shared/city-kit/catalog.js';
 import { physicalSurface, paverSurface } from '../materials.js';
 import { buildMatureTrees, buildPlanterPlanting } from '../landscape-models.js';
 import { treeGrateTexture } from '../street-furniture.js';
@@ -25,11 +25,13 @@ const RENDER_MATERIALS = {
   'produce-green': { color: '#5d8a3a', roughness: .7 },
 };
 
-function createMaterials() {
-  const made = new Map();
+// A finish (catalog.js KIT_FINISHES) replaces fields of a slot's spec; slot names, and so
+// material names, batching and draw calls, are the same under every finish.
+function createMaterials(finish = 'classic') {
+  const made = new Map(), recolour = kitFinish(finish).materials;
   const get = name => {
     if (made.has(name)) return made.get(name);
-    const spec = KIT_MATERIALS[name] ?? RENDER_MATERIALS[name] ?? { color: '#888888' };
+    const base = KIT_MATERIALS[name] ?? RENDER_MATERIALS[name] ?? { color: '#888888' }, spec = recolour[name] ? { ...base, ...recolour[name] } : base;
     let material;
     if (spec.surface === 'district-paver') material = paverSurface();
     else if (spec.surface) material = physicalSurface(spec.surface, { tileSize: spec.tile ?? 4, instanced: false, variation: .08, color: new THREE.Color(spec.color ?? '#ffffff'),
@@ -38,7 +40,7 @@ function createMaterials() {
     else if (spec.glass) material = new THREE.MeshPhysicalMaterial({ color: spec.color, roughness: spec.roughness, metalness: spec.metalness, transparent: true, opacity: .26, envMapIntensity: .7, clearcoat: .6, clearcoatRoughness: .06, depthWrite: false });
     else material = new THREE.MeshStandardMaterial({ color: spec.color, roughness: spec.roughness ?? .8, metalness: spec.metalness ?? 0,
       ...(spec.emissive ? { emissive: new THREE.Color(spec.emissive), emissiveIntensity: spec.emissiveIntensity ?? 1 } : {}) });
-    material.name = `city-kit/${name}`;
+    material.name = `city-kit/${name}`; material.userData.finish = finish;
     made.set(name, material);
     return material;
   };
@@ -130,6 +132,8 @@ function signAtlas(keys) {
     context.fillText(name, 512, row * 128 + 66);
   });
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 4;
+  // The plan owns and disposes its atlas; the stream counts owned textures (heights-stream.js).
+  texture.userData.owned = true;
   return { texture, uv };
 }
 
@@ -154,10 +158,64 @@ function drape(rect, groundAt, lift, step = 2) {
   return geometry;
 }
 
-function renderShell(piece, batch, detail, m, ground, signs) {
+// A planted roof: lawn and raised beds inside the parapet, a rose-gold pergola strung with
+// pink lights. Everything stays within 1.9 m of the roof (KIT_PIECES['roof/garden']).
+function renderGardenRoof([w, s, e, n], roof, batch, detail, m, accent, wall) {
+  const inner = [w + 1.2, s + 1.2, e - 1.2, n - 1.2], cx = (w + e) / 2, cy = (s + n) / 2;
+  if (inner[2] - inner[0] < 3 || inner[3] - inner[1] < 3) return;
+  batch.box(m('lawn'), cx, roof + .1, cy, inner[2] - inner[0], .12, inner[3] - inner[1]);
+  // Raised beds along the two long sides, planted.
+  const long = e - w >= n - s;
+  for (const sign of [-1, 1]) {
+    const length = (long ? e - w : n - s) - 3, bx = long ? cx : cx + sign * ((e - w) / 2 - 1.6), by = long ? cy + sign * ((n - s) / 2 - 1.6) : cy;
+    const [sx, sy] = long ? [length, 1.1] : [1.1, length];
+    batch.box(wall, bx, roof + .35, by, sx, .5, sy);
+    batch.box(m('planting'), bx, roof + .85, by, sx - .2, .55, sy - .2);
+  }
+  // A pergola over the middle of the roof.
+  const px = Math.min(8, (e - w) - 5), py = Math.min(5, (n - s) - 5);
+  if (px < 3 || py < 3) return;
+  for (const [dx, dy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) detail.box(accent, cx + dx * px / 2, roof + .95, cy + dy * py / 2, .14, 1.7, .14);
+  for (let k = 0; k <= 4; k++) detail.box(accent, cx - px / 2 + px * k / 4, roof + 1.82, cy, .08, .08, py + .2);
+  detail.box(m('neon-rose'), cx, roof + 1.74, cy - py / 2, px, .04, .04);
+  detail.box(m('neon-rose'), cx, roof + 1.74, cy + py / 2, px, .04, .04);
+}
+
+// Penthouse Row: the top two storeys set back 2.5 m behind glass-railed terraces, a garden
+// on the terraces, and a pink light band at the crown. The crown's top is the piece's height.
+function renderCrown(piece, [w, s, e, n], bodyTop, top, batch, detail, m, accent, trim, wall) {
+  const back = 2.5, r = [w + back, s + back, e - back, n - back], cx = (w + e) / 2, cy = (s + n) / 2, rw = r[2] - r[0], rd = r[3] - r[1];
+  batch.box(m('stone-pearl'), cx, bodyTop + .06, cy, e - w - .5, .12, n - s - .5);
+  // Penthouse volume: glass storeys between slim slabs, a solid core behind.
+  batch.box(wall, cx, (bodyTop + top) / 2, cy, rw - .6, top - bodyTop, rd - .6);
+  for (let level = 0; level < 2; level++) {
+    const floor = bodyTop + level * U;
+    batch.box(m(level ? 'glass-dark' : 'glass-lit'), cx, floor + U / 2, cy, rw, U - .4, rd);
+    batch.box(trim, cx, floor + U - .1, cy, rw + .3, .2, rd + .3);
+  }
+  // Terrace rails at the setback edge, planters at the corners.
+  for (const [x, y, along, across] of [[cx, s + .4, e - w - .8, .03], [cx, n - .4, e - w - .8, .03], [w + .4, cy, .03, n - s - .8], [e - .4, cy, .03, n - s - .8]]) {
+    detail.box(m('glass-rail'), x, bodyTop + .65, y, along, 1.05, across);
+    detail.box(accent, x, bodyTop + 1.2, y, along + .02, .05, across + .04);
+  }
+  for (const [x, y] of [[w + 1.2, s + 1.2], [e - 1.2, s + 1.2], [e - 1.2, n - 1.2], [w + 1.2, n - 1.2]]) {
+    batch.box(wall, x, bodyTop + .4, y, 1.2, .6, 1.2);
+    batch.box(m('planting'), x, bodyTop + .85, y, 1.05, .5, 1.05);
+  }
+  // The pink band the skyline knows it by, and a roof cap.
+  batch.box(m('neon-rose'), cx, top - .25, cy, rw + .08, .22, rd + .08);
+  batch.box(trim, cx, top + .08, cy, rw + .4, .16, rd + .4);
+}
+
+// `forms` (a finish's rounded-form vocabulary, catalog.js KIT_FINISHES) adds facade
+// detail only: canopy noses and capsule sign plates in existing slots, never massing,
+// ground or collision. Without it a shell renders exactly as before.
+function renderShell(piece, batch, detail, m, ground, signs, forms = false) {
   const [w, s, e, n] = piece.rect, style = KIT_STYLES[piece.style] ?? KIT_STYLES['market-row'];
   const wall = m(piece.wall), trim = m(piece.trim), accent = m(style.accent), glass = m('glass'), bronze = m('metal-bronze');
   const top = ground + piece.height, bottom = ground - .4;
+  // A crown sets the top two storeys back behind terraces: the body stops below them.
+  const crown = piece.roof === 'crown' && piece.storeys > 4, bodyTop = crown ? top - 2 * U : top, bodyStoreys = crown ? piece.storeys - 2 : piece.storeys;
   const faced = new Set(piece.faces ?? []);
   const loggia = piece.variant === 'loggia', recess = loggia ? 2.2 : piece.variant === 'recessed' ? .9 : .45, inset = .25;
   // Ground-floor core sits behind the storefront recess; upper storeys sit behind the window reveal.
@@ -165,10 +223,10 @@ function renderShell(piece, batch, detail, m, ground, signs) {
   const core = cut(recess), upper = cut(inset), groundTop = ground + G;
   const solid = (r, y0, y1, material) => batch.box(material, (r[0] + r[2]) / 2, (y0 + y1) / 2, (r[1] + r[3]) / 2, r[2] - r[0], y1 - y0, r[3] - r[1]);
   solid(core, bottom, groundTop, wall);
-  if (piece.storeys > 1) solid(upper, groundTop, top, wall);
+  if (piece.storeys > 1) solid(upper, groundTop, bodyTop, wall);
   else solid(cut(.02), groundTop - .02, top, wall);
   // Roof membrane inside the parapet.
-  solid([w + .24, s + .24, e - .24, n - .24], top - .02, top + .04, m('roof-membrane'));
+  solid([w + .24, s + .24, e - .24, n - .24], bodyTop - .02, bodyTop + .04, m(piece.roof === 'garden' ? 'lawn' : 'roof-membrane'));
   // Floor plate between storefront and upper facade, and the loggia soffit.
   solid([w, s, e, n], groundTop - .02, groundTop + .28, trim);
   const roofKind = piece.roof;
@@ -176,9 +234,16 @@ function renderShell(piece, batch, detail, m, ground, signs) {
     const f = faceFrame(piece.rect, face), at = (u, o) => [f.origin[0] + f.along[0] * u + f.out[0] * o, f.origin[1] + f.along[1] * u + f.out[1] * o];
     const yaw = Math.atan2(f.along[1], f.along[0]);
     const put = (target, material, u, o, y, along, height, across) => { const [x, yy] = at(u, o); target.box(material, x, y, yy, along, height, across, yaw); };
+    // A cylinder centred at (u, o, y): `axis` 'along' runs with the face (a canopy nose),
+    // 'out' points away from it (a capsule's round end).
+    const round = (material, u, o, y, radius, length, axis) => {
+      const [x, yy] = at(u, o), geometry = new THREE.CylinderGeometry(radius, radius, length, 14, 1);
+      if (axis === 'along') geometry.rotateZ(Math.PI / 2); else geometry.rotateX(Math.PI / 2);
+      detail.place(material, geometry, x, y, yy, [0, yaw, 0], 'YXZ');
+    };
     // Parapet and coping on every side; profiled cornice on faced sides.
-    put(batch, wall, f.length / 2, -.12, top + .45, f.length, .9, .24);
-    put(batch, trim, f.length / 2, -.06, top + .93, f.length + .12, .08, .4);
+    put(batch, wall, f.length / 2, -.12, bodyTop + .45, f.length, .9, .24);
+    put(batch, trim, f.length / 2, -.06, bodyTop + .93, f.length + .12, .08, .4);
     if (!faced.has(face)) continue;
     if (roofKind === 'cornice') { put(detail, trim, f.length / 2, .04, top - .1, f.length + .3, .22, .32); put(detail, trim, f.length / 2, .1, top + .08, f.length + .45, .14, .44); }
     // A shadow reveal under a black-steel coping reads as a crisp modern parapet.
@@ -191,7 +256,22 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       put(batch, loggia ? trim : wall, u, -.05, ground + G / 2 - .2, loggia ? .5 : .55, G + .4, loggia ? .5 : recess + .1);
     }
     // Upper storeys: spandrels and piers on the face plane, glass in the reveal.
-    for (let storey = 1; storey < piece.storeys && style.windows === 'ribbon'; storey++) {
+    // Balconies: a slab and a glass rail along every storey, floor-to-ceiling glass behind with
+    // some homes lit, and piers the tower's full height. Runs span the whole face, so a tower
+    // costs a few hundred boxes and streams light; slabs and glass are massing, rails detail.
+    if (style.windows === 'balcony' && bodyStoreys > 1) {
+      const L = f.length, spans = Math.max(1, Math.round(L / 6)), span = L / spans, rise = bodyTop - groundTop, depth = 1.4;
+      for (let i = 0; i <= spans; i++) put(batch, wall, Math.min(L - .25, Math.max(.25, i * span)), -inset / 2, groundTop + rise / 2, .5, rise, inset);
+      for (let storey = 1; storey < bodyStoreys; storey++) {
+        const floor = groundTop + (storey - 1) * U;
+        put(batch, m('glass-dark'), L / 2, -inset + .03, floor + U / 2 + .1, L - .5, U - .5, .04);
+        for (let i = 0; i < spans; i++) if ((Math.imul(storey * 31 + i * 17 + Math.round(L * 7), 2654435761) >>> 28) < 4)
+          put(batch, m('glass-lit'), (i + .5) * span, -inset + .06, floor + U / 2 + .1, span - .5, U - .5, .02);
+        put(batch, trim, L / 2, depth / 2 - .05, floor + .12, L - .2, .24, depth);
+        put(detail, m('glass-rail'), L / 2, depth - .07, floor + .78, L - .4, 1.05, .03);
+      }
+    }
+    for (let storey = 1; storey < bodyStoreys && style.windows === 'ribbon'; storey++) {
       // A continuous glass band between limestone spandrels, ruled by satin-bronze fins.
       const floor = groundTop + (storey - 1) * U, sill = floor + .75, head = floor + 3.0, L = f.length;
       put(batch, wall, L / 2, -inset / 2, (floor + sill) / 2, L, sill - floor, inset);
@@ -204,7 +284,7 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       // Stone coursing: a fine reveal at each floor line.
       put(detail, trim, L / 2, .004, floor + .3, L, .025, .02);
     }
-    for (let storey = 1; storey < piece.storeys && style.windows !== 'ribbon'; storey++) {
+    for (let storey = 1; storey < bodyStoreys && style.windows !== 'ribbon' && style.windows !== 'balcony'; storey++) {
       const floor = groundTop + (storey - 1) * U, sill = floor + .9, head = floor + (style.windows === 'tall' ? 3.15 : 2.75);
       put(batch, wall, f.length / 2, -inset / 2, (floor + sill) / 2, f.length, sill - floor, inset);
       put(batch, wall, f.length / 2, -inset / 2, (head + floor + U) / 2, f.length, floor + U - head, inset);
@@ -248,6 +328,8 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       put(batch, wall, mid, -.04, ground + 4.19, width + .7, .82, .2);
       put(detail, accent, mid, .82, ground + 3.92, width + .3, .1, 1.62);
       put(detail, accent, mid, 1.6, ground + 3.9, width + .3, .2, .05);
+      // Rounded canopy nose: a jet-age leading edge over the flat fascia strip.
+      if (forms) round(accent, mid, 1.63, ground + 3.9, .11, width + .3, 'along');
       put(detail, m('lamp-glow'), mid, 1.48, ground + 3.85, width + .1, .02, .07);
       for (const t of [-1, 1]) { const [hx, hy] = at(mid + t * width / 3, .78); detail.box(trim, hx, ground + 4.28, hy, .035, .035, 1.62, yaw, .4); }
     }
@@ -267,6 +349,8 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       put(batch, trim, mid, -.04, ground + 3.95, width + .7, .7, .2);
       if (piece.variant === 'canopy') {
         put(detail, accent, mid, 1.0, ground + 3.55, width + .6, .1, 2.0);
+        // Rounded nose along the canopy's front edge (it ends 2.0 m out).
+        if (forms) round(accent, mid, 2.0, ground + 3.55, .09, width + .6, 'along');
         put(detail, bronze, mid - width / 3, .9, ground + 3.95, .04, .8, .04); put(detail, bronze, mid + width / 3, .9, ground + 3.95, .04, .8, .04);
       } else if (piece.variant === 'awning') {
         const [x, y] = at(mid, .7);
@@ -278,7 +362,14 @@ function renderShell(piece, batch, detail, m, ground, signs) {
     if (piece.sign && face === piece.faces?.[0]) {
       const width = Math.min(f.length - 1, 7), [x, y] = at(f.length / 2, .09);
       // Above a canopy (3.6 m) and within the 3.6–4.3 m sign band.
-      signs.push({ name: piece.sign, palette: style.signPalette, width, height: Math.min(.6, width / 8), east: x, up: ground + (piece.variant === 'gallery' ? 4.3 : 3.98), north: y, yaw });
+      const signHeight = Math.min(.6, width / 8), signUp = ground + (piece.variant === 'gallery' ? 4.3 : 3.98);
+      signs.push({ name: piece.sign, palette: style.signPalette, width, height: signHeight, east: x, up: signUp, north: y, yaw });
+      if (forms) {
+        // Capsule sign plate: an ivory band with round ends, just behind the lettering.
+        const plate = signHeight + .16, ends = width / 2 + .05;
+        put(detail, m('trim-ivory'), f.length / 2, .06, signUp, width + .1, plate, .04);
+        for (const side of [-1, 1]) round(m('trim-ivory'), f.length / 2 + side * ends, .06, signUp, plate / 2, .04, 'out');
+      }
       if (style.signage === 'blade') {
         // A plate on a bracket, standing out from the facade, lettered top to bottom on both faces.
         put(detail, bronze, .8, .3, ground + 4.3, .05, .05, .6);
@@ -287,6 +378,8 @@ function renderShell(piece, batch, detail, m, ground, signs) {
       }
     }
   }
+  if (roofKind === 'garden') renderGardenRoof([w, s, e, n], bodyTop, batch, detail, m, accent, wall);
+  if (crown) renderCrown(piece, [w, s, e, n], bodyTop, top, batch, detail, m, accent, trim, wall);
   if (roofKind === 'sawtooth') {
     const span = n - s, count = Math.max(2, Math.floor((e - w) / 4));
     for (let i = 0; i < count; i++) { const x = w + (i + .5) * (e - w) / count; batch.box(m('roof-membrane'), x, top + .9, (s + n) / 2, (e - w) / count * .9, .12, span - .8, 0, .0); batch.box(m('glass'), x + (e - w) / count * .3, top + .9, (s + n) / 2, .06, 1.4, span - .8); }
@@ -414,6 +507,25 @@ function haloTexture() {
   halo = new THREE.CanvasTexture(canvas); return halo;
 }
 
+// The Neighborhood Green's ribbon: one looped band crossing itself, on a pearl stone plinth
+// with a rose-gold band and uplights. Its loop tops out under KIT_PIECES['landmark/ribbon'].height.
+function renderRibbon(piece, m, ground, batch) {
+  const [x, y] = piece.at, yaw = piece.yaw ?? 0;
+  batch.place(m('stone-pearl'), new THREE.BoxGeometry(3.4, 1.1, 3.4), x, ground + .55, y, [0, yaw, 0]);
+  batch.place(m('rose-gold'), new THREE.BoxGeometry(3.46, .08, 3.46), x, ground + .9, y, [0, yaw, 0]);
+  batch.place(m('steel-black'), new THREE.BoxGeometry(3.6, .1, 3.6), x, ground + .05, y, [0, yaw, 0]);
+  // The tails cross at 3.4 m, pass behind each other, and meet again at the loop's top.
+  const points = [[-1.5, 1.1, .3], [-.9, 2.2, .3], [0, 3.4, .32], [.95, 4.7, .1], [1.2, 6.0, 0], [.6, 7.3, -.05], [0, 7.65, 0],
+    [-.6, 7.3, .05], [-1.2, 6.0, 0], [-.95, 4.7, -.1], [0, 3.4, -.32], [.9, 2.2, -.3], [1.5, 1.1, -.3]].map(([a, b, c]) => new THREE.Vector3(a, b, c));
+  const ribbon = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, false, 'catmullrom', .5), 72, .34, 6, false);
+  ribbon.scale(1, 1, .38);
+  batch.place(m('ribbon-rose'), ribbon, x, ground + .02, y, [0, yaw, 0]);
+  for (const [dx, dy] of [[-1.3, -1.3], [1.3, -1.3], [1.3, 1.3], [-1.3, 1.3]]) {
+    const ux = x + dx * Math.cos(yaw) - dy * Math.sin(yaw), uy = y + dx * Math.sin(yaw) + dy * Math.cos(yaw);
+    batch.place(m('neon-rose'), new THREE.CylinderGeometry(.12, .14, .06, 12), ux, ground + 1.13, uy);
+  }
+}
+
 // Structure merges into the shared batch; the lettered band, beacon and crown
 // glow are the tower's own meshes.
 function renderWaterTower(piece, m, ground, batch) {
@@ -445,7 +557,7 @@ function renderWaterTower(piece, m, ground, batch) {
     const context = canvas.getContext('2d'); context.fillStyle = '#f5eee0'; context.fillRect(0, 0, 2048, 128);
     context.fillStyle = '#1f454a'; context.font = '700 84px Georgia, serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
     const words = piece.lettering ?? 'BAYOU MARKET'; context.fillText(`★ ${words} ★`, 512, 68); context.fillText(`★ ${words} ★`, 1536, 68);
-    texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 4;
+    texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 4; texture.userData.owned = true;
   }
   const band = new THREE.MeshStandardMaterial({ map: texture, color: texture ? '#ffffff' : '#f5eee0', roughness: .7 }); band.name = 'city-kit/tower-lettering';
   own(new THREE.CylinderGeometry(3.94, 3.94, 1.3, 48, 1, true), band, x, 20.1, y);
@@ -524,11 +636,12 @@ export function disposeLandscape(groups) {
  * Build the plan's scene. `groundAt(east, north)` returns walking ground height;
  * `ground` is the level site height for shells and edges. With `landscape: false`
  * the caller draws the plan's trees and planting (cityKitLandscape). Planting draws at
- * every distance unless `plantingMetres` limits it.
+ * every distance unless `plantingMetres` limits it. `finish` (catalog.js KIT_FINISHES)
+ * recolours material slots only; the default `classic` renders exactly as before.
  */
-export function buildCityKit(plan, { groundAt, ground, landscape = true, plantingMetres = Infinity }) {
-  const group = new THREE.Group(); group.name = `City kit: ${plan.id}`;
-  const materials = createMaterials(), m = materials.get, disposables = [];
+export function buildCityKit(plan, { groundAt, ground, landscape = true, plantingMetres = Infinity, finish = 'classic' }) {
+  const group = new THREE.Group(); group.name = `City kit: ${plan.id}`; group.userData.finish = finish;
+  const materials = createMaterials(finish), m = materials.get, disposables = [], forms = Boolean(kitFinish(finish).forms);
   const blocks = new Map(), blockFor = piece => {
     // Context massing shares one level-of-detail group; blocks get their own.
     const key = piece.piece === 'building/context' ? 'context' : piece.id.split('/')[1];
@@ -542,7 +655,8 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
   const overlay = name => { const material = m(name).clone(); material.polygonOffset = true; material.polygonOffsetFactor = -2; material.polygonOffsetUnits = -2; material.name = `${m(name).name}:overlay`; disposables.push(material); return material; };
   const groundPiece = { 'street/shared-lane': ['lane-brick', 0], 'street/intersection': ['lane-brick', 0], 'street/crosswalk': ['lane-brick', 0], 'street/sidewalk': ['paver-sidewalk', 0], 'street/court': ['plaza-stone', 0], 'landscape/lawn': ['lawn', 1], 'street/flush-curb': ['curb-granite', 2], 'street/band': ['porcelain', 2], 'street/channel': ['steel-black', 2], 'landscape/tree-pit': ['porcelain', 3] };
   // Tree pits match the District's (street-furniture.js): a cast-iron grate in a pale stone surround.
-  const grateTexture = treeGrateTexture(), grate = new THREE.MeshStandardMaterial({ map: grateTexture, roughness: .55, metalness: .6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
+  const grateTexture = treeGrateTexture(); grateTexture.userData.owned = true;
+  const grate = new THREE.MeshStandardMaterial({ map: grateTexture, roughness: .55, metalness: .6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
   grate.name = 'city-kit/tree-grate'; disposables.push(grate);
   const overlays = new Map();
   const clipStreet = plan.pieces.find(p => p.piece === 'street/court' && p.id.endsWith('/paving'))?.rect;
@@ -566,7 +680,7 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
   const [sw, ss, se, sn] = plan.site;
   flat.box(m('curb-granite'), (sw + se) / 2, ground - 1.9, (ss + sn) / 2, se - sw, 3.4, sn - ss + 30);
   for (const piece of plan.pieces) {
-    if (piece.piece === 'building/shell') { const block = blockFor(piece); renderShell(piece, block.massing, block.detail, m, ground, signs); }
+    if (piece.piece === 'building/shell') { const block = blockFor(piece); renderShell(piece, block.massing, block.detail, m, ground, signs, forms); }
     else if (piece.piece === 'building/context') {
       const [w, s, e, n] = piece.rect, block = blockFor(piece);
       block.massing.box(m(piece.wall ?? 'stucco-ivory'), (w + e) / 2, ground - 1.5 + (piece.height + 1.5) / 2, (s + n) / 2, e - w, piece.height + 1.5, n - s);
@@ -601,6 +715,7 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
     }
     else if (piece.piece === 'furniture/lantern') lanterns.set(piece.id, renderLantern(piece, m, groundAt, flat));
     else if (piece.piece === 'furniture/market-stall') renderMarketStall(piece, flat, m, groundAt, signs);
+    else if (piece.piece === 'landmark/ribbon') renderRibbon(piece, m, groundAt(...piece.at), flat);
     else if (piece.piece === 'landmark/water-tower') { const tower = renderWaterTower(piece, m, ground, flat); group.add(tower); group.userData.tower = tower; }
     else if (piece.piece.startsWith('furniture/') || piece.piece === 'street/crossing-table' || piece.piece === 'street/crosswalk') renderFurniture(piece, flat, m, groundAt);
   }

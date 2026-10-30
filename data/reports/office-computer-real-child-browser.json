@@ -1,0 +1,60 @@
+{
+  "createdAt": "2026-10-28T07:49:48.745Z",
+  "results": [
+    {
+      "name": "office-computer-real",
+      "status": "passed",
+      "seconds": 116.705,
+      "result": {
+        "checks": [
+          "Computer candidate feat/place-embed-33-20261027 @ 8c0240afae93c85e9de18f98e6fdcb201418a5cf on http://127.0.0.1:56430",
+          "Nothing loads from Computer before its tab opens",
+          "A fresh frame shows Computer\u2019s real account gate, Continue and Switch, before any document",
+          "Exactly one Computer frame",
+          "Place shows the account save that Computer acknowledged",
+          "Typing in Computer cannot move, act or talk in the office",
+          "Leaving waits for Computer\u2019s saved answer, then removes the frame",
+          "Reentry starts a fresh account gate with nothing behind it",
+          "The note comes back from the Computer account after the frame and this browser\u2019s copy are gone",
+          "Escape closes Computer\u2019s palette first",
+          "Escape at Computer\u2019s top level closes the desk, removes the frame and restores office focus",
+          "An unsaved change asks for a decision in Computer instead of closing",
+          "Choosing Computer\u2019s local copy is reported as local, not saved",
+          "The local copy is there in the next frame",
+          "\u2026and reaches the account once it can",
+          "Ten visits load ten Computer documents, one per visit",
+          "Ten visits leave no frame or message listener behind",
+          "Ending the visit removes Computer at once (68 ms)",
+          "The journey drops the live town connection",
+          "A dropped connection removes Computer at once (45 ms)",
+          "Rebuilding the world removes Computer without waiting for it (3152 ms)",
+          "No Computer listener survives a dropped connection or a world rebuild",
+          "Switch signs Computer out and Place offers its top-level sign-in, with no frame left",
+          "Computer sign-in happens in its own top-level tab",
+          "The other account\u2019s desktop stays hidden while Computer asks what to do with it",
+          "The second Computer account sees only its own desktop",
+          "An expired Computer session removes the desktop and offers sign-in",
+          "A visitor gets their own Computer account gate, with nothing behind it",
+          "The visitor sees none of the office owner\u2019s Computer notes",
+          "Revocation removes the visitor\u2019s Computer at once (210 ms)",
+          "A second Place account in the same browser sees only its own tasks",
+          "The next Place account gets a fresh Computer gate, not the previous desktop",
+          "Place sign-out removes Computer at once (102 ms)",
+          "No visitor browser errors: ",
+          "A Computer that refuses this Place offers retry and Open separately, with no frame left behind",
+          "Tasks open after Computer refuses the frame",
+          "Once Computer lists this Place again, the next open frames it at the account gate",
+          "Computer notes never reach Place task requests",
+          "Computer notes never appear in the public world snapshot",
+          "After every departure and forced teardown, no Computer frame or listener remains"
+        ],
+        "computer": {
+          "origin": "http://127.0.0.1:56430",
+          "head": "8c0240afae93c85e9de18f98e6fdcb201418a5cf",
+          "branch": "feat/place-embed-33-20261027",
+          "dirty": false
+        }
+      }
+    }
+  ]
+}

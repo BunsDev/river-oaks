@@ -5,6 +5,7 @@ import { HEIGHTS_REVISION, inBayouHeights } from '../../shared/bayou-heights-lay
 import { STUDEWOOD_REVISION } from '../../shared/studewood-layout.js';
 import { TERRACES_REVISION } from '../../shared/bayou-terraces-layout.js';
 import { WOODLAND_REVISION } from '../../shared/woodland-heights-layout.js';
+import { TYPESAFE_REVISION } from '../../shared/typesafe-place-layout.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
 import { createCommonsStream } from './commons-stream.js';
@@ -92,7 +93,7 @@ import { createPlazaChineseCheckers } from './plaza-chinese-checkers.js';
 import { createPlazaXiangqi } from './plaza-xiangqi.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
-import { createQualityControl } from './render-quality.js';
+import { createQualityControl, readFinishPreference } from './render-quality.js';
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
 import { createPhotoMode } from './photo-mode.js';
@@ -175,10 +176,12 @@ const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'o
 // The penthouse skyline (office-skyline.js); ?office-skyline=off compares without it in development.
 // Functional software acceptance omits the live exterior workload.
 const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.search).get('office-skyline') === 'off';
+// The Commons and Heights city-kit finish: classic unless opted in (render-quality.js, #742).
+const cityKitFinish = readFinishPreference();
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 // East Garden Commons and its assembled destination, when the revision composes them.
-// Bayou Heights (bayou-heights-1; heights-studewood-1, bayou-terraces-1 and woodland-heights-1 add Studewood, the terraces and Woodland Heights) streams as a second location; heights-stream.js loads with those revisions.
+// Bayou Heights (bayou-heights-1; heights-studewood-1, bayou-terraces-1 and woodland-heights-1 and typesafe-place-1 add Studewood, the terraces, Woodland Heights and TypeSafe Place) streams as a second location; heights-stream.js loads with those revisions.
 let commonsScene = null, heightsScene = null, heightsStreams = null;
 const lanternWalk = createLanternWalkClient({ announceArrival: false, getLayout: () => world?.eastGardenCommons ?? null, getPose: () => walking?.getPose(), getScene: () => commonsScene,
   getSnapshot: () => multiplayer?.snapshot?.lanternWalk ?? null,
@@ -379,7 +382,7 @@ function initializeRenderer() {
   $('#world-status-stack').append(commonsStreamStatus);
   // Before the player panel, so G reaches the rack first and the owner's ride button only when no bike is in play.
   cyclingBoard = createCyclingLeaderboard();
-  plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, getMiles: () => cyclingBoard?.mine() ?? null, reducedMotion });
+  plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, getMiles: () => cyclingBoard?.mine() ?? null, getSaddle: () => playerAvatar?.bicycleSaddle ?? 0, reducedMotion });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
@@ -763,7 +766,7 @@ function populateWorld(data) {
   }
   worldGroup = new THREE.Group();
   // Facades, arcade rails and neon dissolve near the camera, like trees, so a take-off beside the shops never fills the view.
-  buildingMesh = seeThroughNearCameraIn(buildDistrictBuildings(data));
+  buildingMesh = seeThroughNearCameraIn(buildDistrictBuildings(data, { kitFinish: cityKitFinish }));
   const ground=buildGround(data.eastGardenCommons?{...data,bounds_m:data.eastGardenCommons.districtBounds}:data),roads=buildRoads(data);
   const streetEnvironment=createWalkingEnvironment(data);
   // The Gardens' platform is campus space: no street sidewalk, bench or fountain is generated on it.
@@ -791,8 +794,8 @@ function populateWorld(data) {
   worldGroup.add(furniture);
   const heights = data.eastGardenCommons?.heights ? heightsStreams : null;
   if (data.eastGardenCommons) commonsStream = createCommonsStream({ world: data, ...(heights ? { layout: heights.heightsCommonsLayout(data.eastGardenCommons) } : {}),
-    parent: worldGroup, onScene: scene => { commonsScene = scene; }, onStatus: text => showStreamNotice('commons', text) });
-  if (heights) heightsStream = heights.createHeightsStream({ world: data, parent: worldGroup, onScene: scene => { heightsScene = scene; },
+    parent: worldGroup, finish: cityKitFinish, onScene: scene => { commonsScene = scene; }, onStatus: text => showStreamNotice('commons', text) });
+  if (heights) heightsStream = heights.createHeightsStream({ world: data, parent: worldGroup, finish: cityKitFinish, onScene: scene => { heightsScene = scene; },
     onStatus: text => showStreamNotice('heights', text) });
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
   plazaSalon = buildPlazaSalon(data);
@@ -967,7 +970,7 @@ async function loadWorld() {
       :await jsonResponse(`/api/world-data?world=${encodeURIComponent(worldId)}`);
     worldRegionSha256=manifest.regionSha256??null;
     const districtRevision=manifest.districtRevision??null;
-    if(districtRevision!==null && ![DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision))throw new Error('This district revision is not supported by this client');
+    if(districtRevision!==null && ![DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision))throw new Error('This district revision is not supported by this client');
     let data;
     if(manifest.template==='region-v1')data=manifest.world;
     else if(manifest.template==='river-oaks') {
@@ -977,16 +980,18 @@ async function loadWorld() {
       ]);
       district.vegetation=validateVegetation(district,vegetation);
       data=attachDistrictGalleryPlan(district,approved);
-      if([DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision))data=attachGardenCampus(data);
-      if([COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision))data=attachEastGardenCommons(data);
+      if([DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision))data=attachGardenCampus(data);
+      if([COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision))data=attachEastGardenCommons(data);
       // Bayou Heights loads its recipes and stream only for its own revision; the stream loads its scene.
-      if([HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision)){heightsStreams=await import('./heights-stream.js');data=heightsStreams.attachBayouHeights(data);}
+      if([HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision)){heightsStreams=await import('./heights-stream.js');data=heightsStreams.attachBayouHeights(data);}
       // Studewood continues Heights east; Heights streams its two neighborhoods with its own.
-      if([STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision))data=heightsStreams.attachStudewood(data);
+      if([STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision))data=heightsStreams.attachStudewood(data);
       // The Bayou Terraces stream the same way, west of the bayou.
-      if([TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision))data=heightsStreams.attachBayouTerraces(data);
+      if([TERRACES_REVISION,WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision))data=heightsStreams.attachBayouTerraces(data);
       // Woodland Heights continues Studewood east; Heights streams its two neighborhoods too.
-      if(districtRevision===WOODLAND_REVISION)data=heightsStreams.attachWoodlandHeights(data);
+      if([WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision))data=heightsStreams.attachWoodlandHeights(data);
+      // TypeSafe Place continues Woodland east; Heights streams its five neighborhoods too.
+      if(districtRevision===TYPESAFE_REVISION)data=heightsStreams.attachTypeSafePlace(data);
     } else throw new Error('This region format is not supported by this client');
     worldDistrictRevision=districtRevision;
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
@@ -1314,6 +1319,14 @@ document.addEventListener('keydown', event => {
 window.addEventListener('river-oaks:debug', event => void openDebugTools(event.detail?.open));
 window.__riverDebug = () => debugTools;
 if (import.meta.env.DEV) window.__riverTravelView = () => ({ camera: camera.position.toArray(), direction: camera.getWorldDirection(new THREE.Vector3()).toArray() });
+// The renderer registers a geometry or texture the first time an object is drawn, so GPU counts
+// read in a journey step up when a resident object (a wandering figure, a prop behind the player)
+// first enters view. Drawing every visible object once makes the counts comparable between samples.
+if (import.meta.env.DEV) window.__riverRegisterResident = () => new Promise(resolve => {
+  const culled = [];
+  scene.traverse(item => { if (item.frustumCulled) { culled.push(item); item.frustumCulled = false; } });
+  requestAnimationFrame(() => requestAnimationFrame(() => { for (const item of culled) item.frustumCulled = true; resolve(culled.length); }));
+});
 if (import.meta.env.DEV) window.__riverSpatialStream = () => {
   let objects = 0; worldGroup?.traverse(() => objects++);
   const inventory = object => {
@@ -1332,7 +1345,9 @@ if (import.meta.env.DEV) window.__riverSpatialStream = () => {
   };
   return { ...commonsStream?.debug(), objects, inventory: { district: (worldGroup?.children ?? []).map(inventory), other: scene.children.filter(item => item !== worldGroup).map(inventory) }, district: { world: worldGroup?.uuid, ground: layers.ground?.uuid, buildings: buildingMesh?.uuid }, camera: camera.position.toArray(),
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
-    renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls };
+    renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls,
+    // The opted-in kit finish and what each attached part was built with (#742).
+    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null } };
 };
 if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
 if (import.meta.env.DEV) window.__riverExteriorCull = () => {
@@ -1504,7 +1519,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverPlazaHearts = () => plazaHearts ? { ...plazaHearts.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null,
     deal: (seed, hand) => plazaHearts.deal(seed, hand) } : null;
   window.__riverCyclingBoard = () => cyclingBoard ? { ...cyclingBoard.debug(), mine: cyclingBoard.mine(), open: open => { cyclingBoard.panel.open = open; }, refresh: () => cyclingBoard.refresh() } : null;
-  window.__riverCycling = () => plazaBicycle ? { riding: plazaBicycle.riding, slotId: plazaBicycle.slotId, rideMeters: plazaBicycle.rideMeters, lastRideMeters: plazaBicycle.lastRideMeters, yaw: plazaBicycle.placement?.yaw ?? null, prompt: plazaBicycle.prompt()?.kind ?? null,
+  window.__riverCycling = () => plazaBicycle ? { riding: plazaBicycle.riding, slotId: plazaBicycle.slotId, rideMeters: plazaBicycle.rideMeters, lastRideMeters: plazaBicycle.lastRideMeters, yaw: plazaBicycle.placement?.yaw ?? null, position: plazaBicycle.placement?.position ?? null, speed: plazaBicycle.placement?.speed ?? null, steering: plazaBicycle.placement?.steering ?? null, prompt: plazaBicycle.prompt()?.kind ?? null,
     taken: multiplayer?.snapshot?.cycling?.taken ?? [], parked: plazaSalon?.userData.rack?.parked() ?? null, cityParked: cityBikeRacks?.userData.rack?.parked() ?? null,
     // Arrive at a slot's approach by the normal travel path.
     // Arrive at a slot's approach by the normal travel path. Like the seats' goNear, a
