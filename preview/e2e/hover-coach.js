@@ -33,7 +33,10 @@ async page => {
   await page.screenshot({path:'output/playwright/hover-coach-parked.png'});
   await host().focus();await page.keyboard.press('KeyG');
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true');
-  check((await page.locator('.walking-title strong').textContent())==='Piloting the Ribbonwing','Boarding puts Jevica at the controls');
+  // The HUD title repaints every 150 ms; wait for it rather than read the frame boarding lands in.
+  await page.waitForFunction(()=>document.querySelector('.walking-title strong')?.textContent!=='On foot',{},{timeout:5000}).catch(()=>{});
+  const title=await page.locator('.walking-title strong').textContent();
+  check(title==='Piloting the Ribbonwing',`Boarding puts Jevica at the controls${title==='Piloting the Ribbonwing'?'':` (title: ${title})`}`);
   check(!(await page.evaluate(()=>window.__riverCarriage().princeVisible)),'Jev does not take the controls of the Ribbonwing');
   await page.waitForFunction(()=>{const m=window.__riverCarriage().mechanisms;return m.canopy===0&&m.steps===0&&m.fanRate>0;},{},{timeout:20000});
   checks.push('Seated, the steps stow, the canopy closes and the fans idle up');

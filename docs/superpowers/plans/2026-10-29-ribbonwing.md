@@ -16,8 +16,8 @@ The work lands in increments:
 | Increment | Scope | State |
 | --- | --- | --- |
 | 1 (#779) | D0 source map; reference import and hashes; D1 metric blockout, decisions and canonical views; procedural runtime model with interior, LODs, colliders, attachments and rig; integration into the existing `hover` path; the D1 comparison baseline | ready for review |
-| 2 | Server-validated maneuvers: commands with id/seq/start, deterministic authored paths, swept-volume and recovery-altitude admission, dedupe of stale/reordered/duplicate input, focus loss and revocation recovery; orientation in poses | in progress (see below) |
-| 3 | Two-player occupancy: passenger consent, server-derived passenger pose, disconnect recovery and safe landing, teardown; a two-client journey | not started |
+| 2 | Server-validated maneuvers: commands with id/seq/start, deterministic authored paths, swept-volume and recovery-altitude admission, dedupe of stale/reordered/duplicate input, focus loss and revocation recovery; orientation in poses | pushed to #779 (`1b84cb19`) |
+| 3 | Two-player occupancy: passenger consent, server-derived passenger pose, disconnect recovery and safe landing, teardown; a two-client journey | in progress (see below) |
 | 4 | Bounded audio/VFX; detail art toward the references' materials; performance and disposal measurement in town | not started |
 
 ## D0: located (unchanged by this PR unless stated)
@@ -241,6 +241,84 @@ Not covered:
 - The loop, tuck dive and Petal Roll are flown only in the server tests and the
   path tests. The journey flies the roll.
 - Observer replay has no two-client run yet; that comes with increment 3.
+
+## Increment 3: the passenger seat
+
+Files:
+
+- `server/world.js`: `ribbonwingCommand` (invite, cancel, board, leave),
+  `seatView`, `settleSeat`, `setDownPassenger` and `releasePassenger`. Passengers
+  are refused other commands, and a pilot's travel, stepping out or leaving sets
+  the passenger down. Also checkpoint pairing and validation, and separation on
+  a block.
+- `server/blocks.js`: invitations and boarding toward a blocked account are
+  screened as if aimed at someone absent.
+- `preview/src/ribbonwing-seat.js` and `.css` (new): the passenger's walker
+  transport, which rides the pilot's craft as drawn, and the seat panel (invite,
+  board, cancel, step out; G steps out).
+- `preview/src/remote-players.js`: passengers are drawn in the pilot's craft,
+  remote or this page's own. Adds `craftOf` and `holderOf`.
+- `preview/src/multiplayer-client.js`: no poses while aboard; `ribbonwing(body)`.
+- `preview/src/walking-ui.js`: the "Riding in the Ribbonwing" title.
+- `main.js`: wiring, and the `__riverRibbonwingSeat()` debug hook.
+- Tests: `server/tests/ribbonwing-passenger.test.js` (5) and
+  `preview/e2e/ribbonwing-passenger.js` (three clients). The journey is added to
+  the hosted `commons` experience shard in `.github/workflows/verify.yml`.
+
+Decisions:
+
+- **Consent.** The pilot invites one named person and they accept. The
+  invitation lasts 60 s and is not saved.
+- **Position.** The passenger's position is derived on the server from the
+  pilot's live pose, so pilot, passenger and observers all follow one source.
+  Clients draw the passenger in the pilot's craft object, so the seat stays
+  attached through rolls.
+- **Safe landing.** A set-down uses the first clear spot (in bounds, free, not
+  in a room or private home, 0.8 m from others) on rings around the point below
+  the seat. Stepping out on the ground uses the point beside it. The fallback is
+  the arrival spot.
+- **Pilot disconnect.** A pilot who disconnects is removed after the
+  transport's 30 s departure grace, and the passenger is then set down. During
+  the grace the craft hovers where it was.
+
+Checks so far:
+
+- `node --test server/tests/ribbonwing-passenger.test.js server/tests/blocks-world.test.js`:
+  15 passed.
+- `node scripts/browser-lock.mjs 'ribbonwing passenger journey' -- pnpm run test:experience ribbonwing-passenger`:
+  passed on the second run (120.7 s, 21 checks):
+  - invite and board through the panels;
+  - the town seats alice 0.68 m to the right;
+  - Jevica's and bob's pages draw alice in the seat;
+  - stepping out is refused aloft (button and G);
+  - alice's view rolls (3.08 rad) and bob keeps her in the seat through the
+    roll;
+  - she steps out beside the landed craft (3.28 m) and walks on;
+  - she boards again, Jevica's page closes aloft, the town sets alice down
+    after 30 s, and she walks on while bob sees her on foot.
+
+  The first run failed only on the journey's own measurement: it compared the
+  seat base with the cushion, 0.92 m apart.
+
+- `pnpm run verify` (core) passed on the increment 3 tree (dirty on `1b84cb19`):
+  agent 289/0, preview 4357/0/1 skipped, server 1092/0/283 skipped, and the
+  desktop, build, python, demo and secrets stages.
+- `hover-coach` rerun:
+  - The first run failed at "Boarding puts Jevica at the controls" after 9.5 s.
+    The journey read the HUD title in the same frame boarding landed, and the
+    title repaints every 150 ms.
+  - The journey now waits for the title to change and reports what it read.
+  - The second run passed 31 checks in 21.8 s. That the stale read caused the
+    failure is likely but not proven.
+
+Limits:
+
+- bob's seat measurement checks that bob's page draws alice from Jevica's craft
+  as bob draws it. It is not an independent cross-page comparison at one
+  instant.
+- The roll is the only maneuver flown with a passenger in the browser.
+- During the 30 s grace after a pilot disconnects, the passenger hovers where
+  the craft stopped. The craft does not land itself.
 
 ## Rollback
 

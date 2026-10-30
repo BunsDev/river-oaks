@@ -100,6 +100,8 @@ import { createPhotoMode } from './photo-mode.js';
 import { createGuideEntry } from './salon-guide.js';
 import { createMultiplayer } from './multiplayer-client.js';
 import { createRemotePlayers } from './remote-players.js';
+import { createRibbonwingSeat } from './ribbonwing-seat.js';
+import { VEHICLES } from './vehicle-config.js';
 import { createSharedBuildLayer } from './shared-build-layer.js';
 import { createSeatAndWater } from './seat-and-water.js';
 import { createSharedSeatingControls } from './shared-seating-ui.js';
@@ -201,7 +203,7 @@ let worldRegionSha256 = null;
 let worldDistrictRevision;
 let landmarkAccountId = null;
 let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
-let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
+let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater, ribbonwingSeat;
 let plazaSalon = null, cityBikeRacks = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
@@ -638,8 +640,10 @@ function gameDiagnostics() {
 function startMultiplayer() {
   if (multiplayer) return;
   // Peers out of view are culled with their shadows, while the sun casts any.
+  // A passenger of this page's landowner rides in her craft as drawn here (#777).
+  const ownCraft = id => id === multiplayer?.identity?.id && playerAvatar?.carriage.kind === 'hover' && playerAvatar.carriage.riding ? playerAvatar.carriage.object : null;
   remotePlayers = createRemotePlayers(scene, host, { shadowDirection: () => renderer.shadowMap.enabled && sun.castShadow && sun.intensity > 0
-    ? sunDirection.copy(sunOffset).negate().normalize() : null });
+    ? sunDirection.copy(sunOffset).negate().normalize() : null, localCraft: ownCraft });
   buildLayer ??= createSharedBuildLayer(scene);
   buildControls?.hide();
   multiplayer = createMultiplayer({
@@ -691,6 +695,9 @@ function startMultiplayer() {
     getPose:()=>walking?.getPose(),getEnvironment:()=>walking?.environment,
     request:message=>multiplayer.command(message),onConfirmed:player=>walking.applyServerPose(player),
     getBenches:()=>[...(seatAndWater?.benches()??[]),...suiteSeatsHere()],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
+  ribbonwingSeat = createRibbonwingSeat({ host, viewport: document.querySelector('#viewport'), walking, selfId: () => multiplayer?.identity?.id ?? null,
+    snapshot: () => multiplayer?.snapshot, command: body => multiplayer?.connected ? multiplayer.ribbonwing(body) : Promise.resolve({ ok: false, message: 'Reconnect first.' }),
+    craftOf: id => remotePlayers?.craftOf(id) ?? null });
   host.dataset.multiplayer = 'connecting';
 }
 
@@ -1129,6 +1136,7 @@ function render(now) {
   storeIntros?.update(now);
   renderAudit?.phase('interactions');
   remotePlayers?.update(now, camera);
+  ribbonwingSeat?.update();
   buildLayer?.update(camera.position);
   updateBuilder();
   playerAvatar?.update(now, camera, renderer.getSize(viewportSize).y, Boolean(multiplayer?.connected));
@@ -1556,6 +1564,18 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverScreening = () => ipicScreening?.inspect() ?? null;
   // Development-only: send a raw command, as a modified client could, to prove the server refuses it.
   window.__riverMultiplayerCommand = message => multiplayer?.command(message);
+  // The Ribbonwing passenger seat as this page draws it (#777): each hover craft's passenger
+  // seat, where each remote player is drawn, and this page's own seat state.
+  window.__riverRibbonwingSeat = () => {
+    const seat = new THREE.Vector3(...VEHICLES.hover.passengerSeat), players = multiplayer?.snapshot?.players ?? [], selfId = multiplayer?.identity?.id;
+    const craft = id => id === selfId ? (playerAvatar?.carriage.kind === 'hover' && playerAvatar.carriage.riding ? playerAvatar.carriage.object : null) : remotePlayers?.craftOf(id);
+    // The seat's point at the craft's base (where a passenger's holder sits) and its cushion.
+    const at = (id, height) => { const object = craft(id);object?.updateWorldMatrix(true, false);return object ? object.localToWorld(seat.clone().setY(height)).toArray() : null; };
+    const hovering = players.filter(player => player.vehicle === 'hover');
+    const seats = Object.fromEntries(hovering.map(player => [player.id, at(player.id, 0)])), cushions = Object.fromEntries(hovering.map(player => [player.id, at(player.id, VEHICLES.hover.passengerSeat[1])]));
+    return { pilotId: ribbonwingSeat?.pilotId ?? null, riding: ribbonwingSeat?.riding ?? false, panel: document.querySelector('.ribbonwing-seat:not([hidden]) [data-seat-status]')?.textContent ?? null,
+      seats, cushions, holders: Object.fromEntries(players.filter(player => player.id !== selfId).map(player => [player.id, remotePlayers?.holderOf(player.id)])) };
+  };
   window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), selfMaterials:playerAvatar?.materials,selfRealism:playerAvatar?.realism??null, voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;

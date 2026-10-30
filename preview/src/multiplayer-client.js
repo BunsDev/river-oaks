@@ -463,6 +463,8 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
       const m=result?.ok?result.player?.maneuver:null;maneuverUntil=m?m.startedAt+m.duration:0;
       return result;
     },
+    // The Ribbonwing passenger seat (#777): invite, cancel, board or leave.
+    ribbonwing:body=>command({type:'ribbonwing',...body}),
     async travel(target){
       if(traveling)return {ok:false,message:'Please wait for your arrival.'};
       traveling=true;
@@ -476,7 +478,9 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
       greetings.update(now);crimeHud.update(now);
       if(!connected||socket?.readyState!==WebSocket.OPEN)return;
       // A Ribbonwing maneuver owns this player's pose on the server until it ends (#777).
-      if(!traveling&&now-lastPose>=200&&serverNow()>maneuverUntil){
+      // A Ribbonwing passenger's seat is the town's to move (#777).
+      const aboard=Boolean(latestSnapshot?.players?.find(player=>player.id===selfId)?.passengerOf);
+      if(!traveling&&!aboard&&now-lastPose>=200&&serverNow()>maneuverUntil){
         lastPose=now;const pose=getPose();
         if(pose&&!pose.office){
           const message={type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,levelId:pose.levelId??null,...(activeGreeting?{interactionId:activeGreeting}:{}),...(pose.riding?{vehicle:pose.riding.kind}:{})};

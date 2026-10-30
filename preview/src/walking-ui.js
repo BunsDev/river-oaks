@@ -425,7 +425,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
       const room = currentRoom(), door = room ? null : doorway();
       const up = nearbyStairs(room, 'up'), down = nearbyStairs(room, 'down'), stairs = up ?? down;
-      $('.walking-title strong').textContent = sitting ? 'Seated' : performing ? 'On stage' : transport ? (transport.pose.kind === 'bicycle' ? 'Cycling' : transport.pose.kind === 'hover' ? (transport.pose.landing ? 'Landing the Ribbonwing' : transport.pose.flying ? 'Flying the Ribbonwing' : 'Piloting the Ribbonwing') : 'Riding with Jev') : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
+      $('.walking-title strong').textContent = sitting ? 'Seated' : performing ? 'On stage' : transport ? (transport.pose.kind === 'bicycle' ? 'Cycling' : transport.pose.kind === 'hover' ? (!transport.pose.driver ? 'Riding in the Ribbonwing' : transport.pose.landing ? 'Landing the Ribbonwing' : transport.pose.flying ? 'Flying the Ribbonwing' : 'Piloting the Ribbonwing') : 'Riding with Jev') : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
       const farFromExit = Boolean(room && !stairs && !nearRoomExit(room, [state.position[0], -state.position[2]]));
       enter.hidden = Boolean(sitting||performing||transport)||(!room && !door)||Boolean(room?.generatedPlan?.index>0 && !stairs)||farFromExit;

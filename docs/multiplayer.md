@@ -306,6 +306,31 @@ wingtips every 0.15 m and refuses with `maneuver_too_low`, `maneuver_ceiling`,
 - Checkpoints keep the active maneuver as admitted, so another instance replays
   it from the same start. Restore requires it to match the player's saved pose,
   heading and seq, and ends one whose path the restored town no longer clears.
+
+The Ribbonwing's right-hand seat is also server-owned (#777). Commands are
+`{type:'ribbonwing', action}`.
+
+- **Invite.** The owner, landed in the craft, sends `invite` with `peerId`: one
+  person on foot at street level within 8 m. The invitation lasts 60 s and is
+  not checkpointed. `cancel` withdraws it.
+- **Board.** The invited player boards with `board` and `pilotId`.
+- **Seated.** The snapshot then carries `passengerOf` on the passenger and
+  `passengerId` on the pilot. The town places the passenger 0.68 m to the
+  pilot's right from the pilot's live pose, maneuvers included. It refuses the
+  passenger's own poses and other actions with `passenger_aboard`, without a
+  correction; chat and look changes still work.
+- **Leaving.** `leave` is refused while the craft is aloft or maneuvering
+  (`ribbonwing_aloft`). On the ground it sets the passenger down beside the
+  craft.
+- **Set down by the town.** A pilot who leaves the town, loses the craft or
+  entitlement, steps out, or travels sets the passenger down on the first
+  clear spot below or beside the seat. A departed pilot leaves after the
+  transport's departure grace.
+- **Blocks.** Invitations and boarding toward a blocked account get the answer
+  for an absent one, and a stored block ends a ride under way.
+- **Checkpoints.** The seat is saved as a matched pair. Restore refuses
+  one-sided pairs, a pilot not flying the owner's craft, a passenger in a
+  vehicle, and saved invitations.
 `GET /api/cycling/leaderboard` (session required; the gateway limits it to 60
 reads a minute per account) returns the top 20 riders as `{rank, name, miles}`
 plus the caller's own `{rank, miles}`; the top list is cached for ten seconds
