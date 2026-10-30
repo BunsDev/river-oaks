@@ -194,7 +194,7 @@ test('checkpoints keep health, stars and receipts; older towns restore with none
   const f = town();open(f);
   f.land({ attackId: 'alice-hit-0002' });f.land();
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 17);
+  assert.equal(saved.version, 18);
   const back = town({ restore: saved });back.clock.time = f.clock.time;
   assert.deepEqual(back.world.snapshot().crime, f.world.snapshot().crime);
   back.place(ALICE, [RX + 1.2, RN]);back.later(CRIME_RULES.cooldownMs);

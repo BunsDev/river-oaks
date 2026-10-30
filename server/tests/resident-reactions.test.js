@@ -198,3 +198,53 @@ test('the snapshot tells clients the reaction kind and nothing private', () => {
   assert.equal(life.reaction, 'startle');
   assert.deepEqual(Object.keys(life).sort(), ['action', 'blocked', 'distance', 'heading', 'helping', 'reaction', 'seat', 'source', 'speed', 'status', 'visitId'].sort());
 });
+
+test('a swing from the air alarms nobody below: an airborne attacker misses and raises no street alarm', () => {
+  // The wanted scan already skips airborne players; a contact must agree (review of #708).
+  const f = town();f.clearStreet();
+  const witness = f.park(0, [RX, RN + 8]);
+  open(f);
+  const reply = f.attack(ALICE);assert.equal(reply.ok, true, JSON.stringify(reply));
+  f.world.players.get(ALICE).altitude = 3;
+  f.later(R.strikeWindupMs + 100);
+  const action = f.world.snapshot().crime.actions.find(item => item.id === reply.action.id);
+  assert.deepEqual([action?.outcome, action?.reason], ['miss', 'attack_on_foot'], JSON.stringify(action));
+  assert.equal(f.reaction(witness.id), null, 'the resident below does not startle');
+  // The same swing on foot is seen.
+  f.world.players.get(ALICE).altitude = 0;f.later(R.cooldownMs + 100);
+  strike(f);
+  assert.equal(f.reaction(witness.id), 'startle');
+});
+
+test('a reset or an in-process restore drops alarms the old town had not yet shown its residents', () => {
+  // A strike that comes due inside a command (settle between steps) leaves its contact for the
+  // next step; a reset or restore in between must not startle anyone at the old fight.
+  for (const how of ['reset', 'restore']) {
+    const f = town();f.clearStreet();
+    open(f);
+    const saved = f.world.checkpoint();
+    assert.equal(f.attack(ALICE).ok, true);
+    f.clock.time += R.strikeWindupMs + 10;
+    assert.equal(f.world.command(ALICE, { type: 'evade', direction: 'back' }).ok, true, 'the evade settles the due strike');
+    if (how === 'reset') f.world.reset(); else assert.deepEqual(f.world.restore(saved), { ok: true });
+    const outdoor = f.world.state.locals.filter(local => !local.indoor && !local.stationary);
+    outdoor.forEach((local, index) => { local.position = [-2700 + index % 6 * 3, -1200 - Math.floor(index / 6) * 3, local.position[2]]; Object.assign(local.life, { route: [], destination: null, waitUntil: Infinity, seat: null, speed: 0, previousSpeed: 0 }); });
+    const witness = outdoor[0];
+    witness.position = [RX, RN + 8, f.world.snapshot().crime.targets.find(item => item.id === RIVAL.id).position[2]];
+    f.later(100);
+    assert.equal(f.reaction(witness.id), null, `${how}: no startle at a fight the new town never saw`);
+  }
+});
+
+test('reactions raise the checkpoint to version 18, so a v17 writer cannot run a fleeing town, while v17 rooms still restore', () => {
+  // A v17 (pre-reaction) writer reading these fields would keep walking to the flee destination
+  // with a stale reaction and write both back; version 18 with writer generation 23 fences it.
+  const f = town();
+  const saved = f.world.checkpoint();
+  assert.equal(saved.version, 18);
+  const older = seal({ ...structuredClone(saved), version: 17 });
+  for (const local of older.payload.state.locals) { delete local.life.reaction; delete local.life.reactionCooldownUntil; }
+  const restored = town({ restore: older, time: f.clock.time });
+  assert.equal(restored.world.snapshot().locals.length, f.world.snapshot().locals.length, 'a v17 room restores');
+  assert.equal(restored.world.checkpoint().version, 18, 'and is written forward as v18');
+});

@@ -106,6 +106,11 @@ export function createResidentLife(world,state,routeProvider=null) {
 // line to it (sees(from,to), the world's own sight rule), startle: the nearest first, at most
 // REACTION_RULES.cap reacting at once, each at most once per cool-off. A resident held by a
 // conversation, a wish or a visit keeps it. Returns the ids of the residents it reached.
+// The step's awaitingHelp rule without its bookkeeping: a resident who has asked for help and
+// is still inside the wait (or about to start it) is held, so an alarm passes them by.
+const waitingForHelp=(life,local)=>Boolean(local.priority && local.status==='needs_help' && local.needKnown
+  && !['supply','dispatch'].includes(local.lastInteraction) && !local.askedInStorm
+  && (local.life.helpWait?.generation!==life.state.generation || life.elapsed<local.life.helpWait.until));
 export function alarmResidents(life,alarm,{sees=()=>true}={}) {
   if(!life || !Array.isArray(alarm?.position) || alarm.position.length<2 || !alarm.position.slice(0,2).every(Number.isFinite)) return [];
   if(life.storm) return [];
@@ -117,7 +122,7 @@ export function alarmResidents(life,alarm,{sees=()=>true}={}) {
   const candidates=state.locals.filter(local=>!local.indoor && !local.stationary && local.life && !local.life.reaction
       && (local.life.reactionCooldownUntil ?? 0)<=life.elapsed
       && state.selectedId!==local.id && !local.wish && !local.wishDisruption && !local.life.visitId
-      && (local.status!=='aid_en_route') && !local.visitorReaction?.sharedFocus
+      && (local.status!=='aid_en_route') && !local.visitorReaction?.sharedFocus && !waitingForHelp(life,local)
       && distance(local.position,from)<=radius && (elevation===null || Math.abs(feetHeight(local)-elevation)<1.8))
     .map(local=>({local,distance:distance(local.position,from)}))
     .sort((a,b)=>a.distance-b.distance || a.local.id.localeCompare(b.local.id));

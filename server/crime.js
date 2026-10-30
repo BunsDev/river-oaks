@@ -106,7 +106,9 @@ export function createCrime({ worldId, groundAt, now, changed, decide, reachable
   const resolve = (action, outcome, reason, at, effect = null) => {
     Object.assign(action, { outcome, reason, resolvedAt: Math.max(action.startedAt, at), effect });changed();
     const actor = players.get(action.actorId) ?? rivals.get(action.actorId);
-    if (outcome !== 'cancelled' && actor && contacts.length < 64) contacts.push({ at, kind: action.kind, actorId: action.actorId, position: [...actor.position] });
+    // A swing from the air (or any airborne actor) is not a street alarm: the wanted scan skips
+    // airborne players for the same reason, and position[2] is the ground under them.
+    if (outcome !== 'cancelled' && actor && !(actor.altitude > .1) && contacts.length < 64) contacts.push({ at, kind: action.kind, actorId: action.actorId, position: [...actor.position] });
   };
   // Participation: the minimal player health this PvE exchange needs, on the player record the
   // police capture already reads. It ends with full health; the field stays at 100.
@@ -397,6 +399,7 @@ export function createCrime({ worldId, groundAt, now, changed, decide, reachable
   function load(next, at = now()) {
     for (const rival of rivals.values()) Object.assign(rival, { health: R.maxHealth, hitAt: null, engagedId: null, counterAt: null }, next.rivals.get(rival.id) ?? {});
     ({ wanted, cooldowns, receipts, actions, participants, evades, sequence } = next);
+    contacts = [];
     for (const action of actions.values()) if (action.outcome === null && action.contactAt + LATE_CONTACT < at)
       Object.assign(action, { outcome: 'cancelled', reason: 'interrupted', resolvedAt: Math.max(action.startedAt, at), effect: null });
     for (const participant of participants.values()) {
