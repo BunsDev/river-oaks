@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ipicKitFinish } from './ipic-kit-finish.js';
 
 // The lounge carpet's palette (photo review P12): a bold orange-red ground with fine dark swirl lines, as
 // sampled from IMG_9753-9755. It was darkened on 2026-10-17 after IMG_9758 alone, which is underexposed.
@@ -20,7 +21,9 @@ const seeded = seed => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul
 
 // Authored procedural finishes approximate photographed materials; artwork uses
 // untouched source photos sampled by mesh UVs, not AI-redrawn replacements.
-export function createIpicMaterials({ textures = typeof document !== 'undefined' } = {}) {
+// `finish` (ipic-kit-finish.js) recolours a few lounge and reception materials; classic by default.
+export function createIpicMaterials({ textures = typeof document !== 'undefined', finish } = {}) {
+  const kit = ipicKitFinish(finish), loungeCarpet = kit.carpet ?? IPIC_LOUNGE_CARPET;
   const materials = new Set(), maps = new Set(), pending = [];
   const material = (name, color, options = {}) => {
     const m = new THREE.MeshStandardMaterial({ color, roughness: .7, ...options });
@@ -50,7 +53,7 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
       const u = 2 * Math.PI * x / w, v = 2 * Math.PI * y / h;
       const field = .9 * Math.sin(u + .7) + .8 * Math.cos(v) + .6 * Math.sin(u - v + 1.3) + .35 * Math.cos(2 * u + v);
       const stripe = Math.max(0, Math.min(1, (Math.sin(40 * field) - .6) * 4));
-      const noise = .97 + .03 * Math.sin(x * 53 + y * 71), i = (y * w + x) * 4, [b, p] = [IPIC_LOUNGE_CARPET.base, IPIC_LOUNGE_CARPET.pattern];
+      const noise = .97 + .03 * Math.sin(x * 53 + y * 71), i = (y * w + x) * 4, [b, p] = [loungeCarpet.base, loungeCarpet.pattern];
       pixels.data.set([0, 1, 2].map(k => (b[k] + stripe * (p[k] - b[k])) * noise).concat(255), i);
     }
     c.putImageData(pixels, 0, 0);
@@ -126,7 +129,9 @@ export function createIpicMaterials({ textures = typeof document !== 'undefined'
   if (!textures) {
     m.timber.color.set('#5d4939'); m.carpet.color.set('#ae3925'); m.marble.color.set('#d8d4c8');
     m.sunburst.color.set('#97704a'); m.barFloor.color.set('#6c513b'); m.confetti.color.set('#231d24');
+    if (kit.carpet) m.carpet.color.set(kit.carpet.flat);
   }
+  for (const [key, color] of Object.entries(kit.colors)) m[key].color.set(color);
   const label = (name, lines, { background = '#211d18', color = '#e4d9bd', width = 1024, height = 256, font = 'sans-serif', layout = null } = {}) => {
     const map = canvas(width, height, (c, w, h) => {
       c.fillStyle = background; c.fillRect(0, 0, w, h); c.fillStyle = color;
