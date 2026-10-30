@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRenderAudit } from '../src/render-audit.js';
-import { distribution, auditOptions, gestureWait } from '../audit/metrics.js';
+import { distribution, auditOptions, gestureWait, peerRoster } from '../audit/metrics.js';
+import { rivalFigures, policeFigures } from '../src/crime-ui.js';
+import { CRIME_TARGETS } from '../../server/crime.js';
 
 test('frame audit resets between tiers and signals overflow rather than omitting slow frames silently', () => {
   const audit = createRenderAudit({ limit: 2 });
@@ -18,6 +20,50 @@ test('capacity timing rejects empty/invalid evidence and retains tail stalls', (
   const samples = [...Array(99).fill(16), 800];
   assert.deepEqual(distribution(samples), { count: 100, p50Ms: 16, p95Ms: 16, p99Ms: 16, maxMs: 800 });
   assert.equal(samples.at(-1), 800);
+});
+
+// The town the page draws (#778): the snapshot's players plus its authored rivals
+// and police units, through the same figure builders main.js syncs into the registry.
+function townAt(playerCount, { police = [], ready = () => true, drop = null } = {}) {
+  const players = Array.from({ length: playerCount }, (_, i) => ({ id: i ? `actor-${i - 1}` : 'viewer', position: [i, 0, 0] }));
+  const crime = { targets: CRIME_TARGETS['river-oaks'].map(rival => ({ ...rival, position: [...rival.position, 0], incapacitated: false, staggered: false })) };
+  const drawn = [...players.filter(player => player.id !== 'viewer'), ...rivalFigures(crime), ...policeFigures({ units: police })];
+  return { connected: true, selfId: 'viewer', snapshot: { players },
+    remotes: drawn.filter(figure => figure.id !== drop).map(figure => ({ id: figure.id, ready: ready(figure.id), onScreen: true })) };
+}
+
+test('tier convergence counts other players by roster id, not the town figures drawn beside them', () => {
+  const police = [{ id: 'police:0', position: [5, 5, 0], yaw: 0, state: 'pursue' }];
+  for (const count of [1, 8, 16, 32]) {
+    const town = townAt(count, { police }), roster = peerRoster(town, count);
+    // The registry is longer than the tier by the two rivals and one officer: the length check #778 tripped on.
+    assert.equal(town.remotes.length, count - 1 + 3);
+    assert.equal(roster.converged, true, `tier ${count}`);
+    assert.deepEqual(roster.peers.map(peer => peer.id), Array.from({ length: count - 1 }, (_, i) => `actor-${i}`));
+    assert.deepEqual(roster.figures.map(figure => figure.id), ['rival:westcreek', 'rival:service-lane', 'police:0']);
+  }
+});
+
+test('tier convergence still waits for every player, every load and the right tier', () => {
+  assert.equal(peerRoster(townAt(8, { drop: 'actor-3' }), 8).converged, false, 'a peer missing from the registry');
+  assert.equal(peerRoster(townAt(8, { ready: id => id !== 'actor-6' }), 8).converged, false, 'a peer still loading');
+  assert.equal(peerRoster(townAt(8, { ready: id => id !== 'rival:westcreek' }), 8).converged, false, 'a town figure still loading during the sample');
+  assert.equal(peerRoster(townAt(8), 16).converged, false, 'the roster has not reached the tier');
+  assert.equal(peerRoster({ ...townAt(8), connected: false }, 8).converged, false, 'disconnected');
+  assert.equal(peerRoster(undefined, 1).converged, false, 'no town hook yet');
+  // Two rivals must not stand in for two absent players.
+  const short = townAt(8, { drop: 'actor-0' });
+  short.remotes = short.remotes.filter(remote => remote.id !== 'actor-1');
+  assert.equal(short.remotes.length, 7);
+  assert.equal(peerRoster(short, 8).converged, false);
+  // After everyone leaves, the viewer still draws the rivals: no player peers remain.
+  const alone = peerRoster(townAt(1), 1);
+  assert.deepEqual([alone.converged, alone.peers.length, alone.figures.length], [true, 0, 2]);
+});
+
+test('tier convergence serializes into the page as a self-contained predicate', () => {
+  const town = townAt(8);
+  assert.equal(new Function('town', `return (${peerRoster})(town, 8).converged`)(town), true);
 });
 
 test('capacity options refuse ambiguous runs, excessive duration and invalid player tiers', () => {

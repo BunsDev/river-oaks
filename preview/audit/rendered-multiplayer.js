@@ -21,7 +21,7 @@ import { createMemoryGroups } from '../../server/groups.js';
 import { createMemoryProfiles } from '../../server/profiles.js';
 import { createMemoryEvents } from '../../server/events.js';
 import { SHARED_APPEARANCES } from '../src/shared-appearances.js';
-import { auditOptions, distribution, gestureWait } from './metrics.js';
+import { auditOptions, distribution, gestureWait, peerRoster } from './metrics.js';
 
 const options = auditOptions(process.argv.slice(2));
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -112,11 +112,8 @@ function command(actor, message) {
   });
 }
 async function converge(page, count) {
-  await page.waitForFunction(count => {
-    const town = window.__riverMultiplayer?.(), remotes = town?.remotes ?? [];
-    return town?.connected && town.snapshot?.players.length === count && remotes.length === count - 1
-      && remotes.every(player => player.ready) && document.querySelector('#canvas-host')?.dataset.playerReady === 'true';
-  }, count, { timeout: 90000 });
+  await page.waitForFunction(`(${peerRoster})(window.__riverMultiplayer?.(), ${count}).converged
+    && document.querySelector('#canvas-host')?.dataset.playerReady === 'true'`, null, { timeout: 90000 });
   const permissions = await page.evaluate(() => window.__riverMultiplayer().snapshot.players.map(player => [player.canBuild, player.canGrantWishes]));
   assert.ok(permissions.every(([build, wish]) => build === false && wish === false), 'Synthetic guests must never receive admin capabilities');
 }
@@ -242,11 +239,12 @@ try {
       const measuredSeconds = (performance.now() - measurementStart) / 1000;
       const drawCensus = await page.evaluate(() => window.__riverRenderAudit.drawCensus());
       const sample = await page.evaluate(() => ({ timing: window.__riverRenderAudit.stop(), transport: window.__auditTransport.stop(), graphics: window.__riverRenderAudit.graphics(),
-        onScreenPeers: window.__riverMultiplayer().remotes.filter(peer => peer.onScreen).length,
         labelViewport: (()=>{const r=document.querySelector('.remote-player-labels').getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};})(),
         labels: [...document.querySelectorAll('.remote-player-label')].filter(label => !label.hidden).map(label => { const r=label.getBoundingClientRect(); return {id:label.dataset.peerId,left:r.left,right:r.right,top:r.top,bottom:r.bottom}; }),
-        peers: window.__riverMultiplayer().remotes, npcs: window.__riverMultiplayer().snapshot.locals.length, visibility: document.visibilityState }));
-      report.lastSample = sample;
+        town: window.__riverMultiplayer(), npcs: window.__riverMultiplayer().snapshot.locals.length, visibility: document.visibilityState }));
+      const roster = peerRoster(sample.town, count);
+      Object.assign(sample, { peers: roster.peers, figures: roster.figures, onScreenPeers: roster.peers.filter(peer => peer.onScreen).length, onScreenFigures: roster.figures.filter(figure => figure.onScreen).length });
+      delete sample.town; report.lastSample = sample;
       assert.equal(sample.timing.overflow, false); assert.equal(sample.visibility, 'visible');
       if (options.view === 'crowd') {
         assert.equal(sample.onScreenPeers, count - 1, 'All peer landmarks must fit in the crowd view');
@@ -257,7 +255,7 @@ try {
         const a=sample.labels[i],b=sample.labels[j];
         assert.ok(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top,'Visible nameplates must not overlap');
       }
-      assert.equal(sample.peers.length, count - 1); assert.ok(sample.peers.every(peer => peer.ready));
+      assert.ok(roster.converged, 'Every other player, and every town figure drawn beside them, stays loaded through the sample');
       assert.equal(sample.transport.closes, 0); assert.deepEqual(sample.transport.rejections, []); assert.equal(sample.transport.pending, 0);
       assert.equal(sample.npcs, 98); assert.ok(sample.graphics.render.calls > 0);
       if (count === 32) await page.screenshot({ path: `${root}/output/playwright/render-audit-${profile.name}-32.png` });
@@ -266,7 +264,8 @@ try {
         frame: distribution(sample.timing.frames.map(frame => frame.intervalMs)), cpuSubmission: distribution(sample.timing.frames.map(frame => frame.cpuMs)),
         framesOver33Ms: sample.timing.frames.filter(frame => frame.intervalMs > 33.34).length, framesOver50Ms: sample.timing.frames.filter(frame => frame.intervalMs > 50).length,
         snapshots: sample.transport.snapshots, snapshotGap: distribution(sample.transport.gaps), decodedSnapshotBytesPerSecond: Math.round(sample.transport.bytes / measuredSeconds),
-        gestureAck: distribution(sample.transport.commands), loadedPeers: sample.peers.length, onScreenPeers: sample.onScreenPeers, visibleLabels: sample.labels.length,
+        gestureAck: distribution(sample.transport.commands), loadedPeers: sample.peers.length, onScreenPeers: sample.onScreenPeers,
+        townFigures: { ids: sample.figures.map(figure => figure.id), loaded: sample.figures.filter(figure => figure.ready).length, onScreen: sample.onScreenFigures }, visibleLabels: sample.labels.length,
         graphicsBefore: before, graphicsAfter: sample.graphics, drawCensus, assets: JSON.parse(assetState), actorCorrections: [...actors.values()].reduce((sum, actor) => sum + actor.corrections, 0) };
       // The same page, peers and view, alternating the feature so drift in
       // machine load falls on both arms (ABBA then BAAB). Each segment is kept,
@@ -321,7 +320,8 @@ try {
     report.results.at(-1).departureConvergenceMs = Math.round(performance.now() - departureStart);
     await pause(3000);
     report.results.at(-1).resourceSettleMs = 3000;
-    report.results.at(-1).afterPeersLeave = await page.evaluate(() => ({ peers: window.__riverMultiplayer().remotes.length, graphics: window.__riverRenderAudit.graphics() }));
+    const left = await page.evaluate(() => ({ town: window.__riverMultiplayer(), graphics: window.__riverRenderAudit.graphics() })), leftRoster = peerRoster(left.town, 1);
+    report.results.at(-1).afterPeersLeave = { peers: leftRoster.peers.length, townFigures: leftRoster.figures.map(figure => figure.id), graphics: left.graphics };
     assert.equal(report.results.at(-1).afterPeersLeave.peers, 0);
     await page.screenshot({ path: `${root}/output/playwright/render-audit-${profile.name}-cleanup.png` });
     await context.close(); app.disconnectUser('viewer'); await flush();
