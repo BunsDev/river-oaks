@@ -61,6 +61,7 @@ async page => {
     let nearest = null, stood = null, startled = null;
     for (const candidate of candidates) {
       // The figure must already be drawn: the startle lasts one second, a figure can take longer to load.
+      // Waits stay short: one star cools after 30 s unobserved (crime.js starDecayMs).
       // A CPU-drawn client draws residents only within 30 m (resident-figures.js), so first stop about
       // 12 m off, outside the 6 m a wanted player startles from, then wait for the figure.
       const near = (await town(visitor)).locals.find(local => local.id === candidate.id) ?? candidate, here = (await town(visitor)).self.position;
@@ -69,9 +70,12 @@ async page => {
         const k = 12 / gap, mark = [near.position[0] + (here[0] - near.position[0]) * k, near.position[1] + (here[1] - near.position[1]) * k];
         if (!await approach(visitor, mark, 3)) continue;
       }
-      const figure = await visitor.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === `resident:${id}` && item.ready), candidate.id, { timeout: 20000 }).then(() => true).catch(() => false);
+      const figure = await visitor.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === `resident:${id}` && item.ready), candidate.id, { timeout: 12000 }).then(() => true).catch(() => false);
       if (!figure) continue;
-      const where = await approach(visitor, candidate.position, 4);
+      // Where they are now: they may have walked on while the figure loaded (review of 92d7336a).
+      const now = (await town(visitor)).locals.find(local => local.id === candidate.id);
+      if (!now || now.life?.reaction !== null) continue;
+      const where = await approach(visitor, now.position, 4);
       if (!where) continue;
       startled = await visitor.waitForFunction(id => { const local = window.__riverMultiplayer().snapshot.locals.find(item => item.id === id);
         return local?.life?.reaction === 'startle' && local.life.status === 'startled' && local; }, candidate.id, { timeout: 8000 }).then(handle => handle.jsonValue()).catch(() => null);
