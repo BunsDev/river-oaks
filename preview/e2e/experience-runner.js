@@ -51,6 +51,8 @@ try {
       'woodland-heights':{RIVER_OAKS_DISTRICT_REVISION:'woodland-heights-1'},
       'world-streaming':{RIVER_OAKS_DISTRICT_REVISION:'east-garden-commons-market-1'},
       'world-gate-587':{RIVER_OAKS_DISTRICT_REVISION:'east-garden-commons-market-1'},
+      // The composed town (District, Gardens campus, Commons) for the depth-layer and shader audit.
+      'depth-layers':{RIVER_OAKS_DISTRICT_REVISION:'east-garden-commons-market-1'},
       'garden-campus-suite':{RIVER_OAKS_DISTRICT_REVISION:'river-oaks-gardens-3',RIVER_OAKS_CAMPUS_OPERATOR_IDS:'bob'},
     }[name]??{};
     // The Computer embed journey frames a separate-origin child fixture (#486); other journeys get no Computer origin.

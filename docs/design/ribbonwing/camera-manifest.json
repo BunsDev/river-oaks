@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "frame": "craft frame of preview/src/ribbonwing-design.js: metres, front -X, up +Y, left +Z, origin on the ground under the planform centre",
+  "renderer": {
+    "width": 1200,
+    "height": 800,
+    "pixelRatio": 1,
+    "toneMapping": "ACESFilmic",
+    "exposure": 1,
+    "background": "#fbf8f2",
+    "environment": "RoomEnvironment PMREM x0.55",
+    "lights": "hemisphere #ffffff/#9a948c 0.7; key #fff8ef 2.2 at (-4,9,6) with 2048 soft shadow; fill #eef3ff 0.6 at (6,3,-5)",
+    "ground": "ShadowMaterial 0.18 (hidden aloft)"
+  },
+  "occupants": "Jevica (resident 4, player look) in the pilot seat, Prince Jev (resident 1) in the passenger seat; silhouette captures render the empty craft (?avatars=0)",
+  "views": {
+    "front": {
+      "reference": ["exterior", "front"],
+      "projection": "perspective",
+      "fov": 20,
+      "position": [-17.57, 5.69, 0],
+      "target": [0, 1.35, 0],
+      "state": {
+        "phase": "parked"
+      },
+      "calibration": "elevation fitted by silhouette IoU over -12..+40 deg in 4 deg steps with the d1-blockout-2 geometry fixed: 13.9 deg"
+    },
+    "left": {
+      "reference": ["exterior", "left"],
+      "projection": "perspective",
+      "fov": 20,
+      "position": [-2.38, 7.33, 17.13],
+      "target": [0, 1.3, 0],
+      "state": {
+        "phase": "parked"
+      },
+      "calibration": "elevation fitted by silhouette IoU over -12..+40 deg in 4 deg steps with the d1-blockout-2 geometry fixed: 19.2 deg"
+    },
+    "rear": {
+      "reference": ["exterior", "rear"],
+      "projection": "perspective",
+      "fov": 20,
+      "position": [17.57, 5.69, 0],
+      "target": [0, 1.35, 0],
+      "state": {
+        "phase": "parked"
+      },
+      "calibration": "elevation mirrored from the front fit (13.9 deg); the rear IoU optimum ran to 45.9 deg, which the reference does not show"
+    },
+    "top": {
+      "reference": ["exterior", "top"],
+      "projection": "perspective",
+      "fov": 18,
+      "position": [0, 24, 0],
+      "target": [0, 1.2, 0],
+      "up": [-1, 0, 0],
+      "state": {
+        "phase": "parked"
+      }
+    },
+    "underside": {
+      "reference": ["exterior", "underside"],
+      "projection": "perspective",
+      "fov": 18,
+      "position": [0, -22, 0],
+      "target": [0, 1.2, 0],
+      "up": [-1, 0, 0],
+      "state": {
+        "phase": "parked"
+      }
+    },
+    "threeQuarter": {
+      "reference": ["exterior", "threeQuarter"],
+      "projection": "perspective",
+      "fov": 26,
+      "position": [-9.2, 5.4, 8.6],
+      "target": [0, 1.2, 0.2],
+      "state": {
+        "phase": "parked"
+      },
+      "calibration": "authored; the IoU optimum ran to the sweep bound (58.6 / 49.9 deg), which the reference does not show, so it was rejected"
+    },
+    "rightProfile": {
+      "reference": ["interiorMotion", "rightProfile"],
+      "projection": "perspective",
+      "fov": 20,
+      "position": [-1.43, 7.11, -17.17],
+      "target": [0, 1.3, 0],
+      "state": {
+        "phase": "parked"
+      },
+      "calibration": "elevation fitted by silhouette IoU over -12..+40 deg in 4 deg steps with the d1-blockout-2 geometry fixed: 18.6 deg"
+    },
+    "boarding": {
+      "reference": ["interiorMotion", "boarding"],
+      "projection": "perspective",
+      "fov": 26,
+      "position": [-8.8, 4.2, 8.2],
+      "target": [-0.2, 1.3, 0.3],
+      "state": {
+        "phase": "boarding",
+        "boarding": true,
+        "occupied": false
+      },
+      "calibration": "authored; the IoU optimum ran to the sweep bound (58.6 / 49.9 deg), which the reference does not show, so it was rejected"
+    },
+    "hover": {
+      "reference": ["interiorMotion", "hover"],
+      "projection": "perspective",
+      "fov": 22,
+      "position": [-16.3, 7.7, 0],
+      "target": [0, 2.6, 0],
+      "state": {
+        "phase": "hover",
+        "altitude": 1.4,
+        "occupied": true
+      },
+      "calibration": "elevation fitted by silhouette IoU over -12..+40 deg in 4 deg steps with the d1-blockout-2 geometry fixed: 17.4 deg"
+    },
+    "stuntTuck": {
+      "reference": ["interiorMotion", "stuntTuck"],
+      "projection": "perspective",
+      "fov": 26,
+      "position": [-8.65, 7.72, -6.12],
+      "target": [0, 3.1, 0],
+      "state": {
+        "phase": "maneuver",
+        "altitude": 2,
+        "occupied": true,
+        "tuck": 1
+      },
+      "calibration": "elevation fitted by silhouette IoU over -12..+40 deg in 4 deg steps with the d1-blockout-2 geometry fixed: 23.6 deg"
+    },
+    "cockpit": {
+      "reference": ["interiorMotion", "cockpit"],
+      "projection": "perspective",
+      "fov": 58,
+      "position": [-0.35, 2.3, 0],
+      "target": [-2.2, 1.05, 0],
+      "state": {
+        "phase": "ready",
+        "occupied": true
+      },
+      "silhouette": false
+    },
+    "pilotEye": {
+      "projection": "perspective",
+      "fov": 72,
+      "position": [-1.66, 1.62, 0.34],
+      "target": [-5, 1.6, 0.3],
+      "state": {
+        "phase": "ready",
+        "occupied": true
+      },
+      "silhouette": false
+    },
+    "passengerEye": {
+      "projection": "perspective",
+      "fov": 72,
+      "position": [-1.66, 1.6, -0.34],
+      "target": [-5, 1.58, -0.3],
+      "state": {
+        "phase": "ready",
+        "occupied": true
+      },
+      "silhouette": false
+    },
+    "gear": {
+      "projection": "perspective",
+      "fov": 34,
+      "position": [-2.6, 0.9, 4.4],
+      "target": [-0.3, 0.5, 0.8],
+      "state": {
+        "phase": "parked"
+      },
+      "silhouette": false
+    },
+    "thruster": {
+      "reference": ["interiorMotion", "thrusterJoint"],
+      "projection": "perspective",
+      "fov": 30,
+      "position": [3.4, 2.6, 2.6],
+      "target": [1.1, 1.65, 0.5],
+      "state": {
+        "phase": "hover",
+        "altitude": 0,
+        "occupied": true
+      },
+      "silhouette": false
+    }
+  },
+  "calibration": "scripts in .runtime were throwaway; the procedure is recorded in docs/design/ribbonwing/brief.md (D1 camera calibration). Cameras were fitted once, before detail work, and are frozen for later comparisons."
+}

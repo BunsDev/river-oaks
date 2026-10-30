@@ -146,7 +146,8 @@ export function buildIpicInterior(room, options = {}) {
   // the escalator, instead of across the head of its lane.
   const bayFront = [[room.aMin, -IPIC_RUN_WALL - .09, m.timber], [IPIC_RUN_WALL + .09, room.aMax, m.plaster]];
   for (const [a0, a1, mat] of bayFront) box(mat, (a0 + a1) / 2, IPIC_CEILINGS.reception / 2, 6.09, a1 - a0, IPIC_CEILINGS.reception, .18);
-  label('IPIC & THE TUCK ROOM  ↗', (room.aMin - IPIC_RUN_WALL) / 2, 2.45, 5.98, 3.2, .42);
+  // 8 cm off the timber, so the sign holds its depth order from across the lobby.
+  label('IPIC & THE TUCK ROOM  ↗', (room.aMin - IPIC_RUN_WALL) / 2, 2.45, 5.92, 3.2, .42);
 
   section('Escalators');
   // One well from reception to the lounge, closed overhead at the lounge's ceiling (Val, 2026-10-26). The mural
@@ -154,10 +155,11 @@ export function buildIpicInterior(room, options = {}) {
   // escalator from the lounge, and the walking camera rose through it. Overhead the well stays closed, so the
   // district's sky never shows from the runs (docs/ipic-review/photo-review.md, P1). Above reception's ceiling a
   // header wall closes its front.
-  const { upper } = IPIC_CEILINGS;
+  // Stone under the well's ceiling slab stops at its underside (`soffit`) rather than sharing its end planes.
+  const { upper } = IPIC_CEILINGS, soffit = upper - .09;
   box(m.plaster, 0, upper, 10, 2 * IPIC_RUN_WALL + .18, .18, 8);
   ceiling(14, 20, upper, m.plaster);
-  box(m.stone, 0, (IPIC_CEILINGS.reception + upper) / 2, 6.09, 2 * IPIC_RUN_WALL - .18, upper - IPIC_CEILINGS.reception, .18);
+  box(m.stone, 0, (IPIC_CEILINGS.reception + soffit) / 2, 6.09, 2 * IPIC_RUN_WALL - .18, soffit - IPIC_CEILINGS.reception, .18);
   // Split-face stone from y0 to y1 along d0..d1, its horizontal joints standing proud of the face on the well's side.
   const stoneWall = (a, y0, y1, d0, d1) => {
     box(m.stone, a, (y0 + y1) / 2, (d0 + d1) / 2, .18, y1 - y0, d1 - d0);
@@ -187,7 +189,7 @@ export function buildIpicInterior(room, options = {}) {
     }
     // The run walls rise to the well's ceiling, with recessed candle niches.
     for (const a of [-IPIC_RUN_WALL, IPIC_RUN_WALL]) {
-      stoneWall(a, f.base, upper, f.start, f.end);
+      stoneWall(a, f.base, soffit, f.start, f.end);
       for (const d of [f.start + 1.6, f.end - 1.1]) {
         const side = a < 0 ? 1 : -1;
         box(m.black, a + side * .15, f.base + (d - f.start) / 2 + 1.7, d, .03, .45, .3);
@@ -206,10 +208,11 @@ export function buildIpicInterior(room, options = {}) {
     const a = (inner + edge) / 2, w = Math.abs(edge - inner), side = Math.sign(edge);
     box(m.stone, a, (3 + bay) / 2, 11.91, w, bay - 3, .18);
     // The back wall rises to the ceiling: past it is the light well beside the second run.
-    box(m.stone, a, (3 + upper) / 2, 14.09, w, upper - 3, .18);
+    box(m.stone, a, (3 + soffit) / 2, 14.09, w, soffit - 3, .18);
     box(m.stone, edge + side * .09, (3 + bay) / 2, 13, .18, bay - 3, 2.36);
-    box(m.plaster, a, bay, 13, w, .18, 2.36);
-    stoneWall(inner, bay, upper, 12, 14);
+    // The bay's ceiling fits between its front and back walls.
+    box(m.plaster, a, bay, 13, w, .18, 2);
+    stoneWall(inner, bay, soffit, 12, 14);
   }
   const mural = room.fixtures.find(f => f.kind === 'ipic-mural-wall');
   box(m.black, mural.a, mural.y + mural.h / 2, mural.d, mural.w, mural.h, mural.l);

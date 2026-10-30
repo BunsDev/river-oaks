@@ -8,6 +8,7 @@ import { createPlayerCostume } from './player-costume.js';
 import { createFlightVehicle } from './flight-vehicles.js';
 import { VEHICLES } from './vehicle-config.js';
 import { createParkedCarriage } from './parked-carriage.js';
+import { createDrivingHands } from './driving-hands.js';
 import { createCarriageEncounter } from './carriage-encounter.js';
 import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
@@ -18,8 +19,10 @@ import { localLocomotion } from './locomotion-handoff.js';
 import { APPEARANCE_COOLDOWN_MS, CHARACTERS, appearanceFor, canFlyAs, canUseAppearance, defaultAppearanceFor, isJevicaOwner, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './player-avatar.css';
 import { isGameplayKey } from './keyboard-input.js';
+import { RIBBONWING_MANEUVERS, RIBBONWING_MANEUVER_KINDS, maneuverMinimumAltitude } from './ribbonwing-maneuvers.js';
+import { soundToggle } from './throw-sounds.js';
 
-export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), requestVehicleExit=async()=>({ok:true}), requestChauffeur, getPortrait=null, reducedMotion }) {
+export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), requestVehicleExit=async()=>({ok:true}), requestManeuver=async()=>({ok:false}), requestChauffeur, getPortrait=null, reducedMotion }) {
   const lifetime = new AbortController();
   const holder = new THREE.Group();holder.name = 'Player character';holder.userData.renderAuditOwner = 'player';scene.add(holder);
   const owner=isJevicaOwner(userId);
@@ -37,7 +40,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(crew&&!crewLocal)crewLocal=createCarriageEncounter(getWorld())[0]??null;
     return crew&&crewLocal&&!current?[...locals,crewLocal]:locals;
   };
-  const carriage=createParkedCarriage({scene,walking,getWorld,getLocals:crewLocals,getConversation,requestExit:requestVehicleExit,requestChauffeur,reducedMotion});
+  const carriage=createParkedCarriage({scene,walking,getWorld,getLocals:crewLocals,getConversation,requestExit:requestVehicleExit,requestChauffeur,requestManeuver,reducedMotion});
   if(!rideKinds.some(spec=>spec.kind===carriage.kind))carriage.select(rideKinds[0].kind);
   // Hidden until the walk has a pose (update() below): shown first, it flashed for a frame at sign-in.
   const panel = document.createElement('section');panel.className = 'player-controls';panel.hidden = true;panel.setAttribute('aria-label', 'Your character');
@@ -62,6 +65,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       <label for="player-vehicle">Your ride</label><select id="player-vehicle">${rideKinds.map(spec=>`<option value="${spec.kind}">${spec.label}</option>`).join('')}</select>
       <div class="player-actions"><button id="player-carriage" type="button" aria-keyshortcuts="Q"><span data-call-label>Call Jev</span><kbd>Q</kbd></button><button id="player-ride" type="button" aria-keyshortcuts="G"><span data-ride-label>Ride with Jev</span><kbd>G</kbd></button></div>
       <button id="player-chauffeur" type="button" aria-pressed="false">Jev smart drive</button><div class="player-actions" data-tour-actions><button id="player-drive-pause" type="button">Pause ride</button><button id="player-drive-park" type="button">Brake & park</button></div><div class="player-drive-pad" aria-label="Driving directions"><button type="button" data-drive="forward">Accelerate ↑</button><button type="button" data-drive="left">Steer ←</button><button type="button" data-drive="reverse">Reverse ↓</button><button type="button" data-drive="right">Steer →</button></div><p id="player-drive-status" role="status" aria-live="polite">Jev is ready</p>
+      <div class="player-actions ribbonwing-maneuvers" role="group" aria-label="Ribbonwing maneuvers" hidden>${RIBBONWING_MANEUVER_KINDS.map((kind,i)=>`<button type="button" data-maneuver="${kind}" aria-keyshortcuts="${i+1}"><span>${RIBBONWING_MANEUVERS[kind].label}</span><kbd>${i+1}</kbd></button>`).join('')}</div>
     </section>
   </details><p id="player-status" role="status" aria-live="polite"></p>`;
   panel.insertBefore(panel.querySelector('.player-quick-actions'), panel.querySelector('.character-picker'));
@@ -71,15 +75,35 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   panel.addEventListener('click',event=>{
     if(event.detail>0&&event.target.closest('.player-actions button'))host.focus({preventScroll:true});
   });
+  // Ribbonwing maneuvers (#777): the town admits and flies them; refusals say why.
+  const maneuverGroup=panel.querySelector('.ribbonwing-maneuvers');
+  // The page's one game-sounds switch also silences the Ribbonwing's hum and effects.
+  maneuverGroup.append(soundToggle());
+  const maneuverRefusal={maneuver_too_low:result=>`Climb higher first: the ${result.label} needs ${Math.ceil(result.minimum??0)} m.`,maneuver_blocked:result=>`No clear sky here for the ${result.label}.`,
+    maneuver_ceiling:result=>`Too close to the sky's ceiling for the ${result.label}.`,maneuver_active:()=>'Finish the current maneuver first.',maneuver_requires_ribbonwing:()=>'Pilot the Ribbonwing aloft to fly maneuvers.',stale_maneuver:()=>'That maneuver request was out of date. Try again.'};
+  const flyManeuver=async kind=>{
+    const label=RIBBONWING_MANEUVERS[kind].label,result=await carriage.flyManeuver(kind);
+    const minimum=result.minimum??maneuverMinimumAltitude(kind);
+    status.textContent=result.ok?`${label}!`:(maneuverRefusal[result.error]?.({label,minimum})??result.message??`The town did not allow the ${label}.`);
+    walking.notify?.(status.textContent);
+  };
+  for(const button of maneuverGroup.querySelectorAll('[data-maneuver]'))button.addEventListener('click',()=>flyManeuver(button.dataset.maneuver),{signal:lifetime.signal});
+  host.addEventListener('keydown',event=>{
+    const index=/^Digit([1-4])$/.exec(event.code)?.[1];
+    if(!index||!isGameplayKey(event)||event.repeat||!carriage.riding||carriage.kind!=='hover')return;
+    event.preventDefault();flyManeuver(RIBBONWING_MANEUVER_KINDS[Number(index)-1]);
+  },{signal:lifetime.signal});
   const carriageButton=panel.querySelector('#player-carriage');
   carriageButton.addEventListener('click',()=>{
-    const summoned=carriage.summon();status.textContent=summoned?`${carriage.label} is waiting nearby.`:'Find a clear stretch of road to call your ride.';
+    const summoned=carriage.summon();status.textContent=summoned?(walking.getPose()?.flying?`${carriage.label} is waiting below. Land beside it to board.`:`${carriage.label} is waiting nearby.`):'Find a clear stretch of road to call your ride.';
     walking.notify?.(status.textContent);
     if(carriage.placement)walking.lookAt([carriage.placement.position[0],-carriage.placement.position[2],carriage.placement.position[1]]);
   });
   const vehicleSelect=panel.querySelector('#player-vehicle'),driveButton=panel.querySelector('#player-chauffeur'),driveStatus=panel.querySelector('#player-drive-status');
   vehicleSelect.value=carriage.kind;
-  vehicleSelect.addEventListener('change',()=>{if(!carriage.select(vehicleSelect.value)){vehicleSelect.value=carriage.kind;status.textContent='Step out and find clear road space before changing vehicles.';}else status.textContent=`${carriage.label} is ready.`;});
+  // Choosing a ride leaves focus on the menu, where Q and G are not the game's
+  // keys; hand the keyboard back to the world so Q calls the new ride at once.
+  vehicleSelect.addEventListener('change',()=>{if(!carriage.select(vehicleSelect.value)){vehicleSelect.value=carriage.kind;status.textContent='Step out and find clear road space before changing vehicles.';}else{status.textContent=`${carriage.label} is ready. Press Q to call it.`;host.focus({preventScroll:true});}});
   driveButton.addEventListener('click',()=>{if(carriage.chauffeur.active)carriage.stopTour();else if(!carriage.tour())status.textContent='Board your vehicle on a clear road to start a scenic drive.';});
   const pauseDrive=panel.querySelector('#player-drive-pause');
   pauseDrive.addEventListener('click',()=>{if(carriage.chauffeur.paused)carriage.resumeTour();else carriage.pauseTour();});
@@ -99,13 +123,15 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   bindPageLifecycle({ release: holdRide, signal: lifetime.signal });
   const rideButton=panel.querySelector('#player-ride');
   rideButton.addEventListener('click',async()=>{
-    if(carriage.riding)status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';
+    if(carriage.riding){if(carriage.maneuver)status.textContent=`Hold on: the ${RIBBONWING_MANEUVERS[carriage.maneuver.kind].label} finishes first.`;else if(carriage.airborne){carriage.land();status.textContent='The Ribbonwing is landing. Press G again once it is down.';}else status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';}
     else status.textContent=carriage.board()?(carriage.chauffeured?'Ride with Jev, or give directions with W/S and A/D.':'You have the controls: W/S to ride or reverse, A/D to steer.'):'Walk closer to your vehicle before boarding.';
   });
   host.addEventListener('keydown',event=>{
     if(!owner||event.repeat||event.defaultPrevented||!isGameplayKey(event))return;
     const button=event.code==='KeyQ'?carriageButton:event.code==='KeyG'?rideButton:null;
-    if(!button||button.disabled)return;
+    if(!button)return;
+    // A key the button would refuse says why (the button's hint) rather than doing nothing.
+    if(button.disabled){if(button.title)status.textContent=button.title;return;}
     event.preventDefault();button.click();
   },{signal:lifetime.signal});
   // Keep the detailed decision source in diagnostics; the player sees what Jev
@@ -129,7 +155,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   const recipeKey=definition=>definition.schemaVersion===3?JSON.stringify(definition.parameters):null;
   let loadedRecipe=null;
   let colors=null,selectedDefinition=migrateCharacterAppearance(userId,defaultAppearanceFor(userId)),definitionKey=JSON.stringify(selectedDefinition);
-  let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0,presentation=null;
+  let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0,presentation=null,pilotHands=null;
   // Watering: until when, and the planter the body turns toward (scene coordinates).
   let waterUntil = 0, waterTarget = null, throwStart = -Infinity;
   // Appearance and movement belong to the account and are confirmed by the town.
@@ -267,6 +293,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       nextColors=createCharacterMaterials(next.object);nextColors.apply(selectedDefinition);
       const firstLoad=!avatar;
       colors?.dispose();outfit?.dispose();vehicle?.dispose();avatar?.dispose();holder.clear();colors=nextColors;avatar = next;outfit = nextOutfit;vehicle = nextVehicle;holder.add(avatar.object,vehicle.object);
+      // The Ribbonwing's pilot keeps a palm on the side stick and one on the throttle.
+      pilotHands=avatar.rig?.model?createDrivingHands(avatar.rig.model,avatar.object):null;
       loadedAppearance=chosenProfile;loadedRecipe=recipeKey(definition);
       next = nextOutfit = nextVehicle = nextColors = null;
       if(firstLoad)toggleCamera(true);
@@ -336,7 +364,9 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       if (connected) carriage.update(now);
       carriage.updateOptics(camera,viewportHeight);
       const prince=carriage.prince.companion,chauffeured=carriage.chauffeured,away=chauffeured&&prince.mode!=='seat';
-      carriageButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||carriage.riding||away;
+      // A craft that flies can be called while its owner is aloft; it sets down below her.
+      const callsAloft=Boolean(VEHICLES[carriage.kind]?.flies);
+      carriageButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||(pose.flying&&!callsAloft)||carriage.riding||away;
       companionButton.disabled=!owner||!chauffeured||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
       rideButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away||carriage.exiting;
       carriageButton.querySelector('[data-call-label]').textContent=chauffeured?'Call Jev':'Call your ride';
@@ -350,7 +380,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       if(driveStatus.textContent!==driveLabel)driveStatus.textContent=driveLabel;
       host.dataset.vehicle=carriage.kind;host.dataset.chauffeur=JSON.stringify(carriage.chauffeur);host.dataset.driving=String(Boolean(carriage.riding&&!chauffeured));
       host.dataset.riding=String(carriage.riding);flightButton.disabled=seated||!canFlyAs(userId,appearance);
-      carriageButton.title=pose?.roomId?'Step outside to call your ride':pose?.flying?'Land to call your ride':'';
+      carriageButton.title=pose?.roomId?'Step outside to call your ride':pose?.flying&&!callsAloft?'Land to call your ride':'';
       host.dataset.carriageReady=String(Boolean(carriage.placement));
       host.dataset.playerSeat = pose?.sitting ? `${pose.sitting.buildId}:${pose.sitting.slot}` : '';host.dataset.playerWatering = String(now < waterUntil);
       host.dataset.cameraMode = walking.thirdPerson ? 'third' : 'first';host.dataset.playerVisible = String(holder.visible);
@@ -377,7 +407,9 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         if(!seated&&focus.facing!==null&&!sharedInteraction)holder.rotation.y=focus.facing;
         if(sharedInteraction&&!presentation&&!seated&&!pose.flying)holder.rotation.y=turnToward(holder.rotation.y,sharedInteraction.heading,previous===null?1:dt);
         const throwing = !seated && !pose.flying && now - throwStart < 850;
+        pilotHands?.reset();
         avatar.update(now, now < castUntil ? 'amazed' : throwing ? (now - throwStart < 180 ? 'throw-windup' : 'throw-release') : watering ? 'water' : !pose.flying&&!pose.riding ? (poseFor(sharedGesture)??'continue') : 'continue', false, {...localLocomotion(pose,{seated}),flightSpeed:pose.flying?pose.speed:0,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,ridingDriver:Boolean(pose.riding?.driver),seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,ridingDistance:pose.riding?.distance,ridingSpeed:pose.riding?.speed,ridingSteering:pose.riding?.steering,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
+        if(pose.riding?.driver&&pose.riding.kind==='hover'&&pilotHands){holder.updateMatrixWorld(true);pilotHands(carriage.object,VEHICLES.hover);}
         outfit.updateOptics(camera,viewportHeight);
         if(portraitWanted&&getPortrait){
           const id=portraitWanted;portraitWanted=null;
@@ -391,6 +423,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       }
       previous = pose ? now : null;
       flightButton.querySelector('[data-flight-label]').textContent=pose?.flying?(pose.landing?'Cancel landing':'Land'):'Take flight';
+      maneuverGroup.hidden=!(carriage.riding&&carriage.kind==='hover');for(const button of maneuverGroup.querySelectorAll('[data-maneuver]'))button.disabled=!carriage.airborne||Boolean(carriage.maneuver);
       panel.querySelector('#player-mode').textContent=pose?.sitting?'Seated':pose?.riding?'Riding':pose?.flying?(pose.landing?'Landing':'In flight'):'On foot';flightButton.setAttribute('aria-pressed',String(Boolean(pose?.flying)));
       panel.querySelector('.player-flight-pad').hidden=!pose?.flying||!canFlyAs(userId,appearance);host.dataset.flightVehicle=pose?.flying?form:'';
       // No flashing or camera shake: character motion respects reduced motion.

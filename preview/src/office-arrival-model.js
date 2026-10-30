@@ -10,18 +10,26 @@ export const ARRIVAL = Object.freeze({
   carWidth:3.2, carDepth:4, carHeight:3.3, doorWidth:1.7, doorHeight:2.6, frontPortalZ:.32,
   lobbyWidth:5.2, lobbyFront:8.2, lobbyHeight:4.35, start:8.9, carStop:1.45,
   facadeOffset:9.5, officeElevation:24.3,
+  // The phase tube (#hover-coach PR): a glass drum about a vertical axis at z=tubeZ.
+  tubeRadius:1.65, tubeZ:2.25,
 });
-export const OFFICE_FINISH = Object.freeze({stone:'#d9d5c8',floor:'#babdaf',ink:'#243b38',bronze:'#a48961',glass:'#93b7ab',ceiling:'#ebe7dc',light:'#fff0d5'});
+export const OFFICE_FINISH = Object.freeze({stone:'#d9d5c8',floor:'#babdaf',ink:'#243b38',bronze:'#a48961',glass:'#93b7ab',ceiling:'#ebe7dc',light:'#fff0d5',chrome:'#d6dbe0',tangerine:'#e28a4c',tubeGlass:'#e3edf0',glow:'#ffc48a'});
 export const ease = v => {v=Math.max(0,Math.min(1,v));return v*v*(3-2*v);};
 const mix=(a,b,v)=>a+(b-a)*v;
 
 export function arrivalFrame(seconds,{reducedMotion=false}={}) {
   const t=Number.isFinite(seconds)?Math.max(0,seconds):0,a=ARRIVAL;
-  const base={position:[0,1.25],doors:1,floor:6,done:false,progress:Math.min(1,t/a.duration)};
+  // ring: the phase light's height up the tube (0..1); presence: whether the visitor's body is drawn.
+  const base={position:[0,1.25],doors:1,floor:6,done:false,progress:Math.min(1,t/a.duration),ring:0,presence:1};
   if(reducedMotion||t>=a.duration)return {...base,phase:'office',done:true,progress:1};
   if(t<a.boardingEnd)return {...base,phase:t<1.3?'lobby':'boarding',position:[0,-mix(a.start,a.carStop,ease(t/a.boardingEnd))],doors:1,floor:1};
   if(t<a.closingEnd)return {...base,phase:'closing',position:[0,-a.carStop],doors:1-ease((t-a.boardingEnd)/(a.closingEnd-a.boardingEnd)),floor:1};
-  if(t<a.ascentEnd)return {...base,phase:'ascending',position:[0,-a.carStop],doors:0,floor:Math.min(6,1+Math.floor(5*ease((t-a.closingEnd)/(a.ascentEnd-a.closingEnd))))};
+  if(t<a.ascentEnd){
+    // Phasing between floors: the light ring sweeps up the tube, the visitor dissolves beneath it,
+    // is absent for a beat at the top, and condenses again under the ring on its way back down.
+    const s=ease((t-a.closingEnd)/(a.ascentEnd-a.closingEnd)),ring=ease(Math.min(s,1-s)*2);
+    return {...base,phase:'ascending',position:[0,-a.carStop],doors:0,floor:Math.min(6,1+Math.floor(5*s)),ring,presence:ring<.85?1:0};
+  }
   if(t<a.openingEnd)return {...base,phase:'opening',position:[0,-a.carStop],doors:ease((t-a.ascentEnd)/(a.openingEnd-a.ascentEnd)),floor:6};
   return {...base,phase:'arriving',position:[0,mix(-a.carStop,1.25,ease((t-a.openingEnd)/(a.duration-a.openingEnd)))],doors:1};
 }
