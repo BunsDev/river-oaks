@@ -1211,3 +1211,113 @@ on 2026-10-24 and the record-only cancellation was applied at 01:54Z. Remaining:
 - `backup/studio-417-closeout-f4aa1670-presign` (`studio-417-closeout-presign-backup-20261023`, queued) and
   `wip/studio-review-417-baseline-20261022` (`unowned-recovery-refs-20261022`, dirty) are unchanged and stay with
   their tasks.
+
+## Closeout on main `f0d01729` (2026-10-30)
+
+Task `studio-417-closeout-f0d01729-20261030`, owner `claude:river-oaks-bc (9be075)`, branch
+`test/studio-417-closeout-f0d01729-20261030` in `river-oaks-studio-417-closeout-f0d01729`, from origin/main
+`f0d01729` (834 commits after `2cbc4dc4`). Goal: re-run #417's scenarios and #359's office journeys on one main,
+refresh Val's review packet, and reconcile the register. No app or harness code changes.
+
+### Does the candidate still equal main?
+
+No. The `2cbc4dc4` packet (issuecomment-6381102865) named main `2cbc4dc4` or later, and Studio has changed since.
+Studio's import graph (`preview/src/studio/entry.js` followed through relative imports and `new URL(…,
+import.meta.url)` workers; script `.runtime/studio-417/graph.mjs`, not committed) grew from 49 to 80 files; 41 of
+them changed:
+
+| PR | What reaches Studio | Effect on the four space templates |
+| --- | --- | --- |
+| #623 (expansion MVP) | New **Neighborhood** header button and panel (`neighborhood-panel.js`, `-session.js`, `-worker.js`, `neighborhood.css`); `document.js` keeps an optional neighborhood artifact in history and saves; `scene.js`/`viewport.js` compile kit architecture for it; `shared/neighborhood/*`, `streetscape-kit.js` | The button is new UI in every Studio session: one more header control, 13 more listeners and 60 more DOM nodes per soak sample. The architecture path runs only with a neighborhood artifact, which a space document can't hold (`restore` refuses one), so space rendering, saves and history are unchanged |
+| #695 (depth audit) | `materials.js`: the tiling-noise shader patch is wrapped in `#ifdef USE_MAP` | Textured surfaces unchanged (the assets check reads 186/200/186 exactly as before) |
+| #572 (resilient client) | `materials.js`: the environment map can be rebuilt after a lost WebGL context | None: nothing under `preview/src/studio/` calls `loadEnvironment` |
+| #489, #569, #649, #662, #663, #671, #673, #647, #688, #692, #723, #725 | `walking.js` bounds, campus/district layouts, approved Café records, IPIC plan, bike racks | Game-world modules Studio imports through `walking.js` and region rendering; none of the template journeys' routes changed |
+
+**The review candidate is now main `f0d01729` or later.** The checklist items still apply as written; the
+Neighborhood button adds one keyboard/VoiceOver item.
+
+### Results (`f0d01729`, clean tree; MacBook Pro M3 Max, Chromium ANGLE Metal, 1440 × 1000)
+
+One browser-lock hold, 12:41–12:56Z, load 20–52 from other sessions. Each row was compared with the `2cbc4dc4`
+receipt field by field (`.runtime/studio-417/compare.mjs`, not committed).
+
+| Scenario | Result | Receipt (`data/reports/`) |
+| --- | --- | --- |
+| `studio-pilot-journey` | passed, 15 checks; only walk timings and one reached coordinate (5 → 5.1 m) differ. Refusal text identical: "Edit not applied; your draft is unchanged. … Nearby: Waiting Sofa, Meeting Chair 1, Meeting Divider South." | `studio-417-f0d01729-pilot.json` |
+| `studio-pilot-assets` (office) | passed: limestone meeting floor 186 normal → 200 missing/loading → 186 loaded and 186 replaced; 3/3 and 6/6 requests, none pending, identical. The missing/loading frames report 695 calls and 53,208 triangles (414/30,352 before) with the same 49 geometries, 26 materials, 7 textures and 9 programs: `capture` reads an unsettled once-per-second sample (`at` 1,282 ms vs 1,117 ms) | same |
+| `studio-pilot-soak` (1 + 10) | passed: calls, triangles, geometries, materials, textures, render targets, programs, canvases, material loads, live workers (0) and pending timeouts (0) identical to `2cbc4dc4` in every cycle. Listeners 172 (office) / 183 (replaced) and nodes 985 / 1,082, flat across cycles (+13 and +60 from #623's panel; one replaced sample read 1,052 nodes). Heap 16.2–17.2 MiB office, 15.9–18.1 replaced; Metal 72.6–79.7 MiB office | same |
+| `studio-pilot-a11y` | passed, 25 checks, text identical; 320/390 px no overflow with the extra header button. Its Tab walk starts at the first desk and stops when focus leaves the page, so it never reaches the header: the Neighborhood button's focus ring is covered by the global `button:focus-visible` rule, not by this check | same |
+| `studio-template-journey` office / house / boutique / café | passed, 13 checks each; only walked coordinates (≤ 0.3 m) and timings differ | `studio-417-f0d01729-template-{office,house,boutique,cafe}.json` |
+| `node desktop/studio-e2e.js` (development Electron 45.0.0, up from 44.9.1) | passed, 11/11, 12:56Z | `studio-417-f0d01729-desktop.json` |
+
+### #359 non-regression (same main)
+
+| Scenario | Result | Receipt |
+| --- | --- | --- |
+| `office-visit` | passed, 12 checks, text identical | `studio-417-f0d01729-office359.json` |
+| `office-desk` | passed, 18 checks, text identical | same |
+| `office-computer-embed` | passed, 62 checks (61 before): the new one, "The page then reloads into the new Place account", comes from main's account-switch change; the rest differ only in fixture ports and measured removal times (81–313 ms, world rebuild 3.4 s) | same |
+| `office-ipic-journey-runner.mjs`, attempt 1 | **failed** at load 52: all office steps passed, both clients entered IPIC, then the owner's page showed "Connection lost. Rejoining the town…" and `#panel-toggle` (still in `index.html`) was not attached within 60 s | `studio-417-f0d01729-ipic-attempt1-failed.json` |
+| `office-ipic-journey-runner.mjs`, attempt 2 (same tree, 14:08Z, load 22–26) | passed, 30 checks, 128 s: refusal (`office_permission_required`), invitation, arrival, private My tasks, one chair for two clients, floors/library/terrace, late IPIC join (viewers converged after 7 ms), both back in town, no page errors | `studio-417-f0d01729-ipic.json` |
+
+Attempt 1 is kept as the first failure. Its screenshot shows the town connection lost, not a missing control:
+`#panel-toggle` is static in `preview/index.html`, and nothing between `2cbc4dc4` and `f0d01729` changed it or the
+harness. This matches "Fixture page starves under host load" (load above about 12 starves the headless page), and the
+same tree passed once load fell. The office journeys ran on ANGLE Metal; the IPIC runner forces SwiftShader and
+plays fixture media. Loopback fixture identities throughout, so none of this is visual, device or production evidence.
+
+### Café placed in a creator region (#420, optional; on main since #489)
+
+#489 merged on 2026-10-24 as `e17fd94d`, dark: approved spaces are off unless the server runs with
+`RIVER_OAKS_APPROVED_SPACES=1`. Its journey runs only when selected. On `f0d01729`, 14:10Z, ANGLE Metal:
+
+| Scenario | Result | Receipt |
+| --- | --- | --- |
+| `RIVER_OAKS_SHARED_JOURNEY=creator-approved-cafe pnpm run test:shared development-publish` | passed, 22 checks, 169 s: only the reviewed revision offered and resolved server-side, protocol 4, identical plan on both clients, guest publish refused, older client gets Refresh and still joins the original district, owner reaches seating/service/preparation, guest crosses Harbour Street, sees the owner, reconnects in place and walks out, rollback with both disconnected leaves no approved plan and nobody on the replaced floor, no page errors | `studio-417-f0d01729-cafe-region.json` |
+
+This is the local Metal pass. The hosted CPU-rendered door stall recorded on #420 (2026-10-24) was not
+re-investigated here; it stays a pre-activation fix on #420.
+
+### Review host
+
+The shared runner reports **Apple M5 Max** (`Mac17,6`, 128 GB; `sysctl machdep.cpu.brand_string`). The tracked
+receipts name "Apple M3 Max" up to 2026-10-19 and "Apple M5 Max" from 2026-10-22, so the `1cb79549`, `f4aa1670` and
+`2cbc4dc4` closeouts above, which say M3 Max, most likely ran on this M5 Max. Val's accepted budget (2026-10-17) was
+measured on the M3 Max with `studio-pilot-perf.mjs` at `b0e2d78a`/`1221547e`. That profile was not re-run here:
+it isn't one of this round's scenarios, and frame times at load 20–50 would not be a fair measurement.
+
+### Gates
+
+- `pnpm run verify` (core), revision `f0d01729`, under the browser lock (29 minutes queued behind other sessions'
+  runs), 13:26–13:33Z, load 22–30: passed, all 11 tasks. Agent 294/294; preview 4,739 passed, 1 skipped, 35 todo;
+  server 1,110 passed, 285 skipped (Redis and other env-gated tests); desktop 127 passed, 5 skipped; build, Python
+  lint/format/tests (215), demo and its verifier, and secrets. Receipt `.runtime/agent/core.json` (`dirty: true`:
+  only this ledger edit and the untracked `data/reports/studio-417-f0d01729-*.json` receipts; no source change).
+- Not run: isolated Redis/full, `studio-pilot-perf.mjs`, physical devices, VoiceOver, packaged Electron. None of this
+  is human review.
+
+### Register
+
+- `studio-acceptance-417-refresh-20261015`: settled. `queued`, `owner: null`, `branches: []`, with Val's
+  `cancellation` (2026-10-24) recorded; `project:check` on 2026-10-30 no longer reports it. Rechecked: no worktree,
+  no local or `origin` branch, no tag. `project:cancel` has nothing to act on, and nothing is left to decide.
+- The three delivered #417 checkouts named in the `2cbc4dc4` section are gone from disk, and their tasks
+  (`studio-review-417-20261022`, `studio-417-closeout-20261023`, `studio-417-closeout-f4aa1670-20261023`,
+  `studio-417-closeout-2cbc4dc4-20261024`, `studio-acceptance-417-20261018`) are `retired`.
+- `studio-417-closeout-presign-backup-20261023` and `unowned-recovery-refs-20261022` are `queued` cancellations with
+  archive manifests (`cancel-stale-Aohv70`, `cancel-stale-lPuciv`).
+- `project:check`'s only remaining gap touching these records is the machine-wide one: 285 tasks point at restoration
+  archives missing from this machine (the 2026-10-22 backup wipe). That is not #417-specific.
+
+### Decisions for Val
+
+1. **Human review (#417's only open requirement).** No result is recorded on #417 yet. The checklist in the packet
+   comment for this round is the precise outstanding list: VoiceOver, keyboard, touch, uncoached use and the Café items.
+   Each fail becomes a fix PR or an accepted, documented limit.
+2. **Review host.** The accepted desktop budget was measured on an M3 Max; this machine is now an M5 Max. Accept the
+   M3 measurement as the profile of record, or re-measure `studio-pilot-perf.mjs` on the M5 Max when the machine is quiet.
+3. **Café phone/other-GPU review** and **touch walking**: run, defer or drop, unchanged.
+4. **Café in a creator region**: now on main (dark). Review it from main with `RIVER_OAKS_APPROVED_SPACES=1`, or
+   leave it with #420 (optional, deferred; activation and the CPU-rendered door stall are already held there).
+5. **#413's "#359 not regressed" box**: yours to tick or leave, from the table above.
+6. **Landing this branch's PR** (ledger and receipts only): needs your merge authorization.
