@@ -76,8 +76,12 @@ test('a low-tier or CPU-drawn client animates at most three neighbours, all with
   // The tier is the character fidelity tier: a client that has shed render scale and occlusion is low.
   assert.equal(residentFigureBudget(fidelityTierForQuality({ mode: 'auto', scale: .5, occlusion: false })), low);
   assert.equal(residentFigureBudget(fidelityTierForQuality({ mode: 'auto', scale: 1, occlusion: true })), RESIDENT_FIGURE_BUDGETS.full);
-  // Stepping down mid-walk: a figure drawn at 40 m stays only within the keep margin, then goes.
+  // Stepping down mid-walk: the cap, not only the range, drops drawn figures. local-4 (28 m) and
+  // local-5 (34 m) are both inside 30 m + the keep margin, so only the cap of three removes them.
   const drawn = new Set(ids(residentFigures(row, me)));
-  assert.ok(drawn.has('local-6'), 'drawn at 40 m on the full budget');
-  assert.ok(!ids(residentFigures(row, me, drawn, low)).includes('local-6'), 'not among the three nearest on the low budget');
+  assert.ok(drawn.has('local-4') && drawn.has('local-5'), 'drawn on the full budget');
+  assert.deepEqual(ids(residentFigures(row, me, drawn, low)), ['local-0', 'local-1', 'local-2'], 'the three nearest drawn ones stay');
+  // A drawn figure just past 30 m is kept while fewer than three are nearer.
+  const sparse = [local('a', 33, 0), local('b', 50, 0)];
+  assert.deepEqual(ids(residentFigures(sparse, me, new Set(['a', 'b']), low)), ['a'], 'kept within the 10 m margin, dropped beyond it');
 });
