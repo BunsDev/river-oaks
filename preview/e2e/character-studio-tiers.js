@@ -42,9 +42,11 @@ async page => {
   await p.waitForFunction(()=>document.querySelector('.character-studio').dataset.accountPhase==='ready');
  };
  // Realistic looks have no color choices, so they pass no palette.
- const wear=async(p,id,character,palette,appearance=null)=>{
+ // A realistic look may be previewed at a Studio detail tier first (#441); the tier stays in the Studio.
+ const wear=async(p,id,character,palette,appearance=null,detail=null)=>{
   await open(p);const dialog=studio(p);
   await dialog.locator(`[data-character=${character}]`).click();if(palette)await dialog.getByRole('radio',{name:palette,exact:true}).click();
+  if(detail){await dialog.getByRole('radio',{name:detail,exact:true}).click();await p.waitForFunction(()=>document.querySelector('.cs-preview').dataset.realismTier==='low');}
   await dialog.locator('[data-wear]').click();
   await p.waitForFunction(()=>['ready','error','conflict'].includes(document.querySelector('.character-studio').dataset.accountPhase));
   if(await dialog.locator('[data-retry]').isVisible()){await p.waitForTimeout(2200);await dialog.locator('[data-retry]').click();}
@@ -151,8 +153,9 @@ async page => {
   // #517 realistic looks: each viewer applies the material tier its own
   // graphics choice implies (Sharpest high, Smoothest standard) to one definition.
   await page.waitForTimeout(2200);
-  const morgan=await wear(page,'alice','morgan',null,'morgan-human');
+  const morgan=await wear(page,'alice','morgan',null,'morgan-human','Low detail');
   check(morgan.ownerId==='alice'&&morgan.appearanceId==='morgan-human'&&morgan.revision>alice.revision,'Owner publishes the realistic Morgan look as a new owned revision');
+  check(JSON.stringify(morgan.parameters)==='{}'&&!/tier|quality|lod/i.test(JSON.stringify(morgan))&&leaked('alice').length===0,'Wearing Morgan after a Studio Low detail preview publishes the canonical look and sends no tier');
   const imani=await wear(peer,'bob','imani',null,'imani-human');
   check(imani.ownerId==='bob'&&imani.appearanceId==='imani-human'&&imani.revision>bob.revision,'Peer publishes the realistic Imani look as a new owned revision');
   await agrees(peer,'alice',morgan);await agrees(page,'bob',imani);

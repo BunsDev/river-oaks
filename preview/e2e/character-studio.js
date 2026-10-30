@@ -58,6 +58,30 @@ async page => {
   await dialog.getByRole('button',{name:'Remix Kai',exact:true}).click();
   check(await dialog.getAttribute('data-appearance')!=='kai-noir'&&(await dialog.getAttribute('data-appearance')).match(/kai|man-workwear/)&&/^Remix: Kai/.test(await dialog.locator('[data-cs-announce]').evaluate(n=>new Promise(r=>requestAnimationFrame(()=>r(n.textContent))))),'Remix varies the current character and announces the result');
   await dialog.getByRole('button',{name:'Surprise me',exact:true}).click();check(await dialog.getAttribute('data-appearance'),'Curated randomize produces a valid choice');
+  // #441 realistic slice: Morgan offers only the contract's detail tiers; fit, body and hair stay locked with reasons.
+  const announced=()=>dialog.locator('[data-cs-announce]').evaluate(n=>new Promise(r=>requestAnimationFrame(()=>r(n.textContent))));
+  const drawn=tier=>page.waitForFunction(tier=>{const el=document.querySelector('.cs-preview');return el.dataset.ready==='true'&&el.dataset.realismRequested===tier&&el.dataset.realismTier===tier;},tier);
+  await dialog.locator('[data-character=morgan]').click();await ready('morgan-human');
+  const autoTier=await page.waitForFunction(()=>{const tier=document.querySelector('.cs-preview').dataset.realismTier;return tier&&tier!=='off'&&tier;}).then(handle=>handle.jsonValue());
+  check(await dialog.locator('[data-cs-realism]').isVisible()&&await dialog.locator('[data-cs-color-set]').isHidden()&&await dialog.getAttribute('data-tier')==='auto','Morgan shows a detail step in place of colors, starting at Match graphics');
+  check(JSON.stringify(await dialog.locator('[data-cs-tiers] input').evaluateAll(nodes=>nodes.map(n=>n.value)))==='["auto","low","standard","high"]','The detail choices are the contract tiers, without the diagnostic off');
+  const locks=await dialog.locator('[data-locked]').evaluateAll(nodes=>nodes.map(n=>({control:n.dataset.locked,disabled:n.getAttribute('aria-disabled'),reason:document.getElementById(n.getAttribute('aria-describedby'))?.textContent??''})));
+  check(locks.map(item=>item.control).join()==='fit,body,hair'&&locks.every(item=>item.disabled==='true'&&item.reason.length>20),`Fit, body and hair are locked with an in-place reason: ${JSON.stringify(locks)}`);
+  await dialog.locator('[data-locked=body]').focus();await page.keyboard.press('Enter');check(/Body and height stays as designed/.test(await dialog.locator('.cs-status').innerText()),'Activating a locked control repeats its reason');
+  check(/Previewing at .* on this device/.test(await dialog.locator('[data-cs-tier-status]').innerText()),'The detail step says which tier the preview draws');
+  await dialog.getByRole('radio',{name:'Low detail',exact:true}).click();await drawn('low');
+  check(await dialog.getAttribute('data-tier')==='low'&&await dialog.getByRole('img',{name:'Live preview: Morgan, Realistic human, Low detail'}).isVisible(),'Choosing Low detail re-tiers the live preview and names it');
+  await page.screenshot({path:'output/playwright/character-studio-realistic-low.png'});
+  // The original is the look worn when the Studio opened, drawn at its own setting, never at the staged tier.
+  await dialog.getByRole('button',{name:'Before / after',exact:true}).click();
+  await page.waitForFunction(()=>{const el=document.querySelector('.cs-preview');return el.dataset.ready==='true'&&el.dataset.appearance!=='morgan-human'&&el.dataset.realismRequested!=='low';});
+  check(await dialog.getByRole('img',{name:/^Original look: /}).isVisible()&&!/Low detail/.test(await dialog.locator('.cs-preview canvas').getAttribute('aria-label')),'Before / after shows the original look without the staged tier');
+  await dialog.getByRole('button',{name:'Before / after',exact:true}).click();await drawn('low');
+  await dialog.getByRole('button',{name:'Undo',exact:true}).click();await drawn(autoTier);
+  check(await dialog.getAttribute('data-tier')==='auto'&&/^Undone: Morgan, Realistic human, Match graphics/.test(await announced()),'Undo restores and announces the previous tier');
+  await dialog.getByRole('button',{name:'Redo',exact:true}).click();await drawn('low');
+  check(/^Redone: Morgan, Realistic human, Low detail/.test(await announced()),'Redo restores the tier');
+  check(await page.locator('#canvas-host').getAttribute('data-player-appearance')===before&&await dialog.getAttribute('data-appearance')==='morgan-human','A tier is a preview choice: the town look is unchanged');
   await page.keyboard.press('Escape');check(!await dialog.isVisible(),'Escape closes the Studio');check(await page.getByRole('button',{name:'Open character studio',exact:true}).evaluate(n=>n===document.activeElement),'Closing restores focus to the entry');
   // Keyboard only, from the Studio entry to a saved draft: no pointer events.
   const keys=await page.context().browser().newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
@@ -81,6 +105,17 @@ async page => {
     check(await tabTo('[data-save]'),'Keyboard reaches Save draft');await board.keyboard.press('Enter');
     await board.waitForFunction(()=>/Private draft saved/.test(document.querySelector('.character-studio [data-account-status]').textContent));
     check(true,'Keyboard saves the draft privately');
+    // Keyboard alone through Imani's detail tiers and locked controls, then a private save of the canonical look.
+    check(await tabTo('cs-character'),'Keyboard returns to the character choices');
+    while(await studio.getAttribute('data-appearance')!=='imani-human'){await board.keyboard.press('ArrowRight');if(await studio.getAttribute('data-appearance')==='sable-human')break;}
+    await settled('imani-human');
+    check(await tabTo('cs-tier'),'Keyboard reaches the detail tiers');await board.keyboard.press('ArrowRight');
+    check(await studio.getAttribute('data-tier')==='low','Arrow keys move through the detail tiers');
+    check(await tabTo('[data-locked]')&&await board.evaluate(()=>document.activeElement.getAttribute('aria-disabled')==='true'&&Boolean(document.getElementById(document.activeElement.getAttribute('aria-describedby'))?.textContent)),'Keyboard reaches a locked control and its reason');
+    check(await tabTo('[data-save]'),'Keyboard reaches Save draft for Imani');await board.keyboard.press('Enter');
+    await board.waitForFunction(()=>/Private draft saved/.test(document.querySelector('.character-studio [data-account-status]').textContent));
+    const saved=(await board.evaluate(()=>fetch('/api/character').then(r=>r.json()))).character.draft;
+    check(saved.appearanceId==='imani-human'&&saved.rig==='woman-realistic-tailored'&&JSON.stringify(saved.parameters)==='{}'&&!/tier|quality|lod/i.test(JSON.stringify(saved)),`The saved draft is the canonical Imani look with no tier: ${JSON.stringify(saved)}`);
     await board.keyboard.press('Escape');check(!await studio.evaluate(n=>n.open)&&await board.getByRole('button',{name:'Open character studio',exact:true}).evaluate(n=>n===document.activeElement),'Escape closes the keyboard session and returns focus to the entry');
   }finally{await keys.close();}
   // Real touch context, same existing authenticated fixture cookie.
@@ -96,6 +131,12 @@ async page => {
     check(await mobile.locator('[data-palette=botanical]').isVisible(),'Phone color choices remain reachable');
     check(await mobile.evaluate(n=>n.scrollWidth<=n.clientWidth),'Phone dialog has no horizontal overflow');
     await mobile.locator('.cs-workspace').evaluate(n=>n.scrollTop=0);await phone.screenshot({path:'output/playwright/character-studio-phone.png'});
+    await mobile.locator('[data-character=imani]').tap();await phone.waitForFunction(()=>document.querySelector('.cs-preview').dataset.appearance==='imani-human'&&document.querySelector('.cs-preview').dataset.ready==='true');
+    await mobile.getByRole('radio',{name:'Standard detail',exact:true}).tap();
+    await phone.waitForFunction(()=>document.querySelector('.cs-preview').dataset.realismTier==='standard');
+    check(await mobile.getAttribute('data-tier')==='standard'&&await mobile.locator('#cs-locked-hair').isVisible(),'Touch chooses a detail tier and the locked reasons stay readable');
+    check(await mobile.evaluate(n=>n.scrollWidth<=n.clientWidth),'Phone detail step has no horizontal overflow');
+    await mobile.locator('[data-cs-realism]').scrollIntoViewIfNeeded();await phone.screenshot({path:'output/playwright/character-studio-realistic-phone.png'});
     await mobile.getByRole('button',{name:'Close character studio',exact:true}).tap();
   }finally{await touch.close();}
   const animated=await page.context().browser().newContext({viewport:{width:1440,height:1000},reducedMotion:'no-preference'});
@@ -116,5 +157,5 @@ async page => {
     await moving.keyboard.press('Escape');
   }finally{await animated.close();}
   check(errors.length===0,`No runtime errors: ${errors.join('; ')}`);
-  return {passed:true,checks,scope:'Automated desktop/touch/reduced-motion draft journey; no published revisions or human accessibility acceptance'};
+  return {passed:true,checks,scope:'Automated desktop/touch/reduced-motion draft journey, including the realistic detail tiers; no published revisions or human accessibility acceptance'};
 }
