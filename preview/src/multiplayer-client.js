@@ -10,6 +10,7 @@ import { createGroupsUI } from './groups-ui.js';
 import { createWorkplaceUI } from './workplace-ui.js';
 import { accountName } from './resident-names.js';
 import { travelRefusal } from './travel-message.js';
+import { noticeSessionAccount } from './access-recheck.js';
 import { watchConnection } from './connection-deadline.js';
 import { CONNECTING, IMPROVED, UPDATING, closeNotice, createStalenessWatch, retryDelay } from './connection-policy.js';
 import { createVoiceChat } from './voice-chat.js';
@@ -231,6 +232,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     if(stopped||signingOut||asked!==authorization||attempt!==townAttempt)return null;
     if(!session.authenticated){identity=null;csrfToken=null;detachBlocks();displayPlayers([]);return 'signed-out';}
     identity=session.user;csrfToken=session.csrfToken;
+    noticeSessionAccount(identity.id);
     attachBlocks();
     const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});if(stopped||signingOut||asked!==authorization||attempt!==townAttempt)return null;moderator=access.moderator;
     // Ask for the protocol this world's ticket names, so an older server or world keeps protocol 3.
