@@ -1,0 +1,83 @@
+{
+  "createdAt": "2026-10-30T12:48:16.213Z",
+  "results": [
+    {
+      "name": "studio-template-journey",
+      "status": "passed",
+      "seconds": 45.017,
+      "result": {
+        "passed": true,
+        "templateId": "cafe",
+        "checks": [
+          "Corner Café opens with its required routes passing",
+          "valid edit (cafe-table-2 finish) is accepted with routes passing",
+          "blocking the terrace is refused with a finding",
+          "the refused move leaves terrace-planter-west where it was",
+          "undo restores the original finish",
+          "redo reapplies the edit",
+          "save keeps the cafe assessment context",
+          "reload reopens the saved draft and reassesses it",
+          "a stale tab cannot overwrite the newer saved draft",
+          "the other tab's save is kept",
+          "the saved layout assesses as passing",
+          "walked to all 4 required destinations and back to the arrival",
+          "returned to the editor after the walk"
+        ],
+        "tour": [
+          {
+            "target": "cafe-1",
+            "waypoints": 2,
+            "reached": [
+              0,
+              -2.1
+            ],
+            "home": [
+              0,
+              -8.3
+            ],
+            "seconds": 8.324
+          },
+          {
+            "target": "cafe-2",
+            "waypoints": 2,
+            "reached": [
+              0,
+              0.9
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 12.218
+          },
+          {
+            "target": "cafe-3",
+            "waypoints": 2,
+            "reached": [
+              0,
+              4.4
+            ],
+            "home": [
+              0,
+              -8.6
+            ],
+            "seconds": 16.584
+          },
+          {
+            "target": "cafe-4",
+            "waypoints": 2,
+            "reached": [
+              3,
+              -8
+            ],
+            "home": [
+              0.1,
+              -8.5
+            ],
+            "seconds": 4.739
+          }
+        ]
+      }
+    }
+  ]
+}
