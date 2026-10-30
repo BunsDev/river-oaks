@@ -3,7 +3,7 @@
 **Jevica belongs to the approved waitlist administrator account**
 (`user_01M40Y914S1H4EJCEHH91DKTAY` in Staging; `user_01M402HKJYDTH1QJM5NAQDZ4HH` in Production). Other accounts start as Sable and cannot
 select either Jevica form. Only that account
-can call Jev and her vehicle in multiplayer. Among playable characters, only Jevica can fly. Players can choose the seven other
+can call Jev and her pink car in multiplayer; the rose motorcycle is in every account's garage, and its rider drives it. Among playable characters, only Jevica can fly. Players can choose the seven other
 characters, and every character comes in a humanoid and a beast form; see
 [characters, styles and forms](#characters-styles-and-forms). The Witch and Alien forms were removed
 on September 23, 2026, together with their portraits, costumes, broom and personal

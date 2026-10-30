@@ -35,9 +35,9 @@ test('the migrated Nineteenth & Yale crossroads derives its four blocks from qua
   assert.equal(geometryHash(derived), lock.geometry, 'the ground the authored blocks put down, recorded before the migration');
   assert.equal(yale.layout.migrated.geometry, lock.geometry);
   // Hand-authored recipes carry no layout provenance, so their committed hashes stand.
-  const terrace = read('bayou-terrace-north'), authored = assembleNeighborhood(terrace);
+  const greenway = read('bayou-greenway'), authored = assembleNeighborhood(greenway);
   assert.equal(authored.provenance.layout, undefined);
-  assert.equal(authored.hash, read('bayou-terrace-north.lock').hash);
+  assert.equal(authored.hash, read('bayou-greenway.lock').hash);
 });
 
 test('the example grid derives blocks that face the main street, split back to back and face crossing streets at corners', () => {
@@ -207,4 +207,20 @@ test('destination build and layout report the derivation; --freeze writes the sa
   assert.equal(geometry(after), geometry(before));
   assert.equal(after.provenance.layout, undefined);
   assert.ok(!existsSync(join(dir, 'missing')));
+});
+
+test('an inset stands a block back from its land: validated, kept off a split, and never emptying the land', () => {
+  const inset = structuredClone(example);
+  inset.layout.quarters[1].inset = [1, 0.5, 2, 0];
+  const plain = derive(example).blocks.find(block => block.id === 'south-row'), set = derive(inset).blocks.find(block => block.id === 'south-row');
+  assert.deepEqual(set.rect, [plain.rect[0] + 1, plain.rect[1] + 0.5, plain.rect[2] - 2, plain.rect[3]]);
+  assert.equal(set.front, plain.front, 'the land still meets its street, so the block faces the same way');
+  for (const bad of [[1, 2, 3], [0, 0, -1, 0], [0, 0, Number.NaN, 0], 'east']) {
+    const recipe = structuredClone(example); recipe.layout.quarters[1].inset = bad;
+    assert.throws(() => assembleNeighborhood(recipe), /inset must be four distances/);
+  }
+  const split = structuredClone(example); split.layout.quarters[0].inset = [0, 0, 0, 0];
+  assert.throws(() => assembleNeighborhood(split), /an inset places one block, but land .* splits into two; set split none/);
+  const empty = structuredClone(example); empty.layout.quarters[1].inset = [0, 0, 0, 400];
+  assert.throws(() => assembleNeighborhood(empty), /leaves no block on land/);
 });

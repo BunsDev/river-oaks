@@ -1,9 +1,10 @@
-// The shipped world as quarters (#585). Sixteen committed neighborhoods, 30 blocks,
+// The shipped world as quarters (#585). Eighteen committed neighborhoods, 32 blocks,
 // were rewritten from hand-authored blocks to quarters by `destination migrate`
-// (increment 8). The proof is the geometry hash each lock recorded on the authored
-// form in commit 8d2668af, pinned here: the migrated recipe must put the same
-// ground, piece for piece. The two terrace recipes stay authored because their row
-// was hand-placed half a metre off its lane, so no quarter form reproduces it.
+// (increment 8; the two terraces in Phase 3). The proof is the geometry hash each lock
+// recorded on the authored form (commit 8d2668af; the terraces' locks on main bea70e05),
+// pinned here: the migrated recipe must put the same ground, piece for piece. The
+// terrace rows were hand-placed half a metre off their lane; their quarters keep that
+// with an inset.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -22,6 +23,8 @@ const shells = plan => plan.pieces.filter(piece => piece.piece.startsWith('build
 // What the hand-authored blocks put on the ground, recorded by `destination build --lock` before the migration.
 const AUTHORED_GEOMETRY = {
   'bayou-market-commons': 'f0c1ce10921e2c7a',
+  'bayou-terrace-north': '57ec6291e36c63a3',
+  'bayou-terrace-south': '4bc9dd68a9b5780e',
   'heights-boulevard-north': 'fcd0476b880c4c99',
   'heights-boulevard-south': 'faa0cc8b542c3705',
   'nineteenth-and-yale': '2e05bf8475d0be92',
@@ -39,7 +42,7 @@ const AUTHORED_GEOMETRY = {
   'yale-street-south': 'e9cbe520dbc54b0a',
 };
 
-test('sixteen migrated neighborhoods, 30 blocks, put the same ground as their hand-authored blocks did', () => {
+test('eighteen migrated neighborhoods, 32 blocks, put the same ground as their hand-authored blocks did', () => {
   let blocks = 0;
   for (const [name, geometry] of Object.entries(AUTHORED_GEOMETRY)) {
     const recipe = read(name), lock = read(`${name}.lock`);
@@ -53,7 +56,7 @@ test('sixteen migrated neighborhoods, 30 blocks, put the same ground as their ha
     assert.equal(plan.provenance.layout.blocks.length, recipe.layout.migrated.blocks, `${name} derives one block per authored block`);
     blocks += recipe.layout.migrated.blocks;
   }
-  assert.equal(blocks, 30);
+  assert.equal(blocks, 32);
   const migrated = names.filter(name => read(name).layout?.migrated).sort();
   assert.deepEqual(migrated, Object.keys(AUTHORED_GEOMETRY).sort(), 'no other recipe carries a migration record');
 });
@@ -80,32 +83,27 @@ test('the migration kept every rectangle: no shipped block fills its land out to
   let loose = 0, stated = 0;
   for (const name of Object.keys(AUTHORED_GEOMETRY)) for (const quarter of read(name).layout.quarters) { if (quarter.rect === undefined) loose++; if (quarter.front !== undefined) stated++; }
   assert.equal(loose, 0);
-  assert.equal(stated, 24, 'twenty-four of thirty quarters still state the front the author chose; six rows take the auto rule');
+  // The two terrace rows state theirs as well: they stand back from the lane by an inset, which the auto rule does not choose.
+  assert.equal(stated, 26, 'twenty-six of thirty-two quarters still state the front the author chose; six rows take the auto rule');
 });
 
-test('the terrace studio rows sit half a metre off Terrace Lane by hand, so they stay authored; flush to the lane, every shell moves that half metre and six rear wings gain a bay', () => {
-  const deeper = [];
+test('the terrace studio rows stand half a metre off Terrace Lane: as quarters an inset keeps that, and a wider lane still moves them', () => {
   for (const name of ['bayou-terrace-north', 'bayou-terrace-south']) {
-    const recipe = read(name), [block] = recipe.blocks, lane = recipe.streets.find(s => s.id === 'terrace-lane'), kerb = lane.from[0] - lane.lane / 2 - lane.sidewalk;
-    assert.equal(kerb - block.rect[2], 0.5, `${name}: the authored row stops 0.5 m short of the corridor at ${kerb}`);
-    const refused = migrateRecipe(recipe);
-    assert.equal(refused.recipe, null);
-    assert.match(refused.reason, /studio-row: land .* has no street on its east side/, 'as authored, no street bounds the land');
-    const quarter = { id: block.id, rect: [block.rect[0], block.rect[1], kerb, block.rect[3]], style: block.style, depth: block.depth, storeys: block.storeys, bays: block.bays, names: block.names, front: block.front, sides: block.sides };
-    const flush = { ...structuredClone(recipe), blocks: [], layout: { quarters: [quarter], reserved: [] } };
-    const authored = shells(assembleNeighborhood(structuredClone(recipe))), derived = shells(assembleNeighborhood(flush));
-    assert.equal(derived.length, authored.length);
-    for (const [i, piece] of authored.entries()) {
-      const moved = derived[i];
-      assert.equal(moved.id, piece.id);
-      // A shell moves with its front; a rear wing keeps its back on the block's back edge and only its front moves.
-      assert.deepEqual(moved.rect.map((v, k) => Math.round((v - piece.rect[k]) * 1000) / 1000), piece.id.endsWith('/rear') ? [0, 0, 0.5, 0] : [0.5, 0, 0.5, 0], `${piece.id} moves 0.5 m east`);
-      const { rect: _a, bays: bays0, ...rest0 } = piece, { rect: _b, bays: bays1, ...rest1 } = moved;
-      assert.deepEqual(rest1, rest0, `${piece.id} is otherwise the same shell`);
-      if (bays1 !== bays0) { assert.ok(piece.id.endsWith('/rear'), `${piece.id}: only a rear wing, half a metre deeper, may gain a bay`); deeper.push(piece.id.split('/').slice(1).join('/')); }
-    }
+    const recipe = read(name), [quarter] = recipe.layout.quarters, lane = recipe.streets.find(s => s.id === 'terrace-lane');
+    const kerb = lane.from[0] - lane.lane / 2 - lane.sidewalk;
+    assert.equal(quarter.rect[2], kerb, `${name}: the quarter's land runs to the corridor at ${kerb}`);
+    assert.deepEqual([quarter.rect[1], quarter.rect[3]], [lane.from[1], lane.to[1]].sort((a, b) => a - b), `${name}: and only as long as the lane, so a wider lane leaves no strip past its end`);
+    assert.equal(quarter.inset[2], 0.5, `${name}: the row stands 0.5 m back from it, as it was hand-placed`);
+    const plan = assembleNeighborhood(structuredClone(recipe)), [block] = plan.provenance.layout.blocks;
+    assert.equal(block.rect[2], kerb - 0.5);
+    assert.deepEqual(plan.provenance.layout.warnings, [], `${name}: the row is wholly on its street`);
+    // Two metres more lane, nothing else typed: the corridor's west edge moves 1 m west and the row with it, still half a metre back.
+    const wider = structuredClone(recipe);
+    wider.streets.find(s => s.id === 'terrace-lane').lane += 2;
+    const moved = assembleNeighborhood(wider).provenance.layout.blocks[0];
+    assert.equal(moved.rect[2], kerb - 1.5, `${name}: the street edit moves the row with no rectangle retyped`);
+    assert.deepEqual([moved.rect[0], moved.rect[1], moved.rect[3]], [block.rect[0], block.rect[1], block.rect[3]]);
   }
-  assert.deepEqual(deeper, ['studio-row/parcel-5/rear', 'studio-row/parcel-9/rear', 'studio-row/parcel-12/rear', 'studio-row/parcel-16/rear', 'studio-row/parcel-0/rear', 'studio-row/parcel-4/rear'], 'six rear wings (four north, two south), half a metre deeper, gain a bay');
 });
 
 test('court furniture may stand in a derived court, and a stated front on the site edge faces the neighbouring recipe', () => {

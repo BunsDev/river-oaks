@@ -12,6 +12,9 @@ import { treeGrateTexture } from '../street-furniture.js';
 // sample `groundAt`, the same height function movement uses.
 const G = KIT_CONVENTIONS.storey.ground, U = KIT_CONVENTIONS.storey.upper;
 const unit = new THREE.BoxGeometry(1, 1, 1);
+// The unit box, de-indexed once: a batch writes each box's 36 corners straight into its
+// material's arrays instead of cloning, transforming and de-indexing a BoxGeometry per box.
+const unitPositions = unit.toNonIndexed().attributes.position.array, unitNormals = unit.toNonIndexed().attributes.normal.array;
 // Text and glow textures need a canvas; headless builds (Node tests) render without them.
 const headless = typeof document === 'undefined';
 const canvas2d = (width, height) => headless ? null : Object.assign(document.createElement('canvas'), { width, height });
@@ -49,32 +52,37 @@ function createMaterials(finish = 'classic') {
 
 // Surface materials expect UVs in metres (materials.js). A box face takes the two
 // world axes in its plane, vertical as v, so courses stay level and joints line
-// up across neighbouring boxes.
-function metricUv(geometry) {
-  const position = geometry.attributes.position, normal = geometry.attributes.normal, uv = geometry.attributes.uv;
-  for (let i = 0; i < position.count; i++) {
-    const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
-    const nx = Math.abs(normal.getX(i)), ny = Math.abs(normal.getY(i)), nz = Math.abs(normal.getZ(i));
-    if (ny >= nx && ny >= nz) uv.setXY(i, x, z);
-    else if (nx >= nz) uv.setXY(i, z, y);
-    else uv.setXY(i, x, y);
-  }
-  uv.needsUpdate = true;
-}
+// up across neighbouring boxes (written per corner by createBatch's box).
 
 // A rectangle's border, `width` wide, as four [west, south, east, north] strips that do not overlap.
 const frame = ([w, s, e, n], width) => [[w, s, e, s + width], [w, n - width, e, n], [w, s + width, w + width, n - width], [e - width, s + width, e, n - width]];
 
 // Accumulates transformed geometry per material, then merges.
-function createBatch() {
-  const parts = new Map(), matrix = new THREE.Matrix4(), quaternion = new THREE.Quaternion(), euler = new THREE.Euler();
-  const add = (material, geometry) => { if (!parts.has(material)) parts.set(material, []); parts.get(material).push(geometry); };
+export function createBatch() {
+  const parts = new Map(), runs = new Map(), matrix = new THREE.Matrix4(), quaternion = new THREE.Quaternion(), euler = new THREE.Euler();
+  const normalMatrix = new THREE.Matrix3(), vertex = new THREE.Vector3(), stored = new Float32Array(6);
+  const list = material => { if (!parts.has(material)) parts.set(material, []); return parts.get(material); };
+  // Another geometry closes the material's run of boxes, so the merge keeps the order they were added in.
+  const add = (material, geometry) => { list(material).push(geometry); runs.delete(material); };
   // Box centred at world (east, up, north) in metres, yaw about up (radians, from east toward north).
+  // The same arithmetic, in the same order, as cloning the unit box, BufferGeometry.applyMatrix4,
+  // the metric UVs above and toNonIndexed did: the merged buffers are byte-identical
+  // (city-kit-batch.test.js).
   const box = (material, east, up, north, sizeAlong, height, sizeAcross, yaw = 0, pitch = 0) => {
-    const geometry = unit.clone();
     euler.set(pitch, yaw, 0, 'YXZ'); quaternion.setFromEuler(euler);
     matrix.compose(new THREE.Vector3(east, up, -north), quaternion, new THREE.Vector3(sizeAlong, height, sizeAcross));
-    geometry.applyMatrix4(matrix); metricUv(geometry); add(material, geometry);
+    normalMatrix.getNormalMatrix(matrix);
+    let run = runs.get(material);
+    if (!run) { run = { positions: [], normals: [], uvs: [] }; list(material).push(run); runs.set(material, run); }
+    const { positions, normals, uvs } = run;
+    for (let i = 0; i < unitPositions.length; i += 3) {
+      // Stored as 32-bit floats, as a BufferAttribute would; the UVs read the stored values.
+      vertex.fromArray(unitPositions, i).applyMatrix4(matrix); stored[0] = vertex.x; stored[1] = vertex.y; stored[2] = vertex.z;
+      vertex.fromArray(unitNormals, i).applyNormalMatrix(normalMatrix); stored[3] = vertex.x; stored[4] = vertex.y; stored[5] = vertex.z;
+      const [x, y, z, nx, ny, nz] = stored, ax = Math.abs(nx), ay = Math.abs(ny), az = Math.abs(nz);
+      positions.push(x, y, z); normals.push(nx, ny, nz);
+      if (ay >= ax && ay >= az) uvs.push(x, z); else if (ax >= az) uvs.push(z, y); else uvs.push(x, y);
+    }
   };
   const mesh = (material, geometry, east, up, north, yaw = 0, scale = [1, 1, 1]) => {
     const copy = geometry.clone(); euler.set(0, yaw, 0); quaternion.setFromEuler(euler);
@@ -88,15 +96,24 @@ function createBatch() {
   const build = (group, name, { shadows = true } = {}) => {
     const geometries = [];
     for (const [material, list] of parts) {
-      const merged = mergeGeometries(list.map(item => item.index ? item.toNonIndexed() : item), false);
-      list.forEach(item => item.dispose());
+      const geometryOf = item => {
+        if (item.isBufferGeometry) return item.index ? item.toNonIndexed() : item;
+        const run = new THREE.BufferGeometry();
+        run.setAttribute('position', new THREE.Float32BufferAttribute(item.positions, 3));
+        run.setAttribute('normal', new THREE.Float32BufferAttribute(item.normals, 3));
+        run.setAttribute('uv', new THREE.Float32BufferAttribute(item.uvs, 2));
+        return run;
+      };
+      const flat = list.map(geometryOf), merged = mergeGeometries(flat, false);
+      flat.forEach((item, i) => item !== list[i] && item.dispose());
+      list.forEach(item => item.isBufferGeometry && item.dispose());
       if (!merged) continue;
       merged.computeBoundingSphere();
       const result = new THREE.Mesh(merged, material); result.name = `${name}:${material.name}`;
       result.castShadow = shadows && !material.transparent; result.receiveShadow = true;
       group.add(result); geometries.push(merged);
     }
-    parts.clear();
+    parts.clear(); runs.clear();
     return geometries;
   };
   return { add, box, mesh, place, build };
