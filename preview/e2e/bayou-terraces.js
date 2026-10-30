@@ -32,6 +32,7 @@ async page => {
     if(await tab.locator('.visit-tools').evaluate(node=>node.open))await tab.locator('.visit-tools-toggle').click();
   };
   const { createWalkDriver } = await import('./walk-driver.js');
+  const { greenwayReturn } = await import('./bayou-terraces-routes.js');
   const { walk } = createWalkDriver({self,routes,refusals:'__heightsRefusals'});
   const command=(tab,message)=>tab.evaluate(message=>window.__riverMultiplayerCommand(message),message);
   const chunk=(tab,id)=>tab.evaluate(id=>window.__riverBayouHeights()?.stream?.chunks.find(chunk=>chunk.id===id)?.state??null,id);
@@ -53,6 +54,10 @@ async page => {
     console.log(`Heights resident ${streamed.residentBytes} of ${streamed.geometryBudgetBytes} bytes: measured ${JSON.stringify(streamed.measuredBytes)} estimated ${JSON.stringify(streamed.estimatedBytes)}; owned textures ${streamed.residentTextureBytes} bytes resident: ${JSON.stringify(streamed.measuredTextureBytes)}`);
     check(streamed.residentBytes<=streamed.geometryBudgetBytes&&Object.entries(streamed.measuredBytes).every(([id,bytes])=>bytes<=streamed.estimatedBytes[id]),
       'The north terrace streams in at the greenway, within the Heights geometry ceiling and each part within its estimate');
+    // With a real canvas the sign atlases exist: each neighborhood's owned textures measure under the estimate its plan gave the texture ceiling.
+    console.log(`Owned textures ${streamed.residentTextureBytes} of ${streamed.textureBudgetBytes} bytes: estimated ${JSON.stringify(streamed.estimatedTextureBytes)}`);
+    check(streamed.residentTextureBytes>0&&streamed.residentTextureBytes<=streamed.textureBudgetBytes&&Object.entries(streamed.measuredTextureBytes).every(([id,bytes])=>bytes<=streamed.estimatedTextureBytes[id]),
+      'The owned textures sit within the Heights texture ceiling and each neighborhood within its estimate');
     await capture(page,'greenway-footbridge');
     await Promise.all([walk(page,[at([130,112]),at([101,112])],'owner footbridge'),walk(peer,[at([130,110]),at([100,110])],'alice footbridge')]);
     check((await self(page)).position[0]<bank&&(await self(peer)).position[0]<bank,'Two real clients crossed the Twentieth Street footbridge onto the west bank by keyboard');
@@ -93,8 +98,8 @@ async page => {
     const reconnectMs=Date.now()-reconnectStart;
 
     // Back over the footbridge to the greenway, one player at a time, as the Heights journey does on CPU-rendered CI.
-    await walk(peer,[at([96,124]),at([100,110]),at([156.5,110])],'alice greenway');
-    await walk(page,[at([101,128]),at([101,112]),at([156.5,112])],'owner greenway');
+    await walk(peer,greenwayReturn.alice.map(at),'alice greenway');
+    await walk(page,greenwayReturn.owner.map(at),'owner greenway');
     check((await self(page)).position[0]>bank&&(await self(peer)).position[0]>bank,'Both players walked back over the footbridge to the greenway');
     check(await page.evaluate(()=>{const notices=window.__heightsNotices,terraces=notices.indexOf('Entering Bayou Terraces');
       return terraces>=0&&notices.indexOf('Entering Bayou Heights',terraces)>terraces;}),'Returning names Bayou Heights');

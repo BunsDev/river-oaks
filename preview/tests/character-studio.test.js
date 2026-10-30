@@ -77,7 +77,8 @@ test('making your own: a random start, partial recipe edits, rolls that keep the
   assert.equal(draft.value.parameters.face.noseWidth,-40);
   assert.deepEqual({...draft.value.parameters.face,noseWidth:start.parameters.face.noseWidth},start.parameters.face,'a slider edit changes only its feature');
   draft.change({recipe:{body:'man-tailored',height:191}});assert.equal(draft.value.rig,'man-tailored');assert.equal(draft.value.parameters.face.noseWidth,-40);
-  for(const bad of [{recipe:{height:260}},{recipe:{skin:'chrome'}},{recipe:{face:[1]}},{recipe:[]},{recipe:{face:{noseWidth:-40}},palette:'rose'}])assert.throws(()=>draft.change(bad),JSON.stringify(bad));
+  draft.change({recipe:{build:45}});assert.equal(draft.value.parameters.build,45);assert.equal(draft.value.parameters.height,191,'a build edit changes only the build');
+  for(const bad of [{recipe:{height:260}},{recipe:{build:7}},{recipe:{build:150}},{recipe:{skin:'chrome'}},{recipe:{face:[1]}},{recipe:[]},{recipe:{face:{noseWidth:-40}},palette:'rose'}])assert.throws(()=>draft.change(bad),JSON.stringify(bad));
   const before=draft.value.parameters;assert.equal(draft.roll(['face','eyes'],random),true);
   const after=draft.value.parameters;
   for(const [category,fields] of Object.entries(RECIPE_CATEGORIES))if(!['face','eyes'].includes(category))for(const field of fields)assert.deepEqual(after[field],before[field],`${field} kept`);
