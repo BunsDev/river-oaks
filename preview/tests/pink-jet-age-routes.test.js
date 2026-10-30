@@ -5,11 +5,17 @@ import { createCommonsLayout, insideRect } from '../../shared/east-garden-common
 import { composeCommonsDestination } from '../../shared/commons-destination.js';
 import { KIT_FINISHES } from '../../shared/city-kit/catalog.js';
 import { readFinishPreference } from '../src/render-quality.js';
-import { BLANK_LUMA_SPREAD, LIVE_FINISHES, ROUTE_HOURS, commonsCameras, districtPath, gardensCameras, imageVerdict, routeOptions, scenePose, validateCameras, validateReport, viewName } from '../e2e/pink-jet-age-routes-plan.mjs';
+import { BLANK_LUMA_SPREAD, EYE, LIVE_FINISHES, ROUTE_HOURS, ROUTE_PREFIX, commonsCameras, districtCameras, districtPath, gardensCameras, imageVerdict, routeOptions, scenePose, validateCameras, validateReport, viewName } from '../e2e/pink-jet-age-routes-plan.mjs';
+import { loadDistrictData } from '../../server/district-data.js';
+import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
+import { createWalkingEnvironment } from '../src/walking.js';
+import { terrainHeight } from '../src/geometry.js';
 
 // A synthetic District edge and flat edge heights: the same composition the client runs.
 const layout = composeCommonsDestination(createCommonsLayout({ districtBounds: [-2920, -1457, -2666.3, -1167], edgeHeights: Array(13).fill(18.4) }));
-const cameras = [...gardensCameras(), ...commonsCameras(layout)];
+// The composed District the runner serves (the Commons revision, with the Gardens campus).
+const world = await loadDistrictData({ districtRevision: COMMONS_REVISION });
+const cameras = [...gardensCameras(), ...commonsCameras(layout), ...districtCameras(world)];
 const levels = new Map(campusLevels().map(level => [level.id, level]));
 const gap = ([u0, v0, u1, v1], [u, v]) => Math.hypot(Math.max(u0 - u, 0, u - u1), Math.max(v0 - v, 0, v - v1));
 
@@ -40,6 +46,20 @@ test('Commons cameras follow the placed destination and stand inside its walkabl
   const tower = layout.destination.pieces.find(piece => piece.piece === 'landmark/water-tower').at;
   assert.deepEqual(commonsCameras(layout).find(camera => camera.id === 'b04-green-to-tower').source.target.slice(0, 2), tower, 'the tower view aims at the placed tower');
   assert.throws(() => commonsCameras({ ...layout, destination: { ...layout.destination, pieces: [] } }), /missing/);
+});
+
+test('District cameras start at the walk-in arrival and stand on free public ground at eye height', () => {
+  const district = districtCameras(world), environment = createWalkingEnvironment(world);
+  assert.deepEqual(district.map(camera => camera.stop), ['arrival', 'facade', 'entrance', 'crossing', 'aerial']);
+  assert.ok(district.every(camera => camera.route === 'district' && camera.frame === 'source'));
+  assert.deepEqual(district[0].source.position.slice(0, 2), world.walkSpawn.slice(0, 2), 'the arrival view is the walk spawn');
+  for (const camera of district.filter(item => item.stop !== 'aerial')) {
+    const [east, north, altitude] = camera.source.position;
+    assert.ok(environment.isFree(east, -north), `${camera.id} stands outside every building and collision polygon`);
+    assert.ok(Math.abs(altitude - terrainHeight(world.terrain, east, north) - EYE) < 1e-9, `${camera.id} at eye height over the terrain`);
+  }
+  assert.throws(() => districtCameras({}), /terrain/);
+  assert.deepEqual(Object.keys(ROUTE_PREFIX), ['gardens', 'commons', 'district']);
 });
 
 test('scene poses map campus and source metres into Three.js [east, up, -north]', () => {
