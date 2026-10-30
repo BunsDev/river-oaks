@@ -180,6 +180,42 @@ test('a resident walks across the seam into the Commons without teleporting',()=
   assert.ok(crossed,`reached ${local.position.map(value=>value.toFixed(1))}`);
 });
 
+test('a location over the grid cap is split into strips that residents cross at found seams',()=>{
+  // Bayou Heights (308 × 291 cells) is over the 80,000-cell cap. A small cap splits
+  // the Commons band (116 × 81) the same way, on ground this revision has.
+  const whole=createResidentNavigation(commons,{locations:true}),split=createResidentNavigation(commons,{locations:true,locationCells:5000});
+  const regions=split.locations.regions;
+  assert.deepEqual(regions.map(region=>region.id),['district',`${COMMONS_ID}#1`,`${COMMONS_ID}#2`]);
+  for(const {bounds} of regions.slice(1))assert.ok((Math.floor(bounds[2]-bounds[0])+1)*(Math.floor(bounds[3]-bounds[1])+1)<=5000);
+  assert.equal(regions[1].bounds[2],regions[2].bounds[0]);
+  assert.ok(split.locations.portals.some(portal=>portal.west===`${COMMONS_ID}#1`&&portal.east===`${COMMONS_ID}#2`),'the strips meet at a found seam');
+  // Splitting changes no walking answer.
+  const [west,south,east,north]=whole.locations.regions[1].bounds;
+  for(let x=west-20;x<=east;x+=1.5)for(let y=south;y<=north;y+=1.5)
+    assert.equal(split.free([x,y]),whole.free([x,y]),`free at ${x.toFixed(1)},${y.toFixed(1)}`);
+  // Residents still walk from the District to the far end and back.
+  const life=createResidentLife(commons,createCommunity(commons,[],{carriage:false}));
+  const tower=life.stops.find(stop=>stop.id.endsWith('lantern-tower')).position,home=[split.locations.portals[0].from[0]-25,split.locations.portals[0].from[1]];
+  for(const [a,b] of [[home,tower],[tower,home]]){
+    const route=split.route(a,b);
+    assert.ok(route&&walkable(split,a,route),`${a} -> ${b}`);
+    assert.ok(distance(route.at(-1),b)<1e-9);
+  }
+});
+
+test('a world places its location stops once, and every resident life gets its own copy',()=>{
+  const first=createResidentLife(commons,createCommunity(commons,[],{carriage:false}));
+  const second=createResidentLife(commons,createCommunity(commons,[],{carriage:false}));
+  const located=life=>life.stops.filter(stop=>stop.id.includes('/lantern-'));
+  assert.equal(located(first).length,3);
+  assert.deepEqual(located(second),located(first));
+  located(first)[0].position[0]+=100;
+  assert.notDeepEqual(located(second)[0].position,located(first)[0].position,'one life moving a stop leaves the others alone');
+  // Another copy of the same world places the same stops.
+  const fresh=createResidentLife(structuredClone(commons),createCommunity(commons,[],{carriage:false}));
+  assert.deepEqual(located(fresh),located(second));
+});
+
 test('an object built on a keep-right lane leaves residents another row to cross on',()=>{
   const portal=createResidentNavigation(commons,{locations:true}).locations.portals[0];
   const environment=createWalkingEnvironment(commons),roads=buildRoads(commons);
@@ -206,5 +242,25 @@ test('an object built on a keep-right lane leaves residents another row to cross
     assert.ok(crossed(),`${lane}: still ${(local.position[0]-edge).toFixed(1)} m from the edge after ninety seconds`);
     // Pacing at the planter used to take the route-search slot about once a second.
     assert.ok(searches<=2,`${lane}: ${searches} route searches`);
+  }
+});
+
+test('every Heights stop stands in open ground the planner walks to and from the footbridge landing', async () => {
+  const { HEIGHTS_REVISION } = await import('../../shared/bayou-heights-layout.js');
+  const heights=await loadDistrictData({districtRevision:HEIGHTS_REVISION}),id=heights.eastGardenCommons.heights.id;
+  // Stops are chosen by open ground alone, so building Heights never waits on route searches.
+  const stops=createResidentLife(heights,createCommunity(heights,[],{carriage:false})).stops;
+  const landing=stops.find(stop=>stop.id===`${id}/footbridge`)?.position,placed=stops.filter(stop=>stop.id.startsWith(`${id}/`)&&stop.id!==`${id}/footbridge`);
+  assert.ok(landing,'the footbridge landing is a stop');
+  assert.deepEqual(placed.map(stop=>stop.id.slice(id.length+1)).sort(),['bandstand','hall','icehouse']);
+  const navigation=createResidentNavigation(heights,{locations:true});
+  for(const stop of placed) {
+    // Open ground: clear at 0.6 m and 1.2 m all round, so a resident can leave in any direction.
+    for(let i=0;i<16;i++)for(const radius of [0.6,1.2]) {
+      const angle=i/16*Math.PI*2,point=[stop.position[0]+Math.cos(angle)*radius,stop.position[1]+Math.sin(angle)*radius];
+      assert.ok(navigation.free(point),`${stop.name} is clear ${radius} m toward ${i}/16`);
+    }
+    assert.ok(navigation.route(stop.position,landing),`${stop.name} reaches the landing`);
+    assert.ok(navigation.route(landing,stop.position),`the landing reaches ${stop.name}`);
   }
 });

@@ -1,0 +1,272 @@
+{
+  "baseRevision": "5541f831b629420d4d37ba3af36d0f207cfbdd4f",
+  "sourceWasDirty": true,
+  "sourceSha256": {
+    "preview/src/player-blocks.js": "1ece55b5f5d152a4a86c7e1bf3753edbf2c67e6123e0667a26343213ca618256",
+    "preview/src/multiplayer-client.js": "9d24ba620ff693eb3ade5c8b4c19bbfa06af011c7935e1f02738577933d82ad6",
+    "preview/src/sidebar.js": "dc049b7781c72927e640ac11ec2b5c0d8fcffef418ac520b1cf08315e5cfcd05"
+  },
+  "browserEnvironment": {
+    "playwright": "1.64.1",
+    "browser": "Chromium 141.0.7390.37 headless shell",
+    "renderer": "SwiftShader",
+    "adaptation": "Pinned Chromium 156 download returned an invalid archive. External launch adapter selected the preinstalled Chromium 141 headless shell; no application auth or policy changes. Full rendered journey uses two click handlers in one JS task to avoid renderer latency expiring the 4-second confirmation; interface journey covers native pointer double-clicks."
+  },
+  "passed": [
+    {
+      "command": "node --test preview/tests/player-blocks.test.js",
+      "pass": 14,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node --test preview/tests/player-blocks.test.js preview/tests/connection-deadline.test.js preview/tests/connection-policy.test.js preview/tests/moderation-reports.test.js preview/tests/voice-ui.test.js preview/tests/account-deletion.test.js",
+      "pass": 56,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "command": "REDIS_URL=<isolated Redis> node --test server/tests/blocks*.test.js",
+      "pass": 43,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "command": "pnpm run verify build",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm run verify python",
+      "status": "passed",
+      "pytestPass": 170,
+      "note": "With CI-pinned Gitleaks 8.30.1. Earlier 8.24.3 produced 3 digest-allowlist test failures."
+    },
+    {
+      "command": "pnpm run verify security",
+      "status": "passed",
+      "gitleaks": "8.30.1",
+      "note": "Worktree and available Git history, 1 shallow base commit; not a full remote-history scan."
+    }
+  ],
+  "browserJourneys": [
+    {
+      "createdAt": "2026-10-27T19:25:57.425Z",
+      "status": "passed",
+      "modes": [
+        "required"
+      ],
+      "rendering": "Mesa CPU acceptance: quarter resolution, surface-normal shading, no HDR, MSAA, shadows, AO or reflection captures; not visual-quality acceptance.",
+      "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+      "results": [
+        {
+          "name": "player-blocking-lifecycle",
+          "status": "passed",
+          "seconds": 1.996,
+          "result": {
+            "passed": true,
+            "checks": [
+              "the real multiplayer client attaches and loads its signed-in block list",
+              "a stale HTTP 401 cannot detach a newer block session",
+              "old client disposal preserves the replacement client\u2019s block session",
+              "an in-flight reconnect cannot restore private blocks during pending sign-out",
+              "failed sign-out recovers only after a fresh authenticated session",
+              "final client disposal detaches and clears the list",
+              "no browser errors: "
+            ],
+            "errors": [],
+            "scope": "Real multiplayer client controls and HTTP/WS over approved fixture identities; renderer omitted to isolate auth races."
+          }
+        }
+      ],
+      "browser": "chromium",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    },
+    {
+      "createdAt": "2026-10-27T19:36:29.916Z",
+      "status": "passed",
+      "modes": [
+        "required"
+      ],
+      "rendering": "Mesa CPU acceptance: quarter resolution, surface-normal shading, no HDR, MSAA, shadows, AO or reflection captures; not visual-quality acceptance.",
+      "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+      "results": [
+        {
+          "name": "player-blocking-interface",
+          "status": "passed",
+          "seconds": 38.885,
+          "result": {
+            "passed": true,
+            "checks": [
+              "two authenticated fixture residents joined",
+              "the real roster offers Block after loading the signed-in list",
+              "no self-block control",
+              "a failed write is announced as failure and the control recovers",
+              "a failed write did not persist a block",
+              "peer profile is readable before blocking",
+              "the server suppresses chat and profiles in both directions",
+              "Settings shows the server-confirmed blocked resident",
+              "the live socket is dropped for a real reconnect",
+              "the persisted block reloads after reconnect",
+              "Settings Unblock restores server profile access in both directions",
+              "roster Unblock removes the server block",
+              "sign-out detaches the API and clears the private blocked list before navigating",
+              "another account never inherits Alice\u2019s blocked list",
+              "returning to the original account reloads its own persisted list",
+              "no browser errors: "
+            ],
+            "errors": [],
+            "scope": "Production access entry, community, multiplayer and Settings controls over real HTTP/WS; 3D renderer omitted."
+          }
+        }
+      ],
+      "browser": "chromium",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    },
+    {
+      "createdAt": "2026-10-27T19:38:07.033Z",
+      "status": "passed",
+      "modes": [
+        "development-world"
+      ],
+      "rendering": "Mesa CPU acceptance: quarter resolution, surface-normal shading, no HDR, MSAA, shadows, AO or reflection captures; not visual-quality acceptance.",
+      "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+      "results": [
+        {
+          "name": "player-blocking-interface",
+          "status": "passed",
+          "seconds": 37.869,
+          "result": {
+            "passed": true,
+            "checks": [
+              "two authenticated fixture residents joined",
+              "the real roster offers Block after loading the signed-in list",
+              "no self-block control",
+              "a failed write is announced as failure and the control recovers",
+              "a failed write did not persist a block",
+              "peer profile is readable before blocking",
+              "the server suppresses chat and profiles in both directions",
+              "Settings shows the server-confirmed blocked resident",
+              "the live socket is dropped for a real reconnect",
+              "the persisted block reloads after reconnect",
+              "the same persisted block follows both residents into another world",
+              "Settings Unblock restores server profile access in both directions",
+              "roster Unblock removes the server block",
+              "no browser errors: "
+            ],
+            "errors": [],
+            "scope": "Production access entry, community, multiplayer and Settings controls over real HTTP/WS; 3D renderer omitted."
+          }
+        }
+      ],
+      "browser": "chromium",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    },
+    {
+      "createdAt": "2026-10-27T19:40:03.265Z",
+      "status": "passed",
+      "modes": [
+        "required"
+      ],
+      "rendering": "Mesa CPU acceptance: quarter resolution, surface-normal shading, no HDR, MSAA, shadows, AO or reflection captures; not visual-quality acceptance.",
+      "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+      "results": [
+        {
+          "name": "player-blocking",
+          "status": "passed",
+          "seconds": 234.123,
+          "result": {
+            "passed": true,
+            "checks": [
+              "two authenticated fixture residents joined",
+              "the real roster offers Block after loading the signed-in list",
+              "no self-block control",
+              "a failed write is announced as failure and the control recovers",
+              "a failed write did not persist a block",
+              "peer profile is readable before blocking",
+              "the server suppresses chat and profiles in both directions",
+              "Settings shows the server-confirmed blocked resident",
+              "the live socket is dropped for a real reconnect",
+              "the persisted block reloads after reconnect",
+              "Settings Unblock restores server profile access in both directions",
+              "roster Unblock removes the server block",
+              "no browser errors: "
+            ],
+            "errors": [],
+            "scope": "Full rendered game over real HTTP/WS; software fixture, not visual/device acceptance."
+          }
+        }
+      ],
+      "browser": "chromium",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    }
+  ],
+  "mutationChecks": [
+    {
+      "mutation": "Remove stale-401 generation guard",
+      "result": "failed on a stale HTTP 401 cannot detach a newer block session"
+    },
+    {
+      "mutation": "Remove pending-logout post-auth epoch/signing-out fence",
+      "result": "failed on an in-flight reconnect cannot restore private blocks during pending sign-out"
+    }
+  ],
+  "broadGates": {
+    "core": {
+      "status": "failed",
+      "reason": "Tooling stage: 284 passed, 5 failed because ps -axo command= reports fatal library error, lookup self."
+    },
+    "preview": {
+      "status": "incomplete",
+      "reason": "Repository runner terminated at its 600-second deadline; 1797 passing tests reported before termination. Not a passing preview suite."
+    },
+    "desktop": {
+      "status": "failed",
+      "passed": 127,
+      "failed": 1,
+      "skipped": 4,
+      "failure": "on Linux the real status of a live process parses as not dumping: /proc/<pid>/status ENOENT in sandbox."
+    },
+    "server": {
+      "status": "failed",
+      "command": "REDIS_URL=<isolated Redis> node --test --test-concurrency=4 server/tests/*.test.js",
+      "observedFailures": [
+        "Redis fences Commons rollout and rollback by epoch and preserves durable state",
+        "Heights rehearsal from east-garden-commons-market-1: activation, occupants, stale overlap, rollback to the Commons and chained rollback to Gardens"
+      ],
+      "note": "Default run was interrupted after additional observed failures under load; no claim these failures are pre-existing. Backend production source is unchanged.",
+      "passed": 1365,
+      "failed": 2,
+      "skipped": 0,
+      "total": 1367,
+      "durationMs": 417881.217,
+      "focusedRerun": {
+        "status": "failed",
+        "passed": 0,
+        "failed": 2,
+        "skipped": 0,
+        "durationMs": 50869.465053,
+        "concurrency": 1,
+        "errors": [
+          "east-garden-commons-migration.test.js:60: rollback/activation result false != true",
+          "heights-activation-rehearsal.test.js:117: alice snapshot on bayou-heights-1@2 timed out"
+        ]
+      }
+    }
+  },
+  "acceptanceNotEstablished": [
+    "Live WorkOS",
+    "Hosted routing/deployment",
+    "Pinned Chromium 156 / WebKit",
+    "Physical iOS",
+    "Human keyboard/VoiceOver",
+    "Proximity voice block coverage",
+    "Merge readiness",
+    "App Review / release readiness"
+  ],
+  "deliveryHolds": [
+    "Broad gates are not green",
+    "Reconcile unpublished changes of codex:road-bricks-20261024 before merge",
+    "REST connector creates unsigned commits; rebuild the complete owned branch using the repository sign-branch workflow in a trusted authenticated checkout",
+    "Hosted CI pending; no merge or release approval"
+  ]
+}

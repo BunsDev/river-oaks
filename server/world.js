@@ -17,7 +17,7 @@ import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
 import { buildKind, buildGeometry, buildYaw, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, BUILD_REASONS, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.js';
 import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
-import { plazaSalonRack } from '../preview/src/plaza-salon-plan.js';
+import { bikeRackSlots } from '../preview/src/bike-racks.js';
 import { objectCollider, blocksPlayer, blocksResident } from '../preview/src/creator-object.js';
 import { verifyApprovedSpaceRoutes } from '../preview/src/approved-space-plan.js';
 import { cafeSeat, plazaSalonPlan } from '../preview/src/plaza-salon-plan.js';
@@ -67,7 +67,7 @@ const fields = (message, allowed) => Object.keys(message).every(key => allowed.i
 const textId = value => typeof value === 'string' && value.length > 0 && value.length <= 160;
 const reject = (error, message = error) => ({ok:false,error,message});
 
-const CHECKPOINT_VERSION = 17, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
+const CHECKPOINT_VERSION = 18, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
 const LIFE_FIELDS = ['elapsed','storm','revision','packet','cursor','paused','stats'];
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const nonnegative = value => Number.isFinite(value) && value >= 0;
@@ -256,10 +256,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const suiteAdmits=(player,seat,time=now())=>campus.suiteAccess(player.id,seat.unitId,time).ok;
   const campusWorkstation=player=>Boolean(player?.sitting && (campusWorkstations.has(player.sitting.buildId)
     || suiteSeats.get(player.sitting.buildId)?.workstation && suiteAdmits(player,suiteSeats.get(player.sitting.buildId))));
-  // The plaza bike rack: a slot is held by at most one player (player.cycling),
+  // The bike racks (bike-racks.js): a slot is held by at most one player (player.cycling),
   // exactly as a seat is. Metres ride on the player until the transport drains
   // them into the account store (drainRides), so a disconnect loses nothing.
-  const rackSlots=new Map(plazaSalonRack(worldData).map(slot=>[slot.id,slot]));
+  const rackSlots=new Map(bikeRackSlots(worldData).map(slot=>[slot.id,slot]));
   const slotHolder=slotId=>[...players.values()].find(p=>p.cycling===slotId)??null;
   const takenSlots=()=>[...players.values()].filter(p=>p.cycling).map(p=>p.cycling).sort();
   // Banked metres are process-local and not checkpointed: the transports drain
@@ -1315,7 +1315,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}
         : {version:saved.version,worldId:saved.worldId,worldFingerprint:saved.worldFingerprint,payload:saved.payload};
       if (!record(saved) || !fields(saved,legacy?['version','worldFingerprint','payload','checksum']:['version','worldId','worldFingerprint','payload','checksum'])
-        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
+        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
         || saved.worldFingerprint!==worldFingerprint || saved.checksum!==digest(envelope)) throw new Error('Invalid envelope');
       let recovered=decodeCheckpoint(JSON.stringify(saved.payload));
       if (sharedPopulation && recovered.state?.locals?.length!==residentIdentities.length) {
@@ -1621,7 +1621,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       screenings.load(nextScreenings);
       interactions.restore(nextInteractions);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;voiceIdentities.clear();
-      worldPolicy=nextWorldPolicy;worldPolicyAt=-Infinity;crime.load(nextCrime);police.load(nextPolice,now());policeNavigation?.setPlacedObjects(colliders);
+      worldPolicy=nextWorldPolicy;worldPolicyAt=-Infinity;crime.load(nextCrime);police.load(nextPolice,now());policeAlarms.length=0;policeNavigation?.setPlacedObjects(colliders);
       return {ok:true};
     } catch (error) {
       onFailure?.(checkpointFailureReason(error));
@@ -1631,7 +1631,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Trusted process/admin hook; deliberately absent from the command protocol.
   function reset() {
     interactions.clear();
-    crime.clear();police.clear();
+    crime.clear();police.clear();policeAlarms.length=0;
     tableGames.clear();
     cafeGames.clear();
     dartsGames.clear();

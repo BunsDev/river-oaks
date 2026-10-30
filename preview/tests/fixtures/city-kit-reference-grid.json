@@ -1,0 +1,262 @@
+{
+  "schema_version": 1,
+  "crs": "EPSG:32615",
+  "origin": [
+    -95.4,
+    29.8
+  ],
+  "bounds_m": [
+    -40,
+    -40,
+    240,
+    190
+  ],
+  "roads": [
+    {
+      "id": "way-main-1",
+      "name": "Main Street",
+      "kind": "residential",
+      "width_m": 8,
+      "points": [
+        [
+          100.184,
+          59.704,
+          12
+        ],
+        [
+          200.933,
+          81.119,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "way-main-0",
+      "name": "Main Street",
+      "kind": "residential",
+      "width_m": 8,
+      "points": [
+        [
+          -24.041,
+          33.299,
+          12
+        ],
+        [
+          98.228,
+          59.288,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "way-cross",
+      "name": "Cross Street",
+      "kind": "residential",
+      "width_m": 7,
+      "points": [
+        [
+          119.752,
+          -17.924,
+          12
+        ],
+        [
+          80.248,
+          167.924,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "way-back",
+      "name": "Back Lane",
+      "kind": "service",
+      "width_m": 5,
+      "points": [
+        [
+          -11.329,
+          117.788,
+          12
+        ],
+        [
+          184.301,
+          159.371,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "way-bend",
+      "name": "Bend Road",
+      "kind": "residential",
+      "width_m": 8,
+      "points": [
+        [
+          164.501,
+          12.035,
+          12
+        ],
+        [
+          173.882,
+          14.814,
+          12
+        ],
+        [
+          182.584,
+          18.991,
+          12
+        ],
+        [
+          190.271,
+          24.404,
+          12
+        ],
+        [
+          196.648,
+          30.845,
+          12
+        ],
+        [
+          201.47,
+          38.067,
+          12
+        ],
+        [
+          204.551,
+          45.792,
+          12
+        ],
+        [
+          205.774,
+          53.723,
+          12
+        ],
+        [
+          205.092,
+          61.556,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "way-stub",
+      "name": "Stub Lane",
+      "kind": "service",
+      "width_m": 5,
+      "points": [
+        [
+          -3.013,
+          78.663,
+          12
+        ],
+        [
+          8.725,
+          81.157,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "way-edge",
+      "name": "Edge Road",
+      "kind": "residential",
+      "width_m": 8,
+      "points": [
+        [
+          17.363,
+          -17.196,
+          12
+        ],
+        [
+          212.992,
+          24.386,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "way-path",
+      "name": "Main Street path",
+      "kind": "footway",
+      "width_m": 3,
+      "points": [
+        [
+          102.495,
+          63.262,
+          12
+        ],
+        [
+          200.31,
+          84.053,
+          12
+        ]
+      ]
+    }
+  ],
+  "buildings": [
+    {
+      "id": "b-1",
+      "center": [
+        58.37,
+        30.369,
+        12,
+        12
+      ],
+      "ring": [],
+      "size": [
+        20,
+        12,
+        7
+      ],
+      "yaw_deg": 12,
+      "kind": "commercial"
+    },
+    {
+      "id": "b-2",
+      "center": [
+        143.71,
+        109.849,
+        12
+      ],
+      "ring": [],
+      "size": [
+        20,
+        12,
+        7
+      ],
+      "yaw_deg": 12,
+      "kind": "commercial"
+    },
+    {
+      "id": "b-3",
+      "center": [
+        22.174,
+        104.463,
+        12
+      ],
+      "ring": [],
+      "size": [
+        20,
+        12,
+        7
+      ],
+      "yaw_deg": 12,
+      "kind": "residential"
+    },
+    {
+      "id": "b-out",
+      "center": [
+        205.328,
+        204.734,
+        12
+      ],
+      "ring": [],
+      "size": [
+        20,
+        12,
+        7
+      ],
+      "yaw_deg": 12,
+      "kind": "residential"
+    }
+  ]
+}

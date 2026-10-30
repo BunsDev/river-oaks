@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { createSharedWorld } from '../world.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { plazaSalonRack } from '../../preview/src/plaza-salon-plan.js';
+import { bikeRackSlots } from '../../preview/src/bike-racks.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
 
 // The plaza bike rack: slots are arbitrated like seats, a bicycle pose needs a
@@ -67,6 +68,34 @@ test('the rack refuses from far away, from a seat, in the air, with a bad slot, 
   f.put('erin', slots[0].approach);
   assert.equal(f.act('erin', { type: 'cycle', rackId: 'plaza-salon-rack', slot: 0 }).error, 'slot_taken');
   assert.equal(f.world.snapshot().cycling.taken.length, 4);
+});
+
+test('a curbside rack hands out bikes as the plaza rack does, apart from the plaza', () => {
+  const f = setup(['alice', 'bob', 'carol']);
+  const curb = bikeRackSlots(data).filter(slot => slot.rackId === 'cartier-rack');
+  assert.equal(curb.length, 4);
+  // Each rack is in reach only from its own footway.
+  f.put('alice', slots[0].approach);
+  assert.equal(f.act('alice', { type: 'cycle', rackId: 'cartier-rack', slot: 0 }).error, 'rack_out_of_reach');
+  f.put('alice', curb[0].approach);
+  assert.equal(f.act('alice', { type: 'cycle', rackId: 'plaza-salon-rack', slot: 0 }).error, 'rack_out_of_reach');
+  assert.equal(f.act('alice', { type: 'cycle', rackId: 'cartier-rack', slot: 4 }).error, 'invalid_slot');
+  assert.equal(f.act('alice', { type: 'cycle', rackId: 'cartier-rack', slot: 0 }).ok, true);
+  assert.equal(f.me('alice').vehicle, 'bicycle');
+  assert.deepEqual(f.me('alice').position.slice(0, 2), [curb[0].x, curb[0].north]);
+  // The plaza's slot 0 is a different bike.
+  f.put('bob', slots[0].approach);
+  assert.equal(f.act('bob', { type: 'cycle', rackId: 'plaza-salon-rack', slot: 0 }).ok, true);
+  assert.deepEqual(f.world.snapshot().cycling.taken.toSorted(), ['cartier-rack:0', 'plaza-salon-rack:0']);
+  f.put('carol', curb[1].approach);
+  assert.equal(f.act('carol', { type: 'cycle', rackId: 'cartier-rack', slot: 0 }).error, 'slot_taken');
+  // Rolling off the curb rack (its bikes point south) counts like any ride.
+  f.advance(1000);
+  assert.equal(f.ride('alice', [curb[0].x, curb[0].north - 1.5]).ok, true);
+  assert.deepEqual(f.world.drainRides().find(ride => ride.userId === 'alice'), { userId: 'alice', name: 'alice', meters: 1.5 });
+  assert.equal(f.act('alice', { type: 'uncycle' }).ok, true);
+  assert.deepEqual(f.world.snapshot().cycling.taken, ['plaza-salon-rack:0']);
+  assert.equal(f.act('carol', { type: 'cycle', rackId: 'cartier-rack', slot: 0 }).ok, true, 'the bike is back on the rack');
 });
 
 test('a bicycle pose needs a slot, obeys the 18 mph budget, and only accepted distance counts', () => {

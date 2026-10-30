@@ -1,5 +1,5 @@
 // In-engine preview of any neighborhood recipe (scripts/destination.mjs preview):
-// /e2e/fixtures/city-kit.html?recipe=<id>&seed=<n>&view=<name>. Lighting, tone
+// /e2e/fixtures/city-kit.html?recipe=<id>&seed=<n>&view=<name>&finish=<finish>. Lighting, tone
 // mapping, sky and PBR maps match the town (preview/src/main.js).
 import * as THREE from 'three';
 import { assembleNeighborhood } from '../../../shared/city-kit/assemble.js';
@@ -24,7 +24,9 @@ sun.position.set(cx - 60, 90, -cy - 40); sun.target.position.set(cx, 0, -cy); su
 Object.assign(sun.shadow.camera, { left: -110, right: 110, top: 110, bottom: -110, far: 300 }); sun.shadow.bias = -.0002; sun.shadow.normalBias = .02;
 scene.add(sun, sun.target, new THREE.HemisphereLight('#eef4eb', '#73806c', 2.3));
 const environment = await loadEnvironment(renderer, scene).catch(() => null);
-const ground = 0, kit = buildCityKit(plan, { groundAt: () => ground, ground });
+// `finish` (catalog.js KIT_FINISHES) recolours the kit for matched before/after review.
+const finish = params.get('finish') ?? 'classic';
+const ground = 0, kit = buildCityKit(plan, { groundAt: () => ground, ground, finish });
 scene.add(kit);
 await Promise.allSettled(kit.children.map(child => child.userData.ready).filter(Boolean));
 const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, .1, 900);
@@ -46,5 +48,5 @@ function render(view = params.get('view') ?? 'overview') {
 }
 const lit = new Set(plan.lanterns.slice(0, 3).map(item => item.id));
 kit.userData.setLanterns(lit, false);
-window.cityKit = { render, views: Object.keys(views), plan: { id: plan.id, seed: plan.seed, hash: plan.hash, stats: plan.stats }, stats: () => kit.userData.stats(), environment: Boolean(environment), setLanterns: (ids, done) => kit.userData.setLanterns(new Set(ids), done) };
+window.cityKit = { render, finish, views: Object.keys(views), plan: { id: plan.id, seed: plan.seed, hash: plan.hash, stats: plan.stats }, stats: () => kit.userData.stats(), environment: Boolean(environment), setLanterns: (ids, done) => kit.userData.setLanterns(new Set(ids), done) };
 render(); document.body.dataset.ready = 'true';

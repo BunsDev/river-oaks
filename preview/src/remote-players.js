@@ -11,6 +11,7 @@ import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
 import { createPlayerCostume } from './player-costume.js';
 import { createFlightVehicle } from './flight-vehicles.js';
 import { createRoadVehicle } from './road-vehicles.js';
+import { bicycleCrankAngle } from './bicycle-crank.js';
 import { VEHICLES, vehicleKind } from './vehicle-config.js';
 import { permittedAppearance, sharedAppearance } from './shared-appearances.js';
 import { createPeerMotion } from './locomotion-handoff.js';
@@ -38,7 +39,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
     if(entry.road?.spec.kind===selected)return;
     entry.road?.dispose();entry.road=null;entry.roadDistance=0;
     if(selected){
-      entry.road=createRoadVehicle(selected);
+      entry.road=createRoadVehicle(selected,{pedalling:true});
       const seat=VEHICLES[selected].passengerSeat;
       entry.road.object.position.set(-seat[0],0,-seat[2]);
       entry.holder.add(entry.road.object);
@@ -46,19 +47,22 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
   };
   const loadAppearance=(entry,player)=>{
     const appearance=permittedAppearance(player.id,player.appearance);
-    if(entry.requestedAppearance!==appearance){
-      entry.requestedAppearance=appearance;entry.failures=0;entry.retryAt=0;
-      if(entry.pendingAppearance&&entry.pendingAppearance!==appearance){entry.pendingAppearance=null;entry.version++;}
+    // A player-made look is its recipe on its own body: a new recipe is a new load.
+    const selected=selectedCharacterFor(player),recipe=selected.schemaVersion===3?selected.parameters:null;
+    const look=recipe?`${appearance}:${JSON.stringify(recipe)}`:appearance;
+    if(entry.requestedLook!==look){
+      entry.requestedLook=look;entry.failures=0;entry.retryAt=0;
+      if(entry.pendingLook&&entry.pendingLook!==look){entry.pendingLook=null;entry.version++;}
     }
-    if(entry.loadedAppearance===appearance){
-      const definition=selectedCharacterFor(player);const key=JSON.stringify(definition);
-      if(key!==entry.definitionKey){entry.colors?.apply(definition);entry.definitionKey=key;entry.definition=definition;}
+    if(entry.loadedLook===look){
+      const key=JSON.stringify(selected);
+      if(key!==entry.definitionKey){entry.colors?.apply(selected);entry.definitionKey=key;entry.definition=selected;}
     }
-    if(entry.pendingAppearance===appearance||entry.loadedAppearance===appearance)return;
+    if(entry.pendingLook===look||entry.loadedLook===look)return;
     if(now()<entry.retryAt)return;
-    entry.pendingAppearance=appearance;const version=++entry.version;
-    const rigProfile=sharedAppearance(appearance).rig??appearance;
-    loadResidentAvatar(rigProfile==='jevica'?4:AVATAR_PROFILES.indexOf(rigProfile),'remote-'+player.id,rigProfile,{folk:false,appearanceId:appearance}).then(avatar=>{
+    entry.pendingLook=look;const version=++entry.version;
+    const rigProfile=recipe?.body??sharedAppearance(appearance).rig??appearance;
+    loadResidentAvatar(rigProfile==='jevica'?4:AVATAR_PROFILES.indexOf(rigProfile),'remote-'+player.id,rigProfile,{folk:false,appearanceId:appearance,...(recipe?{recipe}:{})}).then(avatar=>{
       if(disposed||entry.removed||entry.version!==version){avatar.dispose();return;}
       const outfit=sharedAppearance(appearance).costume==='jevica'?createPlayerCostume(avatar,'jevica'):{update(){},dispose(){}};
       const vehicle=createFlightVehicle('jevica'),height=figureHeight(avatar),culled=cullAvatarMeshes(avatar.object,height);
@@ -68,9 +72,9 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       entry.avatar=avatar;entry.outfit=outfit;entry.vehicle=vehicle;entry.culled=culled;entry.depth=depth;entry.height=height;entry.holder.add(avatar.object,vehicle.object);
       if(entry.road)entry.holder.add(entry.road.object);
       entry.colors=createCharacterMaterials(avatar.object);entry.definition=selectedCharacterFor(entry.target);entry.definitionKey=JSON.stringify(entry.definition);entry.colors.apply(entry.definition);
-      entry.loadedAppearance=appearance;entry.pendingAppearance=null;entry.failures=0;entry.retryAt=0;
+      entry.loadedAppearance=appearance;entry.loadedLook=look;entry.pendingLook=null;entry.failures=0;entry.retryAt=0;
       setLabelText(entry,entry.target.name);
-    }).catch(()=>{if(entry.version===version){entry.pendingAppearance=null;entry.failures++;entry.retryAt=now()+Math.min(30000,1000*2**entry.failures);setLabelText(entry,entry.target.name+' · avatar unavailable');}});
+    }).catch(()=>{if(entry.version===version){entry.pendingLook=null;entry.failures++;entry.retryAt=now()+Math.min(30000,1000*2**entry.failures);setLabelText(entry,entry.target.name+' · avatar unavailable');}});
   };
   return {
     // Explicit inspection only: skinning every vertex is too expensive for the
@@ -87,7 +91,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
     });},
     stats(){return [...entries].map(([id,entry])=>{
       const arm=entry.avatar?.rig?.model?.getObjectByName('upperarm_r'),rest=arm&&entry.avatar.rig.rest.get(arm);
-      return {id,kind:figureKind(id),combat:entry.combat?.kind??null,combatProgress:entry.combat?.progress??null,onScreen:Boolean(entry.onScreen),labelVisible:Boolean(entry.labelVisible),ready:Boolean(entry.avatar),fallback:Boolean(entry.placeholder),appearance:entry.loadedAppearance,character:entry.definition?structuredClone(entry.definition):null,materials:entry.colors?.inspect()??[],realism:entry.avatar?.realismReport??null,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray(),locomotion:{speed:entry.motion.state.speed,heading:entry.motion.state.heading??null,distance:entry.motion.state.distance},feet:(entry.avatar?.feet??[]).map(leg=>({side:leg.side,contact:leg.contact,error:leg.error,target:leg.target?.toArray()??null,actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()}))};
+      return {id,kind:figureKind(id),combat:entry.combat?.kind??null,combatProgress:entry.combat?.progress??null,onScreen:Boolean(entry.onScreen),labelVisible:Boolean(entry.labelVisible),ready:Boolean(entry.avatar),fallback:Boolean(entry.placeholder),appearance:entry.loadedAppearance,look:entry.loadedLook,character:entry.definition?structuredClone(entry.definition):null,materials:entry.colors?.inspect()??[],realism:entry.avatar?.realismReport??null,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray(),locomotion:{speed:entry.motion.state.speed,heading:entry.motion.state.heading??null,distance:entry.motion.state.distance},feet:(entry.avatar?.feet??[]).map(leg=>({side:leg.side,contact:leg.contact,error:leg.error,target:leg.target?.toArray()??null,actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()}))};
     });},
     sync(players,selfId){
       if(disposed)return;
@@ -100,7 +104,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
           holder.position.set(player.position[0],player.position[2]+player.altitude,-player.position[1]);
           if(snapInitialHeading)holder.rotation.y=player.yaw+Math.PI;
           const placeholder=createAvatarPlaceholder();holder.add(placeholder.object);
-          entry={holder,label,placeholder,target:player,removed:false,motion:createPeerMotion(player.id),blend:createCombatBlend(),combat:null,version:0,loadedAppearance:null,pendingAppearance:null,requestedAppearance:null,failures:0,retryAt:0};entries.set(player.id,entry);
+          entry={holder,label,placeholder,target:player,removed:false,motion:createPeerMotion(player.id),blend:createCombatBlend(),combat:null,version:0,loadedAppearance:null,loadedLook:null,pendingLook:null,requestedLook:null,failures:0,retryAt:0};entries.set(player.id,entry);
           if(speaking.has(player.id))label.dataset.speaking='true';
         }
         entry.target=player;entry.posed=true;entry.syncedAt=performance.now();setLabelText(entry,player.name+(entry.failures?' · avatar unavailable':entry.avatar?'':' · loading avatar'));syncRoad(entry,player.vehicle);loadAppearance(entry,player);
@@ -154,13 +158,15 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
           const speed=delta?Math.hypot(dx,dz)/delta:0;
           avatar.object.position.set(0,seat?seat.height-avatar.rig.hipHeight+.025:ride?ride.passengerSeat[1]-avatar.rig.hipHeight+.025:0,0);
           avatar.object.rotation.y=ride?-Math.PI/2:0;
-          avatar.update(now,!ride&&target.altitude<=0.1?(poseFor(target.gesture)??'continue'):'continue',speaking.has(target.id),{speed:seated?0:motion.speed,flightSpeed:speed,distance:motion.distance,heading:seated?undefined:motion.heading,platform:motion.platform,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,seatToFloor:seat?seat.height:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',handshakeTarget:target.interaction?.kind==='handshake'?target.interaction.target:undefined,gestureTime:target.interaction?target.interaction.elapsed+Math.max(0,now-entry.syncedAt)/1000:undefined},()=>holder.position.y);
+          // The crank and the rider's feet turn from the same distance this frame.
+          if(entry.road)entry.roadDistance+=Math.hypot(dx,dz);
+          avatar.update(now,!ride&&target.altitude<=0.1?(poseFor(target.gesture)??'continue'):'continue',speaking.has(target.id),{speed:seated?0:motion.speed,flightSpeed:speed,distance:motion.distance,heading:seated?undefined:motion.heading,platform:motion.platform,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,ridingDistance:entry.roadDistance,ridingSpeed:ride?speed:0,seatToFloor:seat?seat.height:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',handshakeTarget:target.interaction?.kind==='handshake'?target.interaction.target:undefined,gestureTime:target.interaction?target.interaction.elapsed+Math.max(0,now-entry.syncedAt)/1000:undefined},()=>holder.position.y);
           for(const layer of entry.blend.step(combat,now,{reducedMotion}))applyCombatPose(avatar.rig,layer,{reducedMotion});
           entry.riderSeated=seated;
           entry.outfit.update(!seated&&target.altitude>0.1,now,seated);entry.vehicle.object.visible=!seated&&target.altitude>0.1;
           if(entry.road){
-            entry.roadDistance+=Math.hypot(dx,dz);
             entry.road.wheels.forEach((wheel,i)=>{wheel.rotation.z=entry.roadDistance/ride.wheels[i][1];});
+            entry.road.setCrank(bicycleCrankAngle(entry.roadDistance));entry.road.setSaddle(avatar.bicycleSaddle);
             entry.road.animate(now,Math.min(ride.maxSpeed,speed));
           }
         }

@@ -72,9 +72,14 @@ export function combatStateFor(id, { crime, police, players, evade, ageMs = 0 } 
     const facing = rival.engagedId ? fromCameraYaw(rival.yaw) : null;
     if (rival.incapacitated || rival.health === 0) return state('down', 1, 0, facing);
     if (rival.staggered) {
-      const hits = actions.filter(action => action.kind === 'strike' && action.targetId === id).map(action => sinceContact(action, S, ageMs))
-        .filter(since => since !== null && since >= 0 && since < COMBAT_TIMING.rivalStagger);
-      if (hits.length) return state('flinch', Math.min(...hits) / COMBAT_TIMING.rivalStagger, COMBAT_TIMING.rivalStagger, facing);
+      // The newest hit owns the recoil; its id keys the blend layer, so a second hit inside the
+      // stagger plays a recoil of its own instead of the tail of the first.
+      const hits = actions.filter(action => action.kind === 'strike' && action.targetId === id).map(action => [sinceContact(action, S, ageMs), action])
+        .filter(([since]) => since !== null && since >= 0 && since < COMBAT_TIMING.rivalStagger);
+      if (hits.length) {
+        const [since, action] = hits.reduce((soonest, item) => item[0] < soonest[0] ? item : soonest);
+        return state('flinch', since / COMBAT_TIMING.rivalStagger, COMBAT_TIMING.rivalStagger, facing, { id: action.id });
+      }
     }
     for (const action of actions) if (action.kind === 'counter' && action.actorId === id) {
       const shown = swing(action, C, ageMs, unit(action.direction) ?? facing);
@@ -112,7 +117,7 @@ export function combatStateFor(id, { crime, police, players, evade, ageMs = 0 } 
   const recoils = landed.map(action => [sinceContact(action, C, ageMs), action]).filter(([since]) => since !== null && since >= 0 && since < COMBAT_TIMING.playerStagger);
   if (recoils.length) {
     const [since, action] = recoils.reduce((soonest, item) => item[0] < soonest[0] ? item : soonest);
-    return state('flinch', since / COMBAT_TIMING.playerStagger, COMBAT_TIMING.playerStagger, unit(action.direction?.map(value => -value)) ?? facing);
+    return state('flinch', since / COMBAT_TIMING.playerStagger, COMBAT_TIMING.playerStagger, unit(action.direction?.map(value => -value)) ?? facing, { id: action.id });
   }
   for (const action of mine) if (action.kind === 'strike' && action.actorId === id) {
     const shown = swing(action, S, ageMs, unit(action.direction) ?? facing);

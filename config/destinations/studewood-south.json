@@ -155,75 +155,6 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "studewood-market-row",
-      "style": "market-row",
-      "rect": [
-        436.5,
-        -64.5,
-        452.5,
-        -12
-      ],
-      "front": "west",
-      "sides": [
-        "north",
-        "south"
-      ],
-      "depth": [
-        12,
-        16
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        6.5
-      ],
-      "names": [
-        "Cane Sugar Creamery",
-        "Lightning Bug Lamps",
-        "Tejano Tortilleria",
-        "Mudbug Hardware",
-        "Prickly Pear Pottery",
-        "Cattail Cafe"
-      ]
-    },
-    {
-      "id": "studewood-row-south",
-      "style": "garden-court",
-      "rect": [
-        436.5,
-        -118,
-        452.5,
-        -77.5
-      ],
-      "front": "west",
-      "sides": [
-        "north"
-      ],
-      "depth": [
-        12,
-        16
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        6.5
-      ],
-      "names": [
-        "Rain Lily Yoga",
-        "Copperhead Climbing",
-        "Gulf Moon Books",
-        "Sunflower Laundry"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -338,7 +269,7 @@
         466,
         -114.3
       ],
-      "yaw": 0.0
+      "yaw": 0
     },
     {
       "id": "lawn-bench-480",
@@ -347,7 +278,7 @@
         480,
         -114.3
       ],
-      "yaw": 0.0
+      "yaw": 0
     },
     {
       "id": "lawn-bench-494",
@@ -356,7 +287,7 @@
         494,
         -114.3
       ],
-      "yaw": 0.0
+      "yaw": 0
     },
     {
       "id": "lawn-lamp-0",
@@ -436,5 +367,77 @@
   ],
   "context": [],
   "overrides": {},
-  "additions": []
+  "additions": [],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "studewood-market-row",
+        "rect": [
+          436.5,
+          -64.5,
+          452.5,
+          -12
+        ],
+        "style": "market-row",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          6.5
+        ],
+        "names": [
+          "Cane Sugar Creamery",
+          "Lightning Bug Lamps",
+          "Tejano Tortilleria",
+          "Mudbug Hardware",
+          "Prickly Pear Pottery",
+          "Cattail Cafe"
+        ],
+        "front": "west",
+        "sides": [
+          "north",
+          "south"
+        ]
+      },
+      {
+        "id": "studewood-row-south",
+        "rect": [
+          436.5,
+          -118,
+          452.5,
+          -77.5
+        ],
+        "style": "garden-court",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          6.5
+        ],
+        "names": [
+          "Rain Lily Yoga",
+          "Copperhead Climbing",
+          "Gulf Moon Books",
+          "Sunflower Laundry"
+        ]
+      }
+    ],
+    "migrated": {
+      "blocks": 2,
+      "geometry": "5e3f03e0d88a273e"
+    }
+  }
 }
