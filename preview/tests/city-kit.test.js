@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { KIT_CONVENTIONS, KIT_MATERIALS, KIT_PIECES, KIT_STYLES } from '../../shared/city-kit/catalog.js';
+import { KIT_CONVENTIONS, KIT_FINISHES, KIT_MATERIALS, KIT_PIECES, KIT_STYLES, PINK_JET_AGE, kitFinish } from '../../shared/city-kit/catalog.js';
 import { assembleNeighborhood, canonicalJSON, insideRect, placePlan, walkableConnectivity } from '../../shared/city-kit/assemble.js';
 import { buildCityKit } from '../src/city-kit/render.js';
 
@@ -49,7 +49,7 @@ test('a seed varies only what the recipe leaves open', () => {
     assert.deepEqual(piecesOf(plan, 'bayou-market-commons/bayou-lantern-tower'), piecesOf(base, 'bayou-market-commons/bayou-lantern-tower'));
   }
   // Streams are per stable ID: re-rhythming one block leaves the other's pieces unchanged.
-  const changed = structuredClone(commons); changed.blocks[1].bays = [6, 7.5]; changed.blocks[1].storeys = [2, 3];
+  const changed = structuredClone(commons); changed.layout.quarters[1].bays = [6, 7.5]; changed.layout.quarters[1].storeys = [2, 3];
   const regenerated = assembleNeighborhood(changed);
   assert.notDeepEqual(piecesOf(regenerated, 'bayou-market-commons/garden-court/'), piecesOf(base, 'bayou-market-commons/garden-court/'));
   assert.deepEqual(piecesOf(regenerated, 'bayou-market-commons/market-row/'), piecesOf(base, 'bayou-market-commons/market-row/'));
@@ -80,7 +80,7 @@ test('invalid recipes and overrides fail with a reason instead of producing a br
     [recipe => { recipe.overrides['bayou-market-commons/market-row/parcel-0'] = { set: { glass: 'mirror' } }; }, /cannot set glass/],
     [recipe => { recipe.overrides['elsewhere/piece'] = { suppress: true }; }, /stable piece ID/],
     [recipe => { recipe.additions.push({ id: 'bench-in-shop', piece: 'furniture/bench', at: [20, 12] }); }, /not inside walkable ground/],
-    [recipe => { recipe.blocks[0].style = 'brutalist'; }, /style/],
+    [recipe => { recipe.layout.quarters[0].style = 'brutalist'; }, /style/],
     [recipe => { recipe.streets[0].to = [47, 5]; }, /must run east/],
     [recipe => { recipe.kit = 'city-kit-0'; }, /kit must be/],
     [recipe => { recipe.furniture.push({ ...recipe.furniture[0] }); }, /item id/],
@@ -239,4 +239,76 @@ test('street furniture speaks the District vocabulary: orbital lamps, grates, po
   assert.ok(grate.material.map instanceof THREE.DataTexture);
   let disposed = false; grate.material.map.addEventListener('dispose', () => { disposed = true; });
   kit.userData.dispose(); assert.ok(disposed, 'the grate texture is released with the kit');
+});
+
+test('finishes recolour named slots only, and classic is the unchanged default', () => {
+  assert.deepEqual(Object.keys(KIT_FINISHES.classic.materials), []);
+  assert.equal(kitFinish(), KIT_FINISHES.classic);
+  assert.throws(() => kitFinish('brutalist'), /Unknown kit finish brutalist/);
+  // TypeSafe pink is fixed brand colour, not a proposal.
+  assert.equal(PINK_JET_AGE.pink, '#F486A1');
+  for (const [name, finish] of Object.entries(KIT_FINISHES))
+    for (const [slot, spec] of Object.entries(finish.materials)) {
+      assert.ok(KIT_MATERIALS[slot], `${name} recolours unknown slot ${slot}`);
+      // A finish changes appearance only: never the PBR surface, glass or lantern behaviour.
+      for (const field of Object.keys(spec)) assert.ok(['color', 'roughness', 'metalness'].includes(field), `${name}/${slot} sets ${field}`);
+    }
+});
+
+test('the Pink Jet-Age finish keeps plans, locks, geometry and draw calls identical', async () => {
+  const THREE = await import('three');
+  for (const [recipe, name] of [[commons, 'bayou-market-commons'], [yale, 'nineteenth-and-yale']]) {
+    const plan = assembleNeighborhood(recipe), before = canonicalJSON(plan);
+    const build = finish => buildCityKit(plan, { groundAt: () => 0, ground: 0, ...(finish ? { finish } : {}) });
+    const summary = kit => { const meshes = []; kit.traverse(item => { if (item.isMesh) meshes.push([item.parent?.name ?? '', item.name, item.geometry.attributes.position.count]); }); return meshes; };
+    const classic = build(), defaulted = build('classic'), pink = build('pink-jet-age');
+    // Rendering never writes to the plan, so the committed lock still reproduces.
+    assert.equal(canonicalJSON(plan), before); assert.equal(plan.hash, read(`${name}.lock`).hash);
+    // Classic is the default. Under the finish, massing, ground, furniture and signs keep
+    // the same meshes and vertices; only facade detail may grow by the rounded forms.
+    assert.deepEqual(summary(defaulted), summary(classic));
+    const isDetail = ([parent]) => parent.endsWith(' detail');
+    assert.deepEqual(summary(pink).filter(entry => !isDetail(entry)), summary(classic).filter(entry => !isDetail(entry)));
+    const classicStats = classic.userData.stats(), pinkStats = pink.userData.stats(), drawCalls = summary(pink).length, added = pinkStats.triangles - classicStats.triangles;
+    // The rounded forms are present, and bounded.
+    assert.ok(added > 0 && added < 12000, `${name}: forms add ${added} triangles`);
+    assert.ok(pinkStats.materials - classicStats.materials <= 1, `${name}: forms add at most one shared slot`);
+    assert.ok(drawCalls <= KIT_CONVENTIONS.budgets.drawCallsPerNeighborhood, `${name}: ${drawCalls} draw calls`);
+    assert.equal(classic.userData.finish, 'classic'); assert.equal(pink.userData.finish, 'pink-jet-age');
+    const colourOf = (kit, slot) => { let found; kit.traverse(item => { if (item.isMesh && item.material.name === `city-kit/${slot}`) found = item.material; }); return found; };
+    let recoloured = 0;
+    for (const [slot, spec] of Object.entries(KIT_FINISHES['pink-jet-age'].materials)) {
+      const classicMaterial = colourOf(classic, slot), pinkMaterial = colourOf(pink, slot);
+      if (!classicMaterial) continue;
+      assert.equal(pinkMaterial.userData.finish, 'pink-jet-age');
+      assert.equal(`#${pinkMaterial.color.getHexString()}`, `#${new THREE.Color(spec.color).getHexString()}`, `${name} ${slot}`);
+      // Classic draws every slot in its catalog colour, untouched by the finish table.
+      if (!KIT_MATERIALS[slot].surface) assert.equal(`#${classicMaterial.color.getHexString()}`, `#${new THREE.Color(KIT_MATERIALS[slot].color).getHexString()}`, `classic ${slot}`);
+      recoloured++;
+    }
+    assert.ok(recoloured >= 6, `${name}: ${recoloured} recoloured slots in use`);
+    // Pink leads on every street: the luxury Commons once rendered without any (#749 review).
+    // Every block with storefronts shows pink in its own facade detail.
+    const brand = new THREE.Color(PINK_JET_AGE.pink).getHexString();
+    const storefrontBlocks = new Set(plan.pieces.filter(piece => piece.piece === 'building/shell' && piece.variant).map(piece => piece.id.split('/')[1]));
+    assert.ok(storefrontBlocks.size >= 2, `${name}: storefront blocks`);
+    for (const block of storefrontBlocks) {
+      const detail = pink.children.find(child => child.name === `${block} detail`); let found = false;
+      detail?.traverse(item => { if (item.isMesh && item.material.color?.getHexString() === brand) found = true; });
+      assert.ok(found, `${name}/${block}: no TypeSafe pink in its facade detail`);
+    }
+    for (const kit of [classic, defaulted, pink]) kit.userData.dispose();
+  }
+});
+
+test('switching finishes back and forth releases every material it made', () => {
+  const plan = assembleNeighborhood(commons);
+  for (const finish of ['pink-jet-age', 'classic', 'pink-jet-age']) {
+    const kit = buildCityKit(plan, { groundAt: () => 0, ground: 0, finish }), materials = new Set(), geometries = new Set();
+    kit.traverse(item => { if (item.isMesh) { materials.add(item.material); geometries.add(item.geometry); } });
+    let released = 0;
+    for (const resource of [...materials, ...geometries]) resource.addEventListener('dispose', () => released++);
+    kit.userData.dispose();
+    assert.equal(released, materials.size + geometries.size, `${finish}: every material and geometry released`);
+  }
 });

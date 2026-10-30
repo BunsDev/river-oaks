@@ -1,0 +1,16 @@
+{
+  "id": "typesafe-place-uptown",
+  "kit": "city-kit-1",
+  "seed": 2026,
+  "hash": "7ebdc9d00dfb4c86",
+  "geometry": "ca693b37e58d6b15",
+  "recipeHash": "5dd3b0627bed5438",
+  "overridesHash": "e57417553e1c06d3",
+  "stats": {
+    "pieces": 54,
+    "buildings": 21,
+    "solids": 17,
+    "materials": 7,
+    "triangles": 119868
+  }
+}

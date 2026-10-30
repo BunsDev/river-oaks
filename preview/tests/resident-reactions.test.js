@@ -60,6 +60,25 @@ test('an alarm reaches the nearest residents in range and in sight, at most the 
   assert.equal(notClose.life.reaction ?? null, null);
 });
 
+test('a resident waiting for the help they asked for keeps waiting, and does not take a reaction slot', () => {
+  // A resident who has just told Jevica what would help waits for it (held). The alarm must not
+  // startle them: the step would drop the reaction at once, and the slot and cool-off it used
+  // would shut out a farther bystander who can react (review of #708).
+  const { life, park, step } = street();
+  const waiting = park(0, [ALARM[0], ALARM[1] + 2]);
+  Object.assign(waiting, { priority: true, status: 'needs_help', needKnown: true, lastInteraction: 'talk' });
+  step(.1);
+  const bystanders = Array.from({ length: RR.cap }, (_, i) => park(i + 1, [ALARM[0] + (i % 2 ? 1 : -1), ALARM[1] + 4 + i * 2]));
+  const reacted = alarmResidents(life, { kind: 'contact', position: [...ALARM, 18] }, { sees: () => true });
+  assert.equal(waiting.life.reaction ?? null, null, 'the waiting resident is not startled');
+  assert.equal(waiting.life.reactionCooldownUntil ?? 0, 0, 'and starts no cool-off');
+  assert.deepEqual(reacted, bystanders.map(local => local.id), 'every slot goes to a bystander who can react');
+  // Once help has arrived the wait is over, and the same resident can be startled.
+  for (const local of bystanders) { local.life.reaction = null; }
+  waiting.lastInteraction = 'supply';
+  assert.deepEqual(alarmResidents(life, { kind: 'contact', position: [...ALARM, 18] }, { sees: () => true }), [waiting.id]);
+});
+
 test('after the startle a resident runs to clear ground away from the alarm, or cowers when there is nowhere to go', () => {
   const { life, park, step } = street();
   const runner = park(0, [ALARM[0], ALARM[1] + 8]);
