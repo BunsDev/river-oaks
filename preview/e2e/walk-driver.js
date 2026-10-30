@@ -29,25 +29,34 @@ export function createWalkDriver({ self, routes, refusals, now = () => Date.now(
       end() { if (release) { release(); release = null; } },
     };
   };
-  const pose = tab => tab.evaluate(() => window.__riverCarriage().pose);
+  // The pose carries the page's frame count (installed once per page), so a press can tell
+  // whether the page has drawn since the walker was last observed.
+  const pose = tab => tab.evaluate(() => {
+    if (window.__walkDriverFrames === undefined) { window.__walkDriverFrames = 0; const tick = () => { window.__walkDriverFrames++; window.requestAnimationFrame(tick); }; window.requestAnimationFrame(tick); }
+    return { ...window.__riverCarriage().pose, frame: window.__walkDriverFrames };
+  });
   const stopped = tab => tab.waitForFunction(() => window.__riverCarriage().pose.speed < .05, null, { timeout: 10000 });
   const refused = tab => tab.evaluate(name => window[name], refusals);
 
   const walk = async (tab, points, label) => {
     const started = now(), start = await self(tab), samples = [], turns = { drags: 0, turned: 0, waitedMs: 0 }, turn = turner(turns), presses = { fast: 0, slow: 0 }; // W keydowns, reasserts while held included
     const releaseKeys = async () => { await tab.keyboard.up('KeyW'); await tab.keyboard.up('ShiftLeft'); };
-    // The page reads held keys once per frame. Key events arrive in milliseconds while a
-    // CPU-rendered frame can take a second, so a slow press shorter than a frame can be released
-    // unread and move nothing: two hosted runs ended 0.21 m short of a waypoint after 12 and 94
-    // such presses. A slow press therefore lasts at least one and a half of this page's frames,
-    // measured here, and doubles whenever one still moved nothing.
-    const frameMs = await tab.evaluate(() => new Promise(resolve => window.requestAnimationFrame(first => window.requestAnimationFrame(second => resolve(second - first)))));
-    let dragYaw = null, hold = Math.min(2000, frameMs * 1.5);
+    let dragYaw = null, frameMs = 0, seen = null;
     try {
       for (const target of points) {
         const deadline = now() + 120000;
         for (;;) {
           const current = await pose(tab), dx = target[0] - current.position[0], dz = -target[1] - current.position[2], distance = Math.hypot(dx, dz);
+          // The page reads held keys once per frame. Key events arrive in milliseconds while a
+          // CPU-rendered frame can take a second, so a slow press shorter than a frame could be
+          // released unread: two hosted runs ended 0.21 m short of a waypoint after 12 and 94
+          // presses that moved nothing. A slow press lasts at least one and a half of the page's
+          // frames as last measured, between this observation and the previous one. Nothing is
+          // carried further: a press sized from one slow frame at the start of a walk overshot the
+          // waypoint at every later press (#768, woodland-heights).
+          const observed = now();
+          if (seen) frameMs = current.frame > seen.frame ? (observed - seen.at) / (current.frame - seen.frame) : observed - seen.at;
+          seen = { frame: current.frame, at: observed };
           if (dragYaw !== null) { if (current.yaw !== dragYaw) turns.turned++; dragYaw = null; }
           // Stay inside the planner's 0.3 m corner clearance before turning. A fast press can carry
           // the walker through the waypoint at full speed; let it stop and measure again, or it
@@ -63,16 +72,13 @@ export function createWalkDriver({ self, routes, refusals, now = () => Date.now(
           const fast = distance > 2;
           if (fast) await tab.keyboard.down('ShiftLeft'); else await tab.keyboard.up('ShiftLeft');
           await tab.keyboard.down('KeyW'); presses[fast ? 'fast' : 'slow']++;
-          await tab.waitForTimeout(fast ? Math.min(450, Math.max(30, distance * 110)) : Math.max(hold, Math.min(450, Math.max(30, distance * 230))));
+          await tab.waitForTimeout(fast ? Math.min(450, Math.max(30, distance * 110)) : Math.max(Math.min(2000, frameMs * 1.5), Math.min(450, Math.max(30, distance * 230))));
           // Keep walking during browser round trips, as spatial-streets does. Pulsing or releasing
           // every sample repeatedly brakes on CPU-rendered CI. Reassert while held; a stopped
           // observation starts a fresh press above. Within two metres, stop before measuring again:
           // held across a slow round trip (about 9 fps on CPU-rendered CI) the walker overshoots by
           // more than the arrival radius and circles the waypoint until it stalls.
-          if (!fast) {
-            await releaseKeys(); await stopped(tab);
-            if ((await pose(tab)).distance === current.distance) hold = Math.min(2000, Math.max(100, hold * 2));
-          }
+          if (!fast) { await releaseKeys(); await stopped(tab); }
           samples.push((await self(tab)).position);
         }
       }
