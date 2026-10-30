@@ -39,8 +39,8 @@ UV helper is removed.
 | city-kit, Heights, streaming and neighborhood suites | 151/151 |
 | Interleaved A/B build time, three alternations of seven rounds, host load 36–44 | see below |
 | `pnpm run verify` (core, host load 36–44) | passed: 289/289; 4656 pass + 35 todo + 1 skip of 4692; 1081 pass + 285 skip of 1366; 127 pass + 5 skip of 132; Python 170 passed |
-| Browser: `world-streaming` twenty-round-trip journey on the final head | pending (needs a quiet host) |
-| Browser: matched baseline audit on the final head | pending (needs a quiet host) |
+| Browser: `world-streaming` twenty-round-trip journey, `cc6ab7c7` (detached snapshot, 2026-10-30 03:53–05:12Z, 5-min load 13.5–17.7) | passed: 22 laps (2 warm-ups, 20 measured), scene and GPU counts bounded on every trip, post-GC heap 1.007 and 1.004 × warmed baseline (limit 1.10), no page errors, no extra sockets, camera and position continuous on all crossings |
+| Browser: matched baseline audit (`world-streaming-matched.js`), `cc6ab7c7` snapshot, 05:19–05:35Z, load 14 | passed: desktop and phone viewports on `river-oaks-gardens-3` and `east-garden-commons-market-1`, 3 windows per player count, 9 reconnects each |
 
 Build time, median of three alternation medians (ms):
 
@@ -67,5 +67,4 @@ load.
 
 ## Next step
 
-Core verify, draft PR, then the twenty-round-trip journey and the matched audit on the final
-head when the host is quiet.
+Land (authorized by Val 2026-10-30 once the browser evidence passed).
