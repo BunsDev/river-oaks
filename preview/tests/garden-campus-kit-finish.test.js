@@ -66,8 +66,10 @@ test('classic is the default and draws exactly the pre-finish campus, fit-out an
   assert.deepEqual(looks(unknown), looks(plain));assert.deepEqual(shape(unknown), shape(plain));
 });
 
+// The colour layer on its own (jetAgeForms: false); garden-campus-jet-age.test.js covers the shapes.
+const COLOUR_ONLY = { kitFinish: PINK, jetAgeForms: false };
 test('pink applies the mapping: ivory shells, mint glass, chrome hardware with pink trims, pink doors', () => {
-  const group = buildGardenCampus(campus, { kitFinish: PINK }), spec = CAMPUS_KIT_FINISHES[PINK], P = PINK_JET_AGE;
+  const group = buildGardenCampus(campus, COLOUR_ONLY), spec = CAMPUS_KIT_FINISHES[PINK], P = PINK_JET_AGE;
   assert.equal(group.userData.kitFinish, PINK);
   const colour = name => byName(group, name).material.color.getHexString();
   assert.equal(colour('campus:slab'), hex(P.ivory));assert.equal(colour('campus:stone'), hex(P.ivory));assert.equal(colour('campus:partition'), hex(P.ivory));
@@ -120,9 +122,9 @@ test('TypeSafe pink stays an accent: under a twentieth of the drawn opaque surfa
   group.userData.dispose();
 });
 
-test('every finish draws the same parts in the same places and leaves the world untouched', () => {
+test('the colour layer draws the same parts in the same places, and no finish touches the world', () => {
   const before = structuredClone(campus.gardenCampus);
-  const classic = buildGardenCampus(campus), pink = buildGardenCampus(campus, { kitFinish: PINK });
+  const classic = buildGardenCampus(campus), pink = buildGardenCampus(campus, COLOUR_ONLY), shaped = buildGardenCampus(campus, { kitFinish: PINK });
   assert.deepEqual(shape(pink), shape(classic));
   assert.deepEqual(pink.userData.counts, classic.userData.counts);
   assert.deepEqual(meshesOf(pink).map(mesh => [mesh.castShadow, mesh.receiveShadow, mesh.userData.aoExclude ?? null]), meshesOf(classic).map(mesh => [mesh.castShadow, mesh.receiveShadow, mesh.userData.aoExclude ?? null]));
@@ -134,7 +136,7 @@ test('every finish draws the same parts in the same places and leaves the world 
   }
   assert.deepEqual(campus.gardenCampus, before, 'rendering never writes the campus layout, levels or collision');
   assert.deepEqual(campusLevels(CAMPUS), levels);
-  classic.userData.dispose();pink.userData.dispose();
+  classic.userData.dispose();pink.userData.dispose();shaped.userData.dispose();
 });
 
 test('under pink the time of day still scales only the glow, and relighting returns every material', () => {
