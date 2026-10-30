@@ -53,6 +53,10 @@ async page => {
     console.log(`Heights resident ${streamed.residentBytes} of ${streamed.geometryBudgetBytes} bytes: measured ${JSON.stringify(streamed.measuredBytes)} estimated ${JSON.stringify(streamed.estimatedBytes)}; owned textures ${streamed.residentTextureBytes} bytes resident: ${JSON.stringify(streamed.measuredTextureBytes)}`);
     check(streamed.residentBytes<=streamed.geometryBudgetBytes&&Object.entries(streamed.measuredBytes).every(([id,bytes])=>bytes<=streamed.estimatedBytes[id]),
       'The north terrace streams in at the greenway, within the Heights geometry ceiling and each part within its estimate');
+    // With a real canvas the sign atlases exist: each neighborhood's owned textures measure under the estimate its plan gave the texture ceiling.
+    console.log(`Owned textures ${streamed.residentTextureBytes} of ${streamed.textureBudgetBytes} bytes: estimated ${JSON.stringify(streamed.estimatedTextureBytes)}`);
+    check(streamed.residentTextureBytes>0&&streamed.residentTextureBytes<=streamed.textureBudgetBytes&&Object.entries(streamed.measuredTextureBytes).every(([id,bytes])=>bytes<=streamed.estimatedTextureBytes[id]),
+      'The owned textures sit within the Heights texture ceiling and each neighborhood within its estimate');
     await capture(page,'greenway-footbridge');
     await Promise.all([walk(page,[at([130,112]),at([101,112])],'owner footbridge'),walk(peer,[at([130,110]),at([100,110])],'alice footbridge')]);
     check((await self(page)).position[0]<bank&&(await self(peer)).position[0]<bank,'Two real clients crossed the Twentieth Street footbridge onto the west bank by keyboard');
