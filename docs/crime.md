@@ -111,3 +111,243 @@ Presentation only, in `preview/src/combat-motion.js`: the town decides every pha
 - **Other figures.** `main.js` attaches the town's state to every player, rival and officer figure; `remote-players.js` plays it forward from the snapshot's arrival, faces the opponent and layers the pose. A figure the layer poses drops the legacy `shove` / `stagger` / `down` gesture so the two never stack. Keyboard and touch reach the same states: the HUD's buttons and keys send the same messages.
 - **Reduced motion.** No swings: strikes, evades and flinches keep the posed rig and the HUD text carries the event. Held states (down, surrender, arrest, a grab's reach) and the counter's telegraph show one static key pose, so a downed or held figure is never shown standing at rest. The blend snaps instead of easing.
 - **Tests.** `preview/tests/combat-motion.test.js` (spec adopted from the earlier presentation worktree) covers timing parity, phase reading and late snapshots, facing at 30/60/120 Hz with foot placement, every pose on every shipped rig, bounds and determinism, reduced motion, the blend and the HUD reader; `preview/tests/crime-ui.test.js` the published state; `preview/tests/remote-players.test.js` the figure state and facing. The `crime-shared` journey checks the published strike and the figure state on both screens, the telegraph cue, the admitted evade, surrender holding the figure with inputs cleared, and a clean exit.
+
+## Evidence (#640 increment 5)
+
+Measurements, not budgets: every number below is what one machine produced on one day, bound to
+the revisions named, under the load averages recorded in the receipts. Nothing here changes an
+acceptance threshold, a budget or a harness default.
+
+### Crime workload, main vs branch (the #599 protocol of 2026-10-24)
+
+`pnpm run audit:crime` (`server/crime-workload.js`, report in `data/reports/crime-workload.json`):
+server simulation only (`createSharedWorld` on a synthetic clock, 50 ms steps); every player stands
+around the service lane rival at five stars in `south-service-lane` and strikes every simulated
+second; the police respond at the six-officer cap; two runs of 20 s per tier after a 2 s warm-up;
+the same script on `main` and on the branch, same machine. The town is deterministic, so the two
+runs of a tier differ only in timing. What the protocol produces: the rival is down after four
+hits and recovers 20 s later, so most strikes miss (`target_incapacitated`); officers arrest the
+standing strikers, who are returned to the safe arrival and then strike from outside the zone
+(`not_danger_zone`). Step maxima of 70–90 ms are host noise (load averages 29–102 during these
+runs; other sessions shared the machine).
+
+main a1fa945a [ 101.97, 51.06, 29.31 ] branch b7df2c6a [ 65.77, 47.16, 28.65 ]
+| Head | Players | Step p95 (ms) | Step max (ms) | Snapshot (bytes) | Checkpoint (bytes) | Officers (max) | Strikes admitted / hit / miss |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| main (a1fa945a) run 1 | 1 | 1.1 | 86 | 59896 | 141629 | 3 | 4 / 4 / 0 |
+| main (a1fa945a) run 2 | 1 | 0.88 | 83.76 | 59896 | 141629 | 3 | 4 / 4 / 0 |
+| branch (b7df2c6a) run 1 | 1 | 1.28 | 88.21 | 61464 | 141629 | 3 | 4 / 4 / 0 |
+| branch (b7df2c6a) run 2 | 1 | 0.96 | 69.66 | 61464 | 141629 | 3 | 4 / 4 / 0 |
+| main (a1fa945a) run 1 | 8 | 1.34 | 83.69 | 62845 | 145761 | 6 | 8 / 4 / 4 |
+| main (a1fa945a) run 2 | 8 | 1.41 | 84.81 | 62845 | 145761 | 6 | 8 / 4 / 4 |
+| branch (b7df2c6a) run 1 | 8 | 1.09 | 78.21 | 64413 | 145761 | 6 | 8 / 4 / 4 |
+| branch (b7df2c6a) run 2 | 8 | 1 | 66.7 | 64413 | 145761 | 6 | 8 / 4 / 4 |
+| main (a1fa945a) run 1 | 16 | 1.36 | 92.4 | 67790 | 153715 | 6 | 18 / 6 / 12 |
+| main (a1fa945a) run 2 | 16 | 1.16 | 87.89 | 67790 | 153715 | 6 | 18 / 6 / 12 |
+| branch (b7df2c6a) run 1 | 16 | 1.29 | 79.16 | 69358 | 153715 | 6 | 18 / 6 / 12 |
+| branch (b7df2c6a) run 2 | 16 | 1.36 | 76.2 | 69358 | 153715 | 6 | 18 / 6 / 12 |
+| main (a1fa945a) run 1 | 32 | 1.18 | 78.85 | 79119 | 170373 | 6 | 52 / 8 / 42 |
+| main (a1fa945a) run 2 | 32 | 1.14 | 82.53 | 79119 | 170373 | 6 | 52 / 8 / 42 |
+| branch (b7df2c6a) run 1 | 32 | 1.21 | 73.48 | 80687 | 170373 | 6 | 52 / 8 / 42 |
+| branch (b7df2c6a) run 2 | 32 | 1.1 | 73.14 | 80687 | 170373 | 6 | 52 / 8 / 42 |
+
+### Input to pose and contact alignment, 30/60/120 Hz under the proposed network profiles
+
+`RIVER_OAKS_COMBAT_EVIDENCE=<path> node --test preview/tests/combat-timing.test.js`: a simulated
+town (the strike phases of `server/crime.js`, a 50 ms loop that broadcasts at most every 200 ms as
+`server/app.js` does) and the shipped `combat-motion.js` run the way `crime-ui.js`,
+`player-avatar.js`, `main.js` and `remote-players.js` call it, under the #637 profiles (RTT 0/100/
+200 ms, one-way jitter ±0/15/40 ms, 0/1/3 % head-of-line stalls of 250/400 ms, seeds 3/11/29).
+Milliseconds after the key press, or after the town's contact instant; p50 (min–max) over seeds.
+The striker's own figure starts from the first snapshot that carries the admitted action, not from
+the reply: the "if started from the reply" column is what that would save (not implemented).
+
+| Profile | Hz | Striker: key → pose shown | …if started from the reply | Striker: contact shown after the town's contact | Other player: key → strike shown | contact shown after the town's contact | rival flinch after the town's contact |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| rtt0 (RTT 0 ms, ±0 ms, 0 % stalls of 0 ms) | 30 | 133 (133–133) | 0 (0–0) | 33 (33–33) | 133 (133–133) | 0 (0–0) | 33 (33–33) |
+| rtt0 (RTT 0 ms, ±0 ms, 0 % stalls of 0 ms) | 60 | 117 (117–133) | 0 (0–0) | 17 (17–17) | 117 (117–133) | 0 (0–0) | 33 (17–33) |
+| rtt0 (RTT 0 ms, ±0 ms, 0 % stalls of 0 ms) | 120 | 117 (108–125) | 0 (0–0) | 8 (8–8) | 117 (108–125) | 0 (0–0) | 25 (17–33) |
+| rtt100 (RTT 100 ms, ±15 ms, 1 % stalls of 250 ms) | 30 | 167 (167–200) | 100 (100–133) | 58 (58–58) | 167 (167–167) | 58 (58–58) | 291 (258–291) |
+| rtt100 (RTT 100 ms, ±15 ms, 1 % stalls of 250 ms) | 60 | 167 (150–183) | 100 (100–117) | 58 (41–58) | 167 (167–167) | 58 (41–58) | 274 (258–275) |
+| rtt100 (RTT 100 ms, ±15 ms, 1 % stalls of 250 ms) | 120 | 158 (150–175) | 100 (92–108) | 49 (41–58) | 158 (158–158) | 49 (41–58) | 266 (249–266) |
+| rtt200 (RTT 200 ms, ±40 ms, 3 % stalls of 400 ms) | 30 | 200 (200–233) | 200 (167–233) | 88 (87–121) | 200 (200–200) | 120 (88–121) | 320 (287–321) |
+| rtt200 (RTT 200 ms, ±40 ms, 3 % stalls of 400 ms) | 60 | 200 (183–233) | 183 (167–217) | 88 (87–104) | 183 (183–200) | 104 (71–120) | 304 (271–304) |
+| rtt200 (RTT 200 ms, ±40 ms, 3 % stalls of 400 ms) | 120 | 200 (175–233) | 183 (167–217) | 79 (71–96) | 183 (183–200) | 96 (71–120) | 295 (271–304) |
+
+What the model says: the striker's pose follows the key by one way plus up to one broadcast
+interval plus a frame; the other player's shown contact trails the town's by one way plus jitter
+plus a frame (the state is played forward from the snapshot's age); the rival's flinch trails by
+more, because it waits for the first snapshot that carries the hit. The pose never leads the town
+and never runs backwards (asserted).
+
+### Two-browser capture in the south service lane
+
+`RIVER_OAKS_SHARED_JOURNEY=crime-night RIVER_OAKS_SHARED_REPORT=crime-night-shared.json pnpm run test:shared development` (`preview/e2e/crime-night.js`,
+on demand, not in the default journey list): two Chromium pages at 1280×860, both at the latest
+authored hour (19:00; the time-of-day control ends there, so a night sky is not yet authored), the
+visitor strikes with T and evades the rival's counter with U while the owner watches from a few
+metres east. Each page stamps on its own clock when the key went down, when its figure took up
+the pose, when the hit arrived and when the other figure's contact and flinch showed; screenshots
+at the lane, the strike (the visitor's right after T, the owner's once their page shows it), the telegraph and the
+evade go to `output/playwright/crime-night-*.png`.
+The receipt's `evidence` carries the stamps. Run 1 on this head (receipt `crime-night-run1-receipt.json` in the worktree's evidence
+folder; Apple M5 Max, ANGLE Metal, full rendering; both pages ran at about 28 animation frames per
+second over the fight, screenshots included): striker key → HUD published the strike 70 ms, figure
+took up the pose 68 ms (the pose and the attribute land in the same frame), hit snapshot 409 ms
+(40 ms after the town's contact by the striker's own estimate), counter telegraph 791 ms after the
+hit, evade key → lean 109 ms, counter evaded on the first attempt; the other browser showed the
+strike 194 ms after the key (16 % into the swing), its contact 37 ms after the town's contact, the
+rival's flinch 37 ms after it (the same frame as the hit snapshot) and the counter telegraph 16 ms
+after the striker's HUD did. Two things the capture shows that the model does not: the other
+browser never showed the evade (the evade window lives only in the evader's reply; the snapshot
+carries no evade state for peers, so increment 4 leans the local figure only), and 19:00 renders
+with a daylight sky (clear weather keeps the daytime HDR; the hour only lowers and warms the
+sun), so a night encounter needs an authored sky and lamps before it can be captured.
+Run 2 on the same head (`b7df2c6a` with these files, another session's detached copy, 2026-10-28
+08:28Z, receipt `data/reports/crime-night-shared-ae.json` kept out of the commit; same machine and
+renderer, about 38 animation frames per second on both pages): striker key → HUD 51 ms, pose
+49 ms, hit snapshot 448 ms (99 ms after the town's contact by the striker's estimate), counter
+telegraph 633 ms after the hit, evade key → lean 79 ms; the first evade press was late (131 ms of
+the window left when it reached the town), the second evaded with 593 ms to spare. The other
+browser showed the strike 36 ms after the key (at the start of the swing), its contact 6 ms before
+the striker's estimate of the town's contact and 119 ms before the striker's hit snapshot (the two
+pages stamp on their own clocks and the owner plays the snapshot forward, so the sign is not a
+lead over the town), the flinch 128 ms after the town's contact and in the same frame as its own
+hit snapshot, and the counter telegraph 17 ms before the striker's HUD. The evade was again not
+shown to the other browser. The 9 checks passed in 18.8 s. The same two pages at 19:00 again
+rendered a daylight sky.
+
+### The encounter in one run, three browsers (crime-encounter)
+
+`RIVER_OAKS_SHARED_JOURNEY=crime-encounter RIVER_OAKS_SHARED_REPORT=crime-encounter-shared.json pnpm run test:shared development`
+(`preview/e2e/crime-encounter.js`, on demand, not in the default journey list): the owner page sets
+the rules; a visitor, whose browser context records video, plays; a witness, also recorded, stands in
+the lane in first person and watches the same figures, the peer recording. One run, one candidate,
+the south service lane at 19:00, clear weather. The visitor walks (W 2.5 s), sprints (Shift+W 1.8 s),
+turns (← 1 s), strafes (D 1.5 s) and backs up (S 1.2 s) 22 m east of the rival while both pages
+sample every animation frame (position, yaw, speed, camera, foot contact and IK error from
+`__riverCarriage` / `__riverPlayerAttention`, and the visitor's drawn figure from the witness's
+`remotes`); then strikes the rival with T, evades its counter with U, steps back, is offered
+surrender by the officer, evades the first grab with U and is taken by the next (resisted capture,
+safe arrival); walks back, strikes again, alarms the nearest outdoor resident, is drawn back
+into pursuit and cut off by **Emergency off**; walks back once more, strikes, sends a duplicate
+attack ID three times and a stale evade ID twice through the development command hook, steps back,
+has the socket dropped under pursuit (`__riverConnection.drop`), loses window focus with W held,
+and surrenders. The receipt's `evidence.rows` carry pass / not-run per row with the numbers; the
+videos go to `output/playwright/crime-encounter-video/`.
+
+Run 6 on `aeb95f85` + this journey (2026-10-28 14:36–14:38Z; Apple M5 Max, ANGLE Metal, full
+rendering, load about 10–17 with other sessions; 31 checks in 125 s; receipt sha256 `1a8d3f0c…`,
+videos `3ff709d0…` visitor and `d108fcdb…` witness, kept out of the commit). Five earlier runs
+failed on the harness, never on the town (each log is in the task ledger): a walk window that
+overlapped the sprint; a duplicate raw strike sent before the keyboard strike, whose star brought
+the officer in before the rival's second counter; a HUD line that is only shown beside a rival;
+emergency off pressed before any officer was on the visitor; a travel probe to an unwalkable spot.
+Measurements, not budgets:
+
+- **Movement, local figure** (380 frames, frame time p50 35 ms / p95 54 ms with three browsers on
+  the host): walk peak 1.65 m/s, 90 % of it 258 ms after the key, stopped 360 ms after release;
+  sprint peak 3.2 m/s, 90 % at 243 ms, stopped at 380 ms; a held ← turned the body 91° in 1.0 s;
+  strafe 1.65 m/s at 90° to the facing with 0° body turn; backing up 1.65 m/s with 0° body turn;
+  worst figure displacement between frames 4.5 m/s and worst camera displacement 8.3 m/s (no
+  jumps); of 229 moving frames every one had a foot planted, worst IK error 0.000 m.
+- **Movement, as the witness drew it**: the visitor on screen for 311 of 380 frames, 264 moving
+  frames with no frozen frame, a foot planted in every one, worst drawn displacement 5.1 m/s.
+- **Fight**: strike published by the HUD 351 ms after the key and the pose 358 ms (the figure
+  starts from the first snapshot that carries the action; crime-night measured 51 / 49 ms on a
+  quieter host, so this is the snapshot cadence under load, see the timing table above); hit
+  snapshot 789 ms after the key, 140 ms after the town's contact; counter telegraph 605 ms after
+  the hit; evade key → lean 74 ms; the counter was evaded on the first attempt (647 ms left when
+  timed). The witness showed the strike 394 ms after the key, its contact 8 ms after the town's
+  contact, the rival's flinch 153 ms after it, the counter telegraph 7 ms after the striker's HUD
+  and the grab telegraph 34 ms after it; the arrest pose was shown.
+- **Capture**: the first grab (850 ms left when timed) was evaded with U and the officer went back
+  to pursuit, not subdued; the next grab landed 11.6 s after the first telegraph; the arrest
+  returned the visitor 149 m to the safe arrival with full health and no held input or published
+  state.
+- **Residents**: Ima Hogg startled at 1.2 m from the wanted visitor and ran at 1.83 m/s; the
+  witness's town state showed the flight.
+- **Emergency off during `pursue`**: no unit on the visitor, nothing subdued, no pending action,
+  no held walk key, the visitor walked under their own key, and the one earned star stayed.
+- **Exactly once through raw commands**: three sends of one attack ID returned the same action
+  (`strike:7`: windup, replayed, replayed with outcome `hit`), one hit, one star; a repeated evade
+  ID replayed with no new window (350 → 0 ms remaining).
+- **Reconnect under pursuit**: the socket came back in 1103 ms with the same identity and stars
+  (3); the officer, having lost the player for that second, was in `search` and the pursuit went on.
+- **Focus loss with W held**: 1.60 → 0.00 m/s, no held key left.
+- **Voluntary surrender**: hands up on both screens, arrest shown to the witness, safe arrival.
+- **Run 10 on the same tree plus two more episodes** (2026-10-28 16:14–16:17Z, 37 checks in
+  201 s, frame time p50 37 / p95 55 ms; receipt `data/reports/crime-encounter-shared.json`, videos
+  `crime-encounter-run10-{visitor,witness}.webm`, about 200 s each). Every run-6 row again
+  (walk 257 / 325 ms, sprint 277 / 361 ms to 90 % and to stop; 228/228 moving frames with a foot
+  planted; counter evaded; reconnect 1320 ms; blur 1.61 → 0.00 m/s), then:
+  - **Safe-zone transition inside the windup**: T on the keyboard, and 20 ms later the town moved
+    the visitor 149 m out of the danger zone by travel; at contact the strike resolved
+    `cancelled` / `not_danger_zone`, rival health 100 → 100, stars 0 → 0, no combat framing,
+    nothing held.
+  - **Stars held under observation**: one star, out of the rival's reach, pursued; **11 grabs
+    evaded with U over 36.4 s** while watched (health 100 throughout) and the star stayed; after
+    travelling out of the zone the pursuit ended, the star was still there at 15 s and cooled off
+    **30.1 s** after leaving (`starDecayMs` 30 s from the last observation).
+  - Timing the key: a U pressed a fixed 340 ms before the estimated contact lost a grab under
+    load (run 7) and 420 ms before lost a counter on a quiet loop (run 8), because a key reaches
+    the town 5–250 ms after the press (the loop can be inside a 100–200 ms route search). The
+    journey now sends a command the town refuses at once just as the telegraph appears, measures
+    the round trip (1–8 ms in run 10) and presses that far plus 160 ms ahead of the contact. In
+    run 10 the first grab after the surrender offer was seen with 86 ms left, too late to time,
+    so that row reads not-run while the observation episode evaded eleven.
+  - Runs 7–9 failed on the harness (the fixed lead; the town's 1 s travel cooldown refusing the
+    step out of the zone and the step back from the rival, so the rival's counters wore the
+    visitor down and the officer arrested a downed player); each log is kept.
+- **The three rows the encounter could not show, in one run on two world processes
+  (crime-takeover, run 6, 2026-10-29 03:18–03:20Z, 25 checks in 115 s)**: `pnpm run
+  test:crime:takeover` with `REDIS_URL` naming an isolated Redis runs
+  `preview/e2e/crime-takeover-runner.js`: two `server/tests/takeover-world.js` processes (the
+  browser fixture's loopback identities on `createWorldGateway`, one Redis namespace) behind a
+  plain TCP relay on the Vite town port, so the page, its `/auth`, `/api` and `/multiplayer`
+  traffic reach whichever process the relay names. The runner's page is the Jevica fixture owner
+  (rules; the one identity that may fly), alice the visitor (recorded,
+  `output/playwright/crime-takeover-video/crime-takeover-run6-visitor.webm`), bob the witness.
+  Receipt `data/reports/crime-takeover-shared.json`; a copy with hashes under
+  `.runtime/evidence-640/crime-takeover-run6-*`.
+  - **Search after sight loss, by distance** (the lane is 213 m long; an officer sees 35 m): with
+    the officer at stand-off and alice in view, a server travel moved her 85 m east, still inside
+    the lane. 290 ms later the officer was in `search`, standing within 0.6 m of the spot she was
+    last seen on (0 m at its nearest) and 85 m from her, turning on the spot for 7.9 s with her
+    star kept, then `return`; back within 35 m she was seen and pursued again to 2.2 m. Runs 2
+    and 3 showed the rule's other side: an officer still walking to the strike spot, facing
+    away, had never seen her at the new spot and searched the strike spot instead, standing on it
+    and sweeping at the 90°/s rate; the journey had mis-read that as the last-seen point. The
+    server-only probe `.runtime/evidence-640/search-probe.mjs` reaches the spot in 2 s in both
+    timings.
+  - **Writer takeover mid-pursuit**: wanted and pursued 25 m from the officer, alice sent one
+    evade id to world A; A was killed with SIGKILL (gone in 12 ms) and the relay switched to B.
+    The visitor, witness and owner pages reconnected through it in 5.6, 6.1 and 5.4 s with the
+    same identities, her position (0 m drift), one star, rival health 50, her health 100 and the
+    rules still on; B held a new lease; the officer came back `pursue`, read `search` for a moment
+    and was `pursue` again 2.5 s later. The same evade id sent to B replied `replayed` with the
+    window spent: the action had been committed and carried over in the checkpoint. The witness
+    still drew her and the officer; the surrender offer, keyboard surrender, arrest and safe
+    recovery, and the owner's emergency off, all went through B.
+  - **Altitude inside the windup**: the owner pressed B (take-off) and 150 ms later the raw
+    attack went while the local figure was 0.11 m up; the town accepted it on its last pose, on
+    the ground (110 ms reply), and at contact found the attacker airborne: `miss` /
+    `attack_on_foot`, rival health 100 → 100, no star. Run 5, the same sequence under a 209–378 ms
+    loop, landed two of three: the airborne pose reached the town after the contact, because
+    flight poses are acknowledged one at a time (`multiplayer-client.js`), and the town struck
+    from the last pose it had. That is contact resolved on the authoritative pose, recorded as a
+    finding for the lane rather than a rule violation.
+  - Runs 1–5 failed on the harness (public units carry no last-seen field; the last-seen spot
+    mis-read; a grab landing before the far step; the strike looked up by a field public actions
+    do not carry); each log and receipt is under `.runtime/evidence-640/crime-takeover-run{1..5}-*`.
+  - Escape by concealment still has no browser row, and on `e09ed8d5` it cannot have one with the
+    authored zones (server-only probes of 2026-10-29, `.runtime/evidence-640/conceal/`): a 2 m grid
+    inside both danger zones has no blocked point, and none of 26,848 sampled chest-height sight
+    lines within 35 m is blocked (westcreek-lane 8,317 pairs, south-service-lane 18,531). The
+    nearest free spot hidden from an officer standing in the lane is the alley at (-2799, -1414),
+    behind the corner at (-2802, -1422), which is north of the lane's edge (-1425): staged in the
+    shared world, the visitor stepping there left the zone, so the officer returned at once (an
+    officer only keeps a target that is wanted inside a danger zone) and despawned 0.35 s later.
+    A hiding place therefore needs a content decision (a sight-blocking prop inside the lane, or a
+    zone that includes the alley), not a runtime change; `server/tests/police.test.js` and
+    `police-capture.test.js` cover the concealment geometry rule itself.
