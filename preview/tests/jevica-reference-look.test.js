@@ -277,3 +277,21 @@ test('the lapels lie on the blazer front, not behind it', async () => {
     }
   } finally { costume.dispose(); rig.dispose(); }
 });
+
+test('a rose-gold vine winds unbroken up each lapel, between the piped edges', async () => {
+  const { rig, costume } = await dressed();
+  try {
+    for (const lapel of costume.suit.lapels) {
+      const piping = lapel.geometry.attributes.piping, columns = 22, rows = piping.count / columns;
+      assert.equal(rows, Math.round(rows), 'a regular grid');
+      let lit = 0, vineRows = 0;
+      for (let r = 0; r < rows; r++) {
+        if (r / (rows - 1) >= .66) continue; vineRows++;
+        // The satin columns, inside both piped edges.
+        let best = 0; for (let c = 2; c < columns - 2; c++) best = Math.max(best, piping.getX(r * columns + c));
+        if (best > .5) lit++;
+      }
+      assert.equal(lit, vineRows, `${lapel.name}: the vine shows in ${lit} of ${vineRows} rows`);
+    }
+  } finally { costume.dispose(); rig.dispose(); }
+});

@@ -228,7 +228,24 @@ edge, piped rose-gold. The notched outline now reads in front and three-quarter 
 - Browser: likeness IoU 0.598, mean ΔE 16.9; `jevica-gown`, `jevica-waist`, `jewel-optics`, `gown-sampling` and `gown-contact-samples` pass.
 - Core verify passed: agent 294/294; preview 4772 pass, 1 skipped; server 1110 pass, 285 skipped; desktop 127 pass, 5 skipped.
 
+**Follow-up: roll and vine.**
+- **Roll:** the satin now bows up to 3.5 mm outward between its edges, so it catches light
+  like a pressed lapel.
+- **Vine:** a rose-gold vine winds up the lower two thirds of each lapel, about one and a
+  half turns.
+  - The first try broke into dashes: the line was thinner than the 3.5 mm column spacing.
+    The grid went to 22 columns by 61 rows.
+  - The second try lost the vine at the narrow tip by the button. It is now placed within
+    the satin band itself.
+  - A test requires the vine in every row below the notch. It failed on both earlier tries.
+- **Likeness:** IoU 0.598 is unchanged. Mean ΔE went 16.9 → 17.1 and jacket-chest 9.9 → 11.6,
+  because that sample sits on the right lapel and now picks up the rolled shading and the
+  vine. It stays under the region's threshold. The reference has filigree at that spot too,
+  but the sample measures flat colour.
+- Core verify passed again: agent 294/294; preview 4773 pass, 1 skipped; server 1110 pass,
+  285 skipped; desktop 127 pass, 5 skipped.
+
 **Gaps.**
-- No vine filigree on the lapels.
-- The lapel is a ribbon pinned to the chest, not a rolled collar.
+- The vine is a single winding line, not the reference's branching leafy filigree.
+- The lapel is a rolled ribbon pinned to the chest, not a separate collar piece.
 - No human review.
