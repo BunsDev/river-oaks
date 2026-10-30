@@ -130,7 +130,7 @@ Known intermittent journeys, all of which have passed on rerun:
 - `email access`: waiting for the connected roster. The client connect deadline (#260) and interior render cost (#268) addressed it.
 - `creator-objects`: #271.
 
-Rerun only the failed jobs (`gh run rerun <id> --failed`) and confirm a second pass before treating one as a regression.
+Every failure on `main` goes in [the hosted CI flake ledger](ci-flake-ledger.md) with its signature, cause and fix. Read the failing job's log and artifact before rerunning; a rerun that passes is evidence of intermittency, not a fix.
 
 ```mermaid
 %% diagram: ci-pipeline (placeholder; replace this block with the real diagram)

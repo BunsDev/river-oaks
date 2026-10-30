@@ -155,10 +155,14 @@ test('leaving the town releases the slot and keeps the metres for the flush; a c
   assert.deepEqual(f.world.drainRides(), [{ userId: 'alice', name: 'alice', meters: 3 }]);
 });
 
-test('the car and motorcycle stay exclusive to the owner while anyone may cycle', () => {
+test('the car stays exclusive to the owner while anyone may ride the motorcycle or cycle', () => {
   const f = setup(['bob', OWNER]);
   f.put('bob', slots[0].approach);
-  assert.equal(f.act('bob', { type: 'pose', position: [slots[0].x, slots[0].north, environment.groundAt(slots[0].x, -slots[0].north)], yaw: 0, altitude: 0, vehicle: 'motorcycle' }).error, 'exclusive_vehicle');
+  const at = vehicle => ({ type: 'pose', position: [slots[0].x, slots[0].north, environment.groundAt(slots[0].x, -slots[0].north)], yaw: 0, altitude: 0, vehicle });
+  assert.equal(f.act('bob', at('rolls')).error, 'exclusive_vehicle');
+  assert.equal(f.act('bob', at('motorcycle')).ok, true, 'the motorcycle is every account\'s');
+  assert.equal(f.act('bob', { type: 'cycle', rackId: 'plaza-salon-rack', slot: 0 }).error, 'rack_out_of_reach', 'a rider steps off the motorcycle before taking a rack bike');
+  assert.equal(f.act('bob', at(null)).ok, true);
   assert.equal(f.act('bob', { type: 'cycle', rackId: 'plaza-salon-rack', slot: 0 }).ok, true);
   f.put(OWNER, slots[1].approach);
   assert.equal(f.act(OWNER, { type: 'cycle', rackId: 'plaza-salon-rack', slot: 1 }).ok, true);
