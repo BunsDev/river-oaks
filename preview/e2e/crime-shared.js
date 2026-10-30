@@ -178,11 +178,17 @@ async page => {
     await page.screenshot({path:'output/playwright/police-officer-desktop.png'});
     await visitor.screenshot({ path: 'output/playwright/police-pursuit-phone.png' });
     const surrender = hud.getByRole('button', { name: 'Surrender', exact: true });
+    // Hold a walk button down (pointer pressed, never released) so the release check below has
+    // something to release (review of #710: the check passed with nothing held).
+    const walkButton = visitor.locator('[data-walk-key]:visible').first(), walkBox = await walkButton.boundingBox();
+    await visitor.mouse.move(walkBox.x + walkBox.width / 2, walkBox.y + walkBox.height / 2); await visitor.mouse.down();
+    check(await visitor.evaluate(() => document.querySelectorAll('[data-walk-key].held').length > 0), 'A walk button is held down before surrendering');
     await surrender.focus(); await visitor.keyboard.press('Enter');
     await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.police.surrendered.includes(m.selfId); });
     check(true, 'Keyboard surrender is accepted by the server with reduced motion enabled');
     await visitor.waitForFunction(() => document.querySelector('#canvas-host').dataset.combat === 'surrender', null, { timeout: 5000 });
-    check(await visitor.evaluate(() => document.querySelectorAll('[data-walk-key].held').length === 0), 'Surrendering holds the figure in its pose with no walk button left held');
+    check(await visitor.evaluate(() => document.querySelectorAll('[data-walk-key].held').length === 0), 'Surrendering releases the held walk button and holds the figure in its pose');
+    await visitor.mouse.up();
     await page.waitForFunction(id => window.__riverMultiplayer().snapshot.police.units.some(unit => unit.targetId === id && unit.state === 'arrest'), after.selfId);
     check(true, 'The other browser sees the same authoritative arrest');
     await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return !m.snapshot.crime.wanted.some(([id]) => id === m.selfId); });
