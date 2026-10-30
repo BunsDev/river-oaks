@@ -24,7 +24,8 @@ Two commits on one branch:
 
 - `preview/src/hud-glass.css`, `preview/src/visual-finish.css` (A)
 - `preview/tests/hud-token-contrast.test.js` (A, B)
-- B: see the commit B section below
+- B: `preview/src/pink-jet-age-hud.css` (new), `preview/src/main.js`,
+  `preview/e2e/walking-controls-contrast.js`
 - this ledger
 
 ## Checks
@@ -66,12 +67,55 @@ Why these values:
 Test: 275 tests, 260 pass, 15 todo (the eleven bound gaps, unchanged), 0 fail. The 20
 todos for the four defects are now ordinary enforced tests.
 
+Commit A: `c9b9b0eb`.
+
+## Commit B: the opt-in Pink Jet-Age HUD skin
+
+Handover: on 2026-10-30 `claude:river-oaks-01 (483949)` took the task over from
+`cody-pja-r8s` (lease expired, no live process); commit A was the uncommitted diff the
+previous owner left, verified unchanged (275 tests, 260 pass, 15 todo).
+
+- `preview/src/main.js` sets `<html data-finish>` from the same `readFinishPreference()`
+  the world finish reads (`?finish=pink-jet-age` or `localStorage['river-oaks-finish']`),
+  and imports `pink-jet-age-hud.css` last, after `play-rail-menu.css`.
+- `preview/src/pink-jet-age-hud.css`: two blocks, `:root[data-finish=pink-jet-age][data-theme=light|dark]`.
+  Both name the theme, so neither outranks the other in the cascade. Accent roles only:
+
+| Token | Light | Dark |
+| --- | --- | --- |
+| `--hud-action` / `--hud-on-action` | deep rose `#9b2f55` / `#fff8f2` | TypeSafe pink `#f486a1` / ink `#24242a` |
+| `--hud-focus` | `#9b2f55` | `#f486a1` |
+| `--liquid-accent` / `--liquid-on-accent` | `#8e2a4e` / ivory `#f7f1e8` | `#f486a1` / ink |
+| `--accent` / `--accent-soft` / `--on-accent` | `#9b2f55` / `#fbe3ea` / `#fff8f2` | `#fbd0dc` / `#4a2a36` / ink |
+| `--liquid-caustic` | pink at .5 | pink at .3 |
+
+  Glass tints, ink, muted text and every reduced-transparency/software variant are untouched.
+  Light cannot use `#f486a1` as a fill: `--hud-action` is also the light settings-link
+  *text* colour, and pink on the ivory panel is about 2:1. The town-gate button blends 18%
+  white into its lighter stop, so its accent is one step deeper (4.76:1 there).
+- `preview/tests/hud-token-contrast.test.js`: every scenario repeats under the skin
+  (`pink-jet-age:<scenario>`), the cascade includes the new sheet, and two guards: an
+  unknown finish resolves exactly the classic tokens; skin declarations carry
+  `data-finish=pink-jet-age` plus `data-theme`, no at-rule, and no glass/ink/muted token.
+- `preview/e2e/walking-controls-contrast.js` measures the movement console under
+  classic and the skin (labels `pink-jet-age-light|dark`, screenshots likewise).
+
 ## Results
 
-(filled in at each checkpoint)
+- `node --test preview/tests/hud-token-contrast.test.js`: 541 tests, 511 pass, 30 todo,
+  0 fail. The 30 todos are the 15 classic backdrop-bound gaps and the same 15 under the
+  skin: the skin introduces no new shortfall (dark `--accent` was raised from `#f6a3b8`
+  to `#fbd0dc` after `chat-accent` measured below 4.5 under the white bound).
+- `pnpm run verify`: see the PR.
+- Browser journey: not yet run (host load above 40 on 2026-10-30 ~02:30 CDT; see PR).
 
 ## Gaps and unverified scope
 
 - The eleven "bound" gaps stay todo for classic (unchanged in this slice).
 - `.walking-help kbd` keeps `opacity: .8` (visual-finish.css:240); not measured.
 - Browser automation is not human accessibility acceptance.
+- Raw colours outside the tokens stay classic under the skin: `retro-finish.css`
+  `#walking-enter`/`#walking-interact`/`#walking-meet-nearby`/`#walking-talk`/
+  `#player-carriage`, the town-gate kicker and the places error red. A later slice can
+  move them onto tokens.
+- The sign-in gate (`access-theme.css`) is out of scope: it has its own approved pink.

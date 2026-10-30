@@ -19,7 +19,7 @@ const src = name => readFileSync(new URL(`../src/${name}`, import.meta.url), 'ut
 const CASCADE = [
   'access-theme.css', 'style.css', 'playground-theme.css', 'district-theme.css', 'immersive.css', 'sidebar.css',
   'visual-finish.css', 'retro-finish.css', 'rail-navigation.css', 'hud-glass.css', 'game-hud.css',
-  'settings-dialog.css', 'play-rail-menu.css',
+  'settings-dialog.css', 'play-rail-menu.css', 'pink-jet-age-hud.css',
 ];
 
 const stripComments = css => css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -80,13 +80,16 @@ function rootDeclarations(file, css, conditions = [], out = []) {
 
 const DECLARATIONS = CASCADE.flatMap(name => rootDeclarations(name, stripComments(src(name))));
 
-// The variants a player can be in. `software` is hardware-acceleration.js's data-rendering.
-const SCENARIOS = ['light', 'dark'].flatMap(theme => [
+// The variants a player can be in. `software` is hardware-acceleration.js's data-rendering;
+// `finish` is main.js's data-finish (render-quality.js readFinishPreference). Classic
+// scenarios keep their unprefixed names; the Pink Jet-Age skin repeats each one.
+const FINISHES = [undefined, 'pink-jet-age'];
+const SCENARIOS = FINISHES.flatMap(finish => ['light', 'dark'].flatMap(theme => [
   { name: `${theme}`, theme },
   { name: `${theme}+reduced-transparency`, theme, reducedTransparency: true },
   { name: `${theme}+no-backdrop-filter`, theme, noBackdropFilter: true },
   { name: `${theme}+software`, theme, software: true },
-]);
+].map(scenario => finish ? { ...scenario, finish, name: `${finish}:${scenario.name}` } : scenario)));
 
 const RECOGNISED = [
   [/^@media\s*\(\s*prefers-reduced-transparency\s*:\s*reduce\s*\)$/, s => !!s.reducedTransparency],
@@ -97,7 +100,7 @@ const conditionHolds = (condition, scenario) => {
   return known ? known[1](scenario) : false;
 };
 const attrHolds = ({ name, value }, scenario) => {
-  const actual = { 'data-theme': scenario.theme, 'data-rendering': scenario.software ? 'software' : undefined }[name];
+  const actual = { 'data-theme': scenario.theme, 'data-rendering': scenario.software ? 'software' : undefined, 'data-finish': scenario.finish }[name];
   return actual !== undefined && (value === undefined || value === actual);
 };
 
@@ -231,7 +234,10 @@ const PAIRS = [
 // backdrop filter ignored), and passes with reduced transparency; measure it in the
 // browser before calling it a defect.
 const BOUND = 'below threshold only under the black/white backdrop bound';
-const gaps = (id, reason, scenarios) => scenarios.map(scenario => [`${id}|${scenario}`, reason]);
+// A bound gap is a glass-tint property, and the Pink Jet-Age skin leaves the tints alone,
+// so each one is recorded for both finishes.
+const gaps = (id, reason, scenarios) => FINISHES.flatMap(finish =>
+  scenarios.map(scenario => [`${id}|${finish ? `${finish}:` : ''}${scenario}`, reason]));
 const KNOWN_GAPS = new Map([
   ...gaps('sheet-muted', BOUND, ['light']),
   ...gaps('tile-hud-muted', BOUND, ['light', 'dark']),
@@ -278,6 +284,30 @@ test('the resolved tokens match the theme layers they come from', () => {
   assert.equal(software.get('--hud-filter').value, 'none');
 });
 
+test('an unknown finish resolves exactly the classic tokens', () => {
+  for (const scenario of SCENARIOS.filter(s => !s.finish)) {
+    const classic = tokensFor(scenario), unknown = tokensFor({ ...scenario, finish: 'neon' });
+    assert.deepEqual([...unknown].map(([prop, d]) => [prop, d.value]), [...classic].map(([prop, d]) => [prop, d.value]), scenario.name);
+  }
+});
+
+test('the Pink Jet-Age skin changes accents only, and only for its own finish and a named theme', () => {
+  const skin = DECLARATIONS.filter(d => d.file === 'pink-jet-age-hud.css');
+  assert.ok(skin.length > 0);
+  for (const d of skin) {
+    assert.deepEqual(d.attrs.map(a => a.name).sort(), ['data-finish', 'data-theme'], `${d.prop}`);
+    assert.equal(d.attrs.find(a => a.name === 'data-finish').value, 'pink-jet-age');
+    assert.equal(d.conditions.length, 0);
+    // Glass tints carry the bound gaps; the skin must not move them.
+    assert.ok(!/^--(hud-glass|hud-tile|hud-raised|hud-key-bg|liquid-tint|liquid-well|panel|ink|muted|hud-muted|liquid-ink|liquid-muted)/.test(d.prop), d.prop);
+  }
+  for (const theme of ['light', 'dark']) {
+    const pink = tokensFor({ theme, finish: 'pink-jet-age' });
+    assert.equal(pink.get('--hud-action').file, 'pink-jet-age-hud.css', theme);
+  }
+  assert.equal(tokensFor({ theme: 'dark', finish: 'pink-jet-age' }).get('--hud-action').value.toLowerCase(), PINK_JET_AGE.pink.toLowerCase());
+});
+
 const MEASURED = SCENARIOS.flatMap(scenario => {
   const color = colorIn(tokensFor(scenario))(scenario.theme);
   // The sign-in gate has no theme rules; measure it once.
@@ -306,8 +336,8 @@ test('measured ratios (report)', t => {
   for (const { scenario, pair, value } of MEASURED) t.diagnostic(`${scenario}\t${pair.id}\t${value.toFixed(2)}\t${pair.min}`);
 });
 
-// Report only: what the Pink Jet-Age roles (#739) would give for the same uses. Nothing
-// here is shipped; the numbers inform the future skin and are printed as diagnostics.
+// Report only: what the raw Pink Jet-Age roles (#739) give for the same uses. The shipped
+// skin (pink-jet-age-hud.css) is measured above with every other pair; these are diagnostics.
 test('Pink Jet-Age role projections (report only)', t => {
   const P = PINK_JET_AGE, c = parseColor;
   const glassOf = (hex, alpha) => [...c(hex).slice(0, 3), alpha];
