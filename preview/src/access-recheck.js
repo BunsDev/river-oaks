@@ -10,15 +10,8 @@ export async function answeredFetch(fetcher, ...args) {
 
 export const reloadAfterFailedCheck = (entered, error) => entered && !error?.unanswered;
 
-// The town connection reads the session on every connect. When it finds another account
-// than the one this page entered as (signed in elsewhere in this browser), it says so, and
-// the gate rechecks at once instead of at its next 15 s check. The page then reloads into
-// that account before anything else runs on it under the old one.
+// The town client (session-account-notice.js) dispatches this when its connection reads
+// another account than the one this page entered as; the gate then rechecks at once.
+// The game side defines the name separately: the access entry must not share a module with
+// game code (scripts/check-access-entry.mjs), and a test keeps the two names equal.
 export const ACCOUNT_CHANGED = 'river-oaks:account-changed';
-
-export function noticeSessionAccount(userId, { body = globalThis.document?.body, target = globalThis } = {}) {
-  const entered = body?.dataset?.accountId;
-  if (!entered || !userId || userId === entered) return false;
-  target.dispatchEvent(new Event(ACCOUNT_CHANGED));
-  return true;
-}

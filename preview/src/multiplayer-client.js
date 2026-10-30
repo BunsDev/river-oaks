@@ -10,7 +10,7 @@ import { createGroupsUI } from './groups-ui.js';
 import { createWorkplaceUI } from './workplace-ui.js';
 import { accountName } from './resident-names.js';
 import { travelRefusal } from './travel-message.js';
-import { noticeSessionAccount } from './access-recheck.js';
+import { noticeSessionAccount } from './session-account-notice.js';
 import { watchConnection } from './connection-deadline.js';
 import { CONNECTING, IMPROVED, UPDATING, closeNotice, createStalenessWatch, retryDelay } from './connection-policy.js';
 import { createVoiceChat } from './voice-chat.js';

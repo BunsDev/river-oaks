@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ACCOUNT_CHANGED, answeredFetch, noticeSessionAccount, reloadAfterFailedCheck } from '../src/access-recheck.js';
+import { ACCOUNT_CHANGED, answeredFetch, reloadAfterFailedCheck } from '../src/access-recheck.js';
+import { ACCOUNT_CHANGED as TOWN_ACCOUNT_CHANGED, noticeSessionAccount } from '../src/session-account-notice.js';
 
 test('a periodic access check with no answer keeps the district; any answer still goes back through the gate (#290)', async () => {
   const response = { ok: true };
@@ -18,6 +19,8 @@ test('a periodic access check with no answer keeps the district; any answer stil
 });
 
 test('the town connection asks for an access recheck at once when the session is another account', () => {
+  // The gate listens for the name the town client sends; they live in separate modules (access-only vs game).
+  assert.equal(TOWN_ACCOUNT_CHANGED, ACCOUNT_CHANGED);
   const target = new EventTarget(); let asked = 0; target.addEventListener(ACCOUNT_CHANGED, () => asked++);
   const body = { dataset: { accountId: 'bob' } };
   assert.equal(noticeSessionAccount('bob', { body, target }), false, 'the account this page entered as');
