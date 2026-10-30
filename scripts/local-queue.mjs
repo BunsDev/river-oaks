@@ -11,16 +11,23 @@ const pause = ms => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0,
 const key = entry => entry.id ?? entry.pr;
 const lockHeld = error => error?.code === 'QUEUE_LOCK_HELD';
 
-export function createQueue({ file, lock, pid = process.pid, host = hostname(), alive = isAlive, now = () => new Date().toISOString(), watchDirectory = watch, recheckMs = 1000 }) {
+// The lock guards a few milliseconds of work; one older than this was abandoned.
+const STALE_LOCK_MS = 30000;
+
+export function createQueue({ file, lock, pid = process.pid, host = hostname(), alive = isAlive, now = () => new Date().toISOString(), watchDirectory = watch, recheckMs = 1000, lockWaitMs = STALE_LOCK_MS + 5000 }) {
   const every = Number.isFinite(recheckMs) && recheckMs > 0 ? recheckMs : 1000;
   const withLock = action => {
-    for (let tries = 0; ; tries++) {
+    // mkdir is not a fair lock: under load, every waiter woken by the same queue
+    // write contends at once and one can lose many rounds in a row. Wait past the
+    // stale threshold, so a busy lock delays a caller and only a lock that keeps
+    // being taken fails it.
+    const start = Date.now();
+    for (;;) {
       try { mkdirSync(lock); break; } catch (error) {
         if (error.code !== 'EEXIST') throw error;
-        // The lock guards a few milliseconds of work; one older than 30 s was abandoned.
-        try { if (Date.now() - statSync(lock).mtimeMs > 30000) { rmdirSync(lock); continue; } } catch { continue; }
-        if (tries > 400) throw Object.assign(new Error(`The queue lock is held: ${lock}`), { code: 'QUEUE_LOCK_HELD' });
-        pause(25);
+        try { if (Date.now() - statSync(lock).mtimeMs > STALE_LOCK_MS) { rmdirSync(lock); continue; } } catch { continue; }
+        if (Date.now() - start > lockWaitMs) throw Object.assign(new Error(`The queue lock is held: ${lock}`), { code: 'QUEUE_LOCK_HELD' });
+        pause(10 + Math.floor(Math.random() * 30));
       }
     }
     try { return action(); } finally { rmdirSync(lock); }
@@ -52,20 +59,22 @@ export function createQueue({ file, lock, pid = process.pid, host = hostname(), 
     // the timer returns control to the caller at its own interval.
     waitForTurn(id, timeoutMs) {
       return new Promise((resolve, reject) => {
-        let watcher, recheck;
+        let watcher, recheck, expiredWhileHeld = false;
         const finish = error => { clearTimeout(timer); clearInterval(recheck); watcher?.close(); error ? reject(error) : resolve(); };
-        const check = ({ expired = false, tick = false } = {}) => {
+        const check = ({ expired = false } = {}) => {
           try {
             const position = queue.list().findIndex(entry => mine(entry, id));
             if (position < 0) finish(new Error(`${id} is no longer queued by this session.`));
-            else if (position === 0 || expired) finish();
+            else if (position === 0 || expired || expiredWhileHeld) finish();
           } catch (error) {
-            // A lock left behind is cleared after 30 s; a recheck that meets it waits for the next tick.
-            if (!(tick && lockHeld(error))) finish(error);
+            // A held lock is contention, not a lost turn: whatever woke this check
+            // (a notification, the recheck or the timer), the next recheck tries again.
+            if (!lockHeld(error)) finish(error);
+            else if (expired) expiredWhileHeld = true;
           }
         };
         const timer = setTimeout(() => check({ expired: true }), timeoutMs);
-        recheck = setInterval(() => check({ tick: true }), every);
+        recheck = setInterval(() => check(), every);
         try {
           watcher = watchDirectory(dirname(file), (_event, name) => { if (name === null || String(name) === basename(file)) check(); });
           watcher.on('error', () => watcher.close()); // Keep the recheck and timer.

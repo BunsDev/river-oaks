@@ -276,7 +276,8 @@ a travel, leaving, and a pose without the bike once the 1.5 s hand-over grace
 has passed (a walking pose already in flight when the slot was
 granted is ignored). A `bicycle` pose
 is accepted only from a slot holder, under an 8.05 m/s (18 mph) budget; the
-owner-only rule still covers the car and motorcycle. Each accepted bicycle pose
+owner-only rule still covers the car; the motorcycle is `shared` in `vehicle-config.js`, so
+any account may submit a `motorcycle` pose (Val, 2026-10-29). Each accepted bicycle pose
 adds its ground distance to the rider's metres, which the transport drains into
 the cross-world `cycling-miles` account store (dev town: every 30 s and on
 `uncycle`; hosted room: on every tick, after the commit, through a pending map
@@ -852,6 +853,6 @@ grants the microphone to this origin only.
 
 ### Jev smart rides
 
-Owner accounts can use manual acceleration, reverse, steering, braking and parking, or let Jev drive an authored road route. Pause/resume keeps the route but invalidates old AI decisions; manual directions cancel the route. Losing window focus pauses and stops the ride. A driven vehicle goes wherever its whole footprint fits where a walker could stand, on the road or off it, but never indoors, through a person or through a tree; Jev's route stays on the roads. The server checks each vehicle move like a walk, for speed, ground, solids and private rooms.
+Every account has a garage: the owner's holds the pink car and the rose motorcycle, everyone else's the motorcycle. Jev chauffeurs only the car (`chauffeur` in `vehicle-config.js`): its rider sits in the passenger seat and may hand him the route. Every other kind is driven by the player from its driver seat, hands on the grips, with no Jev aboard and no smart drive. Owner accounts can use manual acceleration, reverse, steering, braking and parking, or let Jev drive an authored road route. Pause/resume keeps the route but invalidates old AI decisions; manual directions cancel the route. Losing window focus pauses and stops the ride. A driven vehicle goes wherever its whole footprint fits where a walker could stand, on the road or off it, but never indoors, through a person or through a tree; Jev's route stays on the roads. The server checks each vehicle move like a walk, for speed, ground, solids and private rooms.
 
 Development uses the local `/v1/chauffeur` bridge and its Settings key override. Hosted play uses `/api/chauffeur` with server-only `TYPESAFE_API_KEY` and optional `JEV_AUTO_MODEL` (default `jev-1.14.0`). The endpoint requires an approved owner session, canonical Origin and CSRF token. It's limited to 40 decisions per minute per owner and `CHAUFFEUR_DAILY_LIMIT` (default 6,000, max 10,000) per UTC day across owners; three provider failures in a row pause calls for 60 seconds. On Redis these budgets are shared across instances; the standalone server keeps them in memory. Credentials never reach the browser; absent keys, invalid answers and expired decisions hold the vehicle. `src/river_oaks/chauffeur-policy.json` supplies both bridge and hosted action policies.
