@@ -1,6 +1,6 @@
 import { plazaSalonPlan } from './plaza-salon-plan.js';
 
-// A service yard against the south wall of the south service lane (world-policy.js
+// A service yard on the south edge of the south service lane (the walkable boundary) (world-policy.js
 // `south-service-lane`): the one place in either danger zone where a wanted player can
 // break an officer's sight (#599, escape by concealment; content decision 2026-10-30).
 // Stacked crates face the lane, a roll-off container closes the west end, and a crate
