@@ -59,7 +59,7 @@ Change: a `required-characters` mode (same server setup as `required`) takes the
 
 - Local (Mac, Metal, full rendering, load 16–24): `pnpm run test:shared required-characters` passed 3/3, 22:27–22:31Z: character-studio-shared 109 s, character-studio-tiers 85 s, default-appearance-tiers 28 s. Report kept in the scratchpad, not committed.
 - `ci/shared-required-split-20261029` at `b8dac965` (signed): core verify passed (289/289; preview 4,645 of 4,681 pass, 0 failed; server 1,080 of 1,365 with Redis-gated skips, 0 failed; 127 of 132). Draft **#764**.
-- Expected hosted durations: `required` about 10–11 min, `required-characters` about 7–8 min (about 2 min of setup plus build on each). To be confirmed on the PR's hosted run.
+- Expected hosted durations: `required` about 10–11 min, `required-characters` about 7–8 min (about 2 min of setup plus build on each). Hosted on #764 (`b8dac965`, all checks green, `preview` passed): `required` **10.3 min** (was 15.2–16.4), `required-characters` **7.3 min**; development 7.2, worlds-and-creator 7.8.
 
 ## Round 3: coordinator idle tick
 
@@ -80,7 +80,7 @@ Change: a `required-characters` mode (same server setup as `required`) takes the
 ## Gaps
 
 - The tick re-measure was taken at load 13–25 and proves nothing either way. No quiet-host A/B was run.
-- The split's hosted durations aren't measured yet (they need the PR's first run). `required` without the character journeys wasn't run locally; they ran last in that mode and each restarted the server first, so the remaining order is unchanged.
+- `required` without the character journeys wasn't run locally; they ran last in that mode and each restarted the server first, so the remaining order is unchanged.
 - `tick-remeasure-snapshot-20261029` (scratchpad `tick-main`, detached `39a5f302`, one untracked harness copy) can't be cancelled until its 12 h touch window ends (after 10-30 10:30Z): `project:prune --cancel-stale --detached-path <path> --expected-head 39a5f30272ea620ce692b95fcc15a8c69b9aff9f`.
 
 ## Decisions for Val
@@ -98,7 +98,7 @@ This list replaces the open lists in #724 (draft-wave-2) and the `docs/register-
 7. **#737** landowner hovercraft (owner lease expired 10-29 02:30Z): land, or leave with the owner.
 8. **#755** stack-rehearsal fix: the same issue was fixed by merged #756. Close it, or say what it still adds.
 9. **Ledger drafts** #668 #687 #697 #724: land them as docs, or close them.
-10. **#764, the shared split from this goal**: land it once its hosted shards are green.
+10. **#764, the shared split from this goal**: all hosted checks are green (`required` 16 → 10.3 min). Say "land #764".
 
 **Engineering calls:**
 
