@@ -2,6 +2,7 @@ import { placeLink, positionLink } from './places.js';
 import { worldIdFromSearch } from './world-contract.js';
 import { travelRefusal } from './travel-message.js';
 import { categorySlug } from './store-categories.js';
+import { COMMONS_NAME, HEIGHTS_NAME, STUDEWOOD_NAME, TERRACES_NAME, WOODLAND_NAME, TYPESAFE_NAME } from './world-location-label.js';
 
 const SVG='http://www.w3.org/2000/svg', SIZE=1000, PAD=36;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
@@ -79,6 +80,47 @@ export function mapRoadLabels(roads,projection){
   return labels;
 }
 
+// The composed expansion (world.eastGardenCommons: East Garden Commons and the
+// districts east of it) keeps its streets, shells and water in kit assemblies, not
+// in world.roads or world.buildings. Read them into map features in the world's
+// east/north frame, plus each district's outline and name, so the map shows every
+// district the revision composes. A world without the layout has no features.
+const EXPANSION_DISTRICTS=[['heights',HEIGHTS_NAME],['studewood',STUDEWOOD_NAME],['terraces',TERRACES_NAME],['woodland',WOODLAND_NAME],['typesafe',TYPESAFE_NAME]];
+const LANE_PIECES=new Set(['street/shared-lane','street/intersection','street/channel','street/band']);
+const COURT_PIECES=new Set(['street/court','street/crossing-table']);
+const finiteRect=rect=>Array.isArray(rect)&&rect.length===4&&rect.every(Number.isFinite)&&rect[2]>rect[0]&&rect[3]>rect[1];
+const rectRing=([west,south,east,north])=>[[west,south],[east,south],[east,north],[west,north]];
+const rectCentre=([west,south,east,north])=>[(west+east)/2,(south+north)/2];
+export function expansionMapFeatures(world){
+  const layout=world?.eastGardenCommons,features={lanes:[],courts:[],water:[],buildings:[],routes:[],districts:[]};
+  if(!layout||!finiteRect(layout.bounds)||!Number.isFinite(layout.edge))return features;
+  const assemblies=[layout.destination,...EXPANSION_DISTRICTS.flatMap(([key])=>layout[key]?.plans??[])].filter(Boolean);
+  // A kit rect that runs past the registered envelope (the bayou's water) is cut at the world's edge.
+  const [west,south,east,north]=layout.bounds;
+  const clipped=rect=>{const cut=[Math.max(west,rect[0]),Math.max(south,rect[1]),Math.min(east,rect[2]),Math.min(north,rect[3])];return finiteRect(cut)?rectRing(cut):null;};
+  const push=(list,rect)=>{const ring=finiteRect(rect)?clipped(rect):null;if(ring)list.push(ring);};
+  for(const piece of assemblies.flatMap(assembly=>Array.isArray(assembly.pieces)?assembly.pieces:[])){
+    if(LANE_PIECES.has(piece.piece))push(features.lanes,piece.rect);
+    else if(COURT_PIECES.has(piece.piece))push(features.courts,piece.rect);
+    else if(piece.piece==='landscape/bayou')push(features.water,piece.rect);
+    else if(piece.piece==='building/shell'||piece.piece==='building/context')push(features.buildings,piece.rect);
+    else if(piece.piece==='landmark/water-tower'&&finitePair(piece.at))push(features.buildings,[piece.at[0]-2.5,piece.at[1]-2.5,piece.at[0]+2.5,piece.at[1]+2.5]);
+  }
+  // The Commons' own promenade, plaza and courts are plain surfaces; its walks stay off the atlas.
+  for(const surface of layout.surfaces??[])if(/\/(promenade|plaza|court(-\d+)?)$/.test(surface.id??''))push(features.courts,surface.rect);
+  for(const route of layout.routes??[])if(Array.isArray(route.points)&&route.points.length>=2&&route.points.every(finitePair))features.routes.push({points:route.points.map(point=>point.slice(0,2)),width:Number.isFinite(route.width)?route.width:4});
+  // The Commons band runs from the District edge to the first district east of it, over its own content.
+  const eastEnd=finiteRect(layout.heights?.bounds)?layout.heights.bounds[0]:layout.bounds[2];
+  const content=(layout.destination?.pieces??[]).map(piece=>piece.rect).filter(finiteRect);
+  const commons=[layout.edge,content.length?Math.min(...content.map(rect=>rect[1])):layout.bounds[1],eastEnd,content.length?Math.max(...content.map(rect=>rect[3])):layout.bounds[3]];
+  if(eastEnd>layout.edge)features.districts.push({name:COMMONS_NAME,rings:[rectRing(commons)],label:rectCentre(commons)});
+  for(const [key,name] of EXPANSION_DISTRICTS){
+    const bounds=layout[key]?.bounds,rects=(Array.isArray(bounds)&&finiteRect(bounds[0])?bounds:[bounds]).filter(finiteRect);
+    if(rects.length)features.districts.push({name,rings:rects.map(rectRing),label:rectCentre(rects[0])});
+  }
+  return features;
+}
+
 // Each kind of place has its own silhouette, centred on its position so a click
 // on the shape still lands on the place: a sparkle for arrival, a shopping-bag
 // square, a dinner plate, a cut gem, a flower for beauty and wellness, a house.
@@ -104,19 +146,21 @@ export function markerPath(shape,x,y,size=8){
 // The walker's yaw turns forward to (-sin yaw, -cos yaw) on this north-up map,
 // so an arrow drawn pointing up is rotated by -yaw. Unwrap against the last angle
 // so a turn through south eases the short way round instead of spinning.
-const KEY_PATHS={arrow:'M 0 -9 L 7 7 L 0 3 L -7 7 Z',diamond:'M 0 -8 L 7 0 L 0 8 L -7 0 Z',ring:circle(0,0,6),parcel:'M -7 -7 H 7 V 7 H -7 Z'};
+const KEY_PATHS={arrow:'M 0 -9 L 7 7 L 0 3 L -7 7 Z',diamond:'M 0 -8 L 7 0 L 0 8 L -7 0 Z',ring:circle(0,0,6),parcel:'M -7 -7 H 7 V 7 H -7 Z',district:'M -8 -6 H 8 V 6 H -8 Z'};
 export const legendPath=shape=>KEY_PATHS[shape]??markerPath(shape,0,0,7);
 const CATEGORY_KEYS=[['shopping','Shopping'],['dining','Dining'],['jewelry','Jewelry'],['beauty','Beauty'],['homes','Homes']];
 // The key lists the symbols this map can show: every kind of place it holds,
-// saved places and players (both can appear at any time), and parcels if any.
-export function mapLegend(places,hasParcels=false){
+// saved places and players (both can appear at any time), parcels if any, and the
+// district outlines when the world composes an expansion.
+export function mapLegend(places,hasParcels=false,hasDistricts=false){
   const list=places??[],present=new Set(list.map(place=>categorySlug(place.category)).filter(Boolean));
   return [{kind:'self',shape:'arrow',label:'You'},
     ...(list.some(place=>place.kind==='arrival')?[{kind:'place',shape:'sparkle',label:'Arrival'}]:[]),
     ...CATEGORY_KEYS.filter(([slug])=>present.has(slug)).map(([slug,label])=>({kind:'place',shape:MARKER_SHAPES[slug],category:slug,label})),
     ...(list.some(place=>place.kind!=='arrival'&&!categorySlug(place.category))?[{kind:'place',shape:'dot',label:'Destination'}]:[]),
     {kind:'landmark',shape:'diamond',label:'Saved place'},{kind:'peer',shape:'ring',label:'Player'},
-    ...(hasParcels?[{kind:'parcel',shape:'parcel',label:'Parcel'}]:[])];
+    ...(hasParcels?[{kind:'parcel',shape:'parcel',label:'Parcel'}]:[]),
+    ...(hasDistricts?[{kind:'district',shape:'district',label:'District'}]:[])];
 }
 export const headingDegrees=yaw=>-yaw*180/Math.PI;
 export function unwrapDegrees(previous,next){
@@ -139,6 +183,8 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
   defs.append(grid);
   const paper=svg('rect',{x:0,y:0,width:SIZE,height:SIZE,class:'world-map-grid',fill:`url(#${id}-grid)`});
   const parcels=svg('g',{class:'world-map-parcels'}),roads=svg('g',{class:'world-map-roads'}),buildings=svg('g',{class:'world-map-buildings'});
+  // The composed expansion's paving, water and district outlines sit under the roads and parcels.
+  const districts=svg('g',{class:'world-map-districts'}),paving=svg('g',{class:'world-map-paving'});
   const casings=svg('g',{class:'world-map-casings'}),centres=svg('g',{class:'world-map-centres'});
   const roadLabels=node('div',null,'world-map-road-labels');roadLabels.setAttribute('aria-hidden','true');
   // Places and players draw on a second, filter-free layer, so a player moving or a
@@ -161,10 +207,10 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
   const targetLabel=node('div',null,'world-map-selection-label');targetLabel.hidden=true;
   const north=node('span','N','world-map-north');north.setAttribute('aria-label','North is up');
   const scale=node('span',null,'world-map-scale');
-  art.append(defs,ground,paper,parcels,casings,roads,centres,buildings);live.append(markers,people);
+  art.append(defs,ground,paper,paving,districts,parcels,casings,roads,centres,buildings);live.append(markers,people);
   surface.append(art,live,roadLabels,self,target,north,scale,targetLabel);
   const legend=node('ul',null,'world-map-legend');legend.setAttribute('aria-label','Map key');
-  const renderLegend=()=>legend.replaceChildren(...mapLegend(places,parcels.childElementCount>0).map(({kind,shape,category,label})=>{
+  const renderLegend=()=>legend.replaceChildren(...mapLegend(places,parcels.childElementCount>0,districts.childElementCount>0).map(({kind,shape,category,label})=>{
     const item=node('li'),symbol=node('span',null,`world-map-key world-map-key-${kind}`),art=svg('svg',{viewBox:'-12 -12 24 24'});
     symbol.setAttribute('aria-hidden','true');if(category)symbol.dataset.category=category;
     art.append(svg('path',{d:legendPath(shape),'fill-rule':'evenodd'}));
@@ -196,7 +242,7 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
     position:[(parcel.bounds_m[0]+parcel.bounds_m[2])/2,(parcel.bounds_m[1]+parcel.bounds_m[3])/2],
     area:Math.round((parcel.bounds_m[2]-parcel.bounds_m[0])*(parcel.bounds_m[3]-parcel.bounds_m[1])),ownerId:parcel.ownerId});
   function renderStatic(){
-    parcels.replaceChildren();casings.replaceChildren();roads.replaceChildren();centres.replaceChildren();buildings.replaceChildren();roadLabels.replaceChildren();markers.replaceChildren();parcelList.replaceChildren();
+    parcels.replaceChildren();casings.replaceChildren();roads.replaceChildren();centres.replaceChildren();buildings.replaceChildren();roadLabels.replaceChildren();markers.replaceChildren();parcelList.replaceChildren();districts.replaceChildren();paving.replaceChildren();
     if(!projection||!world)return;
     const plots=authoredParcels();parcelDetails.hidden=!plots.length;parcelSummary.textContent=`Land parcels · ${plots.length}`;
     for(const parcel of plots){
@@ -223,6 +269,26 @@ export function createWorldMap({host,onGo,getPosition,getYaw,isOutdoor=()=>true,
       const ring=buildingFootprint(building);
       if(ring.length<3)continue;
       buildings.append(svg('polygon',{points:points(ring),class:'world-map-building'}));
+    }
+    // The composed expansion: courts and water under the lanes, its shells with the buildings,
+    // and each district outlined and named (upright, at its centre, clear of the District's street labels).
+    const expansion=expansionMapFeatures(world);
+    for(const ring of expansion.courts)paving.append(svg('polygon',{points:points(ring),class:'world-map-court'}));
+    for(const ring of expansion.water)paving.append(svg('polygon',{points:points(ring),class:'world-map-water'}));
+    for(const ring of expansion.lanes)roads.append(svg('polygon',{points:points(ring),class:'world-map-lane'}));
+    for(const route of expansion.routes){
+      const width=clamp(route.width*projection.scale,3,24);
+      casings.append(svg('polyline',{points:points(route.points),class:'world-map-road-casing','stroke-width':width+5}));
+      roads.append(svg('polyline',{points:points(route.points),class:'world-map-road','stroke-width':width}));
+    }
+    for(const ring of expansion.buildings)buildings.append(svg('polygon',{points:points(ring),class:'world-map-building world-map-shell'}));
+    for(const district of expansion.districts){
+      for(const ring of district.rings){
+        const outline=svg('polygon',{points:points(ring),class:'world-map-district'});
+        const title=svg('title');title.textContent=district.name;outline.append(title);districts.append(outline);
+      }
+      const [x,y]=mapPoint(district.label),text=node('span',district.name,'world-map-district-label');
+      text.style.left=`${x/10}%`;text.style.top=`${y/10}%`;roadLabels.append(text);
     }
     for(const label of mapRoadLabels(world.roads,projection)){
       const [x,y]=label.position,text=node('span',label.name,'world-map-road-label');

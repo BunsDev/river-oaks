@@ -95,6 +95,16 @@ September 23 pink-gown image supersedes the earlier statue styling for Jevica:
 - Jevica: a single flowing rose-pink ballgown, fitted bodice, gold floral
   embroidery at the neckline and hem, an open gold crown, warm blonde hair,
   and a luminous pink-white star wand. The district layout stays intact.
+- Jev (reference supplied by Val on 2026-10-29,
+  `preview/public/assets/characters/references/jev-angel-tunic-20261029.png`):
+  a cream tunic with a pink placket in rose-gold trim and mint scrollwork, a
+  rose-gold belt with a lozenge buckle, rose-gold bracers, pink trousers,
+  rose-gold gladiator sandals over bare feet, caramel curls, blue eyes, and his
+  white wings out and folded back whenever he is not seated in the car. The
+  dress uniform (coronet, royal sash, epaulettes, star of order) is retired.
+  `preview/e2e/jev-reference-likeness.js` measures the silhouette overlap and
+  per-region colour distance against the reference; it is a baseline for a
+  procedural rig on CC0 geometry, not pixel identity.
 The references are visual inputs, not shipped textures or purchased statue
 meshes. The existing local character assets retain their source receipts.
 The costume uses procedural geometry. Jevica and all six resident rigs have
