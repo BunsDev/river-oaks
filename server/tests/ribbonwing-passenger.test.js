@@ -176,3 +176,15 @@ test('the town publishes its flight ceiling, so a page can stop the craft under 
   assert.equal(over.error, 'invalid_pose', 'above it is refused');
   assert.equal(t.view(OWNER).vehicle, 'hover');
 });
+
+test('a passenger rides down in the seat when the pilot drops and the town lands the craft', () => {
+  const t = setup();
+  board(t);
+  t.climb(9);
+  assert.ok(close(t.view('guest').altitude, 9, 1e-3));
+  t.world.away(OWNER, true);
+  for (let i = 0; i < 40; i++) { t.advance(250);t.world.step(.25); }
+  assert.equal(t.view(OWNER).altitude, 0);
+  assert.equal(t.view('guest').passengerOf, OWNER, 'still seated');
+  assert.ok(close(t.view('guest').altitude, 0, 1e-3), 'and on the ground with the craft');
+});

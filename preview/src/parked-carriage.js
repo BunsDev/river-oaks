@@ -14,7 +14,7 @@ import { serverNow } from './server-clock.js';
 export function createParkedCarriage({scene,walking,getWorld,getLocals,getConversation,requestExit=async()=>({ok:true}),requestChauffeur,requestManeuver=async()=>({ok:false}),reducedMotion=false}) {
  let kind='rolls',model=createRoadVehicle(kind);model.object.visible=false;scene.add(model.object);
  const driver=createCarriageDriver({scene,getLocals,getConversation}),chauffeur=createChauffeur({fetcher:requestChauffeur});
- let placement=null,loadedWorld=null,environment=null,companionEnvironment=null,mounted=false,enabled=true,exiting=false,heldControls={};
+ let joinedOnce=false,placement=null,loadedWorld=null,environment=null,companionEnvironment=null,mounted=false,enabled=true,exiting=false,heldControls={};
  // Jev drives only a chauffeured kind (the pink car). In every other kind the
  // player takes the driver seat and the controls, and Jev stays out of it; the
  // Ribbonwing is flown from its driver (left) seat.
@@ -120,9 +120,15 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   // correction), before the page's next pose, and loads the world itself if it must. Only
   // aloft: she steps out on the ground, so a snapshot still naming the craft she just left
   // never puts her back in it.
+  // The page's first look at itself (joining) also resumes a craft the town already landed
+  // while it was away (world.away lands it during the reconnect grace); after that, only aloft.
   resumeRide(self){
-   if(!self||!enabled||!walking.active||mounted||exiting||self.passengerOf||!((self.altitude??0)>.1)||!VEHICLES[vehicleKind(self.vehicle)??'']?.flies)return false;
+   if(!self||!enabled||!walking.active)return false;
    if(!loadWorld()){trace('resume: world not ready');return false;}
+   // The first look counts whatever it finds (on foot too), so a later snapshot never passes for one.
+   const joining=!joinedOnce;joinedOnce=true;
+   if(mounted||exiting||self.passengerOf||!VEHICLES[vehicleKind(self.vehicle)??'']?.flies)return false;
+   if(!((self.altitude??0)>.1)&&!joining)return false;
    if(kind!==self.vehicle){activeManeuver=null;model.dispose();kind=self.vehicle;model=createRoadVehicle(kind);scene.add(model.object);driver.reset();driver.object.visible=false;}
    placement={vehicle:kind,scale:1,team:false,position:[0,0,0],yaw:self.yaw,pitch:0,roll:0,speed:0,distance:0,steering:0,altitude:0,liftTarget:0,verticalSpeed:0,landing:false};
    placeAtSeat(self.position[0],-self.position[1],self.altitude??0,self.yaw);fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);

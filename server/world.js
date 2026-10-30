@@ -554,6 +554,12 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (player.name!==name) {player.name=name;revision++;}
     return publicPlayer(player);
   }
+  // The transport's reconnect grace (app.js departures, redis-room leftAt): connected or not.
+  // Kept out of checkpoints; each transport says it again (redis-room before every step).
+  const awayPlayers=new Set();
+  function away(userId,isAway) {
+    if(isAway&&players.has(userId))awayPlayers.add(userId);else awayPlayers.delete(userId);
+  }
   function join(identity) {
     if (!identity || !textId(identity.userId) || typeof identity.name !== 'string') return reject('invalid_identity');
     if (players.has(identity.userId)) return reject('already_joined');
@@ -575,6 +581,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   function leave(userId) {
     const leaving=players.get(userId);
+    awayPlayers.delete(userId);
     if (!leaving) return false;
     offices.leave(userId);
     releaseBike(leaving);
@@ -784,6 +791,17 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   const releasePassenger=(pilot,time,right=0)=>{const passenger=pilot.passengerId&&players.get(pilot.passengerId);if(passenger)setDownPassenger(passenger,time,right);else if(pilot.passengerId){delete pilot.passengerId;revision++;}};
   // Every tick and snapshot: the seat follows the pilot; a lost craft or entitlement ends the ride.
+  // A pilot whose connection dropped (the transport's reconnect grace: away) cannot fly, so
+  // once any maneuver has ended the craft comes straight down at AWAY_DESCENT, holding where
+  // the sky below is blocked or the ground is not open, and lands. A passenger rides down in
+  // the seat. A page that reconnects resumes the craft wherever the town then holds it.
+  const AWAY_DESCENT=2;
+  function descendAway(player,duration) {
+    if(!awayPlayers.has(player.id)||player.maneuver||!VEHICLES[player.vehicle]?.flies||!(player.altitude>0))return;
+    const [east,north]=player.position,next=Math.max(0,player.altitude-AWAY_DESCENT*duration);
+    if(next>.1?!environment.canFly(east,environment.groundAt(east,-north)+next,-north):!environment.isFree(east,-north))return;
+    player.altitude=next>.1?next:0;revision++;
+  }
   function settleSeat(player,time) {
     if(player.ribbonwingInvite&&(player.ribbonwingInvite.until<=time||player.vehicle!=='hover'||player.altitude>.1||player.passengerId)){delete player.ribbonwingInvite;revision++;}
     if(player.passengerId&&(player.vehicle!=='hover'||!isJevicaOwner(player.id)))releasePassenger(player,time,player.altitude>.1?0:2.6);
@@ -1457,6 +1475,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     clearExpiredLedgers(time);
     // Maneuvers end on the tick too, so a pilot who stops sending (focus lost, tab asleep) still lands level.
     for(const player of players.values())settleManeuver(player,time);
+    for(const player of players.values())descendAway(player,duration);
     for(const player of players.values())settleSeat(player,time);
     tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();lanternWalk.prune(time);screenings.prune(time);campus.prune(time);
     for (const [id,hold] of focus) if (hold.until<=time || !reachable(players.get(id),localById.get(hold.localId))) focus.delete(id);
@@ -1899,7 +1918,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
   const listPlaces = () => placesOf(worldData);
-  return {worldId,protocolVersion,approvedSpaceRoutesBlocked:()=>approvedSpaceRoutesBlocked(),join,rename,leave,forgetAccount,separate,command,step,snapshot,checkpoint,restore,reset,
+  return {worldId,protocolVersion,approvedSpaceRoutesBlocked:()=>approvedSpaceRoutesBlocked(),join,rename,leave,away,forgetAccount,separate,command,step,snapshot,checkpoint,restore,reset,
     // World rules (#596): the public rule and the one violence decision for #597's attacks.
     worldPolicy:publicWorldPolicy,violenceFor,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.
