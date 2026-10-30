@@ -21,20 +21,34 @@ async page => {
     smartDriveHidden:document.querySelector('#player-chauffeur')?.hidden}));
   if(garage.options.join()!=='motorcycle'||garage.call!=='Call your ride'||garage.ride!=='Ride'||!garage.smartDriveHidden)
     throw new Error(`Guest garage is not the self-driven motorcycle alone: ${JSON.stringify(garage)}`);
-  if(!await page.evaluate(()=>document.querySelector('#canvas-host').dataset.carriageReady==='true'))await page.locator('#player-carriage').click();
-  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.carriageReady==='true');
-  await page.locator('#player-ride').click();
-  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true'&&document.querySelector('#canvas-host').dataset.driving==='true');
-  await page.keyboard.down('w');
-  await page.waitForFunction(()=>window.__riverMultiplayer().snapshot.players.find(player=>player.id==='guest')?.vehicle==='motorcycle',null,{timeout:10000});
-  await page.keyboard.up('w');
-  const guestRide=await page.evaluate(()=>({jev:window.__riverCarriage().princeVisible,kind:window.__riverCarriage().vehicle,driver:window.__riverCarriage().pose?.riding?.driver,
-    title:document.querySelector('.walking-title strong')?.textContent,smartDriveHidden:document.querySelector('#player-chauffeur')?.hidden,padShown:!document.querySelector('.player-drive-pad')?.hidden}));
-  if(guestRide.jev||guestRide.kind!=='motorcycle'||!guestRide.driver||guestRide.title!=='Riding'||!guestRide.smartDriveHidden||!guestRide.padShown)
-    throw new Error(`Guest is not driving the motorcycle herself: ${JSON.stringify(guestRide)}`);
-  await page.screenshot({path:'output/playwright/shared-ride-guest-motorcycle.png'});
-  await page.locator('#player-ride').click();
-  await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='false');
+  // The shared fixture town keeps each identity's position, and indoor-npcs leaves the guest inside a shop, where
+  // calling a ride is refused. Another non-owner, 'unnamed', first arrives outdoors here to ride the motorcycle.
+  const riderContext=await page.context().browser().newContext();
+  let guestRide;
+  try {
+    await riderContext.addCookies([{name:'fixture_session',value:'unnamed',url:origin}]);
+    const rider=await riderContext.newPage();
+    await rider.goto(origin+'/?motion-debug=1',{waitUntil:'commit'});await ready(rider);
+    const riderId=await rider.evaluate(()=>window.__riverMultiplayer().selfId);
+    await rider.locator('#play-tab-rides').click();
+    // A self-driven ride is not parked beside a new arrival (it would stand in their path); it comes when called.
+    if(await rider.evaluate(()=>document.querySelector('#canvas-host').dataset.carriageReady==='true'||window.__riverCarriage().visible))
+      throw new Error('A resident\'s motorcycle was parked before they called it');
+    await rider.locator('#player-carriage').click();
+    await rider.waitForFunction(()=>document.querySelector('#canvas-host').dataset.carriageReady==='true');
+    await rider.locator('#player-ride').click();
+    await rider.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true'&&document.querySelector('#canvas-host').dataset.driving==='true');
+    await rider.locator('#canvas-host').focus();await rider.keyboard.down('w');
+    await rider.waitForFunction(id=>window.__riverMultiplayer().snapshot.players.find(player=>player.id===id)?.vehicle==='motorcycle',riderId,{timeout:20000});
+    await rider.keyboard.up('w');
+    guestRide=await rider.evaluate(()=>({jev:window.__riverCarriage().princeVisible,kind:window.__riverCarriage().vehicle,driver:window.__riverCarriage().pose?.riding?.driver,
+      title:document.querySelector('.walking-title strong')?.textContent,smartDriveHidden:document.querySelector('#player-chauffeur')?.hidden,padShown:!document.querySelector('.player-drive-pad')?.hidden}));
+    if(guestRide.jev||guestRide.kind!=='motorcycle'||!guestRide.driver||guestRide.title!=='Riding'||!guestRide.smartDriveHidden||!guestRide.padShown)
+      throw new Error(`A resident is not driving the motorcycle herself: ${JSON.stringify(guestRide)}`);
+    await rider.screenshot({path:'output/playwright/shared-ride-guest-motorcycle.png'});
+    await rider.locator('#player-ride').click();
+    await rider.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='false');
+  } finally {await riderContext.close();}
   await page.locator('#play-tab-character').click();
   await page.locator('#canvas-host').focus();await page.keyboard.press('KeyB');
   if(await page.evaluate(()=>document.querySelector('#walking-hud').dataset.flying==='true'))throw new Error('Guest took flight with B');

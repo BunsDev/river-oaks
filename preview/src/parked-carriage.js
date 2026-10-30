@@ -81,7 +81,9 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
    const world=getWorld();if(!world||!walking.getPose()||world===loadedWorld)return;
    loadedWorld=world;environment=createWalkingEnvironment(world);
    companionEnvironment=createWalkingEnvironment(world,[{contains:(...point)=>Boolean(placement)&&carriageContains(placement,...point)}]);
-   driver.reset();placement=null;mounted=false;model.object.visible=false;summon();
+   // Only Jev's chauffeured car waits beside the owner on arrival; a self-driven ride parks when its rider calls it,
+   // so it never stands in anyone's path unasked.
+   driver.reset();placement=null;mounted=false;model.object.visible=false;if(chauffeured())summon();
   },
   dispose(){chauffeur.dispose();removeObstacle();placement=null;driver.dispose();model.dispose();},
  };

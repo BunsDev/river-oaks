@@ -82,6 +82,17 @@
   (guest garage = motorcycle only, "Call your ride" / "Ride", smart drive hidden; the guest's
   motorcycle pose accepted by the town; no Jev; HUD "Riding"; owner flow unchanged).
 
+- Hosted Verify on the first landing attempt (2026-10-29) failed three shared journeys, all from
+  this change: `multiplayer` still expected no garage for a resident; `multiplayer-exclusivity` ran
+  its guest after `indoor-npcs` left that identity inside a shop (the fixture keeps positions),
+  where calling a ride is refused; `creator-street-crossing` walked into the resident's
+  motorcycle, auto-parked on arrival. Fixes: a self-driven ride now parks only when called (only
+  Jev's car waits on arrival); the exclusivity ride uses the `unnamed` identity and asserts no
+  motorcycle is parked before it is called; `multiplayer` expects a motorcycle-only garage without Jev.
+  Local reruns from a snapshot: the full `required` set passed (17 journeys, CI order) and
+  `creator-street-crossing` passed; the updated exclusivity journey passed alone; core verify
+  passed (preview 4693 run / 0 fail, server 1367 run / 0 fail).
+
 ## Gaps
 
 - The hover coach (#737) is not on main; this branch does not touch it. After #737 merges,
