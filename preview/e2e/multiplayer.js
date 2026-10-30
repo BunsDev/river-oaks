@@ -17,7 +17,8 @@ async page => {
     await other.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.id==='alice'&&player.ready),null,{timeout:60000});
     await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.carriageDriverReady==='true');
     check(await page.locator('.character-picker').isVisible(),'Shared appearance picker is available');
-    check(await page.evaluate(()=>!document.querySelector('.force-controls')&&document.querySelector('.vehicle-garage').hidden&&!window.__riverCarriage().visible),'Unsynchronized carriage and Force controls remain hidden in shared play after assets load');
+    // Every account has a garage with the shared motorcycle it drives itself (Val, 2026-10-29); the pink car and Jev stay the owner's.
+    check(await page.evaluate(()=>!document.querySelector('.force-controls')&&!document.querySelector('.vehicle-garage').hidden&&[...document.querySelectorAll('#player-vehicle option')].map(option=>option.value).join()==='motorcycle'&&!window.__riverCarriage().princeVisible),'Force controls stay hidden; a resident\'s garage offers only the motorcycle, without Jev');
     check(await page.evaluate(()=>!window.__riverPeople().some(p=>p.id==='carriage-driver')&&!window.__riverMultiplayer().snapshot.locals.some(p=>p.id==='carriage-driver')),'Shared diagnostics and town exclude the private coachman');
     await page.locator('#canvas-host').focus();await page.keyboard.press('KeyT');
     check(await page.evaluate(()=>typeof window.__riverForce==='undefined'),'Force shortcut cannot bypass shared-mode gating');
