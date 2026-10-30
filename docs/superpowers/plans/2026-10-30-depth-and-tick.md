@@ -110,6 +110,7 @@
   - **B1** (main) waited 20 min inside the lock without the 1-min load reaching 8, so the round is void at
     12:05Z. One A arm decides nothing.
 - Round 3 started 12:06Z with a 20-min pre-lock cap and was abandoned at 12:26Z (load 16–37).
+- Round 4 ran 12:46–13:00Z with its own Redis (pid 45991, stopped afterwards) and was abandoned: load stayed 37–40.
 - **Result: inconclusive. Main was never measured at load ≤ 8 today.** The goal's condition for a
   `resident-life.js` draft was main missing the active-vs-peaceful comparison in both arms while `4557e70d`
   passes. That was not met, so no PR was opened and the finding is not closed either. Only A1 has a receipt.
@@ -182,7 +183,7 @@
   in this session. Each is registered with its path and a next action, which is to retire it with cancel-stale
   after 12 h. `m707` holds nothing that is not pushed.
 
-## Handoff (12:45Z)
+## Handoff (13:00Z, window closed)
 
 - **Delivered:** #695, landed as `0d54a18d`.
 - **Open drafts (owner claude:river-oaks-bb):**
