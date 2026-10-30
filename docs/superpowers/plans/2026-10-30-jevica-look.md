@@ -101,3 +101,40 @@ folds the same way:
 **Decision.** Not shipped: changing the shared realism module for no visible gain is the
 wrong trade. The probe, the journey and the diff are kept outside the repo as session
 evidence. If a later pose shows crease skin, start from that diff.
+
+## Increment 2: a tailored blazer front (task `jevica-blazer-20261030`, stacked on #814)
+
+**The problem.** The blazer is a copy of her skin pushed out and smoothed, so it followed the
+body into the hollow under each side of the bust (which the V splits). The bust apex
+showed through as a point.
+
+**What changes.** `tailorFront` in `preview/src/jevica-suit.js`, applied from the collar to
+the button:
+- Each 1 cm row, per side of the V, is lifted to the upper convex hull of its horizontal profile.
+- Each 1 cm column is lifted to the hull of its vertical profile, so the cloth hangs from
+  the bust toward the button.
+- Only depth moves, only outward, toward a soft 3 cm limit. The lift is feathered by
+  torso and arm weight and over the last 2 cm above the button, then blended in 8 smoothing passes.
+
+**First tries.**
+- A hard 3 cm cap with no feathering drew a faceted ledge down the side.
+- Feathering over 5 cm above the button let part of the under-bust curve come back.
+- Both are visible in the session's captures.
+
+**Results (bind space, central columns |x| < 9 cm):**
+- Under-bust tuck, measured as the dip below the line from each column's apex to its lowest point:
+  - skin: more than 15 mm (the test asserts it);
+  - before this change: 17.6 mm;
+  - after: 4.4 mm.
+- The largest lift is 3.0 cm. The largest stand-off from the skin is 5.3 cm, under the bust; the
+  shell test's bound moved from 5 to 6 cm.
+- Front captures: no apex points, and the bust reads as one smooth form.
+- Profile: the under-bust curve is softened, not removed.
+- Likeness: IoU 0.598, mean ΔE 17.2, jacket-chest ΔE 9.9, unchanged within noise. The landmark
+  metric does not see shading.
+- `jevica-gown`, `jevica-waist`, `jewel-optics`, `gown-sampling` and `gown-contact-samples` pass.
+- Node: 20/20 across `jevica-reference-look`, `player-costume` and `default-appearance-realism`.
+
+**Still a gap.** The blazer is still a copy of her skin: no lapel roll, no seams, and the bust
+is still shaped (rounder, not flat). A real cut garment mesh would need new modelled assets.
+No human review.

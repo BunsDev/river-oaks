@@ -102,6 +102,51 @@ function smoothFront({ geometry, covered }, body, eligible, minimum, iterations 
   p.needsUpdate = true; geometry.computeVertexNormals(); geometry.computeBoundingSphere();
 }
 
+// Tailoring: a blazer front does not follow the body into its hollows. Across each half of
+// the front (the V splits it) the cloth spans the upper convex hull of the body's horizontal
+// profile, and down each column it hangs on the hull of the vertical one, so it falls
+// straight from the bust to the button instead of tucking under it. Only depth (z) changes,
+// only outward, approaching `reach` softly and scaled by `weight` (1 inside the panel, fading
+// to 0 at its sides) so it meets the untailored cloth without a ledge. Returns the deepest
+// lift, in metres.
+export function upperHull(points) {
+  const sorted = [...points].sort((a, b) => a[0] - b[0]), hull = [];
+  for (const point of sorted) {
+    while (hull.length >= 2) {
+      const [a, b] = [hull.at(-2), hull.at(-1)];
+      if ((b[0] - a[0]) * (point[1] - a[1]) - (b[1] - a[1]) * (point[0] - a[0]) >= 0) hull.pop(); else break;
+    }
+    hull.push(point);
+  }
+  return u => {
+    if (u <= hull[0][0]) return hull[0][1];
+    for (let k = 1; k < hull.length; k++) if (u <= hull[k][0]) { const [a, b] = [hull[k - 1], hull[k]]; return a[1] + (b[1] - a[1]) * (u - a[0]) / (b[0] - a[0] || 1); }
+    return hull.at(-1)[1];
+  };
+}
+export function tailorFront(geometry, front, { bin = .01, reach = .03, weight = () => 1 } = {}) {
+  const p = geometry.attributes.position, ids = [...front];
+  if (!ids.length) return 0;
+  const groupBy = keyOf => { const groups = new Map(); for (const i of ids) { const k = keyOf(i); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(i); } return groups; };
+  const target = new Map(ids.map(i => [i, p.getZ(i)]));
+  // Horizontal: per 1 cm row and per side of the V.
+  for (const group of groupBy(i => `${Math.round(p.getY(i) / bin)}${p.getX(i) > 0 ? 'l' : 'r'}`).values()) {
+    if (group.length < 3) continue;
+    const hull = upperHull(group.map(i => [p.getX(i), p.getZ(i)]));
+    for (const i of group) target.set(i, Math.max(target.get(i), hull(p.getX(i))));
+  }
+  // Vertical: per 1 cm column, from the collar down to the button.
+  for (const group of groupBy(i => Math.round(p.getX(i) / bin)).values()) {
+    if (group.length < 3) continue;
+    const hull = upperHull(group.map(i => [p.getY(i), p.getZ(i)]));
+    for (const i of group) target.set(i, Math.max(target.get(i), hull(p.getY(i))));
+  }
+  let deepest = 0;
+  for (const i of ids) { const lift = reach * Math.tanh((target.get(i) - p.getZ(i)) / reach) * weight(i); deepest = Math.max(deepest, lift); p.setZ(i, p.getZ(i) + lift); }
+  p.needsUpdate = true;
+  return deepest;
+}
+
 // Satin that turns rose-gold where a `piping` vertex attribute says so, without
 // a second material or draw call. Iridescence gives the pink its pearl shift.
 export function satinMaterial({ piping = false, iridescence = .75, color = SUIT.satin, roughness = .36 } = {}) {
@@ -191,7 +236,16 @@ export function createJevicaSuit(avatar, { surface, owned, attach, mesh }) {
     pieces.blazer = createSkinShell(body, { name: 'Jevica satin blazer', keep: blazerKeep, material: satin, attributes: { piping },
       offset: i => arms[i] > .5 ? BLAZER.arm : BLAZER.torso });
     owned.add(pieces.blazer.geometry);
-    smoothFront(pieces.blazer, body, i => torso[i] > .5 && rest[i * 3 + 2] > 0 && rest[i * 3 + 1] > hemY + .05 && rest[i * 3 + 1] < collarY - .02, i => arms[i] > .5 ? BLAZER.arm : BLAZER.torso);
+    const frontPanel = i => torso[i] > .5 && rest[i * 3 + 2] > 0 && rest[i * 3 + 1] > hemY + .05 && rest[i * 3 + 1] < collarY - .02;
+    smoothFront(pieces.blazer, body, frontPanel, i => arms[i] > .5 ? BLAZER.arm : BLAZER.torso);
+    {
+      // From the collar to the button the front hangs on its hulls, then the seams are blended.
+      const tailored = new Set([...pieces.blazer.covered].filter(i => frontPanel(i) && arms[i] < .3 && rest[i * 3 + 1] > buttonY - .02));
+      const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
+      const weight = i => smooth(.5, .9, torso[i]) * (1 - smooth(0, .3, arms[i])) * smooth(buttonY - .02, buttonY, rest[i * 3 + 1]);
+      pieces.blazer.tailoredDepth = tailorFront(pieces.blazer.geometry, tailored, { weight });
+      smoothFront(pieces.blazer, body, frontPanel, i => arms[i] > .5 ? BLAZER.arm : BLAZER.torso, 8);
+    }
     // The trousers: the lower body below the waist, with a front crease pressed down each leg.
     const crease = new Float32Array(count);
     for (let i = 0; i < count; i++) {

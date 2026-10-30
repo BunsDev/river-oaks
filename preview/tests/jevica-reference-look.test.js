@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { loadCharacterRig } from './helpers/character-rig.js';
 import { instantiateAvatar } from '../src/avatars.js';
 import { createJevicaCostume } from '../src/jevica-costume.js';
-import { SUIT, PUMP } from '../src/jevica-suit.js';
+import { SUIT, PUMP, upperHull } from '../src/jevica-suit.js';
 
 // Val's 2026-10-29 reference look on the real hero rig: a blazer and trousers cut
 // from her own skin, a peplum, a collar with its brooch, lilies, earrings, heels
@@ -39,8 +39,9 @@ test('the blazer and trousers are shells of the actual skin, skinned to its skel
     assert.ok(legs > 100 && chest > 50 && hands > 10 && neck > 100, `sampled ${legs} leg, ${chest} chest, ${hands} hand and ${neck} head vertices`);
     const sp = blazer.geometry.attributes.position; let min = Infinity, max = 0;
     for (const i of blazer.covered) { const d = Math.hypot(p.getX(i) - sp.getX(i), p.getY(i) - sp.getY(i), p.getZ(i) - sp.getZ(i)); min = Math.min(min, d); max = Math.max(max, d); }
-    // At least the sleeve offset everywhere; the smoothed front bridges the hollows between and under the bust by up to 5 cm.
-    assert.ok(min >= .0079 && max <= .05, `blazer offset ${min}..${max}`);
+    // At least the sleeve offset everywhere; the smoothed, tailored front bridges the hollow
+    // under the bust (it hangs from the bust to the button), standing off by up to 6 cm there.
+    assert.ok(min >= .0079 && max <= .06, `blazer offset ${min}..${max}`);
     const tp = trousers.geometry.attributes.position; let tMin = Infinity;
     for (const i of trousers.covered) tMin = Math.min(tMin, Math.hypot(p.getX(i) - tp.getX(i), p.getY(i) - tp.getY(i), p.getZ(i) - tp.getZ(i)));
     assert.ok(tMin >= .0049, `trousers offset ${tMin}`);
@@ -162,4 +163,45 @@ test('the shoes become slim pointed pumps under the trouser hem, unchanged where
     for (let i = 0; i < hairBefore.count; i++) if (hairBefore.getY(i) < 1.1) { lower++; if (Math.hypot(hairAfter.getX(i), hairAfter.getZ(i)) > Math.hypot(hairBefore.getX(i), hairBefore.getZ(i)) + .005) wider++; }
     assert.ok(lower > 0 && wider / lower > .9, `${wider}/${lower} low strands stand out further`);
   } finally { costume.dispose(); rig.dispose(); bare.dispose(); }
+});
+
+// The deepest dip of the blazer front below the straight line from each central column's
+// highest point down to its lowest, between the bust and the button (bind space, metres).
+function frontTuck(geometry, covered) {
+  const p = geometry.attributes.position, columns = new Map();
+  for (const i of covered) {
+    const [x, y, z] = [p.getX(i), p.getY(i), p.getZ(i)];
+    if (z < .05 || y < 1 || y > 1.25 || Math.abs(x) > .09) continue;
+    const k = Math.round(x * 100); if (!columns.has(k)) columns.set(k, []); columns.get(k).push([y, z]);
+  }
+  let worst = 0;
+  for (const points of columns.values()) {
+    const apex = points.reduce((m, q) => q[1] > m[1] ? q : m), below = points.filter(q => q[0] < apex[0]).sort((a, b) => b[0] - a[0]);
+    if (!below.length) continue; const last = below.at(-1);
+    for (const [y, z] of below) worst = Math.max(worst, apex[1] + (last[1] - apex[1]) * (apex[0] - y) / (apex[0] - last[0] || 1) - z);
+  }
+  return worst;
+}
+
+test('the blazer front bridges the hollow under the bust instead of following the skin into it', async () => {
+  const { rig, costume, body } = await dressed();
+  try {
+    const { blazer } = costume.suit, skinTuck = frontTuck(body.geometry, blazer.covered), clothTuck = frontTuck(blazer.geometry, blazer.covered);
+    assert.ok(skinTuck > .015, `the body dips ${(skinTuck * 1000).toFixed(1)} mm under the bust`);
+    assert.ok(clothTuck < .007, `the blazer front dips only ${(clothTuck * 1000).toFixed(1)} mm`);
+    assert.ok(blazer.tailoredDepth > .01 && blazer.tailoredDepth <= .03 + 1e-6, `lifted up to ${(blazer.tailoredDepth * 1000).toFixed(1)} mm, never past 3 cm`);
+    // Never inside the skin anywhere the shell covers.
+    const p = blazer.geometry.attributes.position, skin = body.geometry.attributes.position, n = body.geometry.attributes.normal;
+    for (const i of blazer.covered) {
+      const d = (p.getX(i) - skin.getX(i)) * n.getX(i) + (p.getY(i) - skin.getY(i)) * n.getY(i) + (p.getZ(i) - skin.getZ(i)) * n.getZ(i);
+      assert.ok(d > .004, `vertex ${i} stands ${(d * 1000).toFixed(1)} mm off the skin`);
+    }
+  } finally { costume.dispose(); rig.dispose(); }
+});
+
+test('the upper hull spans hollows and passes through peaks', () => {
+  const hull = upperHull([[0, 0], [1, 2], [2, 0], [3, -1], [4, 1]]);
+  assert.equal(hull(1), 2); assert.equal(hull(4), 1);
+  assert.ok(Math.abs(hull(2.5) - 1.5) < 1e-9, 'the hollow between the two peaks is bridged');
+  assert.equal(hull(-1), 0); assert.equal(hull(9), 1);
 });
