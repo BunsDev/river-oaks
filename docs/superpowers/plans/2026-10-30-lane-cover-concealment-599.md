@@ -30,6 +30,18 @@ Files owned: `preview/src/lane-cover.js` (new), `preview/src/lane-cover-mesh.js`
   7.9 s and stood down; one star kept; no page errors. Receipt, screenshots and log with
   SHA256SUMS in `.runtime/lane-cover/evidence/`.
 
+## Review (2026-10-30, independent reviewer)
+
+- **High, confirmed and addressed:** the chase regression moved the player at 5 m/s, faster than
+  any player (brisk 3.2 m/s). At 3.2 m/s the officer (3.4 m/s, notices within 3 m) follows
+  through the gap and arrests; at 1.65 m/s it never loses contact. The test now uses real speeds,
+  reaches the bay by the journey's travel step, and also records the on-foot arrest. Docs say
+  plainly that on-foot escape needs a police tuning decision.
+- **Medium, accepted:** the journey's last step into the bay is a travel step, so it shows the
+  failed search, collision and drawing, not an on-foot escape. Travel is unrestricted while
+  wanted, a pre-existing fairness gap routed separately.
+- **Low:** the yard also blocks melee, interaction, greeting and seat sight lines; documented.
+
 ## Gaps and next step
 
 - The crates and container are plain blockout boxes; no art pass is claimed.
