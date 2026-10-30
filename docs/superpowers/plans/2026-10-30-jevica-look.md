@@ -60,7 +60,44 @@ Likeness journey (`jevica-reference-likeness`), Chromium on this host (M5 Max), 
   back. Pink now shows at the shoulders, but the long waves need new hair cards.
 - **Not attempted yet:**
   - a real blazer cut (the bust shows through);
-  - the face morph and makeup;
-  - the deep-knee poke-through.
-  These are the next increments.
+  - the face morph and makeup.
+  These are the next increments. The deep-knee poke-through was measured, and no fix shipped; see below.
 - No human visual review.
+
+## Deep-knee poke-through: measured, no fix shipped (2026-10-30)
+
+The 10-29 ledger's gap said that at thigh −0.9 / calf 1.4 rad the inner knee pokes through
+the 5 mm trousers.
+
+**What was measured.** A node probe on the real rig counted posed skin vertices that lie
+outside the nearest posed trouser triangle within 9–15 cm of the left knee:
+
+| Bend (thigh / calf rad) | Vertices outside | Worst |
+| --- | --- | --- |
+| 0 / 0 (rest) | 0 | — |
+| −0.5 / 0.8 | 2 | 4.6 mm |
+| −0.9 / 1.4 | 46 | 4.1 mm |
+| −1.2 / 2.0 | 73–85 | 4.8 mm |
+
+- All of them are on the inside of the bend, and they reach up to 10.9 cm from the joint.
+- Skinning folds the thigh and calf skin into each other there.
+
+**Geometry fixes failed.** Both made it worse, because the shell copies the skin's weights and
+folds the same way:
+- a knee-local extra offset of 4–8 mm gave 86–122 vertices outside at −0.9 / 1.4, worst 7.5–11 mm;
+- re-ramping the shell's thigh/calf weights over 3–12 cm gave 87–269 outside.
+
+**A shader mask works but buys nothing visible.**
+- The mask stopped drawing leg skin within ±12 cm of each knee (bind space; only leg skin is
+  there). To survive a realism tier, `upgradeSkin` would have had to chain a look's own skin hook.
+- It worked: node tests passed, and so did a composition test under every tier.
+- A browser journey then rendered both knees at the three bends, from the side and from
+  behind, close up, mask on and off. It counted skin pixels in the knee's ±10 cm box
+  (skin has more green than blue; the satin does not).
+- **No crease skin shows without the mask at any bend or view.** The fold hides it. The only
+  skin in the box was her hand, in the deepest crouch, seen from behind.
+- An earlier, looser count found one 12-pixel speck at the deepest crouch, and the mask removed it.
+
+**Decision.** Not shipped: changing the shared realism module for no visible gain is the
+wrong trade. The probe, the journey and the diff are kept outside the repo as session
+evidence. If a later pose shows crease skin, start from that diff.
