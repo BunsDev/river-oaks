@@ -1321,3 +1321,16 @@ it isn't one of this round's scenarios, and frame times at load 20–50 would no
    leave it with #420 (optional, deferred; activation and the CPU-rendered door stall are already held there).
 5. **#413's "#359 not regressed" box**: yours to tick or leave, from the table above.
 6. **Landing this branch's PR** (ledger and receipts only): needs your merge authorization.
+
+### Addendum: main `e1ac3422` (2026-10-30, 19:25–19:30Z)
+
+Main moved 34 commits. Studio's import graph is the same 80 modules, and none changed between `f0d01729` and
+`e1ac3422`, so the Studio results above stand for `e1ac3422`. Two files on the office path changed:
+`preview/src/main.js` (#710 attaches combat state to remote figures; office occupants are filtered out before it)
+and `server/app.js` (#797: `/api/world-data` always answers). The #359 set was re-run from a `git archive` snapshot
+of `e1ac3422` under the shared browser lock, load 13–21:
+
+| Scenario | Result | Receipt |
+| --- | --- | --- |
+| `office-visit` / `office-desk` / `office-computer-embed` | passed, 12 / 18 / 62 checks, first run | `studio-417-e1ac3422-office359.json` |
+| `office-ipic-journey-runner.mjs` | passed, 30 checks, 124 s, first run (viewers converged after 10 ms) | `studio-417-e1ac3422-ipic.json` |
