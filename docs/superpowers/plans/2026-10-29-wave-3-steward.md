@@ -85,6 +85,24 @@ Change: a `required-characters` mode (same server setup as `required`) takes the
 
 - **Inventory (10-29 ~23:20Z).** Worktrees 86 → 91 and branches 88 → 94 since the start. This goal added 4 worktrees and 2 branches (two open PRs plus two scratch copies in their 12 h window) and retired 2; other sessions created the rest. I dry-ran `project:prune` on the delivered branches `feat/pink-jet-age-r1-kit-20261028`, `feat/resident-locations-20261024`, `fix/player-blocking-ui-292-20261027` and the three #292 branches (`content-filter`, `moderation-routing`, `support-contact-gate`). None is eligible: each is blocked by `session-release-missing-or-stale` (and `ignored-data`). Only the owning session may release one (workflow), so they wait on register-reconcile Decision 2 (resume the owners, or authorize a steward in writing to release on their behalf); that is Decision 21 below.
 
+## Round 4: Val's answers (10-30 ~00:25Z)
+
+Val authorized: land #764, #722, #695 + #707 and #765; release on the ended owners' behalf and prune the delivered branches. The crime stack stays with river-oaks-3d.
+
+- **Core receipts** on detached snapshots of each PR head (register `snap-722-core-20261030`, `snap-695-core-20261030`):
+  - #722 `9c96890c`: core passed (289/289; preview 4,299 of 4,300; server 1,048 of 1,326 with Redis-gated skips; 127 of 132; 0 failed). Hosted 27/27.
+  - #695 `f790ef8b`: core passed (289/289; preview 4,289 of 4,290; server 1,036 of 1,314; 127 of 132; 0 failed). Hosted 27/27.
+- **Ready flips** after the GraphQL reset (00:45Z): #764, #722, #765, #695. Each confirmed `draft:false` over REST.
+- **Landers** queued behind 8 other PRs: #764 (position 9), #722 (14), #695 (15).
+- **#707 held, not landed.** Its own description says it isn't finished: the spatial baseline hasn't been burned down against #695's increment 3, the combined browser and full hosted checks still need review, and its last hosted aggregate wasn't green. The owner wrote "Keep this PR draft". It also conflicts with its base. Landing it needs that work done first.
+- **Releases recorded on river-oaks-ac's behalf** (no process, absent from ListAgents, no CWD users). `app-review-292-20261027` is now delivered for #716, and its #713 and #715 branches are split into their own delivered rows. Retired with `project:prune` (exact-head release, dry run, then apply):
+  - `feat/content-filter-292-20261027` (`96c3b823`, an ancestor of #713's merged head): archive `retirement-nu1jEY`.
+  - `feat/moderation-routing-292-20261027` (`dc31a5dc`, an ancestor of #715's merged head): archive `retirement-vHCqvs`.
+  - `feat/resident-locations-20261024` (`46292801`, ignored data): retired with `--cancel-stale`, archive `cancel-stale-IvpsIt`.
+- **Still waiting:**
+  - `feat/pink-jet-age-r1-kit-20261028`: a live session's command references it (`active-session-command`), so it's left alone.
+  - `feat/support-contact-gate-292-20261027` (touched by the #716 merge) and `fix/player-blocking-ui-292-20261027` (a rebase of merged #711; `range-diff` shows 3/3 patches identical, so the exact-head path refuses it): `--cancel-stale` after their 12 h cutoffs, around 11:45Z and 12:35Z on 10-30.
+
 ## Decisions for Val
 
 This list replaces the open lists in #724 (draft-wave-2) and the `docs/register-reconcile-20261028` ledger (`12ea8d75`, local). Their items that are now done are dropped.
@@ -92,15 +110,15 @@ This list replaces the open lists in #724 (draft-wave-2) and the `docs/register-
 **Landing (each goes through `pnpm run land <pr>` after a core receipt on its head and all hosted checks):**
 
 1. ~~#716~~: done, merged as `c09cbabc`.
-2. **#722** Quaternius clips: say "land #722".
-3. **Crime stack #708 → #710 → #732** and the matrix **#731**: d1's leases are expired; 3d owns #732/#731 and is live. Say whether 3d lands the stack or a steward does.
-4. **#695 + #707** depth audit and hardening (3e, ended): land, or hand them to a named session.
+2. ~~#722~~: authorized; lander queued.
+3. ~~Crime stack~~: stays with river-oaks-3d.
+4. ~~#695~~: authorized; lander queued. **#707** held (see round 4): name who finishes its baseline reconciliation.
 5. **#685** iOS shadow draws and **#719** wardrobe: held for owner fixes. Say whether the fixes are still expected.
 6. **#727** IPIC packets (docs) and **#728** (WebKit MP4-first): both wait on your Safari sound row.
 7. **#737** landowner hovercraft (owner lease expired 10-29 02:30Z): land, or leave with the owner.
 8. **#755** stack-rehearsal fix: the same issue was fixed by merged #756. Close it, or say what it still adds.
 9. **Ledger drafts** #668 #687 #697 #724: land them as docs, or close them.
-10. **#764, the shared split from this goal**: all hosted checks are green (`required` 16 → 10.3 min). Say "land #764".
+10. ~~#764~~: authorized; lander queued.
 
 **Engineering calls:**
 
@@ -117,4 +135,4 @@ This list replaces the open lists in #724 (draft-wave-2) and the `docs/register-
 18. **`crime-melee-597` worktree is dirty** (Codex cc29 state archived at `~/worktree-backups/river-oaks/crime-release-599-handoff-20261028/`): say whether it can be retired.
 19. **The f1 streaming mirror** `../river-oaks-streaming-f1-review` (7 dirty files at `059a16a6`): who releases it.
 20. **Ledgers still local**: `docs/register-reconcile-20261028` (`12ea8d75`) and `docs/goal-register-reconcile-20261028` (`3bd1918d`). Push them as draft docs PRs, or drop them.
-21. **Release on ended owners' behalf**: authorize this steward in writing to record session releases for the delivered #292 branches (owner river-oaks-ac), pink-jet-age r1 and resident-locations. They then go through `project:prune` (dry run, then `--apply`).
+21. ~~Release on ended owners' behalf~~: authorized; three branches retired, three waiting (see round 4).
