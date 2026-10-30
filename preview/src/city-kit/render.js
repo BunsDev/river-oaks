@@ -54,6 +54,9 @@ function createMaterials(finish = 'classic') {
 // world axes in its plane, vertical as v, so courses stay level and joints line
 // up across neighbouring boxes (written per corner by createBatch's box).
 
+// A rectangle's border, `width` wide, as four [west, south, east, north] strips that do not overlap.
+const frame = ([w, s, e, n], width) => [[w, s, e, s + width], [w, n - width, e, n], [w, s + width, w + width, n - width], [e - width, s + width, e, n - width]];
+
 // Accumulates transformed geometry per material, then merges.
 export function createBatch() {
   const parts = new Map(), runs = new Map(), matrix = new THREE.Matrix4(), quaternion = new THREE.Quaternion(), euler = new THREE.Euler();
@@ -117,6 +120,8 @@ export function createBatch() {
 }
 
 // Face frames: start corner, unit direction along the face, outward normal.
+// The rectangle sides each face starts and ends on, in faceFrame's `along` direction.
+const FACE_ENDS = { south: ['west', 'east'], north: ['east', 'west'], east: ['south', 'north'], west: ['north', 'south'] };
 function faceFrame(rect, face) {
   const [w, s, e, n] = rect;
   if (face === 'south') return { origin: [w, s], along: [1, 0], out: [0, -1], length: e - w, depth: n - s };
@@ -175,6 +180,36 @@ function drape(rect, groundAt, lift, step = 2) {
   return geometry;
 }
 
+// `shared` names the sides this shell shares with a neighbouring shell (a party wall).
+const storefrontRecess = piece => piece.variant === 'loggia' ? 2.2 : piece.variant === 'recessed' ? .9 : .45;
+// A shell's piers are centred 5 cm behind its faced sides, so they stand this far proud of them.
+const pierProud = piece => (piece.variant === 'loggia' ? .5 : storefrontRecess(piece) + .1) / 2 - .05;
+
+// `rect` less the part `by` covers, when that part spans `rect` across one whole end; null when
+// it does not (cutting it out would leave an L), and `rect` itself when they do not overlap.
+function yieldTo(rect, by) {
+  const o = [Math.max(rect[0], by[0]), Math.max(rect[1], by[1]), Math.min(rect[2], by[2]), Math.min(rect[3], by[3])], eps = 1e-6;
+  if (o[2] - o[0] <= eps || o[3] - o[1] <= eps) return rect;
+  if (o[0] <= rect[0] + eps && o[2] >= rect[2] - eps) {
+    if (o[3] >= rect[3] - eps) return [rect[0], rect[1], rect[2], o[1]];
+    if (o[1] <= rect[1] + eps) return [rect[0], o[3], rect[2], rect[3]];
+  }
+  if (o[1] <= rect[1] + eps && o[3] >= rect[3] - eps) {
+    if (o[2] >= rect[2] - eps) return [rect[0], rect[1], o[0], rect[3]];
+    if (o[0] <= rect[0] + eps) return [o[2], rect[1], rect[2], rect[3]];
+  }
+  return null;
+}
+
+// `rect` less `by`: up to four rectangles around the part `by` covers.
+function without(rect, [w, s, e, n]) {
+  if (rect[2] <= w || rect[0] >= e || rect[3] <= s || rect[1] >= n) return [rect];
+  return [[rect[0], rect[1], Math.min(rect[2], w), rect[3]], [Math.max(rect[0], e), rect[1], rect[2], rect[3]],
+    [Math.max(rect[0], w), rect[1], Math.min(rect[2], e), Math.min(rect[3], s)], [Math.max(rect[0], w), Math.max(rect[1], n), Math.min(rect[2], e), rect[3]]]
+    .filter(([a, b, c, d]) => c - a > 1e-6 && d - b > 1e-6);
+}
+
+
 // A planted roof: lawn and raised beds inside the parapet, a rose-gold pergola strung with
 // pink lights. Everything stays within 1.9 m of the roof (KIT_PIECES['roof/garden']).
 function renderGardenRoof([w, s, e, n], roof, batch, detail, m, accent, wall) {
@@ -227,25 +262,32 @@ function renderCrown(piece, [w, s, e, n], bodyTop, top, batch, detail, m, accent
 // `forms` (a finish's rounded-form vocabulary, catalog.js KIT_FINISHES) adds facade
 // detail only: canopy noses and capsule sign plates in existing slots, never massing,
 // ground or collision. Without it a shell renders exactly as before.
-function renderShell(piece, batch, detail, m, ground, signs, forms = false) {
+function renderShell(piece, batch, detail, m, ground, signs, shared = new Set(), forms = false) {
   const [w, s, e, n] = piece.rect, style = KIT_STYLES[piece.style] ?? KIT_STYLES['market-row'];
   const wall = m(piece.wall), trim = m(piece.trim), accent = m(style.accent), glass = m('glass'), bronze = m('metal-bronze');
   const top = ground + piece.height, bottom = ground - .4;
   // A crown sets the top two storeys back behind terraces: the body stops below them.
   const crown = piece.roof === 'crown' && piece.storeys > 4, bodyTop = crown ? top - 2 * U : top, bodyStoreys = crown ? piece.storeys - 2 : piece.storeys;
   const faced = new Set(piece.faces ?? []);
-  const loggia = piece.variant === 'loggia', recess = loggia ? 2.2 : piece.variant === 'recessed' ? .9 : .45, inset = .25;
+  const loggia = piece.variant === 'loggia', recess = storefrontRecess(piece), inset = .25;
   // Ground-floor core sits behind the storefront recess; upper storeys sit behind the window reveal.
   const cut = (amount) => [w + (faced.has('west') ? amount : 0), s + (faced.has('south') ? amount : 0), e - (faced.has('east') ? amount : 0), n - (faced.has('north') ? amount : 0)];
   const core = cut(recess), upper = cut(inset), groundTop = ground + G;
   const solid = (r, y0, y1, material) => batch.box(material, (r[0] + r[2]) / 2, (y0 + y1) / 2, (r[1] + r[3]) / 2, r[2] - r[0], y1 - y0, r[3] - r[1]);
+  // Faces of different materials never share a plane or sit a few millimetres apart: past some
+  // distance the depth buffer cannot order them and they flicker (depth-layer-audit.js).
   solid(core, bottom, groundTop, wall);
-  if (piece.storeys > 1) solid(upper, groundTop, bodyTop, wall);
-  else solid(cut(.02), groundTop - .02, top, wall);
-  // Roof membrane inside the parapet.
-  solid([w + .24, s + .24, e - .24, n - .24], bodyTop - .02, bodyTop + .04, m(piece.roof === 'garden' ? 'lawn' : 'roof-membrane'));
-  // Floor plate between storefront and upper facade, and the loggia soffit.
-  solid([w, s, e, n], groundTop - .02, groundTop + .28, trim);
+  if (piece.storeys > 1) solid(upper, groundTop + .26, bodyTop, wall);
+  else if (top > groundTop + .3) solid(cut(.02), groundTop + .26, top, wall);
+  // Roof membrane inside the parapet, on whichever deck is uppermost: on one storey the floor
+  // plate is the roof. A garden roof's membrane is lawn; a crown's terrace slab is its roof.
+  const deck = Math.max(bodyTop, groundTop + .28);
+  if (!crown) solid([w + .24, s + .24, e - .24, n - .24], deck - .02, deck + .08, m(piece.roof === 'garden' ? 'lawn' : 'roof-membrane'));
+  // Floor plate between storefront and upper facade, and the loggia soffit: a slab edge standing
+  // proud of the walls and parapets, except at a party wall, where it stops inside its own wall
+  // rather than overlapping the neighbour's plate.
+  const plate = side => shared.has(side) ? -.04 : .04;
+  solid([w - plate('west'), s - plate('south'), e + plate('east'), n + plate('north')], groundTop - .02, groundTop + .28, trim);
   const roofKind = piece.roof;
   for (const face of ['north', 'south', 'east', 'west']) {
     const f = faceFrame(piece.rect, face), at = (u, o) => [f.origin[0] + f.along[0] * u + f.out[0] * o, f.origin[1] + f.along[1] * u + f.out[1] * o];
@@ -260,16 +302,26 @@ function renderShell(piece, batch, detail, m, ground, signs, forms = false) {
     };
     // Parapet and coping on every side; profiled cornice on faced sides.
     put(batch, wall, f.length / 2, -.12, bodyTop + .45, f.length, .9, .24);
-    put(batch, trim, f.length / 2, -.06, bodyTop + .93, f.length + .12, .08, .4);
+    // Copings overhang a free corner by 6 cm. Where a corner's other side is a party wall the
+    // facade runs on into the neighbour's, so the coping stops 2 cm short: a joint, clear of the
+    // neighbour's coping (perhaps another trim) and of its wall where it rises higher. On the
+    // party wall itself the coping stays on its own parapet, short of the corners.
+    const [startSide, endSide] = FACE_ENDS[face], o0 = shared.has(startSide) ? -.02 : .06, o1 = shared.has(endSide) ? -.02 : .06;
+    if (shared.has(face)) put(batch, trim, f.length / 2, -.12, bodyTop + .93, Math.max(0, f.length - .5), .08, .2);
+    else put(batch, trim, f.length / 2 + (o1 - o0) / 2, -.06, bodyTop + .93, f.length + o0 + o1, .08, .4);
     if (!faced.has(face)) continue;
     if (roofKind === 'cornice') { put(detail, trim, f.length / 2, .04, top - .1, f.length + .3, .22, .32); put(detail, trim, f.length / 2, .1, top + .08, f.length + .45, .14, .44); }
     // A shadow reveal under a black-steel coping reads as a crisp modern parapet.
     if (roofKind === 'reveal') put(detail, trim, f.length / 2, .012, top + .02, f.length + .02, .06, .05);
     if (roofKind === 'stepped') { put(batch, wall, f.length / 2, -.12, top + 1.35, Math.min(6, f.length * .4), .9, .24); put(batch, trim, f.length / 2, -.06, top + 1.83, Math.min(6, f.length * .4) + .12, .08, .4); }
     const bays = face === (piece.faces?.[0]) ? Math.max(1, piece.bays ?? 1) : Math.max(1, Math.round(f.length / 6)), bay = f.length / bays;
+    // A bay's fascia spans its storefront and half of each pier; at the face's ends it stops 2 cm
+    // short, so it never ends flush with the end pier (a different material at corners).
+    const fascia = (u, end = 0) => end ? Math.min(f.length - .02, u + .35) : Math.max(.02, u - .35);
     // Piers at bay edges carry the upper storeys to the ground.
     for (let i = 0; i <= bays; i++) {
-      const u = Math.min(f.length - .25, Math.max(.25, i * bay));
+      // Each pier stays within its own face, so neighbouring shops' piers meet without overlapping.
+      const half = (loggia ? .5 : .55) / 2, u = Math.min(f.length - half, Math.max(half, i * bay));
       put(batch, loggia ? trim : wall, u, -.05, ground + G / 2 - .2, loggia ? .5 : .55, G + .4, loggia ? .5 : recess + .1);
     }
     // Upper storeys: spandrels and piers on the face plane, glass in the reveal.
@@ -281,9 +333,11 @@ function renderShell(piece, batch, detail, m, ground, signs, forms = false) {
       for (let i = 0; i <= spans; i++) put(batch, wall, Math.min(L - .25, Math.max(.25, i * span)), -inset / 2, groundTop + rise / 2, .5, rise, inset);
       for (let storey = 1; storey < bodyStoreys; storey++) {
         const floor = groundTop + (storey - 1) * U;
-        put(batch, m('glass-dark'), L / 2, -inset + .03, floor + U / 2 + .1, L - .5, U - .5, .04);
+        // Each glass layer stands 8 cm proud of the one behind it (the core wall, then the dark
+        // sheet), enough to hold its depth order out to the audit's 120 m (depth-layer-audit.js).
+        put(batch, m('glass-dark'), L / 2, -inset + .06, floor + U / 2 + .1, L - .5, U - .5, .04);
         for (let i = 0; i < spans; i++) if ((Math.imul(storey * 31 + i * 17 + Math.round(L * 7), 2654435761) >>> 28) < 4)
-          put(batch, m('glass-lit'), (i + .5) * span, -inset + .06, floor + U / 2 + .1, span - .5, U - .5, .02);
+          put(batch, m('glass-lit'), (i + .5) * span, -inset + .15, floor + U / 2 + .1, span - .5, U - .5, .02);
         put(batch, trim, L / 2, depth / 2 - .05, floor + .12, L - .2, .24, depth);
         put(detail, m('glass-rail'), L / 2, depth - .07, floor + .78, L - .4, 1.05, .03);
       }
@@ -294,10 +348,10 @@ function renderShell(piece, batch, detail, m, ground, signs, forms = false) {
       put(batch, wall, L / 2, -inset / 2, (floor + sill) / 2, L, sill - floor, inset);
       put(batch, wall, L / 2, -inset / 2, (head + floor + U) / 2, L, floor + U - head, inset);
       for (const u of [.2, L - .2]) put(batch, wall, u, -inset / 2, (sill + head) / 2, .4, head - sill, inset);
-      put(detail, m('glass-dark'), L / 2, -inset + .03, (sill + head) / 2, L - .4, head - sill, .04);
+      put(detail, m('glass-dark'), L / 2, -inset + .05, (sill + head) / 2, L - .4, head - sill, .04);
       for (let u = 1.4; u < L - .9; u += 1.6) put(detail, accent, u, .1, (sill + head) / 2, .06, head - sill + .12, .5);
-      put(detail, trim, L / 2, .02, sill - .03, L - .3, .06, .16);
-      put(detail, trim, L / 2, .012, head + .03, L - .3, .06, .1);
+      put(detail, trim, L / 2, .02, sill - .02, L - .3, .06, .16);
+      put(detail, trim, L / 2, .012, head + .02, L - .3, .06, .1);
       // Stone coursing: a fine reveal at each floor line.
       put(detail, trim, L / 2, .004, floor + .3, L, .025, .02);
     }
@@ -311,38 +365,42 @@ function renderShell(piece, batch, detail, m, ground, signs, forms = false) {
         for (const [a, b] of openings) {
           const u0 = i * bay + a * bay, u1 = i * bay + b * bay;
           if (u0 > cursor) put(batch, wall, (cursor + u0) / 2, -inset / 2, (sill + head) / 2, u0 - cursor, head - sill, inset);
-          put(detail, m('glass-dark'), (u0 + u1) / 2, -inset + .03, (sill + head) / 2, u1 - u0, head - sill, .04);
-          put(detail, bronze, (u0 + u1) / 2, -inset + .06, (sill + head) / 2, .05, head - sill, .05);
+          put(detail, m('glass-dark'), (u0 + u1) / 2, -inset + .05, (sill + head) / 2, u1 - u0, head - sill, .04);
+          put(detail, bronze, (u0 + u1) / 2, -inset + .1, (sill + head) / 2, .05, head - sill, .05);
           put(detail, trim, (u0 + u1) / 2, .04, sill - .04, u1 - u0 + .2, .1, .3);
-          if (style.windows === 'arched') put(detail, trim, (u0 + u1) / 2, .02, head + .16, u1 - u0 + .3, .32, .16);
-          else put(detail, trim, (u0 + u1) / 2, .02, head + .08, u1 - u0 + .12, .16, .12);
+          if (style.windows === 'arched') put(detail, trim, (u0 + u1) / 2, .02, head + .15, u1 - u0 + .3, .32, .16);
+          else put(detail, trim, (u0 + u1) / 2, .02, head + .07, u1 - u0 + .12, .16, .12);
           cursor = u1;
         }
         if ((i + 1) * bay > cursor) put(batch, wall, (cursor + (i + 1) * bay) / 2, -inset / 2, (sill + head) / 2, (i + 1) * bay - cursor, head - sill, inset);
       }
     }
-    // Storefronts: kickplate, glazing with mullions and transom, a warm interior, a door.
+    // Storefronts: kickplate, glazing with mullions and transom, a warm interior, a door. Layers in
+    // the recess, back to front: the interior panel, display rails and lamps, the glass, then frames
+    // and the door straddling it. Overlapping layers stand at least 6 cm apart, so the depth buffer
+    // keeps them in order from across the street (depth-layer-audit.js).
+    const shop = { interior: -recess + .04, display: -recess + .125, glass: -recess + .22, frame: -recess + .25 };
     for (let i = 0; i < bays && piece.variant === 'gallery'; i++) {
       // Gallery fronts: floor-to-head glass in slim black steel over a dark, warm
       // interior, a limestone fascia, and a cantilevered bronze canopy hung on rods
       // with a downlight strip along its edge.
       const u0 = i * bay + .35, u1 = (i + 1) * bay - .35, width = u1 - u0, mid = (u0 + u1) / 2, glassMid = ground + 1.94, glassHeight = 3.62;
       if (width < .8) continue;
-      put(detail, trim, mid, -recess + .08, ground + .06, width, .12, .12);
-      put(detail, glass, mid, -recess + .05, glassMid, width, glassHeight, .03);
-      put(detail, m('shop-interior'), mid, -recess + .015, glassMid, width, glassHeight, .01);
+      put(detail, trim, mid, shop.frame, ground + .06, width, .12, .12);
+      put(detail, glass, mid, shop.glass, glassMid, width, glassHeight, .03);
+      put(detail, m('shop-interior'), mid, shop.interior, glassMid, width, glassHeight, .06);
       const panes = Math.max(2, Math.round(width / 1.6)), pane = width / panes;
       // Dark glass reads deep when only small lights show: one slim brass display rail
       // per bay and a pendant per pane, with nothing pale filling the glass.
-      put(detail, m('metal-brass'), mid, -recess + .03, ground + 1.05, width * .8, .04, .01);
+      put(detail, m('metal-brass'), mid, shop.display, ground + 1.05, width * .8, .04, .01);
       for (let k = 0; k < panes; k++) {
         if (i === Math.floor(bays / 2) && k === Math.floor(panes / 2)) continue;
-        put(detail, m('lamp-glow'), u0 + pane * (k + .5), -recess + .03, ground + 3.3, .22, .09, .01);
+        put(detail, m('lamp-glow'), u0 + pane * (k + .5), shop.display, ground + 3.3, .22, .09, .01);
       }
-      for (let k = 0; k <= panes; k++) put(detail, trim, u0 + width * k / panes, -recess + .08, glassMid, .05, glassHeight, .08);
-      put(detail, trim, mid, -recess + .08, ground + 3.77, width + .05, .07, .08);
-      if (i === Math.floor(bays / 2)) { put(detail, accent, mid + .32, -recess + .11, ground + 1.15, .035, 1.6, .05); put(detail, accent, mid - .32, -recess + .11, ground + 1.15, .035, 1.6, .05); }
-      put(batch, wall, mid, -.04, ground + 4.19, width + .7, .82, .2);
+      for (let k = 0; k <= panes; k++) put(detail, trim, u0 + width * k / panes, shop.frame, glassMid, .05, glassHeight, .12);
+      put(detail, trim, mid, shop.frame, ground + 3.77, width + .05, .07, .12);
+      if (i === Math.floor(bays / 2)) { put(detail, accent, mid + .32, shop.frame + .05, ground + 1.15, .035, 1.6, .05); put(detail, accent, mid - .32, shop.frame + .05, ground + 1.15, .035, 1.6, .05); }
+      put(batch, wall, (fascia(u0) + fascia(u1, 1)) / 2, -.04, ground + 4.19, fascia(u1, 1) - fascia(u0), .82, .2);
       put(detail, accent, mid, .82, ground + 3.92, width + .3, .1, 1.62);
       put(detail, accent, mid, 1.6, ground + 3.9, width + .3, .2, .05);
       // Rounded canopy nose: a jet-age leading edge over the flat fascia strip.
@@ -353,17 +411,18 @@ function renderShell(piece, batch, detail, m, ground, signs, forms = false) {
     for (let i = 0; i < bays && piece.variant !== 'gallery'; i++) {
       const u0 = i * bay + .35, u1 = (i + 1) * bay - .35, width = u1 - u0, mid = (u0 + u1) / 2;
       if (width < .8) continue;
-      put(detail, trim, mid, -recess + .08, ground + .25, width, .5, .12);
-      put(detail, glass, mid, -recess + .05, ground + 1.95, width, 2.9, .03);
+      put(detail, trim, mid, shop.frame, ground + .25, width, .5, .12);
+      put(detail, glass, mid, shop.glass, ground + 1.95, width, 2.9, .03);
       // A warm interior just behind the glass, in front of the core wall.
-      put(detail, m('shop-interior'), mid, -recess + .015, ground + 1.95, width, 2.9, .01);
+      put(detail, m('shop-interior'), mid, shop.interior, ground + 1.95, width, 2.9, .06);
       // Display shelves and pendant lights read as a furnished shop through the glass.
-      for (const level of [1.05, 1.85]) put(detail, m('metal-brass'), mid, -recess + .03, ground + level, width * .78, .1, .01);
-      for (let k = 0, lights = Math.max(1, Math.floor(width / 1.8)); k < lights; k++) put(detail, m('lamp-glow'), u0 + width * (k + .5) / lights, -recess + .03, ground + 3.0, .32, .14, .01);
-      for (const t of [.33, .66]) put(detail, bronze, u0 + width * t, -recess + .08, ground + 1.95, .05, 2.9, .06);
-      put(detail, bronze, mid, -recess + .08, ground + 2.75, width, .05, .06);
-      if (i === Math.floor(bays / 2)) put(detail, bronze, mid, -recess + .09, ground + 1.2, 1.0, 2.35, .05);
-      put(batch, trim, mid, -.04, ground + 3.95, width + .7, .7, .2);
+      for (const level of [1.05, 1.85]) put(detail, m('metal-brass'), mid, shop.display, ground + level, width * .78, .1, .01);
+      for (let k = 0, lights = Math.max(1, Math.floor(width / 1.8)); k < lights; k++) put(detail, m('lamp-glow'), u0 + width * (k + .5) / lights, shop.display, ground + 3.0, .32, .14, .01);
+      for (const t of [.33, .66]) put(detail, bronze, u0 + width * t, shop.frame, ground + 1.95, .05, 2.9, .12);
+      put(detail, bronze, mid, shop.frame, ground + 2.75, width, .05, .12);
+      // The door leaf straddles the glass, clearing it front and back and standing ahead of the frames.
+      if (i === Math.floor(bays / 2)) put(detail, bronze, mid, shop.glass + .02, ground + 1.2, 1.0, 2.35, .2);
+      put(batch, trim, (fascia(u0) + fascia(u1, 1)) / 2, -.04, ground + 3.95, fascia(u1, 1) - fascia(u0), .7, .2);
       if (piece.variant === 'canopy') {
         put(detail, accent, mid, 1.0, ground + 3.55, width + .6, .1, 2.0);
         // Rounded nose along the canopy's front edge (it ends 2.0 m out).
@@ -403,7 +462,8 @@ function renderShell(piece, batch, detail, m, ground, signs, forms = false) {
   }
 }
 
-function renderFurniture(piece, batch, m, groundAt) {
+// `paint` is the polygon-offset overlay for crossing bars painted on the paving.
+function renderFurniture(piece, batch, m, groundAt, paint = m('trim-ivory')) {
   const [x, y] = piece.at ?? [(piece.rect[0] + piece.rect[2]) / 2, (piece.rect[1] + piece.rect[3]) / 2], g = groundAt(x, y), yaw = piece.yaw ?? 0;
   const local = (u, v) => [x + Math.cos(yaw) * u - Math.sin(yaw) * v, y + Math.sin(yaw) * u + Math.cos(yaw) * v];
   const part = (material, u, v, up, along, height, across) => { const [px, py] = local(u, v); batch.box(material, px, up, py, along, height, across, yaw); };
@@ -456,13 +516,13 @@ function renderFurniture(piece, batch, m, groundAt) {
     case 'street/crosswalk': {
       // Bars run in the walking direction, repeated across the lane.
       const [w, s, e, n] = piece.rect, alongX = piece.across === 'x';
-      if (alongX) for (let v = s + .45; v < n - .3; v += 1) batch.box(m('trim-ivory'), (w + e) / 2, groundAt((w + e) / 2, v) + .012, v + .25, e - w - .4, .02, .5);
-      else for (let u = w + .45; u < e - .3; u += 1) batch.box(m('trim-ivory'), u + .25, groundAt(u, (s + n) / 2) + .012, (s + n) / 2, .5, .02, n - s - .4);
+      if (alongX) for (let v = s + .45; v < n - .3; v += 1) batch.box(paint, (w + e) / 2, groundAt((w + e) / 2, v) + .012, v + .25, e - w - .4, .02, .5);
+      else for (let u = w + .45; u < e - .3; u += 1) batch.box(paint, u + .25, groundAt(u, (s + n) / 2) + .012, (s + n) / 2, .5, .02, n - s - .4);
       break;
     }
     case 'street/crossing-table': {
       const [w, s, e, n] = piece.rect;
-      for (let v = s + .5; v < n - .3; v += 1) batch.box(m('trim-ivory'), (w + e) / 2, groundAt((w + e) / 2, v) + .012, v + .25, e - w - .4, .02, .5);
+      for (let v = s + .5; v < n - .3; v += 1) batch.box(paint, (w + e) / 2, groundAt((w + e) / 2, v) + .012, v + .25, e - w - .4, .02, .5);
       break;
     }
   }
@@ -578,7 +638,8 @@ function renderWaterTower(piece, m, ground, batch) {
   }
   const band = new THREE.MeshStandardMaterial({ map: texture, color: texture ? '#ffffff' : '#f5eee0', roughness: .7 }); band.name = 'city-kit/tower-lettering';
   own(new THREE.CylinderGeometry(3.94, 3.94, 1.3, 48, 1, true), band, x, 20.1, y);
-  add(new THREE.ConeGeometry(4.25, 2.9, 40), ivory, x, 23.55, y);
+  // The roof's base sits 7 cm into the brass disc under it, not 5, so it stays hidden from below.
+  add(new THREE.ConeGeometry(4.25, 2.9, 40), ivory, x, 23.57, y);
   add(new THREE.CylinderGeometry(4.3, 4.3, .14, 40), brass, x, 22.12, y);
   const beacon = m('lantern-glass').clone(); beacon.name = 'city-kit/tower-beacon';
   own(new THREE.CylinderGeometry(.42, .42, .8, 16), beacon, x, 25.5, y);
@@ -667,27 +728,57 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
     block.center.add(new THREE.Vector3(x, ground, -y)); block.count.n++;
     return block;
   };
+  // Sides of a shell that touch another shell along a stretch of wall.
+  const shells = plan.pieces.filter(piece => piece.piece === 'building/shell');
+  const partyWalls = piece => {
+    const [w, s, e, n] = piece.rect, sides = new Set(), near = (a, b) => Math.abs(a - b) < .01, along = (a0, a1, b0, b1) => Math.min(a1, b1) - Math.max(a0, b0) > .1;
+    for (const other of shells) {
+      if (other === piece) continue;
+      const [w2, s2, e2, n2] = other.rect;
+      if (near(e, w2) && along(s, n, s2, n2)) sides.add('east');
+      if (near(w, e2) && along(s, n, s2, n2)) sides.add('west');
+      if (near(n, s2) && along(w, e, w2, e2)) sides.add('north');
+      if (near(s, n2) && along(w, e, w2, e2)) sides.add('south');
+    }
+    return sides;
+  };
   const flat = createBatch(), signs = [], lanterns = new Map(), { trees, planters } = cityKitLandscape(plan, { groundAt, ground });
   // Ground: draped paving and lawns; overlays use polygon offset instead of height.
-  const overlay = name => { const material = m(name).clone(); material.polygonOffset = true; material.polygonOffsetFactor = -2; material.polygonOffsetUnits = -2; material.name = `${m(name).name}:overlay`; disposables.push(material); return material; };
+  // Each overlay layer sits 4 mm above the one below and is pulled further forward than it.
+  const overlay = (name, layer) => { const material = m(name).clone(); material.polygonOffset = true; material.polygonOffsetFactor = -layer; material.polygonOffsetUnits = -2 * layer; material.name = `${m(name).name}:overlay`; disposables.push(material); return material; };
   const groundPiece = { 'street/shared-lane': ['lane-brick', 0], 'street/intersection': ['lane-brick', 0], 'street/crosswalk': ['lane-brick', 0], 'street/sidewalk': ['paver-sidewalk', 0], 'street/court': ['plaza-stone', 0], 'landscape/lawn': ['lawn', 1], 'street/flush-curb': ['curb-granite', 2], 'street/band': ['porcelain', 2], 'street/channel': ['steel-black', 2], 'landscape/tree-pit': ['porcelain', 3] };
   // Tree pits match the District's (street-furniture.js): a cast-iron grate in a pale stone surround.
   const grateTexture = treeGrateTexture(); grateTexture.userData.owned = true;
-  const grate = new THREE.MeshStandardMaterial({ map: grateTexture, roughness: .55, metalness: .6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
+  const grate = new THREE.MeshStandardMaterial({ map: grateTexture, roughness: .55, metalness: .6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8 });
   grate.name = 'city-kit/tree-grate'; disposables.push(grate);
-  const overlays = new Map();
+  const overlays = new Map(), paint = overlay('trim-ivory', 3);
   const clipStreet = plan.pieces.find(p => p.piece === 'street/court' && p.id.endsWith('/paving'))?.rect;
+  const courts = plan.pieces.filter(p => p.piece === 'street/court' && p.id.endsWith('/paving')), paved = new Map();
   for (const piece of plan.pieces) {
-    const spec = groundPiece[piece.piece];
-    if (!spec) continue;
+    if (!groundPiece[piece.piece]) continue;
     let rect = piece.rect;
     // Street paving stops where the plaza paving begins; neither overlaps the other.
     if (clipStreet && piece.piece.startsWith('street/') && !piece.id.endsWith('/paving') && rect[2] > clipStreet[0] && rect[0] < clipStreet[0]) rect = [rect[0], rect[1], clipStreet[0], rect[3]];
-    const name = piece.material ?? spec[0], layer = spec[1], material = layer ? (overlays.get(name) ?? overlays.set(name, overlay(name)).get(name)) : m(name);
-    flat.add(material, drape(rect, groundAt, layer ? .004 * layer : 0, layer ? 4 : 2));
+    paved.set(piece, [rect]);
+  }
+  // A neighbourhood may have several plazas, met by streets on any side (Studewood, Woodland
+  // Heights): street paving still yields to each one where it can stop short of it. Where a plaza
+  // overlaps only part of a street piece, the plaza gives way instead, drawn as the rectangles
+  // around the street. Same-plane paving in two materials fights for depth.
+  for (const street of plan.pieces.filter(p => paved.has(p) && p.piece.startsWith('street/') && !p.id.endsWith('/paving'))) for (const court of courts)
+    paved.set(court, paved.get(court).flatMap(part => {
+      const kept = yieldTo(paved.get(street)[0], part);
+      if (kept) { paved.set(street, [kept]); return [part]; }
+      return without(part, paved.get(street)[0]);
+    }));
+  for (const piece of plan.pieces) {
+    const spec = groundPiece[piece.piece];
+    if (!spec) continue;
+    const name = piece.material ?? spec[0], layer = spec[1], material = layer ? (overlays.get(`${name}|${layer}`) ?? overlays.set(`${name}|${layer}`, overlay(name, layer)).get(`${name}|${layer}`)) : m(name);
+    for (const rect of paved.get(piece)) if (rect[2] - rect[0] > 1e-6 && rect[3] - rect[1] > 1e-6) flat.add(material, drape(rect, groundAt, layer ? .004 * layer : 0, layer ? 4 : 2));
     if (piece.piece === 'landscape/tree-pit') {
       // The grate's texture spans the pit once, its round opening on the trunk.
-      const [w, s, e, n] = rect, inner = [w + .12, s + .12, e - .12, n - .12], plate = drape(inner, groundAt, .02, 4), uv = plate.attributes.uv;
+      const [w, s, e, n] = piece.rect, inner = [w + .12, s + .12, e - .12, n - .12], plate = drape(inner, groundAt, .02, 4), uv = plate.attributes.uv;
       for (let i = 0; i < uv.count; i++) uv.setXY(i, (uv.getX(i) - inner[0]) / (inner[2] - inner[0]), (uv.getY(i) - inner[1]) / (inner[3] - inner[1]));
       flat.add(grate, plate);
     }
@@ -697,18 +788,26 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
   const [sw, ss, se, sn] = plan.site;
   flat.box(m('curb-granite'), (sw + se) / 2, ground - 1.9, (ss + sn) / 2, se - sw, 3.4, sn - ss + 30);
   for (const piece of plan.pieces) {
-    if (piece.piece === 'building/shell') { const block = blockFor(piece); renderShell(piece, block.massing, block.detail, m, ground, signs, forms); }
+    if (piece.piece === 'building/shell') { const block = blockFor(piece); renderShell(piece, block.massing, block.detail, m, ground, signs, partyWalls(piece), forms); }
     else if (piece.piece === 'building/context') {
       const [w, s, e, n] = piece.rect, block = blockFor(piece);
       block.massing.box(m(piece.wall ?? 'stucco-ivory'), (w + e) / 2, ground - 1.5 + (piece.height + 1.5) / 2, (s + n) / 2, e - w, piece.height + 1.5, n - s);
       block.massing.box(m('trim-ivory'), (w + e) / 2, ground + piece.height + .2, (s + n) / 2, e - w + .2, .4, n - s + .2);
-      for (let level = ground + 1; level < ground + piece.height - 2; level += 3.3) block.detail.box(m('glass-dark'), (w + e) / 2, level + 1.3, (s + n) / 2, e - w + .04, 1.6, n - s + .04);
+      // Window bands stand 7 cm proud of the context walls, enough to stay in front of them from afar.
+      for (let level = ground + 1; level < ground + piece.height - 2; level += 3.3) block.detail.box(m('glass-dark'), (w + e) / 2, level + 1.3, (s + n) / 2, e - w + .14, 1.6, n - s + .14);
     }
     else if (piece.piece === 'landscape/hedge') {
-      // A honed limestone planter wall under a porcelain cap, planted along its length.
-      const [w, s, e, n] = piece.rect;
-      flat.box(m('limestone'), (w + e) / 2, ground + .275, (s + n) / 2, e - w, .55, n - s);
-      flat.box(m('porcelain'), (w + e) / 2, ground + .575, (s + n) / 2, e - w + .08, .05, n - s + .08);
+      // A honed limestone planter wall under a porcelain cap, planted along its length. It stops at
+      // a shell's proud piers rather than running into one along the plane of its face.
+      let rect = piece.rect;
+      for (const shell of plan.pieces.filter(p => p.piece === 'building/shell')) {
+        const [sw, ss, se, sn] = shell.rect, out = pierProud(shell);
+        const strips = { west: [sw - out, ss, sw, sn], east: [se, ss, se + out, sn], south: [sw, ss - out, se, ss], north: [sw, sn, se, sn + out] };
+        for (const face of shell.faces ?? []) rect = yieldTo(rect, strips[face]) ?? rect;
+      }
+      const [w, s, e, n] = rect;
+      flat.box(m('limestone'), (w + e) / 2, ground + .25, (s + n) / 2, e - w, .5, n - s);
+      flat.box(m('porcelain'), (w + e) / 2, ground + .55, (s + n) / 2, e - w + .08, .1, n - s + .08);
     }
     else if (piece.piece === 'landscape/lawn') {
       // Black steel edging keeps the lawn's line crisp against the paving.
@@ -717,11 +816,16 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
     }
     else if (piece.piece === 'landscape/planter') {
       // The District's planter: a porcelain body on a deep-teal base, a brass rim and dark mulch.
-      const [w, s, e, n] = piece.rect;
-      flat.box(m('lamp-teal'), (w + e) / 2, ground + .06, (s + n) / 2, e - w - .12, .12, n - s - .12);
-      flat.box(m('porcelain'), (w + e) / 2, ground + .36, (s + n) / 2, e - w, .48, n - s);
-      flat.box(m('metal-brass'), (w + e) / 2, ground + .6, (s + n) / 2, e - w + .02, .025, n - s + .02);
-      flat.box(m('soil'), (w + e) / 2, ground + .608, (s + n) / 2, e - w - .1, .012, n - s - .1);
+      // The rim is a frame on porcelain walls and the mulch fills the bed inside them, well above
+      // the body: a brass slab 1.5 mm under the mulch fought it for depth (depth-layer-audit.js).
+      const [w, s, e, n] = piece.rect, lip = .06, x = (w + e) / 2, y = (s + n) / 2;
+      flat.box(m('lamp-teal'), x, ground + .06, y, e - w - .12, .12, n - s - .12);
+      flat.box(m('porcelain'), x, ground + .31, y, e - w, .38, n - s);
+      for (const [x0, y0, x1, y1] of frame(piece.rect, lip)) {
+        flat.box(m('porcelain'), (x0 + x1) / 2, ground + .55, (y0 + y1) / 2, x1 - x0, .1, y1 - y0);
+        flat.box(m('metal-brass'), (x0 + x1) / 2, ground + .6125, (y0 + y1) / 2, x1 - x0 + .02, .025, y1 - y0 + .02);
+      }
+      flat.box(m('soil'), x, ground + .535, y, e - w - 2 * lip, .11, n - s - 2 * lip);
     }
     else if (piece.piece === 'landscape/bayou') {
       const [w, s, e, n] = piece.rect, water = new THREE.MeshPhysicalMaterial({ color: '#3e5f55', roughness: .12, metalness: .1, clearcoat: 1, envMapIntensity: 1.2 });
@@ -734,7 +838,7 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
     else if (piece.piece === 'furniture/market-stall') renderMarketStall(piece, flat, m, groundAt, signs);
     else if (piece.piece === 'landmark/ribbon') renderRibbon(piece, m, groundAt(...piece.at), flat);
     else if (piece.piece === 'landmark/water-tower') { const tower = renderWaterTower(piece, m, ground, flat); group.add(tower); group.userData.tower = tower; }
-    else if (piece.piece.startsWith('furniture/') || piece.piece === 'street/crossing-table' || piece.piece === 'street/crosswalk') renderFurniture(piece, flat, m, groundAt);
+    else if (piece.piece.startsWith('furniture/') || piece.piece === 'street/crossing-table' || piece.piece === 'street/crosswalk') renderFurniture(piece, flat, m, groundAt, paint);
   }
   const geometries = [...flat.build(group, 'ground and street furniture')];
   const levels = [];
@@ -744,7 +848,9 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
     group.add(massing, detail); levels.push({ center: block.center.divideScalar(block.count.n), detail });
   }
   // Shop signs share one atlas texture and one material.
-  const atlas = signAtlas(signs.map(signKey)), signMaterial = new THREE.MeshStandardMaterial({ map: atlas.texture, color: atlas.texture ? '#ffffff' : '#1f454a', roughness: .55 }); signMaterial.name = 'city-kit/signs';
+  const atlas = signAtlas(signs.map(signKey)), signMaterial = new THREE.MeshStandardMaterial({ map: atlas.texture, color: atlas.texture ? '#ffffff' : '#1f454a', roughness: .55,
+    // Lettering is applied to a board or wall a few millimetres behind it: pulled forward like a decal.
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 }); signMaterial.name = 'city-kit/signs';
   const signBatch = createBatch();
   for (const sign of signs) {
     const quad = signQuad(atlas, signKey(sign), sign.width, sign.height);

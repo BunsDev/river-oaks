@@ -112,3 +112,22 @@ test('the pass sorts by kind only while it draws, and restores three\'s order af
   withOcclusionSort(renderer, false, () => calls.push(['draw']));
   assert.deepEqual(calls, [['draw']], 'the audit switch leaves three\'s order untouched');
 });
+
+test('a pooled render item keeps no reference to a model removed from the scene', () => {
+  // three reuses render items across frames and clears an unused item's own object and
+  // geometry; the kind cache must not hold them either, or a removed model stays in memory.
+  const lists = new WebGLRenderLists(), scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(), material = new THREE.MeshStandardMaterial();
+  const frame = objects => {
+    const list = lists.get(scene, 0);list.init();
+    objects.forEach((object, index) => list.push(object, object.geometry, material, 0, depth(index), null, camera));
+    list.finish();list.sort(occlusionOpaqueSort, occlusionTransparentSort);return list;
+  };
+  const kept = new THREE.Mesh(new THREE.BoxGeometry(), material), removed = Array.from({ length: 4 }, () => new THREE.Mesh(new THREE.SphereGeometry(), material));
+  // The first frame's items are the pool three reuses (and clears) in later frames.
+  const pool = [...frame([kept, ...removed]).opaque];
+  const list = frame([kept]);
+  assert.equal(list.opaque.length, 1);
+  assert.ok(pool.includes(list.opaque[0]), 'three reused its pooled item');
+  const references = new Set([...removed, ...removed.map(mesh => mesh.geometry)]);
+  assert.equal(pool.flatMap(item => Object.values(item)).filter(value => references.has(value)).length, 0);
+});

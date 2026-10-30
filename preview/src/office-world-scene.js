@@ -117,7 +117,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       const ground=worldBody.y;
       // The car floor carries the body (foot-placement.js `platform`): read as a curb step,
       // each frame of the climb left the body and shoes behind, sinking out through the floor.
-      street.avatar.setPresentation({...street.startPose,position:[worldBody.x,ground+1.68,worldBody.z],ground,groundAt:()=>ground,platform:stage.position.toArray(),altitude:0,flying:false,landing:false,riding:null,sitting:seated?{buildId:'office',slot:0,height:seated.height,yaw:seated.yaw+turn}:null,roomId:'authorized-office',showBody:!firstPerson&&(entering?street.startPose.showBody:true),speed,velocity:delta?[dx/delta,dz/delta]:[0,0],distance,heading:Math.hypot(dx,dz)>.0001?Math.atan2(dx,dz):undefined});
+      street.avatar.setPresentation({...street.startPose,position:[worldBody.x,ground+1.68,worldBody.z],ground,groundAt:()=>ground,platform:stage.position.toArray(),altitude:0,flying:false,landing:false,riding:null,sitting:seated?{buildId:'office',slot:0,height:seated.height,yaw:seated.yaw+turn}:null,roomId:'authorized-office',showBody:!firstPerson&&(frame.presence??1)>0&&(entering?street.startPose.showBody:true),speed,velocity:delta?[dx/delta,dz/delta]:[0,0],distance,heading:Math.hypot(dx,dz)>.0001?Math.atan2(dx,dz):undefined});
       lastNow=now;lastBody=worldBody.clone();
       current.position=[body.x,-body.z];
     }

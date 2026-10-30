@@ -1,0 +1,362 @@
+{
+ "note": "Motion clips of the tuck dive, loop and Petal Roll from preview/e2e/ribbonwing-maneuvers.js with RIBBONWING_MOTION_FRAMES set; sheets by scripts/ribbonwing/motion-sheet.mjs (frames 1/4 scale, in sample order). t is the fraction of the maneuver; up/nose are the craft's up and nose vertical components; cameraGap is the chase camera to pilot seat distance (m). Captured locally on 2026-10-30, host load about 30.",
+ "sheets": {
+  "tuck_dive": {
+   "path": "tuck_dive.png",
+   "sha256": "0517ffc75c14898fac8f9a03d1f009d51a5f8d67fbba1405b0ab7180b8181748",
+   "frames": 10
+  },
+  "loop": {
+   "path": "loop.png",
+   "sha256": "50067a84a872f700e002497c5ee072a2aa8b4c99225f72569cb924d648b61c1a",
+   "frames": 13
+  },
+  "petal_roll": {
+   "path": "petal_roll.png",
+   "sha256": "1b09c716dfdec458da55bbb242eb72e4a505a23a9de690fb4a2294004afc8e9b",
+   "frames": 11
+  }
+ },
+ "frames": [
+  {
+   "kind": "tuck_dive",
+   "t": 0.09294117647058824,
+   "up": 0.999,
+   "nose": -0.047,
+   "tuck": 0.042,
+   "altitude": 10.37,
+   "cameraGap": 10.97,
+   "frame": "tuck_dive-00.png"
+  },
+  {
+   "kind": "tuck_dive",
+   "t": 0.19588235294117648,
+   "up": 0.885,
+   "nose": -0.466,
+   "tuck": 0.542,
+   "altitude": 9.52,
+   "cameraGap": 10.85,
+   "frame": "tuck_dive-01.png"
+  },
+  {
+   "kind": "tuck_dive",
+   "t": 0.305,
+   "up": 0.804,
+   "nose": -0.594,
+   "tuck": 0.979,
+   "altitude": 7.9,
+   "cameraGap": 10.79,
+   "frame": "tuck_dive-02.png"
+  },
+  {
+   "kind": "tuck_dive",
+   "t": 0.4111764705882353,
+   "up": 0.832,
+   "nose": -0.555,
+   "tuck": 1,
+   "altitude": 6.02,
+   "cameraGap": 10.81,
+   "frame": "tuck_dive-03.png"
+  },
+  {
+   "kind": "tuck_dive",
+   "t": 0.5164705882352941,
+   "up": 0.947,
+   "nose": -0.322,
+   "tuck": 1,
+   "altitude": 4.68,
+   "cameraGap": 10.9,
+   "frame": "tuck_dive-04.png"
+  },
+  {
+   "kind": "tuck_dive",
+   "t": 0.6179411764705882,
+   "up": 0.997,
+   "nose": 0.076,
+   "tuck": 1,
+   "altitude": 4.35,
+   "cameraGap": 10.99,
+   "frame": "tuck_dive-05.png"
+  },
+  {
+   "kind": "tuck_dive",
+   "t": 0.7205882352941176,
+   "up": 0.921,
+   "nose": 0.389,
+   "tuck": 1,
+   "altitude": 4.99,
+   "cameraGap": 11.02,
+   "frame": "tuck_dive-06.png"
+  },
+  {
+   "kind": "tuck_dive",
+   "t": 0.8288235294117647,
+   "up": 0.872,
+   "nose": 0.49,
+   "tuck": 1,
+   "altitude": 6.26,
+   "cameraGap": 11.02,
+   "frame": "tuck_dive-07.png"
+  },
+  {
+   "kind": "tuck_dive",
+   "t": 0.9311764705882353,
+   "up": 0.916,
+   "nose": 0.401,
+   "tuck": 0.729,
+   "altitude": 7.61,
+   "cameraGap": 11.02,
+   "frame": "tuck_dive-08.png"
+  },
+  {
+   "kind": "tuck_dive",
+   "t": 1.0391176470588235,
+   "up": 0.993,
+   "nose": 0.122,
+   "tuck": 0.292,
+   "altitude": 8.32,
+   "cameraGap": 11,
+   "frame": "tuck_dive-09.png"
+  },
+  {
+   "kind": "loop",
+   "t": 0.06363636363636363,
+   "up": 1,
+   "nose": 0.001,
+   "tuck": 0,
+   "altitude": 8.38,
+   "cameraGap": 10.98,
+   "frame": "loop-00.png"
+  },
+  {
+   "kind": "loop",
+   "t": 0.1431818181818182,
+   "up": 0.989,
+   "nose": 0.145,
+   "tuck": 0,
+   "altitude": 8.43,
+   "cameraGap": 11,
+   "frame": "loop-01.png"
+  },
+  {
+   "kind": "loop",
+   "t": 0.22295454545454546,
+   "up": 0.892,
+   "nose": 0.453,
+   "tuck": 0,
+   "altitude": 8.92,
+   "cameraGap": 11.02,
+   "frame": "loop-02.png"
+  },
+  {
+   "kind": "loop",
+   "t": 0.30363636363636365,
+   "up": 0.553,
+   "nose": 0.833,
+   "tuck": 0,
+   "altitude": 10.61,
+   "cameraGap": 10.97,
+   "frame": "loop-03.png"
+  },
+  {
+   "kind": "loop",
+   "t": 0.3836363636363636,
+   "up": -0.03,
+   "nose": 1,
+   "tuck": 0,
+   "altitude": 13.53,
+   "cameraGap": 10.77,
+   "frame": "loop-04.png"
+  },
+  {
+   "kind": "loop",
+   "t": 0.46,
+   "up": -0.662,
+   "nose": 0.75,
+   "tuck": 0,
+   "altitude": 16.68,
+   "cameraGap": 10.46,
+   "frame": "loop-05.png"
+  },
+  {
+   "kind": "loop",
+   "t": 0.5340909090909091,
+   "up": -0.99,
+   "nose": 0.143,
+   "tuck": 0,
+   "altitude": 18.32,
+   "cameraGap": 10.21,
+   "frame": "loop-06.png"
+  },
+  {
+   "kind": "loop",
+   "t": 0.6129545454545454,
+   "up": -0.842,
+   "nose": -0.539,
+   "tuck": 0,
+   "altitude": 17.59,
+   "cameraGap": 10.13,
+   "frame": "loop-07.png"
+  },
+  {
+   "kind": "loop",
+   "t": 0.6922727272727273,
+   "up": -0.28,
+   "nose": -0.96,
+   "tuck": 0,
+   "altitude": 14.78,
+   "cameraGap": 10.28,
+   "frame": "loop-08.png"
+  },
+  {
+   "kind": "loop",
+   "t": 0.7759090909090909,
+   "up": 0.361,
+   "nose": -0.933,
+   "tuck": 0,
+   "altitude": 11.57,
+   "cameraGap": 10.54,
+   "frame": "loop-09.png"
+  },
+  {
+   "kind": "loop",
+   "t": 0.8556818181818182,
+   "up": 0.805,
+   "nose": -0.594,
+   "tuck": 0,
+   "altitude": 9.35,
+   "cameraGap": 10.79,
+   "frame": "loop-10.png"
+  },
+  {
+   "kind": "loop",
+   "t": 0.9356818181818182,
+   "up": 0.972,
+   "nose": -0.236,
+   "tuck": 0,
+   "altitude": 8.52,
+   "cameraGap": 10.92,
+   "frame": "loop-11.png"
+  },
+  {
+   "kind": "loop",
+   "t": 1.015,
+   "up": 1,
+   "nose": -0.026,
+   "tuck": 0,
+   "altitude": 8.38,
+   "cameraGap": 10.98,
+   "frame": "loop-12.png"
+  },
+  {
+   "kind": "petal_roll",
+   "t": 0.03138888888888889,
+   "up": 1,
+   "nose": 0,
+   "tuck": 0.007,
+   "altitude": 8.38,
+   "cameraGap": 10.98,
+   "frame": "petal_roll-00.png"
+  },
+  {
+   "kind": "petal_roll",
+   "t": 0.12916666666666668,
+   "up": 0.997,
+   "nose": 0.019,
+   "tuck": 0.091,
+   "altitude": 8.38,
+   "cameraGap": 10.99,
+   "frame": "petal_roll-01.png"
+  },
+  {
+   "kind": "petal_roll",
+   "t": 0.22722222222222221,
+   "up": 0.88,
+   "nose": 0.22,
+   "tuck": 0.22,
+   "altitude": 8.67,
+   "cameraGap": 10.97,
+   "frame": "petal_roll-02.png"
+  },
+  {
+   "kind": "petal_roll",
+   "t": 0.3194444444444444,
+   "up": 0.414,
+   "nose": 0.556,
+   "tuck": 0.327,
+   "altitude": 9.88,
+   "cameraGap": 10.74,
+   "frame": "petal_roll-03.png"
+  },
+  {
+   "kind": "petal_roll",
+   "t": 0.42027777777777775,
+   "up": -0.161,
+   "nose": 0.687,
+   "tuck": 0.403,
+   "altitude": 12.04,
+   "cameraGap": 9.44,
+   "frame": "petal_roll-04.png"
+  },
+  {
+   "kind": "petal_roll",
+   "t": 0.515,
+   "up": -0.862,
+   "nose": 0.31,
+   "tuck": 0.445,
+   "altitude": 14.09,
+   "cameraGap": 10.39,
+   "frame": "petal_roll-05.png"
+  },
+  {
+   "kind": "petal_roll",
+   "t": 0.6113888888888889,
+   "up": -0.862,
+   "nose": -0.31,
+   "tuck": 0.445,
+   "altitude": 14.09,
+   "cameraGap": 10.64,
+   "frame": "petal_roll-06.png"
+  },
+  {
+   "kind": "petal_roll",
+   "t": 0.7080555555555555,
+   "up": -0.184,
+   "nose": -0.684,
+   "tuck": 0.405,
+   "altitude": 12.13,
+   "cameraGap": 10.51,
+   "frame": "petal_roll-07.png"
+  },
+  {
+   "kind": "petal_roll",
+   "t": 0.8130555555555555,
+   "up": 0.419,
+   "nose": -0.553,
+   "tuck": 0.327,
+   "altitude": 9.86,
+   "cameraGap": 10.61,
+   "frame": "petal_roll-08.png"
+  },
+  {
+   "kind": "petal_roll",
+   "t": 0.9233333333333333,
+   "up": 0.896,
+   "nose": -0.201,
+   "tuck": 0.213,
+   "altitude": 8.63,
+   "cameraGap": 10.89,
+   "frame": "petal_roll-09.png"
+  },
+  {
+   "kind": "petal_roll",
+   "t": 1.0183333333333333,
+   "up": 0.999,
+   "nose": -0.007,
+   "tuck": 0.063,
+   "altitude": 8.38,
+   "cameraGap": 10.98,
+   "frame": "petal_roll-10.png"
+  }
+ ]
+}
