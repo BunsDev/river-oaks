@@ -83,6 +83,8 @@ Change: a `required-characters` mode (same server setup as `required`) takes the
 - `required` without the character journeys wasn't run locally; they ran last in that mode and each restarted the server first, so the remaining order is unchanged.
 - `tick-remeasure-snapshot-20261029` (scratchpad `tick-main`, detached `39a5f302`, one untracked harness copy) can't be cancelled until its 12 h touch window ends (after 10-30 10:30Z): `project:prune --cancel-stale --detached-path <path> --expected-head 39a5f30272ea620ce692b95fcc15a8c69b9aff9f`.
 
+- **Inventory (10-29 ~23:20Z).** Worktrees 86 → 91 and branches 88 → 94 since the start. This goal added 4 worktrees and 2 branches (two open PRs plus two scratch copies in their 12 h window) and retired 2; other sessions created the rest. I dry-ran `project:prune` on the delivered branches `feat/pink-jet-age-r1-kit-20261028`, `feat/resident-locations-20261024`, `fix/player-blocking-ui-292-20261027` and the three #292 branches (`content-filter`, `moderation-routing`, `support-contact-gate`). None is eligible: each is blocked by `session-release-missing-or-stale` (and `ignored-data`). Only the owning session may release one (workflow), so they wait on register-reconcile Decision 2 (resume the owners, or authorize a steward in writing to release on their behalf); that is Decision 21 below.
+
 ## Decisions for Val
 
 This list replaces the open lists in #724 (draft-wave-2) and the `docs/register-reconcile-20261028` ledger (`12ea8d75`, local). Their items that are now done are dropped.
@@ -115,3 +117,4 @@ This list replaces the open lists in #724 (draft-wave-2) and the `docs/register-
 18. **`crime-melee-597` worktree is dirty** (Codex cc29 state archived at `~/worktree-backups/river-oaks/crime-release-599-handoff-20261028/`): say whether it can be retired.
 19. **The f1 streaming mirror** `../river-oaks-streaming-f1-review` (7 dirty files at `059a16a6`): who releases it.
 20. **Ledgers still local**: `docs/register-reconcile-20261028` (`12ea8d75`) and `docs/goal-register-reconcile-20261028` (`3bd1918d`). Push them as draft docs PRs, or drop them.
+21. **Release on ended owners' behalf**: authorize this steward in writing to record session releases for the delivered #292 branches (owner river-oaks-ac), pink-jet-age r1 and resident-locations. They then go through `project:prune` (dry run, then `--apply`).
