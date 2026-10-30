@@ -480,6 +480,60 @@ Hosted failure on `aa255f44`, preview experience (ribbonwing):
 
 CI: commons took 16 min with `ribbonwing-passenger` failing early, against a 20-min timeout. Commons returns to #737's `east-garden-commons hover-coach`. A new `ribbonwing` shard runs `ribbonwing-passenger ribbonwing-maneuvers`.
 
+## Status at handoff (2026-10-30)
+
+| Gate | Revision | Result |
+| --- | --- | --- |
+| `pnpm run verify full` | snapshot of `aa255f44` (`git archive` → snapshot commit `957ec05f`), isolated Redis on port 16779 | passed |
+| Hosted Verify | `aea00600` | all 21 checks passed |
+
+`verify full` stages:
+
+| Stage | Result |
+| --- | --- |
+| dependency audit | no vulnerabilities |
+| agent | 289 passed, 0 failed |
+| preview | 4362 tests, 0 failed |
+| server with Redis | 1417 tests, 0 failed |
+| desktop | 132 tests, 0 failed |
+| build, python lint/format/tests, demo, secrets, secret history | passed |
+| browser security | 2 passed |
+| reflections | passed |
+| experience | 16 journeys passed |
+| experience-commons | passed |
+| shared | passed |
+| ipic-screening | passed |
+| journeys overall | 49 passed, 0 failed |
+
+- The stages waited about 1.5 h on other sessions' browser locks.
+- `aea00600` differs from `aa255f44` only in `preview/e2e/ribbonwing-passenger.js` and this ledger.
+- `verify full`'s journey lists do not include hover-coach or the Ribbonwing journeys. Those ran in the hosted shards and in separate local runs.
+
+Hosted Verify on `aea00600` includes:
+
+| Check | Result |
+| --- | --- |
+| preview experience (ribbonwing) | passed in 4 min |
+| preview experience (commons) | passed in 8 min |
+| aggregate `preview` | passed |
+
+Earlier hosted failures, both fixed or explained:
+
+- `8e0d310e`: stack rehearsal, the pre-#756 defect; the base lacks #756. Also a passenger title race, now fixed.
+- `aa255f44`: the passenger walk-away hold, now fixed.
+
+Not done or not verified:
+
+- No human, device, audio, mobile or GPU acceptance. Nobody has listened to the sounds.
+- Pink coverage still trails the references in top, hover and stunt views. Detail art beyond the D2 paint pass is not done. Silhouette IoU is not a pixel match.
+- The rear IoU sits below its D1 floor; the floor is now reset to D2 (decision 12).
+- Heap growth over six Ribbonwing calls is 3–4 MB. It is bounded but not attributed.
+- The GLB omits the procedural micro-detail texture. The binary is not committed; the exporter reproduces it byte for byte.
+- Rollback with live checkpoints carrying `maneuver` or passenger fields has not been exercised against #737's restore.
+- The base #737 is 114 commits behind main and lacks #756. Rebasing the stack is the owners' call.
+- The craft does not auto-land during the pilot-disconnect grace.
+- The downed and held maneuver aborts are verified only by reading the code.
+
 ## Rollback
 
 Revert the increment's merge commit. The `hover` kind, its server rules and the
