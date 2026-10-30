@@ -20,7 +20,7 @@ the gaps found.
 | #584 conventions: scale, materials, LOD, collision, licensing, budgets, naming | `docs/city-kit.md` Conventions; budgets checked by `destination build` and tests | met |
 | #584 two distinct blocks from the kit | Commons (market-row, garden-court) and Nineteenth and Yale (heights-row) among 18 shipped recipes, 32 blocks, 354 shells | met |
 | #584 pedestrian-scale review, draw calls, repetition | `city-kit-review.js` on this head: 18 views of two recipes at two seeds, 0 page errors, 0 missing assets; draw calls 122–356 per view (whole-view, trees and planting included) | captured; human visual approval outstanding |
-| #584 parity screenshots against the District | the Commons journey captures `parity-district-arrival` and `parity-market-street` | pending: local run needs a quiet host (hosted runs keep no screenshots) |
+| #584 parity screenshots against the District | `parity-district-arrival` and `parity-market-street` from the local Commons run on `ec1ae3c6`: the market street reuses the District's street trees, patterned paving, tree pits and lamp posts; its storefronts are darker by Val's design (`d0044c9d`) | captured; human visual approval outstanding |
 | #585 deterministic, reproducible builds | `destination check`: all 21 locks reproduce; Commons seed 7 built twice: `b750b02a0df11b98` both times | met |
 | #585 seeds | default seed 1912 `2241512f79d5bf79`, seed 7 `b750b02a0df11b98`; both fully connected (93,498/93,498 walkable samples, all 5 lanterns reachable), within budget (91,568/260,000 triangles, 62/160 solids, 14/28 materials) | met |
 | #585 overrides survive regeneration | CLI override (`parcel-1 storeys=3`) on a copy, rebuilt at seeds 1912, 7, 99: applied every time, 0 orphaned | met |
@@ -65,8 +65,8 @@ block stands back by the inset; frontage is measured along the block's own lengt
 | `node --test` city-kit, terraces, Heights stream, resident locations, streetscape, neighborhood scripts | 136/136 |
 | `pnpm run destination check` | every lock reproduces |
 | Server suites for the Heights, Studewood, Terraces, Woodland, TypeSafe revisions and checkpoint migrations (isolated Redis) | 57/57, 0 skipped |
-| `pnpm run verify` (core, host load ~41) | failed 1: `blocks-town.test.js` "the new socket is live" after a reconnect (player blocking, untouched here). Alone it passes twice on this tree and once on main. Tooling 289/289; preview 4656 pass + 35 todo + 1 skip of 4692; server 1080 pass + 285 skip of 1366 with that one failure. Rerun on a quiet host pending |
-| Browser: Commons two-player journey with District parity captures | pending (quiet host) |
+| `pnpm run verify` (core) | at load ~41: one failure in `blocks-town.test.js` ("the new socket is live", player blocking, untouched here), which passes alone on this tree and on main. Rerun from a detached snapshot of `ec1ae3c6` at load ~10 (2026-10-30 05:37–05:43Z): passed, tooling 289/289; preview 4656 pass + 35 todo + 1 skip of 4692; server 1081 pass + 285 skip of 1366; 127 pass + 5 skip of 132 |
+| Browser: `east-garden-commons` two-player journey, `ec1ae3c6` snapshot (05:43–06:00Z, load 18–32) | passed: both players walk in from the District, light all five Lantern Walk lanterns together (credited to both), return home without reload; no page errors |
 
 ## Gaps
 
@@ -78,4 +78,4 @@ block stands back by the inset; frontage is measured along the block's own lengt
 
 ## Next step
 
-Core verify, draft PR, then the Commons journey with parity captures when the host is quiet.
+Land (authorized by Val 2026-10-30 once the local evidence passed). Then, after 2026-10-30T14:45Z, cancel the two 10-22 neighborhood lanes to archives (authorized).
