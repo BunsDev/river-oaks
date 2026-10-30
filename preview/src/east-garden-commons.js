@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { commonsGroundAt } from '../../shared/east-garden-commons-layout.js';
 import { RETRO } from './retro-palette.js';
 import { buildCityKit } from './city-kit/render.js';
-import { KIT_MATERIALS } from '../../shared/city-kit/catalog.js';
+import { KIT_MATERIALS, kitFinish, knownFinish } from '../../shared/city-kit/catalog.js';
 import { physicalSurface } from './materials.js';
 
 export { attachEastGardenCommons, detachEastGardenCommons } from './east-garden-commons-world.js';
@@ -10,19 +10,23 @@ export { attachEastGardenCommons, detachEastGardenCommons } from './east-garden-
 /**
  * The Commons ground ramp and pavilion, plus the assembled destination
  * (layout.destination, shared/commons-destination.js) when it is composed.
+ * `finish` (catalog.js KIT_FINISHES; render-quality.js readFinishPreference) recolours
+ * the kit, and the pavilion's own materials through the same slots. Unknown is classic.
  */
-export function buildEastGardenCommons(layout) {
+export function buildEastGardenCommons(layout, { finish: requested } = {}) {
   const group = new THREE.Group(); group.name = 'East Garden Commons';
   if (!layout) return group;
+  const finish = knownFinish(requested), recolour = kitFinish(finish).materials;
+  group.userData.finish = finish;
   // With the destination composed, the gateway ramp is paved in Market Street's granite
   // so the District street runs on into the shared lane without a change of floor.
   const granite=KIT_MATERIALS['granite-sett'];
   const materials = {
-    route:layout.destination?physicalSurface(granite.surface,{tileSize:granite.tile,variation:.08,color:new THREE.Color(granite.color),textureContrast:granite.textureContrast,normalScale:new THREE.Vector2(.3,.3)}):new THREE.MeshStandardMaterial({color:RETRO.ivory,roughness:.8}),
-    column:new THREE.MeshStandardMaterial({color:RETRO.teal,roughness:.6}),
-    canopy:new THREE.MeshStandardMaterial({color:RETRO.ivory,roughness:.8}),
-    bench:new THREE.MeshStandardMaterial({color:RETRO.brass,roughness:.55}),
-    planter:new THREE.MeshStandardMaterial({color:'#73875c',roughness:1}),
+    route:layout.destination?physicalSurface(granite.surface,{tileSize:granite.tile,variation:.08,color:new THREE.Color(granite.color),textureContrast:granite.textureContrast,normalScale:new THREE.Vector2(.3,.3)}):new THREE.MeshStandardMaterial({color:RETRO.ivory,roughness:.8,...recolour['trim-ivory']}),
+    column:new THREE.MeshStandardMaterial({color:RETRO.teal,roughness:.6,...recolour['trim-teal']}),
+    canopy:new THREE.MeshStandardMaterial({color:RETRO.ivory,roughness:.8,...recolour['trim-ivory']}),
+    bench:new THREE.MeshStandardMaterial({color:RETRO.brass,roughness:.55,...recolour['metal-brass']}),
+    planter:new THREE.MeshStandardMaterial({color:'#73875c',roughness:1,...recolour.planting}),
   };
   const box = new THREE.BoxGeometry(1,1,1), geometries = new Set([box]);
   const addBox = (id,r,bottom,height,material) => {
@@ -61,8 +65,8 @@ export function buildEastGardenCommons(layout) {
   const baseSolids=destination?layout.solids.slice(0,layout.solids.length-destination.solids.length):layout.solids;
   let kit=null;
   if(destination){
-    kit=buildCityKit({...destination,pieces:[...destination.pieces,...pavilionPieces(layout,baseSolids)]},{groundAt:(east,north)=>commonsGroundAt(layout,Math.max(east,layout.edge+1e-6),north)??layout.ground,ground:layout.ground,plantingMetres:layout.plantingMetres});
-    group.add(kit);buildPavilion(layout,group,materials,geometries);
+    kit=buildCityKit({...destination,pieces:[...destination.pieces,...pavilionPieces(layout,baseSolids)]},{groundAt:(east,north)=>commonsGroundAt(layout,Math.max(east,layout.edge+1e-6),north)??layout.ground,ground:layout.ground,plantingMetres:layout.plantingMetres,finish});
+    group.add(kit);buildPavilion(layout,group,materials,geometries,recolour);
   } else {
     for(const solid of baseSolids)addBox(solid.id,solid.rect,layout.ground,solid.height,solid.kind);
     addBox(`${layout.pavilion.id}/roof`,layout.pavilion.rect,layout.ground+layout.pavilion.clearHeight,layout.pavilion.roofThickness,'canopy');
@@ -92,9 +96,10 @@ function pavilionPieces(layout,solids) {
 
 // The landmark pavilion: round ivory posts with brass capitals, a layered canopy
 // with a teal fascia and a raised lantern deck. Posts keep the blockout's solids.
-function buildPavilion(layout,group,materials,geometries) {
+// Under a finish the fascia takes the kit's teal trim slot (Pink Jet-Age: pink).
+function buildPavilion(layout,group,materials,geometries,recolour) {
   const {rect,clearHeight,roofThickness}=layout.pavilion,ground=layout.ground,[w,s,e,n]=rect;
-  const fascia=new THREE.MeshStandardMaterial({color:RETRO.teal,roughness:.5});materials.fascia=fascia;
+  const fascia=new THREE.MeshStandardMaterial({color:RETRO.teal,roughness:.5,...recolour['trim-teal']});materials.fascia=fascia;
   const add=(geometry,material,x,y,north)=>{geometries.add(geometry);const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,y,-north);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;};
   for(const x of [w+.25,e-.25])for(const y of [s+.25,n-.25]){
     add(new THREE.CylinderGeometry(.2,.24,clearHeight-.3,16),materials.canopy,x,ground+(clearHeight-.3)/2,y);

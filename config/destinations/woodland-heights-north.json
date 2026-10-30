@@ -442,70 +442,6 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "twentieth-corner-west",
-      "style": "heights-row",
-      "rect": [
-        508,
-        117.5,
-        523,
-        127.5
-      ],
-      "front": "south",
-      "sides": [
-        "east"
-      ],
-      "depth": [
-        10,
-        10
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        7.5
-      ],
-      "names": [
-        "Screen Door Coffee",
-        "Little Pecan Grocer",
-        "Bluebonnet Florist"
-      ]
-    },
-    {
-      "id": "twentieth-corner-east",
-      "style": "market-row",
-      "rect": [
-        537,
-        117.5,
-        552.5,
-        127.5
-      ],
-      "front": "south",
-      "sides": [
-        "west"
-      ],
-      "depth": [
-        10,
-        10
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        7.5
-      ],
-      "names": [
-        "Crepe Myrtle Books",
-        "Front Porch Hardware",
-        "Sweet Tea Bakery"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -947,5 +883,70 @@
       "variant": "awning",
       "awning": "canvas-teal"
     }
-  ]
+  ],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "twentieth-corner-west",
+        "rect": [
+          508,
+          117.5,
+          523,
+          127.5
+        ],
+        "style": "heights-row",
+        "depth": [
+          10,
+          10
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          7.5
+        ],
+        "names": [
+          "Screen Door Coffee",
+          "Little Pecan Grocer",
+          "Bluebonnet Florist"
+        ],
+        "front": "south"
+      },
+      {
+        "id": "twentieth-corner-east",
+        "rect": [
+          537,
+          117.5,
+          552.5,
+          127.5
+        ],
+        "style": "market-row",
+        "depth": [
+          10,
+          10
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          7.5
+        ],
+        "names": [
+          "Crepe Myrtle Books",
+          "Front Porch Hardware",
+          "Sweet Tea Bakery"
+        ],
+        "front": "south"
+      }
+    ],
+    "migrated": {
+      "blocks": 2,
+      "geometry": "f96a8c08ba90ae6a"
+    }
+  }
 }

@@ -5,6 +5,8 @@
 // copied facades). Houston references inform patterns only: short brick storefront
 // rows with canopies (the Heights' 19th Street), shaded garden courts (Montrose),
 // bayou greenways and elevated water towers as wayfinding landmarks.
+import { PINK_JET_AGE } from './pink-jet-age.js';
+
 export const KIT_VERSION = 'city-kit-1';
 
 export const KIT_CONVENTIONS = Object.freeze({
@@ -80,12 +82,8 @@ export const KIT_MATERIALS = Object.freeze({
   'ribbon-rose': { color: '#e4589b', roughness: .3, metalness: .35, emissive: '#ff3f8f', emissiveIntensity: .3 },
 });
 
-// Pink Jet-Age (#738, #739): the approved optimistic retrofuturist direction. TypeSafe
-// pink is fixed; the supporting roles are proposals, so they live here as named roles
-// rather than replacing every token in the client.
-export const PINK_JET_AGE = Object.freeze({
-  pink: '#F486A1', ivory: '#F7F1E8', mintGlass: '#BFE2DE', chrome: '#BCC5C8', garden: '#4A6A55', ink: '#24242A',
-});
+// Pink Jet-Age (#738, #739) roles: pink-jet-age.js, re-exported here.
+export { PINK_JET_AGE };
 
 // Finishes recolour material slots at render time. A finish never changes a plan, its
 // hash, a lock, a piece ID, geometry, collision or a recipe override: it only replaces
@@ -128,6 +126,10 @@ export function kitFinish(name = 'classic') {
   if (!finish) throw new Error(`Unknown kit finish ${name}`);
   return finish;
 }
+
+// The live client's reading of an untrusted preference (#742): an unknown or malformed
+// name renders classic instead of throwing.
+export const knownFinish = name => typeof name === 'string' && Object.hasOwn(KIT_FINISHES, name) ? name : 'classic';
 
 // Architectural styles choose materials and preferred variants. Distinction comes
 // from massing, rhythm and frontage depth as much as colour.

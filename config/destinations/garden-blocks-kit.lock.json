@@ -1,0 +1,16 @@
+{
+  "id": "garden-blocks-kit",
+  "kit": "city-kit-1",
+  "seed": 1,
+  "hash": "b6f866888dfc0e7a",
+  "geometry": "067b1392f4c9a2b0",
+  "recipeHash": "e2231da60f78963c",
+  "overridesHash": "174b1d836bafee25",
+  "stats": {
+    "pieces": 236,
+    "buildings": 32,
+    "solids": 72,
+    "materials": 6,
+    "triangles": 130384
+  }
+}

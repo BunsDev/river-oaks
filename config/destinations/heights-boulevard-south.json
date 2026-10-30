@@ -90,73 +90,6 @@
     }
   ],
   "plazas": [],
-  "blocks": [
-    {
-      "id": "frontage-south",
-      "style": "garden-court",
-      "rect": [
-        406,
-        -64.5,
-        420.5,
-        -7.5
-      ],
-      "front": "west",
-      "sides": [
-        "north",
-        "south"
-      ],
-      "depth": [
-        11,
-        14.5
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        5,
-        7
-      ],
-      "names": [
-        "Bayou Heights Post",
-        "Pelican Shoe Repair",
-        "Rain Lily Spa",
-        "Prairie Lantern Co."
-      ]
-    },
-    {
-      "id": "frontage-far-south",
-      "style": "garden-court",
-      "rect": [
-        406,
-        -118,
-        420.5,
-        -77.5
-      ],
-      "front": "west",
-      "sides": [
-        "north",
-        "south"
-      ],
-      "depth": [
-        11,
-        14.5
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        5,
-        7
-      ],
-      "names": [
-        "Sandbar Surf",
-        "Gulfwind Kites",
-        "Kingfisher Fly Shop"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -285,5 +218,79 @@
     }
   ],
   "overrides": {},
-  "additions": []
+  "additions": [],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "frontage-south",
+        "rect": [
+          406,
+          -64.5,
+          420.5,
+          -7.5
+        ],
+        "style": "garden-court",
+        "depth": [
+          11,
+          14.5
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          5,
+          7
+        ],
+        "names": [
+          "Bayou Heights Post",
+          "Pelican Shoe Repair",
+          "Rain Lily Spa",
+          "Prairie Lantern Co."
+        ],
+        "front": "west",
+        "sides": [
+          "north",
+          "south"
+        ]
+      },
+      {
+        "id": "frontage-far-south",
+        "rect": [
+          406,
+          -118,
+          420.5,
+          -77.5
+        ],
+        "style": "garden-court",
+        "depth": [
+          11,
+          14.5
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          5,
+          7
+        ],
+        "names": [
+          "Sandbar Surf",
+          "Gulfwind Kites",
+          "Kingfisher Fly Shop"
+        ],
+        "front": "west",
+        "sides": [
+          "north",
+          "south"
+        ]
+      }
+    ],
+    "migrated": {
+      "blocks": 2,
+      "geometry": "faa0cc8b542c3705"
+    }
+  }
 }

@@ -327,24 +327,76 @@ testRedis('durable queue bound rejects overflow without deleting accepted work',
 
 testRedis('a stalled commit respects the request deadline without exposing an uncommitted result',async t=>{
   const f=await setup(t);
-  let release,entered;
+  let release,entered,stalling=false;
   const gate=new Promise(resolve=>{release=resolve;}),blocked=new Promise(resolve=>{entered=resolve;});
   const proxy=new Proxy(f.redis,{get(target,key){
     if(key==='eval')return async(...args)=>{
-      if(String(args[0]).includes('COMMIT_ROOM')){entered();await gate;}
+      if(stalling && String(args[0]).includes('COMMIT_ROOM')){entered();await gate;}
       return target.eval(...args);
     };
     const value=target[key];return typeof value==='function'?value.bind(target):value;
   }});
-  const room=f.create(proxy),pending=f.join(room,'alice');
+  // The room is loaded by alice's join; the stall below is the commit's own, not the first load's.
+  const room=f.create(proxy);
+  assert.ok((await f.join(room,'alice')).ok);
+  stalling=true;
+  const pending=f.join(room,'bob');
   await blocked;
   let watchdog;
   try {
     const result=await Promise.race([pending,new Promise(resolve=>{watchdog=setTimeout(()=>resolve({error:'deadline_missing'}),7600);})]);
     assert.equal(result.error,'request_timeout');
-    assert.equal(await room.read(),null,'timed-out tentative join has no published view');
+    assert.deepEqual((await room.read()).snapshot.players.map(player=>player.id),['alice'],'timed-out tentative join has no published view');
   } finally {
     clearTimeout(watchdog);await room.close();release();await pending;
+  }
+});
+
+testRedis('a slow first load is paid once per lease, not from the first request\'s response budget',async t=>{
+  const f=await setup(t);
+  let release,entered;
+  const gate=new Promise(resolve=>{release=resolve;}),blocked=new Promise(resolve=>{entered=resolve;});
+  // Taking the lease is the first step of the load. Holding it past the response window stands in
+  // for a checkpoint migration that outlives it on a slow host: the one-step stack rollback that
+  // closed the first join with 1013 on hosted runners (#754).
+  const proxy=new Proxy(f.redis,{get(target,key){
+    if(key==='evalBuffer')return async(...args)=>{entered();await gate;return target.evalBuffer(...args);};
+    const value=target[key];return typeof value==='function'?value.bind(target):value;
+  }});
+  const room=f.create(proxy),started=performance.now(),pending=f.join(room,'alice');
+  await blocked;
+  await delay(7500);
+  assert.equal(await room.read(),null,'nothing is published while the room loads');
+  release();
+  const result=await pending;
+  assert.ok(result.ok,JSON.stringify(result));
+  assert.ok(performance.now()-started>=7500,'the join waited for the load');
+  assert.deepEqual((await room.read()).snapshot.players.map(player=>player.id),['alice']);
+});
+
+testRedis('a load that outlives the lease is prepared before the lease and still commits',async t=>{
+  const f=await setup(t),prefix=`{river-oaks:test:${randomUUID()}}`,sha=c=>c.repeat(64);
+  const catalog=slow=>({get:async()=>({regionSha256:sha('a')}),getRegion:async()=>{if(slow)await delay(6000);return worldData;}});
+  const first=createRedisRoom({redis:f.redis,prefix,worldId:'garden-2',worldData,regionSha256:sha('a'),regionCatalog:catalog(false),authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
+  assert.equal((await first.request({type:'join',identity:f.identity('alice'),connectionId:'alice-socket'})).ok,true);
+  await first.close();
+  // The stored checkpoint names a region the next deployment no longer ships, so its load fetches
+  // the region from the catalog; six seconds there outlives the five-second lease. Taken under
+  // the lease, that load could never commit: the fence saw the lease expire, the next tick
+  // repeated the load, and the first join timed out (#754).
+  const key=`${prefix}:state`,stored=JSON.parse(inflateSync(await f.redis.getBuffer(key)));
+  await f.redis.set(key,deflateSync(JSON.stringify({...stored,regionSha256:sha('a')})));
+  const logs=[];t.mock.method(console,'info',message=>logs.push(message));
+  const next=createRedisRoom({redis:f.redis,prefix,worldId:'garden-2',worldData,regionSha256:sha('b'),regionCatalog:catalog(true),authorize:async()=>true,now:()=>100000,isAdmin:id=>id==='alice'});
+  try {
+    const started=performance.now(),result=await next.request({type:'join',identity:f.identity('bob'),connectionId:'bob-socket'});
+    assert.equal(result.ok,true,JSON.stringify(result));
+    assert.ok(performance.now()-started<12000,'one load, not a repeated one');
+    assert.deepEqual((await next.read()).snapshot.players.map(player=>player.id).sort(),['alice','bob']);
+    assert.equal(await f.redis.get(`${prefix}:lease`)!==null,true,'the committing lease is held');
+  } finally {
+    await next.close();
+    const keys=await f.redis.keys(`${prefix}:*`);if(keys.length)await f.redis.del(...keys);
   }
 });
 
