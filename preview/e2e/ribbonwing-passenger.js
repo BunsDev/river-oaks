@@ -120,8 +120,13 @@ async page => {
   await alice.waitForFunction(()=>!document.querySelector('.ribbonwing-seat [data-seat-action]')?.disabled,{},{timeout:10000});
   await host(alice).focus();await alice.keyboard.press('KeyG');
   await alice.waitForFunction(()=>!window.__riverRibbonwingSeat().riding&&!window.__riverRibbonwingSeat().pilotId,{},{timeout:10000});
-  const stepped=await me(alice),landed=await me(page);
-  check(stepped.passengerOf===null&&stepped.altitude===0&&landed.passengerId===null,'On the ground alice steps out and the seat is free');
+  // alice's page reads her seat from her own snapshot. Jevica's page learns of the step-out from
+  // its own next snapshot, which on the CPU-rendered runner can come seconds later: a hosted run
+  // read Jevica's snapshot first and failed, while her failure screenshot already said the seat
+  // was free (run 41058334553). Wait for it there; the check below still reads both pages.
+  await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return m.snapshot.players.find(p=>p.id===m.selfId)?.passengerId==null;},{},{timeout:10000}).catch(()=>{});
+  const stepped=await me(alice),landed=await me(page),free=stepped.passengerOf===null&&stepped.altitude===0&&landed.passengerId===null;
+  check(free,`On the ground alice steps out and the seat is free${free?'':` (alice: passenger of ${stepped.passengerOf} at ${stepped.altitude} m; Jevica's passenger: ${landed.passengerId})`}`);
   const beside=Math.hypot(stepped.position[0]-landed.position[0],stepped.position[1]-landed.position[1]);
   check(beside>2.5&&beside<6,`alice stands beside the craft (${beside.toFixed(2)} m from the pilot)`);
   await alice.waitForFunction(()=>!document.querySelector('.walking-title strong')?.textContent.includes('Ribbonwing'),{},{timeout:5000}).catch(()=>{});
