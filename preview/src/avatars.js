@@ -4,6 +4,7 @@ import {defaultAppearanceRealism} from './default-appearance-realism.js';
 import {createCharacterExpressions} from './character-expressions.js';
 import { createArmContacts } from './arm-contact.js';
 import { createBicycleRider } from './bicycle-rider.js';
+import { createMotorcycleRider } from './motorcycle-rider.js';
 import { applyHandshakeContact } from './handshake-contact.js';
 import { shareAvatarSkeletons } from './avatar-skeletons.js';
 import { createConversationGaze } from './conversation-gaze.js';
@@ -15,7 +16,7 @@ import { registerSpeechAvatar, speechAvatarPose } from './speech-avatar.js';
 import { applyResidentStyle } from './resident-style.js';
 import { applyResidentHairstyle } from './resident-hairstyle.js';
 import { applyCharacterRecipe } from './character-recipe-look.js';
-import { recipeFaceShapes } from './character-recipe.js';
+import { recipeFaceShapes, recipeWidth } from './character-recipe.js';
 import { residentFaceFor, bakeResidentFace } from './resident-face.js';
 import * as THREE from 'three';
 import { createAssetGLTFLoader, prefersHtmlAvatarImages } from './gltf-image-decoder.js';
@@ -99,10 +100,12 @@ export function shareSkeletons(model) { return [...shareAvatarSkeletons(model)];
 // One independently skinned clone of a cached template. Joint axes are expressed
 // in each bone's rest frame so poses can be authored in the character's terms:
 // x pitches forward/back, y turns, z tilts sideways.
-export function instantiateAvatar(source, { targetHeight, id, armSpread, face }) {
+// width: a recipe's build (character-recipe.js recipeWidth), scaling the figure's
+// east/west and front/back axes while the standing height stays targetHeight.
+export function instantiateAvatar(source, { targetHeight, id, armSpread, face, width = 1 }) {
   const model = clone(source.scene), materials = new Map(), skeletons = shareAvatarSkeletons(model);
   const scale = targetHeight/source.height;
-  model.scale.setScalar(scale); model.position.y=-source.floor*scale;
+  model.scale.set(scale*width, scale, scale*width); model.position.y=-source.floor*scale;
   model.traverse(item => {
     if (id !== undefined) item.userData.localId=id;
     if (!item.isMesh) return;
@@ -150,7 +153,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const profile = profileOverride ?? avatarProfile(index), source = await template(profile);
   if (recipe && recipe.body !== profile) throw new TypeError('A recipe dresses its own body');
   const targetHeight = recipe ? recipe.height / 100 : characterFidelityContract(profile)?.targetHeightM ?? (profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025);
-  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, face:recipe?recipeFaceShapes(recipe):faceRecipe??(folk&&id!=='player'?residentFaceFor(id):undefined) });
+  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, width:recipe?recipeWidth(recipe):1, face:recipe?recipeFaceShapes(recipe):faceRecipe??(folk&&id!=='player'?residentFaceFor(id):undefined) });
   const { model, bones, rest } = avatar;
   if(recipe) {
     try { await applyCharacterRecipe(avatar,recipe,template); }
@@ -173,6 +176,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
   const gazeHead=model.getObjectByName('head'),gazeNeck=model.getObjectByName('neck_01');
   const arms=createArmContacts(model,root),greetingArm=arms.find(arm=>arm.side==='r');
   const bicycle=createBicycleRider({model,root,feet,arms,seatedShoes,axes:avatar.axes,hipHeight:avatar.hipHeight});
+  const motorcycle=createMotorcycleRider({model,root,feet,arms,seatedShoes,axes:avatar.axes,hipHeight:avatar.hipHeight});
   const gestures=createResidentGestures({reducedMotion:noMotion});
   const conversation=createConversationMotion({seed:id??index,reducedMotion:noMotion});
   const conversationBody=createConversationBody(avatar);
@@ -246,17 +250,14 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       }
       const cycling=Boolean(locomotion?.riding)&&locomotion.ridingKind==='bicycle';
       if(!cycling)bicycle.release();
+      // Whoever drives the motorcycle rides it as a motorcyclist; a pillion passenger keeps the seated pose below.
+      const motorcycling=Boolean(locomotion?.riding)&&locomotion.ridingKind==='motorcycle'&&Boolean(locomotion.ridingDriver);
+      if(!motorcycling)motorcycle.release();
       if(locomotion?.riding) {
         const seated={thigh_l:[0,0,0],thigh_r:[0,0,0],calf_l:[0,0,0],calf_r:[0,0,0],foot_l:[0,0,0],foot_r:[0,0,0],spine_03:[.035,0,0],upperarm_l:[.20,0,.025],upperarm_r:[.20,0,-.025],lowerarm_l:[0,0,.60],lowerarm_r:[0,0,.60]};
-        if(locomotion.ridingKind==='motorcycle'&&locomotion.ridingDriver) {
-          const motion=noMotion?0:Math.min(1,Math.abs(locomotion.ridingSpeed??0)/6);
-          const lean=noMotion?0:Math.max(-.05,Math.min(.05,(locomotion.ridingSteering??0)*.1));
-          seated.spine_01=[.055+motion*.018,0,lean*.4];
-          seated.spine_02=[.045+motion*.012,0,lean*.35];
-          seated.spine_03=[.025+(noMotion?0:Math.sin(t*1.4)*.003),0,lean*.25];
-        }
         model.position.y=baseY;
         if(cycling)bicycle.posture(seated,locomotion,dt,noMotion);
+        if(motorcycling)motorcycle.posture(seated,locomotion,dt,noMotion);
         for(const bone of bones)if(seated[bone.name]) {
           bone.quaternion.copy(rest.get(bone));
           seated[bone.name].forEach((angle,i)=>{adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);bone.quaternion.multiply(adjustment);});
@@ -265,6 +266,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
           });
         }
         if(cycling)bicycle.place(locomotion);
+        else if(motorcycling)motorcycle.place(locomotion);
         else {
           root.updateWorldMatrix(true,true);
           const worldRotation=root.getWorldQuaternion(new THREE.Quaternion()),forward=new THREE.Vector3(0,0,1).applyQuaternion(worldRotation);

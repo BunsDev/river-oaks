@@ -137,3 +137,28 @@ test('state(id) follows one chunk without building the debug picture: absent, lo
   h.tick(500); h.stream.update([[5, 5]]); agree('stalled');
   h.stream.dispose(); assert.equal(h.stream.state('a'), 'absent');
 });
+
+test('the texture ceiling admits on estimate and refuses on measure, separately from the geometry one', async () => {
+  // Two chunks of 10 geometry bytes, under a 100 byte ceiling; their textures, 60 each, cannot both sit under 100.
+  const textured = bytes => ({ bytes: 10, textureBytes: bytes, dispose() {} });
+  const chunks = [{ ...chunk('a'), estimatedTextureBytes: 60 }, { ...chunk('b', 12), estimatedTextureBytes: 60 }];
+  const h = harness({ chunks, maxResident: 2, maxTextureBytes: 100, prefetchDistance: 30, unloadDistance: 40,
+    load: async item => (h.loads.push({ item }), textured(60)) });
+  h.stream.update([[5, 5]]); await flush(); await flush();
+  assert.equal(h.stream.ready('a'), true); assert.equal(h.stream.ready('b'), false, 'b waits: its estimate would pass the texture ceiling');
+  assert.equal(h.loads.length, 1); assert.deepEqual([h.stream.debug().residentBytes, h.stream.debug().residentTextureBytes], [10, 60]);
+  h.stream.update([[17, 5]]); await flush(); await flush();
+  assert.equal(h.stream.ready('b'), true); assert.equal(h.stream.ready('a'), false, 'nearer b takes the texture budget');
+  h.stream.dispose(); assert.equal(h.stream.debug().residentTextureBytes, 0);
+  // A loaded chunk measuring past the ceiling is disposed and marked failed; a flat estimate admits it, the measure refuses it.
+  const over = harness({ chunks: [{ ...chunk('a'), estimatedTextureBytes: 0 }], maxTextureBytes: 50,
+    load: async () => ({ bytes: 10, textureBytes: 70, dispose() { over.disposed = (over.disposed ?? 0) + 1; } }) });
+  over.stream.update([[5, 5]]); await flush(); await flush();
+  assert.equal(over.stream.state('a'), 'failed'); assert.equal(over.disposed, 1); assert.equal(over.stream.debug().residentTextureBytes, 0);
+  over.stream.dispose();
+  // Without a texture ceiling nothing changes: untextured resources count zero.
+  const plain = harness(); plain.stream.update([[5, 5]]); await flush();
+  assert.equal(plain.stream.ready('a'), true); assert.equal(plain.stream.debug().residentTextureBytes, 0); plain.stream.dispose();
+  assert.throws(() => createSpatialChunkStream({ chunks: [{ ...chunk('a'), estimatedTextureBytes: -1 }], load() {}, attach() {}, detach() {} }), /Invalid chunk definition/);
+  assert.throws(() => createSpatialChunkStream({ chunks: [chunk('a')], maxTextureBytes: 0, load() {}, attach() {}, detach() {} }), /Invalid/);
+});

@@ -139,6 +139,7 @@ function operation(state,kind,payload,{expectedVersion,requestId:id}={}){
   return {unchanged:false,receipt};
 }
 
+export function createCharacterStore(storage){return createStore(storage);}
 function createStore(storage){
   const read=async ownerId=>{checkOwner(ownerId);return decode(await storage.get(hash(ownerId)),ownerId);};
   async function mutate(ownerId,kind,payload,options){
