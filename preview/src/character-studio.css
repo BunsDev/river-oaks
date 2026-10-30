@@ -117,5 +117,5 @@
 :root[data-theme=dark] .cs-rotation input{accent-color:#6fb3a1}
 :root[data-theme=dark] .character-studio[data-account-phase=conflict] [data-account-status],:root[data-theme=dark] .character-studio[data-account-phase=error] [data-account-status]{color:#f0a88a}
 /* Realistic bundles: what stays as designed, with the reason beside each control. */
-.cs-locked{list-style:none;margin:0;padding:0;display:grid;gap:8px}.cs-locked li{display:grid;gap:3px}.cs-locked button{justify-self:start;min-height:44px;border:1px dashed var(--cs-line);border-radius:10px;background:transparent;color:#567064;padding:8px 12px;font-size:12px;cursor:not-allowed}.cs-locked span{font-size:11px;line-height:1.5;color:#567064}[data-cs-tier-status]{margin:10px 0 14px}
+.cs-locked{list-style:none;margin:0;padding:0;display:grid;gap:4px}.cs-locked li{display:grid;grid-template-columns:minmax(118px,auto) 1fr;align-items:center;gap:10px}.cs-locked button{justify-self:stretch;min-height:28px;border:1px dashed var(--cs-line);border-radius:10px;background:transparent;color:#567064;padding:4px 12px;font-size:12px;cursor:not-allowed}.cs-locked span{font-size:11px;line-height:1.5;color:#567064}[data-cs-tier-status]{margin:4px 0 6px}
 :root[data-theme=dark] .cs-locked button,:root[data-theme=dark] .cs-locked span{color:var(--cs-muted)}

@@ -12,7 +12,7 @@ builds on main (no stacking on #545).
 | --- | --- | --- |
 | 1 | `feat/studio-realistic-441-guide-20261030` | Guide mapping from `character-fidelity-contract.js`; focused tests |
 | 2 | `feat/studio-realistic-441-ui-20261030` (stacked on 1) | Studio UI: tier choice, locked fit/body/hair with reasons, tier in undo/redo and before/after, never saved; journey checks for keyboard, touch and reduced motion |
-| 3 | (stacked on 2) | Studio close-up vs world captures (idle/walk/wave), reduced-motion/low-tier fallback, this ledger's evidence |
+| 3 | `feat/studio-realistic-441-captures-20261030` (stacked on 2) | Studio close-up vs world captures (idle/walk/wave), reduced-motion/low-tier fallback, this ledger's evidence |
 
 ## Rules carried from the goal
 
@@ -56,6 +56,36 @@ Files: `preview/src/character-studio-state.js`, `character-studio.js`,
   graphics setting only for Match graphics. It reports the drawn tier and a
   missing-map fallback in place. Portraits use the previewed tier.
 
+## Increment 3: captures and fallback
+
+Files: new `preview/e2e/character-studio-realistic.js` (registered in
+`shared-runner.js` under `required-characters`, so hosted CI runs it),
+`preview/e2e/character-studio-layout.js`, `character-studio.css`,
+`character-studio.js` (the locked list's heading became its accessible name so
+the realistic step fits a 1440×900 window; the layout journey now checks it).
+
+The journey wears Morgan (alice) and Imani (bob) at the Sharpest graphics
+setting, then captures the Studio portrait close-up and full idle/walk/wave, and
+the town close-up and full idle/walk (owner holding W, ≥0.5 m) and wave (shared
+gesture, peer sees the arm raised) from the peer, framed from the front by yaw.
+It checks the Studio, the owner's own avatar and the peer's copy agree on the
+tier. On the owner's page reloaded with reduced motion and the skin roughness
+map blocked: poses and turntable stay off; High detail falls back to Standard
+and says so; Low detail says it draws without the map; before/after compares
+worn Morgan at Match graphics with staged Low detail; the worn look is unchanged.
+
+Captures (local, `output/playwright/character-studio-realistic-*.png`,
+`character-studio-layout-realistic-desktop.png`) inspected by eye:
+- Identity matches across views: Morgan's face, short black hair, brown irises,
+  blue logo sweater, jeans and tan shoes; Imani's silver bob, skin tone, striped
+  blouse, skirt and socks. Studio and town draw both at `high`.
+- Walk and wave read the same in both views (stride; right hand across the chest).
+- Differences are lighting, not identity: the town's sun leaves faces darker and
+  shoes darker in shadow. Imani's town close-up shows a small dark spot at the
+  nostril that the Studio close-up does not (likely shadow; recorded for Val).
+- The missing-map fallback (Standard) is visually close to High at portrait
+  distance, as the contract's tiers share geometry and textures.
+
 ## Results
 
 Increment 1, head `7d390e54` (#800):
@@ -78,11 +108,28 @@ Increment 2, source = increment 1 + this diff:
   `required` 13/13, `development-world` 4/4. These ran before the two
   `character-studio` journey-only fixes, which those runs do not load.
 
+Increment 3, source = increment 2 + this diff:
+- `pnpm run test:experience character-studio-layout character-studio
+  character-studio-disabled character-studio-paused`: 4/4 passed
+  (character-studio 63 checks; realistic desktop controls 719 px in a 718 px
+  area, within the journey's 1 px tolerance).
+- `RIVER_OAKS_SHARED_JOURNEY=character-studio-realistic pnpm run test:shared
+  required-characters`: passed, 17 checks.
+- Earlier attempts, kept as diagnosis: the second alice tab was refused (one
+  town connection per account), the first camera framed backs, the first walk
+  did not move (canvas not focused), and the realistic step overflowed 1440×900
+  by 53 then 17 px. Each was fixed and the final run above is on the final source.
+
 ## Decisions for Val
 
 - The Studio tier is a preview choice for this device only. It is not saved and
   does not change the town's tier (that stays the Graphics setting, #443).
   Reopening the Studio starts at Match graphics.
+- Morgan's catalog description (from #545) says "authored casual suit"; the
+  bundle is a sweater and jeans. Wording change left to the catalog owner.
+- Visual approval of the close-up vs town captures (lighting differences and the
+  spot at Imani's nostril in town) is yours; automation shows only that one
+  definition is drawn at one tier in both views.
 
 ## Gaps
 
