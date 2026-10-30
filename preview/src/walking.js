@@ -5,6 +5,7 @@ import { storeRoomsFor, interiorLevelRoomsFor, roomAt, roomBlocked } from './sto
 import { roomBlocksConversation } from './conversation-sight.js';
 import { plazaSalonFootprints } from './plaza-salon-plan.js';
 import { cityBikeRackFootprints } from './bike-racks.js';
+import { laneCoverFootprints } from './lane-cover.js';
 import { campusFlightVolumes } from './garden-campus-district.js';
 import { isJevicaAccount } from './jevica-accounts.js';
 
@@ -88,13 +89,19 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   // Plaza salon furniture (plaza-salon-plan.js) and the curbside bike rack bars
   // (bike-racks.js) block bodies and low flight like a placed object. One box
   // around the plaza and one per rack keep every other query to a few compares.
-  const propBoxes = [plazaSalonFootprints(world), ...cityBikeRackFootprints(world)].filter(group => group.length).map(group => {
+  // The service yard in the south lane (lane-cover.js) blocks bodies the same way and is the
+  // only prop that also blocks sight lines (hasSightLine), so police can lose a player behind it.
+  const boxProps = group => {
     const props = group.map(([east, north, radius, height]) => ({ x: east, z: -north, radius, height }));
     return { props, minX: Math.min(...props.map(p => p.x - p.radius)) - 2, maxX: Math.max(...props.map(p => p.x + p.radius)) + 2,
       minZ: Math.min(...props.map(p => p.z - p.radius)) - 2, maxZ: Math.max(...props.map(p => p.z + p.radius)) + 2 };
-  });
-  const propAt = (x, y, z, radius, halfHeight = 0) => propBoxes.some(box => x > box.minX && x < box.maxX && z > box.minZ && z < box.maxZ
+  };
+  const coverBoxes = laneCoverFootprints(world).filter(group => group.length).map(boxProps);
+  const propBoxes = [plazaSalonFootprints(world), ...cityBikeRackFootprints(world)].filter(group => group.length).map(boxProps).concat(coverBoxes);
+  const inProps = (boxes, x, y, z, radius, halfHeight) => boxes.some(box => x > box.minX && x < box.maxX && z > box.minZ && z < box.maxZ
     && box.props.some(p => (x - p.x) ** 2 + (z - p.z) ** 2 < (p.radius + radius) ** 2 && y - halfHeight < groundAt(p.x, p.z) + p.height));
+  const propAt = (x, y, z, radius, halfHeight = 0) => inProps(propBoxes, x, y, z, radius, halfHeight);
+  const coverAt = (x, y, z) => coverBoxes.length > 0 && inProps(coverBoxes, x, y, z, .035, 0);
   const baseIsFree = (x, z) => {
     if(!commonsAllows(world.eastGardenCommons,x,-z,RADIUS))return false;
     if (x < west + RADIUS || x > east - RADIUS || z < -north + RADIUS || z > -south - RADIUS) return false;
@@ -179,7 +186,7 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     const steps=Math.max(1,Math.ceil(Math.hypot(to[0]-from[0],to[1]-from[1])/0.15));
     for(let i=0;i<=steps;i++) {
       const t=i/steps,x=from[0]+(to[0]-from[0])*t,z=-from[1]-(to[1]-from[1])*t,y=from[2]+(to[2]-from[2])*t;
-      if(!baseIsFree(x,z)||roomFor(x,z,0)||placedObjects.some(object=>object.contains(x,y,z,.035)))return false;
+      if(!baseIsFree(x,z)||roomFor(x,z,0)||coverAt(x,y,z)||placedObjects.some(object=>object.contains(x,y,z,.035)))return false;
     }
     return true;
   };
