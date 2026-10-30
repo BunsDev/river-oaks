@@ -18,6 +18,8 @@ test('the Ribbonwing exports a GLB that loads back as the same craft, byte for b
   assert.ok(first.attachments.includes('seat.passenger') && first.attachments.includes('camera.cockpit'));
   assert.equal(first.colliders.length, 6);
   assert.ok(first.pivots.length >= 10, `${first.pivots.length} mechanism pivots`);
+  assert.deepEqual([first.texture.width, first.texture.height, first.texture.maxChannelError], [64, 64, 0], 'the quilted upholstery normal map is embedded pixel for pixel');
+  assert.deepEqual(first.texture.normalMapped, ['Ribbonwing ivory upholstery', 'Ribbonwing pink upholstery']);
   assert.equal(first.glb.sha256, second.glb.sha256, 'the export is deterministic');
   assert.ok(first.glb.bytes < 16 * 1024 * 1024, `${first.glb.bytes} bytes`);
 });

@@ -5,8 +5,10 @@
 // (hashes, counts, source hashes) to <outDir>. The game still builds the craft from source;
 // the GLB is the interchange copy for DCC tools and other runtimes.
 //
-// The procedural micro-detail DataTexture is left out (GLTFExporter needs a DOM canvas to
-// encode images); every other material factor is exported. The manifest records this.
+// GLTFExporter encodes images through a canvas. Node has none, so a minimal OffscreenCanvas
+// (below) backs it with png.mjs: the quilted upholstery's normal map is embedded as a PNG.
+// GLTFLoader cannot decode images in Node, so the loader round trip runs on a copy without
+// images, and the embedded PNG is decoded and compared with the source pixels directly.
 // GLTFLoader sanitizes node names ("lod:near" becomes "lodnear") but keeps the original in
 // userData.name, which is what an importer should match.
 //
@@ -18,12 +20,32 @@ import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { createRibbonwing } from '../../preview/src/ribbonwing.js';
+import { decodePng, encodePng } from './png.mjs';
 import { RIBBONWING_VERSION, ATTACHMENTS, COLLIDERS } from '../../preview/src/ribbonwing-design.js';
 
 // GLTFExporter's binary path reads its Blob through FileReader, which Node lacks.
 globalThis.FileReader ??= class {
   readAsArrayBuffer(blob) { blob.arrayBuffer().then(result => { this.result = result;this.onloadend?.({ target: this });this.onload?.({ target: this }); }); }
   readAsDataURL(blob) { blob.arrayBuffer().then(result => { this.result = `data:${blob.type || 'application/octet-stream'};base64,${Buffer.from(result).toString('base64')}`;this.onloadend?.({ target: this });this.onload?.({ target: this }); }); }
+};
+
+// The canvas surface GLTFExporter uses: size, a vertical flip, put/draw/get pixels, PNG out.
+// Pixels are copied 1:1 (every source here is the canvas's own size).
+globalThis.ImageData ??= class { constructor(data, width, height) { Object.assign(this, { data, width, height }); } };
+globalThis.OffscreenCanvas ??= class {
+  constructor(width, height) { this.width = width;this.height = height; }
+  getContext() {
+    const canvas = this;let flip = false;
+    const ensure = () => { if (!canvas.pixels || canvas.pixels.length !== canvas.width * canvas.height * 4) canvas.pixels = new Uint8ClampedArray(canvas.width * canvas.height * 4); };
+    const copy = (source, mirrored) => { ensure();const row = canvas.width * 4;for (let y = 0; y < canvas.height; y++) canvas.pixels.set(source.subarray((mirrored ? canvas.height - 1 - y : y) * row, (mirrored ? canvas.height - y : y + 1) * row), y * row); };
+    return {
+      translate() {}, scale(_x, y) { if (y < 0) flip = !flip; },
+      putImageData(image) { copy(Uint8ClampedArray.from(image.data), false); }, // putImageData ignores the transform
+      drawImage(image) { copy(Uint8ClampedArray.from(image.pixels ?? image.data), flip); },
+      getImageData() { ensure();return new ImageData(Uint8ClampedArray.from(canvas.pixels), canvas.width, canvas.height); },
+    };
+  }
+  async convertToBlob() { return new Blob([encodePng({ width: this.width, height: this.height, data: new Uint8Array(this.pixels.buffer) })], { type: 'image/png' }); }
 };
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -56,7 +78,7 @@ for (const [level, object] of Object.entries(craft.levels)) {
   // clone() deep-copies userData through JSON, so filter from the source nodes (same order).
   const sourceNodes = [], copyNodes = [];object.traverse(node => sourceNodes.push(node));copy.traverse(node => copyNodes.push(node));
   copyNodes.forEach((node, i) => { node.userData = plainData(sourceNodes[i].userData) ?? {}; });
-  copy.traverse(node => { if (node.isMesh) { node.material = [node.material].flat().map(m => { const c = m.clone();for (const key of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'bumpMap', 'aoMap']) c[key] = null;return c; });if (node.material.length === 1) node.material = node.material[0]; } });
+  copy.traverse(node => { if (node.isMesh) { node.material = [node.material].flat().map(m => { const c = m.clone();for (const key of ['map', 'roughnessMap', 'metalnessMap', 'bumpMap', 'aoMap']) c[key] = null;return c; });if (node.material.length === 1) node.material = node.material[0]; } });
   exportRoot.add(copy);levels[level] = triangles(object);
 }
 for (const [name, anchor] of craft.attachments) { const a = new THREE.Object3D();a.name = `attach:${name}`;a.position.copy(anchor.position);exportRoot.add(a); }
@@ -77,9 +99,34 @@ await mkdir(outDir, { recursive: true });
 await writeFile(`${outDir}/ribbonwing.glb`, glb);
 
 // Load it back and compare with the source craft.
-const loaded = await new GLTFLoader().parseAsync(glb.buffer.slice(glb.byteOffset, glb.byteOffset + glb.byteLength), '');
-const back = byName(loaded.scene, 'Ribbonwing');
+// GLB chunks: JSON, then BIN.
+const jsonLength = glb.readUInt32LE(12), gltf = JSON.parse(glb.subarray(20, 20 + jsonLength).toString()), bin = glb.subarray(20 + jsonLength + 8);
+// The embedded normal map: decode it and compare with the source, green flipped (glTF's +Y
+// normals against three's default for an untangented map with positive normalScale.y).
 const problems = [];
+const quilt = craft.materials.seat.normalMap, images = gltf.images ?? [];
+const normalImages = [...new Set((gltf.materials ?? []).filter(m => m.normalTexture).map(m => gltf.textures[m.normalTexture.index].source))];
+let texture = { images: images.length, normalMapped: (gltf.materials ?? []).filter(m => m.normalTexture).map(m => m.name).sort() };
+if (normalImages.length !== 1) problems.push(`expected one normal map image, found ${normalImages.length}`);
+else {
+  const view = gltf.bufferViews[images[normalImages[0]].bufferView], png = bin.subarray(view.byteOffset ?? 0, (view.byteOffset ?? 0) + view.byteLength), image = decodePng(png);
+  const channels = image.channels ?? image.data.length / (image.width * image.height);
+  let worst = 0;
+  for (let i = 0, j = 0; i < quilt.image.data.length; i += 4, j += channels) {
+    const expected = [quilt.image.data[i], 255 - quilt.image.data[i + 1], quilt.image.data[i + 2]];
+    for (let k = 0; k < 3; k++) worst = Math.max(worst, Math.abs(image.data[j + k] - expected[k]));
+  }
+  texture = { ...texture, width: image.width, height: image.height, bytes: png.length, sha256: sha(png), maxChannelError: worst };
+  if (image.width !== quilt.image.width || image.height !== quilt.image.height || worst > 0) problems.push(`normal map differs from the source (max channel error ${worst})`);
+}
+// Loader round trip on the same file without images.
+const imageless = structuredClone(gltf);delete imageless.images;delete imageless.textures;delete imageless.samplers;
+for (const material of imageless.materials ?? []) delete material.normalTexture;
+const jsonBytes = Buffer.from(JSON.stringify(imageless)), pad = (4 - jsonBytes.length % 4) % 4, paddedJson = Buffer.concat([jsonBytes, Buffer.alloc(pad, 0x20)]);
+const binChunk = glb.subarray(20 + jsonLength), stripped = Buffer.alloc(12 + 8 + paddedJson.length + binChunk.length);
+stripped.write('glTF', 0);stripped.writeUInt32LE(2, 4);stripped.writeUInt32LE(stripped.length, 8);stripped.writeUInt32LE(paddedJson.length, 12);stripped.write('JSON', 16);paddedJson.copy(stripped, 20);binChunk.copy(stripped, 20 + paddedJson.length);
+const loaded = await new GLTFLoader().parseAsync(stripped.buffer.slice(stripped.byteOffset, stripped.byteOffset + stripped.byteLength), '');
+const back = byName(loaded.scene, 'Ribbonwing');
 const loadedLevels = {};
 for (const level of Object.keys(levels)) {
   const node = byName(back, `lod:${level}`);loadedLevels[level] = node ? triangles(node) : 0;
@@ -105,10 +152,10 @@ const manifest = {
   schemaVersion: 1, version: RIBBONWING_VERSION, three: THREE.REVISION,
   glb: { path: 'ribbonwing.glb', bytes: glb.length, sha256: sha(glb) },
   levels, loadedLevels, attachments, materials: sourceMaterials, pivots: sourcePivots, colliders: colliderNames,
-  omitted: ['procedural micro-detail DataTexture (normal/roughness); rebuilt by ribbonwing.js at runtime'],
+  texture,
   sources, roundTrip: problems.length ? 'failed' : 'passed', problems,
 };
 await writeFile(`${outDir}/manifest.json`, `${JSON.stringify(manifest, null, 2)}\n`);
 craft.dispose();
-console.log(JSON.stringify({ bytes: glb.length, sha256: manifest.glb.sha256, levels, loadedLevels, attachments: attachments.length, materials: sourceMaterials.length, pivots: sourcePivots.length, colliders: colliderNames.length, problems }));
+console.log(JSON.stringify({ bytes: glb.length, sha256: manifest.glb.sha256, levels, loadedLevels, attachments: attachments.length, materials: sourceMaterials.length, pivots: sourcePivots.length, colliders: colliderNames.length, texture, problems }));
 if (problems.length) process.exit(1);

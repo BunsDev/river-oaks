@@ -4,8 +4,8 @@
   "three": "186",
   "glb": {
     "path": "ribbonwing.glb",
-    "bytes": 10744884,
-    "sha256": "3518a80db5d984c42c636b4792abce122f5e68e8d1362d9130f0d30041a74b3b"
+    "bytes": 10746980,
+    "sha256": "b350470b9a88e2fdc9522c08e9c450f2cf37f220f1ed273c4445d6433e74dbf7"
   },
   "levels": {
     "near": 92055,
@@ -90,14 +90,23 @@
     "collider:thrusters",
     "collider:petals"
   ],
-  "omitted": [
-    "procedural micro-detail DataTexture (normal/roughness); rebuilt by ribbonwing.js at runtime"
-  ],
+  "texture": {
+    "images": 1,
+    "normalMapped": [
+      "Ribbonwing ivory upholstery",
+      "Ribbonwing pink upholstery"
+    ],
+    "width": 64,
+    "height": 64,
+    "bytes": 1600,
+    "sha256": "ede8ca16aec52bb0e5d81d4f12d3e2ac06de2df90cd0cd52ed960bccc50c1fd4",
+    "maxChannelError": 0
+  },
   "sources": {
     "preview/src/ribbonwing-design.js": "3c86f9912ebc0e1e8eea8b83897d1d54547ed770abb144ac417be86c2930cdde",
     "preview/src/ribbonwing.js": "f33cfe3396b1852328f3c3c77b8ecc26fc75f38af6dbd69f487c60cea1d4b5bc",
     "preview/src/ribbonwing-rig.js": "24f9573475360397c4f3072faba8a80f40c0c2234c2434fec456e34c5e611a94",
-    "scripts/ribbonwing/export-glb.mjs": "a5eb48462fc994f2564da4e2265abf006c2785311856eba2c42bf1f34b95f573"
+    "scripts/ribbonwing/export-glb.mjs": "21e2cb7d874b786c6c364837ccc3275c524ba9d0e396abeb385b853541b39aa4"
   },
   "roundTrip": "passed",
   "problems": []

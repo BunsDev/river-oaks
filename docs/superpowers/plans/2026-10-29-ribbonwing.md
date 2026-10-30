@@ -384,7 +384,7 @@ Export (`scripts/ribbonwing/export-glb.mjs`, manifest `docs/design/ribbonwing/ex
 - **Round trip:** loading the GLB back with three's GLTFLoader gives identical triangle counts (near 92,055, medium 31,829, far 1,872), attachment positions within 1e-5 m, every material and every pivot.
 - **Determinism:** the export is byte-for-byte deterministic. Runtime handles in `userData` were made plain; before that, the file embedded random uuids.
 - **Size and hash:** 10,744,884 bytes, sha256 `3518a80d…41a74b3b`. The binary is not committed; the exporter reproduces it.
-- **Omitted:** the procedural micro-detail DataTexture, because GLTFExporter needs a DOM canvas to encode images. The game still builds the craft from source.
+- **Texture (embedded since 2026-10-30):** the craft's one texture is the 64×64 quilted normal map on both upholstery materials. A minimal Node `OffscreenCanvas` backed by `png.mjs` now lets GLTFExporter embed it as a 1,600-byte PNG (sha256 `ede8ca16…`), with normal scale 0.35 and the 3×3 repeat as `KHR_texture_transform`. The exporter decodes the embedded PNG and matches the source pixel for pixel (max channel error 0; green flipped to glTF's convention). GLTFLoader cannot decode images in Node, so the loader round trip runs on an image-free copy of the same file. The GLB is now 10,746,980 bytes, sha256 `b350470b…`, still deterministic.
 
 Tests:
 
@@ -552,6 +552,16 @@ Verification on this tree:
 | ribbonwing-maneuvers | passed, 24 checks (adds the three camera checks) |
 | rehearsal script | every case restores on #737 and rolls forward |
 
+## Heap growth attributed: a renderer leak, fixed (2026-10-30)
+
+- **Method:** `ribbonwing-lifetime` takes heap snapshots on request (`RIBBONWING_HEAP_SNAPSHOTS=<dir>`) at the baseline, after the first call and back, and after all six. `scripts/ribbonwing/heap-diff.mjs` groups growth by constructor; `scripts/ribbonwing/heap-retainers.mjs` prints the retainer path of objects with a given name.
+- **Finding:** snapshot growth was 34 MB, almost all vertex-array buffers (`JSArrayBufferData`, which the 3–4 MB `JSHeapUsedSize` figure excludes). All six removed Ribbonwings were still alive. Each was held by a render item's `occlusionObject` in GTAO's override pass.
+- **Cause:** `preview/src/occlusion-sort.js` (#442) cached each item's kind with strong references to its object and geometry. three clears a pooled item's own references when it falls out of use, but not these extra fields. So any removed model — cars, avatars, the Ribbonwing — could stay in memory.
+- **Fix:** the cache keys on the object's and geometry's numeric ids. A WeakRef cache was measured 5× slower to sort (3.1 vs 0.62 ms per 2,000 items), so it was not used.
+- **Test:** `preview/tests/occlusion-sort.test.js` "a pooled render item keeps no reference to a model removed from the scene", using three's real render lists. It fails on the old code and passes with the fix.
+- **Verification:** core `pnpm run verify` passed (agent 289/0; preview 4362/0/1; server 1093/0/283; desktop 127/0/5). `ribbonwing-lifetime` passed with snapshots.
+- **After:** no removed craft is alive. Snapshot growth over the six calls is 2.0 MB, of which 1.7 MB is compiled code and the rest V8 bookkeeping (`WeakArrayList`, shapes). Collected heap 111.8 → 113.7 MB (was 112.0 → 115.2). Host load about 20.
+
 ## Status at handoff (2026-10-30)
 
 | Gate | Revision | Result |
@@ -599,8 +609,7 @@ Not done or not verified:
 - No human, device, audio, mobile or GPU acceptance. Nobody has listened to the sounds.
 - Pink coverage still trails the references in top, hover and stunt views. Detail art beyond the D2 paint pass is not done. Silhouette IoU is not a pixel match.
 - The rear IoU sits below its D1 floor; the floor is now reset to D2 (decision 12).
-- Heap growth over six Ribbonwing calls is 3–4 MB. It is bounded but not attributed.
-- The GLB omits the procedural micro-detail texture. The binary is not committed; the exporter reproduces it byte for byte.
+- The GLB binary is not committed; the exporter reproduces it byte for byte.
 - Rollback with live checkpoints carrying `maneuver` or passenger fields has not been exercised against #737's restore.
 - The base #737 is 114 commits behind main and lacks #756. Rebasing the stack is the owners' call.
 - The craft does not auto-land during the pilot-disconnect grace.
