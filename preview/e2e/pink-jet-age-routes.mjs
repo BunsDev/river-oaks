@@ -1,10 +1,10 @@
-// Pink Jet-Age R9 (#747, #738): a matched visual baseline of two routes, so each later
+// Pink Jet-Age R9 (#747, #738): a matched visual baseline of three routes, so each later
 // pink-finish PR can be compared at the same cameras. One loopback town serving the Commons
 // revision (it composes the Gardens campus too), one authenticated page with the interface
 // hidden, a pinned graphics preset and the cameras and hours in pink-jet-age-routes-plan.mjs.
 //   node preview/e2e/pink-jet-age-routes.mjs [--graphics=sharp|smooth] [--hours=day,dusk,night]
 //     [--cameras=id,id] [--finish=classic|pink-jet-age] [--out=dir]
-// Writes <out>/<camera>-<hour>.png, sheet-gardens.jpg and sheet-commons.jpg (cameras by hour)
+// Writes <out>/<camera>-<hour>.png, sheet-<route>.jpg per route (cameras by hour)
 // and report.json: served revision, HEAD, graphics, finish, the glow the hour set, per-view
 // draw calls, triangles, frame interval p50/p95, CPU p50 and a luma check that rejects a black
 // or inside-a-wall frame. Default <out> is .runtime/pink-jet-age-r9/<timestamp>/ so a capture
@@ -19,11 +19,11 @@ import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 import { loadDistrictData } from '../../server/district-data.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { campusGlow, launch, openDistrict, sample, setHour, startFixture } from './garden-campus-render-common.mjs';
-import { CLIENT_LATEST_HOUR, ROUTE_HOURS, commonsCameras, districtPath, gardensCameras, imageVerdict, routeOptions, scenePose, validateCameras, validateReport, viewName } from './pink-jet-age-routes-plan.mjs';
+import { CLIENT_LATEST_HOUR, ROUTE_HOURS, ROUTE_PREFIX, commonsCameras, districtCameras, districtPath, gardensCameras, imageVerdict, routeOptions, scenePose, validateCameras, validateReport, viewName } from './pink-jet-age-routes-plan.mjs';
 
 const options = routeOptions(process.argv.slice(2));
 const revision = COMMONS_REVISION, world = await loadDistrictData({ districtRevision: revision });
-const cameras = validateCameras([...gardensCameras(), ...commonsCameras(world.eastGardenCommons)]).filter(camera => !options.cameras || options.cameras.includes(camera.id));
+const cameras = validateCameras([...gardensCameras(), ...commonsCameras(world.eastGardenCommons), ...districtCameras(world)]).filter(camera => !options.cameras || options.cameras.includes(camera.id));
 if (!cameras.length) throw new Error(`No camera matches ${options.cameras}`);
 // HEAD, the dirty flag and a relative --out belong to this checkout, whatever the shell's directory.
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -56,6 +56,9 @@ try {
   // The page must have drawn the requested finish, or the capture is mislabelled.
   const appliedFinish = await page.evaluate(() => globalThis.__gardenCampusRoot?.userData.kitFinish ?? null);
   if (appliedFinish !== options.finish) throw new Error(`asked for ${options.finish}, the campus drew ${appliedFinish}`);
+  // The District facades (#740) report their finish through the development spatial probe.
+  const districtFinish = await page.evaluate(() => globalThis.__riverSpatialStream?.().finish?.district ?? null);
+  if (districtFinish !== options.finish) throw new Error(`asked for ${options.finish}, the District drew ${districtFinish}`);
   await page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => {});
   for (const [label, hour] of Object.entries(hours)) {
     await setHour(page, hour);
@@ -75,7 +78,7 @@ try {
   if (errors.length) throw new Error(`page errors: ${errors.join(' | ')}`);
   // Contact sheets: one per route, a row per camera and a column per hour.
   const labels = Object.keys(hours), sheet = await browser.newPage({ viewport: { width: 1600, height: 400 } });
-  for (const route of ['gardens', 'commons']) {
+  for (const route of Object.keys(ROUTE_PREFIX)) {
     const rows = cameras.filter(camera => camera.route === route);
     if (!rows.length) continue;
     const cells = [];
@@ -86,7 +89,7 @@ try {
     await sheet.setContent(`<style>body{margin:0;background:#111;font:11px system-ui;color:#ddd;display:grid;grid-template-columns:repeat(${labels.length},1fr);gap:4px;padding:4px}figure{margin:0}img{width:100%;display:block}figcaption{padding:2px 4px}</style>${cells.join('')}`);
     await sheet.screenshot({ path: `${output}/sheet-${route}.jpg`, type: 'jpeg', quality: 75, fullPage: true });
   }
-  const report = { status: 'passed', head, dirty, revision, graphics: options.graphics, finish: options.finish, campusFinish: appliedFinish, hours, viewport: [1280, 800], deviceScaleFactor: 1,
+  const report = { status: 'passed', head, dirty, revision, graphics: options.graphics, finish: options.finish, campusFinish: appliedFinish, districtFinish, hours, viewport: [1280, 800], deviceScaleFactor: 1,
     nightNote: `The client's #sun-hour stops at ${CLIENT_LATEST_HOUR}:00 (twilight 1); there is no later night, so night is pinned there.`,
     firstEntry, cameras, views, finishedAt: new Date().toISOString(),
     limits: 'Local loopback fixture, interface hidden, 1280x800 at DPR 1; residents move between views; frame times are this host under its recorded load (vsync on), not a device budget. Not a human visual review.' };

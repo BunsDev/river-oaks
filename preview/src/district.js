@@ -20,21 +20,23 @@ import { buildCampusCeilings } from './garden-campus-ceilings.js';
 import { buildStoreInteriors } from './store-interiors.js';
 import { createReferenceFacades, visibleRoofHeight } from './reference-facades.js';
 import { finishKey } from './material-finish.js';
+import { applyKitFields, districtKitFinish, districtKitFinishName } from './district-kit-finish.js';
 import { officeLobbyFor, officeRetailOpenings } from './office-contract.js';
 import { buildOfficeArrival } from './office-arrival-architecture.js';
 import { ARRIVAL } from './office-arrival-model.js';
 
 // Signs are drawn once per tenant: ivory lettering on a brass-edged teal plaque
 // (the retro palette), backlit on reference-guided frontages. The plaque fills
-// the canvas, so signs are opaque and never sort against the glazing.
-function sign(name, illuminated = false, home = false) {
+// the canvas, so signs are opaque and never sort against the glazing. A kit
+// finish (district-kit-finish.js `sign`) replaces the plaque, keyline and ink.
+function sign(name, illuminated = false, home = false, look = null) {
   const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 128;
   const context = canvas.getContext('2d');
-  context.fillStyle = home ? '#43564e' : RETRO.deepTeal; context.fillRect(0, 0, 1024, 128);
-  const ink = RETRO.ivory;
+  context.fillStyle = look?.plaque ?? (home ? '#43564e' : RETRO.deepTeal); context.fillRect(0, 0, 1024, 128);
+  const ink = look?.ink ?? RETRO.ivory;
   context.textAlign = 'center'; context.textBaseline = 'middle';
   context.font = `500 ${name.length > 20 ? 39 : name.length > 13 ? 47 : 57}px Futura, Avenir, sans-serif`;
-  context.strokeStyle=RETRO.brass;context.lineWidth=3;context.strokeRect(8,8,1008,112);
+  context.strokeStyle=look?.edge ?? RETRO.brass;context.lineWidth=3;context.strokeRect(8,8,1008,112);
   const text = name === 'Cartier' || name === 'Le Colonial' || name === 'Steak 48' ? name : name.toUpperCase();
   context.fillStyle = ink; context.fillText(text, 512, 62, 955);
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 8;
@@ -45,10 +47,13 @@ function sign(name, illuminated = false, home = false) {
   return material;
 }
 
-function cutStone() {
+// The ceramic's base colour is a shader constant: classic keeps its source and
+// program key, and any other colour (a kit finish) is a separate program.
+function cutStone(base = RETRO.ivory) {
   const material=physicalSurface('stone',{instanced:true,tileSize:3,normalScale:new THREE.Vector2(0.035,0.035),roughness:0.36});
   const compile=material.onBeforeCompile, key=material.customProgramCacheKey;
-  const color=new THREE.Color(RETRO.ivory).toArray().map(x=>x.toFixed(4)).join(',');
+  const color=new THREE.Color(base).toArray().map(x=>x.toFixed(4)).join(',');
+  const variant=new THREE.Color(base).equals(new THREE.Color(RETRO.ivory))?'':`-${new THREE.Color(base).getHexString()}`;
   material.onBeforeCompile=shader=>{
     compile(shader);
     shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
@@ -61,7 +66,7 @@ function cutStone() {
       float roTone = fract(sin(dot(roBlock, vec2(12.9898, 78.233))) * 43758.5453);
       diffuseColor.rgb *= mix(0.78, 1.0, roJoint) * (0.98 + 0.03 * roTone);`);
   };
-  material.customProgramCacheKey=()=>key()+'-retro-ceramic-v1';
+  material.customProgramCacheKey=()=>key()+'-retro-ceramic-v1'+variant;
   return material;
 }
 
@@ -72,14 +77,19 @@ export function upperWindowLevels(height) {
   return Array.from({ length: Math.max(0, count) }, (_, level) => 6.85 + level * 3.3);
 }
 
-/** `kitFinish` (render-quality.js readFinishPreference) recolours the Gardens campus only; classic by default. */
+/**
+ * `kitFinish` (render-quality.js readFinishPreference) recolours the generic facade kit
+ * (district-kit-finish.js) and the Gardens campus (garden-campus-kit-finish.js); classic by
+ * default. Reference-photographed frontages keep their own look under every finish.
+ */
 export function buildDistrictBuildings(world, { kitFinish } = {}) {
+  const finishName = districtKitFinishName(kitFinish), look = districtKitFinish(finishName);
   const group = new THREE.Group(), materials = new Set(), geometries = new Set(), textures = [];
   const box = new THREE.BoxGeometry(1, 1, 1); geometries.add(box);
   const pane = new THREE.PlaneGeometry(1, 1); geometries.add(pane);
   const disc = new THREE.CylinderGeometry(0.5, 0.5, 1, 14); geometries.add(disc);
   const lobe = new THREE.IcosahedronGeometry(0.5, 1); geometries.add(lobe);
-  const stone = cutStone();
+  const stone = cutStone(look.stone ?? undefined);
   const dark = new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, metalness: 0.58, roughness: 0.35 });
   const bronzeFrame = new THREE.MeshStandardMaterial({ color: RETRO.brass, metalness: 0.7, roughness: 0.3 });
   const glass = thinStorefrontGlass();
@@ -102,7 +112,23 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
   const velvet = new THREE.MeshStandardMaterial({color:RETRO.rose,roughness:0.96});
   const furniture = new THREE.MeshStandardMaterial({color:'#775c40',roughness:0.65});
   const planter = new THREE.MeshStandardMaterial({color:RETRO.porcelain,roughness:0.8});
-  for (const [name, material] of Object.entries({ stone, dark, bronzeFrame, glass, upperGlass, bulkhead, reveal, interior, floor, display, light, spot, roof, plant, gold, navy, canvas, wood, hedge, velvet, furniture, planter })) { material.name = `facade-${name}`; materials.add(material); }
+  const table = { stone, dark, bronzeFrame, glass, upperGlass, bulkhead, reveal, interior, floor, display, light, spot, roof, plant, gold, navy, canvas, wood, hedge, velvet, furniture, planter };
+  for (const [name, material] of Object.entries(table)) { material.name = `facade-${name}`; materials.add(material); }
+  // Kit finish (district-kit-finish.js). A reference doorway keeps a classic copy of what it
+  // shares with the generic kit; the generic materials are then recoloured in place. Accents
+  // are clones of their base, so they share its batch (finishKey) or, for the physical
+  // kickplate, add one draw. Under classic every one of these is the original material.
+  const kept = Object.fromEntries(look.keep.map(name => {
+    const copy = table[name].clone(); copy.name = `facade-${name}-reference`; materials.add(copy); return [name, copy];
+  }));
+  const accent = (base, name, color) => {
+    if (!color) return base;
+    const material = base.clone(); material.color.set(color); material.name = `facade-${name}`; materials.add(material); return material;
+  };
+  const speedLine = accent(bronzeFrame, 'speedLine', look.accents?.speedLine), kickplate = accent(bulkhead, 'kickplate', look.accents?.kickplate);
+  const valance = accent(canvas, 'valance', look.accents?.valance);
+  for (const [name, fields] of Object.entries(look.facade)) applyKitFields(table[name], fields);
+  const generic = { dark, bulkhead, planter, hedge }, atReference = { ...generic, ...kept };
   const interiors = createRetailInteriors();
   interiors.materials.forEach(material => materials.add(material));
   // Walk-in rooms replace the shallow alcoves wherever a boutique plan covers a bay.
@@ -177,7 +203,7 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
       run(ground, bulkhead, -0.06, 4.72, [0.86, 0.28]);
       // Continuous enamel fascia and brass speed lines tie every block into
       // the space-age palette, including facades without a named storefront.
-      for(const height of [4.38,4.51,5.02])run(ground,bronzeFrame,-.22,height,[.035,.035]);
+      for(const height of [4.38,4.51,5.02])run(ground,speedLine,-.22,height,[.035,.035]);
       run(ground,stone,-.28,5.12,[.11,.64],.12);
       run(ground, reveal, 0.02, 4.2, [0.18, 0.12]);
       run(ground, stone, -0.02, 0.18, [0.36, 0.30]);
@@ -234,7 +260,7 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
           const offset = (left + right) / 2 - t * length, width = right - left;
           // Honed stone bulkhead, glazing sheet, and a bronze frame with real
           // stiles, head and sill so the pane reads as a fitted unit.
-          part(bulkhead, along(at(0.06, 0.34), offset), [width + 0.06, 0.32, 0.22], yaw, index);
+          part(kickplate, along(at(0.06, 0.34), offset), [width + 0.06, 0.32, 0.22], yaw, index);
           part(glass, along(at(0.11, 2.27), offset), [width, 3.55, 1], yaw + (winding < 0 ? Math.PI : 0), index);
           part(bronzeFrame, along(at(0.10, 4.06), offset), [width + 0.04, 0.06, 0.12], yaw, index);
           part(bronzeFrame, along(at(0.10, 0.52), offset), [width + 0.04, 0.05, 0.12], yaw, index);
@@ -313,9 +339,9 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
     const isHarry = store.name === 'Harry Winston', isSteak = store.name === 'Steak 48', isColonial = store.name === 'Le Colonial';
     const dining = ['restaurant','ice_cream'].includes(store.category), home = store.category === 'home';
     // A photographed frontage carries its own lettering, door frame, canopy and lights.
-    const rebuilt = reference.plan.stores.has(store.id);
+    const rebuilt = reference.plan.stores.has(store.id), kit = rebuilt ? atReference : generic;
     if (!rebuilt) {
-      const material = sign(store.name, isDior || isCartier || isVanCleef || isSteak || isColonial, home); materials.add(material); textures.push(material.map);
+      const material = sign(store.name, isDior || isCartier || isVanCleef || isSteak || isColonial, home, look.sign); materials.add(material); textures.push(material.map);
       const geometry = new THREE.PlaneGeometry(home ? 4.5 : isColonial ? 4.5 : store.name.length > 17 ? 9 : 7, home || isColonial ? 0.5 : 0.85); geometries.add(geometry);
       const label = new THREE.Mesh(geometry, material);
       label.position.set(x+nx*(isColonial ? 1.4 : 0.3), base+(home || isColonial ? 3.97 : isSteak ? 5.35 : 4.72), -north-ny*(isColonial ? 1.4 : 0.3)); label.rotation.y = yaw;
@@ -332,10 +358,10 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
       const pivot = new THREE.Group();
       pivot.position.set(x+ny*0.85+nx*0.2, base, -north+nx*0.85-ny*0.2); pivot.rotation.y = yaw;
       const leaf = new THREE.Mesh(pane, glass); leaf.position.set(0.85, 1.8, 0); leaf.scale.set(1.7, 3.0, 1); leaf.userData.storeId = store.id; leaf.userData.breakableGlass = true; leaf.userData.breakableGlassDynamic = true;
-      const pull = new THREE.Mesh(box, isCartier || isVanCleef ? gold : dark); pull.position.set(1.52, 1.45, 0.06); pull.scale.set(0.03, 0.9, 0.03); pull.userData.storeId = store.id;
-      const rail = new THREE.Mesh(box, isCartier || isVanCleef ? gold : dark); rail.position.set(0.85, 0.32, 0); rail.scale.set(1.68, 0.06, 0.05); rail.userData.storeId = store.id;
+      const pull = new THREE.Mesh(box, isCartier || isVanCleef ? gold : kit.dark); pull.position.set(1.52, 1.45, 0.06); pull.scale.set(0.03, 0.9, 0.03); pull.userData.storeId = store.id;
+      const rail = new THREE.Mesh(box, isCartier || isVanCleef ? gold : kit.dark); rail.position.set(0.85, 0.32, 0); rail.scale.set(1.68, 0.06, 0.05); rail.userData.storeId = store.id;
       pivot.add(leaf, pull, rail);
-      if (isHarry && rebuilt) decorateWinstonDoor(pivot, box, gold, dark); pivot.userData.storeId = store.id; group.add(pivot);
+      if (isHarry && rebuilt) decorateWinstonDoor(pivot, box, gold, kit.dark); pivot.userData.storeId = store.id; group.add(pivot);
       doors.push({ pivot, yaw, angle: 0, hinge: new THREE.Vector3(x+nx*0.2, base+1.2, -north-ny*0.2) });
     } else {
       part(glass, [x+nx*0.26, base+1.8, -north-ny*0.26], [1.5, 3.0, 0.09], yaw);
@@ -343,14 +369,14 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
       for (const side of [-1, 1]) part(gold, [x+nx*0.36-ny*side*0.12, base+1.15, -north-ny*0.36-nx*side*0.12], [0.03, 0.9, 0.03], yaw);
     }
     // Threshold, entrance mat and a recessed downlight over every door.
-    part(bulkhead, [x+nx*0.55, base+0.16, -north-ny*0.55], [1.9, 0.03, 0.9], yaw);
+    part(kit.bulkhead, [x+nx*0.55, base+0.16, -north-ny*0.55], [1.9, 0.03, 0.9], yaw);
     part(velvet, [x+nx*1.25, base+0.165, -north-ny*1.25], [1.3, 0.012, 0.75], yaw);
     // Clipped boxwood in limestone planters flank each boutique entrance. They
     // are also watering sites (world-interactions.js), so rebuilt frontages keep them.
     if (!dining && !isColonial && !store.venue && !(isHarry && rebuilt)) for (const side of [-1, 1]) {
       const across = side * 1.6;
-      part(planter, [x-ny*across+nx*1.05, base+0.44, -north-nx*across-ny*1.05], [0.62, 0.56, 0.62], yaw);
-      for (const [dx, dy, dz, scale, spin] of hedgeClusters(0.56, 0.56, 0.5, 11 + side)) part(hedge, [x-ny*(across+dx)+nx*(1.05+dz), base+0.98+dy, -north-nx*(across+dx)-ny*(1.05+dz)], scale, yaw + spin, -1, 0, lobe);
+      part(kit.planter, [x-ny*across+nx*1.05, base+0.44, -north-nx*across-ny*1.05], [0.62, 0.56, 0.62], yaw);
+      for (const [dx, dy, dz, scale, spin] of hedgeClusters(0.56, 0.56, 0.5, 11 + side)) part(kit.hedge, [x-ny*(across+dx)+nx*(1.05+dz), base+0.98+dy, -north-nx*(across+dx)-ny*(1.05+dz)], scale, yaw + spin, -1, 0, lobe);
     }
     if (rebuilt) continue;
     part(spot, [x+nx*0.45, base+4.11, -north-ny*0.45], [0.13, 0.015, 0.13], yaw, -1, 0, disc);
@@ -358,7 +384,7 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
       // A sloped fabric awning with a valance and tie rods; not a flat slab.
       const pitch = 0.32, run = 1.45, drop = Math.sin(pitch) * run / 2;
       part(canvas, [x+nx*(0.15+run/2*Math.cos(pitch)), base+4.0-drop, -north-ny*(0.15+run/2*Math.cos(pitch))], [4.6, 0.03, run], yaw, -1, pitch);
-      part(canvas, [x+nx*(0.15+run*Math.cos(pitch)), base+4.0-drop*2-0.13, -north-ny*(0.15+run*Math.cos(pitch))], [4.62, 0.26, 0.03], yaw);
+      part(valance, [x+nx*(0.15+run*Math.cos(pitch)), base+4.0-drop*2-0.13, -north-ny*(0.15+run*Math.cos(pitch))], [4.62, 0.26, 0.03], yaw);
       for (const side of [-1, 1]) {
         const across = side * 2.2;
         part(dark, [x-ny*across+nx*(0.15+run/2*Math.cos(pitch)), base+4.0-drop, -north-nx*across-ny*(0.15+run/2*Math.cos(pitch))], [0.035, 0.035, run], yaw, -1, pitch);
@@ -469,6 +495,7 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
   group.userData.interiors = interiorGroup;
   group.userData.generatedRooms = generatedRooms;
   group.userData.rooms = rooms;
+  group.userData.kitFinish = finishName;
   group.userData.updateDoors = (positions, delta) => {
     const step = 1 - Math.exp(-5 * Math.min(delta, 0.1));
     for (const door of doors) {
@@ -496,11 +523,14 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
   return group;
 }
 
-export function buildDistrictDetail(world) {
+/** Storefront benches and landscape; `kitFinish` recolours the benches (district-kit-finish.js `detail`). */
+export function buildDistrictDetail(world, { kitFinish } = {}) {
   const group = new THREE.Group(), objects = [];
-  const dummy = new THREE.Object3D();
+  const dummy = new THREE.Object3D(), finishName = districtKitFinishName(kitFinish), look = districtKitFinish(finishName);
   const bronze = new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, roughness: 0.55, metalness: 0.6 });
   const timber = new THREE.MeshStandardMaterial({ color: RETRO.ivory, roughness: 0.85 });
+  applyKitFields(bronze, look.detail.bronze); applyKitFields(timber, look.detail.timber);
+  group.userData.kitFinish = finishName;
   const box = new THREE.BoxGeometry(1, 1, 1);
   for (const spot of storefrontBenchSpots(world)) {
     const { x, north, outward: [nx, ny] } = spot;

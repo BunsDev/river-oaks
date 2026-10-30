@@ -7,6 +7,7 @@ import { groundSurfaceHeight } from './world-surface.js';
 import { RETRO } from './retro-palette.js';
 import { localToScene, routeSegments, sampleRoute, terrainHeight } from './geometry.js';
 import { distanceToRoad, clearOfRoads, laneFixtures, LAMP_SPACING } from './street-fixtures.js';
+import { applyKitFields, districtKitFinish, districtKitFinishName } from './district-kit-finish.js';
 
 // Placement lives in a module without rendering imports, so the authoritative
 // town can list the same benches and planters the browser draws.
@@ -97,8 +98,11 @@ export function hedgeClusters(width, depth, height, seed = 7) {
   return lobes;
 }
 
-export function buildStreetFurniture(world, isFree) {
+/** `kitFinish` recolours the lamps, planters and bins (district-kit-finish.js `street`); classic by default. */
+export function buildStreetFurniture(world, isFree, { kitFinish } = {}) {
   const group = new THREE.Group(); group.name = 'Street furniture';
+  const finishName = districtKitFinishName(kitFinish), look = districtKitFinish(finishName);
+  group.userData.kitFinish = finishName;
   const box = new THREE.BoxGeometry(1, 1, 1), disc = new THREE.CylinderGeometry(0.5, 0.5, 1, 20), post = new THREE.CylinderGeometry(0.5, 0.5, 1, 10);
   const bronze = new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, roughness: 0.5, metalness: 0.65 });
   const lampGlow = new THREE.MeshStandardMaterial({ color: RETRO.light, emissive: RETRO.light, emissiveIntensity: 2.2, roughness: 0.4 });
@@ -112,6 +116,7 @@ export function buildStreetFurniture(world, isFree) {
   const treeGrate = new THREE.MeshStandardMaterial({ map: treeGrateTexture(), roughness: 0.55, metalness: 0.6, ...flush });
   const orbital = new THREE.TorusGeometry(.52,.023,6,40);orbital.rotateX(Math.PI/2);
   const canopy = new THREE.SphereGeometry(1,20,10),brass=new THREE.MeshStandardMaterial({color:RETRO.brass,metalness:.8,roughness:.28});
+  for (const [name, material] of Object.entries({ bronze, brass, stoneCast })) applyKitFields(material, look.street[name]);
   const batches = new Map(), dummy = new THREE.Object3D();
   const add = (geometry, material, position, scale, yaw = 0, color = null) => {
     const key = `${geometry.uuid}:${material.uuid}`;
