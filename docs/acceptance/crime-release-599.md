@@ -1,6 +1,6 @@
 # Crime release #599 acceptance checklist
 
-Status (refresh 2026-10-28, see the section at the end): **#637 and #640's foundation are delivered on `main`; the encounter candidate is the #640 increment stack #708 → #710 → increment 5 (draft, unmerged); every automated row below now has revision-bound evidence, including browser-shown writer takeover, search after sight loss and an airborne windup (`crime-takeover`, 2026-10-29); the human gameplay-feel disposition is accept (Val Alexander, 2026-10-28, on run-10 recordings of `700bddb2`); hosted checks on the candidate `700bddb2` are green (21 success / 5 skipped after one heights rerun); `pnpm run verify full` is green end to end on a snapshot of `71bb8d5a` (2026-10-29, all 19 stages) after an earlier stage-by-stage pass across three receipts; the physical-device disposition is accept (Val Alexander, 2026-10-29, iPhone in Safari, touch only; keyboard-only and screen-reader passes not covered); escape by concealment is the one row that cannot be shown with the authored zones (server probe on `e09ed8d5`, a content decision); no production activation approval**. The 2026-10-24 candidate base was fetched main `9ee738f8ca12bec54fb0d2a26d6b88a103739921` plus the owned `test/crime-release-599-20261024` changes in `/Users/buns/.codex/worktrees/cc29/river-oaks` (archived 2026-10-28, below). Earlier receipts on `2cbc4dc4` and `4557e70d` remain historical. This checklist separates source implementation, local verification, hosted checks, device evidence and human acceptance. A completed prerequisite does not close this release gate.
+Status (refresh 2026-10-30, see "Landing and post-merge measurements" at the end): **the #640 stack is on `main`: #708 `f0d01729`, #710 `163c204a`, increment 5 #732 `ccffc5c8`; on merged `main` the crime workload, the World and Redis coordinator tiers and the render tiers all meet their absolute budgets (the Redis relative comparison misses at 8 players); open: keyboard-only and screen-reader passes, escape by concealment on foot (police tuning decision, #784/#785), foot drift and correction under loss, a physical-device frame rate, and any production activation.** Earlier status, kept as written: **#637 and #640's foundation are delivered on `main`; the encounter candidate is the #640 increment stack #708 → #710 → increment 5 (draft, unmerged); every automated row below now has revision-bound evidence, including browser-shown writer takeover, search after sight loss and an airborne windup (`crime-takeover`, 2026-10-29); the human gameplay-feel disposition is accept (Val Alexander, 2026-10-28, on run-10 recordings of `700bddb2`); hosted checks on the candidate `700bddb2` are green (21 success / 5 skipped after one heights rerun); `pnpm run verify full` is green end to end on a snapshot of `71bb8d5a` (2026-10-29, all 19 stages) after an earlier stage-by-stage pass across three receipts; the physical-device disposition is accept (Val Alexander, 2026-10-29, iPhone in Safari, touch only; keyboard-only and screen-reader passes not covered); escape by concealment is the one row that cannot be shown with the authored zones (server probe on `e09ed8d5`, a content decision); no production activation approval**. The 2026-10-24 candidate base was fetched main `9ee738f8ca12bec54fb0d2a26d6b88a103739921` plus the owned `test/crime-release-599-20261024` changes in `/Users/buns/.codex/worktrees/cc29/river-oaks` (archived 2026-10-28, below). Earlier receipts on `2cbc4dc4` and `4557e70d` remain historical. This checklist separates source implementation, local verification, hosted checks, device evidence and human acceptance. A completed prerequisite does not close this release gate.
 
 The portable evidence package `docs/acceptance/crime-release-599/` (2 MB, on the `test/crime-release-599-20261024` branch and in its archive; not carried onto this documentation branch) includes compressed raw baseline reports, preserved first failures, inspected policy captures, exact source hashes and a restore-verified historical source patch. Its 9ee core and partial-full receipts are distinct from 4557 measurements and do not claim expanded gameplay acceptance.
 
@@ -14,7 +14,7 @@ The portable evidence package `docs/acceptance/crime-release-599/` (2 MB, on the
 | Alternate police branch | Live register records authorized cancellation/archive of the alternate 26a2f033 strategy; #621 remains the delivered implementation | Archive preserved by its owner; no cleanup performed by this task |
 | Broader #587 acceptance | `mvp-release-readiness-20261024` owns expansion/Commons stall investigation and broader rendering acceptance | Consume exact receipts; no duplicate ownership |
 | #637 local/peer movement | #645 merged `a437cbbf` (travel heading and horizontal stride for local and peer feet); issue still open at 2026-10-26T23:33Z for its remaining items. Runtime reproduction on the encounter candidate below (walk/sprint/turn/strafe/back, feet planted every moving frame, worst IK error 0 m) | Delivered foundation on `main`; the issue's own closure is its owner's |
-| #640 on-foot encounter | #646 merged `15334aad` (timed melee, perception, grab/arrest); #708 `da1bfa39` draft on `main` (residents react; hosted 26/26 success); #710 `b7df2c6a` draft on #708 (combat presentation; hosted 19/19 success); increment 5 #732 `700bddb2` draft on #710 (workload, 30/60/120 Hz profiles, two- and three-browser journeys; see the refresh; ledger commit `71bb8d5a` on top) | Candidate exists; drafts unmerged; hosted green on `700bddb2`; human feel accept 2026-10-28; device pass open |
+| #640 on-foot encounter | #646 merged `15334aad` (timed melee, perception, grab/arrest); #708 `da1bfa39` draft on `main` (residents react; hosted 26/26 success); #710 `b7df2c6a` draft on #708 (combat presentation; hosted 19/19 success); increment 5 #732 `700bddb2` draft on #710 (workload, 30/60/120 Hz profiles, two- and three-browser journeys; see the refresh; ledger commit `71bb8d5a` on top) | Delivered on `main` 2026-10-30: #708 `f0d01729`, #710 `163c204a`, #732 `ccffc5c8` (reviewed heads `dec24320`, `545eb21c`, `d6515370`); human feel accept 2026-10-28; device pass accept 2026-10-29; keyboard-only and screen-reader passes open |
 
 ## Expanded gameplay acceptance added to #599
 
@@ -152,11 +152,76 @@ Next actions, one per open row: (1) done 2026-10-28: Val accepted on the run-10 
 ## Remaining release decisions
 
 - [ ] Final current-source core/full checks;4557-source browser captures are inspected and preserved, with new-main verification pending.
-- [ ] Tiered real transport/Redis and rendering measurements, cold-step attribution and material regression disposition.
+- [ ] Tiered real transport/Redis and rendering measurements, cold-step attribution and material regression disposition; 2026-10-30 on merged `main`: every absolute budget met, the Redis relative comparison missed at 8 players (see the landing section).
 - [ ] Contrast, keyboard, reduced-motion, safety warning and reporting acceptance; target-device and human evidence appropriate to the intended audience.
 - [x] Isolated rollback/recovery rehearsal and independent branch/playbook review; later new-main integration still needs final verification.
 - [ ] Reviewable verified baseline commits and exact candidate/hosted state, without treating publication or production activation as implied.
 - [x] #637/#640 implementation handoff: #645/#646 merged, #708/#710 drafts and increment 5 bound above.
 - [x] Human gameplay-feel disposition: accept, Val Alexander, 2026-10-28, #732 `700bddb2` (recordings of an automated session).
 - [x] Physical-device accessibility disposition: accept, Val Alexander, 2026-10-29, candidate #732, iPhone in Safari, touch only.
-- [ ] Keyboard-only and screen-reader passes (tester and date to be named), concealment on foot (needs the police tuning decision; the yard and its browser journey are on #784), and the full gate on the final candidate head (`verify full` on a snapshot of `e09ed8d5` is queued behind host load; hosted is green on `21872147`, `6f29ed03` and `e09ed8d5`).
+- [x] #640 stack landed (2026-10-30: #708 `f0d01729`, #710 `163c204a`, #732 `ccffc5c8`); `verify full` 19/19 on a snapshot of `bdb9fde0`; post-merge workload, World, Redis and render tiers recorded above.
+- [ ] Keyboard-only and screen-reader passes (tester and date to be named), and concealment on foot (needs the police tuning decision; the yard and its browser journey are on #784).
+
+## Landing and post-merge measurements, 2026-10-30 (session `claude:river-oaks-3d`)
+
+Landed with Val's merge authorization, in order, each green on a branch up to date with `main`
+through the lander: #708 as `f0d01729` (reviewed head `dec24320`), #710 as `163c204a` (`545eb21c`),
+#732 as `ccffc5c8` (`d6515370`). Before landing:
+
+- **Reviews.** Two independent reviews of each change made since the previous reviews: the
+  resident figure budget on #708 (no defect; journey fixes in `e61e56a1`), #710's merge with the
+  Ribbonwing (one real gap: a strike begun on foot still landed after the attacker boarded a craft
+  as a passenger; fixed in `165bfed4` with a regression that fails without it) and the
+  `crime-encounter` witness change.
+- **Hosted `heights-return` regression** (6 of 11 stack runs, against 1 of 36 on `main`): root
+  cause from a hosted A/B, resident figures slowing the CPU-drawn walkers; fixed by a low-tier
+  figure budget (`92d7336a`). Ledger: `docs/superpowers/plans/2026-10-27-onfoot-encounter-640-inc3-5.md`.
+- **Signing.** The merge guard refused #708 on one unsigned commit (`567d8514`); every descendant
+  across the stack was re-created signed with identical trees (the render-audit fix is `b19456ec`).
+- **`ribbonwing-passenger` flake** (#798, from #779): a hosted A/B showed `main` failing it too
+  (1/6, #710 1/6); #804, #805 and #809 on `main` fixed its step-out, climb and roll waits.
+- **Full gate.** `pnpm run verify full` passed all 19 stages on a snapshot of `bdb9fde0`
+  (2026-10-30 15:21–17:42Z, load under 8 at start, isolated Redis). The final head `b04db8e8`
+  differs only by a `main` merge (the journey file taken from `main`); core passed on it (preview
+  4767 / 0) and hosted Verify passed on `d6515370` in the lander's slot.
+
+Post-merge measurements on a snapshot of merged `main` `ccffc5c8`, 2026-10-30 22:19–23:48Z, load
+7.1–10.8 (1 min) at each stage start, Apple M5 Max, Node 24.22.0. The 2026-10-24 harnesses were
+copied unchanged from the baseline worktree, except the render harness's checkpoint reset, which
+now keeps the police `subdued` list that #646 added (one line; diff kept). Evidence with SHA256SUMS:
+`~/worktree-backups/river-oaks/evidence-crime599-postmerge-20261030/`.
+
+| Measurement | Budget | 1 | 8 | 16 | 32 | Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| Crime workload (`server/crime-workload.js`), worst step | 200 ms | 121 ms | 123 ms | 118 ms | 117 ms | **Met** (step p95 at most 1.7 ms; officers at the cap of 6 from 8 players) |
+| World tiers, worst step wall | 200 ms | 104 ms | 95 ms | 103 ms | 90 ms | **Met** |
+| World tiers, active warm CPU p95 / limit | baseline-derived | 2.0 / 3.9 ms | 2.2 / 3.9 | 2.2 / 3.9 | 2.6 / 4.2 | **Met** |
+| Redis coordinator, idle ticks over 200 ms | 0 | 0 | 0 | 0 | 0 | **Met** |
+| Redis coordinator, active warm idle p95 / limit | baseline-derived | 52.8 / 63.6 ms | 67.2 / 63.0 | 52.1 / 64.4 | 46.9 / 71.6 | **Not met at 8** (relative only) |
+| Render tiers desktop, active frame p95 / limit | repeated-off + 16.7 ms | 16.8 / 33.5 ms | 16.8 / 33.5 | 16.8 / 33.5 | 33.3 / 33.5 | **Met** (submission within its gate at every tier) |
+| Render tiers phone viewport (host GPU) | same | 16.8 / 33.5 ms | 16.8 / 33.5 | 16.8 / 33.5 | 33.4 / 33.5 | **Met** |
+| Render audit (#778), peer anchors | all peers | 0/0 | 7/7 | 15/15 | 31/31 | **Passed**; #778 closed |
+
+At 32 players the active frame p95 sits 0.1–0.2 ms under its limit: a margin, not headroom. The
+host was shared with other sessions; these are one machine's numbers, not a target-device result.
+
+Retired through `project:prune` with archive proof: the #708, #710 and #732 worktrees and branches
+(archives `retirement-kSuFgs`, `-RLQLnx`, `-WCQyB3` under `~/worktree-backups/river-oaks/`: bundle
+SHA-256 matches each manifest, the restored repositories resolve the archive tags to `dec24320`,
+`165bfed4` and `b04db8e8`, `git fsck --full` clean). Their ignored evidence was archived first in
+`evidence-onfoot-640-20261030/` (SHA256SUMS verified, restored file counts match).
+
+Open rows and their next action:
+
+1. **Keyboard-only and screen-reader passes**: Val, on a named device, browser and date.
+2. **Escape by concealment on foot**: the lane yard and its journey are on draft #784; a player on
+   foot cannot break contact (officer 3.4 m/s and 3 m close contact against a brisk 3.2 m/s). Needs
+   Val's police tuning decision, then #785 (travel while wanted), a second review and landing #784.
+3. **Foot drift and correction under loss**: `combat-timing.test.js` covers stalls and jitter for
+   timing only; no browser measurement of foot drift under packet loss exists. Open: a loss-injected
+   two-browser run reading the peer foot error, not attempted this session.
+4. **Physical-device frame rate**: the device pass (iPhone, Safari, touch) recorded a disposition, not
+   a frame rate. Open: a measured frame rate on that device, which needs Val's device.
+5. **Redis relative comparison at 8 players**: absolute tick budget met; investigate or accept the
+   67.2 / 63.0 ms miss with a repeat run.
+6. **Production activation**: no go/no-go requested or given; none performed.

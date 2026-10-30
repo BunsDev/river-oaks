@@ -184,3 +184,14 @@ Goal status is being set blocked for that dependency/decision, not merely browse
 Takeover of the register task `crime-release-599` from the lapsed Codex lease (2026-10-24); the Codex worktree `/Users/buns/.codex/worktrees/cc29/river-oaks` is untouched and archived at `/Users/buns/worktree-backups/river-oaks/crime-release-599-handoff-20261028/` (head `9ee738f8`, SHA256SUMS verified). This branch carries only the three documents (acceptance checklist, operator playbook, this ledger), copied from that worktree; the 2 MB evidence package stays on the Codex branch and in the archive, so the checklist's package link is written as a path, not a link.
 
 The scope question of 2026-10-24 is answered by delivery: #645 (#637 foundation) and #646 (#640 foundation) merged to `main` on 2026-10-24/25; #708 and #710 are draft increments; increment 5 (`feat/onfoot-encounter-640-inc5-20261028`, worktree `../river-oaks-onfoot-640-inc5-3d`) carries the workload comparison, the 30/60/120 Hz × RTT 0/100/200 ms table, the two-browser `crime-night` and three-browser `crime-encounter` journeys. The checklist's expanded rows are rewritten with that evidence, each bound to a revision, with not-run items and their reasons; the human disposition, physical device, concealment escape (no sight-blocking geometry in either danger zone) and the full/hosted gates on the final candidate stay open. The playbook's rollback paragraph is corrected to checkpoint v17 and writers 21/22 (#646). No merge, publication to production, paid service or production activation occurred; this branch is a draft documentation PR.
+
+## 2026-10-30: stack landed, post-merge measurements (claude:river-oaks-3d)
+
+- Landed in order with merge authorization: #708 `f0d01729`, #710 `163c204a`, #732 `ccffc5c8`.
+- `verify full` 19/19 on a snapshot of `bdb9fde0`; final head `b04db8e8` (a `main` merge only) passed core.
+- Post-merge on `ccffc5c8`: crime workload, World and Redis absolute budgets and render tiers met; Redis
+  relative comparison missed at 8 players; #778 verified and closed. Table and evidence paths in
+  `docs/acceptance/crime-release-599.md`, "Landing and post-merge measurements".
+- Retired the three stack worktrees through `project:prune` (archives verified).
+- Open: keyboard-only and screen-reader passes (Val), concealment on foot (police tuning decision, #784/#785),
+  foot drift under loss, a physical-device frame rate, Redis 8-player comparison, production activation.
