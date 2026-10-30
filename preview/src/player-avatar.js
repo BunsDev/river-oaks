@@ -6,6 +6,7 @@ import { migrateCharacterAppearance, characterAppearanceFor } from './character-
 import { createPlayerAttention } from './player-attention.js';
 import { createPlayerCostume } from './player-costume.js';
 import { createFlightVehicle } from './flight-vehicles.js';
+import { VEHICLES } from './vehicle-config.js';
 import { createParkedCarriage } from './parked-carriage.js';
 import { createCarriageEncounter } from './carriage-encounter.js';
 import * as THREE from 'three';
@@ -22,15 +23,22 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   const lifetime = new AbortController();
   const holder = new THREE.Group();holder.name = 'Player character';holder.userData.renderAuditOwner = 'player';scene.add(holder);
   const owner=isJevicaOwner(userId);
+  // The garage is open to every account: the owner keeps her chauffeured pink car
+  // and Jev; everyone (the owner included) rides a shared kind, the motorcycle,
+  // from its own driver seat (vehicle-config.js).
+  const rideKinds=Object.values(VEHICLES).filter(spec=>spec.kind!=='bicycle'&&(owner||spec.shared));
   let crewLocal=null;
+  // Jev is part of the crew only while a chauffeured ride is chosen.
   const crewLocals=()=>{
     const locals=getLocals()??[];
     const current=locals.find(local=>local.id==='carriage-driver');
     if(current)crewLocal=current;
-    if(owner&&!crewLocal)crewLocal=createCarriageEncounter(getWorld())[0]??null;
-    return owner&&crewLocal&&!current?[...locals,crewLocal]:locals;
+    const crew=owner&&carriage?.chauffeured;
+    if(crew&&!crewLocal)crewLocal=createCarriageEncounter(getWorld())[0]??null;
+    return crew&&crewLocal&&!current?[...locals,crewLocal]:locals;
   };
   const carriage=createParkedCarriage({scene,walking,getWorld,getLocals:crewLocals,getConversation,requestExit:requestVehicleExit,requestChauffeur,reducedMotion});
+  if(!rideKinds.some(spec=>spec.kind===carriage.kind))carriage.select(rideKinds[0].kind);
   // Hidden until the walk has a pose (update() below): shown first, it flashed for a frame at sign-in.
   const panel = document.createElement('section');panel.className = 'player-controls';panel.hidden = true;panel.setAttribute('aria-label', 'Your character');
   panel.innerHTML = `<header class="player-identity">
@@ -49,11 +57,11 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   <p id="player-companion-status" class="player-companion-status" role="status" aria-live="polite"></p>
   <details class="player-settings"><summary>Rides & camera<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4"/></svg></summary>
     <div class="player-actions"><button id="player-camera" type="button" aria-pressed="true"><span data-camera-label>Third person</span><kbd>V</kbd></button></div>
-    <section class="vehicle-garage" aria-label="Jev chauffeur">
-      <div class="vehicle-garage-title"><span>Your chauffeur</span><span aria-hidden="true">✧</span></div>
-      <label for="player-vehicle">Your ride</label><select id="player-vehicle"><option value="rolls">Pink Rolls-Royce</option><option value="motorcycle">Rose motorcycle</option></select>
-      <div class="player-actions"><button id="player-carriage" type="button" aria-keyshortcuts="Q"><span>Call Jev</span><kbd>Q</kbd></button><button id="player-ride" type="button" aria-keyshortcuts="G"><span data-ride-label>Ride with Jev</span><kbd>G</kbd></button></div>
-      <button id="player-chauffeur" type="button" aria-pressed="false">Jev smart drive</button><div class="player-actions"><button id="player-drive-pause" type="button">Pause ride</button><button id="player-drive-park" type="button">Brake & park</button></div><div class="player-drive-pad" aria-label="Driving directions"><button type="button" data-drive="forward">Accelerate ↑</button><button type="button" data-drive="left">Steer ←</button><button type="button" data-drive="reverse">Reverse ↓</button><button type="button" data-drive="right">Steer →</button></div><p id="player-drive-status" role="status" aria-live="polite">Jev is ready</p>
+    <section class="vehicle-garage" aria-label="${owner?'Jev chauffeur':'Your ride'}">
+      <div class="vehicle-garage-title"><span>${owner?'Your chauffeur':'Your garage'}</span><span aria-hidden="true">✧</span></div>
+      <label for="player-vehicle">Your ride</label><select id="player-vehicle">${rideKinds.map(spec=>`<option value="${spec.kind}">${spec.label}</option>`).join('')}</select>
+      <div class="player-actions"><button id="player-carriage" type="button" aria-keyshortcuts="Q"><span data-call-label>Call Jev</span><kbd>Q</kbd></button><button id="player-ride" type="button" aria-keyshortcuts="G"><span data-ride-label>Ride with Jev</span><kbd>G</kbd></button></div>
+      <button id="player-chauffeur" type="button" aria-pressed="false">Jev smart drive</button><div class="player-actions" data-tour-actions><button id="player-drive-pause" type="button">Pause ride</button><button id="player-drive-park" type="button">Brake & park</button></div><div class="player-drive-pad" aria-label="Driving directions"><button type="button" data-drive="forward">Accelerate ↑</button><button type="button" data-drive="left">Steer ←</button><button type="button" data-drive="reverse">Reverse ↓</button><button type="button" data-drive="right">Steer →</button></div><p id="player-drive-status" role="status" aria-live="polite">Jev is ready</p>
     </section>
   </details><p id="player-status" role="status" aria-live="polite"></p>`;
   panel.insertBefore(panel.querySelector('.player-quick-actions'), panel.querySelector('.character-picker'));
@@ -70,13 +78,15 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(carriage.placement)walking.lookAt([carriage.placement.position[0],-carriage.placement.position[2],carriage.placement.position[1]]);
   });
   const vehicleSelect=panel.querySelector('#player-vehicle'),driveButton=panel.querySelector('#player-chauffeur'),driveStatus=panel.querySelector('#player-drive-status');
+  vehicleSelect.value=carriage.kind;
   vehicleSelect.addEventListener('change',()=>{if(!carriage.select(vehicleSelect.value)){vehicleSelect.value=carriage.kind;status.textContent='Step out and find clear road space before changing vehicles.';}else status.textContent=`${carriage.label} is ready.`;});
   driveButton.addEventListener('click',()=>{if(carriage.chauffeur.active)carriage.stopTour();else if(!carriage.tour())status.textContent='Board your vehicle on a clear road to start a scenic drive.';});
   const pauseDrive=panel.querySelector('#player-drive-pause');
   pauseDrive.addEventListener('click',()=>{if(carriage.chauffeur.paused)carriage.resumeTour();else carriage.pauseTour();});
   panel.querySelector('#player-drive-park').addEventListener('click',()=>{carriage.park();status.textContent='Vehicle stopped. Resume with manual directions or start a new smart ride.';});
-  // Driving controls appear once Jevica is riding; before that the garage offers choosing and calling a ride.
-  const rideOnly=[driveButton,pauseDrive.parentElement,panel.querySelector('.player-drive-pad')];
+  // Driving controls appear once the player is riding; before that the garage offers choosing and calling a ride.
+  // Jev's smart drive, pause and park belong to a chauffeured ride; the direction pad is the player's own driving.
+  const rideOnly=[driveButton,pauseDrive.parentElement,panel.querySelector('.player-drive-pad')],tourOnly=[driveButton,pauseDrive.parentElement];
   const directions={forward:{forward:1},reverse:{forward:-1},left:{turn:1},right:{turn:-1}};
   for(const button of panel.querySelectorAll('[data-drive]')) {
     const release=()=>carriage.setControls({});
@@ -90,7 +100,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   const rideButton=panel.querySelector('#player-ride');
   rideButton.addEventListener('click',async()=>{
     if(carriage.riding)status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';
-    else status.textContent=carriage.board()?'Ride with Jev, or give directions with W/S and A/D.':'Walk closer to your vehicle before boarding.';
+    else status.textContent=carriage.board()?(carriage.chauffeured?'Ride with Jev, or give directions with W/S and A/D.':'You have the controls: W/S to ride or reverse, A/D to steer.'):'Walk closer to your vehicle before boarding.';
   });
   host.addEventListener('keydown',event=>{
     if(!owner||event.repeat||event.defaultPrevented||!isGameplayKey(event))return;
@@ -286,7 +296,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     }
     finally {if (generation === version) panel.setAttribute('aria-busy', 'false');}
   };
-  carriage.setEnabled(owner);panel.querySelector('.vehicle-garage').hidden=!owner;companionButton.hidden=!owner;companionStatus.hidden=!owner;
+  carriage.setEnabled(true);companionButton.hidden=!owner;companionStatus.hidden=!owner;
   load();
   return {
     get carriage(){return carriage;},
@@ -325,18 +335,20 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       const pose = presentation??walking.getPose(),seated=Boolean(pose?.riding||pose?.sitting);panel.hidden = !pose;holder.visible = Boolean(pose?.showBody && avatar);
       if (connected) carriage.update(now);
       carriage.updateOptics(camera,viewportHeight);
-      const prince=carriage.prince.companion,away=prince.mode!=='seat';
-      carriageButton.disabled=!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||carriage.riding||away;
-      companionButton.disabled=!owner||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
-      rideButton.disabled=!owner||!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away||carriage.exiting;
-      rideButton.querySelector('[data-ride-label]').textContent=carriage.riding?'Step out':'Ride with Jev';
-      vehicleSelect.disabled=!owner||carriage.riding||away;driveButton.disabled=!owner||!carriage.riding||away;
+      const prince=carriage.prince.companion,chauffeured=carriage.chauffeured,away=chauffeured&&prince.mode!=='seat';
+      carriageButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||carriage.riding||away;
+      companionButton.disabled=!owner||!chauffeured||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
+      rideButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away||carriage.exiting;
+      carriageButton.querySelector('[data-call-label]').textContent=chauffeured?'Call Jev':'Call your ride';
+      rideButton.querySelector('[data-ride-label]').textContent=carriage.riding?'Step out':chauffeured?'Ride with Jev':'Ride';
+      vehicleSelect.disabled=carriage.riding||away;driveButton.disabled=!chauffeured||!carriage.riding||away;
       pauseDrive.textContent=carriage.chauffeur.paused?'Resume ride':'Pause ride';pauseDrive.disabled=!carriage.chauffeur.active&&!carriage.chauffeur.paused;
       for(const button of panel.querySelectorAll('[data-drive],#player-drive-park'))button.disabled=!carriage.riding;
-      for(const node of rideOnly)if(node.hidden===carriage.riding)node.hidden=!carriage.riding;
+      for(const node of rideOnly){const shown=carriage.riding&&(chauffeured||!tourOnly.includes(node));if(node.hidden===shown)node.hidden=!shown;}
       driveButton.textContent=carriage.chauffeur.active?'Stop the ride':'Jev smart drive';driveButton.setAttribute('aria-pressed',String(carriage.chauffeur.active));
-      if(driveStatus.textContent!==carriage.chauffeur.label)driveStatus.textContent=carriage.chauffeur.label;
-      host.dataset.vehicle=carriage.kind;host.dataset.chauffeur=JSON.stringify(carriage.chauffeur);
+      const driveLabel=chauffeured?carriage.chauffeur.label:carriage.riding?'You are driving':'You drive this one';
+      if(driveStatus.textContent!==driveLabel)driveStatus.textContent=driveLabel;
+      host.dataset.vehicle=carriage.kind;host.dataset.chauffeur=JSON.stringify(carriage.chauffeur);host.dataset.driving=String(Boolean(carriage.riding&&!chauffeured));
       host.dataset.riding=String(carriage.riding);flightButton.disabled=seated||!canFlyAs(userId,appearance);
       carriageButton.title=pose?.roomId?'Step outside to call your ride':pose?.flying?'Land to call your ride':'';
       host.dataset.carriageReady=String(Boolean(carriage.placement));
@@ -365,7 +377,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         if(!seated&&focus.facing!==null&&!sharedInteraction)holder.rotation.y=focus.facing;
         if(sharedInteraction&&!presentation&&!seated&&!pose.flying)holder.rotation.y=turnToward(holder.rotation.y,sharedInteraction.heading,previous===null?1:dt);
         const throwing = !seated && !pose.flying && now - throwStart < 850;
-        avatar.update(now, now < castUntil ? 'amazed' : throwing ? (now - throwStart < 180 ? 'throw-windup' : 'throw-release') : watering ? 'water' : !pose.flying&&!pose.riding ? (poseFor(sharedGesture)??'continue') : 'continue', false, {...localLocomotion(pose,{seated}),flightSpeed:pose.flying?pose.speed:0,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,ridingDistance:pose.riding?.distance,ridingSpeed:pose.riding?.speed,ridingSteering:pose.riding?.steering,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
+        avatar.update(now, now < castUntil ? 'amazed' : throwing ? (now - throwStart < 180 ? 'throw-windup' : 'throw-release') : watering ? 'water' : !pose.flying&&!pose.riding ? (poseFor(sharedGesture)??'continue') : 'continue', false, {...localLocomotion(pose,{seated}),flightSpeed:pose.flying?pose.speed:0,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,ridingDriver:Boolean(pose.riding?.driver),seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,ridingDistance:pose.riding?.distance,ridingSpeed:pose.riding?.speed,ridingSteering:pose.riding?.steering,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
         outfit.updateOptics(camera,viewportHeight);
         if(portraitWanted&&getPortrait){
           const id=portraitWanted;portraitWanted=null;
