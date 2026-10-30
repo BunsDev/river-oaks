@@ -15,9 +15,9 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
  let kind='rolls',model=createRoadVehicle(kind);model.object.visible=false;scene.add(model.object);
  const driver=createCarriageDriver({scene,getLocals,getConversation}),chauffeur=createChauffeur({fetcher:requestChauffeur});
  let placement=null,loadedWorld=null,environment=null,companionEnvironment=null,mounted=false,enabled=true,exiting=false,heldControls={};
- // Jev drives only a chauffeured kind; the Ribbonwing is piloted by the
- // player from its driver (left) seat with Jev not aboard (as open #767 does
- // for every non-chauffeured kind).
+ // Jev drives only a chauffeured kind (the pink car). In every other kind the
+ // player takes the driver seat and the controls, and Jev stays out of it; the
+ // Ribbonwing is flown from its driver (left) seat.
  const chauffeured=()=>vehicleChauffeured(kind),seat=()=>chauffeured()?model.spec.passengerSeat:model.spec.driverSeat,floor=()=>chauffeured()?model.spec.passengerFloor:model.spec.driverFloor;
  const driverReady=()=>!chauffeured()||driver.canDrive;
  const airborne=()=>(placement?.altitude??0)>.1;
@@ -155,7 +155,9 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
    const world=getWorld();if(!world||!walking.getPose()||world===loadedWorld)return;
    loadedWorld=world;environment=createWalkingEnvironment(world);
    companionEnvironment=createWalkingEnvironment(world,[{contains:(...point)=>Boolean(placement)&&carriageContains(placement,...point)}]);
-   driver.reset();placement=null;mounted=false;model.object.visible=false;summon();
+   // Only Jev's chauffeured car waits beside the owner on arrival; a self-driven ride parks when its rider calls it,
+   // so it never stands in anyone's path unasked.
+   driver.reset();placement=null;mounted=false;model.object.visible=false;if(chauffeured())summon();
   },
   dispose(){activeManeuver=null;chauffeur.dispose();removeObstacle();placement=null;driver.dispose();model.dispose();},
  };

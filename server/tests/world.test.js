@@ -82,6 +82,27 @@ test('the same WorkOS account has Jevica and vehicle access under its Production
   assert.equal(world.command(owner,{type:'pose',position:joined.player.position,yaw:0,altitude:0,vehicle:'rolls'}).ok,true);
 });
 
+test('any account may ride the shared motorcycle; the pink car stays the owner\'s',()=>{
+  let time=1000;
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
+  const world=createSharedWorld(data,{now:()=>time});
+  world.join({userId:owner,name:'Owner'});
+  const guestPosition=world.join({userId:'guest',name:'Guest'}).player.position;
+  time+=1000;
+  const pose=vehicle=>({type:'pose',position:[guestPosition[0],guestPosition[1]+5.5,guestPosition[2]],yaw:0,altitude:0,vehicle});
+  assert.equal(world.command('guest',pose('rolls')).error,'exclusive_vehicle');
+  assert.equal(world.command('guest',pose('motorcycle')).ok,true,'the motorcycle is open to every account');
+  assert.equal(world.snapshot().players.find(player=>player.id==='guest').vehicle,'motorcycle');
+  assert.equal(world.command('guest',{...pose('motorcycle'),altitude:1}).error,'invalid_pose','no vehicle flies');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  const restored=createSharedWorld(data,{now:()=>time});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  assert.equal(restored.snapshot().players.find(player=>player.id==='guest').vehicle,'motorcycle','a guest\'s motorcycle survives a checkpoint');
+  const forged=JSON.parse(JSON.stringify(checkpoint));
+  forged.payload.players.find(player=>player.id==='guest').vehicle='rolls';
+  assert.equal(createSharedWorld(data,{now:()=>time}).restore(forged).ok,false,'a guest in the car is not a valid checkpoint');
+});
+
 test('only the Jevica owner can submit a vehicle pose in shared play',()=>{
   let time=1000;
   const owner='user_01M40Y914S1H4EJCEHH91DKTAY';

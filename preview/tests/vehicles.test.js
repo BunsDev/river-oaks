@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { VEHICLES, drivingInput, chauffeurCommand, vehicleKind, vehicleChauffeured, riderSeat } from '../src/vehicle-config.js';
+import { VEHICLES, drivingInput, chauffeurCommand, vehicleKind, vehicleChauffeured, riderSeat, vehicleShared } from '../src/vehicle-config.js';
 import { canopyHeightAt } from '../src/ribbonwing-design.js';
 import { createRoadVehicle } from '../src/road-vehicles.js';
 
@@ -190,4 +190,16 @@ test('the Ribbonwing climbs with lift, flies level, stops under a blocked sky, r
   assert.equal(state.altitude,0);assert.equal(state.landing,false);
   fitCarriageToGround(state,env.groundAt,model.wheelTreads);
  } finally {model.dispose();}
+});
+
+test('Jev chauffeurs only the pink car; the motorcycle is shared and ridden by its driver',()=>{
+ assert.equal(vehicleChauffeured('rolls'),true);
+ assert.equal(vehicleShared('rolls'),false,'the car stays the owner\'s');
+ assert.equal(vehicleChauffeured('motorcycle'),false,'the player drives the motorcycle');
+ assert.equal(vehicleShared('motorcycle'),true,'every account may ride the motorcycle');
+ assert.equal(vehicleChauffeured('bicycle'),false);
+ for(const value of ['hover','unknown',null,undefined,42])assert.equal(vehicleChauffeured(value)||vehicleShared(value),false,`${value} is neither chauffeured nor shared until its spec says so`);
+ // A chauffeured kind seats its rider as a passenger; the driver seat is ahead of it in the car and behind the bars on the bike.
+ assert.ok(VEHICLES.rolls.passengerSeat[0]>VEHICLES.rolls.driverSeat[0]);
+ assert.ok(VEHICLES.motorcycle.driverSeat[0]<VEHICLES.motorcycle.passengerSeat[0]&&VEHICLES.motorcycle.grips.every(grip=>grip[0]<VEHICLES.motorcycle.driverSeat[0]));
 });
