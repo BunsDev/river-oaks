@@ -121,11 +121,12 @@ test('an extended stride takes fewer, longer steps over the same ground; stride 
   const walk=stride=>{
     const {root,model}=rig(),placement=createFootPlacement(model,root),swinging=[false,false];
     let distance=0,started=0,planted=0;
-    for(let frame=0;frame<240;frame++){
+    for(let frame=0;frame<480;frame++){
       const before=placement.legs.map(leg=>({target:leg.target?.clone(),contact:leg.contact}));
-      distance+=3.2/60;root.position.z=distance;model.position.y=-0.08;
+      // A walking speed: a run sets its own step length (RUN_SPEED and up).
+      distance+=1.65/60;root.position.z=distance;model.position.y=-0.08;
       model.traverse(bone=>{if(bone.isBone)bone.quaternion.identity();});
-      placement.update(1/60,stride===undefined?{speed:3.2,distance}:{speed:3.2,distance,stride},()=>0);
+      placement.update(1/60,stride===undefined?{speed:1.65,distance}:{speed:1.65,distance,stride},()=>0);
       placement.legs.forEach((leg,i)=>{
         if(leg.swing&&!swinging[i])started++;
         swinging[i]=Boolean(leg.swing);

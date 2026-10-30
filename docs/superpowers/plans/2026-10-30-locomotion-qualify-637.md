@@ -109,7 +109,7 @@ the thighs climbing past the garments' fitted range. That is an art follow-up, w
 keeps separate from locomotion. The probe's office-run `hemOverGround` of -2.9 m appears on main
 and part 1 alike, and is a probe artefact (ground sampled off the stair).
 
-## Part 2: a run gait (not in this branch)
+## Part 2: a run gait
 
 Prototype (in `.runtime/loco637/foot-placement.run.js` with its tests): a run from 2.1 m/s held
 about 0.25 s, with hysteresis down to 1.8 m/s and a cadence of `2.35 + 0.15 v` steps/s. Swings
@@ -146,10 +146,80 @@ extension: -0.12 rad at 0.1 m, +0.12 rad at 0 m. At 0.1 m the counts become:
 | Lyra's drapes | 673 | 2,199 |
 | tailored coat | 0 | 11 |
 
-Lyra's drapes already clip at a walk on main (222). Next (part 2, a new branch from this one
-once merged): take `RUN_BACK` 0.1, re-measure step length, flight and symmetry, and inspect the
-rendered run. The remaining drape clipping goes to an art task for run correctives; per the
-amendment, the locomotion does not wait on it.
+Lyra's drapes already clip at a walk on main (222).
+
+### Part 2 as shipped (`fix/locomotion-run-637-20261030`, stacked on #808)
+
+Task `locomotion-run-637-20261030`, worktree `river-oaks-locomotion-run-637`.
+
+- `RUN_BACK` 0.1. A running foot lands 0.25 m ahead of the hip and leaves 0.1 m behind it.
+- Phase lock (`RUN_PHASE` 0.3, `RUN_EARLY` 0.1). A foot that leaves out of phase swings that much
+  shorter or longer, and a late one may leave up to 0.1 m ahead of the hip. Without it, joining
+  a run from a walk limped for about 3 s (alternate steps of 1.23/1.00 m), because only the
+  0.12 m stretch allowance corrected the phase. Variants measured (min. alternate-step ratio
+  after 1.5 s, Jevica):
+
+  | variant | 3.2 m/s @ 60 Hz | 6.4 m/s @ 60 Hz | 6.4 m/s @ 30 Hz |
+  |---|---|---|---|
+  | none | 0.38 | 0.46 | 0.06 |
+  | lead < 0.1 only | 0.76 | 0.62 | 0.42 |
+  | 0.25 m stretch | 0.97, but planted feet 0.9-2.4 m out of reach | | |
+  | phase lock 0.3 + lead < 0.1 | 0.95 | 0.95 | 0.90 |
+
+- 10 rigs:
+  - at 3.2 m/s, 1.14-1.17 m steps (2.8 steps/s), flight 56-65 %;
+  - at 6.4 m/s, 1.95-1.98 m steps (3.3 steps/s), flight 70-79 %;
+  - symmetry 0.93-0.97;
+  - no planted slip, stance error 0, pelvis drop 5.6-7.3 cm;
+  - walking at 1.65 m/s unchanged.
+- Thigh range: -0.22..0.70 rad (garment envelope +/-0.75; the 0.25 m stance reached -0.40).
+
+Garments, penetrating samples (main / part 2):
+
+| garment | walk | run 3.2 | sprint 6.4 | office stair run |
+|---|---|---|---|---|
+| Sable's mini dress | 0 / 0 | 0 / 0 | 0 / 3 | 16,449 / 3,764 |
+| Vesper's wrap skirt | 0 / 0 | 0 / 0 | 0 / 3 | 16,153 / 3,635 |
+| Lyra's drapes | 222 / 222 | 0 / 197 | 4,152 / 1,563 | 21,054 / 6,916 |
+| workwear coat | 0 / 0 | 0 / 0 | 48 / 1 | 6,724 / 1,251 |
+| tailored coat | 2 / 2 | 0 / 0 | 160 / 9 | 6,665 / 1,230 |
+
+Remaining run clipping is Lyra's drapes at 3.2 m/s (197, all at toe-off, like her walk's 222)
+and three samples per skirt at 6.4 m/s. That is an art follow-up for drape run correctives. On
+the office stair part 2 clips more than part 1 for the skirts (1,941 → 3,635 for the wrap
+skirt), because a run's longer steps lift the thighs higher on the treads. It is still a fifth
+of main's.
+
+Independent review of part 2 (subagent, its own probes against 87d0d44f):
+- **Instant stop:** a run into a wall zeroes the speed in one frame, and both feet can be in
+  the air with the body stopped for up to 8 frames at 60 Hz (17 at 120 Hz). That is within the
+  0.15 s landing (`RUN_LAND`); part 1 had 0. Kept: the body stopped mid-stride. The stop test now
+  covers instant stops at five phases and bounds the overlap by `RUN_LAND`, where it previously
+  claimed none.
+- **A walking peer after a pose stall:** `createPeerMotion` catches up at up to the fast-walk
+  clamp (3.4 m/s). After a stall of 0.6 s or more it moves faster than 2.1 m/s for longer than
+  0.25 s, so it runs for about a second (0.55 s stall: no run). Kept deliberately: the peer is
+  then actually crossing the screen at running speed, and the legs match it. Before this branch
+  it shuffled at 7+ steps/s.
+- Two checks that could not fail (no running swing below `RUN_EXIT`) were removed.
+- Checked fine: phase-lock clamp (travel never below 0.38 m), mid-run reset, platform carry,
+  curbs, reversals and strafes via `stepWalking`. A synthetic instant 90 degree heading jump at
+  6.4 m/s leaves a planted foot 1.5-5.4 cm out of reach; a real key turn leaves it 0.9 cm or less.
+  At 12.5 Hz (0.08 s frames) part 1 left planted feet 11-24 m out of reach at 6.4 m/s;
+  part 2 leaves 0.24 m.
+
+## Checks (part 2)
+
+- Focused: `locomotion-qualify` 7/7 (run strides, thigh envelope, stops eased and instant,
+  both stairs, curb, seat), `foot-placement` and `locomotion-handoff-local`: 18/18 in all.
+- Garment receipts rebaked after the last source edit (receipts only).
+- `pnpm run verify` (core), two runs on the final tree:
+  - Run 1 failed. `navigation.test.js` aborted in V8 (`Fatal error ... Check failed:
+    !IsFreelistEntry()`, a GC-internal check) with no assertion; the diff does not touch
+    navigation, and the file passes 6/6 alone. Log kept at `.runtime/run637/verify-core-1-v8crash.txt`.
+  - Run 2 passed: preview 4,807 tests, 0 fail, 1 skipped; agent 294/294; server 1,395, 0 fail,
+    285 skipped (Redis); desktop 132, 0 fail, 5 skipped; Python 215 passed; build, lint and
+    secrets passed.
 
 ## Checks (part 1)
 
