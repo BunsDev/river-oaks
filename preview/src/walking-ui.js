@@ -89,7 +89,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   // Local-only movement vetoes, e.g. presentation readiness. They never enter the
   // shared environment, so map, encounter and carriage queries stay unaffected.
   const stepGuards = [];
-  let transport = null, sitting = null, performing = false, seatedGround = 0, doorwayPending = false;
+  let mountRefusal = null, transport = null, sitting = null, performing = false, seatedGround = 0, doorwayPending = false;
   let flight = createFlightState();
   let flightAllowed=false,fastWalkSpeed=WALK_SPEED.fast;
   let thirdPerson = true, bodyVisible = true;
@@ -285,8 +285,15 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     allowsStep(from, to) { return stepGuards.every(guard => guard(from, to)); },
     get active() { return active; },
     get riding() { return Boolean(transport); },
+    // Why the last mount() refused, for the debug hooks.
+    get mountRefusal() { return mountRefusal; },
     mount(controller) {
-      if(!active||flight.active||currentRoom()||transport||sitting||performing)return false;
+      // A craft already aloft (resuming a ride after a reload) takes over from the flight
+      // the page adopted from the town's altitude; any other ride needs her on the ground.
+      const aloft=Boolean(controller.pose.flying);
+      mountRefusal=!active?'inactive':flight.active&&!aloft?'flying':currentRoom()?'indoors':transport?'riding':sitting?'sitting':performing?'performing':null;
+      if(mountRefusal)return false;
+      if(flight.active)flight=createFlightState();
       clear();transport=controller;
       thirdPerson=true;state.yaw=controller.pose.yaw+Math.PI+.38;state.pitch=-.25;
       state.position=[controller.pose.seat[0],controller.pose.seat[1]+.62,controller.pose.seat[2]];

@@ -307,6 +307,10 @@ jobs:
           # Woodland Heights east of Studewood, along Twentieth Street (toward 3x).
           - id: woodland
             journeys: woodland-heights
+          # Surfaces that fight for depth in the composed town, and the shared shader patches
+          # on instanced, batched and unmapped meshes (preview/src/depth-layer-audit.js).
+          - id: depth
+            journeys: depth-layers
           # Sign-in settles without flicker: the redirect splash, then every visible
           # state (theme, gate, Character Studio button, character) moves one way only.
           - id: access

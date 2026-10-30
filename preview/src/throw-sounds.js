@@ -119,3 +119,15 @@ export function soundToggle(sounds = throwSounds()) {
   button.addEventListener('click', () => sounds.setEnabled(!sounds.enabled()));
   return button;
 }
+
+// The same switch as a Settings row (Audio), always reachable: the games' sounds and the
+// Ribbonwing's fans, canopy, gear and maneuver sounds all follow it.
+export function soundSetting(sounds = throwSounds()) {
+  const label = document.createElement('label'), text = document.createElement('span'), input = document.createElement('input');
+  label.className = 'layer-row'; text.textContent = 'Game and vehicle sounds';
+  input.type = 'checkbox'; input.dataset.gameSoundSetting = ''; input.checked = sounds.enabled();
+  sounds.subscribe(on => { input.checked = on; });
+  input.addEventListener('change', () => sounds.setEnabled(input.checked));
+  label.append(text, input);
+  return label;
+}

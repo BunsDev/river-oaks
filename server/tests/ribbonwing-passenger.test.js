@@ -148,3 +148,31 @@ test('a block hides invitations and boarding like an absent resident, and ends a
   assert.equal(riding.world.separate(OWNER, 'guest'), true);
   assert.deepEqual([riding.view('guest').passengerOf, riding.view('guest').altitude, riding.view(OWNER).passengerId], [undefined, 0, undefined]);
 });
+
+test('a page that lost the ride mid-flight cannot step its pilot out in the sky; on the ground it can', () => {
+  const t = setup();
+  t.climb(8);
+  // What a reloaded page sends before it resumes: the pilot on foot at the craft's altitude.
+  const { position } = t.view(OWNER);
+  t.advance(1000);
+  const lost = t.world.command(OWNER, { type: 'pose', position, yaw: 0, altitude: 8, vehicle: null });
+  assert.equal(lost.ok, false);assert.equal(lost.error, 'land_before_leaving');
+  assert.equal(lost.correction.vehicle, 'hover', 'the correction hands the page the craft back');
+  assert.ok(close(lost.correction.altitude, 8), 'at its altitude');
+  assert.equal(t.view(OWNER).vehicle, 'hover', 'the town keeps her at the controls');
+  let at = 8;while (at > 0) { at = Math.max(0, at - 3.2);assert.equal(t.pilot(at).ok, true); }
+  t.advance(1000);
+  assert.equal(t.world.command(OWNER, { type: 'pose', position: t.view(OWNER).position, yaw: 0, altitude: 0, vehicle: null }).ok, true, 'landed, she steps out');
+  assert.equal(t.view(OWNER).vehicle ?? null, null);
+});
+
+test('the town publishes its flight ceiling, so a page can stop the craft under it', () => {
+  const t = setup(), ceiling = t.world.snapshot().flightCeiling;
+  assert.ok(Number.isFinite(ceiling) && ceiling >= 32, `ceiling ${ceiling}`);
+  t.climb(ceiling - .05);
+  assert.ok(close(t.view(OWNER).altitude, ceiling - .05), 'a page that stops 5 cm under it is accepted');
+  t.advance(1000);
+  const over = t.world.command(OWNER, { type: 'pose', position: t.view(OWNER).position, yaw: -Math.PI / 2, altitude: ceiling + .02, vehicle: 'hover' });
+  assert.equal(over.error, 'invalid_pose', 'above it is refused');
+  assert.equal(t.view(OWNER).vehicle, 'hover');
+});
