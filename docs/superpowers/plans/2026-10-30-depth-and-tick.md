@@ -21,7 +21,7 @@
 | 1. #707 | Merged with main after #695 and pushed (`4e6f35ca`), core passed; baseline burn-down **blocked**, see Decision 2 |
 | 2. Coordinator tick A/B | **Inconclusive**: 3 rounds, load ≤ 8 held only for A1 (pass); main never measured. See Decision 3 |
 | 3. Depth burn-down | #790 draft: Axe & Darts, 164 → 159; #796 draft: IPIC venue joints, 164 → 160; #794 draft: fix-forward for #695's shader-callback regression |
-| 4. Retirement | pr716-merge and tick-main cancelled 10:22Z; the rest wait on 12 h windows (see Retirement) |
+| 4. Retirement | pr716-merge, tick-main and player-blocking-ui-292 cancelled with archives; snap-722/695 and my own snapshots wait on 12 h windows |
 
 ## Results
 
@@ -133,7 +133,7 @@
   the depth journey in check mode passed.
   - Hosted on `684cd9ab`: 28 pass, 2 fail. `preview experience (heights-return)` (job 124019135473, run
     41042702331, attempt 1) failed with "alice home: stalled", 0.57 m short. That is the known heights-return
-    flake, and #796 touches only IPIC interior geometry. The log is kept; failed jobs were rerun once at 12:30Z.
+    flake, and #796 touches only IPIC interior geometry. The log is kept. The rerun of failed jobs (attempt 2) passed `heights-return` and the aggregate `preview`, so #796 is all green, citing the first failure.
   - #790 hosted: all 29 green on `27707041`.
 - #790 and #796 delete different lines of the same list, so the second
   to land needs a trivial merge.
@@ -168,8 +168,10 @@
   - wave-3 `tick-main` (`39a5f302`) → `cancel-detached-rUJx3w` (tar sha256 `049776b5…`, 15,203 entries).
 - `feat/support-contact-gate-292-20261027`: already retired by river-oaks-de about 02:25Z (bundle
   `retirement-TVkCoz`). Verified; skipped.
-- `fix/player-blocking-ui-292-20261027` (`32f88f6e`, task `player-blocking-ui-292-711` delivered, worktree
-  clean and idle): touched 00:37Z, so cancel-stale is eligible after 12:38Z.
+- `fix/player-blocking-ui-292-20261027` (`32f88f6e`, task `player-blocking-ui-292-711`): cancel-stale applied
+  12:40Z → `~/worktree-backups/river-oaks/cancel-stale-EtMdhf` (tar sha256 `9d2a487b…`, 3,623 entries). The
+  branch and worktree are gone and the task is retired. The first dry run reported `active-session-command`;
+  that matched my own `lsof` liveness command, and the repeat dry run was clean.
 - snap-722 (`9c96890c`) and snap-695 (`f790ef8b`), in the 97524b7a scratchpad: idle and clean, but last
   touched at 05:00Z and 05:30Z, so cancel-stale refuses them (`touched-within-cutoff`) until about 17:00Z and
   17:30Z, after this window. Next action: cancel-stale each with `--detached-path` and `--expected-head` after
@@ -179,6 +181,22 @@
   `cap-fix`) were made today. `project:cancel` refuses anything touched within 12 h, so they cannot be retired
   in this session. Each is registered with its path and a next action, which is to retire it with cancel-stale
   after 12 h. `m707` holds nothing that is not pushed.
+
+## Handoff (12:45Z)
+
+- **Delivered:** #695, landed as `0d54a18d`.
+- **Open drafts (owner claude:river-oaks-bb):**
+  - #707: pushed `4e6f35ca`; blocked on Decision 2.
+  - #790: Axe & Darts, all green.
+  - #794: shader fix-forward, all green; urgent, Decision 0.
+  - #796: IPIC joints, green after one cited rerun.
+  - #795: this ledger.
+- **Not met in this window:**
+  - #707 landing: needs Decision 2.
+  - Tick A/B: inconclusive, Decision 3.
+  - Retirement of snap-722, snap-695 and this session's own snapshots: 12 h rule; each has a registered next
+    action.
+- **Processes:** none of mine remain. The private Redis was stopped; captures and verifies have finished.
 
 ## Decisions for Val
 
