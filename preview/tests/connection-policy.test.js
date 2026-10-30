@@ -62,6 +62,11 @@ test('other closes keep their meaning and whether the page retries', () => {
   assert.equal(closeNotice(4009).status, 'Your account joined from another tab.');
   assert.equal(closeNotice(4010).terminal, false);
   assert.equal(closeNotice(1006).status, 'Connection lost. Rejoining the town…');
+  // A sign-in that ran out mid-visit is refreshed by the page, not lost (server/app.js 4001).
+  const refreshing = closeNotice(4001, 'Session expired. Reconnecting securely.');
+  assert.equal(refreshing.kind, 'refreshing'); assert.equal(refreshing.terminal, false);
+  assert.doesNotMatch(`${refreshing.title} ${refreshing.description} ${refreshing.status}`, /lost|disconnect/i);
+  assert.equal(closeNotice(4001, 'Please sign in again.').kind, 'lost', 'any other 4001 keeps its meaning until the ticket decides');
   assert.equal(closeNotice(4901, 'No town updates.').terminal, false);
   assert.equal(CONNECTING.status, 'Connecting to the town…');
 });

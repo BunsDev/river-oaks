@@ -1,0 +1,403 @@
+{
+  "id": "garden-blocks-kit",
+  "title": "Garden Blocks (kit): the compiler drawing as kit blocks",
+  "kit": "city-kit-1",
+  "seed": 1,
+  "inspiration": "The northeast block of the Studio neighborhood compiler's Garden Blocks candidate (config/neighborhoods/garden-blocks.json): its four streets and four parcels, as garden-court kit blocks. Only the tree and lamp spacings and the shop names were typed.",
+  "site": [
+    0,
+    0,
+    92,
+    92
+  ],
+  "streets": [
+    {
+      "id": "cross",
+      "from": [
+        0,
+        8
+      ],
+      "to": [
+        84,
+        8
+      ],
+      "lane": 8.4,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 4,
+        "spacing": 8
+      },
+      "lamps": {
+        "offset": 8,
+        "spacing": 14
+      }
+    },
+    {
+      "id": "north",
+      "from": [
+        0,
+        84
+      ],
+      "to": [
+        84,
+        84
+      ],
+      "lane": 8.4,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 4,
+        "spacing": 8
+      },
+      "lamps": {
+        "offset": 8,
+        "spacing": 14
+      }
+    },
+    {
+      "id": "middle",
+      "from": [
+        8,
+        0
+      ],
+      "to": [
+        8,
+        84
+      ],
+      "lane": 8.4,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 4,
+        "spacing": 8
+      },
+      "lamps": {
+        "offset": 8,
+        "spacing": 14
+      }
+    },
+    {
+      "id": "east",
+      "from": [
+        84,
+        0
+      ],
+      "to": [
+        84,
+        84
+      ],
+      "lane": 8.4,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 4,
+        "spacing": 8
+      },
+      "lamps": {
+        "offset": 8,
+        "spacing": 14
+      }
+    }
+  ],
+  "plazas": [],
+  "blocks": [],
+  "landmarks": [],
+  "furniture": [],
+  "context": [],
+  "layout": {
+    "quarters": [
+      {
+        "id": "p-middle-cross-0-0",
+        "rect": [
+          15.7,
+          15.7,
+          46,
+          46
+        ],
+        "style": "garden-court",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          7
+        ],
+        "names": [
+          "Azalea Court",
+          "Fig Tree Flats"
+        ]
+      },
+      {
+        "id": "p-middle-cross-0-1",
+        "rect": [
+          46,
+          15.7,
+          76.3,
+          46
+        ],
+        "style": "garden-court",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          7
+        ],
+        "names": [
+          "Magnolia Court",
+          "Pecan Row"
+        ]
+      },
+      {
+        "id": "p-middle-cross-1-0",
+        "rect": [
+          15.7,
+          46,
+          46,
+          76.3
+        ],
+        "style": "garden-court",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          7
+        ],
+        "names": [
+          "Crepe Myrtle Court",
+          "Live Oak Lofts"
+        ]
+      },
+      {
+        "id": "p-middle-cross-1-1",
+        "rect": [
+          46,
+          46,
+          76.3,
+          76.3
+        ],
+        "style": "garden-court",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          7
+        ],
+        "names": [
+          "Yaupon Court",
+          "Cypress Walk"
+        ]
+      }
+    ],
+    "reserved": []
+  },
+  "overrides": {},
+  "additions": [],
+  "reference": {
+    "source": {
+      "name": "region.json",
+      "sha256": "8fdc82031bf75c94bc9594f23136c58ae07444d89ee859dc2cb4df3610fc4c67",
+      "crs": "LOCAL:METRES",
+      "origin": null,
+      "schema_version": 1
+    },
+    "site": [
+      -8,
+      -8,
+      84,
+      84
+    ],
+    "rotation": 0,
+    "tolerance": 5,
+    "module": 0.5,
+    "sidewalk": 3.5,
+    "minimumLength": 20,
+    "trees": 8,
+    "lamps": 14,
+    "buildings": 4,
+    "streets": [
+      {
+        "id": "cross",
+        "roads": [
+          "road-cross"
+        ],
+        "name": "cross",
+        "kind": "residential",
+        "width": 8.4
+      },
+      {
+        "id": "north",
+        "roads": [
+          "road-north"
+        ],
+        "name": "north",
+        "kind": "residential",
+        "width": 8.4
+      },
+      {
+        "id": "middle",
+        "roads": [
+          "road-middle"
+        ],
+        "name": "middle",
+        "kind": "residential",
+        "width": 8.4
+      },
+      {
+        "id": "east",
+        "roads": [
+          "road-east"
+        ],
+        "name": "east",
+        "kind": "residential",
+        "width": 8.4
+      }
+    ],
+    "blocks": 4,
+    "openLand": 150.85,
+    "parcels": {
+      "source": "quarters",
+      "quarters": [
+        {
+          "id": "p-middle-cross-0-0",
+          "parcel": "p-middle-cross-0-0",
+          "name": "Parcel middle cross 1.1",
+          "rect": [
+            15.7,
+            15.7,
+            46,
+            46
+          ],
+          "snapped": [
+            "west 16 to 15.7 (middle)",
+            "south 16 to 15.7 (cross)"
+          ]
+        },
+        {
+          "id": "p-middle-cross-0-1",
+          "parcel": "p-middle-cross-0-1",
+          "name": "Parcel middle cross 1.2",
+          "rect": [
+            46,
+            15.7,
+            76.3,
+            46
+          ],
+          "snapped": [
+            "south 16 to 15.7 (cross)",
+            "east 76 to 76.3 (east)"
+          ]
+        },
+        {
+          "id": "p-middle-cross-1-0",
+          "parcel": "p-middle-cross-1-0",
+          "name": "Parcel middle cross 2.1",
+          "rect": [
+            15.7,
+            46,
+            46,
+            76.3
+          ],
+          "snapped": [
+            "west 16 to 15.7 (middle)",
+            "north 76 to 76.3 (north)"
+          ]
+        },
+        {
+          "id": "p-middle-cross-1-1",
+          "parcel": "p-middle-cross-1-1",
+          "name": "Parcel middle cross 2.2",
+          "rect": [
+            46,
+            46,
+            76.3,
+            76.3
+          ],
+          "snapped": [
+            "east 76 to 76.3 (east)",
+            "north 76 to 76.3 (north)"
+          ]
+        }
+      ],
+      "dropped": [
+        {
+          "parcel": "p-middle-south-0-0",
+          "reason": "outside the site"
+        },
+        {
+          "parcel": "p-middle-south-0-1",
+          "reason": "outside the site"
+        },
+        {
+          "parcel": "p-middle-south-1-0",
+          "reason": "outside the site"
+        },
+        {
+          "parcel": "p-middle-south-1-1",
+          "reason": "outside the site"
+        },
+        {
+          "parcel": "p-west-cross-0-0",
+          "reason": "outside the site"
+        },
+        {
+          "parcel": "p-west-cross-0-1",
+          "reason": "outside the site"
+        },
+        {
+          "parcel": "p-west-cross-1-0",
+          "reason": "outside the site"
+        },
+        {
+          "parcel": "p-west-cross-1-1",
+          "reason": "outside the site"
+        },
+        {
+          "parcel": "p-west-south-0-0",
+          "reason": "outside the site"
+        },
+        {
+          "parcel": "p-west-south-0-1",
+          "reason": "outside the site"
+        },
+        {
+          "parcel": "p-west-south-1-0",
+          "reason": "outside the site"
+        },
+        {
+          "parcel": "p-west-south-1-1",
+          "reason": "outside the site"
+        }
+      ]
+    },
+    "layoutWarnings": [
+      "open land 0,0,0.3,0.3: no quarter claims it",
+      "open land 15.7,0,76.3,0.3: no quarter claims it",
+      "open land 91.7,0,92,84: no quarter claims it",
+      "open land 0,15.7,0.3,76.3: no quarter claims it",
+      "open land 84,84,92,91.7: no quarter claims it",
+      "open land 0,91.7,92,92: no quarter claims it"
+    ],
+    "layoutError": null,
+    "dropped": []
+  }
+}

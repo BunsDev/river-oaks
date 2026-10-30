@@ -4,7 +4,7 @@ import { createCharacterPreview } from './character-studio-preview.js';
 import { CHARACTER_PALETTES, CHARACTER_HAIR } from './character-customization.js';
 import { validateCharacterDefinition, migrateStoredCharacterDefinition } from './character-definition.js';
 import { describeLook, studioChoices, studioRoster } from './character-studio-guide.js';
-import { RECIPE_CATEGORY_LABELS, recipeEdit, recipeMarkup, renderRecipe, unlockedCategories } from './character-studio-recipe.js';
+import { RECIPE_CATEGORY_LABELS, buildText, recipeEdit, recipeMarkup, renderRecipe, unlockedCategories } from './character-studio-recipe.js';
 import { CUSTOM_CHARACTER, appearanceFor, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './character-studio.css';
 
@@ -198,6 +198,7 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
   $('[data-cs-create]').addEventListener('input',event=>{
     const input=event.target;if(input.type!=='range')return;
     if(input.name==='cs-height')$('[data-height-value]').textContent=`${input.value} cm`;
+    else if(input.name==='cs-build')$('[data-build-value]').textContent=buildText(Number(input.value));
     else $(`[data-face-value=${input.name.slice(8)}]`).textContent=input.value;
   });
   $('[data-favorite]').addEventListener('click',()=>{const value=draft.value;if(favorites.some(item=>JSON.stringify(item)===JSON.stringify(value))){status.textContent='This look is already a favorite.';return;}if(favorites.length>=8){status.textContent='Your eight favorites are full. Remove one to make room.';return;}favorites.push(value);if(saveFavorites())status.textContent='Favorite saved on this device.';showFavorites();});

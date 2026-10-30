@@ -1,4 +1,4 @@
-import { EYE_COLORS, FACE_CONTROLS, FACE_FEATURES, FACE_STEP, HAIR_SHADES, HAIRSTYLE_OPTIONS, OUTFIT_COLORS, RECIPE_BODIES, RECIPE_CATEGORIES, RECIPE_FRAMES, RECIPE_HEIGHT, SHOE_COLORS, SKIN_TONES } from './character-recipe.js';
+import { EYE_COLORS, FACE_CONTROLS, FACE_FEATURES, FACE_STEP, HAIR_SHADES, HAIRSTYLE_OPTIONS, OUTFIT_COLORS, RECIPE_BODIES, RECIPE_BUILD, RECIPE_CATEGORIES, RECIPE_FRAMES, RECIPE_HEIGHT, SHOE_COLORS, SKIN_TONES } from './character-recipe.js';
 
 // The Studio's Make your own controls. Every control is generated from the
 // recipe catalogue, so it can only offer what the definition contract accepts.
@@ -18,7 +18,8 @@ const slider = control => `<label class="cs-slider"><span>${control.label}</span
 export function recipeMarkup() {
   return `<div class="cs-create" data-cs-create hidden>
     ${category('body', `<div class="cs-segments" data-cs-frames>${Object.entries(RECIPE_FRAMES).map(([id, frame]) => `<label><input type="radio" name="cs-frame" value="${id}"><span>${frame.label}</span></label>`).join('')}</div>
-      <div class="cs-segments cs-outfits" data-cs-bodies>${Object.entries(RECIPE_BODIES).map(([id, body]) => `<label data-frame="${body.frame}"><input type="radio" name="cs-body" value="${id}"><span>${body.outfit}</span></label>`).join('')}</div>`)}
+      <div class="cs-segments cs-outfits" data-cs-bodies>${Object.entries(RECIPE_BODIES).map(([id, body]) => `<label data-frame="${body.frame}"><input type="radio" name="cs-body" value="${id}"><span>${body.outfit}</span></label>`).join('')}</div>
+      <label class="cs-slider cs-build"><span>Build</span><input type="range" name="cs-build" min="${RECIPE_BUILD.min}" max="${RECIPE_BUILD.max}" step="${RECIPE_BUILD.step}" aria-label="Body build, slim to broad"><output data-build-value></output></label>`)}
     ${category('height', `<label class="cs-slider cs-height"><span>Height</span><input type="range" name="cs-height" min="${RECIPE_HEIGHT.min}" max="${RECIPE_HEIGHT.max}" step="1" aria-label="Height"><output data-height-value></output></label>`)}
     ${category('face', `<div class="cs-face">${Object.entries(FACE_FEATURES).map(([feature, label]) => `<div class="cs-feature"><p>${label}</p>${FACE_CONTROLS.filter(control => control.feature === feature).map(slider).join('')}</div>`).join('')}</div>`)}
     ${category('skin', `${swatches('skin', SKIN_TONES, 'skin')}<p data-recipe-name="skin"></p>`)}
@@ -37,6 +38,7 @@ export function recipeEdit(input, recipe) {
     case 'cs-frame': return { body: RECIPE_BODIES[recipe.body].frame === value ? recipe.body : RECIPE_BODIES[recipe.body].pair };
     case 'cs-body': return { body: value };
     case 'cs-height': return { height: Number(value) };
+    case 'cs-build': return { build: Number(value) };
     case 'cs-skin': return { skin: value };
     case 'cs-eyes': return { eyes: value };
     case 'cs-hairstyle': return { hairStyle: value };
@@ -48,6 +50,7 @@ export function recipeEdit(input, recipe) {
 }
 
 const valueText = (control, value) => !value ? 'Neutral' : control.low ? `${value < 0 ? control.lowLabel : control.highLabel} ${Math.abs(value)}` : String(value);
+export const buildText = value => !value ? 'Neutral' : `${value < 0 ? 'Slim' : 'Broad'} ${Math.abs(value)}`;
 export function renderRecipe(root, recipe, locked) {
   const body = RECIPE_BODIES[recipe.body];
   const checked = { 'cs-frame': body.frame, 'cs-body': recipe.body, 'cs-skin': recipe.skin, 'cs-eyes': recipe.eyes, 'cs-hairstyle': recipe.hairStyle, 'cs-haircolor': recipe.hairColor, 'cs-outfitcolor': recipe.outfitColor, 'cs-shoecolor': recipe.shoeColor };
@@ -56,6 +59,9 @@ export function renderRecipe(root, recipe, locked) {
   const height = root.querySelector('[name=cs-height]');
   height.value = String(recipe.height); height.setAttribute('aria-valuetext', `${recipe.height} centimetres`);
   root.querySelector('[data-height-value]').textContent = `${recipe.height} cm`;
+  const build = root.querySelector('[name=cs-build]');
+  build.value = String(recipe.build); build.setAttribute('aria-valuetext', buildText(recipe.build));
+  root.querySelector('[data-build-value]').textContent = buildText(recipe.build);
   for (const control of FACE_CONTROLS) {
     const input = root.querySelector(`[name=cs-face-${control.id}]`), value = recipe.face[control.id];
     input.value = String(value); input.setAttribute('aria-valuetext', valueText(control, value));

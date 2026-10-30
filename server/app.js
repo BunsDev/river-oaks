@@ -403,7 +403,12 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         if(blocks)void loadHidden(blocks,connection,identity.userId).catch(()=>{});
         old?.ws.close(4009,'This account joined in another tab.');
         // Off by default here; a host with a request limit sets it, and the page moves to a fresh socket first.
-        const retire=retireAfter(ws,connectionLifetime,{noticeMs:rotateNoticeMs,notify:()=>{if(connections.get(identity.userId)===connection)send(ws,rotateNotice(connectionLifetime,rotateNoticeMs,token));}});
+        // A socket keeps the identity it was issued at upgrade, which expires with the sign-in it
+        // came from (an hour in the browser fixture, a provider access token's lifetime), so the
+        // page is asked to move before then too: the fresh socket re-authenticates and the player
+        // never sees a gate. A page that does not move still meets the expiry close below.
+        const sessionMs=identity.expiresAt-now(),lifetime=connectionLifetime>0?Math.min(connectionLifetime,sessionMs):sessionMs;
+        const retire=retireAfter(ws,lifetime,{noticeMs:rotateNoticeMs,notify:()=>{if(connections.get(identity.userId)===connection)send(ws,rotateNotice(lifetime,rotateNoticeMs,token));}});
         // A page moving from another socket brings its voice lease along (voice.js continueConnection).
         if(voice&&continues)void voice.continueConnection({userId:identity.userId,from:continues,to:token});
         ws.on('error',()=>{});ws.on('pong',()=>{connection.alive=true;});
@@ -431,7 +436,11 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           let approved = false;
           try { approved = await waitlist.isApproved(identity.userId); } catch { /* Storage fails closed. */ }
           if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN)return;
-          if(identity.expiresAt<=now() || isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
+          // An expired session ends the socket the way the broadcast loop does: the player stays in
+          // the world for the departure grace, so the secure reconnect resumes where they were
+          // instead of re-joining at the District spawn. A ban or ended approval still removes them.
+          if(identity.expiresAt<=now())return ws.close(4001,'Session expired. Reconnecting securely.');
+          if(isBanned(identity.userId) || !approved)return disconnectUser(identity.userId,4001,'Please sign in again.');
           let equipObservation=null;
           try {
             const message=slot.message;

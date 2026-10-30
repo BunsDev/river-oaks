@@ -72,7 +72,8 @@ export function upperWindowLevels(height) {
   return Array.from({ length: Math.max(0, count) }, (_, level) => 6.85 + level * 3.3);
 }
 
-export function buildDistrictBuildings(world) {
+/** `kitFinish` (render-quality.js readFinishPreference) recolours the Gardens campus only; classic by default. */
+export function buildDistrictBuildings(world, { kitFinish } = {}) {
   const group = new THREE.Group(), materials = new Set(), geometries = new Set(), textures = [];
   const box = new THREE.BoxGeometry(1, 1, 1); geometries.add(box);
   const pane = new THREE.PlaneGeometry(1, 1); geometries.add(pane);
@@ -439,12 +440,12 @@ export function buildDistrictBuildings(world) {
   }
   group.add(reference.group);
   group.add(buildGreenRoofs(world));
-  const campus = buildGardenCampus(world), fitout = buildGardenCampusFitout(world);
+  const campus = buildGardenCampus(world, { kitFinish }), fitout = buildGardenCampusFitout(world, { kitFinish });
   if (campus) {
     // Lit ceilings over every campus floor (#508), in the campus root's frame; released with it.
-    const ceilings = buildCampusCeilings(), release = campus.userData.dispose;
+    const ceilings = buildCampusCeilings(undefined, { kitFinish }), release = campus.userData.dispose;
     campus.add(ceilings);campus.userData.dispose = () => { ceilings.userData.dispose();release?.(); };
-    group.add(campus);
+    group.add(campus);group.userData.campusKitFinish = campus.userData.kitFinish;
   }
   if (fitout) group.add(fitout);
   if(officeLobby){
