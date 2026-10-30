@@ -44,7 +44,10 @@ async page => {
   await alice.waitForFunction(()=>window.__riverRibbonwingSeat().riding,{},{timeout:10000});
   const aboard=await me(alice),pilot=(await town(alice)).players.find(p=>p.id===OWNER);
   check(aboard.passengerOf===OWNER&&pilot.passengerId===aliceId,'The town seats alice as Jevica\'s passenger');
-  check((await alice.locator('.walking-title strong').textContent())==='Riding in the Ribbonwing','alice\'s page says she is riding in the Ribbonwing');
+  // The HUD title repaints every 150 ms; wait for it rather than read the frame boarding lands in.
+  await alice.waitForFunction(()=>document.querySelector('.walking-title strong')?.textContent==='Riding in the Ribbonwing',{},{timeout:5000}).catch(()=>{});
+  const aliceTitle=await alice.locator('.walking-title strong').textContent();
+  check(aliceTitle==='Riding in the Ribbonwing',`alice's page says she is riding in the Ribbonwing${aliceTitle==='Riding in the Ribbonwing'?'':` (title: ${aliceTitle})`}`);
   check(Math.abs(Math.hypot(aboard.position[0]-pilot.position[0],aboard.position[1]-pilot.position[1])-.68)<.05,'The town places alice in the right-hand seat, 0.68 m from the pilot');
   // Jevica's page draws alice in her own craft's passenger seat.
   await page.waitForFunction(id=>{const s=window.__riverRibbonwingSeat(),h=s.holders[id],seat=Object.values(s.seats)[0];return h?.aboard&&seat&&Math.hypot(h.position[0]-seat[0],h.position[1]-seat[1],h.position[2]-seat[2])<.05;},aliceId,{timeout:10000});
@@ -86,7 +89,9 @@ async page => {
   check(stepped.passengerOf===null&&stepped.altitude===0&&landed.passengerId===null,'On the ground alice steps out and the seat is free');
   const beside=Math.hypot(stepped.position[0]-landed.position[0],stepped.position[1]-landed.position[1]);
   check(beside>2.5&&beside<6,`alice stands beside the craft (${beside.toFixed(2)} m from the pilot)`);
-  check(!(await alice.locator('.walking-title strong').textContent()).includes('Ribbonwing'),'alice\'s page is on foot again');
+  await alice.waitForFunction(()=>!document.querySelector('.walking-title strong')?.textContent.includes('Ribbonwing'),{},{timeout:5000}).catch(()=>{});
+  const footTitle=await alice.locator('.walking-title strong').textContent();
+  check(!footTitle.includes('Ribbonwing'),`alice's page is on foot again${footTitle.includes('Ribbonwing')?` (title: ${footTitle})`:''}`);
   await host(alice).focus();await alice.keyboard.down('KeyS');await alice.waitForTimeout(900);await alice.keyboard.up('KeyS');
   await alice.waitForFunction(at=>{const m=window.__riverMultiplayer(),p=m.snapshot.players.find(q=>q.id===m.selfId).position;return Math.hypot(p[0]-at[0],p[1]-at[1])>.5;},stepped.position,{timeout:10000});
   check(true,'The town accepts alice walking on from where she stepped out');

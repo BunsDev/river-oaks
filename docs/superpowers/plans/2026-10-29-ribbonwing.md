@@ -443,6 +443,35 @@ Not measured:
 - Device or mobile frame rates.
 - Many Ribbonwings at once.
 
+## All four maneuvers in the browser
+
+`preview/e2e/ribbonwing-maneuvers.js` is a new experience journey. The roll stays in hover-coach.
+
+- As the owner: board, climb past 10.5 m, then fly the tuck dive (key 3), loop (2) and Petal Roll (4) in turn, land and step out.
+- Each endpoint is computed from the shared path module (`maneuverPose`) in Node and compared with both the pilot's seat and the town.
+- First local run passed: 21 checks in 31.5 s, host load about 21.
+
+| Maneuver | Endpoint error (seat / town) | Altitude (town / path) | Signature observed |
+| --- | --- | --- | --- |
+| tuck dive | 0.00 / 0.00 m | 8.23 / 8.23 m | tuck 1.00, drop 6.0 m |
+| loop | 0.00 / 0.00 m | 8.23 / 8.23 m | inverted at the top (up −1.00), nose vertical (1.00) |
+| Petal Roll | 0.00 / 0.00 m | 8.23 / 8.23 m | roll 3.03 rad, tuck 0.45 |
+
+- Each finishes level with Jevica seated.
+- No pose was corrected through the whole flight, and there were no page errors.
+- The tuck dive's path has no pitch term, so it drops nearly level. The journey does not claim a nose-down dive.
+
+Hosted failure on `8e0d310e`, preview experience (commons): `ribbonwing-passenger` failed "alice's page says she is riding in the Ribbonwing". The same journey had passed locally with 21 checks.
+
+- The check read the HUD title immediately after the seat was granted, but the title repaints every 150 ms.
+- hover-coach had the same race on "Piloting", fixed earlier.
+- Both reads in the passenger journey (aboard and on foot again), and hover-coach's "Flying" read, now wait for the repaint and print the title they saw.
+- The race is the likely cause, not a proven one: the hosted log shows only the message.
+
+After the fixes, one local run of all three on the final tree passed: hover-coach 33 checks (24.6 s), ribbonwing-passenger 22 (138.5 s), ribbonwing-maneuvers 21 (31.8 s).
+
+CI: commons took 16 min with `ribbonwing-passenger` failing early, against a 20-min timeout. Commons returns to #737's `east-garden-commons hover-coach`. A new `ribbonwing` shard runs `ribbonwing-passenger ribbonwing-maneuvers`.
+
 ## Rollback
 
 Revert the increment's merge commit. The `hover` kind, its server rules and the

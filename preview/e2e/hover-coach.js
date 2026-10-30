@@ -61,7 +61,9 @@ async page => {
   check(flying.riding&&flying.placement.altitude>1.5&&flying.pose.altitude>1.5,'Space lifts the piloted Ribbonwing above the street');
   check(townFlying.vehicle==='hover'&&townFlying.altitude>1&&Math.abs(townFlying.altitude-flying.placement.altitude)<1.5,'The town accepts the airborne Ribbonwing and carries its altitude');
   check(Math.abs(flying.placement.roll)<.01&&Math.abs(flying.placement.pitch)<.01,'Airborne the hull flies level');
-  check((await page.locator('.walking-title strong').textContent())==='Flying the Ribbonwing','The ride title says the Ribbonwing is flying');
+  await page.waitForFunction(()=>document.querySelector('.walking-title strong')?.textContent==='Flying the Ribbonwing',{},{timeout:5000}).catch(()=>{});
+  const flyingTitle=await page.locator('.walking-title strong').textContent();
+  check(flyingTitle==='Flying the Ribbonwing',`The ride title says the Ribbonwing is flying${flyingTitle==='Flying the Ribbonwing'?'':` (title: ${flyingTitle})`}`);
   await page.waitForFunction(()=>window.__riverCarriage().mechanisms.gear===1,{},{timeout:20000});
   checks.push('Above 3 m the landing feet retract');
   await page.screenshot({path:'output/playwright/hover-coach-flying.png'});
