@@ -57,6 +57,26 @@ The switch is also the rollback lever.
 ## Results
 
 - 2026-10-29: worktree created at `c09cbabc`; register claim active.
+- 2026-10-29: core `pnpm run verify` passed on the tree committed as `d3926495`, with one
+  import-path edit (`three/examples/jsm` → `three/addons`, same module) made during the run
+  and the focused tests rerun after it, 9/9. Results: tooling 289/289; preview 4655 pass,
+  1 skip, 35 todo of 4691; server 1080 pass, 285 Redis skips of 1365; desktop 127 pass, 5 skip;
+  Python 170 passed; gitleaks clean. Signed commit `d3926495`; draft PR #774.
+- 2026-10-29: matched Gardens captures on `d3926495` (clean tree), under the browser lock:
+  1280x800, sharp, a01/a02/a03/a05/a07/a08 at day and dusk. Outputs are in
+  `.runtime/pja-arch/captures/{classic,pink}`, and both reports passed (`campusFinish`
+  `pink-jet-age` on the pink run).
+  - Pink vs classic: +9 to +32 draw calls and about +93k triangles per view. Shadow passes
+    redraw the casters.
+  - Frame p50 read 33 ms on a03/a07 in the pink run. A recheck flipped it (classic a07 33.3 ms,
+    pink 16.7 ms) at host load 31–38, so it is vsync-quantised noise, not a measured cost.
+  - Comparison page: `.runtime/pja-arch/compare/gardens-jet-age-compare.html`.
+- Visual read (agent, not human review):
+  - Strong: the roof (rounded headhouse, pink band, saucer brim) and the B12 skywalk hoops.
+  - Moderate: hall ring lights. The starburst sits high, near the camera's top edge.
+  - Weak: the boomerang canopy (0.45 m rise) reads only slightly; the pergola vault (22 cm
+    rise inside the 4.2 m height) reads flat behind the climbers.
+  - Unchanged: tower glass massing. Changing it needs a contract decision.
 
 ## Gaps
 
