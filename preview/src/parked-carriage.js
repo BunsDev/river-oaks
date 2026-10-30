@@ -1,6 +1,6 @@
 import { createCarriageDriver } from './carriage-driver.js';
 import { createRoadVehicle } from './road-vehicles.js';
-import { VEHICLES, vehicleKind, drivingInput } from './vehicle-config.js';
+import { VEHICLES, vehicleKind, vehicleChauffeured, drivingInput } from './vehicle-config.js';
 import { createChauffeur, scenicRoute } from './chauffeur.js';
 import { carriageContains, findCarriageParking, vehicleCanOccupy } from './carriage-parking.js';
 import { fitCarriageToGround, stepCarriage, findCarriageExit } from './carriage-motion.js';
@@ -13,6 +13,10 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
  let kind='rolls',model=createRoadVehicle(kind);model.object.visible=false;scene.add(model.object);
  const driver=createCarriageDriver({scene,getLocals,getConversation}),chauffeur=createChauffeur({fetcher:requestChauffeur});
  let placement=null,loadedWorld=null,environment=null,companionEnvironment=null,mounted=false,enabled=true,exiting=false,heldControls={};
+ // Jev drives only a chauffeured kind (the pink car). In every other kind the
+ // player takes the driver seat and the controls, and Jev stays out of it.
+ const chauffeured=()=>vehicleChauffeured(kind),seat=()=>chauffeured()?model.spec.passengerSeat:model.spec.driverSeat,floor=()=>chauffeured()?model.spec.passengerFloor:model.spec.driverFloor;
+ const driverReady=()=>!chauffeured()||driver.canDrive;
  const removeObstacle=walking.addObstacle({contains:(...point)=>enabled&&!mounted&&carriageContains(placement,...point)});
  const apply=()=>{
   model.object.position.fromArray(placement.position);model.object.rotation.set(placement.pitch,placement.yaw,placement.roll,'YXZ');
@@ -22,40 +26,41 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
  };
  const canOccupy=next=>vehicleCanOccupy(next,environment,getWorld(),getLocals()??[]);
  const ride={
-  get pose(){return {kind,seat:model.object.localToWorld(new Vector3(...model.spec.passengerSeat)).toArray(),cameraTarget:model.object.localToWorld(new Vector3(-1,1.25,0)).toArray(),seatToFloor:model.spec.passengerSeat[1]-model.spec.passengerFloor,yaw:placement.yaw-Math.PI/2,quaternion:model.object.quaternion.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0,1,0),-Math.PI/2)).toArray(),speed:placement.speed,distance:placement.distance};},
-  step(input,delta){if(!driver.canDrive){placement.speed=0;chauffeur.request({mode:'stop'});return;}const lookahead={...placement,position:[placement.position[0]-Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]+Math.sin(placement.yaw)*2]};const rear={...placement,position:[placement.position[0]+Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]-Math.sin(placement.yaw)*2]};const manual=drivingInput(input);const controls=chauffeur.input(placement,manual.forward||manual.turn||manual.strafe?manual:heldControls,delta,{roadClear:canOccupy(lookahead),rearClear:canOccupy(rear)});if(chauffeur.status.active&&!controls.forward)placement.speed=0;stepCarriage(placement,{groundAt:environment.groundAt,wheelTreads:model.wheelTreads,canOccupy},controls,delta);apply();},
+  get pose(){return {kind,driver:!chauffeured(),seat:model.object.localToWorld(new Vector3(...seat())).toArray(),cameraTarget:model.object.localToWorld(new Vector3(-1,1.25,0)).toArray(),seatToFloor:seat()[1]-floor(),yaw:placement.yaw-Math.PI/2,quaternion:model.object.quaternion.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0,1,0),-Math.PI/2)).toArray(),speed:placement.speed,distance:placement.distance};},
+  step(input,delta){if(!driverReady()){placement.speed=0;chauffeur.request({mode:'stop'});return;}const lookahead={...placement,position:[placement.position[0]-Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]+Math.sin(placement.yaw)*2]};const rear={...placement,position:[placement.position[0]+Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]-Math.sin(placement.yaw)*2]};const manual=drivingInput(input);const controls=chauffeur.input(placement,manual.forward||manual.turn||manual.strafe?manual:heldControls,delta,{roadClear:canOccupy(lookahead),rearClear:canOccupy(rear)});if(chauffeur.status.active&&!controls.forward)placement.speed=0;stepCarriage(placement,{groundAt:environment.groundAt,wheelTreads:model.wheelTreads,canOccupy},controls,delta);apply();},
   brake(){if(placement)placement.speed=0;chauffeur.request({mode:'stop'});heldControls={};},
   takeOver(){if(chauffeur.status.active)this.brake();},
   stop(){mounted=false;heldControls={};if(placement)placement.speed=0;chauffeur.request({mode:'stop'});},
  };
  const summon=()=>{
-  if(!enabled||mounted||!environment||driver.companion.mode!=='seat')return false;
+  if(!enabled||mounted||!environment||(chauffeured()&&driver.companion.mode!=='seat'))return false;
   const next=findCarriageParking(getWorld(),walking.getPose(),getLocals()??[],1,false,kind);if(!next)return false;
   chauffeur.request({mode:'stop'});placement={...next,speed:0,distance:0,steering:0};fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);
-  apply();model.object.visible=true;driver.configure(getWorld(),placement);return true;
+  apply();model.object.visible=true;if(chauffeured())driver.configure(getWorld(),placement);else{driver.reset();driver.object.visible=false;}return true;
  };
  return {
   get object(){return model.object;},get kind(){return kind;},get label(){return model.spec.label;},get chauffeur(){return chauffeur.status;},
   select(value){
-   const next=vehicleKind(value);if(!next||mounted||driver.companion.mode!=='seat')return false;if(next===kind)return true;
+   const next=vehicleKind(value);if(!next||mounted||(chauffeured()&&driver.companion.mode!=='seat'))return false;if(next===kind)return true;
    const parked=environment?findCarriageParking(getWorld(),walking.getPose(),getLocals()??[],1,false,next):null;if(environment&&!parked)return false;
    model.dispose();kind=next;model=createRoadVehicle(kind);model.object.visible=false;scene.add(model.object);placement=null;
-   if(parked){placement={...parked,speed:0,distance:0,steering:0};fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);apply();model.object.visible=enabled;driver.configure(getWorld(),placement);}
+   if(parked){placement={...parked,speed:0,distance:0,steering:0};fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);apply();model.object.visible=enabled;if(chauffeured())driver.configure(getWorld(),placement);}
+   if(!chauffeured()){driver.reset();driver.object.visible=false;}
    chauffeur.request({mode:'stop'});return true;
   },
-  tour(){return mounted&&driver.canDrive&&chauffeur.request({mode:'tour'},scenicRoute(getWorld(),placement));},
+  tour(){return mounted&&chauffeured()&&driver.canDrive&&chauffeur.request({mode:'tour'},scenicRoute(getWorld(),placement));},
   setControls(input){if(!mounted)return false;heldControls=drivingInput(input);if(heldControls.forward||heldControls.turn||heldControls.strafe){chauffeur.request({mode:'stop'});}if(heldControls.brake){ride.brake();heldControls={brake:true};}return true;},
   pauseTour(){if(!mounted)return false;const ok=chauffeur.request({mode:'pause'});if(placement)placement.speed=0;return ok;},
-  resumeTour(){return mounted&&driver.canDrive&&chauffeur.request({mode:'resume'});},
+  resumeTour(){return mounted&&chauffeured()&&driver.canDrive&&chauffeur.request({mode:'resume'});},
   park(){ride.brake();if(placement)apply();return mounted;},
   stopTour(){chauffeur.request({mode:'stop'});if(placement)placement.speed=0;},
   setEnabled(value){enabled=value;if(!enabled){if(mounted){const seat=ride.pose.seat;walking.dismount([seat[0],environment.groundAt(seat[0],seat[2]),seat[2]]);}driver.reset();placement=null;loadedWorld=null;model.object.visible=false;driver.object.visible=false;}},
-  get driver(){return driver.object;},get prince(){return driver;},get unicorns(){return [];},get spinners(){return model.spinners;},get placement(){return placement;},get riding(){return mounted;},
+  get driver(){return driver.object;},get prince(){return driver;},get chauffeured(){return chauffeured();},get unicorns(){return [];},get spinners(){return model.spinners;},get placement(){return placement;},get riding(){return mounted;},
   get tyreClearances(){
    if(!placement)return [];model.object.updateWorldMatrix(true,true);const point=new Vector3();
    return model.wheels.map(wheel=>{let gap=Infinity;wheel.traverse(mesh=>{if(!mesh.isMesh||mesh.material.name!=='Road tyre rubber')return;const p=mesh.geometry.attributes.position;for(let i=0;i<p.count;i++){point.fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld);gap=Math.min(gap,point.y-environment.groundAt(point.x,point.z));}});return gap;});
   },
-  board(){const pose=walking.getPose();if(!enabled||!driver.canDrive||!placement||!pose||pose.flying||pose.roomId||Math.hypot(pose.position[0]-placement.position[0],pose.position[2]-placement.position[2])>8)return false;mounted=true;if(!walking.mount(ride)){mounted=false;return false;}return true;},
+  board(){const pose=walking.getPose();if(!enabled||!driverReady()||!placement||!pose||pose.flying||pose.roomId||Math.hypot(pose.position[0]-placement.position[0],pose.position[2]-placement.position[2])>8)return false;mounted=true;if(!walking.mount(ride)){mounted=false;return false;}return true;},
   get exiting(){return exiting;},
   async leave(){
    if(!mounted||exiting)return false;
@@ -72,11 +77,13 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   updateOptics(camera,viewportHeight){driver.updateOptics?.(camera,viewportHeight);},
   update(now=performance.now()){
    if(!enabled)return;
-   if(placement){apply();model.animate(now,placement.speed,reducedMotion);driver.update(model.object,now,walking.getPosition(),{pose:walking.getPose(),environment:companionEnvironment});}
+   if(placement){apply();model.animate(now,placement.speed,reducedMotion);if(chauffeured())driver.update(model.object,now,walking.getPosition(),{pose:walking.getPose(),environment:companionEnvironment});else driver.object.visible=false;}
    const world=getWorld();if(!world||!walking.getPose()||world===loadedWorld)return;
    loadedWorld=world;environment=createWalkingEnvironment(world);
    companionEnvironment=createWalkingEnvironment(world,[{contains:(...point)=>Boolean(placement)&&carriageContains(placement,...point)}]);
-   driver.reset();placement=null;mounted=false;model.object.visible=false;summon();
+   // Only Jev's chauffeured car waits beside the owner on arrival; a self-driven ride parks when its rider calls it,
+   // so it never stands in anyone's path unasked.
+   driver.reset();placement=null;mounted=false;model.object.visible=false;if(chauffeured())summon();
   },
   dispose(){chauffeur.dispose();removeObstacle();placement=null;driver.dispose();model.dispose();},
  };
