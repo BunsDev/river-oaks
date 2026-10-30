@@ -95,6 +95,7 @@ test('memory transport recovers a selection write finishing after shutdown witho
 test('memory: a recipe drafts, publishes and equips through the routes, and peers receive it as the custom look',{timeout:30000},async t=>{
  const f=await fixture('memory',t),recipe=rollCharacterRecipe({random:()=>.73}),definition=recipeCharacterDefinition('alice',recipe);
  assert.equal((await f.request('alice','/api/character/draft',{definition:{...definition,parameters:{...recipe,height:120}},expectedVersion:0,requestId:'bad'})).status,400);
+ for(const build of [7,150,-105,'20'])assert.equal((await f.request('alice','/api/character/draft',{definition:{...definition,parameters:{...recipe,build}},expectedVersion:0,requestId:`bad-build-${build}`})).status,400,`build ${build}`);
  assert.equal((await f.request('alice','/api/character/draft',{definition,expectedVersion:0,requestId:'draft'})).status,200);
  assert.equal((await f.request('alice','/api/character/publish',{expectedVersion:1,requestId:'publish'})).status,200);
  const a=await f.open('alice'),b=await f.open('bob');

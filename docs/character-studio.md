@@ -736,7 +736,7 @@ in the task ledger.
 ### Your own: player-made characters (2026-10-26)
 
 Val asked for the studio to start from a random character, with control down to the
-face (nose, mouth, eyes, cheeks, brows), skin, height, body and gender, hair, outfit,
+face (nose, mouth, eyes, cheeks, brows), skin, height, body type, body and gender, hair, outfit,
 shoes and eye colour. This supersedes, for this feature only, the earlier rule to keep
 face and body controls unavailable. The other rules still hold:
 
@@ -755,6 +755,12 @@ catalogue `river-oaks-recipes-v1`):
 - **body:** one of the six shipped CC0 bodies, a feminine or masculine frame with the
   outfit made for it;
 - **height:** 150–200 cm;
+- **build:** body type, slim (-100) to broad (100) in steps of 5, added 2026-10-29 (Val's
+  ask that the random start also varies the body type). The shipped bodies carry no
+  body morphs, so the build is a width scale of the figure (up to 8% either way) at the
+  recipe's exact height, not a different person. A record published before the build
+  has no `build` field; it validates and renders as a neutral build, and its canonical
+  copy carries `build: 0`, so stored revisions still equip and select exactly;
 - **face:** sixteen sliders over the bodies' face targets, in steps of 5, capped at a 0.7
   weight, with left and right moving together;
 - **colours:** skin tone, eye colour, hair colour, outfit colour and shoe colour;
