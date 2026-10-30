@@ -92,9 +92,8 @@ is the closest faithful procedural version, and the likeness is **measured** by
   costume update median 2.8–2.9 ms. Legs are now measured from their own bone chain,
   skipping skin inside the shoe cuff; the waist-axis rays of the gown check graze tight
   trousers and reported false misses.
-- `jevica-waist`, `jewel-optics`, `gown-sampling`, `gown-contact-samples`: passed on an
-  earlier iteration of this branch (before the final peplum and blouse tweaks); rerun
-  pending with the final commit.
+- `jevica-waist`, `jewel-optics`, `gown-sampling`, `gown-contact-samples`: passed on 44e8185e
+  (detached snapshot, shared browser lock), after an earlier pass on a prior iteration.
 - Fixed while measuring: the shells now copy the skin's bind inverse (`attached` mode
   only refreshes it in `updateMatrixWorld`, so node-side sampling saw a 3 cm offset).
 - `pnpm run verify` (core): passed, receipt `.runtime/agent/core.json`; agent 289/289,
