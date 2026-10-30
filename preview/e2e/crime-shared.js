@@ -180,7 +180,9 @@ async page => {
     const surrender = hud.getByRole('button', { name: 'Surrender', exact: true });
     // Hold a walk button down (pointer pressed, never released) so the release check below has
     // something to release (review of #710: the check passed with nothing held).
-    const walkButton = visitor.locator('[data-walk-key]:visible').first(), walkBox = await walkButton.boundingBox();
+    const padToggle = visitor.locator('#walking-controls-toggle');
+    if (await padToggle.getAttribute('aria-expanded') !== 'true') await padToggle.click();
+    const walkButton = visitor.getByRole('button', { name: 'Walk forward', exact: true }), walkBox = await walkButton.boundingBox();
     await visitor.mouse.move(walkBox.x + walkBox.width / 2, walkBox.y + walkBox.height / 2); await visitor.mouse.down();
     check(await visitor.evaluate(() => document.querySelectorAll('[data-walk-key].held').length > 0), 'A walk button is held down before surrendering');
     await surrender.focus(); await visitor.keyboard.press('Enter');
