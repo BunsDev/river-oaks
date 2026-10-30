@@ -31,51 +31,14 @@ async page => {
     if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await tab.locator('#panel-toggle').click();
     if(await tab.locator('.visit-tools').evaluate(node=>node.open))await tab.locator('.visit-tools-toggle').click();
   };
-  const turn=async(tab,difference)=>{
-    const box=await tab.locator('#canvas-host').boundingBox(),x=box.x+box.width*.5,y=box.y+box.height*.4;
-    const drag=Math.max(-box.width*.35,Math.min(box.width*.35,-difference/.003));
-    await tab.mouse.move(x,y);await tab.mouse.down();await tab.mouse.move(x+drag,y,{steps:3});await tab.mouse.up();
-  };
-  const walk=async(tab,points,label)=>{
-    const started=Date.now(),start=await self(tab),samples=[];
-    const releaseKeys=async()=>{await tab.keyboard.up('KeyW');await tab.keyboard.up('ShiftLeft');};
-    try{for(const target of points){
-      const deadline=Date.now()+120000;
-      for(;;){
-        const pose=await tab.evaluate(()=>window.__riverCarriage().pose),dx=target[0]-pose.position[0],dz=-target[1]-pose.position[2],distance=Math.hypot(dx,dz);
-        // Stay inside the planner's 0.3 m corner clearance before turning.
-        if(distance<.15){await releaseKeys();break;}
-        if(Date.now()>deadline)throw new Error(`${label}: stalled ${JSON.stringify({target,pose,refusals:await tab.evaluate(()=>window.__heightsRefusals)})}`);
-        const heading=Math.atan2(-dx,-dz),difference=Math.atan2(Math.sin(heading-pose.yaw),Math.cos(heading-pose.yaw));
-        if(Math.abs(difference)>.035){await releaseKeys();await turn(tab,difference);continue;}
-        // A lifecycle release clears runtime input; repeat keydown cannot resume it.
-        if(pose.speed<.05)await releaseKeys();
-        await tab.locator('#canvas-host').focus();
-        const fast=distance>2;
-        if(fast)await tab.keyboard.down('ShiftLeft');else await tab.keyboard.up('ShiftLeft');
-        await tab.keyboard.down('KeyW');
-        await tab.waitForTimeout(Math.min(450,Math.max(30,distance*(fast?110:230))));
-        // Keep walking during browser round trips, as spatial-streets does.
-        // Pulsing/releasing every sample repeatedly brakes on CPU-rendered CI.
-        // Reassert while held; a stopped observation starts a fresh press above.
-        // Within two metres, stop before measuring again: held across a slow
-        // round trip (about 9 fps on CPU-rendered CI) the walker overshoots by
-        // more than the arrival radius and circles the waypoint until it stalls.
-        if(!fast){await releaseKeys();await tab.waitForFunction(()=>window.__riverCarriage().pose.speed<.05,null,{timeout:10000});}
-        samples.push((await self(tab)).position);
-      }
-    }
-    }finally{await releaseKeys();}
-    const target=points.at(-1);
-    try{await tab.waitForFunction(target=>{const town=window.__riverMultiplayer(),p=town.snapshot.players.find(p=>p.id===town.selfId);return Math.hypot(p.position[0]-target[0],p.position[1]-target[1])<.6;},target,{timeout:10000});}
-    catch(error){throw new Error(`${label}: the town did not confirm arrival ${JSON.stringify(await tab.evaluate(()=>{const town=window.__riverMultiplayer();
-      return {pose:window.__riverCarriage().pose.position,town:town.snapshot.players.find(p=>p.id===town.selfId)?.position,connected:town.connected,refusals:window.__heightsRefusals};}).catch(()=>null))} (${error.message})`);}
-    routes.push({label,seconds:(Date.now()-started)/1000,start:start.position,end:(await self(tab)).position,samples});console.log(`${label} reached`);
-  };
+  const { createWalkDriver } = await import('./walk-driver.js');
+  const { greenwayReturn } = await import('./bayou-terraces-routes.js');
+  const { walk } = createWalkDriver({self,routes,refusals:'__heightsRefusals'});
   const command=(tab,message)=>tab.evaluate(message=>window.__riverMultiplayerCommand(message),message);
   const chunk=(tab,id)=>tab.evaluate(id=>window.__riverBayouHeights()?.stream?.chunks.find(chunk=>chunk.id===id)?.state??null,id);
   try{
     await Promise.all([ready(page),ready(peer)]);
+    const arrivals=[await self(page),await self(peer)];
     const edge=layout.edge,bank=layout.heights.bounds[0],at=([x,y])=>[edge+x,-1335+y];
     check(await page.evaluate(()=>window.__riverBayouHeights?.()?.revision)==='bayou-terraces-1','The client composed the Bayou Terraces for the served revision');
     const views=[],capture=async(tab,name)=>{await tab.waitForTimeout(600);await tab.screenshot({path:`output/playwright/terraces-${name}.png`});
@@ -88,9 +51,13 @@ async page => {
     }
     for(const tab of [page,peer])await tab.waitForFunction(()=>window.__riverBayouHeights().stream.chunks.find(chunk=>chunk.id==='bayou-heights/bayou-terrace-north').state==='ready',null,{timeout:120000});
     const streamed=await page.evaluate(()=>window.__riverBayouHeights().stream);
-    console.log(`Heights resident ${streamed.residentBytes} of ${streamed.geometryBudgetBytes} bytes: measured ${JSON.stringify(streamed.measuredBytes)} estimated ${JSON.stringify(streamed.estimatedBytes)}`);
+    console.log(`Heights resident ${streamed.residentBytes} of ${streamed.geometryBudgetBytes} bytes: measured ${JSON.stringify(streamed.measuredBytes)} estimated ${JSON.stringify(streamed.estimatedBytes)}; owned textures ${streamed.residentTextureBytes} bytes resident: ${JSON.stringify(streamed.measuredTextureBytes)}`);
     check(streamed.residentBytes<=streamed.geometryBudgetBytes&&Object.entries(streamed.measuredBytes).every(([id,bytes])=>bytes<=streamed.estimatedBytes[id]),
       'The north terrace streams in at the greenway, within the Heights geometry ceiling and each part within its estimate');
+    // With a real canvas the sign atlases exist: each neighborhood's owned textures measure under the estimate its plan gave the texture ceiling.
+    console.log(`Owned textures ${streamed.residentTextureBytes} of ${streamed.textureBudgetBytes} bytes: estimated ${JSON.stringify(streamed.estimatedTextureBytes)}`);
+    check(streamed.residentTextureBytes>0&&streamed.residentTextureBytes<=streamed.textureBudgetBytes&&Object.entries(streamed.measuredTextureBytes).every(([id,bytes])=>bytes<=streamed.estimatedTextureBytes[id]),
+      'The owned textures sit within the Heights texture ceiling and each neighborhood within its estimate');
     await capture(page,'greenway-footbridge');
     await Promise.all([walk(page,[at([130,112]),at([101,112])],'owner footbridge'),walk(peer,[at([130,110]),at([100,110])],'alice footbridge')]);
     check((await self(page)).position[0]<bank&&(await self(peer)).position[0]<bank,'Two real clients crossed the Twentieth Street footbridge onto the west bank by keyboard');
@@ -131,14 +98,24 @@ async page => {
     const reconnectMs=Date.now()-reconnectStart;
 
     // Back over the footbridge to the greenway, one player at a time, as the Heights journey does on CPU-rendered CI.
-    await walk(peer,[at([96,124]),at([100,110]),at([156.5,110])],'alice greenway');
-    await walk(page,[at([101,128]),at([101,112]),at([156.5,112])],'owner greenway');
+    await walk(peer,greenwayReturn.alice.map(at),'alice greenway');
+    await walk(page,greenwayReturn.owner.map(at),'owner greenway');
     check((await self(page)).position[0]>bank&&(await self(peer)).position[0]>bank,'Both players walked back over the footbridge to the greenway');
     check(await page.evaluate(()=>{const notices=window.__heightsNotices,terraces=notices.indexOf('Entering Bayou Terraces');
       return terraces>=0&&notices.indexOf('Entering Bayou Heights',terraces)>terraces;}),'Returning names Bayou Heights');
     await capture(page,'greenway-return');
+    // Home: approved travel back to the District arrivals. With the terraces at the District edge the
+    // District anchors nothing in Heights, so every part and its owned textures stream out (#583).
+    for(const [tab,arrival] of [[page,arrivals[0]],[peer,arrivals[1]]]){
+      const home=await command(tab,{type:'travel',position:arrival.position.slice(0,2)});
+      check(home?.ok===true,`Travel home to the District arrival is approved (${arrival.position.slice(0,2).map(Math.round)})`);
+    }
+    for(const tab of [page,peer])await tab.waitForFunction(()=>{const heights=window.__riverBayouHeights();
+      return !heights.ready&&heights.stream.residentBytes===0&&heights.stream.residentTextureBytes===0&&heights.stream.pending===0;},null,{timeout:120000});
+    check((await self(page)).position[0]<edge&&(await self(peer)).position[0]<edge,'Back in the District, the Heights presentation and its owned textures are released');
+    await capture(page,'district-home');
     check(errors.length===0,`No page errors: ${errors.join('; ')}`);
     const refusals={owner:await page.evaluate(()=>window.__heightsRefusals),alice:await peer.evaluate(()=>window.__heightsRefusals)};
-    return {checks,routes,reconnectMs,drift,views,refusals,scope:'Two rendered fixture clients: approved travel to the Heights greenway, then normal keyboard walking over the Twentieth Street footbridge into the north terrace gardens; shared gardens table game and reconnect on the terrace; no physical-device or production acceptance'};
+    return {checks,routes,reconnectMs,drift,views,refusals,streamed,scope:'Two rendered fixture clients: approved travel to the Heights greenway, then normal keyboard walking over the Twentieth Street footbridge into the north terrace gardens; shared gardens table game and reconnect on the terrace; no physical-device or production acceptance'};
   }finally{await peerContext.close();}
 }

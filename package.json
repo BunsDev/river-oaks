@@ -1,6 +1,6 @@
 {
   "name": "river-oaks-development-preview",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "type": "module",
   "engines": {
@@ -111,7 +111,7 @@
     "@electron/fuses": "2.1.3",
     "@electron/osx-sign": "2.7.1",
     "@electron/packager": "20.3.0",
-    "electron": "44.9.1",
+    "electron": "45.0.0",
     "electron-winstaller": "5.4.4",
     "playwright": "1.64.1",
     "vite": "8.3.5"

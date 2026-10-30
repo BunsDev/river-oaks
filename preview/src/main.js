@@ -5,6 +5,7 @@ import { HEIGHTS_REVISION, inBayouHeights } from '../../shared/bayou-heights-lay
 import { STUDEWOOD_REVISION } from '../../shared/studewood-layout.js';
 import { TERRACES_REVISION } from '../../shared/bayou-terraces-layout.js';
 import { WOODLAND_REVISION } from '../../shared/woodland-heights-layout.js';
+import { TYPESAFE_REVISION } from '../../shared/typesafe-place-layout.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
 import { createCommonsStream } from './commons-stream.js';
@@ -72,6 +73,7 @@ import { createStorefrontReflections } from './reflections.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from './world-surface.js';
 import { buildStreetFurniture } from './street-furniture.js';
 import { buildPlazaSalon } from './plaza-salon.js';
+import { buildCityBikeRacks } from './city-bike-racks.js';
 import { createPlazaTableGames, seatAtTable } from './plaza-table-games.js';
 import { createPlazaStage } from './plaza-stage.js';
 import { plazaSalonPlan, winePongPoint } from './plaza-salon-plan.js';
@@ -92,7 +94,7 @@ import { createPlazaChineseCheckers } from './plaza-chinese-checkers.js';
 import { createPlazaXiangqi } from './plaza-xiangqi.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
-import { createQualityControl } from './render-quality.js';
+import { createQualityControl, readFinishPreference } from './render-quality.js';
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
 import { createPhotoMode } from './photo-mode.js';
@@ -130,7 +132,7 @@ import './play-rail-menu.css';
 import { createPlazaBicycle } from './plaza-bicycle.js';
 import { createCyclingLeaderboard } from './cycling-leaderboard.js';
 import './cycling-leaderboard.css';
-import { plazaSalonRack } from './plaza-salon-plan.js';
+import { bikeRackSlots } from './bike-racks.js';
 import { describeRenderer, describeScene, noteFrame, registerDiagnosticSource, setScreenshotCapture } from './debug-report.js';
 import { venueDoorSites } from './venue-rooms.js';
 import { createAxePanel } from './axe-panel.js';
@@ -175,10 +177,12 @@ const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'o
 // The penthouse skyline (office-skyline.js); ?office-skyline=off compares without it in development.
 // Functional software acceptance omits the live exterior workload.
 const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.search).get('office-skyline') === 'off';
+// The Commons and Heights city-kit finish: classic unless opted in (render-quality.js, #742).
+const cityKitFinish = readFinishPreference();
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 // East Garden Commons and its assembled destination, when the revision composes them.
-// Bayou Heights (bayou-heights-1; heights-studewood-1, bayou-terraces-1 and woodland-heights-1 add Studewood, the terraces and Woodland Heights) streams as a second location; heights-stream.js loads with those revisions.
+// Bayou Heights (bayou-heights-1; heights-studewood-1, bayou-terraces-1 and woodland-heights-1 and typesafe-place-1 add Studewood, the terraces, Woodland Heights and TypeSafe Place) streams as a second location; heights-stream.js loads with those revisions.
 let commonsScene = null, heightsScene = null, heightsStreams = null;
 const lanternWalk = createLanternWalkClient({ announceArrival: false, getLayout: () => world?.eastGardenCommons ?? null, getPose: () => walking?.getPose(), getScene: () => commonsScene,
   getSnapshot: () => multiplayer?.snapshot?.lanternWalk ?? null,
@@ -201,7 +205,7 @@ let worldDistrictRevision;
 let landmarkAccountId = null;
 let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
-let plazaSalon = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
+let plazaSalon = null, cityBikeRacks = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
 let plazaWinePong = null, plazaShuffleboard = null, longTableGame = 'winePong';
@@ -379,7 +383,7 @@ function initializeRenderer() {
   $('#world-status-stack').append(commonsStreamStatus);
   // Before the player panel, so G reaches the rack first and the owner's ride button only when no bike is in play.
   cyclingBoard = createCyclingLeaderboard();
-  plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, getMiles: () => cyclingBoard?.mine() ?? null, reducedMotion });
+  plazaBicycle = createPlazaBicycle({ scene, host, walking, getMultiplayer: () => multiplayer, getLocals: () => community.state?.locals, getMiles: () => cyclingBoard?.mine() ?? null, getSaddle: () => playerAvatar?.bicycleSaddle ?? 0, reducedMotion });
   playerAvatar = createPlayerAvatar({ scene, host, walking, reducedMotion, userId: document.body.dataset.accountId, getLocals: () => community.state?.locals, getConversation: () => community.state?.locals.find(local=>local.id===community.state.selectedId), getWorld: () => world,
     requestAppearance: appearance => multiplayer?.command({type:'appearance',appearance}),
     requestMovement: movement => multiplayer?.command({type:'movement',movement}),
@@ -587,7 +591,7 @@ function initializeRenderer() {
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
-  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? []), ...(heightsScene?.userData.shadowProxies ?? [])]);
+  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? []), ...(heightsScene?.userData.shadowProxies ?? []), ...(cityBikeRacks?.userData.shadowProxies ?? [])]);
   sun.shadow.bias = -0.00002;
   sun.shadow.normalBias = 0.018;
   sun.shadow.camera.near = 10;
@@ -651,7 +655,7 @@ function startMultiplayer() {
     getRegionSha256: () => worldRegionSha256,
     getDistrictRevision: () => worldDistrictRevision,
     onHomeAccess: () => districtUI?.refreshAccess(),
-    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
+    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []);cityBikeRacks?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
     onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
@@ -737,7 +741,7 @@ function populateWorld(data) {
     buildingMesh?.userData.dispose?.();
     worldGroup.remove(interiorsLayer);
     ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
-    plazaSalon?.userData.rack?.dispose();
+    plazaSalon?.userData.rack?.dispose(); cityBikeRacks?.userData.rack?.dispose();
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
@@ -763,7 +767,7 @@ function populateWorld(data) {
   }
   worldGroup = new THREE.Group();
   // Facades, arcade rails and neon dissolve near the camera, like trees, so a take-off beside the shops never fills the view.
-  buildingMesh = seeThroughNearCameraIn(buildDistrictBuildings(data));
+  buildingMesh = seeThroughNearCameraIn(buildDistrictBuildings(data, { kitFinish: cityKitFinish }));
   const ground=buildGround(data.eastGardenCommons?{...data,bounds_m:data.eastGardenCommons.districtBounds}:data),roads=buildRoads(data);
   const streetEnvironment=createWalkingEnvironment(data);
   // The Gardens' platform is campus space: no street sidewalk, bench or fountain is generated on it.
@@ -791,13 +795,16 @@ function populateWorld(data) {
   worldGroup.add(furniture);
   const heights = data.eastGardenCommons?.heights ? heightsStreams : null;
   if (data.eastGardenCommons) commonsStream = createCommonsStream({ world: data, ...(heights ? { layout: heights.heightsCommonsLayout(data.eastGardenCommons) } : {}),
-    parent: worldGroup, onScene: scene => { commonsScene = scene; }, onStatus: text => showStreamNotice('commons', text) });
-  if (heights) heightsStream = heights.createHeightsStream({ world: data, parent: worldGroup, onScene: scene => { heightsScene = scene; },
+    parent: worldGroup, finish: cityKitFinish, onScene: scene => { commonsScene = scene; }, onStatus: text => showStreamNotice('commons', text) });
+  if (heights) heightsStream = heights.createHeightsStream({ world: data, parent: worldGroup, finish: cityKitFinish, onScene: scene => { heightsScene = scene; },
     onStatus: text => showStreamNotice('heights', text) });
   // The Dior-Toulouse plaza furnished as an open-air salon (plaza-salon-plan.js).
   plazaSalon = buildPlazaSalon(data);
   plazaStage?.setWorld(data);
   worldGroup.add(plazaSalon);
+  // Curbside bike racks around the District (bike-racks.js), beside the plaza's.
+  cityBikeRacks = buildCityBikeRacks(data);
+  worldGroup.add(cityBikeRacks);
   buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   scene.add(worldGroup);
@@ -964,7 +971,7 @@ async function loadWorld() {
       :await jsonResponse(`/api/world-data?world=${encodeURIComponent(worldId)}`);
     worldRegionSha256=manifest.regionSha256??null;
     const districtRevision=manifest.districtRevision??null;
-    if(districtRevision!==null && ![DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision))throw new Error('This district revision is not supported by this client');
+    if(districtRevision!==null && ![DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision))throw new Error('This district revision is not supported by this client');
     let data;
     if(manifest.template==='region-v1')data=manifest.world;
     else if(manifest.template==='river-oaks') {
@@ -974,16 +981,18 @@ async function loadWorld() {
       ]);
       district.vegetation=validateVegetation(district,vegetation);
       data=attachDistrictGalleryPlan(district,approved);
-      if([DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision))data=attachGardenCampus(data);
-      if([COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision))data=attachEastGardenCommons(data);
+      if([DISTRICT_REVISION_GARDENS,COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision))data=attachGardenCampus(data);
+      if([COMMONS_REVISION,HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision))data=attachEastGardenCommons(data);
       // Bayou Heights loads its recipes and stream only for its own revision; the stream loads its scene.
-      if([HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision)){heightsStreams=await import('./heights-stream.js');data=heightsStreams.attachBayouHeights(data);}
+      if([HEIGHTS_REVISION,STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision)){heightsStreams=await import('./heights-stream.js');data=heightsStreams.attachBayouHeights(data);}
       // Studewood continues Heights east; Heights streams its two neighborhoods with its own.
-      if([STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision))data=heightsStreams.attachStudewood(data);
+      if([STUDEWOOD_REVISION,TERRACES_REVISION,WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision))data=heightsStreams.attachStudewood(data);
       // The Bayou Terraces stream the same way, west of the bayou.
-      if([TERRACES_REVISION,WOODLAND_REVISION].includes(districtRevision))data=heightsStreams.attachBayouTerraces(data);
+      if([TERRACES_REVISION,WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision))data=heightsStreams.attachBayouTerraces(data);
       // Woodland Heights continues Studewood east; Heights streams its two neighborhoods too.
-      if(districtRevision===WOODLAND_REVISION)data=heightsStreams.attachWoodlandHeights(data);
+      if([WOODLAND_REVISION,TYPESAFE_REVISION].includes(districtRevision))data=heightsStreams.attachWoodlandHeights(data);
+      // TypeSafe Place continues Woodland east; Heights streams its five neighborhoods too.
+      if(districtRevision===TYPESAFE_REVISION)data=heightsStreams.attachTypeSafePlace(data);
     } else throw new Error('This region format is not supported by this client');
     worldDistrictRevision=districtRevision;
     if (data.schema_version !== 1 || data.scene !== 'district' || !Array.isArray(data.bounds_m) || !['roads', 'stores', 'buildings', 'trees'].every(key => Array.isArray(data[key]))) throw new Error('The district data does not match the supported schema.');
@@ -1311,6 +1320,14 @@ document.addEventListener('keydown', event => {
 window.addEventListener('river-oaks:debug', event => void openDebugTools(event.detail?.open));
 window.__riverDebug = () => debugTools;
 if (import.meta.env.DEV) window.__riverTravelView = () => ({ camera: camera.position.toArray(), direction: camera.getWorldDirection(new THREE.Vector3()).toArray() });
+// The renderer registers a geometry or texture the first time an object is drawn, so GPU counts
+// read in a journey step up when a resident object (a wandering figure, a prop behind the player)
+// first enters view. Drawing every visible object once makes the counts comparable between samples.
+if (import.meta.env.DEV) window.__riverRegisterResident = () => new Promise(resolve => {
+  const culled = [];
+  scene.traverse(item => { if (item.frustumCulled) { culled.push(item); item.frustumCulled = false; } });
+  requestAnimationFrame(() => requestAnimationFrame(() => { for (const item of culled) item.frustumCulled = true; resolve(culled.length); }));
+});
 if (import.meta.env.DEV) window.__riverSpatialStream = () => {
   let objects = 0; worldGroup?.traverse(() => objects++);
   const inventory = object => {
@@ -1329,7 +1346,9 @@ if (import.meta.env.DEV) window.__riverSpatialStream = () => {
   };
   return { ...commonsStream?.debug(), objects, inventory: { district: (worldGroup?.children ?? []).map(inventory), other: scene.children.filter(item => item !== worldGroup).map(inventory) }, district: { world: worldGroup?.uuid, ground: layers.ground?.uuid, buildings: buildingMesh?.uuid }, camera: camera.position.toArray(),
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
-    renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls };
+    renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls,
+    // The opted-in kit finish and what each attached part was built with (#742).
+    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null } };
 };
 if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
 if (import.meta.env.DEV) window.__riverExteriorCull = () => {
@@ -1538,14 +1557,14 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverPlazaHearts = () => plazaHearts ? { ...plazaHearts.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null,
     deal: (seed, hand) => plazaHearts.deal(seed, hand) } : null;
   window.__riverCyclingBoard = () => cyclingBoard ? { ...cyclingBoard.debug(), mine: cyclingBoard.mine(), open: open => { cyclingBoard.panel.open = open; }, refresh: () => cyclingBoard.refresh() } : null;
-  window.__riverCycling = () => plazaBicycle ? { riding: plazaBicycle.riding, slotId: plazaBicycle.slotId, rideMeters: plazaBicycle.rideMeters, lastRideMeters: plazaBicycle.lastRideMeters, yaw: plazaBicycle.placement?.yaw ?? null, prompt: plazaBicycle.prompt()?.kind ?? null,
-    taken: multiplayer?.snapshot?.cycling?.taken ?? [], parked: plazaSalon?.userData.rack?.parked() ?? null,
+  window.__riverCycling = () => plazaBicycle ? { riding: plazaBicycle.riding, slotId: plazaBicycle.slotId, rideMeters: plazaBicycle.rideMeters, lastRideMeters: plazaBicycle.lastRideMeters, yaw: plazaBicycle.placement?.yaw ?? null, position: plazaBicycle.placement?.position ?? null, speed: plazaBicycle.placement?.speed ?? null, steering: plazaBicycle.placement?.steering ?? null, prompt: plazaBicycle.prompt()?.kind ?? null,
+    taken: multiplayer?.snapshot?.cycling?.taken ?? [], parked: plazaSalon?.userData.rack?.parked() ?? null, cityParked: cityBikeRacks?.userData.rack?.parked() ?? null,
     // Arrive at a slot's approach by the normal travel path.
     // Arrive at a slot's approach by the normal travel path. Like the seats' goNear, a
     // refused travel (a cooldown, or a spot briefly taken) is retried after a pause, then
     // nearby paving is tried, so a loaded machine does not fail the journey at the rack.
     async goNear(slotId) {
-      const slot = world ? plazaSalonRack(world).find(item => item.id === slotId) : null;
+      const slot = world ? bikeRackSlots(world).find(item => item.id === slotId) : null;
       if (!slot) return { ok: false };
       const environment = walkingEnvironment(), free = ([x, north]) => environment.isFree(x, -north) && !environment.roomAt(x, -north);
       const around = [0.6, 1.1].flatMap(radius => Array.from({ length: 8 }, (_, i) => [slot.approach[0] + Math.sin(i * Math.PI / 4) * radius, slot.approach[1] + Math.cos(i * Math.PI / 4) * radius]));
@@ -1555,6 +1574,14 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
         await new Promise(resolve => setTimeout(resolve, 1100));
       }
       return { ok: false };
+    },
+    // Turn your back to a slot's bike (a walker faces -sin/-cos yaw), so the camera
+    // behind you frames its rack (for journey screenshots).
+    frame(slotId) {
+      const slot = world ? bikeRackSlots(world).find(item => item.id === slotId) : null, pose = walking?.getPose();
+      if (!slot || !pose) return false;
+      walking.setYaw(Math.atan2(slot.x - pose.position[0], -slot.north - pose.position[2]));
+      return true;
     } } : null;
   window.__riverSeatAndWater = () => seatAndWater ? {
     seated: walking?.getPose()?.sitting ? `${walking.getPose().sitting.buildId}:${walking.getPose().sitting.slot}` : null, interaction: seatAndWater.interaction()?.kind ?? null, offered: seatAndWater.interaction()?.targetId ?? null, ...seatAndWater.sites(),
