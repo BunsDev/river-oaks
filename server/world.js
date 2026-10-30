@@ -730,7 +730,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   function settleManeuver(player,time) {
     if(!player.maneuver)return;
     if(maneuverPose(player.maneuver,time).done)return endManeuver(player,time,true);
-    if(player.vehicle!=='hover'||!isJevicaOwner(player.id))endManeuver(player,time,false);
+    // Losing the craft or the entitlement, or being downed or held, ends it in a level hover at
+    // the current path point, on whichever of the tick, a snapshot or a command comes first.
+    if(player.vehicle!=='hover'||!isJevicaOwner(player.id)||crime.down(player.id,time)||police.held(player.id))endManeuver(player,time,false);
   }
   // ---- Ribbonwing passenger seat (#777) ----------------------------------
   // The pilot invites someone on foot beside the landed craft; they board by
@@ -835,15 +837,24 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // A saved maneuver is exactly what admission stored for this player: their
   // pose is its origin, its heading their craft's, its seq their latest, and it
   // started no later than now (instances' clocks may differ by a few seconds).
+  // A saved maneuver must be well formed, or the checkpoint is corrupt and fails closed.
   function savedManeuverValid(player) {
     const m=player.maneuver;
     if(m===undefined)return true;
     return record(m) && fields(m,['id','seq','kind','heading','origin','altitude','startedAt']) && maneuverId(m.id) && isManeuverKind(m.kind)
-      && m.seq===player.maneuverSeq && player.vehicle==='hover' && isJevicaOwner(player.id)
-      && Array.isArray(m.origin) && m.origin.length===2 && m.origin[0]===player.position[0] && m.origin[1]===player.position[1]
-      && m.altitude===player.altitude && Number.isFinite(m.heading)
+      && Number.isSafeInteger(m.seq) && Array.isArray(m.origin) && m.origin.length===2 && m.origin.every(Number.isFinite)
+      && Number.isFinite(m.altitude) && Number.isFinite(m.heading) && Number.isFinite(m.startedAt);
+  }
+  // A well-formed one must also still belong to its player: the owner in the craft, at its origin,
+  // altitude and heading, under its seq, started no later than now. One that does not (a town that
+  // kept a stale path, as #737 does after a rollback while the owner flew on) is dropped at restore,
+  // leaving the player where she was saved, rather than refusing the whole town.
+  function savedManeuverCurrent(player) {
+    const m=player.maneuver;
+    return m.seq===player.maneuverSeq && player.vehicle==='hover' && isJevicaOwner(player.id)
+      && m.origin[0]===player.position[0] && m.origin[1]===player.position[1] && m.altitude===player.altitude
       && Math.abs(Math.atan2(Math.sin(m.heading-player.yaw-Math.PI),Math.cos(m.heading-player.yaw-Math.PI)))<1e-9
-      && Number.isFinite(m.startedAt) && m.startedAt<=now()+5000;
+      && m.startedAt<=now()+5000;
   }
   function maneuverCommand(player,message,time) {
     if(!fields(message,['type','kind','id','seq'])||!isManeuverKind(message.kind)||!maneuverId(message.id)
@@ -1179,7 +1190,6 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const ledger=ledgers.get(userId),time=now();
     ledger.seen=time;
     settleManeuver(player,time);
-    if(player.maneuver&&(crime.down(userId,time)||police.held(userId)))endManeuver(player,time,false);
     // The owner's world rules apply wherever she stands, an office or upper floor included.
     if(message.type==='worldPolicy')return worldPolicyCommand(userId,message,ledger,time);
     if(offices.has(userId) && !['office','chat'].includes(message.type))return reject('leave_office_first');
@@ -1788,13 +1798,18 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       for (const key of Object.keys(state)) delete state[key];
       Object.assign(state,nextState);
       // A saved seat is a matched pair: the pilot owns and flies the Ribbonwing, the passenger is not in a vehicle.
-      for(const player of nextPlayers.values()){
-        const pilot=player.passengerOf!==undefined&&nextPlayers.get(player.passengerOf),passenger=player.passengerId!==undefined&&nextPlayers.get(player.passengerId);
-        if(player.passengerOf!==undefined&&(!pilot||pilot.passengerId!==player.id||pilot.vehicle!=='hover'||!isJevicaOwner(pilot.id)||player.vehicle!=null||player.passengerId!==undefined||player.sitting||player.performing))throw new Error('Invalid passenger');
-        if(player.passengerId!==undefined&&(!passenger||passenger.passengerOf!==player.id))throw new Error('Invalid passenger');
+      // A pair that no longer matches (a town that kept one side after a rollback, then lost the other)
+      // is cleared on both sides and the passenger set on the ground below, rather than refusing the town.
+      const seatMatches=player=>{
+        const pilot=nextPlayers.get(player.passengerOf);
+        return Boolean(pilot)&&pilot.passengerId===player.id&&pilot.vehicle==='hover'&&isJevicaOwner(pilot.id)&&player.vehicle==null&&player.passengerId===undefined&&!player.sitting&&!player.performing;
+      };
+      for(const player of nextPlayers.values())if(player.passengerOf!==undefined&&!seatMatches(player)){
+        delete player.passengerOf;player.altitude=0;player.position=[player.position[0],player.position[1],environment.groundAt(player.position[0],-player.position[1])];
       }
+      for(const player of nextPlayers.values())if(player.passengerId!==undefined&&nextPlayers.get(player.passengerId)?.passengerOf!==player.id)delete player.passengerId;
       // A saved path the restored town no longer clears (a district change) ends where it began, level.
-      for(const player of nextPlayers.values())if(player.maneuver&&maneuverRefusal(player.maneuver)){player.lastManeuverId=player.maneuver.id;delete player.maneuver;}
+      for(const player of nextPlayers.values())if(player.maneuver&&(!savedManeuverCurrent(player)||maneuverRefusal(player.maneuver))){player.lastManeuverId=player.maneuver.id;delete player.maneuver;}
       players.clear();for (const [id,player] of nextPlayers) players.set(id,player);
       ledgers.clear();for (const [id,ledger] of nextLedgers) ledgers.set(id,ledger);
       focus.clear();for (const [id,hold] of nextFocus) focus.set(id,hold);

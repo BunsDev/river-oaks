@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { createSharedWorld as createWorld } from '../world.js';
 import { maneuverPose } from '../../preview/src/ribbonwing-maneuvers.js';
 
@@ -7,6 +8,7 @@ import { maneuverPose } from '../../preview/src/ribbonwing-maneuvers.js';
 // accepts, and the town places them from the pilot's pose until they step out
 // on the ground or the town sets them down.
 const OWNER = 'user_01M40Y914S1H4EJCEHH91DKTAY';
+const resign = value => { const { checksum, ...envelope } = value;return { ...envelope, checksum: createHash('sha256').update(JSON.stringify(envelope)).digest('hex') }; };
 const data = { scene: 'district', bounds_m: [-30, -30, 30, 30], walkSpawn: [-12, -14, 0], collisionPolygons: [], stores: [], buildings: [], communityLocations: [] };
 const close = (a, b, eps = 1e-6) => Math.abs(a - b) <= eps;
 
@@ -97,7 +99,7 @@ test('losing the pilot or the craft sets the passenger down safely on clear grou
   assert.equal(t.ride(OWNER, { action: 'invite', peerId: 'third' }).ok, true);
 });
 
-test('checkpoints keep the seat as a matched pair, drop invitations and refuse forged seats', () => {
+test('checkpoints keep the seat as a matched pair and drop invitations; a malformed seat fails closed and an unmatched one is cleared', () => {
   const t = setup();board(t);t.climb(5);
   assert.equal(t.ride(OWNER, { action: 'cancel' }).ok, true);
   const saved = JSON.parse(JSON.stringify(t.world.checkpoint()));
@@ -106,12 +108,27 @@ test('checkpoints keep the seat as a matched pair, drop invitations and refuse f
   const back = restored.snapshot().players;
   assert.deepEqual([back.find(p => p.id === 'guest').passengerOf, back.find(p => p.id === OWNER).passengerId], [OWNER, 'guest']);
   assert.ok(close(back.find(p => p.id === 'guest').altitude, 5));
-  const forge = change => { const copy = JSON.parse(JSON.stringify(saved));change(Object.fromEntries(copy.payload.players.map(p => [p.id, p])));return createWorld(data, { now: () => t.time, isAdmin: () => false }).restore(copy).ok; };
+  // Re-signed, so each edit reaches the seat's own validation rather than the checksum.
+  const restoreCopy = change => { const copy = JSON.parse(JSON.stringify(saved));change(Object.fromEntries(copy.payload.players.map(p => [p.id, p])));const world = createWorld(data, { now: () => t.time, isAdmin: () => false });return { result: world.restore(resign(copy)), world }; };
+  assert.equal(restoreCopy(() => {}).result.ok, true, 'an unchanged re-signed copy restores');
+  // Malformed: fails the whole checkpoint.
+  for (const [name, change] of [
+    ['saved invitation', p => { p[OWNER].ribbonwingInvite = { peerId: 'third', until: t.time + 1000 }; }], ['non-text seat', p => { p.guest.passengerOf = 42; }],
+    ['a guest in the Ribbonwing', p => { p.guest.vehicle = 'hover'; }],
+  ]) assert.equal(restoreCopy(change).result.ok, false, name);
+  // A pair that no longer matches (after a rollback #737 kept one side while the other left or
+  // moved): the town restores, the seat is cleared on both sides and the passenger is on the ground.
   for (const [name, change] of [
     ['one-sided passenger', p => { delete p[OWNER].passengerId; }], ['one-sided pilot', p => { delete p.guest.passengerOf; }],
     ['pilot not in the craft', p => { p[OWNER].vehicle = null;p[OWNER].altitude = 0; }], ['non-owner pilot', p => { p.third.passengerId = 'guest';p.guest.passengerOf = 'third';delete p[OWNER].passengerId; }],
-    ['passenger in a vehicle', p => { p.guest.vehicle = 'hover'; }], ['saved invitation', p => { p[OWNER].ribbonwingInvite = { peerId: 'third', until: t.time + 1000 }; }],
-  ]) assert.equal(forge(change), false, name);
+    ['passenger left (rollback)', p => { p[OWNER].passengerId = 'gone'; }],
+  ]) {
+    const { result, world } = restoreCopy(change);
+    assert.deepEqual(result, { ok: true }, name);
+    const players = world.snapshot().players, guest = players.find(p => p.id === 'guest');
+    assert.ok(players.every(p => p.passengerId == null && p.passengerOf == null), `${name}: no seat survives`);
+    if (name !== 'one-sided pilot') assert.equal(guest.altitude, 0, `${name}: the passenger is on the ground`);
+  }
   // An invitation is not saved.
   assert.equal(t.ride(OWNER, { action: 'invite', peerId: 'third' }).error, 'ribbonwing_not_landed');
 });

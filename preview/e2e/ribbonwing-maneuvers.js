@@ -9,6 +9,10 @@ async page => {
   const checks=[],errors=[],refusals=[],origin=page.url().startsWith('http')?await page.evaluate(()=>location.origin):'http://127.0.0.1:5181';
   const check=(value,message)=>{if(!value)throw new Error(message);checks.push(message);};
   const {maneuverPose,RIBBONWING_MANEUVERS}=await import(`${process.cwd()}/preview/src/ribbonwing-maneuvers.js`);
+  // Opt-in motion clips: RIBBONWING_MOTION_FRAMES=<dir> saves a frame at every sample of each
+  // maneuver (<dir>/<kind>-NN.png) with the sample's time, tilt and tuck in <dir>/frames.json.
+  const framesDir=process.env.RIBBONWING_MOTION_FRAMES,frames=[];
+  if(framesDir)(await import('node:fs')).mkdirSync(framesDir,{recursive:true});
   page.on('pageerror',error=>errors.push(error.message));
   page.on('websocket',socket=>socket.on('framereceived',frame=>{try{const data=JSON.parse(frame.payload);if(data.type==='result'&&!data.ok)refusals.push({error:data.error,correction:Boolean(data.correction)});}catch{}}));
   const host=()=>page.locator('#canvas-host');
@@ -44,10 +48,11 @@ async page => {
     const admitted=(await page.evaluate(()=>window.__riverCarriage())).maneuver;
     const seen={minUp:1,maxTilt:0,maxNose:0,minNose:0,maxTuck:0,minAltitude:Infinity,samples:0};
     for(let i=0;i<60;i++){
-      const s=await page.evaluate(()=>{const c=window.__riverCarriage();return {q:c.craftQuaternion,maneuver:c.maneuver,tuck:c.mechanisms?.tuck??0,altitude:c.placement?.altitude??0};});
+      const s=await page.evaluate(()=>{const c=window.__riverCarriage(),target=c.pose?.position,camera=c.camera?.position;return {q:c.craftQuaternion,maneuver:c.maneuver,tuck:c.mechanisms?.tuck??0,altitude:c.placement?.altitude??0,cameraGap:target&&camera?Math.hypot(camera[0]-target[0],camera[1]-target[1],camera[2]-target[2]):null};});
       if(!s.maneuver)break;
       const [x,y,z,w]=s.q,up=1-2*(x*x+z*z),noseY=-(2*(x*y+w*z));// craft front is local -X
-      Object.assign(seen,{minUp:Math.min(seen.minUp,up),maxTilt:Math.max(seen.maxTilt,Math.acos(Math.max(-1,Math.min(1,up)))),maxNose:Math.max(seen.maxNose,noseY),minNose:Math.min(seen.minNose,noseY),maxTuck:Math.max(seen.maxTuck,s.tuck),minAltitude:Math.min(seen.minAltitude,s.altitude),samples:seen.samples+1});
+      if(framesDir){const file=`${framesDir}/${kind}-${String(seen.samples).padStart(2,'0')}.png`;await page.screenshot({path:file});frames.push({kind,file,t:(Date.now()-admitted.startedAt)/RIBBONWING_MANEUVERS[kind].duration,up:+up.toFixed(3),nose:+noseY.toFixed(3),tuck:+s.tuck.toFixed(3),altitude:+s.altitude.toFixed(2),cameraGap:s.cameraGap===null?null:+s.cameraGap.toFixed(2)});}
+      Object.assign(seen,{minCameraGap:Math.min(seen.minCameraGap??Infinity,s.cameraGap??Infinity),minUp:Math.min(seen.minUp,up),maxTilt:Math.max(seen.maxTilt,Math.acos(Math.max(-1,Math.min(1,up)))),maxNose:Math.max(seen.maxNose,noseY),minNose:Math.min(seen.minNose,noseY),maxTuck:Math.max(seen.maxTuck,s.tuck),minAltitude:Math.min(seen.minAltitude,s.altitude),samples:seen.samples+1});
       await page.waitForTimeout(120);
     }
     await step(`${kind} ended`,()=>page.waitForFunction(()=>window.__riverCarriage().maneuver===null,{},{timeout:10000}));
@@ -59,6 +64,9 @@ async page => {
     check(exit.riding&&town.vehicle==='hover',`Jevica is still at the controls after the ${kind}`);
     const miss=Math.hypot(exit.pose.position[0]-end.east,-exit.pose.position[2]-end.north),townMiss=Math.hypot(town.position[0]-end.east,town.position[1]-end.north);
     check(miss<.5&&townMiss<.5,`The ${kind} ends where the shared path ends (seat ${miss.toFixed(2)} m, town ${townMiss.toFixed(2)} m off)`);
+    // The chase camera stays outside the craft through the whole maneuver (a collapsed boom
+    // would put it inside the canopy).
+    check(seen.minCameraGap>3,`The chase camera stays ${seen.minCameraGap.toFixed(1)} m or more from the seat through the ${kind}`);
     check(Math.abs(town.altitude-end.altitude)<.5,`The town ends the ${kind} at the path's altitude (${town.altitude.toFixed(2)} vs ${end.altitude.toFixed(2)} m)`);
     return {admitted,seen,end};
   };
@@ -79,5 +87,6 @@ async page => {
   const corrected=refusals.filter(item=>item.correction);
   check(corrected.length===0,`No pose was corrected through the flight${corrected.length?`: ${JSON.stringify(corrected)}`:''}`);
   check(errors.length===0,`No page errors${errors.length?`: ${errors.slice(0,3).join(' | ')}`:''}`);
-  return {checks,maneuvers:{tuck_dive:dive.seen,loop:loop.seen,petal_roll:petal.seen},refusals};
+  if(framesDir)(await import('node:fs')).writeFileSync(`${framesDir}/frames.json`,JSON.stringify(frames,null,1));
+  return {checks,maneuvers:{tuck_dive:dive.seen,loop:loop.seen,petal_roll:petal.seen},refusals,frames:frames.length};
 }

@@ -459,7 +459,7 @@ Not measured:
 
 - Each finishes level with Jevica seated.
 - No pose was corrected through the whole flight, and there were no page errors.
-- The tuck dive's path has no pitch term, so it drops nearly level. The journey does not claim a nose-down dive.
+- Correction (motion clips, below): the craft does pitch through the tuck dive, nose down to about 37° on the drop and up about 29° on the pull-out, following the path's slope. An earlier note here said it drops nearly level; that was wrong.
 
 Hosted failure on `8e0d310e`, preview experience (commons): `ribbonwing-passenger` failed "alice's page says she is riding in the Ribbonwing". The same journey had passed locally with 21 checks.
 
@@ -479,6 +479,78 @@ Hosted failure on `aa255f44`, preview experience (ribbonwing):
 - Local rerun passed: 22 checks in 102.2 s.
 
 CI: commons took 16 min with `ribbonwing-passenger` failing early, against a 20-min timeout. Commons returns to #737's `east-garden-commons hover-coach`. A new `ribbonwing` shard runs `ribbonwing-passenger ribbonwing-maneuvers`.
+
+## Closing the read-only gaps (2026-10-30)
+
+### Downed pilot mid-maneuver: a real bug, fixed
+
+- **Before:** `command()` ended a maneuver for a pilot who was down or held, but only when that pilot sent a command. The tick and snapshot paths (`settleManeuver`) did not check. A downed pilot who sent nothing kept flying the path to its end. Reproduced through a restored town.
+- **Fix:** `settleManeuver` now ends it on the first tick, snapshot or command.
+- **Test:** `server/tests/ribbonwing-maneuvers.test.js` "a pilot who is down leaves the maneuver on the next snapshot". It fails without the fix and passes with it.
+- **Held is not testable here.** Police only target players on foot at street level (`inDanger` requires no vehicle and altitude ≤ 0.1). A pilot in the craft cannot be grabbed, and the fixture has no police posts. The check stays as a defence.
+
+### Forgery tests were weaker than they claimed
+
+- **The flaw:** the maneuver and seat forgery cases edited the checkpoint without re-signing it. Restore verifies the checksum first, so every forgery failed on the checksum alone and never reached the validation it claimed to test.
+- **Fix:** both tests now re-sign their copies, as `cafe-games.test.js` does, and include a control showing an unchanged re-signed copy restores.
+- **Mutation check:** forcing `savedManeuverValid` to return true makes the test fail, so it now exercises the validation.
+
+### Rollback rehearsal against #737, and a roll-forward hazard fixed
+
+`scripts/ribbonwing/rollback-rehearsal.mjs` writes four checkpoints with this PR's server and restores them with #737's (`1cd96019`, extracted with `git archive`). The cases are: flying, mid maneuver, after a maneuver, and carrying a passenger.
+
+On #737:
+
+- All four restore.
+- None of the new fields are published.
+- The owner and alice can both move.
+- A mid-maneuver rollback returns the owner to the admission point, up to 22 m back.
+- #737 keeps `maneuver`, `maneuverSeq`, `lastManeuverId`, `passengerId` and `passengerOf` inertly in its own checkpoints.
+
+Rolling forward (re-landing this PR on #737's checkpoint) exposed a hazard:
+
+- The mid-maneuver checkpoint was refused, because #737 kept the stale path while the owner moved.
+- The passenger checkpoint was refused once alice had left under #737.
+- Either would refuse the whole town's restore.
+- The seat check also threw after `Object.assign(state, nextState)`, so a throw could leave the town partially restored.
+
+New restore policy:
+
+- **Malformed** maneuvers or seats still fail closed as corruption: wrong fields, a bad id or kind, non-finite values, a saved invitation, a guest in the Ribbonwing.
+- **Well-formed but stale** ones are dropped: a maneuver that no longer matches its player's origin, altitude, heading, seq, craft, owner or clock, and a seat pair that no longer matches. The player stays where she was saved, and a stranded passenger is set on the ground below.
+- After the change, every rehearsal case restores on #737 and rolls forward.
+
+### Motion clips
+
+`RIBBONWING_MOTION_FRAMES=<dir>` makes `ribbonwing-maneuvers` save a frame at every sample. `scripts/ribbonwing/motion-sheet.mjs` composes contact sheets. Committed in `docs/design/ribbonwing/evidence/motion/`, with hashes and per-frame data in `frames.json`.
+
+Inspected:
+
+- **Tuck dive:** the wings sweep back, the nose drops (−0.60) and the craft pulls out nose-up (+0.49).
+- **Loop:** the craft pitches up through vertical, is inverted over the top with the underside and fans showing, comes nose-down on the back side and levels out.
+- **Petal Roll:** rolls over with the wings half-tucked (0.45).
+- Mint wingtip ribbons stream in all three, and Jevica is visible in the cockpit.
+- In the two instrumented runs the chase camera stayed 9.4–11.0 m from the seat in every frame. The journey now checks that it stays over 3 m.
+
+Unresolved:
+
+- One frame in the first, uninstrumented capture (tuck dive, t = 0.49, 4.5 m) was a flat pale viewport with the HUD intact.
+- It did not recur in three later captures, and the camera never came close to the craft.
+- The cause is unknown; one possibility is a screenshot taken between rendered frames.
+- That capture's files were overwritten by the next run, so they are not kept.
+
+Verification on this tree:
+
+| Check | Result |
+| --- | --- |
+| `pnpm run verify` (core) | passed |
+| preview | 4361 passed, 0 failed, 1 skipped |
+| server | 1093 passed, 0 failed, 283 skipped |
+| desktop | 127 passed, 0 failed, 5 skipped |
+| hover-coach | passed, 33 checks |
+| ribbonwing-passenger | passed, 22 checks |
+| ribbonwing-maneuvers | passed, 24 checks (adds the three camera checks) |
+| rehearsal script | every case restores on #737 and rolls forward |
 
 ## Status at handoff (2026-10-30)
 

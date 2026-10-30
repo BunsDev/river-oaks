@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { createSharedWorld as createWorld } from '../world.js';
 import { RIBBONWING_MANEUVERS, RIBBONWING_MANEUVER_KINDS, maneuverMinimumAltitude, maneuverPose, maneuverSample } from '../../preview/src/ribbonwing-maneuvers.js';
 
@@ -7,6 +8,7 @@ import { RIBBONWING_MANEUVERS, RIBBONWING_MANEUVER_KINDS, maneuverMinimumAltitud
 // owner in the craft, high and clear enough to recover, then published with a
 // server start time that every client replays.
 const OWNER = 'user_01M40Y914S1H4EJCEHH91DKTAY';
+const resign = value => { const { checksum, ...envelope } = value;return { ...envelope, checksum: createHash('sha256').update(JSON.stringify(envelope)).digest('hex') }; };
 const data = { scene: 'district', bounds_m: [-30, -30, 30, 30], walkSpawn: [-12, -14, 0], collisionPolygons: [], stores: [], buildings: [], communityLocations: [] };
 const close = (a, b, eps = 1e-6) => Math.abs(a - b) <= eps;
 
@@ -88,7 +90,7 @@ test('an admitted maneuver owns the pose on every client, refuses stale, duplica
   assert.equal(t.world.command(OWNER, { type: 'maneuver', kind: 'roll', id: 'm1', seq: 1 }).replayed, true, 'the finished id still replays');
 });
 
-test('a checkpoint keeps the admitted maneuver, so a restored instance replays the same path; forged ones fail closed', () => {
+test('a checkpoint keeps the admitted maneuver, so a restored instance replays it; a malformed one fails closed and a stale one is dropped', () => {
   const t = setup();t.climb(10);
   const reply = t.fly('tuck_dive');assert.equal(reply.ok, true, JSON.stringify(reply));
   t.advance(1000);
@@ -104,13 +106,29 @@ test('a checkpoint keeps the admitted maneuver, so a restored instance replays t
   assert.deepEqual([back.position, back.altitude, back.maneuver], [live.position, live.altitude, live.maneuver]);
   assert.equal(restored.command(OWNER, { type: 'maneuver', kind: 'roll', id: 'again', seq: 1 }).error, 'stale_maneuver', 'seq survives a restore');
   assert.equal(restored.command(OWNER, { type: 'maneuver', kind: 'roll', id: 'm1', seq: 2 }).replayed, true, 'and so does the id');
-  // A forged or inconsistent maneuver fails the whole checkpoint.
-  const forge = change => { const copy = JSON.parse(JSON.stringify(saved));change(copy.payload.players.find(p => p.id === OWNER));return createWorld(data, { now: () => t.time, isAdmin: () => false }).restore(copy).ok; };
+  // A malformed maneuver is corruption and fails the whole checkpoint. Re-sign each copy: the
+  // checksum only detects corruption, so an unsigned edit would fail on the checksum alone.
+  const restoreCopy = change => { const copy = JSON.parse(JSON.stringify(saved));change(copy.payload.players.find(p => p.id === OWNER));const back = createWorld(data, { now: () => t.time, isAdmin: () => false });return { result: back.restore(resign(copy)), back }; };
+  assert.equal(restoreCopy(() => {}).result.ok, true, 'an unchanged re-signed copy restores');
+  for (const [name, change] of [
+    ['unknown kind', p => { p.maneuver.kind = 'barrel'; }], ['extra field', p => { p.maneuver.speed = 40; }],
+    ['bad id', p => { p.maneuver.id = ''; }], ['non-finite heading', p => { p.maneuver.heading = null; }], ['short origin', p => { p.maneuver.origin = [1]; }],
+  ]) assert.equal(restoreCopy(change).result.ok, false, name);
+  // A well-formed maneuver that no longer belongs to its player is dropped: the town restores, and
+  // she is where she was saved, with no path. After a rollback #737 keeps a stale path while the
+  // owner flies on; re-landing must not refuse the town for it.
   for (const [name, change] of [
     ['moved origin', p => { p.maneuver.origin[0] += 5; }], ['other heading', p => { p.maneuver.heading += .5; }], ['raised', p => { p.maneuver.altitude += 3; }],
-    ['unknown kind', p => { p.maneuver.kind = 'barrel'; }], ['seq mismatch', p => { p.maneuver.seq = 7; }], ['future start', p => { p.maneuver.startedAt = t.time + 60000; }],
-    ['extra field', p => { p.maneuver.speed = 40; }], ['out of the craft', p => { p.vehicle = null;p.altitude = 0;p.maneuver.altitude = 0; }],
-  ]) assert.equal(forge(change), false, name);
+    ['seq mismatch', p => { p.maneuver.seq = 7; }], ['future start', p => { p.maneuver.startedAt = t.time + 60000; }],
+    ['out of the craft', p => { p.vehicle = null;p.altitude = 0;p.maneuver.altitude = 0; }],
+    ['owner flew on (rollback)', p => { p.position = [p.position[0], p.position[1] + 12, p.position[2]];p.altitude = 6; }],
+  ]) {
+    const { result, back } = restoreCopy(change);
+    assert.deepEqual(result, { ok: true }, name);
+    const restoredOwner = back.snapshot().players.find(p => p.id === OWNER), stored = JSON.parse(JSON.stringify(saved)).payload.players.find(p => p.id === OWNER);change(stored);
+    assert.equal(restoredOwner.maneuver, undefined, `${name}: the stale path is dropped`);
+    assert.deepEqual([restoredOwner.position, restoredOwner.altitude], [stored.position, stored.altitude], `${name}: she is where she was saved`);
+  }
   // A restore long after the path ended settles at its end, level.
   const late = createWorld(data, { now: () => t.time + 60000, isAdmin: () => false });
   assert.deepEqual(late.restore(saved), { ok: true });
@@ -148,4 +166,23 @@ test('leaving mid-maneuver drops it with the player, and a rejoin starts from a 
   assert.equal(t.world.snapshot().players.some(p => p.id === OWNER), false);
   const joined = t.world.join({ userId: OWNER, name: 'Jevica' });
   assert.equal(joined.ok, true);assert.equal(joined.player.maneuver, undefined);
+});
+
+test('a pilot who is down leaves the maneuver on the next snapshot, without sending anything', () => {
+  // Held is not constructed here: police only target players on foot at street level (inDanger),
+  // so a pilot in the craft cannot be grabbed, and this fixture has no police posts. The check
+  // in settleManeuver stays as a defence; being down is reachable through a restored town.
+  const t = setup();t.climb(10);
+  const reply = t.fly('tuck_dive');assert.equal(reply.ok, true, JSON.stringify(reply));
+  t.advance(800);
+  // The pilot is down in the saved state, at zero health, which restore requires to agree.
+  const saved = JSON.parse(JSON.stringify(t.world.checkpoint()));
+  saved.payload.crime.participants = [[OWNER, { damagedAt: t.time - 100, engagedAt: t.time - 100, downAt: t.time - 100, staggerUntil: 0 }]];
+  saved.payload.players.find(p => p.id === OWNER).health = 0;
+  const restored = createWorld(data, { now: () => t.time, isAdmin: () => false });
+  assert.deepEqual(restored.restore(resign(saved)), { ok: true });
+  const at = maneuverPose(reply.player.maneuver, t.time), back = restored.snapshot().players.find(p => p.id === OWNER);
+  assert.equal(back.maneuver, undefined, 'the snapshot ends the maneuver');
+  assert.ok(close(back.altitude, at.altitude) && close(back.position[0], at.east) && close(back.position[1], at.north), 'level hover at the current path point');
+  assert.equal(back.vehicle, 'hover', 'still in the craft');
 });
