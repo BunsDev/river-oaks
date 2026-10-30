@@ -19,6 +19,23 @@ async page => {
     finally {await tab.keyboard.up(key);}
   };
   const seatOf=tab=>tab.evaluate(()=>window.__riverRibbonwingSeat());
+  // Jevica holds Space until her craft is above `above` metres. A frame lifts the craft by at most
+  // 0.08 s of climb, and with three clients the CPU-rendered runner can draw one frame a second:
+  // a hosted run was still climbing at 5.1 of 5.2 m when a fixed 20 s ran out (run 41060869403).
+  // The climb fails when the craft stops rising: less than 5 cm gained in 20 s.
+  const climb=async(above,label)=>{
+    await host(page).focus();await page.keyboard.down('Space');
+    try {
+      let highest=-Infinity,risingAt=Date.now();
+      for(;;){
+        try {await page.waitForFunction(above=>(window.__riverCarriage().placement.altitude??0)>above,above,{polling:'raf',timeout:2000});return;}
+        catch(error){if(!/Timeout/.test(error.message))throw error;}
+        const altitude=await page.evaluate(()=>window.__riverCarriage().placement.altitude??0);
+        if(altitude>highest+.05){highest=altitude;risingAt=Date.now();}
+        if(Date.now()-risingAt>20000)throw new Error(`${label}: the craft stopped rising at ${altitude.toFixed(2)} m, short of ${above} m`);
+      }
+    } finally {await page.keyboard.up('Space');}
+  };
   const host=tab=>tab.locator('#canvas-host');
   const gap=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
   const ready=async tab=>{
@@ -68,8 +85,7 @@ async page => {
   await bob.waitForFunction(id=>{const s=window.__riverRibbonwingSeat(),h=s.holders[id],seat=Object.values(s.seats).find(Boolean);return h?.aboard&&seat&&Math.hypot(h.position[0]-seat[0],h.position[1]-seat[1],h.position[2]-seat[2])<.05;},aliceId,{timeout:20000});
   check(true,'bob sees alice seated in Jevica\'s Ribbonwing');
   // Climb: alice cannot step out aloft.
-  await host(page).focus();await page.keyboard.down('Space');
-  try {await page.waitForFunction(()=>(window.__riverCarriage().placement.altitude??0)>5.2,{},{timeout:20000});}finally{await page.keyboard.up('Space');}
+  await climb(5.2,'Jevica climbs with alice aboard');
   await alice.waitForFunction(()=>{const m=window.__riverMultiplayer();return (m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??0)>5;},{},{timeout:20000});
   check(await alice.locator('.ribbonwing-seat [data-seat-action]').isDisabled(),'Aloft, alice\'s Step out is disabled');
   await host(alice).focus();await alice.keyboard.press('KeyG');await alice.waitForTimeout(400);
@@ -120,8 +136,7 @@ async page => {
   await alice.waitForFunction(()=>document.querySelector('.ribbonwing-seat:not([hidden]) [data-seat-status]')?.textContent.includes('invites you aboard'),{},{timeout:10000});
   await alice.locator('.ribbonwing-seat [data-seat-action]').click();
   await alice.waitForFunction(()=>window.__riverRibbonwingSeat().riding,{},{timeout:10000});
-  await host(page).focus();await page.keyboard.down('Space');
-  try {await page.waitForFunction(()=>(window.__riverCarriage().placement.altitude??0)>4,{},{timeout:20000});}finally{await page.keyboard.up('Space');}
+  await climb(4,'Jevica climbs again');
   await alice.waitForFunction(()=>{const m=window.__riverMultiplayer();return (m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??0)>3.5;},{},{timeout:20000});
   check(true,'alice boards again and Jevica climbs');
   const closedAt=Date.now();await page.close();
