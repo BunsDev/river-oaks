@@ -50,6 +50,14 @@ test('each throwing box and the darts area are open floor inside the venue', () 
   assert.equal(atAxeLane([0, 2]), null, 'the doorway is not a lane');
 });
 
+test('the walls, cage, axe rack and targets never fight for depth (depth-layer-audit.js)', async () => {
+  const { findDepthFights } = await import('../src/depth-layer-audit.js');
+  // The wall-side cage panel lay inside the plaster, the rack's board 5.5 cm proud of it and the
+  // backboards 2 cm behind the target faces: all inside the depth buffer's reach (2026-10-30).
+  const fights = findDepthFights(group).filter(fight => !/rubber-floor/.test(`${fight.a} ${fight.b}`));
+  assert.deepEqual(fights.map(fight => `${fight.a} × ${fight.b} gap ${fight.gap.toFixed(3)}`), []);
+});
+
 test('the venue build shows stuck axes and darts, and disposes cleanly', () => {
   const lanes = group.userData.axeLanes;
   lanes[AXE_LANES[0].id].show([{ point: [0, 0], stuck: true }, { point: [50, 60], stuck: false }, { point: [-235, 235], stuck: true }]);
