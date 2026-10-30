@@ -21,7 +21,7 @@
 | 1. #707 | Merged with main after #695 and pushed (`4e6f35ca`), core passed; baseline burn-down **blocked**, see Decision 2 |
 | 2. Coordinator tick A/B | Snapshots and Redis ready; waiting for 1-min load ≤ 8 (host 17–44 all morning) |
 | 3. Depth burn-down | #790 draft: Axe & Darts, 164 → 159; #794 draft: fix-forward for #695's shader-callback regression |
-| 4. Retirement | Pending the 12 h windows |
+| 4. Retirement | pr716-merge and tick-main cancelled 10:22Z; the rest wait on 12 h windows (see Retirement) |
 
 ## Results
 
@@ -82,7 +82,11 @@
   `fix/depth-review-hardening-20261027`. Focused 57/57; local core on the merged state passed (tooling 294/0,
   preview 4,710 / 0 / 1, server 1,083 / 0 / 285 skipped, desktop 127 / 0 / 5). PR comment 6519904976. Register
   task `depth-review-hardening-20261027` (blocked).
-- Not done: the hosted full run and premium-frontage visual parity. Both wait on Decision 2.
+- Hosted run on `4e6f35ca` (merge ref `d642426f`): 27 pass, 2 fail. `preview experience (depth)` (job
+  123998317806) refuses "1080 new or enlarged depth occurrences" (6 fewer than locally against newer main);
+  the aggregate `preview` fails with it. This is expected until Decision 2. The log is kept in the scratchpad.
+- Premium-frontage visual parity: #707 carries #794's shader lines, so see #794's captures below
+  (PR comment 6520363237). #707's own head was not captured separately.
 
 ### 2. Coordinator idle tick
 
@@ -114,7 +118,29 @@
 - Draft #794 (`fix/depth-clone-shader-callbacks-20261030`, signed `b976c357`) carries #707's two-line fix ahead
   of its baseline work, plus a self-contained regression in `district-depth.test.js` that fails on main and passes
   with the fix. Core passed (tooling 294/0, preview 4,696 / 0 / 1, server 1,083 / 0 / 285 skipped, desktop
-  127 / 0 / 5). Matched facade-fixture captures (main vs fix) are queued.
+  127 / 0 / 5). Hosted checks: 25 pass, 3 in progress at 10:25Z.
+- Matched captures of `facades.html` (1280×800, 5 views) at pre-#695 `986977ef`, main `0d54a18d` and the fix
+  `b976c357`, under the browser lock. The fix sits within 0.7–1.9% changed pixels of pre-#695 on every view;
+  main is up to 18.9% off (IPIC: raw rubble texture at mesh UVs in place of jointed tan panels; Cartier
+  13.8%). Table in PR comment 6520361484; 15 PNGs with SHA256SUMS in scratchpad `receipts-794/`.
+
+### 4. Retirement
+
+- 10:22Z `project:prune --cancel-stale --apply`, after a dry run and a liveness check (no processes, clean
+  apart from the untracked audit copy):
+  - `river-oaks-pr716-merge` (`a0cd049f`) → `~/worktree-backups/river-oaks/cancel-detached-DXRHia`
+    (tar sha256 `9996b1bd…`, 19,363 entries).
+  - wave-3 `tick-main` (`39a5f302`) → `cancel-detached-rUJx3w` (tar sha256 `049776b5…`, 15,203 entries).
+- `feat/support-contact-gate-292-20261027`: already retired by river-oaks-de about 02:25Z (bundle
+  `retirement-TVkCoz`). Verified; skipped.
+- `fix/player-blocking-ui-292-20261027` (`32f88f6e`, task `player-blocking-ui-292-711` delivered, worktree
+  clean and idle): touched 00:37Z, so cancel-stale is eligible after 12:38Z.
+- snap-722 and snap-695: eligible after about 12:35Z.
+- `river-oaks-depth-audit` (#695's original): blocked by `dirty`, see Decision 6.
+- My own snapshots (`m695`, `m707`, `d707-parent`, `d707-fixed`, `tick-a`, `tick-b`, `cap-pre`, `cap-main`,
+  `cap-fix`) were made today. `project:cancel` refuses anything touched within 12 h, so they cannot be retired
+  in this session. Each is registered with its path and a next action, which is to retire it with cancel-stale
+  after 12 h. `m707` holds nothing that is not pushed.
 
 ## Decisions for Val
 
