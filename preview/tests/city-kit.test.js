@@ -241,6 +241,22 @@ test('street furniture speaks the District vocabulary: orbital lamps, grates, po
   kit.userData.dispose(); assert.ok(disposed, 'the grate texture is released with the kit');
 });
 
+test('no two parallel faces of a neighbourhood fight for depth within sight (depth-layer-audit.js)', async () => {
+  const { findDepthFights } = await import('../src/depth-layer-audit.js');
+  // The planter's mulch lay 1.5 mm over a brass slab and crawled through it from about 20 m (2026-10-26).
+  // Every city-kit neighbourhood in the destinations folder, so new ones are held to it too.
+  const { readdirSync } = await import('node:fs');
+  const recipes = readdirSync(new URL('../../config/destinations/', import.meta.url)).filter(file => file.endsWith('.json') && !file.endsWith('.lock.json'))
+    .map(file => [file.slice(0, -5), read(file.slice(0, -5))]).filter(([, recipe]) => recipe.kit);
+  assert.ok(recipes.length >= 8, `${recipes.length} city-kit neighbourhoods`);
+  for (const [name, recipe] of recipes) {
+    const kit = buildCityKit(assembleNeighborhood(recipe), { groundAt: () => 0, ground: 0 });
+    const fights = findDepthFights(kit, { groundAt: () => 0 });
+    assert.deepEqual(fights.map(({ a, b, gap, size, fightMetres, at }) => ({ a, b, gap: +gap.toFixed(4), size: +size.toFixed(2), fightMetres: Math.round(fightMetres), at: at.map(v => +v.toFixed(1)) })), [], name);
+    kit.userData.dispose();
+  }
+});
+
 test('finishes recolour named slots only, and classic is the unchanged default', () => {
   assert.deepEqual(Object.keys(KIT_FINISHES.classic.materials), []);
   assert.equal(kitFinish(), KIT_FINISHES.classic);

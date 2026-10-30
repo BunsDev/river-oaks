@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "version": "d2-paint-1",
+  "three": "186",
+  "glb": {
+    "path": "ribbonwing.glb",
+    "bytes": 10746980,
+    "sha256": "b350470b9a88e2fdc9522c08e9c450f2cf37f220f1ed273c4445d6433e74dbf7"
+  },
+  "levels": {
+    "near": 92055,
+    "medium": 31829,
+    "far": 1872
+  },
+  "loadedLevels": {
+    "near": 92055,
+    "medium": 31829,
+    "far": 1872
+  },
+  "attachments": [
+    "axis.fan.left",
+    "axis.fan.right",
+    "camera.chase",
+    "camera.cockpit",
+    "dashboard",
+    "emitter.cockpit",
+    "emitter.fan.left",
+    "emitter.fan.right",
+    "emitter.nozzle.left",
+    "emitter.nozzle.right",
+    "entry.left",
+    "entry.right",
+    "foot.passenger",
+    "foot.pilot",
+    "gimbal.nozzle.left",
+    "gimbal.nozzle.right",
+    "hand.passenger.left",
+    "hand.passenger.right",
+    "hand.pilot.left",
+    "hand.pilot.right",
+    "hinge.foot.left",
+    "hinge.foot.nose",
+    "hinge.foot.right",
+    "hinge.steps.left",
+    "hinge.steps.right",
+    "pivot.canopy",
+    "pivot.wing.left",
+    "pivot.wing.right",
+    "seat.passenger",
+    "seat.pilot"
+  ],
+  "materials": [
+    "Ribbonwing blue chrome edge",
+    "Ribbonwing bronze",
+    "Ribbonwing chrome",
+    "Ribbonwing cockpit teal",
+    "Ribbonwing dark mechanical",
+    "Ribbonwing harness webbing",
+    "Ribbonwing instrument glow",
+    "Ribbonwing ivory bulkhead",
+    "Ribbonwing ivory composite",
+    "Ribbonwing ivory upholstery",
+    "Ribbonwing mint canopy glass",
+    "Ribbonwing mint canopy glass (outer)",
+    "Ribbonwing pink lacquer",
+    "Ribbonwing pink lacquer (two-sided)",
+    "Ribbonwing pink upholstery",
+    "Ribbonwing thruster glow"
+  ],
+  "pivots": [
+    "Ribbonwing canopy",
+    "Ribbonwing left boarding steps",
+    "Ribbonwing left fan rotor",
+    "Ribbonwing left foot",
+    "Ribbonwing left nozzle gimbal",
+    "Ribbonwing left wing pivot",
+    "Ribbonwing nose foot",
+    "Ribbonwing pilot side stick",
+    "Ribbonwing right boarding steps",
+    "Ribbonwing right fan rotor",
+    "Ribbonwing right foot",
+    "Ribbonwing right nozzle gimbal",
+    "Ribbonwing right wing pivot"
+  ],
+  "colliders": [
+    "collider:nose",
+    "collider:cabin",
+    "collider:canopy",
+    "collider:tail",
+    "collider:thrusters",
+    "collider:petals"
+  ],
+  "texture": {
+    "images": 1,
+    "normalMapped": [
+      "Ribbonwing ivory upholstery",
+      "Ribbonwing pink upholstery"
+    ],
+    "width": 64,
+    "height": 64,
+    "bytes": 1600,
+    "sha256": "ede8ca16aec52bb0e5d81d4f12d3e2ac06de2df90cd0cd52ed960bccc50c1fd4",
+    "maxChannelError": 0
+  },
+  "sources": {
+    "preview/src/ribbonwing-design.js": "3c86f9912ebc0e1e8eea8b83897d1d54547ed770abb144ac417be86c2930cdde",
+    "preview/src/ribbonwing.js": "f33cfe3396b1852328f3c3c77b8ecc26fc75f38af6dbd69f487c60cea1d4b5bc",
+    "preview/src/ribbonwing-rig.js": "24f9573475360397c4f3072faba8a80f40c0c2234c2434fec456e34c5e611a94",
+    "scripts/ribbonwing/export-glb.mjs": "21e2cb7d874b786c6c364837ccc3275c524ba9d0e396abeb385b853541b39aa4"
+  },
+  "roundTrip": "passed",
+  "problems": []
+}
