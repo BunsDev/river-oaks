@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { loadCharacterRig } from './helpers/character-rig.js';
 import { instantiateAvatar } from '../src/avatars.js';
 import { createJevicaCostume } from '../src/jevica-costume.js';
-import { SUIT } from '../src/jevica-suit.js';
+import { SUIT, PUMP } from '../src/jevica-suit.js';
 
 // Val's 2026-10-29 reference look on the real hero rig: a blazer and trousers cut
 // from her own skin, a peplum, a collar with its brooch, lilies, earrings, heels
@@ -88,7 +88,7 @@ test('the hair fades from espresso roots to rose ends and the pumps turn glossy 
     assert.ok(ombre, 'the hair owns an ombre attribute');
     let min = Infinity, max = -Infinity; for (const v of ombre.array) { min = Math.min(min, v); max = Math.max(max, v); }
     assert.equal(min, 0); assert.equal(max, 1);
-    assert.equal(hair.material.customProgramCacheKey(), 'jevica-ombre-hair-v1');
+    assert.equal(hair.material.customProgramCacheKey(), 'jevica-ombre-hair-v2');
     const shoes = rig.model.getObjectByName('Jevicashoes01').material;
     assert.equal(`#${shoes.color.getHexString()}`, SUIT.shoe); assert.ok(shoes.roughness < .3);
   } finally { costume.dispose(); rig.dispose(); }
@@ -126,4 +126,40 @@ test('every suit resource is released on dispose and the budget stays within the
     assert.equal(object.children.length, 1, 'only the rig remains under the avatar');
     assert.equal(disposed, suitOwn.length, 'every suit geometry and material is released');
   } finally { rig.dispose(); }
+});
+
+// Measures each shoe below the ankle and its top where it meets the leg, in bind space.
+function shoeShape(geometry) {
+  const p = geometry.attributes.position, sides = { l: { low: [Infinity, -Infinity], toe: -Infinity, top: [] }, r: { low: [Infinity, -Infinity], toe: -Infinity, top: [] } };
+  for (let i = 0; i < p.count; i++) {
+    const side = sides[p.getX(i) < 0 ? 'r' : 'l'], y = p.getY(i);
+    side.toe = Math.max(side.toe, p.getZ(i));
+    if (y < .06) { side.low[0] = Math.min(side.low[0], p.getX(i)); side.low[1] = Math.max(side.low[1], p.getX(i)); }
+    if (y > .18) side.top.push([p.getX(i), y, p.getZ(i)]);
+  }
+  return sides;
+}
+
+test('the shoes become slim pointed pumps under the trouser hem, unchanged where they meet the leg', async () => {
+  const source = await loadCharacterRig('jevica'), bare = instantiateAvatar(source, { targetHeight: 1.685 });
+  const { rig, costume } = await dressed();
+  try {
+    const before = bare.model.getObjectByName('Jevicashoes01').geometry, shoe = rig.model.getObjectByName('Jevicashoes01');
+    assert.notEqual(shoe.geometry, before, 'the costume reshapes its own copy, never the shared rig');
+    const a = shoeShape(before), b = shoeShape(shoe.geometry);
+    for (const side of ['l', 'r']) {
+      const widthBefore = a[side].low[1] - a[side].low[0], widthAfter = b[side].low[1] - b[side].low[0];
+      assert.ok(widthAfter < widthBefore * .92, `${side} sole narrower: ${widthAfter.toFixed(3)} vs ${widthBefore.toFixed(3)} m`);
+      assert.ok(b[side].toe > a[side].toe + PUMP.point * .5, `${side} toe drawn to a point`);
+      assert.deepEqual(b[side].top, a[side].top, `${side} unchanged where it meets the leg (her feet end inside the shoe)`);
+    }
+    const vamp = shoe.geometry.attributes.vamp.array;
+    assert.ok(vamp.some(v => v < -.01) && vamp.some(v => v > .01), 'shoe below the topline, hem satin above it');
+    assert.equal(shoe.material.customProgramCacheKey(), 'jevica-pumps-v2');
+    // The hair stands fuller below the ears than the rig's own.
+    const hairBefore = bare.model.getObjectByName('Jevicalong01').geometry.attributes.position, hairAfter = rig.model.getObjectByName('Jevicalong01').geometry.attributes.position;
+    let wider = 0, lower = 0;
+    for (let i = 0; i < hairBefore.count; i++) if (hairBefore.getY(i) < 1.1) { lower++; if (Math.hypot(hairAfter.getX(i), hairAfter.getZ(i)) > Math.hypot(hairBefore.getX(i), hairBefore.getZ(i)) + .005) wider++; }
+    assert.ok(lower > 0 && wider / lower > .9, `${wider}/${lower} low strands stand out further`);
+  } finally { costume.dispose(); rig.dispose(); bare.dispose(); }
 });
