@@ -13,7 +13,7 @@ import { validateWoodlandRegistration } from './woodland-heights-world.js';
 import { woodlandBaseLayout } from '../../shared/typesafe-place.js';
 import { validateTypeSafeRegistration } from './typesafe-place-world.js';
 import { createSpatialChunkStream } from './spatial-chunk-stream.js';
-import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
+import { KIT_CONVENTIONS, KIT_STYLES } from '../../shared/city-kit/catalog.js';
 import { cityKitLandscape } from './city-kit/render.js';
 
 // Loaded only for bayou-heights-1, heights-studewood-1, bayou-terraces-1, woodland-heights-1 and typesafe-place-1 (main.js), with the composition they need.
@@ -70,6 +70,27 @@ export const HEIGHTS_FINISH_CHUNK_BYTES = {
   'pink-jet-age': { 'typesafe-place-north': 2.35 * MiB, 'typesafe-place-uptown': 2.9 * MiB },
 };
 export const heightsChunkBytes = (id, finish = 'classic') => HEIGHTS_FINISH_CHUNK_BYTES[finish]?.[id] ?? HEIGHTS_CHUNK_BYTES[id];
+// The textures a neighborhood owns (render.js, `userData.owned`): one sign atlas row of
+// 1024 by 128 px per distinct sign (palette and name), a 2048 by 128 px lettering band per
+// water tower, and the 64 px tree grate, all RGBA and mipmapped (a third more), as
+// ownedTextureBytes measures them. The estimate is derived from the plan the same way,
+// two per cent high so a chunk admitted on its estimate is never refused on its measure.
+export const HEIGHTS_TEXTURE_BYTES = { signRow: Math.round(1024 * 128 * 4 * 4 / 3), lettering: Math.round(2048 * 128 * 4 * 4 / 3), grate: Math.round(64 * 64 * 4 * 4 / 3) };
+export function heightsChunkTextureBytes(plan) {
+  const signs = new Set(); let towers = 0;
+  for (const piece of plan.pieces ?? []) {
+    if (piece.piece === 'building/shell' && piece.sign) signs.add(`${(KIT_STYLES[piece.style] ?? KIT_STYLES['market-row']).signPalette ?? 'teal'}|${piece.sign}`);
+    else if (piece.piece === 'furniture/market-stall' && piece.sign) signs.add(`teal|${piece.sign}`);
+    else if (piece.piece === 'landmark/water-tower') towers++;
+  }
+  return Math.ceil((Math.max(1, signs.size) * HEIGHTS_TEXTURE_BYTES.signRow + towers * HEIGHTS_TEXTURE_BYTES.lettering + HEIGHTS_TEXTURE_BYTES.grate) * 1.02);
+}
+// The owned-texture ceiling beside the geometry one. Atlases outweigh geometry: on
+// typesafe-place-1 the neighborhoods own 111 MiB of textures in all, Nineteenth and Yale
+// 13.35 MiB alone, and the heaviest set the geometry ceiling keeps resident together (Yale
+// Icehouse, Nineteenth and Yale, Yale Street South) 30.7 MiB. Thirty-two is the smallest
+// power of two above that: it refuses nothing resident today and bounds what content adds.
+export const HEIGHTS_MAX_TEXTURE_BYTES = 32 * MiB;
 // Each neighborhood composed after Heights' own adds its street trees and planted beds to the
 // shared part. Allowances per placement err high, so the shared estimate grows with them.
 export const HEIGHTS_SHARED_PLACEMENT_BYTES = { tree: 4 * 1024, planter: 10 * 1024 };
@@ -87,8 +108,8 @@ function geometryBytes(group) {
 /**
  * Bytes of the textures a chunk made and disposes itself, which render.js marks `userData.owned`:
  * each neighborhood's sign atlas, tower lettering and tree grate. Shared kit maps and the halo
- * stay out, as they survive eviction. Mipmaps add a third. Reported beside the geometry
- * ceiling, not yet enforced by it: the atlases alone can outweigh a neighborhood's geometry.
+ * stay out, as they survive eviction. Mipmaps add a third. Counted under HEIGHTS_MAX_TEXTURE_BYTES
+ * beside the geometry ceiling: the atlases alone can outweigh a neighborhood's geometry.
  */
 export function ownedTextureBytes(group) {
   const textures = new Set();
@@ -108,7 +129,7 @@ export function ownedTextureBytes(group) {
  * finish (render-quality.js readFinishPreference) every part is built with.
  */
 export function createHeightsStream({ world, parent, onStatus = () => {}, onScene = () => {}, now = () => performance.now(),
-  finish, loadModule = () => import('./bayou-heights.js') }) {
+  finish, loadModule = () => import('./bayou-heights.js'), maxTextureBytes = HEIGHTS_MAX_TEXTURE_BYTES }) {
   const layout = validateHeightsRegistration(manifest, world.eastGardenCommons), { plans } = layout.heights;
   const location = manifest.locations.find(item => item.id === layout.heights.id);
   // Studewood (heights-studewood-1) streams as two more Heights neighborhoods, east to its own edge,
@@ -141,8 +162,8 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
     const { trees, planters } = cityKitLandscape(plan, { groundAt: () => layout.ground, ground: layout.ground });
     return bytes + trees.length * HEIGHTS_SHARED_PLACEMENT_BYTES.tree + planters.length * HEIGHTS_SHARED_PLACEMENT_BYTES.planter;
   }, HEIGHTS_CHUNK_BYTES[SHARED]);
-  const chunks = [{ id: SHARED, bounds: sharedBounds, estimatedBytes: sharedBytes },
-    ...plans.map(plan => ({ id: idOf(plan), plan, bounds: plan.site, estimatedBytes: heightsChunkBytes(plan.id, finish) ?? 3 * MiB }))];
+  const chunks = [{ id: SHARED, bounds: sharedBounds, estimatedBytes: sharedBytes, estimatedTextureBytes: 0 },
+    ...plans.map(plan => ({ id: idOf(plan), plan, bounds: plan.site, estimatedBytes: heightsChunkBytes(plan.id, finish) ?? 3 * MiB, estimatedTextureBytes: heightsChunkTextureBytes(plan) }))];
   // A neighborhood's view box reaches over its tallest building: TypeSafe Place's towers stand 71 m.
   const boxes = plans.map(plan => { const [w, s, e, n] = plan.site, tallest = Math.max(26, ...plan.pieces.filter(piece => piece.piece === 'building/shell').map(piece => piece.height));
     return [plan, new Box3(new Vector3(w, layout.ground - 4, -n), new Vector3(e, layout.ground + tallest + 4, -s))]; });
@@ -164,7 +185,7 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
   parent.add(scene); onScene(scene);
   const announce = text => { if (text !== status) { status = text; onStatus(text); } };
   const stream = createSpatialChunkStream({
-    chunks, maxResident: chunks.length, maxConcurrent: 1, maxBytes: HEIGHTS_MAX_BYTES,
+    chunks, maxResident: chunks.length, maxConcurrent: 1, maxBytes: HEIGHTS_MAX_BYTES, maxTextureBytes,
     prefetchDistance: 85, unloadDistance: 110, now,
     async load(chunk, signal) {
       const module = await loadModule();
@@ -253,9 +274,9 @@ export function createHeightsStream({ world, parent, onStatus = () => {}, onScen
       const inner = stream.debug();
       return { ...inner, status, geometryBudgetBytes: HEIGHTS_MAX_BYTES, measuredBytes: { ...measured },
         estimatedBytes: Object.fromEntries(chunks.map(chunk => [chunk.id, chunk.estimatedBytes])),
-        // Owned textures of the chunks attached now, beside the geometry the ceiling counts.
-        measuredTextureBytes: { ...measuredTextures },
-        residentTextureBytes: inner.chunks.reduce((bytes, chunk) => bytes + (chunk.state === 'ready' ? measuredTextures[chunk.id] ?? 0 : 0), 0) };
+        // Owned textures, measured on attach and estimated from each plan, under their own ceiling.
+        textureBudgetBytes: maxTextureBytes, measuredTextureBytes: { ...measuredTextures },
+        estimatedTextureBytes: Object.fromEntries(chunks.map(chunk => [chunk.id, chunk.estimatedTextureBytes])) };
     },
     dispose() { stream.dispose(); scene.removeFromParent(); onScene(null); announce(''); },
   };
