@@ -10,6 +10,14 @@ async page => {
   const watch=tab=>tab.on('pageerror',error=>errors.push(`${tab===page?'jevica':'peer'}: ${error.message}`));watch(page);
   const town=tab=>tab.evaluate(()=>{const m=window.__riverMultiplayer();return {selfId:m.selfId,players:m.snapshot.players.map(p=>({id:p.id,vehicle:p.vehicle??null,altitude:p.altitude,position:p.position,passengerOf:p.passengerOf??null,passengerId:p.passengerId??null,maneuver:p.maneuver?.kind??null}))};});
   const me=async tab=>{const t=await town(tab);return t.players.find(p=>p.id===t.selfId);};
+  // Hold a walking key until the town sees the walker 0.5 m from `at`. A fixed hold is too short
+  // on a software-rendered runner, where a frame can take seconds. On a timeout, say where she was.
+  const walkAway=async(tab,key,at,label)=>{
+    await host(tab).focus();await tab.keyboard.down(key);
+    try {await tab.waitForFunction(at=>{const m=window.__riverMultiplayer(),p=m.snapshot.players.find(q=>q.id===m.selfId).position;return Math.hypot(p[0]-at[0],p[1]-at[1])>.5;},at,{timeout:30000});}
+    catch(error){const now=await me(tab),local=await tab.evaluate(()=>window.__riverCarriage?.().pose?.position??null);throw new Error(`${label}: the town did not see alice move 0.5 m (from ${JSON.stringify(at)} to ${JSON.stringify(now.position)}, local ${JSON.stringify(local)}, refusals ${JSON.stringify(tab.refusals.slice(-4))})`);}
+    finally {await tab.keyboard.up(key);}
+  };
   const seatOf=tab=>tab.evaluate(()=>window.__riverRibbonwingSeat());
   const host=tab=>tab.locator('#canvas-host');
   const gap=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
@@ -18,7 +26,10 @@ async page => {
     await tab.waitForFunction(()=>window.__riverMultiplayer?.().connected&&document.querySelector('#canvas-host')?.dataset.playerReady==='true');
     if(await tab.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await tab.locator('#panel-toggle').click();
   };
-  const peer=async id=>{const context=await page.context().browser().newContext({viewport:{width:1280,height:800}});await context.addCookies([{name:'fixture_session',value:id,url:origin}]);const tab=await context.newPage();tab.setDefaultTimeout(60000);watch(tab);await ready(tab);return tab;};
+  const peer=async id=>{const context=await page.context().browser().newContext({viewport:{width:1280,height:800}});await context.addCookies([{name:'fixture_session',value:id,url:origin}]);const tab=await context.newPage();tab.setDefaultTimeout(60000);watch(tab);
+    // The town's refusals to this page, for diagnosing a walker who does not move.
+    tab.refusals=[];tab.on('websocket',socket=>socket.on('framereceived',frame=>{try{const data=JSON.parse(frame.payload);if(data.type==='result'&&!data.ok)tab.refusals.push({error:data.error,correction:Boolean(data.correction)});}catch{}}));
+    await ready(tab);return tab;};
   // Jevica calls and boards her Ribbonwing (as hover-coach does).
   await page.setViewportSize({width:1280,height:800});
   await ready(page);
@@ -92,8 +103,7 @@ async page => {
   await alice.waitForFunction(()=>!document.querySelector('.walking-title strong')?.textContent.includes('Ribbonwing'),{},{timeout:5000}).catch(()=>{});
   const footTitle=await alice.locator('.walking-title strong').textContent();
   check(!footTitle.includes('Ribbonwing'),`alice's page is on foot again${footTitle.includes('Ribbonwing')?` (title: ${footTitle})`:''}`);
-  await host(alice).focus();await alice.keyboard.down('KeyS');await alice.waitForTimeout(900);await alice.keyboard.up('KeyS');
-  await alice.waitForFunction(at=>{const m=window.__riverMultiplayer(),p=m.snapshot.players.find(q=>q.id===m.selfId).position;return Math.hypot(p[0]-at[0],p[1]-at[1])>.5;},stepped.position,{timeout:10000});
+  await walkAway(alice,'KeyS',stepped.position,'walking on after stepping out');
   check(true,'The town accepts alice walking on from where she stepped out');
   // Board again, climb, then Jevica's page goes away mid-flight: once the town's departure grace
   // runs out, alice is set down on clear ground and walks on.
@@ -111,8 +121,7 @@ async page => {
   const setDown=await me(alice);
   check(!(await town(alice)).players.some(p=>p.id===OWNER),`When Jevica's page closes aloft, the town sets alice down on the ground after the departure grace (${((Date.now()-closedAt)/1000).toFixed(0)} s)`);
   await alice.waitForFunction(()=>!window.__riverRibbonwingSeat().riding,{},{timeout:10000});
-  await host(alice).focus();await alice.keyboard.down('KeyW');await alice.waitForTimeout(900);await alice.keyboard.up('KeyW');
-  await alice.waitForFunction(at=>{const m=window.__riverMultiplayer(),p=m.snapshot.players.find(q=>q.id===m.selfId).position;return Math.hypot(p[0]-at[0],p[1]-at[1])>.5;},setDown.position,{timeout:10000});
+  await walkAway(alice,'KeyW',setDown.position,'walking on after being set down');
   check(true,'alice walks on from where the town set her down');
   await bob.waitForFunction(id=>{const h=window.__riverRibbonwingSeat().holders[id];return h&&!h.aboard;},aliceId,{timeout:10000});
   check(true,'bob sees alice on foot again');

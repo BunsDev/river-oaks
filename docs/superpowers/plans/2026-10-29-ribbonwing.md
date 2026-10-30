@@ -470,6 +470,14 @@ Hosted failure on `8e0d310e`, preview experience (commons): `ribbonwing-passenge
 
 After the fixes, one local run of all three on the final tree passed: hover-coach 33 checks (24.6 s), ribbonwing-passenger 22 (138.5 s), ribbonwing-maneuvers 21 (31.8 s).
 
+Hosted failure on `aa255f44`, preview experience (ribbonwing):
+
+- `ribbonwing-maneuvers` passed (41 s).
+- `ribbonwing-passenger` failed at line 96: "Timeout 10000ms" waiting for the town to see alice 0.5 m from where she stepped out.
+- The failure screenshot shows the runner on software rendering. The journey held S for a fixed 900 ms, which can be only a frame or two of movement there. This is the likely cause, not proven.
+- Both walk-aways (after stepping out, and after being set down) now hold the key until the town sees her move, up to 30 s. On a timeout they report her town and local positions and the town's last refusals. Each peer page collects refusals from load.
+- Local rerun passed: 22 checks in 102.2 s.
+
 CI: commons took 16 min with `ribbonwing-passenger` failing early, against a 20-min timeout. Commons returns to #737's `east-garden-commons hover-coach`. A new `ribbonwing` shard runs `ribbonwing-passenger ribbonwing-maneuvers`.
 
 ## Rollback
