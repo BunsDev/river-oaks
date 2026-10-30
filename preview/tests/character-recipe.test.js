@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CUSTOM_APPEARANCE_ID, DEFAULT_RECIPE, FACE_CONTROLS, FACE_LIMIT, FACE_STEP, HAIRSTYLE_OPTIONS, RECIPE_BODIES, RECIPE_CATEGORIES, RECIPE_HEIGHT, SKIN_TONES,
-  characterRecipe, recipeFaceShapes, recipeFrame, rollCharacterRecipe } from '../src/character-recipe.js';
+import { CUSTOM_APPEARANCE_ID, DEFAULT_RECIPE, EYE_COLORS, FACE_CONTROLS, FACE_LIMIT, FACE_STEP, HAIR_SHADES, HAIRSTYLE_OPTIONS, RECIPE_BODIES, RECIPE_BUILD, RECIPE_CATEGORIES, RECIPE_HEIGHT, SKIN_TONES,
+  characterRecipe, recipeFaceShapes, recipeFrame, recipeWidth, rollCharacterRecipe } from '../src/character-recipe.js';
 import { characterAppearanceFor, characterDefinitionFor, migrateCharacterAppearance, recipeCharacterDefinition, validateCharacterDefinition } from '../src/character-definition.js';
 import { customizedCharacterDefinition } from '../src/character-customization.js';
 import { selectedCharacterFor } from '../src/character-selection-view.js';
@@ -70,6 +70,7 @@ test('malformed, forged and older-version recipe records fail closed', () => {
     { height: RECIPE_HEIGHT.max + 1 }, { height: RECIPE_HEIGHT.min - 1 }, { height: 170.5 }, { height: '170' },
     { body: 'jevica' }, { body: 'woman-realistic-tailored' }, { skin: 'constructor' }, { skin: '__proto__' }, { eyes: 'violet' },
     { hairStyle: 'long01' }, { hairColor: '#ff00ff' }, { outfitColor: 'gold' }, { shoeColor: null }, { extra: true },
+    { build: 7 }, { build: 150 }, { build: -105 }, { build: '0' }, { build: 2.5 }, { build: null },
     { face: { ...recipe.face, noseLength: -10 } }, { face: { ...recipe.face, head: 101 } }, { face: { ...recipe.face, eyeSize: 1.5 } },
     { face: { ...recipe.face, noseWidth: -49 } }, { face: { ...recipe.face, eyeSize: 33 } },
     { face: { ...recipe.face, smile: 10 } }, { face: Object.fromEntries(Object.entries(recipe.face).slice(1)) }, { face: [] },
@@ -80,12 +81,64 @@ test('malformed, forged and older-version recipe records fail closed', () => {
   }
   const { skin: _skin, ...missing } = recipe;
   assert.equal(valid({ ...base, parameters: missing }).ok, false);
+  assert.throws(() => characterRecipe({ ...recipe, build: undefined }), /Invalid character recipe/, 'a present but empty build is not the legacy shape');
   assert.equal(validateCharacterDefinition({ ...base, parameters: Object.assign(Object.create({ injected: 1 }), recipe) }, { ownerId: 'fixture-owner' }).ok, false, 'a recipe with a prototype is refused');
   // Authored records cannot name the custom look, and a recipe cannot borrow Sable's colours.
   assert.equal(valid({ ...characterDefinitionFor('fixture-owner', 'sable-human', { revision: 1 }), appearanceId: CUSTOM_APPEARANCE_ID }).ok, false);
   assert.throws(() => customizedCharacterDefinition('fixture-owner', CUSTOM_APPEARANCE_ID, { palette: 'authored', hair: 'authored' }));
   const result = valid(base); result.definition.parameters.face.head = 99;
   assert.notEqual(base.parameters.face.head, 99, 'validation returns independent owned state');
+});
+
+// The build joined the recipe on 2026-10-29. People published before it have no `build`
+// field: they still validate, as a neutral build, and canonical copies come out in one
+// field order, so a stored revision and a fresh copy of the same person are the same text.
+test('a recipe record from before the build reads as a neutral build, and canonical copies share one field order', () => {
+  const recipe = rollCharacterRecipe({ random: seeded(29) }), { build: _build, ...before } = recipe;
+  const definition = recipeCharacterDefinition('fixture-owner', recipe, { revision: 3 });
+  const legacy = { ...definition, parameters: before };
+  const read = valid(legacy);
+  assert.equal(read.ok, true, 'a record without a build still validates');
+  assert.deepEqual(read.definition, recipeCharacterDefinition('fixture-owner', { ...before, build: 0 }, { revision: 3 }));
+  assert.equal(read.definition.parameters.build, 0);
+  assert.deepEqual(Object.keys(read.definition.parameters), Object.keys(DEFAULT_RECIPE));
+  assert.deepEqual(characterRecipe(before), { ...before, build: 0 }, 'the canonical copy carries the neutral build');
+  // Fields arriving in another order still give the same text as the stored copy.
+  const shuffled = Object.fromEntries(Object.entries(recipe).reverse());
+  assert.equal(JSON.stringify(characterRecipe(shuffled)), JSON.stringify(characterRecipe(recipe)));
+  assert.equal(JSON.stringify(recipeCharacterDefinition('fixture-owner', shuffled, { revision: 3 })), JSON.stringify(definition));
+  // Only the build may be missing; a record that drops anything else is still refused.
+  const { height: _height, ...noHeight } = before;
+  assert.equal(valid({ ...definition, parameters: noHeight }).ok, false);
+  assert.throws(() => characterRecipe({ ...before, build: 7 }), /Invalid character recipe/);
+  assert.equal(recipeWidth({ build: 0 }), 1);
+  assert.equal(recipeWidth({ build: RECIPE_BUILD.max }), 1 + RECIPE_BUILD.width);
+  assert.ok(Math.abs(recipeWidth({ build: -50 }) - (1 - RECIPE_BUILD.width / 2)) < 1e-12);
+});
+
+// Val's ask (2026-10-29): the studio starts from a random eyes, brows, lips, hairstyle,
+// frame, hair colour, height and body type. Every one of those varies across starts.
+test('random starts vary every named category: frame, body, build, height, face, eyes, hair and skin', () => {
+  const seen = { frame: new Set(), body: new Set(), build: new Set(), height: new Set(), eyes: new Set(), hairStyle: new Set(), hairColor: new Set(), skin: new Set(),
+    eyeSize: new Set(), browHeight: new Set(), upperLip: new Set(), lowerLip: new Set() };
+  for (let i = 0; i < 200; i++) {
+    const recipe = rollCharacterRecipe();
+    assert.deepEqual(characterRecipe(recipe), recipe);
+    assert.ok(Number.isInteger(recipe.build / RECIPE_BUILD.step) && recipe.build >= RECIPE_BUILD.min && recipe.build <= RECIPE_BUILD.max, `build ${recipe.build}`);
+    assert.ok(Object.is(recipe.build, recipe.build + 0) && !Object.is(recipe.build, -0), 'a neutral build is never -0');
+    seen.frame.add(recipeFrame(recipe));
+    for (const field of ['body', 'build', 'height', 'eyes', 'hairStyle', 'hairColor', 'skin']) seen[field].add(recipe[field]);
+    for (const control of ['eyeSize', 'browHeight', 'upperLip', 'lowerLip']) seen[control].add(recipe.face[control]);
+  }
+  for (const [field, values] of Object.entries(seen)) assert.ok(values.size >= 2, `${field} varies (${[...values].join(', ')})`);
+  assert.equal(seen.frame.size, 2);
+  assert.ok(seen.eyes.size >= 4 && seen.hairColor.size >= 5 && seen.build.size >= 6);
+  for (const value of seen.build) assert.ok(Object.hasOwn(EYE_COLORS, [...seen.eyes][0]) && Object.hasOwn(HAIR_SHADES, [...seen.hairColor][0]) && Number.isInteger(value));
+  // The body dice re-roll the build with the body; the height dice leave it alone.
+  const random = seeded(61);
+  const base = rollCharacterRecipe({ random }), height = rollCharacterRecipe({ from: base, categories: ['height'], random });
+  assert.equal(height.build, base.build);
+  assert.deepEqual(RECIPE_CATEGORIES.body, ['body', 'build']);
 });
 
 test('rolls are seeded, valid, always change something, and leave other categories exactly as they were', () => {

@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { loadCharacterRig } from './helpers/character-rig.js';
 import { loadResidentAvatar } from '../src/avatars.js';
-import { DEFAULT_RECIPE, EYE_COLORS, FACE_CONTROLS, RECIPE_BODIES, SKIN_TONES, rollCharacterRecipe } from '../src/character-recipe.js';
+import { DEFAULT_RECIPE, EYE_COLORS, FACE_CONTROLS, RECIPE_BODIES, SKIN_TONES, recipeWidth, rollCharacterRecipe } from '../src/character-recipe.js';
 import { SKIN_TEXTURES, irisTexture, recipeSkinSource } from '../src/character-recipe-look.js';
 import { HAIRSTYLES } from '../src/resident-hairstyle.js';
 import { textureGain } from '../src/resident-style.js';
@@ -31,6 +31,7 @@ async function withRigs(run) {
 const seeded = seed => () => { seed = (seed + 0x6d2b79f5) >>> 0; let t = seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const materials = avatar => new Map([...avatar.rig.materials].map(([original, material]) => [original.name.replace(/\.\d+$/, ''), material]));
 const standing = avatar => { avatar.object.updateMatrixWorld(true); return avatar.rig.model.getObjectByName('head').getWorldPosition(new THREE.Vector3()).y; };
+const span = avatar => { avatar.object.updateMatrixWorld(true); return avatar.rig.model.getObjectByName('upperarm_l').getWorldPosition(new THREE.Vector3()).distanceTo(avatar.rig.model.getObjectByName('upperarm_r').getWorldPosition(new THREE.Vector3())); };
 
 test('a recipe dresses its body: height, face, hairstyle, skin, eyes, hair, outfit and shoes, leaving the cached rig alone', async () => {
   await withRigs(async () => {
@@ -38,13 +39,17 @@ test('a recipe dresses its body: height, face, hairstyle, skin, eyes, hair, outf
     for (const body of Object.keys(RECIPE_BODIES)) {
       const plain = await loadResidentAvatar(0, 'remote-plain', body, { folk: false, recipe: { ...DEFAULT_RECIPE, body } });
       let recipe;
-      do recipe = rollCharacterRecipe({ from: { ...DEFAULT_RECIPE, body }, categories: ['height', 'face', 'skin', 'eyes', 'hair', 'outfit', 'shoes'], random });
+      do recipe = { ...rollCharacterRecipe({ from: { ...DEFAULT_RECIPE, body }, categories: ['height', 'face', 'skin', 'eyes', 'hair', 'outfit', 'shoes'], random }), build: random() < .5 ? -60 : 40 };
       while (recipe.outfitColor === 'natural' || recipe.shoeColor === 'natural' || recipe.hairStyle === HAIRSTYLES[body] || !Object.values(recipe.face).some(Boolean));
       const avatar = await loadResidentAvatar(0, 'remote-recipe', body, { folk: false, recipe });
       try {
         const label = `${body} ${JSON.stringify(recipe).slice(0, 120)}`;
         // Height scales the whole figure: the head stands in proportion.
         assert.ok(Math.abs(standing(avatar) / standing(plain) - recipe.height / DEFAULT_RECIPE.height) < .002, `${label}: height`);
+        // The build widens or slims the figure without changing its height: the hips and shoulders spread, the head stays put.
+        const { x: wx, y: wy, z: wz } = avatar.rig.model.scale, { x: px, y: py } = plain.rig.model.scale;
+        assert.ok(Math.abs(wx / wy - recipeWidth(recipe)) < 1e-9 && Math.abs(wz / wy - recipeWidth(recipe)) < 1e-9 && Math.abs(px / py - 1) < 1e-9, `${label}: build width ${wx / wy}`);
+        assert.ok(Math.abs(span(avatar) / span(plain) - recipeWidth(recipe) * recipe.height / DEFAULT_RECIPE.height) < .002, `${label}: shoulder span follows the build`);
         // Face sliders move the head's vertices; the default face keeps them.
         let moved = 0;
         const own = [], recipeMeshes = [];

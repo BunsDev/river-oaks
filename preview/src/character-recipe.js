@@ -20,6 +20,11 @@ export const RECIPE_BODIES = freeze({
 });
 // Standing height in centimetres; uniform scale of the whole figure.
 export const RECIPE_HEIGHT = freeze({ min: 150, max: 200, typical: { feminine: 166, masculine: 178 }, spread: 7 });
+// Body type: slim (-100) to broad (100) in steps of 5, a width scale of the figure
+// (its east/west and front/back axes) of up to `width` either way while the height
+// stays exact. The shipped bodies carry no body morphs, so the build is a scale,
+// not a different person; a 2026-10-26 record without it reads as 0 (neutral).
+export const RECIPE_BUILD = freeze({ min: -100, max: 100, step: 5, width: .08, spread: 30 });
 
 // Sliders over resident-face.js's targets. One-sided controls run 0..100 and
 // two-sided ones -100..100 between their `low` and `high` targets; left and
@@ -123,16 +128,18 @@ export const SHOE_COLORS = freeze({
 
 // Studio categories: each rolls and locks as a unit.
 export const RECIPE_CATEGORIES = freeze({
-  body: ['body'], height: ['height'], face: ['face'], skin: ['skin'], eyes: ['eyes'],
+  body: ['body', 'build'], height: ['height'], face: ['face'], skin: ['skin'], eyes: ['eyes'],
   hair: ['hairStyle', 'hairColor'], outfit: ['outfitColor'], shoes: ['shoeColor'],
 });
 
 export const DEFAULT_RECIPE = freeze({
-  body: 'woman-daywear', height: RECIPE_HEIGHT.typical.feminine,
+  body: 'woman-daywear', height: RECIPE_HEIGHT.typical.feminine, build: 0,
   face: Object.fromEntries(FACE_CONTROLS.map(control => [control.id, 0])),
   skin: 'beige', eyes: 'brown', hairStyle: 'ponytail01', hairColor: 'dark-brown', outfitColor: 'natural', shoeColor: 'natural',
 });
 const FIELDS = Object.keys(DEFAULT_RECIPE);
+// Records published before the build existed (catalogue river-oaks-recipes-v1, 2026-10-26) lack it.
+const LEGACY_FIELDS = FIELDS.filter(field => field !== 'build');
 
 const record = value => value !== null && typeof value === 'object' && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype;
 const exact = (value, keys) => record(value) && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key));
@@ -141,15 +148,26 @@ const within = (value, min, max) => Number.isSafeInteger(value) && value >= min 
 const faceRange = control => control.low ? -100 : 0;
 const faceValue = (value, control) => within(value, faceRange(control), 100) && value % FACE_STEP === 0;
 
-// The canonical copy of a recipe, or a TypeError. Never repairs a malformed one.
+const buildValue = value => within(value, RECIPE_BUILD.min, RECIPE_BUILD.max) && value % RECIPE_BUILD.step === 0;
+
+// The canonical copy of a recipe, or a TypeError. Never repairs a malformed one: the
+// only shape accepted beyond the exact field set is a record from before the build
+// existed, which reads as a neutral build. Fields come back in catalogue order, so
+// two canonical copies of one person are the same text whatever order they arrived in.
 export function characterRecipe(value) {
-  const valid = exact(value, FIELDS) && key(RECIPE_BODIES, value.body) && within(value.height, RECIPE_HEIGHT.min, RECIPE_HEIGHT.max)
+  const legacy = exact(value, LEGACY_FIELDS);
+  const valid = (legacy || exact(value, FIELDS)) && key(RECIPE_BODIES, value.body) && within(value.height, RECIPE_HEIGHT.min, RECIPE_HEIGHT.max)
+    && (legacy || buildValue(value.build))
     && exact(value.face, FACE_CONTROLS.map(control => control.id)) && FACE_CONTROLS.every(control => faceValue(value.face[control.id], control))
     && key(SKIN_TONES, value.skin) && key(EYE_COLORS, value.eyes) && key(HAIRSTYLE_OPTIONS, value.hairStyle) && key(HAIR_SHADES, value.hairColor)
     && key(OUTFIT_COLORS, value.outfitColor) && key(SHOE_COLORS, value.shoeColor);
   if (!valid) throw new TypeError('Invalid character recipe');
-  return { ...value, face: Object.fromEntries(FACE_CONTROLS.map(control => [control.id, value.face[control.id]])) };
+  return Object.fromEntries(FIELDS.map(field => [field,
+    field === 'face' ? Object.fromEntries(FACE_CONTROLS.map(control => [control.id, value.face[control.id]])) : field === 'build' && legacy ? 0 : value[field]]));
 }
+
+// The figure's width scale for its build; its height scale is the recipe's height.
+export const recipeWidth = recipe => 1 + recipe.build / RECIPE_BUILD.max * RECIPE_BUILD.width;
 
 // Morph name -> weight for resident-face.js's bake.
 export function recipeFaceShapes(recipe) {
@@ -177,8 +195,10 @@ function weighted(random, weights) {
 const HAIR_WEIGHTS = { black: 2, 'blue-black': 1, 'dark-brown': 3, chestnut: 2, auburn: 1, copper: .7, honey: 1, 'ash-blonde': 1, platinum: .5, silver: .6 };
 const EYE_WEIGHTS = { brown: 3, 'dark-brown': 2, amber: .7, hazel: 1.5, green: 1, blue: 1.5, grey: .8 };
 const styleWeights = frame => Object.fromEntries(Object.entries(HAIRSTYLE_OPTIONS).map(([id, style]) => [id, recipeFrame({ body: style.body }) === frame ? 3 : 1]));
+// A rounded bell (the sum of three uniforms) about zero, in the control's steps.
+const bell = (random, spread, step, min, max) => Math.min(max, Math.max(min, Math.round((random() + random() + random() - 1.5) * 2 * spread / step) * step)) || 0;
 const rolls = {
-  body: random => ({ body: pick(random, Object.keys(RECIPE_BODIES)) }),
+  body: random => ({ body: pick(random, Object.keys(RECIPE_BODIES)), build: bell(random, RECIPE_BUILD.spread, RECIPE_BUILD.step, RECIPE_BUILD.min, RECIPE_BUILD.max) }),
   height: (random, recipe) => {
     // A rounded bell about the frame's typical height (the sum of three uniforms).
     const offset = (random() + random() + random() - 1.5) * 2 * RECIPE_HEIGHT.spread;

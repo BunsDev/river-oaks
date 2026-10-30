@@ -5,7 +5,7 @@ import { loadDistrictData } from '../../server/district-data.js';
 import { createWalkingEnvironment, createWalkingState, guardedStepEnvironment, stepWalking } from '../src/walking.js';
 import { createCommonsStream } from '../src/commons-stream.js';
 import { buildHeightsNeighborhood } from '../src/bayou-heights.js';
-import { createHeightsStream, heightsCommonsLayout, ownedTextureBytes, HEIGHTS_CHUNK_BYTES, HEIGHTS_MAX_BYTES, HEIGHTS_VIEW_HOLD_MS, HEIGHTS_VIEW_METRES } from '../src/heights-stream.js';
+import { createHeightsStream, heightsCommonsLayout, heightsChunkTextureBytes, ownedTextureBytes, HEIGHTS_CHUNK_BYTES, HEIGHTS_MAX_BYTES, HEIGHTS_MAX_TEXTURE_BYTES, HEIGHTS_TEXTURE_BYTES, HEIGHTS_VIEW_HOLD_MS, HEIGHTS_VIEW_METRES } from '../src/heights-stream.js';
 const world = await loadDistrictData({ districtRevision: 'bayou-heights-1' });
 const layout = world.eastGardenCommons, edge = layout.edge, west = layout.heights.bounds[0], MiB = 1024 * 1024;
 const at = ([x, y]) => [edge + x, -1335 + y];
@@ -278,4 +278,53 @@ test('on the Terraces revisions, walking home into the District releases Heights
   await settle(stream, [[west - 10, -1335]]);
   assert.equal(stream.ready(), true);
   stream.dispose();
+});
+
+test('texture estimates come from each plan, err high over the headless measure, and the ceiling refuses nothing the geometry ceiling admits today', async () => {
+  const chain = await loadDistrictData({ districtRevision: 'typesafe-place-1' }), plans = chain.eastGardenCommons.heights.plans;
+  const nineteenth = plans.find(plan => plan.id === 'nineteenth-and-yale'), tower = plans.find(plan => plan.id === 'studewood-north');
+  const signs = plan => new Set(plan.pieces.filter(piece => piece.sign && (piece.piece === 'building/shell' || piece.piece === 'furniture/market-stall')).map(piece => piece.sign)).size;
+  assert.equal(signs(nineteenth), 20);
+  assert.equal(heightsChunkTextureBytes(nineteenth), Math.ceil((20 * HEIGHTS_TEXTURE_BYTES.signRow + HEIGHTS_TEXTURE_BYTES.grate) * 1.02));
+  assert.ok(tower.pieces.some(piece => piece.piece === 'landmark/water-tower'));
+  assert.equal(heightsChunkTextureBytes(tower), Math.ceil((signs(tower) * HEIGHTS_TEXTURE_BYTES.signRow + HEIGHTS_TEXTURE_BYTES.lettering + HEIGHTS_TEXTURE_BYTES.grate) * 1.02));
+  assert.equal(heightsChunkTextureBytes({ id: 'bare', pieces: [] }), Math.ceil((HEIGHTS_TEXTURE_BYTES.signRow + HEIGHTS_TEXTURE_BYTES.grate) * 1.02), 'an unsigned plan still builds a one-row atlas and a grate');
+  // Headless, a neighborhood owns only its grate (no canvas, no atlas): the measure stays under the estimate.
+  const group = buildHeightsNeighborhood(chain.eastGardenCommons, nineteenth, {});
+  await group.userData.ready;
+  assert.equal(ownedTextureBytes(group), HEIGHTS_TEXTURE_BYTES.grate); assert.ok(ownedTextureBytes(group) <= heightsChunkTextureBytes(nineteenth));
+  group.userData.dispose();
+  // Along the whole chain and back, stand-ins owning exactly their estimated textures stream the same chunks at every stop with and without the ceiling.
+  const textured = (plan, bytes) => {
+    const g = sized(bytes); if (!plan) return g;
+    // A flat RGBA strip owning exactly the plan's estimated texture bytes (the data itself stays tiny).
+    const texture = new THREE.DataTexture(new Uint8Array(4), Math.floor(heightsChunkTextureBytes(plan) / 4), 1); texture.userData.owned = true; texture.generateMipmaps = false;
+    g.add(new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshStandardMaterial({ map: texture }))); return g;
+  };
+  const module = async () => ({ buildHeightsLandscape: () => textured(null, HEIGHTS_CHUNK_BYTES['bayou-heights'] * .9), buildHeightsNeighborhood: (_l, plan) => textured(plan, HEIGHTS_CHUNK_BYTES[plan.id] * .9) });
+  const bounded = createHeightsStream({ world: chain, parent: new THREE.Group(), now: () => 0, loadModule: module });
+  const unbounded = createHeightsStream({ world: chain, parent: new THREE.Group(), now: () => 0, loadModule: module, maxTextureBytes: Infinity });
+  assert.equal(bounded.debug().textureBudgetBytes, HEIGHTS_MAX_TEXTURE_BYTES);
+  assert.deepEqual(bounded.debug().estimatedTextureBytes['bayou-heights/nineteenth-and-yale'], heightsChunkTextureBytes(nineteenth));
+  const out = [[edge - 200, -1335], [edge + 60, -1335], [west - 10, -1335], [-2470, -1335], [-2360, -1335], [-2275, -1335], [-2210, -1335], [-2135, -1335], [-2060, -1335], [-1990, -1335], [-1920, -1335]];
+  const route = [...out, ...out.slice(0, -1).reverse()];
+  let heaviest = 0;
+  for (const point of route) {
+    await settle(bounded, [point]); await settle(unbounded, [point]);
+    assert.deepEqual(resident(bounded), resident(unbounded), `the texture ceiling changes nothing at ${point}`);
+    const estimated = bounded.debug().chunks.filter(chunk => chunk.state === 'ready').reduce((n, chunk) => n + bounded.debug().estimatedTextureBytes[chunk.id], 0);
+    heaviest = Math.max(heaviest, estimated);
+    assert.ok(estimated <= HEIGHTS_MAX_TEXTURE_BYTES, `${point}: ${estimated} estimated texture bytes`);
+  }
+  assert.ok(heaviest > 16 * MiB, `the chain holds more than a 16 MiB texture ceiling would allow (${heaviest})`);
+  bounded.dispose(); unbounded.dispose();
+  // A neighborhood measuring past the texture ceiling is refused and retried; the footbridge explains it.
+  const heavy = createHeightsStream({ world, parent: new THREE.Group(), now: () => 0, loadModule: async () => ({
+    buildHeightsLandscape: () => sized(HEIGHTS_CHUNK_BYTES['bayou-heights'] * .9),
+    buildHeightsNeighborhood(_l, plan) { const g = sized(HEIGHTS_CHUNK_BYTES[plan.id] * .9); if (plan.id === 'yale-icehouse') { const t = new THREE.DataTexture(new Uint8Array(4 * 4096 * 4096), 4096, 4096); t.userData.owned = true; t.generateMipmaps = true; g.add(new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshStandardMaterial({ map: t }))); } return g; } }) });
+  await settle(heavy, [[west - 10, -1335]]);
+  assert.equal(heavy.state('bayou-heights/yale-icehouse'), 'failed');
+  assert.equal(heavy.debug().residentTextureBytes, 0);
+  assert.ok(heavy.debug().residentBytes > 0 && heavy.debug().residentBytes <= HEIGHTS_MAX_BYTES);
+  heavy.dispose();
 });

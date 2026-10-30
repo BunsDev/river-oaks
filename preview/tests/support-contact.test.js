@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createSupportContact, supportLink } from '../src/support-contact.js';
+import { createGateSupport, supportLink } from '../src/support-contact.js';
+import { createSupportContact } from '../src/settings-support.js';
 
 class Element {
   constructor(tag) { this.tagName = tag.toUpperCase();this.children = [];this.textContent = ''; }
@@ -20,12 +21,27 @@ test('only a real email address or https link is shown', () => {
   assert.deepEqual(supportLink('https://river-oaks.app/'), { href: 'https://river-oaks.app/', text: 'river-oaks.app' });
 });
 
-test('Settings shows the contact under Support, and nothing without one', t => {
+test('Settings shows the contact under Support, copied from the gate\'s link, and nothing without one', t => {
+  const prior = globalThis.document;t.after(() => { globalThis.document = prior; });
+  let gateAnchor = null;
+  globalThis.document = { createElement: tag => new Element(tag), querySelector: selector => (selector === '#access-support a' ? gateAnchor : null) };
+  assert.equal(createSupportContact(), null, 'no contact under the gate, none in Settings');
+  assert.equal(createSupportContact({ href: '', textContent: '' }), null);
+  gateAnchor = createGateSupport('help@river-oaks.app').children[0];
+  const mail = createSupportContact(), [heading, line] = mail.children, anchor = line.children[0];
+  assert.deepEqual([heading.textContent, line.textContent, anchor.href, anchor.textContent, anchor.target], ['Support', 'Questions, problems or safety concerns: ', 'mailto:help@river-oaks.app', 'help@river-oaks.app', undefined]);
+  const web = createSupportContact(createGateSupport('https://river-oaks.app/support').children[0]).children[1].children[0];
+  assert.deepEqual([web.href, web.textContent, web.target, web.rel], ['https://river-oaks.app/support', 'river-oaks.app/support', '_blank', 'noopener noreferrer']);
+});
+
+test('the sign-in and waitlist gate shows the same contact under its footer, and nothing without one', t => {
   const prior = globalThis.document;t.after(() => { globalThis.document = prior; });
   globalThis.document = { createElement: tag => new Element(tag) };
-  assert.equal(createSupportContact(''), null);
-  const mail = createSupportContact('help@river-oaks.app'), [heading, line] = mail.children, anchor = line.children[0];
-  assert.deepEqual([heading.textContent, line.textContent, anchor.href, anchor.textContent, anchor.target], ['Support', 'Questions, problems or safety concerns: ', 'mailto:help@river-oaks.app', 'help@river-oaks.app', undefined]);
-  const web = createSupportContact('https://river-oaks.app/support').children[1].children[0];
-  assert.deepEqual([web.target, web.rel], ['_blank', 'noopener noreferrer']);
+  assert.equal(createGateSupport(''), null);
+  assert.equal(createGateSupport('help@example.com'), null, 'an example domain is no contact');
+  const line = createGateSupport('help@river-oaks.app'), [anchor] = line.children;
+  assert.deepEqual([line.tagName, line.id, line.className, line.textContent], ['P', 'access-support', 'access-support', 'Questions, problems or safety concerns: ']);
+  assert.deepEqual([anchor.href, anchor.textContent, anchor.target], ['mailto:help@river-oaks.app', 'help@river-oaks.app', undefined]);
+  const web = createGateSupport('https://river-oaks.app/support').children[0];
+  assert.deepEqual([web.href, web.textContent, web.target, web.rel], ['https://river-oaks.app/support', 'river-oaks.app/support', '_blank', 'noopener noreferrer']);
 });
