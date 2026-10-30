@@ -259,3 +259,21 @@ test('bangs: a fringe in front of her forehead, ending just above the brows, mov
     assert.ok(Math.abs(turned - .5) < .05, `the fringe turns ${turned.toFixed(3)} rad with a 0.5 rad head turn`);
   } finally { costume.dispose(); rig.dispose(); }
 });
+
+test('the lapels lie on the blazer front, not behind it', async () => {
+  const { object, rig, costume, body } = await dressed();
+  try {
+    object.updateMatrixWorld(true);
+    const { blazer, lapels } = costume.suit, shell = blazer.geometry.attributes.position, point = new THREE.Vector3();
+    assert.equal(lapels.length, 2);
+    for (const lapel of lapels) {
+      const p = lapel.geometry.attributes.position; let hidden = 0, worst = 0;
+      for (let i = 0; i < p.count; i++) {
+        body.worldToLocal(lapel.localToWorld(point.fromBufferAttribute(p, i)));
+        let cloth = -Infinity; for (const k of blazer.covered) if (Math.abs(shell.getX(k) - point.x) < .006 && Math.abs(shell.getY(k) - point.y) < .006) cloth = Math.max(cloth, shell.getZ(k));
+        if (cloth > -Infinity && point.z < cloth + .001) { hidden++; worst = Math.max(worst, cloth - point.z); }
+      }
+      assert.ok(hidden <= p.count * .05, `${lapel.name}: ${hidden} of ${p.count} points behind the blazer (up to ${(worst * 1000).toFixed(1)} mm)`);
+    }
+  } finally { costume.dispose(); rig.dispose(); }
+});

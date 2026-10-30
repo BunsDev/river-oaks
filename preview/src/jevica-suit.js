@@ -285,15 +285,16 @@ export function createJevicaSuit(avatar, { surface, owned, attach, mesh }) {
     // Notched lapels: two ribbons folded back along the V, from the button to the collar.
     const upper = attach('spine_03'), chestOrigin = boneRest('spine_03');
     for (const side of [-1, 1]) {
-      // Four columns across the lapel: the piped V edge (two columns 4 mm apart), then the
-      // satin out to the lapel's width, which peaks at the notch two thirds of the way up.
-      const steps = 14, positions = [], indices = [], edge = [], columns = 4;
+      // Six columns across the lapel: the piped V edge (two columns 4 mm apart), the satin, and
+      // the piped outer edge (as in the reference, so the lapel's shape reads), out to the
+      // lapel's width, which peaks at the notch two thirds of the way up.
+      const steps = 14, positions = [], indices = [], edge = [], columns = 6;
       for (let s = 0; s <= steps; s++) {
         const t = s / steps, y = THREE.MathUtils.lerp(buttonY, collarY - .01, t), xEdge = side * (BLAZER.neckWidth + (y - buttonY) * BLAZER.slope);
         let zFront = 0; for (let i = 0; i < count; i++) if (torso[i] > .4 && Math.abs(rest[i * 3 + 1] - y) < .012 && Math.abs(rest[i * 3] - xEdge) < .03) zFront = Math.max(zFront, rest[i * 3 + 2]);
         const width = .012 + .03 * Math.sin(Math.PI * Math.min(1, t / .7)) * (t < .7 ? 1 : .35);
-        for (const [k, across] of [[0, 0], [1, .004], [2, .005], [3, width]]) {
-          positions.push(...toRoot(new THREE.Vector3(xEdge + side * across, y, zFront + BLAZER.torso + .008 - across * .15)).sub(chestOrigin).toArray()); edge.push(k < 2 ? 1 : 0);
+        for (const [k, across] of [[0, 0], [1, .004], [2, .005], [3, width - .0045], [4, width - .0035], [5, width]]) {
+          positions.push(...toRoot(new THREE.Vector3(xEdge + side * across, y, zFront + BLAZER.torso + .008 - across * .15)).sub(chestOrigin).toArray()); edge.push(k < 2 || k > 3 ? 1 : 0);
         }
         if (s < steps) for (let k = 0; k < columns - 1; k++) { const a = s * columns + k, b = a + columns; indices.push(a, a + 1, b, a + 1, b + 1, b); }
       }

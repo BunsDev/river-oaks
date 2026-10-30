@@ -210,3 +210,25 @@ All three are in the session's face captures.
 - It is one sheet, not hair cards. The strands don't move independently or react to wind.
 - The reference's side-swept face-framing locks are not attempted.
 - No human review.
+
+## Increment 5: piped lapel outlines (task `jevica-lapels-20261030`, stacked on #817)
+
+**Problem.** The lapels were piped only along the V edge, so in close-ups they read as a
+faint panel and the notched shape was lost. The reference pipes both edges.
+
+**First hypothesis, rejected.** I thought #815's tailoring had pushed the blazer in front
+of the lapels. A new test shows otherwise: under 5% of lapel points sit behind the blazer
+surface, and the test passed before any change. It stays as a guard.
+
+**What changes.** Each lapel ribbon gains two outer columns, 3.5 mm and 4.5 mm in from its
+edge, piped rose-gold. The notched outline now reads in front and three-quarter close-ups.
+
+**Results.**
+- Node: `jevica-reference-look` 11/11.
+- Browser: likeness IoU 0.598, mean ΔE 16.9; `jevica-gown`, `jevica-waist`, `jewel-optics`, `gown-sampling` and `gown-contact-samples` pass.
+- Core verify passed: agent 294/294; preview 4772 pass, 1 skipped; server 1110 pass, 285 skipped; desktop 127 pass, 5 skipped.
+
+**Gaps.**
+- No vine filigree on the lapels.
+- The lapel is a ribbon pinned to the chest, not a rolled collar.
+- No human review.
