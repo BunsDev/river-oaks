@@ -103,6 +103,21 @@ Val authorized: land #764, #722, #695 + #707 and #765; release on the ended owne
   - `feat/pink-jet-age-r1-kit-20261028`: a live session's command references it (`active-session-command`), so it's left alone.
   - `feat/support-contact-gate-292-20261027` (touched by the #716 merge) and `fix/player-blocking-ui-292-20261027` (a rebase of merged #711; `range-diff` shows 3/3 patches identical, so the exact-head path refuses it): `--cancel-stale` after their 12 h cutoffs, around 11:45Z and 12:35Z on 10-30.
 
+## Round 5: comprehensive prune (Val: "prune comprehensively", 10-30 ~01:15Z)
+
+- **Delivered branches, owners ended** (none in ListAgents), retired with `project:prune --cancel-stale --branch <b> --expected-head <sha>`. Every dry run was clean; each apply archived the tip and the full checkout, restore-tested both, then removed the checkout and ref (`cancelled-local`; the register rows are now `retired` with their archive):
+  - feat/human-studio-apple-polish-20261018, fix/vite-env-dir-20261020, feat/resilient-client-290-20261020, feat/background-input-290-20261020
+  - feat/world-expansion-580-581-20261022, feat/crime-melee-597-20261023, integration/expansion-mvp-20261023, test/mvp-release-readiness-20261024
+  - feat/onfoot-presentation-640-20261024, fix/network-drops-290-20261024, test/two-player-place-copy-20261026, feat/character-recipes-20261026
+  - fix/ipic-movement-design-20261026, ci/heights-shard-split-20261028
+- **Detached checkouts**, via `--cancel-stale --detached-path`: river-oaks-accept-final-5541f831 (`cancel-detached-aenc2Z`), river-oaks-fidelity-timing-517 (`9AVWLY`), river-oaks-pr-sweep (`hykVAd`), river-oaks-streaming-f1-review (`G6eQHB`), river-oaks-two-player-perf-base (`8o7x0W`). Their register rows note the archive.
+- **Left in place:**
+  - **Live or active work:** the six pink-jet-age branches (a live session uses them), `river-oaks-onfoot-640-inc5-ae` (river-oaks-3d is live), `river-oaks-ios-draw-budget-289-base` (#685 is open), `river-oaks-release-v0.2.2-tag` (the release lane waits on Val), `river-oaks-jev-likeness-snapshot` (touched within 12 h).
+  - **Stale registrations:** six detached checkouts in other sessions' scratchpads whose directories are already gone (`missing-worktree`).
+  - **Open PRs** and every undelivered branch.
+  - **This goal's scratch copies**, until their cutoffs.
+- **Counts at ~01:45Z:** 81 worktrees and 85 branches, down from 91 and 94 at round 4. Other sessions keep creating work, so these counts are not a clean before/after.
+
 ## Decisions for Val
 
 This list replaces the open lists in #724 (draft-wave-2) and the `docs/register-reconcile-20261028` ledger (`12ea8d75`, local). Their items that are now done are dropped.
