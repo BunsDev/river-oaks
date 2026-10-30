@@ -14,6 +14,7 @@ import { storefrontSpot } from '../preview/src/arrival.js';
 import { placesOf } from '../preview/src/places.js';
 import { APPEARANCE_COOLDOWN_MS, MOVEMENTS, canFlyAs, canUseAppearance, isJevicaOwner, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
 import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
+import { RIBBONWING_MANEUVERS, MANEUVER_RECOVERY_ALTITUDE, MANEUVER_TIP_CLEARANCE, isManeuverKind, maneuverPose, maneuverSweep } from '../preview/src/ribbonwing-maneuvers.js';
 import { buildKind, buildGeometry, buildYaw, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, BUILD_REASONS, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.js';
 import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
@@ -239,7 +240,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if((environment.roomAt(ax,-an)?.storeId??null)!==(environment.roomAt(tx,-tn)?.storeId??null))return false;
     return environment.hasSightLine([ax,an,ah+1.2],[tx,tn,th+1.2]);
   }
-  const publicPlayer = player => ({...(Object.hasOwn(player,'health')?{health:player.health}:{}),office:offices.publicVisit(player.id),...(campusWorkstation(player)?{campusWorkstation:true}:{}),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,...(characterByUser.has(player.id)?{character:copy(characterByUser.get(player.id))}:{}),movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),canSetWorldPolicy:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),position:[...player.position],yaw:player.yaw,altitude:player.altitude,buildingId:player.buildingId??null,levelId:player.levelId??null,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
+  const publicPlayer = player => ({...(Object.hasOwn(player,'health')?{health:player.health}:{}),office:offices.publicVisit(player.id),...(campusWorkstation(player)?{campusWorkstation:true}:{}),interaction:interactions.publicFor(player),id:player.id,name:accountName(player.id,player.name),appearance:player.appearance,...(characterByUser.has(player.id)?{character:copy(characterByUser.get(player.id))}:{}),movement:movementOf(player),gesture:interactions.publicFor(player)?.kind??(player.gestureUntil>now()?player.gesture:null)??(player.performing?'perform':null),performing:Boolean(player.performing),canBuild:Boolean(isAdmin(player.id)),canGrantWishes:Boolean(isAdmin(player.id)),canSetWorldPolicy:Boolean(isAdmin(player.id)),vehicle:player.vehicle??null,sitting:publicSeat(player),...maneuverView(player),buildingId:player.buildingId??null,levelId:player.levelId??null,voice:{space:voiceSpaceOf(player.id),id:voiceIdentities.get(player.id)??null}});
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
   const benches=benchSeats(worldData);
@@ -687,11 +688,93 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const room=environment.roomAt(x,-north);
     return room && ownerOnlyHomes.has(room.storeId) && room.contains(x,north) ? room : null;
   };
+  // ---- Ribbonwing maneuvers (#777) -------------------------------------
+  // The owner asks for an authored path (ribbonwing-maneuvers.js) with an id and a
+  // monotonic seq; the craft flies it along its accepted heading. The server admits it only in the
+  // Ribbonwing, for its entitled owner, high enough to recover, with the swept
+  // centre and wingtips open to flight under the ceiling; then it owns the pose
+  // and publishes the path with its server start time so the pilot, passengers
+  // and observers replay the same motion. A repeated id replays the answer, a
+  // lower seq is stale. It ends at the path's end, or early in a level hover
+  // at the current path point (admitted clear) when the owner loses the craft
+  // or entitlement, is downed or held, or the world is checkpointed.
+  const maneuverId=value=>typeof value==='string'&&/^[A-Za-z0-9_-]{1,64}$/.test(value);
+  function maneuverView(player) {
+    if(!player.maneuver)return {position:[...player.position],yaw:player.yaw,altitude:player.altitude};
+    const m=player.maneuver,at=maneuverPose(m,now()),ground=environment.groundAt(at.east,-at.north);
+    return {position:[at.east,at.north,ground],yaw:player.yaw,altitude:at.altitude,maneuver:{...m,origin:[...m.origin],duration:RIBBONWING_MANEUVERS[m.kind].duration}};
+  }
+  function recoveredFromManeuver(player,time) {
+    const {maneuver:m,...rest}=player,at=maneuverPose(m,time);
+    return {...rest,position:[at.east,at.north,environment.groundAt(at.east,-at.north)],altitude:Math.max(0,Math.min(environment.flightCeiling,at.altitude)),lastManeuverId:m.id,
+      // The usual reset budget: the pilot's first hover pose after the path drifts a little.
+      poseAt:time,moveBudget:.1,liftBudget:.1};
+  }
+  function endManeuver(player,time,completed) {
+    if(!player.maneuver)return;
+    const next=recoveredFromManeuver(player,time);
+    delete player.maneuver;Object.assign(player,next);revision++;
+    return completed;
+  }
+  function settleManeuver(player,time) {
+    if(!player.maneuver)return;
+    if(maneuverPose(player.maneuver,time).done)return endManeuver(player,time,true);
+    if(player.vehicle!=='hover'||!isJevicaOwner(player.id))endManeuver(player,time,false);
+  }
+  // Why a path cannot be flown here, or null: every swept centre and wingtip point
+  // must keep recovery height, stay under the ceiling and be clear to fly.
+  function maneuverRefusal(plan) {
+    const {centre,tips}=maneuverSweep(plan);
+    if(centre.some(point=>point[2]<MANEUVER_RECOVERY_ALTITUDE-1e-9)||tips.some(point=>point[2]<MANEUVER_TIP_CLEARANCE-1e-9))return 'maneuver_too_low';
+    if([...centre,...tips].some(point=>point[2]>environment.flightCeiling))return 'maneuver_ceiling';
+    for(const [east,north,up] of [...centre,...tips]) {
+      if(restrictedRoomAt(east,north)&&up<=0.1)return 'private_home';
+      if(!environment.canFly(east,environment.groundAt(east,-north)+up,-north))return 'maneuver_blocked';
+    }
+    return null;
+  }
+  // A saved maneuver is exactly what admission stored for this player: their
+  // pose is its origin, its heading their craft's, its seq their latest, and it
+  // started no later than now (instances' clocks may differ by a few seconds).
+  function savedManeuverValid(player) {
+    const m=player.maneuver;
+    if(m===undefined)return true;
+    return record(m) && fields(m,['id','seq','kind','heading','origin','altitude','startedAt']) && maneuverId(m.id) && isManeuverKind(m.kind)
+      && m.seq===player.maneuverSeq && player.vehicle==='hover' && isJevicaOwner(player.id)
+      && Array.isArray(m.origin) && m.origin.length===2 && m.origin[0]===player.position[0] && m.origin[1]===player.position[1]
+      && m.altitude===player.altitude && Number.isFinite(m.heading)
+      && Math.abs(Math.atan2(Math.sin(m.heading-player.yaw-Math.PI),Math.cos(m.heading-player.yaw-Math.PI)))<1e-9
+      && Number.isFinite(m.startedAt) && m.startedAt<=now()+5000;
+  }
+  function maneuverCommand(player,message,time) {
+    if(!fields(message,['type','kind','id','seq'])||!isManeuverKind(message.kind)||!maneuverId(message.id)
+      ||!Number.isSafeInteger(message.seq)||message.seq<1)return reject('invalid_maneuver');
+    if(!isJevicaOwner(player.id))return reject('exclusive_vehicle');
+    // Duplicates (a retry of the accepted request) replay; anything older is stale.
+    if(player.maneuver?.id===message.id||player.lastManeuverId===message.id)return {ok:true,replayed:true,player:publicPlayer(player),serverTimeMs:time};
+    if(message.seq<=(player.maneuverSeq??0))return reject('stale_maneuver');
+    if(player.maneuver)return reject('maneuver_active');
+    if(player.vehicle!=='hover')return reject('maneuver_requires_ribbonwing');
+    if((interiorLevels.get(player.levelId)?.level.index??0)>0)return reject('flight_not_allowed');
+    // The craft flies the way it faces: a riding pose's yaw is the carriage yaw, whose nose (-X) points at yaw + pi.
+    const heading=Math.atan2(Math.sin(player.yaw+Math.PI),Math.cos(player.yaw+Math.PI));
+    const plan={kind:message.kind,heading,origin:/** @type {[number,number]} */([player.position[0],player.position[1]]),altitude:player.altitude};
+    const refused=maneuverRefusal(plan);if(refused)return reject(refused);
+    player.maneuverSeq=message.seq;
+    player.maneuver={id:message.id,seq:message.seq,kind:message.kind,...plan,startedAt:time};
+    interactions.cancel(player.id);revision++;
+    return {ok:true,player:publicPlayer(player),serverTimeMs:time};
+  }
   function pose(player, message, time) {
     const correction = error => ({...reject(error),correction:publicPlayer(player),player:publicPlayer(player)});
     // Down after a rival's counter (#640): a bounded hold that ends by itself.
     if(crime.down(player.id,time))return correction('incapacitated');
     if(police.held(player.id))return correction('surrendered');
+    // A Ribbonwing maneuver owns the pose until it ends (ribbonwing-maneuvers.js):
+    // late, reordered or duplicate client poses cannot fight the server's path.
+    // A pose already in flight when the maneuver began is refused without a correction:
+    // the pilot's page follows the same path, and a correction would unseat them.
+    if(player.maneuver)return reject('maneuver_active');
     const {position,yaw,altitude} = message;
     if (!fields(message,['type','position','yaw','altitude','levelId','vehicle','interactionId']) || (message.vehicle != null && !vehicleKind(message.vehicle))
       || !Array.isArray(position) || position.length !== 3 || !position.every(Number.isFinite)
@@ -995,6 +1078,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(prepareSelection&&!['appearance','character','movement'].includes(message.type))return reject('invalid_command');
     const ledger=ledgers.get(userId),time=now();
     ledger.seen=time;
+    settleManeuver(player,time);
+    if(player.maneuver&&(crime.down(userId,time)||police.held(userId)))endManeuver(player,time,false);
     // The owner's world rules apply wherever she stands, an office or upper floor included.
     if(message.type==='worldPolicy')return worldPolicyCommand(userId,message,ledger,time);
     if(offices.has(userId) && !['office','chat'].includes(message.type))return reject('leave_office_first');
@@ -1006,6 +1091,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     // Voice is negotiated over HTTP from the transport's authority; it is never a game command.
     if (message.type==='voice') return reject('invalid_command');
     if (!spend(ledger,time)) return reject('rate_limited');
+    if(message.type==='maneuver')return maneuverCommand(player,message,time);
     interactions.prune();
     if(message.type==='campus')return campus.command(player,message,time);
     if(message.type==='interiorLevel')return changeInteriorLevel(player,message,time);
@@ -1244,6 +1330,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (!Number.isFinite(delta) || delta<=0) return;
     const duration=Math.min(delta,0.25),time=now();
     clearExpiredLedgers(time);
+    // Maneuvers end on the tick too, so a pilot who stops sending (focus lost, tab asleep) still lands level.
+    for(const player of players.values())settleManeuver(player,time);
     tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();lanternWalk.prune(time);screenings.prune(time);campus.prune(time);
     for (const [id,hold] of focus) if (hold.until<=time || !reachable(players.get(id),localById.get(hold.localId))) focus.delete(id);
     const held=new Set([...focus.values()].map(hold=>hold.localId));
@@ -1266,6 +1354,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     revision++;
   }
   function snapshot() {
+    const snapshotTime=now();for(const player of players.values())settleManeuver(player,snapshotTime);
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
@@ -1285,6 +1374,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     interactions.prune();
     tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();lanternWalk.prune(now());screenings.prune(now());
     const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.checkpoint()}:{}),screenings:screenings.checkpoint(now()),worldPolicy,crime:crime.checkpoint(),police:police.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
+      // An active maneuver is saved as admitted, so another instance (or this one after a
+      // cache miss) replays the same path from the same start; restore re-checks it.
       if(!player.performing)return player;
       const {performing,...rest}=player;
       return {...rest,position:stageStepDown(player)??performing.from};
@@ -1423,7 +1514,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         && nonnegative(player.altitude) && player.altitude<=environment.flightCeiling && Number.isFinite(player.poseAt)
         && (player.gesture===undefined && player.gestureUntil===undefined
           || (player.gesture===null || SHOWN_GESTURES.includes(player.gesture)) && nonnegative(player.gestureUntil))
-        && ['moveBudget','liftBudget'].every(key=>Number.isFinite(player[key]) && player[key]>=-1e-8 && player[key]<=1));
+        && ['moveBudget','liftBudget'].every(key=>Number.isFinite(player[key]) && player[key]>=-1e-8 && player[key]<=1)
+        && savedManeuverValid(player) && (player.maneuverSeq===undefined || Number.isSafeInteger(player.maneuverSeq) && player.maneuverSeq>=0)
+        && (player.lastManeuverId===undefined || maneuverId(player.lastManeuverId)));
       if(saved.version<6 && recovered.offices!==undefined)throw new Error('Invalid office version');
       if(saved.version>=6 && recovered.offices===undefined)throw new Error('Missing offices');
       const nextOffices=offices.validate(recovered.offices,nextPlayers,saved.version>=8,saved.version);
@@ -1583,6 +1676,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       if (nextLife) {Object.assign(nextLife,clock);nextLife.state=state;}
       for (const key of Object.keys(state)) delete state[key];
       Object.assign(state,nextState);
+      // A saved path the restored town no longer clears (a district change) ends where it began, level.
+      for(const player of nextPlayers.values())if(player.maneuver&&maneuverRefusal(player.maneuver)){player.lastManeuverId=player.maneuver.id;delete player.maneuver;}
       players.clear();for (const [id,player] of nextPlayers) players.set(id,player);
       ledgers.clear();for (const [id,ledger] of nextLedgers) ledgers.set(id,ledger);
       focus.clear();for (const [id,hold] of nextFocus) focus.set(id,hold);

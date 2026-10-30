@@ -19,8 +19,9 @@ import { localLocomotion } from './locomotion-handoff.js';
 import { APPEARANCE_COOLDOWN_MS, CHARACTERS, appearanceFor, canFlyAs, canUseAppearance, defaultAppearanceFor, isJevicaOwner, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './player-avatar.css';
 import { isGameplayKey } from './keyboard-input.js';
+import { RIBBONWING_MANEUVERS, RIBBONWING_MANEUVER_KINDS, maneuverMinimumAltitude } from './ribbonwing-maneuvers.js';
 
-export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), requestVehicleExit=async()=>({ok:true}), requestChauffeur, getPortrait=null, reducedMotion }) {
+export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), requestVehicleExit=async()=>({ok:true}), requestManeuver=async()=>({ok:false}), requestChauffeur, getPortrait=null, reducedMotion }) {
   const lifetime = new AbortController();
   const holder = new THREE.Group();holder.name = 'Player character';holder.userData.renderAuditOwner = 'player';scene.add(holder);
   const owner=isJevicaOwner(userId);
@@ -32,7 +33,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(owner&&!crewLocal)crewLocal=createCarriageEncounter(getWorld())[0]??null;
     return owner&&crewLocal&&!current?[...locals,crewLocal]:locals;
   };
-  const carriage=createParkedCarriage({scene,walking,getWorld,getLocals:crewLocals,getConversation,requestExit:requestVehicleExit,requestChauffeur,reducedMotion});
+  const carriage=createParkedCarriage({scene,walking,getWorld,getLocals:crewLocals,getConversation,requestExit:requestVehicleExit,requestChauffeur,requestManeuver,reducedMotion});
   // Hidden until the walk has a pose (update() below): shown first, it flashed for a frame at sign-in.
   const panel = document.createElement('section');panel.className = 'player-controls';panel.hidden = true;panel.setAttribute('aria-label', 'Your character');
   panel.innerHTML = `<header class="player-identity">
@@ -56,6 +57,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       <label for="player-vehicle">Your ride</label><select id="player-vehicle"><option value="rolls">Pink Rolls-Royce</option><option value="motorcycle">Rose motorcycle</option><option value="hover">Ribbonwing</option></select>
       <div class="player-actions"><button id="player-carriage" type="button" aria-keyshortcuts="Q"><span>Call Jev</span><kbd>Q</kbd></button><button id="player-ride" type="button" aria-keyshortcuts="G"><span data-ride-label>Ride with Jev</span><kbd>G</kbd></button></div>
       <button id="player-chauffeur" type="button" aria-pressed="false">Jev smart drive</button><div class="player-actions"><button id="player-drive-pause" type="button">Pause ride</button><button id="player-drive-park" type="button">Brake & park</button></div><div class="player-drive-pad" aria-label="Driving directions"><button type="button" data-drive="forward">Accelerate ↑</button><button type="button" data-drive="left">Steer ←</button><button type="button" data-drive="reverse">Reverse ↓</button><button type="button" data-drive="right">Steer →</button></div><p id="player-drive-status" role="status" aria-live="polite">Jev is ready</p>
+      <div class="player-actions ribbonwing-maneuvers" role="group" aria-label="Ribbonwing maneuvers" hidden>${RIBBONWING_MANEUVER_KINDS.map((kind,i)=>`<button type="button" data-maneuver="${kind}" aria-keyshortcuts="${i+1}"><span>${RIBBONWING_MANEUVERS[kind].label}</span><kbd>${i+1}</kbd></button>`).join('')}</div>
     </section>
   </details><p id="player-status" role="status" aria-live="polite"></p>`;
   panel.insertBefore(panel.querySelector('.player-quick-actions'), panel.querySelector('.character-picker'));
@@ -65,6 +67,22 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   panel.addEventListener('click',event=>{
     if(event.detail>0&&event.target.closest('.player-actions button'))host.focus({preventScroll:true});
   });
+  // Ribbonwing maneuvers (#777): the town admits and flies them; refusals say why.
+  const maneuverGroup=panel.querySelector('.ribbonwing-maneuvers');
+  const maneuverRefusal={maneuver_too_low:result=>`Climb higher first: the ${result.label} needs ${Math.ceil(result.minimum??0)} m.`,maneuver_blocked:result=>`No clear sky here for the ${result.label}.`,
+    maneuver_ceiling:result=>`Too close to the sky's ceiling for the ${result.label}.`,maneuver_active:()=>'Finish the current maneuver first.',maneuver_requires_ribbonwing:()=>'Pilot the Ribbonwing aloft to fly maneuvers.',stale_maneuver:()=>'That maneuver request was out of date. Try again.'};
+  const flyManeuver=async kind=>{
+    const label=RIBBONWING_MANEUVERS[kind].label,result=await carriage.flyManeuver(kind);
+    const minimum=result.minimum??maneuverMinimumAltitude(kind);
+    status.textContent=result.ok?`${label}!`:(maneuverRefusal[result.error]?.({label,minimum})??result.message??`The town did not allow the ${label}.`);
+    walking.notify?.(status.textContent);
+  };
+  for(const button of maneuverGroup.querySelectorAll('[data-maneuver]'))button.addEventListener('click',()=>flyManeuver(button.dataset.maneuver),{signal:lifetime.signal});
+  host.addEventListener('keydown',event=>{
+    const index=/^Digit([1-4])$/.exec(event.code)?.[1];
+    if(!index||!isGameplayKey(event)||event.repeat||!carriage.riding||carriage.kind!=='hover')return;
+    event.preventDefault();flyManeuver(RIBBONWING_MANEUVER_KINDS[Number(index)-1]);
+  },{signal:lifetime.signal});
   const carriageButton=panel.querySelector('#player-carriage');
   carriageButton.addEventListener('click',()=>{
     const summoned=carriage.summon();status.textContent=summoned?`${carriage.label} is waiting nearby.`:'Find a clear stretch of road to call your ride.';
@@ -91,7 +109,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   bindPageLifecycle({ release: holdRide, signal: lifetime.signal });
   const rideButton=panel.querySelector('#player-ride');
   rideButton.addEventListener('click',async()=>{
-    if(carriage.riding){if(carriage.airborne){carriage.land();status.textContent='The Ribbonwing is landing. Press G again once it is down.';}else status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';}
+    if(carriage.riding){if(carriage.maneuver)status.textContent=`Hold on: the ${RIBBONWING_MANEUVERS[carriage.maneuver.kind].label} finishes first.`;else if(carriage.airborne){carriage.land();status.textContent='The Ribbonwing is landing. Press G again once it is down.';}else status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';}
     else status.textContent=carriage.board()?'Ride with Jev, or give directions with W/S and A/D.':'Walk closer to your vehicle before boarding.';
   });
   host.addEventListener('keydown',event=>{
@@ -385,6 +403,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       }
       previous = pose ? now : null;
       flightButton.querySelector('[data-flight-label]').textContent=pose?.flying?(pose.landing?'Cancel landing':'Land'):'Take flight';
+      maneuverGroup.hidden=!(carriage.riding&&carriage.kind==='hover');for(const button of maneuverGroup.querySelectorAll('button'))button.disabled=!carriage.airborne||Boolean(carriage.maneuver);
       panel.querySelector('#player-mode').textContent=pose?.sitting?'Seated':pose?.riding?'Riding':pose?.flying?(pose.landing?'Landing':'In flight'):'On foot';flightButton.setAttribute('aria-pressed',String(Boolean(pose?.flying)));
       panel.querySelector('.player-flight-pad').hidden=!pose?.flying||!canFlyAs(userId,appearance);host.dataset.flightVehicle=pose?.flying?form:'';
       // No flashing or camera shake: character motion respects reduced motion.

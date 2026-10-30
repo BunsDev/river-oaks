@@ -15,8 +15,8 @@ The work lands in increments:
 
 | Increment | Scope | State |
 | --- | --- | --- |
-| 1 (this PR) | D0 source map; reference import and hashes; D1 metric blockout, decisions and canonical views; procedural runtime model with interior, LODs, colliders, attachments and rig; integration into the existing `hover` path; the D1 comparison baseline | ready for review |
-| 2 | Server-validated maneuvers: commands with id/seq/start, deterministic authored paths, swept-volume and recovery-altitude admission, dedupe of stale/reordered/duplicate input, focus loss and revocation recovery; orientation in poses | not started |
+| 1 (#779) | D0 source map; reference import and hashes; D1 metric blockout, decisions and canonical views; procedural runtime model with interior, LODs, colliders, attachments and rig; integration into the existing `hover` path; the D1 comparison baseline | ready for review |
+| 2 | Server-validated maneuvers: commands with id/seq/start, deterministic authored paths, swept-volume and recovery-altitude admission, dedupe of stale/reordered/duplicate input, focus loss and revocation recovery; orientation in poses | in progress (see below) |
 | 3 | Two-player occupancy: passenger consent, server-derived passenger pose, disconnect recovery and safe landing, teardown; a two-client journey | not started |
 | 4 | Bounded audio/VFX; detail art toward the references' materials; performance and disposal measurement in town | not started |
 
@@ -160,6 +160,87 @@ Occupant fit:
 - The capture comparison is silhouette IoU plus coarse colour zones. It is
   not a pixel match and not Val's visual acceptance.
 - Not tested: device, touch and human accessibility.
+
+## Increment 2: server-owned maneuvers
+
+Files:
+
+- `preview/src/ribbonwing-maneuvers.js` (new, shared by server and clients): the
+  four authored paths, the swept centre and wingtips, minimum entry altitudes
+  (roll 3.92 m, loop 3 m, tuck dive 9.05 m, Petal Roll 3 m) and `validManeuver`.
+- `preview/src/server-clock.js` (new): the town-clock estimate from `serverTimeMs`.
+- `server/world.js`: the `maneuver` command, `maneuverRefusal`, settle on
+  command, tick and snapshot, poses refused while active, and checkpoint and
+  restore of the active maneuver.
+- `preview/src/multiplayer-client.js`: `maneuver(kind)` (rising seq, one retry
+  with the same id). Poses are suppressed until the path ends.
+- `preview/src/parked-carriage.js`: the craft follows the path (yaw, then pitch,
+  then roll) and feeds the rig the `maneuver` phase and tuck. It adopts or ends
+  a maneuver from snapshots. Land and leave wait for the end.
+- `preview/src/remote-players.js`: observers replay the path on the town clock,
+  turning about the rider's seat.
+- `preview/src/player-avatar.js`: the maneuver buttons and keys 1–4, and refusal
+  messages. `main.js` wires the request and the debug fields.
+- Tests: `server/tests/ribbonwing-maneuvers.test.js` (7) and
+  `preview/tests/ribbonwing-maneuvers.test.js` (2). The journey adds maneuver
+  steps to `preview/e2e/hover-coach.js`.
+
+Decisions:
+
+- Paths are deterministic functions of server time, and the craft's heading is
+  fixed for the whole path. No orientation is streamed; every client derives
+  it, so pilot and observers cannot disagree beyond clock-estimate error.
+- Admission sweeps the whole path once. Recovery is a level hover at the
+  current path point, which admission already proved clear.
+- An early checkpoint draft converted the active maneuver into its recovery
+  pose. That would end every maneuver whenever the Redis room restores from the
+  checkpoint (another instance or a cache miss), so the active maneuver is now
+  saved and re-validated instead.
+
+Checks so far:
+
+- `node --test server/tests/ribbonwing-maneuvers.test.js`: 7 passed.
+- `node --test preview/tests/ribbonwing-maneuvers.test.js preview/tests/ribbonwing.test.js preview/tests/vehicles.test.js`:
+  27 passed.
+- `pnpm run test:server` (before the checkpoint change): 1085 passed, 1 failed,
+  283 skipped. The failure was the office "supported district checkpoint
+  recovery" test at load 44; it passed alone in 5.7 s. Not caused by this
+  diff (no vehicle state), but it must be rerun.
+
+- `node scripts/browser-lock.mjs 'ribbonwing maneuver journey' -- pnpm run test:experience hover-coach`:
+  passed on the eleventh local run (27.5 s, 31 checks). `data/reports/experience.json`
+  was restored after every run. The new checks:
+  - maneuvers shown aloft;
+  - a tuck dive from 5 m refused with the reason;
+  - the roll admitted and published in the snapshot;
+  - a maximum tilt of 3.00 rad, a level finish and the pilot still seated;
+  - the path ending 0.00 m from its admitted end;
+  - the town and the pilot agreeing.
+
+  The failed runs found real defects, now fixed:
+  1. The `carriage.maneuver(kind)` method shadowed the `maneuver` getter, so the
+     UI saw a maneuver as always active. It is renamed `flyManeuver`.
+  2. Ending a maneuver zeroed the movement budgets, so the pilot's first hover
+     pose was `movement_too_fast`, and its correction unseated her. It now gets
+     the 0.1 reset budget used elsewhere. A server regression test fails
+     without the fix.
+  3. A pose arriving during a maneuver was refused with a correction, which
+     unseats the pilot. It is now refused without one, and the page stops
+     sending poses while the request is pending.
+  4. A riding pose reports the pilot's seat, so the path is the seat. The page
+     had put the craft's origin on the path, about 1.4 m off. The craft now
+     turns about the seat, as observers already did.
+
+  The other runs were diagnostics, and one journey check was corrected to
+  compare the seat rather than the craft origin.
+
+Not covered:
+
+- The downed and held aborts are verified by reading the code only, with no
+  crime-flow test.
+- The loop, tuck dive and Petal Roll are flown only in the server tests and the
+  path tests. The journey flies the roll.
+- Observer replay has no two-client run yet; that comes with increment 3.
 
 ## Rollback
 

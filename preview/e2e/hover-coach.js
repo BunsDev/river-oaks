@@ -6,6 +6,9 @@ async page => {
   const checks=[],errors=[],origin=page.url().startsWith('http')?await page.evaluate(()=>location.origin):'http://127.0.0.1:5181';
   const check=(value,message)=>{if(!value)throw new Error(message);checks.push(message);};
   page.on('pageerror',error=>errors.push(error.message));
+  // Refusals the town sends back (with or without a correction), for diagnosing an unseated pilot.
+  const refusals=[];
+  page.on('websocket',socket=>socket.on('framereceived',frame=>{try{const data=JSON.parse(frame.payload);if(data.type==='result'&&!data.ok)refusals.push({error:data.error,message:data.message,correction:Boolean(data.correction),at:Date.now()});}catch{ /* binary or non-JSON frame */ }}));
   const self=()=>page.evaluate(()=>{const m=window.__riverMultiplayer();const me=m.snapshot.players.find(p=>p.id===m.selfId);return {vehicle:me.vehicle??null,altitude:me.altitude,position:me.position};});
   const host=()=>page.locator('#canvas-host');
   await page.setViewportSize({width:1440,height:1000});await page.emulateMedia({reducedMotion:'no-preference'});
@@ -59,6 +62,44 @@ async page => {
   await page.waitForFunction(()=>window.__riverCarriage().mechanisms.gear===1,{},{timeout:20000});
   checks.push('Above 3 m the landing feet retract');
   await page.screenshot({path:'output/playwright/hover-coach-flying.png'});
+  // Maneuvers (#777): the town admits a roll from 5 m, every snapshot carries the path, the craft
+  // rolls about its flight path and finishes level 22 m on; a dive from too low is refused with a reason.
+  await host().focus();await page.keyboard.down('Space');
+  try {await page.waitForFunction(()=>(window.__riverCarriage().placement.altitude??0)>5.2,{},{timeout:20000});}
+  finally {await page.keyboard.up('Space');}
+  await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return (m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??0)>5;},{},{timeout:20000});
+  check(await page.locator('.ribbonwing-maneuvers').isVisible(),'Piloting the Ribbonwing aloft shows the four maneuvers');
+  // On a timeout, say which step stalled and what the garage and carriage showed.
+  const step=async(label,wait)=>{try{await wait();}catch(error){const state=await page.evaluate(()=>({status:document.querySelector('#player-status')?.textContent,notice:document.querySelector('.walking-notice,#walking-notice')?.textContent,c:JSON.stringify((({maneuver,maneuverTrace,placement})=>({maneuver:maneuver??'missing',maneuverTrace,altitude:placement?.altitude}))(window.__riverCarriage())),now:Date.now()}));throw new Error(`${label}: ${error.message.split('\n')[0]} ${JSON.stringify(state)}`);}};
+  await host().focus();await page.keyboard.press('Digit3');
+  await step('dive refusal',()=>page.waitForFunction(()=>document.querySelector('#player-status')?.textContent.startsWith('Climb higher first'),{},{timeout:10000}));
+  check((await page.locator('#player-status').textContent()).includes('Tuck dive'),'A tuck dive from 5 m is refused: it needs room to pull out');
+  await host().focus();await page.keyboard.press('Digit1');
+  await step('roll admitted',()=>page.waitForFunction(()=>window.__riverCarriage().maneuver?.kind==='roll',{},{timeout:10000}));
+  await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return m.snapshot.players.find(p=>p.id===m.selfId)?.maneuver?.kind==='roll';},{},{timeout:5000});
+  const admitted=(await page.evaluate(()=>window.__riverCarriage())).maneuver;
+  checks.push('The town admits the roll and publishes it in the snapshot');
+  // Sample the craft's tilt through the roll: its local up against world up.
+  let tilt=0;
+  for(let i=0;i<12;i++){
+    const sample=await page.evaluate(()=>{const c=window.__riverCarriage();return {q:c.craftQuaternion,maneuver:c.maneuver};});
+    if(!sample.maneuver)break;
+    const [x,y,z,w]=sample.q;tilt=Math.max(tilt,Math.acos(Math.max(-1,Math.min(1,1-2*(x*x+z*z)))));
+    await page.waitForTimeout(180);
+  }
+  check(tilt>1.2,`The craft rolls through the maneuver (max tilt ${tilt.toFixed(2)} rad)`);
+  await step('roll ended',()=>page.waitForFunction(()=>window.__riverCarriage().maneuver===null,{},{timeout:10000}));
+  await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return !m.snapshot.players.find(p=>p.id===m.selfId)?.maneuver;},{},{timeout:10000});
+  const exit=await page.evaluate(()=>window.__riverCarriage()),townExit=await self();
+  const [qx,,qz]=exit.craftQuaternion;
+  check(1-2*(qx*qx+qz*qz)>.999,'The roll finishes level');
+  check(exit.riding&&await host().getAttribute('data-riding')==='true'&&townExit.vehicle==='hover',`Jevica is still at the controls after the roll${exit.riding&&townExit.vehicle==='hover'?'':` ${JSON.stringify({riding:exit.riding,attr:await host().getAttribute('data-riding'),town:townExit,trace:exit.maneuverTrace,refusals:refusals.slice(-6),status:await page.locator('#player-status').textContent(),notice:await page.locator('#town-notice, .town-notice').first().textContent().catch(()=>null)})}`}`);
+  // The path ends 22 m along the admitted heading from its origin (server frame: [east, north]; three z = -north).
+  const endEast=admitted.origin[0]+22*Math.cos(admitted.heading),endNorth=admitted.origin[1]+22*Math.sin(admitted.heading);
+  // The path is the pilot's seat (what the town tracks), not the craft's origin.
+  const miss=Math.hypot(exit.pose.position[0]-endEast,-exit.pose.position[2]-endNorth);
+  check(miss<.5,`The roll ends 22 m along the admitted heading (off by ${miss.toFixed(2)} m)`);
+  check(Math.hypot(townExit.position[0]-exit.pose.position[0],-townExit.position[1]-exit.pose.position[2])<.5&&Math.abs(townExit.altitude-exit.placement.altitude)<.5,'The town and the pilot agree where the roll ended');
   // G while aloft lands first; a second G steps out once it is down.
   await host().focus();await page.keyboard.press('KeyG');
   check(await host().getAttribute('data-riding')==='true','G while aloft does not drop the rider');

@@ -14,6 +14,8 @@ import { bicycleCrankAngle } from './bicycle-crank.js';
 import { VEHICLES, vehicleKind, riderSeat, vehicleChauffeured } from './vehicle-config.js';
 import { permittedAppearance, sharedAppearance } from './shared-appearances.js';
 import { createPeerMotion } from './locomotion-handoff.js';
+import { maneuverPose, validManeuver } from './ribbonwing-maneuvers.js';
+import { serverNow } from './server-clock.js';
 
 // shadowDirection, when given, returns the shadow-casting light's direction (or
 // null without sun shadows) and lets a peer whose figure and shadow are both out
@@ -31,6 +33,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
   const setLabelText=(entry,text)=>{if(entry.label.textContent!==text){entry.label.textContent=text;entry.labelSize=null;}};
   const next=new THREE.Vector3(),point=new THREE.Vector3();
   const remove=entry=>{entry.removed=true;entry.version++;entry.placeholder?.dispose();entry.colors?.dispose();entry.outfit?.dispose();entry.vehicle?.dispose();entry.road?.dispose();entry.avatar?.dispose();entry.holder.removeFromParent();entry.label.remove();};
+  const MANEUVER_AXES={yaw:new THREE.Vector3(0,1,0),pitch:new THREE.Vector3(0,0,-1),roll:new THREE.Vector3(-1,0,0)},maneuverTurn=new THREE.Quaternion();
   const syncRoad=(entry,kind)=>{
     const selected=vehicleKind(kind);
     if(entry.road?.spec.kind===selected)return;
@@ -132,6 +135,15 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
         else if(motion.heading!==undefined)entry.heading=motion.heading;
         if(target.sitting)holder.rotation.y=entry.heading;
         else holder.rotation.y+=Math.atan2(Math.sin(entry.heading-holder.rotation.y),Math.cos(entry.heading-holder.rotation.y))*(1-Math.exp(-12*delta));
+        // A Ribbonwing maneuver (#777) replays the town's path from its start time on
+        // the town clock, so every observer sees the same roll, loop or dive in step
+        // (ground from the last snapshot). It turns about the rider's seat.
+        entry.flight=validManeuver(target.maneuver)&&entry.road?.spec.kind==='hover'?maneuverPose(target.maneuver,serverNow()):null;
+        if(entry.flight&&!entry.flight.done){
+          const at=entry.flight;holder.position.set(at.east,target.position[2]+at.altitude,-at.north);
+          holder.quaternion.setFromAxisAngle(MANEUVER_AXES.yaw,at.heading-Math.PI).multiply(maneuverTurn.setFromAxisAngle(MANEUVER_AXES.pitch,at.pitch)).multiply(maneuverTurn.setFromAxisAngle(MANEUVER_AXES.roll,at.roll));
+          entry.heading=at.heading-Math.PI;entry.maneuvering=true;
+        } else if(entry.maneuvering){holder.rotation.set(0,holder.rotation.y,0);entry.maneuvering=false;}
         const gated=!(isVisible(target)&&holder.position.distanceTo(camera.position)<120);
         // Out of view with its shadow: skip every pass, but keep animating at a
         // quarter rate so the figure is current when it turns back into view. A
@@ -159,7 +171,8 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
             entry.road.wheels.forEach((wheel,i)=>{wheel.rotation.z=entry.roadDistance/ride.wheels[i][1];});
             entry.road.setCrank(bicycleCrankAngle(entry.roadDistance));entry.road.setSaddle(avatar.bicycleSaddle);
             // A remote Ribbonwing's mechanisms follow the snapshot's altitude and speed.
-            entry.road.setFlightState?.({phase:target.altitude>.1?(speed>1?'cruise':'hover'):'ready',altitude:target.altitude,maxSpeed:ride.maxSpeed,occupied:true});
+            const flight=entry.flight&&!entry.flight.done?entry.flight:null;
+            entry.road.setFlightState?.({phase:flight?'maneuver':target.altitude>.1?(speed>1?'cruise':'hover'):'ready',altitude:flight?flight.altitude:target.altitude,maxSpeed:ride.maxSpeed,occupied:true,tuck:flight?flight.tuck:0});
             entry.road.animate(now,Math.min(ride.maxSpeed,speed));
           }
         }

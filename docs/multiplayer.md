@@ -283,6 +283,29 @@ the cross-world `cycling-miles` account store (dev town: every 30 s and on
 `uncycle`; hosted room: on every tick, after the commit, through a pending map
 that retries on a store failure). The snapshot carries `cycling: {taken: [slotId]}`
 so clients hide bikes that are out.
+
+Ribbonwing maneuvers (#777) are server-owned. The pilot sends
+`{type:'maneuver', kind, id, seq}`, where `kind` is `roll`, `loop`, `tuck_dive`
+or `petal_roll` (`preview/src/ribbonwing-maneuvers.js`, shared by server and
+clients). The town admits it only for the entitled owner flying the `hover`
+kind on the street level. It sweeps the authored path's centre and both
+wingtips every 0.15 m and refuses with `maneuver_too_low`, `maneuver_ceiling`,
+`private_home` or `maneuver_blocked`.
+
+- A repeated `id` (the active or last one) replays without restarting.
+- A `seq` that does not rise is `stale_maneuver`. A second request while one
+  runs is `maneuver_active`.
+- While a maneuver runs, poses are refused with `maneuver_active`. Snapshots
+  publish the live path point and `maneuver:{id,seq,kind,heading,origin,altitude,startedAt,duration}`.
+  Every client replays the path from `startedAt` on the town clock, estimated
+  from each snapshot's `serverTimeMs`.
+- The tick ends a maneuver at its end, so a silent or unfocused pilot still
+  finishes level. It also ends early, in a level hover at the current path
+  point (already proven clear), when the craft or entitlement is lost or the
+  pilot is downed or held. Leaving the world drops it.
+- Checkpoints keep the active maneuver as admitted, so another instance replays
+  it from the same start. Restore requires it to match the player's saved pose,
+  heading and seq, and ends one whose path the restored town no longer clears.
 `GET /api/cycling/leaderboard` (session required; the gateway limits it to 60
 reads a minute per account) returns the top 20 riders as `{rank, name, miles}`
 plus the caller's own `{rank, miles}`; the top list is cached for ten seconds
