@@ -20,6 +20,8 @@ import { serverNow } from './server-clock.js';
 // shadowDirection, when given, returns the shadow-casting light's direction (or
 // null without sun shadows) and lets a peer whose figure and shadow are both out
 // of view skip its update and every pass, like a peer beyond the distance gate.
+// Audits and journeys count players apart from the town's own figures (rivals, police, residents).
+export const figureKind=id=>/^(rival|police|resident):/.test(id)?id.slice(0,id.indexOf(':')):'player';
 export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=>true,snapInitialHeading=false,shadowDirection=null,localCraft=()=>null}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
   // Who is talking on shared voice right now: a ring on the nameplate and the
@@ -94,7 +96,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
     });},
     stats(){return [...entries].map(([id,entry])=>{
       const arm=entry.avatar?.rig?.model?.getObjectByName('upperarm_r'),rest=arm&&entry.avatar.rig.rest.get(arm);
-      return {id,onScreen:Boolean(entry.onScreen),labelVisible:Boolean(entry.labelVisible),ready:Boolean(entry.avatar),fallback:Boolean(entry.placeholder),appearance:entry.loadedAppearance,look:entry.loadedLook,character:entry.definition?structuredClone(entry.definition):null,materials:entry.colors?.inspect()??[],realism:entry.avatar?.realismReport??null,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray(),locomotion:{speed:entry.motion.state.speed,heading:entry.motion.state.heading??null,distance:entry.motion.state.distance},feet:(entry.avatar?.feet??[]).map(leg=>({side:leg.side,contact:leg.contact,error:leg.error,target:leg.target?.toArray()??null,actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()}))};
+      return {id,kind:figureKind(id),onScreen:Boolean(entry.onScreen),labelVisible:Boolean(entry.labelVisible),ready:Boolean(entry.avatar),fallback:Boolean(entry.placeholder),appearance:entry.loadedAppearance,look:entry.loadedLook,character:entry.definition?structuredClone(entry.definition):null,materials:entry.colors?.inspect()??[],realism:entry.avatar?.realismReport??null,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray(),locomotion:{speed:entry.motion.state.speed,heading:entry.motion.state.heading??null,distance:entry.motion.state.distance},feet:(entry.avatar?.feet??[]).map(leg=>({side:leg.side,contact:leg.contact,error:leg.error,target:leg.target?.toArray()??null,actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()}))};
     });},
     // Where each remote player is drawn (debug: a passenger's seat as observers see it).
     holderOf(id){const entry=entries.get(id);return entry?{position:entry.holder.position.toArray(),quaternion:entry.holder.quaternion.toArray(),aboard:Boolean(entry.aboard)}:null;},
@@ -140,7 +142,8 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
         // Watering: face the planter, which the server turned them toward
         // (a player's yaw is the camera's, behind them).
         else if(target.interaction)entry.heading=target.interaction.heading;
-        else if(target.gesture==='water')entry.heading=target.yaw+Math.PI;
+        // A startled or cowering resident faces the trouble the town turned them toward (#640).
+        else if(target.gesture==='water'||target.gesture==='startle'||target.gesture==='cower')entry.heading=target.yaw+Math.PI;
         else if(motion.heading!==undefined)entry.heading=motion.heading;
         if(target.sitting)holder.rotation.y=entry.heading;
         else holder.rotation.y+=Math.atan2(Math.sin(entry.heading-holder.rotation.y),Math.cos(entry.heading-holder.rotation.y))*(1-Math.exp(-12*delta));
