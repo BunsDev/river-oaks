@@ -1,0 +1,256 @@
+{
+  "base": "3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8",
+  "branch": "fix/depth-review-hardening-20261027",
+  "renderer": "Chromium 141.0.7390.37 headless_shell / SwiftShader; locked Playwright 1.64.1 driver",
+  "mode": "authenticated provider-free fixture; shrink-only recording journey",
+  "baseOccurrences": 9296,
+  "finalOccurrences": 9255,
+  "removed": {
+    "brassMirror": 23,
+    "brassLeatherBacking": 16,
+    "receptionPlasterTimber": 2
+  },
+  "captureStatsBefore": {
+    "calls": 59,
+    "triangles": 109062,
+    "textures": 17,
+    "glError": 0
+  },
+  "captureStatsAfter": {
+    "calls": 59,
+    "triangles": 109062,
+    "textures": 17,
+    "glError": 0
+  },
+  "allocationsBefore": {
+    "boutiques": {
+      "draws": 318,
+      "triangles": 512818,
+      "geometryBytes": 196944,
+      "instanceBytes": 721164
+    },
+    "ipic": {
+      "draws": 70,
+      "triangles": 136340,
+      "geometryBytes": 5857304,
+      "instanceBytes": 192
+    }
+  },
+  "allocationsAfter": {
+    "boutiques": {
+      "draws": 319,
+      "triangles": 513288,
+      "geometryBytes": 196944,
+      "instanceBytes": 724204
+    },
+    "ipic": {
+      "draws": 70,
+      "triangles": 136340,
+      "geometryBytes": 5857304,
+      "instanceBytes": 192
+    }
+  },
+  "journey": {
+    "passed": true,
+    "checks": [
+      "this renderer's depth reach was measured",
+      "the scan the District arrival covered every face",
+      "the scan east of the Gardens campus covered every face",
+      "the scan inside the Commons covered every face",
+      "no new, enlarged or relocated conflict beyond 9255 bounded depth occurrences",
+      "shader patches failed: ",
+      "outdoor ground inside a room footprint is cut away, and kept outside it",
+      "the room clip cuts instanced ground where the instance stands, not at its geometry origin",
+      "the room clip composes batch placement with a translated parent",
+      "the near-camera fade dissolves a batched mesh by where the batch places it",
+      "a paver surface without a colour map compiles and draws",
+      "every shader in the town compiled",
+      "no page errors"
+    ],
+    "precision": [
+      {
+        "elevation": 10,
+        "gap": 0.0015,
+        "fightsFrom": 10,
+        "slack": 15.0994944
+      },
+      {
+        "elevation": 10,
+        "gap": 0.005,
+        "fightsFrom": null,
+        "slack": null
+      },
+      {
+        "elevation": 10,
+        "gap": 0.01,
+        "fightsFrom": null,
+        "slack": null
+      },
+      {
+        "elevation": 10,
+        "gap": 0.02,
+        "fightsFrom": null,
+        "slack": null
+      },
+      {
+        "elevation": 10,
+        "gap": 0.05,
+        "fightsFrom": null,
+        "slack": null
+      },
+      {
+        "elevation": 10,
+        "gap": 0.1,
+        "fightsFrom": null,
+        "slack": null
+      },
+      {
+        "elevation": 30,
+        "gap": 0.0015,
+        "fightsFrom": 20,
+        "slack": 3.7748736
+      },
+      {
+        "elevation": 30,
+        "gap": 0.005,
+        "fightsFrom": 80,
+        "slack": 0.7864319999999999
+      },
+      {
+        "elevation": 30,
+        "gap": 0.01,
+        "fightsFrom": 160,
+        "slack": 0.39321599999999995
+      },
+      {
+        "elevation": 30,
+        "gap": 0.02,
+        "fightsFrom": 320,
+        "slack": 0.19660799999999998
+      },
+      {
+        "elevation": 30,
+        "gap": 0.05,
+        "fightsFrom": 320,
+        "slack": 0.49152
+      },
+      {
+        "elevation": 30,
+        "gap": 0.1,
+        "fightsFrom": 320,
+        "slack": 0.98304
+      },
+      {
+        "elevation": 60,
+        "gap": 0.0015,
+        "fightsFrom": 5,
+        "slack": 60.3979776
+      },
+      {
+        "elevation": 60,
+        "gap": 0.005,
+        "fightsFrom": 5,
+        "slack": 201.32659199999998
+      },
+      {
+        "elevation": 60,
+        "gap": 0.01,
+        "fightsFrom": 5,
+        "slack": 402.65318399999995
+      },
+      {
+        "elevation": 60,
+        "gap": 0.02,
+        "fightsFrom": 5,
+        "slack": 805.3063679999999
+      },
+      {
+        "elevation": 60,
+        "gap": 0.05,
+        "fightsFrom": 5,
+        "slack": 2013.26592
+      },
+      {
+        "elevation": 60,
+        "gap": 0.1,
+        "fightsFrom": 5,
+        "slack": 4026.53184
+      }
+    ],
+    "slack": 4026.53184,
+    "known": 292,
+    "remaining": 425,
+    "knownOccurrences": 9255,
+    "observedOccurrences": 9255,
+    "fixedSinceListed": [
+      "Mesh|interior-brass ~ Mesh|interior-leather ~ 0.0000",
+      "Mesh|interior-brass ~ Mesh|interior-leather ~ 0.0001",
+      "Mesh|interior-brass ~ Mesh|interior-mirror ~ 0.0000",
+      "Mesh|interior-brass ~ Mesh|interior-mirror ~ 0.0100",
+      "Mesh|interior-wall ~ Mesh|interior-warmPanel ~ 0.0000",
+      "Reception: ipic-warm-plaster|ipic-warm-plaster ~ Reception: ipic-weathered-timber|ipic-weathered-timber ~ 0.0000",
+      "campus:ceiling|campus:ceiling ~ campus:glass|campus:glass ~ 0.0000",
+      "campus:ceiling|campus:ceiling ~ campus:luminaire|campus:luminaire ~ 0.0000",
+      "facade:facade-floor|facade-floor ~ facade:facade-stone|facade-stone ~ 0.0000",
+      "facade:finish:facade-planter+reference-hoarding+reference-rattan+reference-reclaimed-timber+reference-vine-blossom+reference-wisteria|finish:facade-planter+reference-hoarding+reference-rattan+reference-reclaimed-timber+reference-vine-blossom+reference-wisteria ~ facade:finish:facade-reveal+reference-ouzo-blue+reference-vine-leaves|finish:facade-reveal+reference-ouzo-blue+reference-vine-leaves ~ 0.0003",
+      "market-row:city-kit/glass-dark|city-kit/glass-dark ~ market-row:city-kit/limestone|city-kit/limestone ~ 0.0000"
+    ],
+    "scans": [
+      {
+        "station": "the District arrival",
+        "seconds": 46.033,
+        "faces": 1177702,
+        "fights": 872
+      },
+      {
+        "station": "east of the Gardens campus",
+        "seconds": 78.724,
+        "faces": 1212499,
+        "fights": 877
+      },
+      {
+        "station": "inside the Commons",
+        "seconds": 54.988,
+        "faces": 1265962,
+        "fights": 877
+      }
+    ],
+    "patches": {
+      "plainClip": {
+        "inside": 0,
+        "outside": 1
+      },
+      "instancedClip": {
+        "inside": 0,
+        "outside": 1
+      },
+      "batchedClip": {
+        "inside": 0,
+        "outside": 1
+      },
+      "fade": {
+        "near": 0.0029296875,
+        "far": 1
+      },
+      "surface": 1,
+      "compileErrors": []
+    }
+  },
+  "sourceSha256": {
+    "preview/src/depth-layer-audit.js": "b0f7b077e9240759464298a49f56ea0b28dcaa3505581d1760e5e54b8512880e",
+    "preview/src/depth-layer-baseline.js": "ab1c0e112d6a48011a72ce5fd3654fa19055b2ee2bc93d7835ab92c518feba3f",
+    "preview/src/store-interiors.js": "ae70879b504b5b763ea667a500660fbaede3f172cc6dd1ac5c5cffbb00864820",
+    "preview/src/ipic-interior.js": "dc96798f6b556e28e65ba05d5650747f91a259225ea850daa0f017cd066daa64",
+    "preview/src/materials.js": "e91848932446dda65ba3a27c63eaef021a600a67393e5285b9caa8368aef21b3",
+    "preview/e2e/depth-layers.js": "81ec1070c4ff7aa550067d9ba904dc8da24e81823f5a0cb299cc1d2a556b3fb2",
+    "preview/e2e/depth-layers-known.json": "0d7f7e43ede61d34116b8d513271ef08e830a729bb7eabfd2690ed77b05d3e11"
+  },
+  "unverified": [
+    "physical-GPU precision and frame/submission timings",
+    "phone performance and quality",
+    "continuous player-height approach/strafe/turn/back-away at fixed daylight and dusk",
+    "hosted CI aggregate"
+  ],
+  "testedSourceCommit": "b86ccc018b92440bb7b22ffa10a7cef8a23c5358",
+  "verification": "verification.json"
+}

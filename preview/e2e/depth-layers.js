@@ -13,6 +13,8 @@ async page => {
   const check = (condition, message, detail) => { if (!condition) throw new Error(`${message}${detail === undefined ? '' : ` ${JSON.stringify(detail).slice(0, 1500)}`}`); checks.push(message); };
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (/Shader Error|Program Info Log|VALIDATE_STATUS/.test(message.text())) shaderErrors.push(message.text().slice(0, 500)); });
+  const {createCampusStartupReadiness}=await import('./garden-campus-readiness.js');
+  const readiness=createCampusStartupReadiness();readiness.track(page);
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('http://127.0.0.1:5173/?motion-debug=1&render-audit=1');
   await page.locator('#loading').waitFor({ state: 'hidden', timeout: 180000 });
@@ -44,11 +46,13 @@ async page => {
   const stations = [['the District arrival', null], ['east of the Gardens campus', [-2688, -1290]], ['inside the Commons', [-2606, -1335]]];
   const scans = [];
   for (const [station, position] of stations) {
-    if (position) await travel(position);
+    // A synchronous million-face DEV scan can outlast a software runner's heartbeat. Admit the
+    // next action on a proved responsive connection, without changing production timeouts or retrying commands.
+    if (position) { await readiness.joined(page);await travel(position); }
     await settle();
-    const started = Date.now(), { faces, truncated, fights } = await page.evaluate(() => window.__riverRenderAudit.depthFights());
+    const started = Date.now(), { faces, truncated, fights, occurrences } = await page.evaluate(() => window.__riverRenderAudit.depthFights({occurrences:true}));
     check(!truncated, `the scan ${station} covered every face`, { faces });
-    scans.push({ station, seconds: (Date.now() - started) / 1000, faces, fights });
+    scans.push({ station, seconds: (Date.now() - started) / 1000, faces, fights, occurrences });
   }
   // Grouped by the two surfaces and their gap; the full list goes into the report as evidence.
   const groups = new Map();
@@ -60,15 +64,32 @@ async page => {
   }
   const { readFile, writeFile } = await import('node:fs/promises'), list = 'preview/e2e/depth-layers-known.json', key = g => `${g.a} ~ ${g.b} ~ ${(+g.gap).toFixed(4)}`;
   const found = [...groups.values()].sort((p, q) => key(p) < key(q) ? -1 : 1);
-  // One pair per line, so a fix shows as the lines it removes.
-  if (process.env.RIVER_OAKS_DEPTH_LAYERS_RECORD === '1') await writeFile(list, `{\n "note": ${JSON.stringify('Surface pairs that fought for depth before preview/e2e/depth-layers.js; fix them and rerun with RIVER_OAKS_DEPTH_LAYERS_RECORD=1 to shrink this list.')},\n "pairs": [\n${found.map(({ a, b, gap, stations, widest, fightMetres, at }) => `  ${JSON.stringify({ a, b, gap, stations, widest, fightMetres, at })}`).join(',\n')}\n ]\n}\n`);
-  const known = new Set(JSON.parse(await readFile(list, 'utf8')).pairs.map(key)), fresh = found.filter(g => !known.has(key(g))), gone = [...known].filter(k => !groups.has(k));
+  const { collectDepthOccurrences, compareDepthBaseline, burnDownDepthBaseline, formatDepthBaseline } = await import('../src/depth-layer-baseline.js');
+  let baseline=JSON.parse(await readFile(list,'utf8'));
+  const occurrences=collectDepthOccurrences(scans);
+  // Migration is explicit and only available for the legacy class-only file. Run it on the
+  // recorded, unchanged geometry before fixing defects; never use it to accept a new version-2 regression.
+  if (process.env.RIVER_OAKS_DEPTH_LAYERS_MIGRATE === '1') {
+    if (baseline.version===2) throw new Error('Depth occurrence baseline already migrated');
+    const {execFileSync}=await import('node:child_process');
+    const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+    if (head!=='3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8') throw new Error('Migration must run on the recorded geometry baseline');
+    execFileSync('git',['diff','--exit-code','HEAD','--','preview/src/city-kit','preview/src/district.js','preview/src/reference-facades.js','preview/src/reference-blocks.js','preview/src/store-interiors.js','preview/src/ipic-interior.js','preview/src/garden-campus.js','preview/src/green-roofs.js'],{stdio:'pipe'});
+    baseline={...baseline,version:2,geometryBaseline:'3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8',occurrences};
+    await writeFile(list,formatDepthBaseline(baseline));
+  }
+  const known = new Set(baseline.pairs.map(key)), fresh = compareDepthBaseline(baseline,occurrences), gone = [...known].filter(k => !groups.has(k));
   if (fresh.length) {
-    const error = new Error(`${fresh.length} new pairs of surfaces fight for depth within sight: ${fresh.slice(0, 8).map(g => `${g.a} / ${g.b} ${g.gap * 1000} mm at ${g.at}`).join('; ')}`);
+    const error = new Error(`${fresh.length} new or enlarged depth occurrences: ${fresh.slice(0, 8).map(g => `${g.a} / ${g.b} at ${g.cell.map(v=>v*4)}`).join('; ')}`);
     error.journeyEvidence = { slack, precision: precision.onsets, fresh, groups: found, scans: scans.map(({ station, seconds, faces }) => ({ station, seconds, faces })) };
     throw error;
   }
-  checks.push(`no surface pair fights for depth within sight beyond the ${known.size} listed in ${list}`);
+  if (process.env.RIVER_OAKS_DEPTH_LAYERS_RECORD === '1') {
+    baseline=burnDownDepthBaseline(baseline,occurrences);
+    baseline.pairs=found.map(({a,b,gap,stations,widest,fightMetres,at})=>({a,b,gap,stations,widest,fightMetres,at}));
+    await writeFile(list,formatDepthBaseline(baseline));
+  }
+  checks.push(`no new, enlarged or relocated conflict beyond ${baseline.occurrences.length} bounded depth occurrences`);
 
   // The shared shader patches, with their real modules, on the meshes they must handle.
   const patches = await page.evaluate(async () => {
@@ -92,20 +113,23 @@ async page => {
     // A plain mesh moves by its own matrix; an instanced one by its instance's.
     const placed = (mesh, east, north) => {
       const matrix = new THREE.Matrix4().makeTranslation(east, 0, -north);
-      if (mesh.isInstancedMesh) { mesh.setMatrixAt(0, matrix); mesh.instanceMatrix.needsUpdate = true; } else mesh.matrix.copy(matrix);
+      if (mesh.isInstancedMesh || mesh.isBatchedMesh) { mesh.setMatrixAt(0, matrix); if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true; } else mesh.matrix.copy(matrix);
       mesh.matrixAutoUpdate = false; mesh.frustumCulled = false; mesh.updateMatrixWorld(true); return mesh;
     };
     // A room 10–14 m east and north; outdoor ground drawn inside it is cut away.
     const room = { footprint: [[10, 10], [14, 10], [14, 14], [10, 14]], facade: [10, 10], right: [1, 0], aMin: 0, aMax: 4, depth: 4, floor: 0, toLocal: (east, north) => [east - 10, north - 10] };
-    const clipCase = instanced => {
+    const clipCase = kind => {
       const clip = createRoomGroundClip([room]), scene = new THREE.Scene();
-      const ground = instanced ? new THREE.InstancedMesh(plane(), white(), 1) : new THREE.Mesh(plane(), white());
-      scene.add(ground); clip.apply(scene);
-      placed(ground, 12, 12); const inside = lit(scene, above(12, 12));
-      placed(ground, 30, 30); const outside = lit(scene, above(30, 30));
+      const ground = kind==='batched' ? new THREE.BatchedMesh(1,64,64,white()) : kind==='instanced' ? new THREE.InstancedMesh(plane(), white(), 1) : new THREE.Mesh(plane(), white());
+      if (kind==='batched') ground.addInstance(ground.addGeometry(plane()));
+      const parent=new THREE.Group();scene.add(parent);parent.add(ground);
+      if (kind==='batched') parent.position.set(3,0,-4);
+      clip.apply(scene);
+      placed(ground, 12-parent.position.x, 12+parent.position.z); const inside = lit(scene, above(12, 12));
+      placed(ground, 30-parent.position.x, 30+parent.position.z); const outside = lit(scene, above(30, 30));
       clip.dispose(); return { inside, outside };
     };
-    const plainClip = clipCase(false), instancedClip = clipCase(true);
+    const plainClip = clipCase('plain'), instancedClip = clipCase('instanced'), batchedClip = clipCase('batched');
     // A batched quad a metre under the camera dissolves; six metres under it, it is whole.
     const fadeCase = () => {
       const material = seeThroughNearCamera(white()), batch = new THREE.BatchedMesh(1, 64, 64, material);
@@ -120,12 +144,13 @@ async page => {
     const lights = new THREE.Scene(); lights.add(unmapped, new THREE.AmbientLight(0xffffff, 3));
     const surface = lit(lights, above(0, 0));
     renderer.dispose();
-    return { plainClip, instancedClip, fade, surface, compileErrors };
+    return { plainClip, instancedClip, batchedClip, fade, surface, compileErrors };
   });
   // Every patch is judged before any failure is reported, so one run names all that regressed.
   const judged = [
     [patches.plainClip.inside < .05 && patches.plainClip.outside > .95, 'outdoor ground inside a room footprint is cut away, and kept outside it', patches.plainClip],
     [patches.instancedClip.inside < .05 && patches.instancedClip.outside > .95, 'the room clip cuts instanced ground where the instance stands, not at its geometry origin', patches.instancedClip],
+    [patches.batchedClip.inside < .05 && patches.batchedClip.outside > .95, 'the room clip composes batch placement with a translated parent', patches.batchedClip],
     [patches.fade.near < .05 && patches.fade.far > .95, 'the near-camera fade dissolves a batched mesh by where the batch places it', patches.fade],
     [patches.surface > .95 && patches.compileErrors.length === 0, 'a paver surface without a colour map compiles and draws', { surface: patches.surface, errors: patches.compileErrors.map(error => error.slice(0, 300)) }],
   ];
@@ -134,5 +159,5 @@ async page => {
   for (const [, message] of judged) checks.push(message);
   check(shaderErrors.length === 0, 'every shader in the town compiled', shaderErrors.slice(0, 3));
   check(errors.length === 0, 'no page errors', errors.slice(0, 3));
-  return { passed: true, checks, precision: precision.onsets, slack, known: known.size, remaining: found.length, fixedSinceListed: gone, scans: scans.map(({ station, seconds, faces, fights }) => ({ station, seconds, faces, fights: fights.length })), patches };
+  return { passed: true, checks, precision: precision.onsets, slack, known: known.size, remaining: found.length, knownOccurrences: baseline.occurrences.length, observedOccurrences: occurrences.length, fixedSinceListed: gone, scans: scans.map(({ station, seconds, faces, fights }) => ({ station, seconds, faces, fights: fights.length })), patches };
 }
