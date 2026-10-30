@@ -2,7 +2,7 @@ import { batchCostumeAttachments } from './costume-batching.js';
 import * as THREE from 'three';
 import { createJevicaDrape } from './jevica-drape.js';
 import { fitJevicaBodice } from './bodice-fitting.js';
-import { applyHairOmbre, createJevicaSuit } from './jevica-suit.js';
+import { applyHairOmbre, createJevicaSuit, shapeJevicaPumps } from './jevica-suit.js';
 
 // One hero costume: Val's 2026-10-29 reference look (jevica-suit.js). Shared
 // resident geometry and textures are never mutated.
@@ -39,6 +39,7 @@ export function createJevicaCostume(avatar) {
       // Glossy pink pumps; jevica-suit.js adds the heels.
       // The shoe texture is a dark leather; a flat glossy pink reads as the reference's satin pumps.
       material.map = null; material.color.set('#ee86b4'); material.roughness = 0.22; material.metalness = 0.1; material.envMapIntensity = 1;
+      shapeJevicaPumps(model, material, owned);
     }
     if (original.name === 'jevica_silk') {
       model.traverse(item => {
