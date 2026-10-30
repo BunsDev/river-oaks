@@ -177,3 +177,36 @@ mouth 3.4 cm wide. It was corrected before any capture was kept.
 - Her face shape (eyes, jaw, nose) and bangs are unchanged: shapes wait on the asset packs,
   and bangs need new hair cards.
 - No human review.
+
+## Increment 4: bangs (task `jevica-bangs-20261030`, stacked on #816)
+
+**What changes.** `createJevicaBangs` in `preview/src/jevica-suit.js` adds a straight fringe
+as in the reference:
+- **Shape:** a 41×15 sheet fitted to her forehead's depth, sampled on a 4 mm grid and blurred
+  so it does not copy small bumps. It never sits closer than the skin plus 5 mm. It runs from
+  5 cm above the brows to 6 mm above them, and 1.4 cm longer at the sides.
+- **Edges:** the top rows tuck under the hair cap.
+- **Attachment:** pinned to the head.
+- **Strands:** a procedural texture, one tone per strand. Each strand ends at its own length,
+  with alpha-cut tips, in her warm espresso root colour.
+
+**Tries.**
+1. Grey-black, blotchy noise, with the top edge fighting the hair cap.
+2. Warm colour, a tucked top and clean strands, but it copied the forehead's bumps.
+3. Final: the blurred depth.
+
+All three are in the session's face captures.
+
+**Results.**
+- Node: 22/22. The bangs test checks:
+  - the fringe stands in front of the forehead;
+  - it ends just above the brows;
+  - it turns 0.5 rad with a 0.5 rad head turn.
+- Browser likeness: IoU 0.598, mean ΔE 16.9, hair-crown 27.7 (that landmark is the top of the head, which the fringe doesn't change). `jevica-gown`, `jevica-waist`, `jewel-optics`,
+  `gown-sampling` and `gown-contact-samples` pass.
+
+**Gaps.**
+- It is one sheet, not hair cards. The strands don't move independently or react to wind.
+- The reference's side-swept face-framing locks are not attempted.
+- In the likeness lighting, a faint lighter edge shows where the fringe's top meets the hair cap.
+- No human review.

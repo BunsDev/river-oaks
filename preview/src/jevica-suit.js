@@ -351,6 +351,10 @@ if(!(vBind.y>${(collarY - .03).toFixed(4)}&&abs(vBind.x)<.07)&&!(vBind.z>.0&&vBi
     const drop = createFlower(.011, { petalMaterial: petal, stamenMaterial: stamen, owned }); drop.position.y = -.026; drop.rotation.x = Math.PI; earring.add(drop);
     head.add(earring); pieces.earrings.push({ group: earring, side, angle: new THREE.Vector2(), velocity: new THREE.Vector2() });
   }
+  // Bangs: a straight fringe across the forehead, a sheet fitted to her skin a few millimetres
+  // out, pinned to the head, ending just above the brows and a little longer at the sides.
+  // Strands are a texture: dark roots, ragged tips cut by alpha.
+  if (body) pieces.bangs = createJevicaBangs({ body, model, toRoot, boneRest, head, owned, surface });
   const headPosition = new THREE.Vector3(), lastHead = new THREE.Vector3(), lastVelocity = new THREE.Vector3(), velocity = new THREE.Vector3(), drive = new THREE.Vector3(), inverse = new THREE.Quaternion();
   let previous = null;
   return {
@@ -486,6 +490,78 @@ export function applyJevicaMakeup(model, owned) {
   geometry.setAttribute('color', new THREE.BufferAttribute(colour, 3));
   body.material.vertexColors = true; body.material.needsUpdate = true;
   return { marks, lips, blush, halfWidth };
+}
+
+export const BANGS = Object.freeze({ halfWidth: .058, above: .05, gap: .006, sides: .014, offset: .005, columns: 40, rows: 14 });
+export function bangsStrands(size = 128, seed = 7) {
+  const pixels = new Uint8Array(size * size * 4);
+  let r = seed; const random = () => (r = (Math.imul(r, 1664525) + 1013904223) >>> 0) / 2 ** 32;
+  const tips = Array.from({ length: 48 }, () => .82 + random() * .18);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const u = x / size, v = y / size, strand = Math.floor(u * tips.length), k = (y * size + x) * 4;
+    // Each strand has its own tone, lighter along its middle, like the hair cards' strands.
+    const across = Math.abs((u * tips.length) % 1 - .5) * 2, shade = 175 + 50 * ((strand * 37 % 11) / 10) + 30 * (1 - across);
+    pixels[k] = pixels[k + 1] = pixels[k + 2] = Math.min(255, shade);
+    // v runs from the roots (0) to the tips (1); each strand ends at its own length, tapered.
+    const tip = tips[strand], edge = Math.abs((u * tips.length) % 1 - .5) * 2;
+    pixels[k + 3] = v < tip - .06 * edge ? 255 : 0;
+  }
+  const texture = new THREE.DataTexture(pixels, size, size); texture.needsUpdate = true;
+  texture.wrapS = THREE.RepeatWrapping; texture.repeat.set(2, 1);
+  return texture;
+}
+export function createJevicaBangs({ body, model, toRoot, boneRest, head, owned, surface }) {
+  const brows = model.getObjectByName('Jevicaeyebrow001');
+  if (!brows) return null;
+  brows.geometry.computeBoundingBox();
+  const browTop = brows.geometry.boundingBox.max.y, top = browTop + BANGS.above;
+  // The forehead's depth on a 4 mm grid (front skin only).
+  const p = body.geometry.attributes.position, cell = .004, depth = new Map();
+  for (let i = 0; i < p.count; i++) {
+    const [x, y, z] = [p.getX(i), p.getY(i), p.getZ(i)];
+    if (z < .02 || y < browTop - .01 || y > top + .02 || Math.abs(x) > BANGS.halfWidth + .02) continue;
+    const k = `${Math.round(x / cell)},${Math.round(y / cell)}`; depth.set(k, Math.max(depth.get(k) ?? -Infinity, z));
+  }
+  const surfaceAt = (x, y) => {
+    for (let r = 0; r < 4; r++) { let best = -Infinity; for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) best = Math.max(best, depth.get(`${Math.round(x / cell) + dx},${Math.round(y / cell) + dy}`) ?? -Infinity); if (best > -Infinity) return best; }
+    return null;
+  };
+  const { columns, rows } = BANGS, positions = [], uvs = [], index = [], origin = boneRest('head');
+  // Cloth does not follow the forehead's small bumps: the sampled depth is blurred across the
+  // grid, and never below the skin plus the offset.
+  const grid = [];
+  for (let j = 0; j <= rows; j++) for (let i = 0; i <= columns; i++) {
+    const u = i / columns * 2 - 1, v = j / rows, x = u * BANGS.halfWidth, bottom = browTop + BANGS.gap - BANGS.sides * u * u, y = top + (bottom - top) * v;
+    grid.push(surfaceAt(x, y) ?? surfaceAt(x * .9, y) ?? 0);
+  }
+  const skinDepth = [...grid];
+  for (let pass = 0; pass < 6; pass++) {
+    const next = [...grid];
+    for (let j = 0; j <= rows; j++) for (let i = 0; i <= columns; i++) {
+      let sum = 0, n = 0;
+      for (const [di, dj] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) { const a = i + di, b = j + dj; if (a < 0 || b < 0 || a > columns || b > rows) continue; sum += grid[b * (columns + 1) + a]; n++; }
+      next[j * (columns + 1) + i] = Math.max(sum / n, skinDepth[j * (columns + 1) + i]);
+    }
+    grid.splice(0, grid.length, ...next);
+  }
+  for (let j = 0; j <= rows; j++) for (let i = 0; i <= columns; i++) {
+    const u = i / columns * 2 - 1, v = j / rows, x = u * BANGS.halfWidth;
+    const bottom = browTop + BANGS.gap - BANGS.sides * u * u, y = top + (bottom - top) * v;
+    // The top rows tuck in under the hair cap; lower down the fringe stands a little off the brow.
+    const z = grid[j * (columns + 1) + i] + BANGS.offset * THREE.MathUtils.smoothstep(v, 0, .35) - .002 * (1 - THREE.MathUtils.smoothstep(v, 0, .35));
+    const at = toRoot(new THREE.Vector3(x, y, z)).sub(origin);
+    positions.push(at.x, at.y, at.z); uvs.push(i / columns, v);
+    if (i < columns && j < rows) { const a = j * (columns + 1) + i; index.push(a, a + columns + 1, a + 1, a + 1, a + columns + 1, a + columns + 2); }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(index); geometry.computeVertexNormals(); owned.add(geometry);
+  const strands = bangsStrands(); owned.add(strands);
+  // Her hair's espresso roots as the ombré shader draws them (warm, not black).
+  const material = surface({ color: '#4a2a20', map: strands, alphaTest: .5, roughness: .52, side: THREE.DoubleSide });
+  material.name = 'Jevica bangs';
+  const mesh = new THREE.Mesh(geometry, material); mesh.name = 'Jevica bangs'; mesh.castShadow = true; head.add(mesh);
+  return { mesh, browTop, top };
 }
 
 export function applyHairOmbre(model, material, owned) {
