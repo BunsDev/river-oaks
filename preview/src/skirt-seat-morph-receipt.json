@@ -28,7 +28,7 @@
     "preview/src/driving-hands.js": "f669e06d436727b0cc5457228d663570b5ab9dba18f1cd24c110d413293328d9",
     "preview/src/eye-tracking.js": "93b8af25f82f59ffbfecd44b090fc6e32650add837c4a21ce68a1c5099165313",
     "preview/src/facial-motion.js": "d90f5ee3e67b7edaa755e3494dd097db89682cec2cc8c61730fa201bf939fc87",
-    "preview/src/foot-placement.js": "d2668e58e106f431a3188fa268352b80f3803ce7670c89b078213bf5b29bb6f1",
+    "preview/src/foot-placement.js": "0719c68ce9aeb67a772d099f25b95c5aa5cee71eaef5ef5fb4eb476039078164",
     "preview/src/foot-roll.js": "5c8de2ef4c1d3ed3905991d7cc16ed3ce249b7091b70ad90c6b5bfb6afc98528",
     "preview/src/gltf-image-decoder.js": "72962e0e554b8237c87d20101145285f0891d94f707a064ba1d9e34b76296290",
     "preview/src/handshake-contact.js": "6f92ae3935c043cccfd9027546687cfe1dc5172bd62b0817dfe3927746ba9692",
