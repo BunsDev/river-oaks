@@ -81,7 +81,7 @@ Manual artistic edits live in the recipe as intent, never as edited generated ou
 
 Overrides are applied after generation by stable ID. If a different seed no longer produces an overridden ID, the plan reports that ID under `provenance.overrides.orphaned`. The override itself stays in the recipe. Every plan records the kit version, seed, recipe hash, overrides hash and the applied, orphaned and added lists. Plans are canonical JSON with a browser-safe 64-bit hash, identical in Node and the browser.
 
-A plaza derives its trees, benches and lamps by the row: `treeRows`, `benchRows` and `lampRows` each take a line (`y` with `from`/`to` along x, or `x` along y), a `spacing` and, for furniture, a `yaw`, instead of an entry per item. Derived ids are stable (`<plaza>/bench-row-<row>-<n>`), so overrides address them, and a row that leaves the plaza's ground fails the build like any solid off walkable ground. Hand-placed `furniture` still works beside rows for the pieces that matter.
+A plaza derives its trees, benches and lamps by the row: `treeRows`, `benchRows` and `lampRows` each take a line (`y` with `from`/`to` along x, or `x` along y), a `spacing` and, for furniture, a `yaw`, instead of an entry per item. Derived ids are stable (`<plaza>/bench-row-<row>-<n>`), so overrides address them, and a row that leaves the plaza's ground fails the build like any solid off walkable ground. Hand-placed `furniture` still works beside rows for the pieces that matter. On a street, trees and lamps keep independent spacings; a lamp that would stand within a metre of a tree on its kerb moves half a tree spacing along the street, between two trees, so no lamp column stands in a trunk or lights the inside of a canopy.
 
 ## Derive blocks from streets
 
