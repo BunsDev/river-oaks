@@ -191,7 +191,9 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
           // The crank and the rider's feet turn from the same distance this frame.
           if(entry.road)entry.roadDistance+=Math.hypot(dx,dz);
           avatar.update(now,!ride&&target.altitude<=0.1?(poseFor(target.gesture)??'continue'):'continue',speaking.has(target.id),{speed:seated?0:motion.speed,flightSpeed:speed,distance:motion.distance,heading:seated?undefined:motion.heading,platform:motion.platform,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,ridingDriver:Boolean(ride)&&!vehicleChauffeured(ride.kind),ridingDistance:entry.roadDistance,ridingSpeed:ride?speed:0,seatToFloor:seat?seat.height:ride?rideSeat(ride)[1]-rideFloor(ride):undefined,vehicle:'jevica',handshakeTarget:target.interaction?.kind==='handshake'?target.interaction.target:undefined,gestureTime:target.interaction?target.interaction.elapsed+Math.max(0,now-entry.syncedAt)/1000:undefined},()=>holder.position.y);
-          for(const layer of entry.blend.step(combat,now,{reducedMotion}))applyCombatPose(avatar.rig,layer,{reducedMotion});
+          // The blend keeps time either way; a seated, aboard or airborne body shows no fight pose.
+          const combatLayers=entry.blend.step(combat,now,{reducedMotion});
+          if(!ride&&!seated&&!entry.aboard&&target.altitude<=0.1)for(const layer of combatLayers)applyCombatPose(avatar.rig,layer,{reducedMotion});
           entry.riderSeated=seated;
           entry.outfit.update(!seated&&target.altitude>0.1,now,seated);entry.vehicle.object.visible=!seated&&target.altitude>0.1;
           if(entry.road){
