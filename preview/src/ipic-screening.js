@@ -20,13 +20,24 @@ export function fitVideoToScreen(videoAspect, screenAspect) {
   return { repeat: [x, y], offset: [(1 - x) / 2, (1 - y) / 2] };
 }
 
-// The bundled sources this browser says it may decode, in catalog order. canPlayType is a hint,
-// not a decode: the player still tries each one, once per load attempt (#498).
-export function screeningSources(media, element) {
-  return media?.sources?.filter(source => ['probably', 'maybe'].includes(element.canPlayType(source.type))) ?? [];
+// The encoding this browser's engine should try first, or null for the catalog's order (WebM, then MP4).
+// WebKit (Safari on macOS, and every browser on iOS: they all report Apple as the vendor, Chromium and
+// Firefox do not) answers "probably" for the WebM as well, but the 2026-10-19 engine check could not
+// measure its Opus sound, while the MP4's AAC was audible (#502). So there the MP4 goes first. Every
+// encoding is still tried once per attempt, so a WebKit that cannot play the MP4 still gets the WebM.
+export function preferredScreeningType(navigator = globalThis.navigator) {
+  return navigator?.vendor === 'Apple Computer, Inc.' ? 'video/mp4' : null;
 }
-export function pickScreeningSource(media, element) {
-  return screeningSources(media, element)[0] ?? null;
+// The bundled sources this browser says it may decode, in catalog order, or with the engine's preferred
+// type first. canPlayType is a hint, not a decode: the player still tries each one, once per load
+// attempt (#498). A preference reorders; it never adds an encoding the browser refused.
+export function screeningSources(media, element, preferred = preferredScreeningType()) {
+  const playable = media?.sources?.filter(source => ['probably', 'maybe'].includes(element.canPlayType(source.type))) ?? [];
+  if (!preferred) return playable;
+  return [...playable.filter(source => source.type.startsWith(preferred)), ...playable.filter(source => !source.type.startsWith(preferred))];
+}
+export function pickScreeningSource(media, element, preferred) {
+  return screeningSources(media, element, preferred)[0] ?? null;
 }
 
 // How long a load or a buffer may sit without progress before the viewer is told and offered
@@ -72,7 +83,8 @@ export function createServerClock({ now = () => performance.now() } = {}) {
 // Each element load (a new film, a fallback encoding, Retry, a stop) starts a new generation;
 // a play() promise or a frame callback from an earlier generation changes nothing (#498).
 // catalog is SCREENING_MEDIA; only test pages pass their own (preview/e2e/fixtures/ipic-screen.js).
-export function createScreeningPlayer({ media: element, clock, onChange = () => {}, now = () => performance.now(), catalog = SCREENING_MEDIA, probe = probeScreeningSource }) {
+// preferType is the encoding tried first on this engine (preferredScreeningType); tests pass their own.
+export function createScreeningPlayer({ media: element, clock, onChange = () => {}, now = () => performance.now(), catalog = SCREENING_MEDIA, probe = probeScreeningSource, preferType = preferredScreeningType() }) {
   let shared = null, mediaId = null, state = 'idle', generation = 0, playing = null, rate = 1, drift = 0, measured = 0, captions = false;
   let attempt = null, failure = null, presented = null, frameRequest = 0, progressAt = now(), playAt = 0;
   const set = next => { if (state !== next) { state = next; progressAt = now(); onChange(stats()); } };
@@ -150,7 +162,7 @@ export function createScreeningPlayer({ media: element, clock, onChange = () => 
   }
   function load(id) {
     mediaId = id; failure = null;
-    attempt = { sources: screeningSources(catalog[id], element), tried: [], current: null };
+    attempt = { sources: screeningSources(catalog[id], element, preferType), tried: [], current: null };
     if (!next()) { reset(); element.removeAttribute('src'); element.load(); set('unsupported'); }
   }
   // Nothing is showing: release the decoder rather than keep a paused film loaded.
