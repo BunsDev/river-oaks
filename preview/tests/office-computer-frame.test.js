@@ -36,7 +36,7 @@ test('configuration accepts one exact public HTTPS origin and nothing else', () 
  assert.equal(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:loopback,VITE_TYPESAFE_COMPUTER_TEST_LOOPBACK:'1'}),null,'and a development build');
  assert.equal(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:loopback,DEV:true,VITE_TYPESAFE_COMPUTER_TEST_LOOPBACK:'1'}).origin,loopback);
  assert.equal(computerOrigin('http://example.test:80',{allowLoopback:true}),null,'only loopback hosts get the exception');
- const hosted='https://typesafe-computer.vercel.app';
+ const hosted='https://computer.typesafe.place';
  assert.deepEqual(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:hosted}),{origin:hosted,frameURL:`${hosted}/?embed=place`,signInURL:`${hosted}/api/auth/login`,openURL:`${hosted}/`},'the hosted Computer origin in Place\'s frame policy is accepted as configured');
 });
 

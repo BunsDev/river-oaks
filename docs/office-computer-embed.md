@@ -12,13 +12,16 @@ lifecycle contract that Computer's embed mode implements
   [TypeSafeAI/typesafe-computer#34](https://github.com/TypeSafeAI/typesafe-computer/pull/34)
   (8c0240af, 2026-10-27). Its `docs/PLACE_EMBED.md` adopts version 1 below unchanged.
   `office-computer-real` runs the desk against it locally (see [Verification](#verification)).
-- **Hosting:** since 2026-10-29 the Place frame policy lists the hosted Computer origin
-  `https://typesafe-computer.vercel.app` (see [Staged blockers](#staged-blockers)).
+- **Hosting:** the Place frame policy lists `https://computer.typesafe.place`, the
+  same-site Computer origin proposed in
+  [TypeSafeAI/typesafe-computer#21](https://github.com/TypeSafeAI/typesafe-computer/issues/21)
+  (see [Staged blockers](#staged-blockers)). From 2026-10-29 it listed
+  `https://typesafe-computer.vercel.app`, which is cross-site from `typesafe.place`.
   `VITE_TYPESAFE_COMPUTER_ORIGIN` is still unset in every hosted environment, so no
-  deployed desk loads a frame; setting it is the owner's configuration step. That
-  origin serves Computer's main branch, which has no embed mode: until #34 deploys, a
-  frame to it never answers `init`, and the desk reports that Computer did not open
-  and returns to Tasks.
+  deployed desk loads a frame; setting it is the owner's configuration step. No Computer
+  deployment serves that origin yet, and Computer's main branch has no embed mode: until
+  #34 deploys there, a frame to it never answers `init`, and the desk reports that
+  Computer did not open and returns to Tasks.
 
 ## Ownership
 
@@ -68,8 +71,10 @@ Computer checks the parent origin against its own configuration.
 - **Computer's response:** it must allow framing by the reviewed Place origin only
   (`Content-Security-Policy: frame-ancestors <place origin>`), with no conflicting
   `X-Frame-Options`. The fixture sends exactly this.
-- **Place's response:** its `frame-src` must list Computer's origin. Since 2026-10-29 it
-  lists `https://typesafe-computer.vercel.app` (`vercel.json`, `server/security-headers.js`).
+- **Place's response:** its `frame-src` must list Computer's origin. It lists
+  `https://computer.typesafe.place` (`vercel.json`, `server/security-headers.js`), and
+  `server/tests/hardening2-security-headers.test.js` requires that origin to be exact and
+  on Place's site.
 
 Computer's session cookie is `SameSite=Lax` (`src/server/auth.js`). A Lax cookie is
 sent inside a same-site frame and withheld from a cross-site one. Place and Computer
@@ -311,14 +316,16 @@ These must be resolved before a hosted pilot (tracked in
      sign-in.
 3. **Continuity (#27).** Record the decision for a new Computer host's origin-local data.
 4. **Place frame policy and configuration.** `frame-src` in `vercel.json` and
-   `server/security-headers.js` lists `https://typesafe-computer.vercel.app` since
-   2026-10-29, with the expectation in `server/tests/hardening2-security-headers.test.js`
-   and the origin accepted by `preview/tests/office-computer-frame.test.js`. What remains
-   is the owner's step: set `VITE_TYPESAFE_COMPUTER_ORIGIN=https://typesafe-computer.vercel.app`
-   for the target environment (Preview first) once Computer's embed build (#34) is
-   deployed there; before that the Computer tab appears, times out and returns to
-   Tasks. The origin pair is cross-site, so the Lax-cookie question in #21 still
-   decides whether a framed player is signed in.
+   `server/security-headers.js` lists `https://computer.typesafe.place`, with the
+   expectation in `server/tests/hardening2-security-headers.test.js` and the origin
+   accepted by `preview/tests/office-computer-frame.test.js`. What remains is the owner's
+   step: once Computer's embed build (#34) is deployed at that origin with
+   `frame-ancestors https://typesafe.place`, set
+   `VITE_TYPESAFE_COMPUTER_ORIGIN=https://computer.typesafe.place` for Production. Before
+   that the Computer tab appears, times out and returns to Tasks. Place Preview
+   deployments run on `*.vercel.app`, which is cross-site from that origin, so a Preview
+   desk would show framed players as signed out: prove the pair on a same-site staging
+   host instead.
 
    The variable is a production configuration change that needs its own authorization.
    Leaving it unset is the rollback: the desk returns to Tasks only.
