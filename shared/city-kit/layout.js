@@ -49,7 +49,7 @@ export function validateLayout(recipe) {
     if (!quarter || typeof quarter !== 'object') fail('quarter');
     if (!idOk(quarter.id) || ids.has(quarter.id)) fail(`quarter id ${quarter.id}`);
     ids.add(quarter.id);
-    for (const key of Object.keys(quarter)) if (!['id', 'rect', 'style', 'front', 'sides', 'depth', 'storeys', 'bays', 'names', 'court', 'split'].includes(key)) fail(`quarter ${quarter.id}: unknown key ${key}`);
+    for (const key of Object.keys(quarter)) if (!['id', 'rect', 'style', 'front', 'sides', 'depth', 'storeys', 'bays', 'names', 'court', 'split', 'inset'].includes(key)) fail(`quarter ${quarter.id}: unknown key ${key}`);
     if (quarter.rect !== undefined && !rectOk(quarter.rect)) fail(`quarter ${quarter.id} rect`);
     if (!KIT_STYLES[quarter.style]) fail(`quarter ${quarter.id} style`);
     if (!rangeOk(quarter.depth) || !rangeOk(quarter.storeys) || !rangeOk(quarter.bays) || quarter.bays[0] < KIT_CONVENTIONS.bay.min || quarter.bays[1] > KIT_CONVENTIONS.bay.max) fail(`quarter ${quarter.id} ranges`);
@@ -61,6 +61,8 @@ export function validateLayout(recipe) {
     if (sides !== 'auto' && !(Array.isArray(sides) && sides.every(side => SIDES.includes(side)))) fail(`quarter ${quarter.id} sides`);
     if (quarter.split !== undefined && quarter.split !== 'auto' && quarter.split !== 'none') fail(`quarter ${quarter.id} split must be auto or none`);
     if (quarter.court && !(quarter.court.width > 0 && quarter.court.depth > 0 && quarter.court.at > 0 && quarter.court.at < 1)) fail(`quarter ${quarter.id} court`);
+    // How far the block stands back from its land, west, south, east and north, in metres.
+    if (quarter.inset !== undefined && !(Array.isArray(quarter.inset) && quarter.inset.length === 4 && quarter.inset.every(value => Number.isFinite(value) && value >= 0))) fail(`quarter ${quarter.id} inset must be four distances of at least 0 m`);
   }
   for (const item of layout.reserved ?? []) {
     if (!item || !idOk(item.id) || ids.has(item.id)) fail(`reserved id ${item?.id}`);
@@ -213,8 +215,17 @@ export function expandLayout(recipe) {
       const halves = fronts.length === 2
         ? (fronts[0] === 'north' ? (mid => [[x0, mid, x1, y1], [x0, y0, x1, mid]])(snap((y0 + y1) / 2)) : (mid => [[mid, y0, x1, y1], [x0, y0, mid, y1]])(snap((x0 + x1) / 2)))
         : [rect];
+      // An inset stands one block back from its land: the land still meets its streets
+      // (frontage, sides), and a street edit still moves the block with it.
+      if (quarter.inset && fronts.length === 2) fail(`quarter ${quarter.id}: an inset places one block, but land ${rect.join(',')} splits into two; set split none`);
       fronts.forEach((face, k) => {
-        const own = halves[k].map(mm), ownBounds = boundingStreets(own, corridors);
+        const land = halves[k].map(mm);
+        const own = quarter.inset ? [land[0] + quarter.inset[0], land[1] + quarter.inset[1], land[2] - quarter.inset[2], land[3] - quarter.inset[3]].map(mm) : land;
+        if (!(own[2] - own[0] > EPS && own[3] - own[1] > EPS)) fail(`quarter ${quarter.id}: inset ${quarter.inset.join(',')} leaves no block on land ${land.join(',')}`);
+        // Streets are found from the land, along the block's own length: a block set back
+        // from a lane that runs its full length is wholly on that street.
+        const along = face === 'north' || face === 'south' ? [own[0], land[1], own[2], land[3]] : [land[0], own[1], land[2], own[3]];
+        const ownBounds = boundingStreets(along, corridors);
         const ownWidth = face === 'north' || face === 'south' ? own[2] - own[0] : own[3] - own[1], ownDepth = face === 'north' || face === 'south' ? own[3] - own[1] : own[2] - own[0];
         if (ownWidth + EPS < KIT_CONVENTIONS.bay.min) { warnings.push(`${quarter.id} ${own.join(',')}: too narrow for a bay (${mm(ownWidth)} m)`); return; }
         if (ownDepth + EPS < quarter.depth[0]) { warnings.push(`${quarter.id} ${own.join(',')}: too shallow for the quarter's parcels (${mm(ownDepth)} m < ${quarter.depth[0]} m)`); return; }
