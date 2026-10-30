@@ -47,17 +47,35 @@ export function migrateRecipe(recipe) {
     try { const plan = assembleNeighborhood(build(quarters)); return geometryHash(plan) === target ? plan : null; } catch (error) { lastError = error.message; return null; }
   };
   // The full form: the authored fields, which the shipped-quarters test showed reproduce the plan or say why not.
+  // A block set back from its street (the Bayou Terraces stand 0.5 m off their lane) has
+  // no street on its own rectangle: its full form is then the loose land with an inset.
   const full = recipe.blocks.map(({ id, rect, style, depth, storeys, bays, names, court, front, sides }) => ({ id, rect, style, depth, storeys, bays, names, court, front, sides }));
-  if (!reproduces(full)) return { id: recipe.id, recipe: null, reason: lastError ?? 'the derived blocks differ from the authored ones', geometry: target };
-  const chosen = full.map(strip), forms = [];
+  const insetFrom = (land, rect) => [rect[0] - land[0], rect[1] - land[1], land[2] - rect[2], land[3] - rect[3]].map(mm);
+  // Land for an inset block: loose across its street, but only as long as the block along
+  // it, so a wider street cuts the whole land and leaves no strip beyond the street's end.
+  const across = (block, loose) => (block.front === 'north' || block.front === 'south'
+    ? [block.rect[0], loose[1], block.rect[2], loose[3]] : [loose[0], block.rect[1], loose[2], block.rect[3]]);
+  const insetFull = full.map((quarter, index) => {
+    const block = recipe.blocks[index], land = across(block, looseRect(block, recipe));
+    return sameRect(land, quarter.rect) ? quarter : { ...quarter, rect: land, inset: insetFrom(land, quarter.rect), split: 'none' };
+  });
+  const start = reproduces(full) ? full : reproduces(insetFull) ? insetFull : null;
+  if (!start) return { id: recipe.id, recipe: null, reason: lastError ?? 'the derived blocks differ from the authored ones', geometry: target };
+  const chosen = start.map(strip), forms = [];
   for (const [index, block] of recipe.blocks.entries()) {
-    const { front, sides, ...rest } = chosen[index], loose = looseRect(block, recipe), tight = block.rect;
+    const { front, sides, inset: _inset, split: _split, ...rest } = chosen[index], loose = looseRect(block, recipe), tight = block.rect;
+    const land = across(block, loose), inset = insetFrom(land, tight);
     // Leanest first: no rectangle at all (one quarter over the whole site), the loose
     // rectangle, the authored one; and for each, the auto rule before a stated front.
+    // Land with an inset comes last of all: it types four more numbers.
     const rects = [...(recipe.blocks.length === 1 ? [['no rect', undefined]] : []), ...(sameRect(loose, tight) ? [] : [['loose', loose]]), ['tight', tight]];
-    const candidates = rects.flatMap(([kind, rect]) => [
+    const candidates = [...rects.flatMap(([kind, rect]) => [
       [`${kind}, auto`, { ...rest, rect }], [`${kind}, auto, no split`, { ...rest, rect, split: 'none' }],
-      [`${kind}, front`, { ...rest, rect, front }], [`${kind}, front and sides`, { ...rest, rect, front, sides }]]);
+      [`${kind}, front`, { ...rest, rect, front }], [`${kind}, front and sides`, { ...rest, rect, front, sides }]]),
+    ...(sameRect(land, tight) ? [] : [
+      ['land, inset, auto', { ...rest, rect: land, inset, split: 'none' }],
+      ['land, inset, front', { ...rest, rect: land, inset, split: 'none', front }],
+      ['land, inset, front and sides', { ...rest, rect: land, inset, split: 'none', front, sides }]])];
     for (const [form, candidate] of candidates) {
       const trial = chosen.map((quarter, i) => (i === index ? strip(candidate) : quarter));
       if (reproduces(trial)) { chosen[index] = strip(candidate); forms.push({ id: block.id, form, rect: candidate.rect ?? null }); break; }

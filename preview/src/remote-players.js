@@ -11,7 +11,7 @@ import { createPlayerCostume } from './player-costume.js';
 import { createFlightVehicle } from './flight-vehicles.js';
 import { createRoadVehicle } from './road-vehicles.js';
 import { bicycleCrankAngle } from './bicycle-crank.js';
-import { VEHICLES, vehicleKind } from './vehicle-config.js';
+import { VEHICLES, vehicleKind, vehicleChauffeured } from './vehicle-config.js';
 import { permittedAppearance, sharedAppearance } from './shared-appearances.js';
 import { createPeerMotion } from './locomotion-handoff.js';
 
@@ -31,13 +31,15 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
   const setLabelText=(entry,text)=>{if(entry.label.textContent!==text){entry.label.textContent=text;entry.labelSize=null;}};
   const next=new THREE.Vector3(),point=new THREE.Vector3();
   const remove=entry=>{entry.removed=true;entry.version++;entry.placeholder?.dispose();entry.colors?.dispose();entry.outfit?.dispose();entry.vehicle?.dispose();entry.road?.dispose();entry.avatar?.dispose();entry.holder.removeFromParent();entry.label.remove();};
+  // Jev chauffeurs only his kind (the car): its rider is a passenger. Every other kind is driven by its rider.
+  const rideSeat=spec=>vehicleChauffeured(spec.kind)?spec.passengerSeat:spec.driverSeat,rideFloor=spec=>vehicleChauffeured(spec.kind)?spec.passengerFloor:spec.driverFloor;
   const syncRoad=(entry,kind)=>{
     const selected=vehicleKind(kind);
     if(entry.road?.spec.kind===selected)return;
     entry.road?.dispose();entry.road=null;entry.roadDistance=0;
     if(selected){
       entry.road=createRoadVehicle(selected,{pedalling:true});
-      const seat=VEHICLES[selected].passengerSeat;
+      const seat=rideSeat(VEHICLES[selected]);
       entry.road.object.position.set(-seat[0],0,-seat[2]);
       entry.holder.add(entry.road.object);
     }
@@ -148,11 +150,11 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
         if(avatar&&!gated&&entry.hiddenFrames%4===0){
           const ride=entry.road?.spec,seat=target.sitting,seated=Boolean(ride||seat);
           const speed=delta?Math.hypot(dx,dz)/delta:0;
-          avatar.object.position.set(0,seat?seat.height-avatar.rig.hipHeight+.025:ride?ride.passengerSeat[1]-avatar.rig.hipHeight+.025:0,0);
+          avatar.object.position.set(0,seat?seat.height-avatar.rig.hipHeight+.025:ride?rideSeat(ride)[1]-avatar.rig.hipHeight+.025:0,0);
           avatar.object.rotation.y=ride?-Math.PI/2:0;
           // The crank and the rider's feet turn from the same distance this frame.
           if(entry.road)entry.roadDistance+=Math.hypot(dx,dz);
-          avatar.update(now,!ride&&target.altitude<=0.1?(poseFor(target.gesture)??'continue'):'continue',speaking.has(target.id),{speed:seated?0:motion.speed,flightSpeed:speed,distance:motion.distance,heading:seated?undefined:motion.heading,platform:motion.platform,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,ridingDistance:entry.roadDistance,ridingSpeed:ride?speed:0,seatToFloor:seat?seat.height:ride?ride.passengerSeat[1]-ride.passengerFloor:undefined,vehicle:'jevica',handshakeTarget:target.interaction?.kind==='handshake'?target.interaction.target:undefined,gestureTime:target.interaction?target.interaction.elapsed+Math.max(0,now-entry.syncedAt)/1000:undefined},()=>holder.position.y);
+          avatar.update(now,!ride&&target.altitude<=0.1?(poseFor(target.gesture)??'continue'):'continue',speaking.has(target.id),{speed:seated?0:motion.speed,flightSpeed:speed,distance:motion.distance,heading:seated?undefined:motion.heading,platform:motion.platform,flying:!seated&&target.altitude>0.1,riding:seated,ridingKind:seat?'seat':ride?.kind,ridingDriver:Boolean(ride)&&!vehicleChauffeured(ride.kind),ridingDistance:entry.roadDistance,ridingSpeed:ride?speed:0,seatToFloor:seat?seat.height:ride?rideSeat(ride)[1]-rideFloor(ride):undefined,vehicle:'jevica',handshakeTarget:target.interaction?.kind==='handshake'?target.interaction.target:undefined,gestureTime:target.interaction?target.interaction.elapsed+Math.max(0,now-entry.syncedAt)/1000:undefined},()=>holder.position.y);
           entry.riderSeated=seated;
           entry.outfit.update(!seated&&target.altitude>0.1,now,seated);entry.vehicle.object.visible=!seated&&target.altitude>0.1;
           if(entry.road){
