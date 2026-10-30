@@ -661,8 +661,8 @@ function startMultiplayer() {
     getRegionSha256: () => worldRegionSha256,
     getDistrictRevision: () => worldDistrictRevision,
     onHomeAccess: () => districtUI?.refreshAccess(),
-    onSnapshot: snapshot => { playerAvatar?.carriage.syncManeuver?.(snapshot.players?.find(player=>player.id===multiplayer?.identity?.id));ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []);cityBikeRacks?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
-    onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
+    onSnapshot: snapshot => { const self=snapshot.players?.find(player=>player.id===multiplayer?.identity?.id);playerAvatar?.carriage.setTownCeiling?.(snapshot.flightCeiling);playerAvatar?.carriage.resumeRide?.(self);playerAvatar?.carriage.syncManeuver?.(self);ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []);cityBikeRacks?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
+    onCorrection: player => { if (world && player) { walking.applyServerPose(player); playerAvatar?.carriage.resumeRide?.(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
       // Authored rivals (#597) draw like players, from the town's crime state only.
@@ -1020,7 +1020,8 @@ async function loadWorld() {
     enterWalk(data.walkSpawn, data.walkLookAt);
     if (multiplayer?.snapshot) {
       community.applyRemote(multiplayer.snapshot);
-      walking.applyServerPose(multiplayer.snapshot.players.find(player => player.id === multiplayer.identity?.id));
+      const self = multiplayer.snapshot.players.find(player => player.id === multiplayer.identity?.id);
+      walking.applyServerPose(self);playerAvatar?.carriage.resumeRide?.(self);
     }
     const places = placesOf(data);
     placesUI?.setPlaces(places);

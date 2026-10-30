@@ -17,15 +17,17 @@ async page => {
   page.on('websocket',socket=>socket.on('framereceived',frame=>{try{const data=JSON.parse(frame.payload);if(data.type==='result'&&!data.ok)refusals.push({error:data.error,correction:Boolean(data.correction)});}catch{}}));
   const host=()=>page.locator('#canvas-host');
   const self=()=>page.evaluate(()=>{const m=window.__riverMultiplayer();const me=m.snapshot.players.find(p=>p.id===m.selfId);return {vehicle:me.vehicle??null,altitude:me.altitude,position:me.position,maneuver:me.maneuver??null};});
-  const step=async(label,wait)=>{try{await wait();}catch(error){const state=await page.evaluate(()=>({status:document.querySelector('#player-status')?.textContent,maneuver:window.__riverCarriage().maneuver,altitude:window.__riverCarriage().placement?.altitude}));throw new Error(`${label}: ${error.message.split('\n')[0]} ${JSON.stringify({state,refusals:refusals.slice(-4)})}`);}};
+  const step=async(label,wait)=>{try{await wait();}catch(error){const state=await page.evaluate(()=>{const m=window.__riverMultiplayer(),me=m?.snapshot?.players?.find(p=>p.id===m.selfId);return {status:document.querySelector('#player-status')?.textContent,maneuver:window.__riverCarriage().maneuver,altitude:window.__riverCarriage().placement?.altitude,riding:document.querySelector('#canvas-host')?.dataset.riding,trace:window.__riverCarriage().maneuverTrace?.map(item=>item.event),town:me?{vehicle:me.vehicle??null,altitude:me.altitude}:null};});throw new Error(`${label}: ${error.message.split('\n')[0]} ${JSON.stringify({state,refusals:refusals.slice(-4),errors:errors.slice(-3)})}`);}};
   await page.setViewportSize({width:1440,height:1000});await page.emulateMedia({reducedMotion:'no-preference'});
   await page.goto(`${origin}/?motion-debug=1`);
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true'&&document.querySelector('#canvas-host')?.dataset.carriageReady==='true');
   if(await page.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await page.locator('#panel-toggle').click();
   await page.locator('#play-tab-rides').click();
-  await page.locator('#player-vehicle').selectOption('hover');
+  // As a person does: choose from the menu, then press Q without clicking the world first.
+  await page.locator('#player-vehicle').focus();await page.locator('#player-vehicle').selectOption('hover');
   await page.waitForFunction(()=>window.__riverCarriage().vehicle==='hover');
-  await host().focus();await page.keyboard.press('KeyQ');
+  check(await page.evaluate(()=>document.activeElement?.id==='canvas-host'&&document.querySelector('#player-status').textContent.includes('Press Q')),'Choosing the Ribbonwing hands the keys back to the world and says to press Q');
+  await page.keyboard.press('KeyQ');
   await page.waitForFunction(()=>document.querySelector('#player-status').textContent.includes('waiting nearby'));
   await page.waitForFunction(()=>{const m=window.__riverCarriage().mechanisms;return m&&m.canopy===1&&m.steps===1;},{},{timeout:20000});
   await host().focus();await page.keyboard.press('KeyG');
@@ -40,6 +42,24 @@ async page => {
   };
   await climb(10.5);
   check((await self()).altitude>10,'The town carries the Ribbonwing above the tuck dive\'s 9.05 m entry');
+  // A reload mid-flight (a crash, a dropped connection, a dev-server reload) puts Jevica
+  // back at the controls where the town holds the craft, instead of on foot in the sky.
+  // Let the climb coast to a hover first, so the height compared after the reload is where the craft holds.
+  let settled=await self();
+  for(let i=0;i<20;i++){await page.waitForTimeout(500);const next=await self();if(Math.abs(next.altitude-settled.altitude)<.03){settled=next;break;}settled=next;}
+  const before=settled,refusalsBeforeReload=refusals.length;
+  await page.reload();
+  await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',{},{timeout:120000});
+  await step('resumed after reload',()=>page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true'&&window.__riverCarriage().vehicle==='hover',{},{timeout:30000}));
+  await page.waitForTimeout(1500);
+  const resumed=await self(),local=await page.evaluate(()=>window.__riverCarriage().placement.altitude);
+  check(resumed.vehicle==='hover'&&Math.abs(resumed.altitude-before.altitude)<.5&&Math.abs(local-before.altitude)<.5,`After a reload at ${before.altitude.toFixed(1)} m Jevica is still flying the Ribbonwing (town ${resumed.altitude.toFixed(1)} m, page ${local.toFixed(1)} m)`);
+  // The resumed craft is flown, not only replayed: it climbs another metre on Space.
+  await climb(Math.max(resumed.altitude,local)+1);
+  checks.push('After the reload the resumed Ribbonwing climbs under her control');
+  // The town refuses any pose that would leave the craft aloft (land_before_leaving); count what the reload cost.
+  const reloadRefusals=refusals.splice(refusalsBeforeReload);
+  check(reloadRefusals.every(item=>item.error==='land_before_leaving'),`The reload's only refusals are the town keeping her in the craft (${reloadRefusals.length}: ${JSON.stringify(reloadRefusals.map(item=>item.error))})`);
   // Fly one maneuver; sample the craft until it ends.
   const fly=async(kind,key)=>{
     await host().focus();await page.keyboard.press(key);
@@ -85,7 +105,7 @@ async page => {
   await step('stepped out',()=>page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding!=='true',{},{timeout:20000}));
   checks.push('The Ribbonwing lands and Jevica steps out');
   const corrected=refusals.filter(item=>item.correction);
-  check(corrected.length===0,`No pose was corrected through the flight${corrected.length?`: ${JSON.stringify(corrected)}`:''}`);
+  check(corrected.length===0,`No pose was corrected through the flight after the reload${corrected.length?`: ${JSON.stringify(corrected)}`:''}`);
   check(errors.length===0,`No page errors${errors.length?`: ${errors.slice(0,3).join(' | ')}`:''}`);
   if(framesDir)(await import('node:fs')).writeFileSync(`${framesDir}/frames.json`,JSON.stringify(frames,null,1));
   return {checks,maneuvers:{tuck_dive:dive.seen,loop:loop.seen,petal_roll:petal.seen},refusals,frames:frames.length};

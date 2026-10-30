@@ -910,6 +910,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     // A walking pose still in flight when the bike was handed over is stale,
     // not a dismount: ignore it briefly instead of releasing the slot.
     if (!message.vehicle && player.cycling && time-(player.cycledAt??0)<CYCLE_GRACE_MS) return {ok:true,player:publicPlayer(player)};
+    // A pilot steps out of a flying craft only once it has landed. A pose without the craft
+    // while it is aloft is a page that lost the ride (a reload or reconnect mid-flight), not a
+    // leap: correct it, so the page takes the controls back where the craft is.
+    if (!message.vehicle && player.vehicle && VEHICLES[player.vehicle]?.flies && player.altitude>0.1) return correction('land_before_leaving');
     if (message.vehicle==='bicycle' && !player.cycling) return correction('bike_required');
     // A shared kind (the motorcycle) is open to every account; the rest of the garage is the owner's.
     if (message.vehicle && message.vehicle!=='bicycle' && !vehicleShared(message.vehicle) && !isJevicaOwner(player.id)) return correction('exclusive_vehicle');
@@ -1476,7 +1480,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const social=interactions.snapshot();
     const community={};
     for (const key of ['status','running','elapsed','target','supported','unmet','supplies','helpBudget','jobs','events','scenarioKey','generation','result','storm','resupplied']) community[key]=copy(state[key]);
-    return {type:'snapshot',interactions:social,worldId,protocolVersion,revision,elapsed,worldPolicy:publicWorldPolicy(),crime:crime.snapshot(now()),police:police.snapshot(),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.snapshot()}:{}),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
+    // The town's flight ceiling, so a page never climbs a flying vehicle above what it accepts.
+    return {type:'snapshot',interactions:social,worldId,flightCeiling:environment.flightCeiling,protocolVersion,revision,elapsed,worldPolicy:publicWorldPolicy(),crime:crime.snapshot(now()),police:police.snapshot(),screenings:screenings.snapshot(),cycling:{taken:takenSlots()},tables:[...tableGames.snapshot(),...cafeGames.snapshot()],darts:dartsGames.snapshot(),axes:axeGames.snapshot(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.snapshot()}:{}),...(campus.enabled?{campus:campus.snapshot()}:{}),players:[...players.values()].map(publicPlayer),
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,

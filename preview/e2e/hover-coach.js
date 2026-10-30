@@ -102,6 +102,18 @@ async page => {
   check(1-2*(qx*qx+qz*qz)>.999,'The roll finishes level');
   await step('ribbons fade',()=>page.waitForFunction(()=>window.__riverRibbonwingEffects().trails?.draws===0,{},{timeout:5000}));
   checks.push('The ribbons fade away after the roll');
+  // Sounds can be turned off at any time from Settings → Audio, not only from the flight bar:
+  // the switch silences the fans at once and is remembered.
+  const humming=await page.evaluate(()=>window.__riverRibbonwingEffects().sounds?.hums??0);
+  const {openHudSpace}=await import(`${process.cwd()}/preview/e2e/hud-navigation.js`);
+  await openHudSpace(page,'settings-section','Audio');
+  const soundSwitch=page.locator('#settings-dialog [data-game-sound-setting]');
+  check(await soundSwitch.isChecked(),'Settings → Audio offers Game and vehicle sounds, on');
+  await soundSwitch.uncheck();
+  await step('fans fall silent',()=>page.waitForFunction(()=>window.__riverRibbonwingEffects().sounds?.hums===0,{},{timeout:5000}));
+  check(await page.evaluate(()=>localStorage.getItem('river-oaks-game-sounds'))==='off',`Turning sounds off silences the Ribbonwing (${humming} fan hum${humming===1?'':'s'} before, none after) and is remembered`);
+  await soundSwitch.check();await page.keyboard.press('Escape');
+  check(await page.evaluate(()=>localStorage.getItem('river-oaks-game-sounds'))!=='off','and turning them back on is remembered too');
   check(exit.riding&&await host().getAttribute('data-riding')==='true'&&townExit.vehicle==='hover',`Jevica is still at the controls after the roll${exit.riding&&townExit.vehicle==='hover'?'':` ${JSON.stringify({riding:exit.riding,attr:await host().getAttribute('data-riding'),town:townExit,trace:exit.maneuverTrace,refusals:refusals.slice(-6),status:await page.locator('#player-status').textContent(),notice:await page.locator('#town-notice, .town-notice').first().textContent().catch(()=>null)})}`}`);
   // The path ends 22 m along the admitted heading from its origin (server frame: [east, north]; three z = -north).
   const endEast=admitted.origin[0]+22*Math.cos(admitted.heading),endNorth=admitted.origin[1]+22*Math.sin(admitted.heading);

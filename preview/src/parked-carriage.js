@@ -31,6 +31,12 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
  // craft turns about the seat: its origin sits a rotated seat offset away.
  const seatOffset=(quaternion,target)=>target.set(seat()[0],0,seat()[2]).applyQuaternion(quaternion);
  const flat=new Vector3(),full=new Vector3(),heading=new Quaternion();
+ // The town refuses a pose above its own flight ceiling, which it publishes with each
+ // snapshot (townCeiling); the page's world can put its ceiling higher (it composes more
+ // roofs). Climbing between the two would be refused at the top, so the craft stops a
+ // little under the lower one.
+ let townCeiling=Infinity;
+ const liftEnvironment=()=>{const limit=Math.min(environment.flightCeiling??32,townCeiling-.05);return limit<(environment.flightCeiling??32)?{...environment,flightCeiling:limit}:environment;};
  const placeAtSeat=(x,z,altitude,yaw)=>{
   seatOffset(heading.setFromAxisAngle(yawAxis,yaw),flat);
   const cx=x-flat.x,cz=z-flat.z;
@@ -59,11 +65,21 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
  const canOccupy=next=>(next.altitude??0)>.1?hoverClear(next,environment):vehicleCanOccupy(next,environment,getWorld(),getLocals()??[]);
  const ride={
   get pose(){return {maneuver:activeManeuver?activeManeuver.kind:null,kind,driver:!chauffeured(),seat:model.object.localToWorld(new Vector3(...seat())).toArray(),cameraTarget:model.object.localToWorld(new Vector3(-1,1.25,0)).toArray(),seatToFloor:seat()[1]-floor(),yaw:placement.yaw-Math.PI/2,quaternion:model.object.quaternion.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0,1,0),-Math.PI/2)).toArray(),speed:placement.speed,distance:placement.distance,altitude:placement.altitude??0,flying:airborne(),landing:Boolean(placement.landing)};},
-  step(input,delta){if(activeManeuver&&placement){followManeuver();return;}if(!driverReady()){placement.speed=0;chauffeur.request({mode:'stop'});return;}const lookahead={...placement,position:[placement.position[0]-Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]+Math.sin(placement.yaw)*2]};const rear={...placement,position:[placement.position[0]+Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]-Math.sin(placement.yaw)*2]};const manual=drivingInput(input);if(model.spec.flies){stepHoverLift(placement,environment,{lift:input?.lift},delta);if(airborne())chauffeur.request({mode:'stop'});}const controls=airborne()?manual:chauffeur.input(placement,manual.forward||manual.turn||manual.strafe?manual:heldControls,delta,{roadClear:canOccupy(lookahead),rearClear:canOccupy(rear)});if(chauffeur.status.active&&!controls.forward)placement.speed=0;stepCarriage(placement,{groundAt:environment.groundAt,wheelTreads:model.wheelTreads,canOccupy},controls,delta);apply();},
+  step(input,delta){if(activeManeuver&&placement){followManeuver();return;}if(!driverReady()){placement.speed=0;chauffeur.request({mode:'stop'});return;}const lookahead={...placement,position:[placement.position[0]-Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]+Math.sin(placement.yaw)*2]};const rear={...placement,position:[placement.position[0]+Math.cos(placement.yaw)*2,placement.position[1],placement.position[2]-Math.sin(placement.yaw)*2]};const manual=drivingInput(input);if(model.spec.flies){stepHoverLift(placement,liftEnvironment(),{lift:input?.lift},delta);if(airborne())chauffeur.request({mode:'stop'});}const controls=airborne()?manual:chauffeur.input(placement,manual.forward||manual.turn||manual.strafe?manual:heldControls,delta,{roadClear:canOccupy(lookahead),rearClear:canOccupy(rear)});if(chauffeur.status.active&&!controls.forward)placement.speed=0;stepCarriage(placement,{groundAt:environment.groundAt,wheelTreads:model.wheelTreads,canOccupy},controls,delta);apply();},
   brake(){if(placement)placement.speed=0;chauffeur.request({mode:'stop'});heldControls={};},
   takeOver(){if(chauffeur.status.active)this.brake();},
   land(){if(activeManeuver)return false;if(placement&&airborne()){placement.landing=true;placement.liftTarget=0;return true;}return false;},
   stop(){mounted=false;heldControls={};if(placement)placement.speed=0;chauffeur.request({mode:'stop'});},
+ };
+ // A new world (or the first): fresh environments and no ride placed yet. Only Jev's chauffeured car
+ // waits beside the owner on arrival; a self-driven ride parks when its rider calls it, so it never
+ // stands in anyone's path unasked. Returns whether the world is ready.
+ const loadWorld=()=>{
+  const world=getWorld();if(!world||!walking.getPose())return false;if(world===loadedWorld)return true;
+  loadedWorld=world;environment=createWalkingEnvironment(world);
+  companionEnvironment=createWalkingEnvironment(world,[{contains:(...point)=>Boolean(placement)&&carriageContains(placement,...point)}]);
+  driver.reset();placement=null;mounted=false;model.object.visible=false;if(chauffeured())summon();
+  return true;
  };
  const summon=()=>{
   if(!enabled||mounted||!environment||(chauffeured()&&driver.companion.mode!=='seat'))return false;
@@ -95,6 +111,26 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   // The town's word on this player's maneuver (each snapshot): adopt one this page
   // missed (a lost reply, a reload mid-path); when the town ended it early (recovery),
   // hover level where the town put the craft.
+  // A page that (re)joins while the town still has this player aboard a flying craft (a
+  // reload or a dropped connection mid-flight) takes the controls back where the town
+  // holds her: same kind, seat at the town's position and altitude, facing its yaw (the
+  // town's yaw for a rider is the craft's own). Without this the page starts on foot and
+  // its first pose takes her out of the craft in the sky (the town takes a pose without a
+  // vehicle as stepping out). So it runs where the page adopts the town's pose (joining, a
+  // correction), before the page's next pose, and loads the world itself if it must. Only
+  // aloft: she steps out on the ground, so a snapshot still naming the craft she just left
+  // never puts her back in it.
+  resumeRide(self){
+   if(!self||!enabled||!walking.active||mounted||exiting||self.passengerOf||!((self.altitude??0)>.1)||!VEHICLES[vehicleKind(self.vehicle)??'']?.flies)return false;
+   if(!loadWorld()){trace('resume: world not ready');return false;}
+   if(kind!==self.vehicle){activeManeuver=null;model.dispose();kind=self.vehicle;model=createRoadVehicle(kind);scene.add(model.object);driver.reset();driver.object.visible=false;}
+   placement={vehicle:kind,scale:1,team:false,position:[0,0,0],yaw:self.yaw,pitch:0,roll:0,speed:0,distance:0,steering:0,altitude:0,liftTarget:0,verticalSpeed:0,landing:false};
+   placeAtSeat(self.position[0],-self.position[1],self.altitude??0,self.yaw);fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);
+   apply();model.object.visible=true;chauffeur.request({mode:'stop'});
+   mounted=true;if(!walking.mount(ride)){mounted=false;trace(`resume refused: ${walking.mountRefusal}`);return false;}
+   trace('resumed');return true;
+  },
+  setTownCeiling(value){townCeiling=Number.isFinite(value)&&value>0?value:Infinity;},
   syncManeuver(self){
    if(!self||!placement||!mounted||kind!=='hover')return;
    const m=validManeuver(self.maneuver)?self.maneuver:null;
@@ -152,12 +188,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
     model.animate(now,placement.speed,reducedMotion);
     if(chauffeured())driver.update(model.object,now,walking.getPosition(),{pose:walking.getPose(),environment:companionEnvironment});else driver.object.visible=false;
    }
-   const world=getWorld();if(!world||!walking.getPose()||world===loadedWorld)return;
-   loadedWorld=world;environment=createWalkingEnvironment(world);
-   companionEnvironment=createWalkingEnvironment(world,[{contains:(...point)=>Boolean(placement)&&carriageContains(placement,...point)}]);
-   // Only Jev's chauffeured car waits beside the owner on arrival; a self-driven ride parks when its rider calls it,
-   // so it never stands in anyone's path unasked.
-   driver.reset();placement=null;mounted=false;model.object.visible=false;if(chauffeured())summon();
+   loadWorld();
   },
   dispose(){activeManeuver=null;chauffeur.dispose();removeObstacle();placement=null;driver.dispose();model.dispose();},
  };

@@ -95,13 +95,15 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   },{signal:lifetime.signal});
   const carriageButton=panel.querySelector('#player-carriage');
   carriageButton.addEventListener('click',()=>{
-    const summoned=carriage.summon();status.textContent=summoned?`${carriage.label} is waiting nearby.`:'Find a clear stretch of road to call your ride.';
+    const summoned=carriage.summon();status.textContent=summoned?(walking.getPose()?.flying?`${carriage.label} is waiting below. Land beside it to board.`:`${carriage.label} is waiting nearby.`):'Find a clear stretch of road to call your ride.';
     walking.notify?.(status.textContent);
     if(carriage.placement)walking.lookAt([carriage.placement.position[0],-carriage.placement.position[2],carriage.placement.position[1]]);
   });
   const vehicleSelect=panel.querySelector('#player-vehicle'),driveButton=panel.querySelector('#player-chauffeur'),driveStatus=panel.querySelector('#player-drive-status');
   vehicleSelect.value=carriage.kind;
-  vehicleSelect.addEventListener('change',()=>{if(!carriage.select(vehicleSelect.value)){vehicleSelect.value=carriage.kind;status.textContent='Step out and find clear road space before changing vehicles.';}else status.textContent=`${carriage.label} is ready.`;});
+  // Choosing a ride leaves focus on the menu, where Q and G are not the game's
+  // keys; hand the keyboard back to the world so Q calls the new ride at once.
+  vehicleSelect.addEventListener('change',()=>{if(!carriage.select(vehicleSelect.value)){vehicleSelect.value=carriage.kind;status.textContent='Step out and find clear road space before changing vehicles.';}else{status.textContent=`${carriage.label} is ready. Press Q to call it.`;host.focus({preventScroll:true});}});
   driveButton.addEventListener('click',()=>{if(carriage.chauffeur.active)carriage.stopTour();else if(!carriage.tour())status.textContent='Board your vehicle on a clear road to start a scenic drive.';});
   const pauseDrive=panel.querySelector('#player-drive-pause');
   pauseDrive.addEventListener('click',()=>{if(carriage.chauffeur.paused)carriage.resumeTour();else carriage.pauseTour();});
@@ -127,7 +129,9 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   host.addEventListener('keydown',event=>{
     if(!owner||event.repeat||event.defaultPrevented||!isGameplayKey(event))return;
     const button=event.code==='KeyQ'?carriageButton:event.code==='KeyG'?rideButton:null;
-    if(!button||button.disabled)return;
+    if(!button)return;
+    // A key the button would refuse says why (the button's hint) rather than doing nothing.
+    if(button.disabled){if(button.title)status.textContent=button.title;return;}
     event.preventDefault();button.click();
   },{signal:lifetime.signal});
   // Keep the detailed decision source in diagnostics; the player sees what Jev
@@ -360,7 +364,9 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       if (connected) carriage.update(now);
       carriage.updateOptics(camera,viewportHeight);
       const prince=carriage.prince.companion,chauffeured=carriage.chauffeured,away=chauffeured&&prince.mode!=='seat';
-      carriageButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||carriage.riding||away;
+      // A craft that flies can be called while its owner is aloft; it sets down below her.
+      const callsAloft=Boolean(VEHICLES[carriage.kind]?.flies);
+      carriageButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||(pose.flying&&!callsAloft)||carriage.riding||away;
       companionButton.disabled=!owner||!chauffeured||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
       rideButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away||carriage.exiting;
       carriageButton.querySelector('[data-call-label]').textContent=chauffeured?'Call Jev':'Call your ride';
@@ -374,7 +380,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       if(driveStatus.textContent!==driveLabel)driveStatus.textContent=driveLabel;
       host.dataset.vehicle=carriage.kind;host.dataset.chauffeur=JSON.stringify(carriage.chauffeur);host.dataset.driving=String(Boolean(carriage.riding&&!chauffeured));
       host.dataset.riding=String(carriage.riding);flightButton.disabled=seated||!canFlyAs(userId,appearance);
-      carriageButton.title=pose?.roomId?'Step outside to call your ride':pose?.flying?'Land to call your ride':'';
+      carriageButton.title=pose?.roomId?'Step outside to call your ride':pose?.flying&&!callsAloft?'Land to call your ride':'';
       host.dataset.carriageReady=String(Boolean(carriage.placement));
       host.dataset.playerSeat = pose?.sitting ? `${pose.sitting.buildId}:${pose.sitting.slot}` : '';host.dataset.playerWatering = String(now < waterUntil);
       host.dataset.cameraMode = walking.thirdPerson ? 'third' : 'first';host.dataset.playerVisible = String(holder.visible);
