@@ -49,6 +49,12 @@
         "offset": 14,
         "spacing": 12
       },
+      "clear": [
+        [
+          158,
+          163
+        ]
+      ],
       "lamps": {
         "offset": 20,
         "spacing": 24
@@ -341,7 +347,7 @@
     ],
     "migrated": {
       "blocks": 2,
-      "geometry": "a291402bc9d3c659"
+      "geometry": "398d0f21e3ab3f97"
     }
   }
 }
