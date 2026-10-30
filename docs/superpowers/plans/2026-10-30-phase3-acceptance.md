@@ -68,14 +68,51 @@ block stands back by the inset; frontage is measured along the block's own lengt
 | `pnpm run verify` (core) | at load ~41: one failure in `blocks-town.test.js` ("the new socket is live", player blocking, untouched here), which passes alone on this tree and on main. Rerun from a detached snapshot of `ec1ae3c6` at load ~10 (2026-10-30 05:37–05:43Z): passed, tooling 289/289; preview 4656 pass + 35 todo + 1 skip of 4692; server 1081 pass + 285 skip of 1366; 127 pass + 5 skip of 132 |
 | Browser: `east-garden-commons` two-player journey, `ec1ae3c6` snapshot (05:43–06:00Z, load 18–32) | passed: both players walk in from the District, light all five Lantern Walk lanterns together (credited to both), return home without reload; no page errors |
 
+## Follow-up inspection on main `2df5089e` (after #780 and #781)
+
+Measured on every committed recipe with the kit's own assembly and renderer
+(`assembleNeighborhood`, `walkableConnectivity`, `buildCityKit`, headless, trees excluded
+from draw counts) plus the composed-world connectivity test. Probes are local evidence, not
+committed tests; the lamp rule below is.
+
+| Check | Result |
+| --- | --- |
+| Draw calls, the two Commons blocks (#584) | market-row 11 (3 massing + 8 detail), garden-court 10 (3 + 7); whole Commons plan 63 calls, 43 materials, 31,316 triangles. All 21 recipes 28–66 calls. Every block draws as a massing and a detail group |
+| Collisions, Commons | 0 overlapping solids, 0 overlapping shells, 0 solids inside a shell |
+| Collisions, all recipes, before | 39 overlapping solid pairs; **23 street lamps in 13 recipes stood exactly on a street tree** (column in the trunk, globe at 5 m inside the canopy), because street trees and lamps were spaced independently on the same kerb line |
+| Collisions, all recipes, after the fix | 0 lamp overlaps. 14 pairs remain: 4 hedge planters meeting end to end (intended), 5 tree/bench touches of 1 cm, and 5 authored placements overlapping a tree by 0.1–0.6 m (Nineteenth and Yale corner benches and café set, the Heights Boulevard end hedge). Recorded, not changed |
+| Dead ends, Commons | flood fill from the Market Street walk reaches 92,994/92,994 walkable samples; all 5 lanterns reachable |
+| Dead ends, all recipes | 19 of 21 recipes fully connected on their own. The Bayou Greenway strip and a Yale Icehouse patch are pockets only in isolation: the composed-world test (`bayou-heights.test.js`, every Heights sample connects to the footbridge) requires 100% and passes |
+| Repetition | 424 shells: 4 of 378 adjacent pairs share every visible field, the longest identical run is 2, the most common façade signature is at most 35% of a recipe (Bayou Terraces, TypeSafe North and Penthouse) and 11% in the Commons. One tree model throughout, varied per tree by height (8.5–11.5 m), crown radius (3.1–3.9 m) and yaw; rows are evenly spaced by design |
+| Lighting and landscaping parity | one scene sun and sky light the District and every destination; the kit draws paving with the District's `paverSurface`, trees and planting with `buildMatureTrees`/`buildPlanterPlanting`, the District's orbital lamp, tree grate and porcelain planter. Local captures `parity-district-arrival` and `parity-market-street` show the same trees, paving, tree pits and lamps |
+
+### Fix: no street lamp stands in a tree pit
+
+`shared/city-kit/assemble.js`: where a lamp would stand within 1 m of a tree on its kerb,
+it moves half a tree spacing along the street (forward, else back) if that spot is open
+and clear of trees. 25 lamps in 13 recipes moved; no other piece changed (piece-by-piece
+diff against main). The Commons is unchanged. 13 locks rebuilt (`destination build --lock`);
+the ten migrated recipes' recorded authored-ground hashes and the test's table moved with
+it, with a note (both forms move identically; the migrate/freeze round trip still holds).
+New test in `preview/tests/city-kit.test.js` fails on main and passes here.
+
+| Check (lamp fix) | Result |
+| --- | --- |
+| `destination check` | every lock reproduces |
+| city-kit suites | 56/56 plus the new test |
+| full preview suite | 4766 pass + 35 todo + 1 skip of 4802 |
+| server suites for Heights, Studewood, Terraces, Woodland, TypeSafe, residents and checkpoint migrations (isolated Redis) | 72/72, 0 skipped |
+| `pnpm run verify` (core, load 22–31) | passed: tooling 294/294; preview 4767 pass + 35 todo + 1 skip of 4803; server 1110 pass + 285 skip of 1395; 127 pass + 5 skip of 132 |
+
 ## Gaps
 
-- Human visual approval of the destination and parity captures is Val's.
-- The 10-22 lane `neighborhood-584-586` holds a 50-line block prototype, its test, fixture
-  journey, spec and plan, superseded by `shared/city-kit/`; retiring it needs Val's
-  cancellation authorization. The lane `neighborhood-authoring` is wholly on main (46 files
-  byte-identical, delivered by #623).
+- Human visual approval of the destination and parity captures is Val's; the measured
+  checks above do not replace it.
+- Remaining small overlaps (corner benches, café set, end hedge) are authored placements;
+  recorded for the human review.
+- The two 10-22 lanes were cancelled to restore-tested archives on 2026-10-30 with Val's
+  authorization (`cancel-stale-nRFn91`, `cancel-stale-rxIZxX`).
 
 ## Next step
 
-Land (authorized by Val 2026-10-30 once the local evidence passed). Then, after 2026-10-30T14:45Z, cancel the two 10-22 neighborhood lanes to archives (authorized).
+Core verify and a draft PR for the lamp fix; landing needs Val's authorization.

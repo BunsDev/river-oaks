@@ -236,10 +236,19 @@ function assembleStreet(recipe, street, seed, pieces, walks) {
     }
   }
   if (street.lamps) {
+    // Trees and lamps share the kerbside line at independent spacings. Where a lamp
+    // would stand in a tree pit (its column in the trunk, its globe in the canopy),
+    // it moves half a tree spacing along the street, between two trees.
+    const trees = new Set(pieces.filter(piece => piece.piece === 'landscape/street-tree' && piece.id.startsWith(`${base}/tree-`)).map(piece => `${piece.at[1]}|${piece.at[0]}`));
+    const inPit = (x, sign) => [...trees].some(key => { const [ty, tx] = key.split('|').map(Number); return ty === kerbside(sign) && Math.abs(tx - x) < 1; });
     let index = 0;
     for (let x = xa + street.lamps.offset; x <= xb - 1; x += street.lamps.spacing) {
       const sign = index % 2 ? -1 : 1;
-      if (open(x)) pieces.push({ id: `${base}/lamp-${index}`, piece: 'furniture/lamp', at: [mm(x), kerbside(sign)], yaw: sign > 0 ? Math.PI / 2 : -Math.PI / 2 });
+      let at = x;
+      if (inPit(at, sign) && street.trees) {
+        at = [x + street.trees.spacing / 2, x - street.trees.spacing / 2].find(candidate => candidate >= xa + 1 && candidate <= xb - 1 && open(candidate) && !inPit(candidate, sign)) ?? null;
+      }
+      if (at !== null && open(at)) pieces.push({ id: `${base}/lamp-${index}`, piece: 'furniture/lamp', at: [mm(at), kerbside(sign)], yaw: sign > 0 ? Math.PI / 2 : -Math.PI / 2 });
       index++;
     }
   }
