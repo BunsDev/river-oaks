@@ -7,7 +7,7 @@
 // Same-origin fetches, the /v1 voice bridge and the multiplayer WebSocket are
 // all 'self'. vercel.json carries the same strings
 // (server/tests/hardening2-security-headers.test.js keeps them equal).
-export const CONTENT_SECURITY_POLICY = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' data: blob: https://*.livekit.cloud wss://*.livekit.cloud; worker-src 'self' blob:; frame-src https://challenges.cloudflare.com https://typesafe-computer.vercel.app; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+export const CONTENT_SECURITY_POLICY = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' data: blob: https://*.livekit.cloud wss://*.livekit.cloud; worker-src 'self' blob:; frame-src https://challenges.cloudflare.com https://computer.typesafe.place; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 // The microphone is for this origin's own voice chat; nothing else powerful is delegated.
 export const PERMISSIONS_POLICY = 'microphone=(self), camera=(), geolocation=(), display-capture=()';
 

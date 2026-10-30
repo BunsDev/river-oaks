@@ -1,0 +1,587 @@
+{
+  "at": "2026-10-28T14:16:01.961Z",
+  "label": "increment 5",
+  "mode": "sustained",
+  "head": "aeb95f85ca4d27913b1303d05cbe79d5ef10e0ca",
+  "dirty": false,
+  "runtime": "v24.22.0",
+  "platform": "darwin/arm64",
+  "loadavg": [
+    11.63,
+    17.48,
+    17.31
+  ],
+  "protocol": "Server simulation only (createSharedWorld, 50 ms steps on a synthetic clock); every player at five stars in south-service-lane strikes rival:service-lane every simulated second; officers respond up to the cap of 6 (one wanted player draws at most 3); 2 runs of 20 s per tier after a 2 s warm-up. Sustained: the rival, the five stars and the ring are restored every simulated second through a sealed checkpoint outside the measured step. Measurements on this host (see loadavg), not budgets.",
+  "tiers": [
+    {
+      "players": 1,
+      "runs": [
+        {
+          "players": 1,
+          "mode": "sustained",
+          "seconds": 20,
+          "steps": 400,
+          "resets": 20,
+          "stepP95Ms": 1.49,
+          "stepMaxMs": 121.97,
+          "stepMeanMs": 1.91,
+          "stepOver50Ms": 3,
+          "snapshotP95Ms": 0.29,
+          "checkpointP95Ms": 2.27,
+          "snapshotBytes": 61848,
+          "checkpointBytes": 142668,
+          "policeUnitsAtEnd": 3,
+          "policeUnitsMax": 3,
+          "policeCap": 6,
+          "wantedAtEnd": 1,
+          "starsAtEnd": 5,
+          "strikesAdmitted": 8,
+          "admission": {
+            "staggered": 4,
+            "ok": 8,
+            "incapacitated": 8
+          },
+          "outcomes": {
+            "strike:hit": 8,
+            "counter:hit": 4
+          },
+          "actionsShown": 0,
+          "rivalHealth": 100,
+          "npcs": 98
+        },
+        {
+          "players": 1,
+          "mode": "sustained",
+          "seconds": 20,
+          "steps": 400,
+          "resets": 20,
+          "stepP95Ms": 6.12,
+          "stepMaxMs": 170.19,
+          "stepMeanMs": 2.5,
+          "stepOver50Ms": 5,
+          "snapshotP95Ms": 0.43,
+          "checkpointP95Ms": 2.99,
+          "snapshotBytes": 61848,
+          "checkpointBytes": 142668,
+          "policeUnitsAtEnd": 3,
+          "policeUnitsMax": 3,
+          "policeCap": 6,
+          "wantedAtEnd": 1,
+          "starsAtEnd": 5,
+          "strikesAdmitted": 8,
+          "admission": {
+            "staggered": 4,
+            "ok": 8,
+            "incapacitated": 8
+          },
+          "outcomes": {
+            "strike:hit": 8,
+            "counter:hit": 4
+          },
+          "actionsShown": 0,
+          "rivalHealth": 100,
+          "npcs": 98
+        }
+      ]
+    },
+    {
+      "players": 8,
+      "runs": [
+        {
+          "players": 8,
+          "mode": "sustained",
+          "seconds": 20,
+          "steps": 400,
+          "resets": 20,
+          "stepP95Ms": 1.86,
+          "stepMaxMs": 198.12,
+          "stepMeanMs": 2.18,
+          "stepOver50Ms": 3,
+          "snapshotP95Ms": 0.32,
+          "checkpointP95Ms": 3.51,
+          "snapshotBytes": 69072,
+          "checkpointBytes": 153185,
+          "policeUnitsAtEnd": 6,
+          "policeUnitsMax": 6,
+          "policeCap": 6,
+          "wantedAtEnd": 8,
+          "starsAtEnd": 5,
+          "strikesAdmitted": 160,
+          "admission": {
+            "ok": 160
+          },
+          "outcomes": {
+            "strike:hit": 80,
+            "strike:miss": 78,
+            "strike:cancelled": 2
+          },
+          "actionsShown": 16,
+          "rivalHealth": 0,
+          "npcs": 98
+        },
+        {
+          "players": 8,
+          "mode": "sustained",
+          "seconds": 20,
+          "steps": 400,
+          "resets": 20,
+          "stepP95Ms": 1.99,
+          "stepMaxMs": 135.08,
+          "stepMeanMs": 2.07,
+          "stepOver50Ms": 3,
+          "snapshotP95Ms": 0.34,
+          "checkpointP95Ms": 2.74,
+          "snapshotBytes": 69072,
+          "checkpointBytes": 153185,
+          "policeUnitsAtEnd": 6,
+          "policeUnitsMax": 6,
+          "policeCap": 6,
+          "wantedAtEnd": 8,
+          "starsAtEnd": 5,
+          "strikesAdmitted": 160,
+          "admission": {
+            "ok": 160
+          },
+          "outcomes": {
+            "strike:hit": 80,
+            "strike:miss": 78,
+            "strike:cancelled": 2
+          },
+          "actionsShown": 16,
+          "rivalHealth": 0,
+          "npcs": 98
+        }
+      ]
+    },
+    {
+      "players": 16,
+      "runs": [
+        {
+          "players": 16,
+          "mode": "sustained",
+          "seconds": 20,
+          "steps": 400,
+          "resets": 20,
+          "stepP95Ms": 2.23,
+          "stepMaxMs": 158.92,
+          "stepMeanMs": 2.3,
+          "stepOver50Ms": 3,
+          "snapshotP95Ms": 0.39,
+          "checkpointP95Ms": 3.22,
+          "snapshotBytes": 76268,
+          "checkpointBytes": 163418,
+          "policeUnitsAtEnd": 6,
+          "policeUnitsMax": 6,
+          "policeCap": 6,
+          "wantedAtEnd": 16,
+          "starsAtEnd": 5,
+          "strikesAdmitted": 320,
+          "admission": {
+            "ok": 320
+          },
+          "outcomes": {
+            "strike:hit": 80,
+            "strike:miss": 235,
+            "strike:cancelled": 5
+          },
+          "actionsShown": 32,
+          "rivalHealth": 0,
+          "npcs": 98
+        },
+        {
+          "players": 16,
+          "mode": "sustained",
+          "seconds": 20,
+          "steps": 400,
+          "resets": 20,
+          "stepP95Ms": 1.85,
+          "stepMaxMs": 222.73,
+          "stepMeanMs": 2.65,
+          "stepOver50Ms": 5,
+          "snapshotP95Ms": 0.36,
+          "checkpointP95Ms": 2.98,
+          "snapshotBytes": 76268,
+          "checkpointBytes": 163418,
+          "policeUnitsAtEnd": 6,
+          "policeUnitsMax": 6,
+          "policeCap": 6,
+          "wantedAtEnd": 16,
+          "starsAtEnd": 5,
+          "strikesAdmitted": 320,
+          "admission": {
+            "ok": 320
+          },
+          "outcomes": {
+            "strike:hit": 80,
+            "strike:miss": 235,
+            "strike:cancelled": 5
+          },
+          "actionsShown": 32,
+          "rivalHealth": 0,
+          "npcs": 98
+        }
+      ]
+    },
+    {
+      "players": 32,
+      "runs": [
+        {
+          "players": 32,
+          "mode": "sustained",
+          "seconds": 20,
+          "steps": 400,
+          "resets": 20,
+          "stepP95Ms": 1.98,
+          "stepMaxMs": 114.76,
+          "stepMeanMs": 2.09,
+          "stepOver50Ms": 4,
+          "snapshotP95Ms": 0.42,
+          "checkpointP95Ms": 3.58,
+          "snapshotBytes": 90619,
+          "checkpointBytes": 183778,
+          "policeUnitsAtEnd": 6,
+          "policeUnitsMax": 6,
+          "policeCap": 6,
+          "wantedAtEnd": 32,
+          "starsAtEnd": 5,
+          "strikesAdmitted": 640,
+          "admission": {
+            "ok": 640
+          },
+          "outcomes": {
+            "strike:hit": 80,
+            "strike:miss": 551,
+            "strike:cancelled": 9
+          },
+          "actionsShown": 64,
+          "rivalHealth": 0,
+          "npcs": 98
+        },
+        {
+          "players": 32,
+          "mode": "sustained",
+          "seconds": 20,
+          "steps": 400,
+          "resets": 20,
+          "stepP95Ms": 2.17,
+          "stepMaxMs": 127,
+          "stepMeanMs": 2.2,
+          "stepOver50Ms": 4,
+          "snapshotP95Ms": 0.51,
+          "checkpointP95Ms": 3.28,
+          "snapshotBytes": 90619,
+          "checkpointBytes": 183778,
+          "policeUnitsAtEnd": 6,
+          "policeUnitsMax": 6,
+          "policeCap": 6,
+          "wantedAtEnd": 32,
+          "starsAtEnd": 5,
+          "strikesAdmitted": 640,
+          "admission": {
+            "ok": 640
+          },
+          "outcomes": {
+            "strike:hit": 80,
+            "strike:miss": 551,
+            "strike:cancelled": 9
+          },
+          "actionsShown": 64,
+          "rivalHealth": 0,
+          "npcs": 98
+        }
+      ]
+    }
+  ],
+  "baseline": {
+    "label": "main",
+    "mode": "sustained",
+    "head": "6f85ba9be597c07f7e5a96f65171180f0883e361",
+    "dirty": true,
+    "at": "2026-10-28T14:15:46.404Z",
+    "loadavg": [
+      12.17,
+      17.89,
+      17.44
+    ],
+    "tiers": [
+      {
+        "players": 1,
+        "runs": [
+          {
+            "players": 1,
+            "mode": "sustained",
+            "seconds": 20,
+            "steps": 400,
+            "resets": 20,
+            "stepP95Ms": 1.77,
+            "stepMaxMs": 126.62,
+            "stepMeanMs": 1.96,
+            "stepOver50Ms": 3,
+            "snapshotP95Ms": 0.3,
+            "checkpointP95Ms": 2.25,
+            "snapshotBytes": 60302,
+            "checkpointBytes": 142718,
+            "policeUnitsAtEnd": 3,
+            "policeUnitsMax": 3,
+            "policeCap": 6,
+            "wantedAtEnd": 1,
+            "starsAtEnd": 5,
+            "strikesAdmitted": 8,
+            "admission": {
+              "staggered": 4,
+              "ok": 8,
+              "incapacitated": 8
+            },
+            "outcomes": {
+              "strike:hit": 8,
+              "counter:hit": 4
+            },
+            "actionsShown": 0,
+            "rivalHealth": 100,
+            "npcs": 98
+          },
+          {
+            "players": 1,
+            "mode": "sustained",
+            "seconds": 20,
+            "steps": 400,
+            "resets": 20,
+            "stepP95Ms": 1.46,
+            "stepMaxMs": 119.81,
+            "stepMeanMs": 1.82,
+            "stepOver50Ms": 3,
+            "snapshotP95Ms": 0.24,
+            "checkpointP95Ms": 2.2,
+            "snapshotBytes": 60302,
+            "checkpointBytes": 142718,
+            "policeUnitsAtEnd": 3,
+            "policeUnitsMax": 3,
+            "policeCap": 6,
+            "wantedAtEnd": 1,
+            "starsAtEnd": 5,
+            "strikesAdmitted": 8,
+            "admission": {
+              "staggered": 4,
+              "ok": 8,
+              "incapacitated": 8
+            },
+            "outcomes": {
+              "strike:hit": 8,
+              "counter:hit": 4
+            },
+            "actionsShown": 0,
+            "rivalHealth": 100,
+            "npcs": 98
+          }
+        ]
+      },
+      {
+        "players": 8,
+        "runs": [
+          {
+            "players": 8,
+            "mode": "sustained",
+            "seconds": 20,
+            "steps": 400,
+            "resets": 20,
+            "stepP95Ms": 1.89,
+            "stepMaxMs": 130.87,
+            "stepMeanMs": 2.05,
+            "stepOver50Ms": 4,
+            "snapshotP95Ms": 0.31,
+            "checkpointP95Ms": 2.62,
+            "snapshotBytes": 67526,
+            "checkpointBytes": 153235,
+            "policeUnitsAtEnd": 6,
+            "policeUnitsMax": 6,
+            "policeCap": 6,
+            "wantedAtEnd": 8,
+            "starsAtEnd": 5,
+            "strikesAdmitted": 160,
+            "admission": {
+              "ok": 160
+            },
+            "outcomes": {
+              "strike:hit": 80,
+              "strike:miss": 78,
+              "strike:cancelled": 2
+            },
+            "actionsShown": 16,
+            "rivalHealth": 0,
+            "npcs": 98
+          },
+          {
+            "players": 8,
+            "mode": "sustained",
+            "seconds": 20,
+            "steps": 400,
+            "resets": 20,
+            "stepP95Ms": 1.55,
+            "stepMaxMs": 126.47,
+            "stepMeanMs": 1.85,
+            "stepOver50Ms": 3,
+            "snapshotP95Ms": 0.26,
+            "checkpointP95Ms": 2.35,
+            "snapshotBytes": 67526,
+            "checkpointBytes": 153235,
+            "policeUnitsAtEnd": 6,
+            "policeUnitsMax": 6,
+            "policeCap": 6,
+            "wantedAtEnd": 8,
+            "starsAtEnd": 5,
+            "strikesAdmitted": 160,
+            "admission": {
+              "ok": 160
+            },
+            "outcomes": {
+              "strike:hit": 80,
+              "strike:miss": 78,
+              "strike:cancelled": 2
+            },
+            "actionsShown": 16,
+            "rivalHealth": 0,
+            "npcs": 98
+          }
+        ]
+      },
+      {
+        "players": 16,
+        "runs": [
+          {
+            "players": 16,
+            "mode": "sustained",
+            "seconds": 20,
+            "steps": 400,
+            "resets": 20,
+            "stepP95Ms": 1.63,
+            "stepMaxMs": 135.36,
+            "stepMeanMs": 2.03,
+            "stepOver50Ms": 4,
+            "snapshotP95Ms": 0.34,
+            "checkpointP95Ms": 2.7,
+            "snapshotBytes": 74722,
+            "checkpointBytes": 163468,
+            "policeUnitsAtEnd": 6,
+            "policeUnitsMax": 6,
+            "policeCap": 6,
+            "wantedAtEnd": 16,
+            "starsAtEnd": 5,
+            "strikesAdmitted": 320,
+            "admission": {
+              "ok": 320
+            },
+            "outcomes": {
+              "strike:hit": 80,
+              "strike:miss": 235,
+              "strike:cancelled": 5
+            },
+            "actionsShown": 32,
+            "rivalHealth": 0,
+            "npcs": 98
+          },
+          {
+            "players": 16,
+            "mode": "sustained",
+            "seconds": 20,
+            "steps": 400,
+            "resets": 20,
+            "stepP95Ms": 1.85,
+            "stepMaxMs": 123.38,
+            "stepMeanMs": 1.93,
+            "stepOver50Ms": 3,
+            "snapshotP95Ms": 0.36,
+            "checkpointP95Ms": 2.83,
+            "snapshotBytes": 74722,
+            "checkpointBytes": 163468,
+            "policeUnitsAtEnd": 6,
+            "policeUnitsMax": 6,
+            "policeCap": 6,
+            "wantedAtEnd": 16,
+            "starsAtEnd": 5,
+            "strikesAdmitted": 320,
+            "admission": {
+              "ok": 320
+            },
+            "outcomes": {
+              "strike:hit": 80,
+              "strike:miss": 235,
+              "strike:cancelled": 5
+            },
+            "actionsShown": 32,
+            "rivalHealth": 0,
+            "npcs": 98
+          }
+        ]
+      },
+      {
+        "players": 32,
+        "runs": [
+          {
+            "players": 32,
+            "mode": "sustained",
+            "seconds": 20,
+            "steps": 400,
+            "resets": 20,
+            "stepP95Ms": 1.71,
+            "stepMaxMs": 121.6,
+            "stepMeanMs": 1.97,
+            "stepOver50Ms": 3,
+            "snapshotP95Ms": 0.39,
+            "checkpointP95Ms": 3.09,
+            "snapshotBytes": 89073,
+            "checkpointBytes": 183828,
+            "policeUnitsAtEnd": 6,
+            "policeUnitsMax": 6,
+            "policeCap": 6,
+            "wantedAtEnd": 32,
+            "starsAtEnd": 5,
+            "strikesAdmitted": 640,
+            "admission": {
+              "ok": 640
+            },
+            "outcomes": {
+              "strike:hit": 80,
+              "strike:miss": 551,
+              "strike:cancelled": 9
+            },
+            "actionsShown": 64,
+            "rivalHealth": 0,
+            "npcs": 98
+          },
+          {
+            "players": 32,
+            "mode": "sustained",
+            "seconds": 20,
+            "steps": 400,
+            "resets": 20,
+            "stepP95Ms": 1.54,
+            "stepMaxMs": 121.08,
+            "stepMeanMs": 1.89,
+            "stepOver50Ms": 3,
+            "snapshotP95Ms": 0.36,
+            "checkpointP95Ms": 2.83,
+            "snapshotBytes": 89073,
+            "checkpointBytes": 183828,
+            "policeUnitsAtEnd": 6,
+            "policeUnitsMax": 6,
+            "policeCap": 6,
+            "wantedAtEnd": 32,
+            "starsAtEnd": 5,
+            "strikesAdmitted": 640,
+            "admission": {
+              "ok": 640
+            },
+            "outcomes": {
+              "strike:hit": 80,
+              "strike:miss": 551,
+              "strike:cancelled": 9
+            },
+            "actionsShown": 64,
+            "rivalHealth": 0,
+            "npcs": 98
+          }
+        ]
+      }
+    ]
+  }
+}

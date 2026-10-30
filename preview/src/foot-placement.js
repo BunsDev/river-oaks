@@ -8,8 +8,13 @@ const smooth = t => t*t*(3-2*t);
 const TRANSFER_START = .25, REACH_KNEE = .01;
 // Pelvis release: critically damped return (1/s) and its speed cap (m/s).
 const RISE_RESPONSE = 20, RISE_CAP = .5;
+// The furthest (m) the body trails its ceiling: a curb's rise is left to the
+// capped release, a stair's accumulating rise is not (#637).
+const RISE_DEFICIT = .2;
 // Decay rate (1/s) of the body height offset after an abrupt navigation step.
 const STEP_TRANSFER = 8;
+// Steepest rise over a frame's horizontal travel that is still a slope.
+const ABRUPT_SLOPE = .6;
 // A hinge with a C1 onset: zero below -knee, the identity above +knee, and a
 // quadratic blend between, never less than the hard limit it softens.
 const softLimit = (want, knee) => want <= -knee ? 0 : want >= knee ? want : (want+knee)*(want+knee)/(4*knee);
@@ -77,6 +82,9 @@ export function createFootPlacement(model, root) {
   const swingTravel = 0.38, reach = 0.25;
   return {
     legs,
+    // The body sat, rode or flew while its feet were not placed: the next update
+    // stands them under it (a relocation), however near the old footprints are.
+    reset() { lastDistance = null; },
     update(delta, locomotion, groundAt) {
       if (legs.length !== 2) return;
       root.updateWorldMatrix(true, false);
@@ -108,11 +116,13 @@ export function createFootPlacement(model, root) {
       const scale=root.getWorldScale(new THREE.Vector3()).y,epsilon=.12;
       // Navigation must follow the exact collision surface, but the rendered
       // body transfers height over time when crossing a curb. Continuous slopes
-      // follow navigation directly; only height jumps faster than 1.2 m/s add
-      // a decaying offset. Keep the state in world space, clear it on relocation,
-      // and leave shoe targets on the actual terrain below.
+      // follow navigation directly; only height jumps faster than 1.2 m/s and
+      // steeper than ABRUPT_SLOPE over the frame's travel add a decaying offset
+      // (a fast walk up the office stair's 0.45 nosing line is a slope, not a curb
+      // a frame). Keep the state in world space, clear it on relocation, and leave
+      // shoe targets on the actual terrain below.
       const heightStep=reset?0:origin.y-lastPosition.y;
-      const abruptStep=Math.abs(heightStep)>1.2*delta;
+      const abruptStep=Math.abs(heightStep)>Math.max(1.2*delta,ABRUPT_SLOPE*(reset?0:Math.hypot(origin.x-lastPosition.x,origin.z-lastPosition.z)));
       bodyRootHeight=reset?origin.y:origin.y+(bodyRootHeight-lastPosition.y-(abruptStep?heightStep:0))*Math.exp(-STEP_TRANSFER*delta);
       const heightLag=bodyRootHeight-origin.y;
       model.position.y+=heightLag/scale;
@@ -267,11 +277,15 @@ export function createFootPlacement(model, root) {
       // transferred by heightLag, and a ceiling that merely re-expresses that
       // transfer (the root dropped, the planted foot did not) is not a release.
       // The old exp(-16 t) release let a 9 cm uphill crouch spring back at
-      // 1.4 m/s the instant the trailing foot lifted.
+      // 1.4 m/s the instant the trailing foot lifted. The capped release alone
+      // could not keep up with a climb, though: risers coming faster than 0.5 m/s
+      // sank the body 1.4 m below a stepped stair's head at 1.65 m/s, so it never
+      // trails the ceiling by more than RISE_DEFICIT (#637).
       const ceiling = origin.y + heightLag - lower;
       if (reset) { bodyHeight = ceiling; bodyRise = 0; }
       else {
         if (!abruptStep) bodyHeight += heightStep;
+        bodyHeight = Math.max(bodyHeight, ceiling-RISE_DEFICIT);
         if (ceiling <= bodyHeight) { bodyHeight = ceiling; bodyRise = 0; }
         else {
           bodyRise += (-2*RISE_RESPONSE*bodyRise + RISE_RESPONSE*RISE_RESPONSE*(ceiling-bodyHeight))*delta;
