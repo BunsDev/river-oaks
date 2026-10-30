@@ -81,3 +81,59 @@ first-visit store intro before its reception check.
 Done: the GPU visits, the in-world band framing, `pnpm run verify`, and the handoff on #500. Remaining: Val's approval
 to land after #514 (`pnpm run land 515`), the device rows (Safari/iOS volume, gesture unlock, touch), VoiceOver and
 comfort review, and the listening review once #501's film is approved.
+
+## Design-decision package for Val (2026-10-28): the portrait hint and nameplates over the film
+
+Two notes left open on 2026-10-18. Both are local presentation only: neither touches the seat, the server, the timeline
+or the shared film. Numbers below come from `screenFocusPose` with the current room (#557 moved the rows to 12.5, 9.5
+and 6.5 m from the screen; the 3.49 m front-row figure in the 2026-10-18 handoff is from the old room) and an assumed
+panel height, so they are estimates until a device fills `focus.fits` in the packet; no in-world captures were taken in
+this session (the browser lock was held by the verification runs).
+
+**Focus framing on the current room** (seated eye on the centre line; band = the view above the panel; the front row may
+step back as far as the back row, 12.5 m):
+
+| Viewport | Panel assumed | Front row | Back row |
+| --- | --- | --- | --- |
+| 1440 × 900 desktop | 190 px | fits, 35.4° at its own row (6.5 m) | fits, 30° (clamped) at 12.5 m |
+| 844 × 390 iPhone landscape | 150 px | fits, 45.9° at 6.5 m | fits, 30° at 12.5 m |
+| 390 × 844 iPhone portrait | 230 px | fits only by stepping back to 7.4 m at 80° (the limit); a taller panel, or the chooser open, tips it to `fits: false` | fits, 52.7° at 12.5 m |
+| 320 × 568 small phone portrait | 230 px | fits, 76° at 6.5 m (narrower band, but the film is a smaller share of a 16:9-ish band) | fits, 44.2° |
+| 820 × 1180 iPad portrait | 200 px | fits, 64.7° | fits, 36.5° |
+
+So on today's room the whole film usually fits even in portrait; the front row on a phone is at the edge, and any
+extra panel height (captions on two lines, the chooser, the volume row) pushes it over. When it does not fit, focus
+already centres the film in the band at 80° and reports `focus.fits: false`; the viewer sees the film's middle with its
+left and right edges cut.
+
+### 1. The portrait hint (what to say when `focus.fits` is false)
+
+| Option | What the viewer sees | Cost | Trade-off |
+| --- | --- | --- | --- |
+| **A. One status line (recommended)** | The panel's status reads "Turn your phone sideways to see the whole film" while focus is on and `fits` is false; it clears when it fits or focus ends | A few lines in `ipic-screening-ui.js` where the status is built, plus a unit case; no layout change | Truthful and cheap; does not fix the framing, only names it |
+| B. A compact panel in focus | While focused on a narrow viewport, the panel collapses to one row (status, Sound, Captions, Look around) and the chooser and transcript fold away, so the band grows by about 100 px and the front row fits at 80° | CSS and a `compact` state; the visit journey's 390 px step must still find Stand up topmost | Fixes most portrait cases; more code and another layout to test on a device; Stop watching and the transcript become one tap further |
+| C. Nothing | As now: centred, edges cut, no explanation | — | The film looks cropped for no stated reason on the device most people carry |
+
+**Recommendation: A now, B only if the iPhone row shows portrait viewing is common.** A is a copy change with a test;
+it keeps the panel's existing clearances and the device checklist unchanged. Draft copy: "Turn your phone sideways to
+see the whole film." (reduced-motion and VoiceOver read it as any other status).
+
+### 2. Nameplates over the focused film
+
+Front-row avatars sit between a back-row viewer and the screen. Their screen-space nameplates (`remote-players.js`
+labels laid out by `peer-label-layout.js`, which never hides a label for overlap with the world) float over the lower
+part of the film in the back row's focused view, and so does the voice ring of whoever is speaking.
+
+| Option | What the viewer sees | Cost | Trade-off |
+| --- | --- | --- | --- |
+| **A. Hide nameplates while focus is on (recommended)** | Labels fade with the 0.35 s focus ease (instantly with reduced motion) and return on Look around; the avatars stay | One flag from the screening UI (`focus.blend > 0`) to `createRemotePlayers` (`labelVisible` is already computed per entry) and a CSS opacity on `.remote-player-labels`; a unit case and a visit-journey check that labels are hidden while focused | Loses "who is sitting there" while watching; the roster and the speaking ring in the panel still say who is talking |
+| B. Keep them, but below the film | Labels are clamped to the band under the film's bottom edge in focus (the layout already clamps to the viewport) | A clamp rectangle passed to `layoutPeerLabels` from the film's projected corners | Labels stack where the panel is; crowded with three or more viewers |
+| C. Dim them | Labels at 35 % opacity, no outline, in focus | CSS only | Still text over the film; the dimmest option that keeps names |
+
+**Recommendation: A.** Focus is an explicit "watch the film" mode; names belong to the social view it returns to.
+The speaking ring stays in the panel (and the roster), so voice chat is not lost. Prototype location, if Val wants to
+see it first: `preview/src/main.js` where the screening camera is applied after the walking camera (the same hunk that
+reads `focus.blend`), setting `remotePlayers.setLabelsHidden(blend > 0)`; no server or shared change.
+
+**Decisions for Val:** (1) A or B for the portrait hint, and the copy; (2) A, B or C for nameplates; (3) whether a
+prototype PR should be opened before the device rows, or after them with the measured `focus.fits` from an iPhone.
