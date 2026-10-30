@@ -1,5 +1,6 @@
 import { bindPageLifecycle } from './background-lifecycle.js';
 import { poseFor } from './crime-poses.js';
+import { applyCombatPose, createLocalCombat } from './combat-motion.js';
 import { selectedCharacterFor } from './character-selection-view.js';
 import { createCharacterMaterials } from './character-studio-materials.js';
 import { migrateCharacterAppearance, characterAppearanceFor } from './character-definition.js';
@@ -42,6 +43,9 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   };
   const carriage=createParkedCarriage({scene,walking,getWorld,getLocals:crewLocals,getConversation,requestExit:requestVehicleExit,requestChauffeur,requestManeuver,reducedMotion});
   if(!rideKinds.some(spec=>spec.kind===carriage.kind))carriage.select(rideKinds[0].kind);
+  // #640 increment 4: the crime HUD publishes the town's combat state for this figure; combat-motion.js
+  // turns the body toward the opponent and layers a pose on after the rig is posed.
+  const combat=createLocalCombat();let combatHeld=false,crimeHud=null;
   // Hidden until the walk has a pose (update() below): shown first, it flashed for a frame at sign-in.
   const panel = document.createElement('section');panel.className = 'player-controls';panel.hidden = true;panel.setAttribute('aria-label', 'Your character');
   panel.innerHTML = `<header class="player-identity">
@@ -400,16 +404,27 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         // Walking off, sitting, riding or flying ends watering.
         if(waterUntil&&(pose.speed>.3||seated||pose.flying))waterUntil=0;
         const watering=now<waterUntil&&waterTarget;
-        if(!seated&&(watering||previous===null||pose.speed>.05)) {
+        // #640 increment 4: while engaged, the body turns toward the fight (combat-motion.js) and the
+        // travel turn below stands down, so a backpedal or strafe keeps facing the opponent.
+        if(!crimeHud?.isConnected)crimeHud=document.querySelector('.crime-hud');
+        const fight=presentation?null:combat.update({dataset:crimeHud?.dataset,now,dt,position:holder.position,yaw:holder.rotation.y,heading:travelHeading,seated,flying:pose.flying,reducedMotion});
+        const engaged=fight!==null&&fight.yaw!==null;
+        if(!seated&&!engaged&&(watering||previous===null||pose.speed>.05)) {
           const aim=watering?waterTarget:null;
           const facing=aim?Math.atan2(aim[0]-holder.position.x,aim[2]-holder.position.z):travelHeading??pose.yaw+Math.PI;
           holder.rotation.y=turnToward(holder.rotation.y,facing,previous===null?1:dt);
         }
-        if(!seated&&focus.facing!==null&&!sharedInteraction)holder.rotation.y=focus.facing;
+        if(!seated&&focus.facing!==null&&!sharedInteraction&&!engaged)holder.rotation.y=focus.facing;
         if(sharedInteraction&&!presentation&&!seated&&!pose.flying)holder.rotation.y=turnToward(holder.rotation.y,sharedInteraction.heading,previous===null?1:dt);
+        if(engaged)holder.rotation.y=fight.yaw;
+        // Down, surrendered or held: the town will not move this player, so held keys and buttons let go.
+        const combatHold=['down','surrender'].includes(fight?.state?.kind);
+        if(combatHold&&!combatHeld)walking.halt();
+        combatHeld=combatHold;host.dataset.combat=fight?.layers.at(-1)?.kind??'';
         const throwing = !seated && !pose.flying && now - throwStart < 850;
         pilotHands?.reset();
-        avatar.update(now, now < castUntil ? 'amazed' : throwing ? (now - throwStart < 180 ? 'throw-windup' : 'throw-release') : watering ? 'water' : !pose.flying&&!pose.riding ? (poseFor(sharedGesture)??'continue') : 'continue', false, {...localLocomotion(pose,{seated}),flightSpeed:pose.flying?pose.speed:0,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,ridingDriver:Boolean(pose.riding?.driver),seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,ridingDistance:pose.riding?.distance,ridingSpeed:pose.riding?.speed,ridingSteering:pose.riding?.steering,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
+        // While the town reports a combat state the layer owns the figure: the legacy shove gesture never stacks on the strike pose.
+        avatar.update(now, now < castUntil ? 'amazed' : throwing ? (now - throwStart < 180 ? 'throw-windup' : 'throw-release') : watering ? 'water' : !pose.flying&&!pose.riding ? (fight?.state?'continue':poseFor(sharedGesture)??'continue') : 'continue', false, {...localLocomotion(pose,{seated}),flightSpeed:pose.flying?pose.speed:0,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,ridingDriver:Boolean(pose.riding?.driver),seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,ridingDistance:pose.riding?.distance,ridingSpeed:pose.riding?.speed,ridingSteering:pose.riding?.steering,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});if(!seated&&!pose.flying&&!pose.riding)for(const layer of fight?.layers??[])applyCombatPose(avatar.rig,layer,{reducedMotion});outfit.update(pose.flying,now,seated);
         if(pose.riding?.driver&&pose.riding.kind==='hover'&&pilotHands){holder.updateMatrixWorld(true);pilotHands(carriage.object,VEHICLES.hover);}
         outfit.updateOptics(camera,viewportHeight);
         if(portraitWanted&&getPortrait){
