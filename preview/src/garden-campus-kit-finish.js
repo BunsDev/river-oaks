@@ -5,7 +5,8 @@
 // finish is render-only: it replaces colour, roughness and metalness fields of materials the
 // campus already builds. It never adds, moves or removes a part, so every instance, level,
 // suite and bridge ID, support, clearance, collision rect and lease is the same under each
-// finish. `classic` is the default and changes nothing; the client opts in with
+// finish. The one exception is `forms` (Pink Jet-Age), which reshapes parts inside the same
+// contract envelopes (garden-campus-jet-age.js) and still moves no surface, rect or ID. `classic` is the default and changes nothing; the client opts in with
 // render-quality.js readFinishPreference (`?finish=pink-jet-age` or localStorage).
 //
 // The palette comes from its own dependency-free module (catalog.js re-exports it), so the kit
@@ -17,7 +18,7 @@ import { PINK_JET_AGE as P } from '../../shared/city-kit/pink-jet-age.js';
 // soil and luminaires stay as they are, and the desk screens stay one dark neutral so nothing
 // private ever reads on them).
 export const CAMPUS_KIT_FINISHES = Object.freeze({
-  classic: Object.freeze({ label: 'Classic', campus: Object.freeze({}), trim: null, emerald: Object.freeze({}), fitout: Object.freeze({}), ceiling: Object.freeze({}) }),
+  classic: Object.freeze({ label: 'Classic', campus: Object.freeze({}), trim: null, emerald: Object.freeze({}), fitout: Object.freeze({}), ceiling: Object.freeze({}), forms: null }),
   'pink-jet-age': Object.freeze({
     label: 'Pink Jet-Age',
     // garden-campus.js materials. Ivory shells and bands, mint glass, satin chrome hardware.
@@ -53,6 +54,10 @@ export const CAMPUS_KIT_FINISHES = Object.freeze({
     }),
     // garden-campus-ceilings.js: an ivory plaster with the same faint bounce.
     ceiling: Object.freeze({ color: P.ivory, emissive: P.ivory }),
+    // Jet-Age architecture (garden-campus-jet-age.js): the shapes, not only the colours. Saucer
+    // crowns, rounded headhouses, boomerang canopies, skywalk hoops, a vaulted pergola, hall
+    // starbursts and ring lights, and bullnosed slab bands, in these three roles.
+    forms: Object.freeze({ ivory: P.ivory, chrome: P.chrome, pink: P.pink }),
   }),
 });
 
