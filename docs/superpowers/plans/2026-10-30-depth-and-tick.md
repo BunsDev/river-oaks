@@ -19,8 +19,8 @@
 | --- | --- |
 | 0. #695 | **Landed** 2026-10-30T09:40:12Z as `0d54a18d` (`pnpm run land 695`) |
 | 1. #707 | Merged with main after #695 and pushed (`4e6f35ca`), core passed; baseline burn-down **blocked**, see Decision 2 |
-| 2. Coordinator tick A/B | Snapshots and Redis ready; waiting for 1-min load ≤ 8 (host 17–44 all morning) |
-| 3. Depth burn-down | #790 draft: Axe & Darts, 164 → 159; #794 draft: fix-forward for #695's shader-callback regression |
+| 2. Coordinator tick A/B | **Inconclusive**: 3 rounds, load ≤ 8 held only for A1 (pass); main never measured. See Decision 3 |
+| 3. Depth burn-down | #790 draft: Axe & Darts, 164 → 159; #796 draft: IPIC venue joints, 164 → 160; #794 draft: fix-forward for #695's shader-callback regression |
 | 4. Retirement | pr716-merge and tick-main cancelled 10:22Z; the rest wait on 12 h windows (see Retirement) |
 
 ## Results
@@ -93,7 +93,27 @@
 - Snapshots `tick-a` = `4557e70d` (before #655) and `tick-b` = `986977ef` (main), installed. The Codex
   `crime-redis-audit.js` (cc29) is copied read-only and untracked. Private Redis runs on 127.0.0.1:6481.
 - The wrapper takes one browser lock for A1 B1 B2 A2 and starts each arm only at 1-min load ≤ 8, under
-  `caffeinate -s`. Started 06:51Z; the host has held 17–44 since then.
+  `caffeinate -s`.
+- Round 1 started 06:51Z and abandoned at 10:51Z ("never quiet in 4 h"; exit 3). It never took the lock and no
+  arm ran; host load stayed between 17 and 62.
+- Round 2 started 10:52Z. It took the lock at 11:43Z (1-min load 7.7).
+  - **A1** (`4557e70d`) ran 158 s, status 0, `measured`. Every tier was within the comparison, with no tick
+    over 200 ms:
+
+    | players | active warm-idle p95 | limit |
+    | ---: | ---: | ---: |
+    | 1 | 26.8 ms | 34.7 ms |
+    | 8 | 30.9 ms | 42.9 ms |
+    | 16 | 33.3 ms | 41.6 ms |
+    | 32 | 29.9 ms | 42.6 ms |
+
+  - **B1** (main) waited 20 min inside the lock without the 1-min load reaching 8, so the round is void at
+    12:05Z. One A arm decides nothing.
+- Round 3 started 12:06Z with a 20-min pre-lock cap and was abandoned at 12:26Z (load 16–37).
+- **Result: inconclusive. Main was never measured at load ≤ 8 today.** The goal's condition for a
+  `resident-life.js` draft was main missing the active-vs-peaceful comparison in both arms while `4557e70d`
+  passes. That was not met, so no PR was opened and the finding is not closed either. Only A1 has a receipt.
+  The private Redis (pid 59413) was stopped 12:27Z. Receipts are in scratchpad `tick-receipts/round{1,2,3}/`.
 
 ### 3. Depth burn-down
 
@@ -102,6 +122,21 @@
   - The axe rack's board now stands 8 cm proud of the wall; it had been 5.5 cm.
   - The target backboards now stand 8 cm behind the targets; they had been 2 cm.
   - Regression: 4 pass / 1 fail before, 5/5 after. Core passed on `7f0ac26a`.
+- #796 (draft, from main): IPIC venue joints, 4 pairs, 164 → 160, list edit deletes lines only. Each pair
+  was a face too close to its backing:
+  - wine-fridge glass, 5 mm off its cabinet: the door is now 7 cm deep in a recessed cabinet;
+  - the burgundy back-bar wall, 2.5 cm off the lounge timber: now 8 cm;
+  - the book-spine mural, 2.5 cm off its black wall: the backing now stands 7 cm behind it;
+  - the bronze lift doors, 4.75 cm proud of their surround: now 8 cm.
+  Colliders are unchanged. In the model-level audit exactly these 4 pairs disappear. The regression fails before
+  and passes after; suites 141/141. Core passed on `684cd9ab` (preview 4,719 / 0 / 1, server 1,101 / 0 / 285);
+  the depth journey in check mode passed.
+  - Hosted on `684cd9ab`: 28 pass, 2 fail. `preview experience (heights-return)` (job 124019135473, run
+    41042702331, attempt 1) failed with "alice home: stalled", 0.57 m short. That is the known heights-return
+    flake, and #796 touches only IPIC interior geometry. The log is kept; failed jobs were rerun once at 12:30Z.
+  - #790 hosted: all 29 green on `27707041`.
+- #790 and #796 delete different lines of the same list, so the second
+  to land needs a trivial merge.
 - Assessed, not shipped:
   - Campus floor stack (ceiling/slab 2 cm and floor/slab 6 mm, both 15 m wide). Fixing it means recessing the
     slab core under the finishes, which would open a visible pit where a setback slab top is uncovered; it
@@ -135,7 +170,10 @@
   `retirement-TVkCoz`). Verified; skipped.
 - `fix/player-blocking-ui-292-20261027` (`32f88f6e`, task `player-blocking-ui-292-711` delivered, worktree
   clean and idle): touched 00:37Z, so cancel-stale is eligible after 12:38Z.
-- snap-722 and snap-695: eligible after about 12:35Z.
+- snap-722 (`9c96890c`) and snap-695 (`f790ef8b`), in the 97524b7a scratchpad: idle and clean, but last
+  touched at 05:00Z and 05:30Z, so cancel-stale refuses them (`touched-within-cutoff`) until about 17:00Z and
+  17:30Z, after this window. Next action: cancel-stale each with `--detached-path` and `--expected-head` after
+  those times.
 - `river-oaks-depth-audit` (#695's original): blocked by `dirty`, see Decision 6.
 - My own snapshots (`m695`, `m707`, `d707-parent`, `d707-fixed`, `tick-a`, `tick-b`, `cap-pre`, `cap-main`,
   `cap-fix`) were made today. `project:cancel` refuses anything touched within 12 h, so they cannot be retired
@@ -155,9 +193,12 @@
    - (a) Authorize re-establishing the version-2 baseline on the parent geometry (7,912), with #707's fixes then
      burning it to 7,894. This is the same migration protocol #707 used on `3d666a29`.
    - (b) Keep #707 draft until a narrower baseline policy exists.
-3. **Coordinator tick A/B.** The load ≤ 8 gate has not opened. If it stays shut through 13:00Z, choose between
-   an overnight quiet window and accepting a higher gate. The 10-29 receipts (load 13–27) were inconclusive.
-4. **#790.** Landing is outside this session's authority; it is ready for review after #695.
+3. **Coordinator tick A/B.** Between 06:51Z and 13:00Z the host reached 1-min load ≤ 8 once, for one arm
+   (A1 `4557e70d`: within the comparison at 1, 8, 16 and 32 players). Main was never measured. Choose between
+   (a) an overnight quiet window, with snapshots `tick-a`/`tick-b` and the wrapper ready (start a private Redis on
+   6481 and run `TICK_PRELOCK_MIN=480 node .runtime/tick-ab/abba-tick.mjs round4` in `tick-b`), and
+   (b) accepting a higher gate. The 10-29 receipts (load 13–27) were also inconclusive.
+4. **#790 and #796.** Landing is outside this session's authority. Both are ready for review on main.
 5. **Street markings and campus floors.** Choose whether the next burn-down may touch District road/decal
    polygon offsets, and whether a campus slab recess may proceed with captures.
 6. **river-oaks-3e's undelivered street-markings work.** #695's original worktree `river-oaks-depth-audit`
