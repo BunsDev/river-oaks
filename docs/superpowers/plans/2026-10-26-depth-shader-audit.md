@@ -213,7 +213,39 @@ A Node scan of `buildDistrictBuildings` (no browser, about 3 s) found the facade
 - **Checks.** Focused district, reference, depth and interior files: 104/104. `RIVER_OAKS_DEPTH_LAYERS_RECORD=1 pnpm run test:experience depth-layers`: passed, 204 listed; a normal run then passed. `pnpm run verify` (core, started 17:29Z): passed on the first attempt; agent 289/289, preview 4,289 passed and 1 skipped, server 1,036 passed and 278 skipped (Redis cases), desktop 127 passed and 5 skipped, build, Python, demo and secrets.
 - **Left on the list:** the Hermès mass flush with the block beside it; an upper window buried 1 cm inside a parking garage's wall; finish × finish pairs (both at the same offset); cladding joints at gap 0; and two alcove side walls flush with a rebuilt neighbour's stone end.
 
-## Remaining (`depth-layers-known.json`, 204 pairs)
+## Increment 4 (2026-10-27): boutique interiors, 204 listed pairs to 176
+
+The Node scan missed the boutique interiors, which `buildDistrictBuildings` returns in `userData.interiors`. With them, 230 pairs to 142, none added; the record run dropped 28 listed pairs and added none.
+
+- **Display alcoves beside boutiques (`district.js`).** An alcove side wall stood 4 cm in front of a boutique room's wall wherever the room began just past the bay. It is now skipped there, as it already was for a room inside the bay, and the alcove's back wall runs 2 cm on into the room's wall so its end cap is buried. Every alcove side wall starts 2 cm behind the facade line, where a room's wall also ends.
+- **Fluted millwork (`interior-luxe.js`)** stands 4 mm off a room's back wall; its material now takes polygon offset −1/−2, like the trim finishes.
+- **Mirrors (`store-interiors.js`)** lie on brass surrounds or walls; the mirror material takes the same offset.
+- **Regression.** `district-depth.test.js` now scans the interiors too: no boutique surface may fight an alcove, and no fluted panel may fight. It fails on `882a27d5`'s sources and passes here.
+- **Left:** a fitting-room mirror sits inside its brass slab (which way it should face is not clear from the code), brass trims elsewhere, and the facade finish and cladding pairs above.
+- **Checks.** 30 district, reference, store, interior and room files: 2,021 passed, 1 skipped. Record run passed (176 listed), then a normal run passed. `pnpm run verify` (core, 17:43Z): passed on the first attempt; agent 289/289, preview 4,289 passed and 1 skipped, server 1,036 passed and 278 skipped (Redis cases), desktop 127 passed and 5 skipped.
+
+## Increment 5 (2026-10-27): shop artwork and room slabs, 176 listed pairs to 168
+
+Node scan 142 to 124, none added; the record run dropped 8 listed pairs and added none.
+
+- **Artwork (`retail-interiors.js`).** The four atlas materials are always a wall's face: an alcove's back wall, or a feature panel 5 mm in front of its 6.5 m brass surround. They take polygon offset −1/−2 and the name `retail-artwork`, so the audit names them. (Their maps arrive after load, so per-use clones would miss them.)
+- **Room slab (`store-interiors.js`).** A boutique's 0.6 m slab under its floor ended 3 cm behind the shop glass; it now starts 6 cm back.
+- **Tried and reverted:** thickening the bar's walnut back panel moved its back face against a different wall; the remaining walnut pairs (1.5 cm) are another fixture.
+- **Regression.** `district-depth.test.js` asserts no artwork × brass fight; it fails with the offset removed.
+- **Checks.** Same 30 focused files: 2,021 passed, 1 skipped. Record and normal journey runs passed (168 listed). `pnpm run verify` (core, 17:59Z): passed on the first attempt with the same counts as increment 4.
+
+## Increment 6 (2026-10-27): Dolce & Gabbana and Hermès corners, 168 listed pairs to 164
+
+Node scan 124 to 113, none added.
+
+- **Dolce & Gabbana (`reference-blocks.js`).** Its sand cornice and its neighbours' white eaves overlapped flush at both corners (top, ends, front and underside). `eaves()` takes `grow`, and Dolce's cornice and soffit are 6 cm larger all round, burying the white eaves' faces where they meet. Its stone storeys and the band between them are likewise 6 cm deeper and longer than the tile storeys they meet.
+- **Hermès (`reference-facades.js`).** The stone cap on the pavilion stood exactly at its bronze roof (14.45 m); it now rises 7 cm above it. The pavilion's mass, flush with the block's own on the west wall, is pushed back one step less (+1/+1), so it wins there and every part in front of it still wins over it.
+- **Test.** `district-depth.test.js` no longer allows the Hermès mass pair; the parking-garage window is the one mass pair left.
+- **Tried and reverted:** lengthening Cartier's wall by 6 cm at each end added a pair and fixed none; the Cartier/IPIC stone joints stay listed.
+- **The record run dropped 6 listed pairs and listed 2 others.** Both 2 are undersides at the first-floor line (−2804.9, −1422.9 and −2899.6, −1284) that the Node scan already found before this increment. The journey keeps one entry per pair key (materials and gap), and these share their keys with the corner pairs fixed here, so they only surface now. They are not new faults.
+- **Checks.** Same 30 focused files: 2,021 passed, 1 skipped. Record and normal journey runs passed (164 listed). `pnpm run verify` (core, 20:16Z): passed on the first attempt with the same counts as increment 5.
+
+## Remaining (`depth-layers-known.json`, 164 pairs)
 
 By source:
 
@@ -237,5 +269,5 @@ Hosted checks on `86afad18` (the third merge): 26 of 26 passed, including the `d
    - A larger walking near plane than 6 cm.
 
    Both touch every frame and the phone budgets, so neither is in this branch.
-2. **Landing with a known list.** This branch lands the planter, city-kit, the shader fixes and the journey, with 204 earlier pairs listed for burn-down (388 at increment 1). The alternative is holding it until the list is empty.
+2. **Landing with a known list.** This branch lands the planter, city-kit, the shader fixes and the journey, with 164 earlier pairs listed for burn-down (388 at increment 1). The alternative is holding it until the list is empty.
 3. **Merge order with #649.** The planter block's neighbours change in both branches.

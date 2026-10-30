@@ -1,9 +1,11 @@
 // Settings → Account → Reports, for moderators only (#292, App Review guideline 1.2):
-// what residents reported, newest first, and a ban for the reported account. The server
-// decides who is a moderator and enforces every ban; this list only asks and shows.
-const LIST_PATH = '/api/moderation/reports', BAN_PATH = '/api/moderation/ban';
+// what residents reported, open reports first and newest first, with what each carries
+// (the quoted text and the reported account's last chat lines), when it should be
+// answered by, a ban for the reported account and a Close for a report dealt with. The
+// server decides who is a moderator and enforces every ban; this list only asks and shows.
+const LIST_PATH = '/api/moderation/reports', BAN_PATH = '/api/moderation/ban', CLOSE_PATH = '/api/moderation/reports/close';
 const REASONS = { disruption: 'disruptive', harassment: 'harassment', cheating: 'cheating' };
-const UNAVAILABLE = 'Reports are unavailable right now.', NOT_CHANGED = 'The ban didn’t change. Try again.';
+const UNAVAILABLE = 'Reports are unavailable right now.', NOT_CHANGED = 'The ban didn’t change. Try again.', NOT_CLOSED = 'The report didn’t close. Try again.';
 // Server answers that are sentences are shown; codes such as waitlist_approval_required aren't.
 const sentence = text => typeof text === 'string' && /\s/.test(text) && /[.!?]$/.test(text);
 
@@ -13,7 +15,7 @@ export function createModerationReports({ fetcher = (...args) => fetch(...args),
   const make = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text) node.textContent = text; return node; };
   const root = make('div', 'settings-group moderation-reports'); root.hidden = true;
   const heading = make('h4', null, 'Reports');
-  const help = make('p', 'moderation-reports-help', 'What residents reported, newest first. A ban signs the account out of the town and keeps it out until you lift it.');
+  const help = make('p', 'moderation-reports-help', 'What residents reported, open reports first. A ban signs the account out of the town and keeps it out until you lift it; close a report once it’s dealt with.');
   const status = make('p', 'moderation-reports-status'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.tabIndex = -1;
   const list = make('ol', 'moderation-reports-list'); list.setAttribute('aria-label', 'Reports, newest first');
   root.append(heading, help, status, list);
@@ -54,29 +56,65 @@ export function createModerationReports({ fetcher = (...args) => fetch(...args),
     // A refresh can hide the group (the session ended); focus then stays in the pane.
     (root.hidden ? root.closest?.('[role="tabpanel"]') : status)?.focus?.();
   };
+  // Closes a report the moderator has dealt with; the list reloads to show it closed.
+  const close = async item => {
+    if (busy) return;
+    busy = true; hold(true);
+    let message = NOT_CLOSED, changed = false;
+    try {
+      const session = await signedIn();
+      if (!session) message = 'Sign in again to close a report.';
+      else {
+        const response = await fetcher(CLOSE_PATH, { method: 'POST', credentials: 'same-origin', cache: 'no-store',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrfToken }, body: JSON.stringify({ id: item.id }) });
+        const value = await response.json().catch(() => ({}));
+        if (response.ok) { message = 'Report closed.'; changed = true; }
+        else if (sentence(value?.error)) message = value.error;
+      }
+    } catch { /* NOT_CLOSED */ }
+    busy = false;
+    if (changed) { draw(shown.map(report => report.id === item.id ? { ...report, closed: { at: new Date().toISOString(), by: 'you' }, overdue: false } : report)); hold(true); }
+    const failure = changed ? await refresh() : null;
+    hold(busy);
+    status.textContent = failure ? `${message} ${failure}` : message;
+    (root.hidden ? root.closest?.('[role="tabpanel"]') : status)?.focus?.();
+  };
+  const stamp = at => { const time = make('time', null, when(at)); time.setAttribute('datetime', at); return time; };
   const row = item => {
-    const node = make('li', 'moderation-report');
+    const node = make('li', `moderation-report${item.closed ? ' moderation-report-closed' : item.overdue ? ' moderation-report-overdue' : ''}`);
     const summary = make('p', 'moderation-report-summary', `${item.reported.name}: ${REASONS[item.reason] ?? item.reason}${item.reported.banned ? ' (banned)' : ''}`);
     const meta = make('p', 'moderation-report-meta', `Reported by ${item.reporter.name}, `);
-    const time = make('time', null, when(item.at)); time.setAttribute('datetime', item.at); meta.append(time);
+    meta.append(stamp(item.at));
+    // When it should be answered by, or who closed it and when.
+    if (item.closed) { meta.append(make('span', null, `. Closed by ${item.closed.by}, `), stamp(item.closed.at)); }
+    else if (item.respondBy) { meta.append(make('span', null, item.overdue ? '. Overdue, was due ' : '. Respond by '), stamp(item.respondBy)); }
+    // What the report carries: the quoted text, then the reported account's last chat lines.
+    const content = make('div', 'moderation-report-content');
+    if (item.content?.quoted) content.append(make('blockquote', 'moderation-report-quote', item.content.quoted));
+    if (item.content?.chat?.length) {
+      const lines = make('ul', 'moderation-report-chat'); lines.setAttribute('aria-label', `${item.reported.name}’s last messages`);
+      for (const line of item.content.chat) lines.append(make('li', null, line.text));
+      content.append(lines);
+    }
     const actions = make('div', 'moderation-report-actions');
     const button = (text, onClick, className = 'moderation-report-action') => {
       const node = make('button', className, text); node.type = 'button'; node.disabled = busy; node.addEventListener('click', onClick); buttons.add(node); return node;
     };
+    const closing = () => item.id && !item.closed ? [button('Close report', () => close(item))] : [];
     const idle = () => {
-      if (item.reported.id === self) return actions.replaceChildren();
-      if (item.reported.banned) return actions.replaceChildren(button(`Lift ${item.reported.name}’s ban`, () => setBan(item.reported, false)));
+      if (item.reported.id === self) return actions.replaceChildren(...closing());
+      if (item.reported.banned) return actions.replaceChildren(button(`Lift ${item.reported.name}’s ban`, () => setBan(item.reported, false)), ...closing());
       // The server refuses to ban a moderator, a waitlist admin or an owner.
-      if (item.reported.staff) return actions.replaceChildren();
+      if (item.reported.staff) return actions.replaceChildren(...closing());
       const start = button(`Ban ${item.reported.name}…`, () => {
         const confirm = button(`Ban ${item.reported.name}`, () => setBan(item.reported, true), 'moderation-report-action moderation-report-confirm');
         actions.replaceChildren(confirm, button('Cancel', () => { idle(); actions.children[0]?.focus?.(); }));
         confirm.focus?.();
       });
-      actions.replaceChildren(start);
+      actions.replaceChildren(start, ...closing());
     };
     idle();
-    node.append(summary, meta, actions);
+    node.append(summary, meta, content, actions);
     return node;
   };
   // Answers the failure the group shows once it's done, if any.

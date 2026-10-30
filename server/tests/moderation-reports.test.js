@@ -15,6 +15,7 @@ import { createRedisBlocks } from '../blocks.js';
 import { createRedisLandmarks } from '../landmarks.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 import { REPORT_LIST_LIMIT, normalizeReport } from '../moderation-reports.js';
+import { RESPONSE_HOURS } from '../moderation-notify.js';
 import { accountName } from '../../preview/src/resident-names.js';
 import { JEVICA_ADMIN_USER_IDS } from '../admin.js';
 
@@ -31,16 +32,57 @@ const waitlist = { ...approvedWaitlist, isApproved: async id => id !== 'moderato
 const read = (base, user, method = 'GET') => fetch(`${base}/api/moderation/reports`, { method, headers: { Origin: ORIGIN, ...(user ? { Cookie: `session=${user}` } : {}), 'X-CSRF-Token': 'test-csrf' } });
 const ban = (base, user, userId, banned = true) => fetch(`${base}/api/moderation/ban`, { method: 'POST',
   headers: { Origin: ORIGIN, Cookie: `session=${user}`, 'X-CSRF-Token': 'test-csrf', 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, banned }) });
-// The whole of each listed report, with its time checked and set aside.
-const whole = reports => reports.map(({ at, ...rest }) => { assert.ok(!Number.isNaN(Date.parse(at)), at);return rest; });
+const closeReport = (base, user, body, headers = {}) => fetch(`${base}/api/moderation/reports/close`, { method: 'POST',
+  headers: { Origin: ORIGIN, Cookie: `session=${user}`, 'X-CSRF-Token': 'test-csrf', 'Content-Type': 'application/json', ...headers }, body: typeof body === 'string' ? body : JSON.stringify(body) });
+// Closing a report (#292): moderators only, with the session token; a closed report is
+// listed after the open ones with who closed it, and is never overdue. Each listed report
+// carries its content and response target.
+async function closesReports(base, { saveReport, isListed = () => true }) {
+  const listed = async user => (await (await read(base, user)).json()).reports;
+  const [open, late] = await listed('moderator');
+  assert.equal(open.content.quoted, 'go away', 'what the report carries is listed');
+  assert.deepEqual([open.closed, open.overdue, late.overdue], [null, false, true]);
+  assert.equal((await closeReport(base, 'user-pat', { id: open.id })).status, 403, 'a resident can\'t close');
+  assert.equal((await closeReport(base, 'moderator', { id: open.id }, { 'X-CSRF-Token': 'wrong' })).status, 403, 'nor a request without the session token');
+  assert.equal((await closeReport(base, 'moderator', { id: 'nope' })).status, 400);
+  assert.equal((await closeReport(base, 'moderator', 'not json')).status, 400);
+  const missing = await closeReport(base, 'moderator', { id: 'f2b5c9e1-7c3a-4e21-9d1b-0a2b3c4d5e6f' });
+  assert.equal(missing.status, 404);
+  assert.deepEqual(await missing.json(), { error: 'That report isn’t here.' });
+  const closed = await closeReport(base, 'moderator', { id: late.id });
+  assert.equal(closed.status, 200);
+  assert.deepEqual(await closed.json(), { ok: true });
+  assert.equal((await closeReport(base, 'moderator', { id: late.id })).status, 200, 'closing again is fine');
+  const after = await listed('moderator');
+  assert.deepEqual(after.map(report => [report.id, report.overdue, report.closed?.by ?? null]), [[open.id, false, null], [late.id, false, accountName('moderator', null)]], 'closed last, no longer overdue, with who closed it');
+  assert.ok(!Number.isNaN(Date.parse(after[1].closed.at)));
+  // A new report lands ahead of the closed one.
+  await saveReport('user-kim', 'user-erin', 'cheating');
+  assert.deepEqual((await listed('moderator')).map(report => [report.reason, Boolean(report.closed)]), [['cheating', false], ['harassment', false], ['disruption', true]]);
+  assert.ok(isListed());
+}
+// The whole of each listed report, with its time, id and response target checked and set
+// aside: a report saved by the store has a uuid, is due `RESPONSE_HOURS` after it was
+// saved and isn't overdue yet; one read from an older log line has a digest id and is overdue.
+const whole = reports => reports.map(({ at, id, respondBy, overdue, closed, content, ...rest }) => {
+  assert.ok(!Number.isNaN(Date.parse(at)), at);
+  const fresh = Date.now() - Date.parse(at) < 60_000;
+  assert.match(id, fresh ? /^[0-9a-f-]{36}$/ : /^[A-Za-z0-9_-]{32}$/, id);
+  assert.equal(Date.parse(respondBy) - Date.parse(at), RESPONSE_HOURS * 3_600_000, 'due a day after it was saved');
+  assert.equal(overdue, !fresh);
+  assert.equal(closed, null);
+  assert.equal(content, null);
+  return rest;
+});
 const town = () => ({ worldId: 'river-oaks', players: new Map(), join: () => ({ ok: true }), leave() {}, command: () => ({ ok: true }), step() {},
   snapshot: () => ({ type: 'snapshot', players: [], locals: [], wishes: {} }), resolvePlace: () => null, listPlaces: () => [] });
 
 test('the town file and the hosted list read as one report shape', () => {
-  assert.deepEqual(normalizeReport({ at: '2026-10-26T10:00:00.000Z', type: 'report', reporterId: 'a', userId: 'b', reason: 'harassment' }),
-    { at: '2026-10-26T10:00:00.000Z', reporterId: 'a', reportedId: 'b', reason: 'harassment' });
-  assert.deepEqual(normalizeReport({ kind: 'report', at: '2026-10-26T10:00:00.000Z', reporterId: 'a', targetId: 'b', reason: 'cheating' }),
-    { at: '2026-10-26T10:00:00.000Z', reporterId: 'a', reportedId: 'b', reason: 'cheating' });
+  const town = normalizeReport({ at: '2026-10-26T10:00:00.000Z', type: 'report', reporterId: 'a', userId: 'b', reason: 'harassment' });
+  assert.deepEqual(town, { at: '2026-10-26T10:00:00.000Z', reporterId: 'a', reportedId: 'b', reason: 'harassment', id: town.id, content: null, respondBy: null });
+  assert.match(town.id, /^[A-Za-z0-9_-]{32}$/, 'a report saved before ids gets a stable one');
+  assert.deepEqual(normalizeReport({ kind: 'report', at: '2026-10-26T10:00:00.000Z', reporterId: 'a', targetId: 'b', reason: 'cheating', id: 'f2b5c9e1-7c3a-4e21-9d1b-0a2b3c4d5e6f', content: { quoted: 'hey' }, respondBy: '2026-10-27T10:00:00.000Z' }),
+    { at: '2026-10-26T10:00:00.000Z', reporterId: 'a', reportedId: 'b', reason: 'cheating', id: 'f2b5c9e1-7c3a-4e21-9d1b-0a2b3c4d5e6f', content: { quoted: 'hey' }, respondBy: '2026-10-27T10:00:00.000Z' });
   for (const entry of [null, 'text', { type: 'ban', userId: 'b' }, { kind: 'unban', userId: 'b' }, { type: 'report', reporterId: 'a', userId: 'b', reason: 'spam', at: 'x' },
     { type: 'report', reporterId: '', userId: 'b', reason: 'harassment', at: '2026-10-26T10:00:00.000Z' }, { type: 'report', reporterId: 'a', userId: 'b', reason: 'harassment', at: 'not a time' },
     // Every field of a report, but another kind of entry.
@@ -267,4 +309,41 @@ test('the hosted list reads past other audit entries, and returns at most the ne
   const all = await security.reports(1000);
   assert.equal(all.length, REPORT_LIST_LIMIT + 6);
   assert.equal(all.at(-1).reporterId, 'user-early', 'a report behind 600 other entries is still found');
+});
+
+test('the town closes a report for a moderator only, and lists content, response targets and closed reports last', async t => {
+  const temporary = await mkdtemp(join(tmpdir(), 'river-oaks-moderation-reports-'));
+  t.after(() => rm(temporary, { recursive: true, force: true }));
+  const path = join(temporary, 'moderation.json');
+  // A report saved before ids and response targets reads as overdue, with a stable id.
+  await writeFile(`${path}.audit.jsonl`, `${JSON.stringify({ at: '2026-10-20T09:00:00.000Z', type: 'report', reporterId: 'user-erin', userId: 'user-pat', reason: 'disruption' })}\n`);
+  const moderation = await createModeration(path);
+  await moderation.report('user-pat', 'user-erin', 'harassment', { content: { quoted: 'go away', chat: [{ at: '2026-10-27T10:00:00.000Z', text: 'go away' }] }, respondBy: new Date(Date.now() + 3_600_000).toISOString() });
+  const app = createGameServer({ auth, world: town(), waitlist, origin: ORIGIN, staticRoot: '/nonexistent', moderation, moderators: ['moderator'] });
+  await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
+  t.after(() => app.close());
+  await closesReports(`http://127.0.0.1:${app.server.address().port}`, { saveReport: (reporterId, userId, reason) => moderation.report(reporterId, userId, reason) });
+  // The closed report survives a restart, and closing was audited.
+  const reopened = await createModeration(path);
+  const reports = await reopened.reports();
+  assert.deepEqual(reports.map(report => Boolean(report.closed)), [false, false, true]);
+  assert.match(await readFile(`${path}.audit.jsonl`, 'utf8'), /"type":"report_closed"/);
+});
+
+test('the hosted backend closes a report for a moderator only, and lists content, response targets and closed reports last', { skip: !process.env.REDIS_URL, timeout: 30000 }, async t => {
+  const redis = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1 });redis.on('error', () => {});
+  const prefix = `{river-oaks:test-moderation-reports:${randomUUID()}}`;
+  const security = createRedisSecurity({ redis, prefix });
+  const data = JSON.parse(await readFile(new URL('../../preview/public/data/district.json', import.meta.url)));
+  const room = createRedisRoom({ redis, prefix, worldId: 'river-oaks', worldData: data, authorize: async () => true });
+  const app = createDistributedServer({ auth, security, room, waitlist, landmarks: createRedisLandmarks({ redis, prefix }),
+    social: createRedisSocial({ redis, prefix }), blocks: createRedisBlocks({ redis, prefix }), origin: ORIGIN, moderators: ['moderator'] });
+  await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
+  t.after(async () => { await app.close();await room.close();security.close();const keys = await redis.keys(`${prefix}*`);if (keys.length) await redis.del(...keys);await redis.quit(); });
+  // An entry saved before ids and response targets reads as overdue, with a stable id.
+  await redis.lpush(`${prefix}:audit`, JSON.stringify({ kind: 'report', at: '2026-10-20T09:00:00.000Z', reporterId: 'user-erin', targetId: 'user-pat', reason: 'disruption' }));
+  assert.equal(await security.report({ reporterId: 'user-pat', targetId: 'user-erin', reason: 'harassment', content: { quoted: 'go away' }, respondBy: new Date(Date.now() + 3_600_000).toISOString() }), true);
+  await closesReports(`http://127.0.0.1:${app.server.address().port}`, { saveReport: async (reporterId, targetId, reason) => assert.equal(await security.report({ reporterId, targetId, reason }), true) });
+  assert.equal(await redis.hlen(`${prefix}:reports:closed`), 1);
+  assert.ok((await redis.lrange(`${prefix}:audit`, 0, -1)).some(line => JSON.parse(line).kind === 'report_closed'), 'closing was audited');
 });

@@ -16,6 +16,26 @@ export function normalizeQuality(value) {
   return Object.hasOwn(QUALITY_MODES, value) ? value : DEFAULT_QUALITY;
 }
 
+// The city-kit finish (shared/city-kit/catalog.js KIT_FINISHES) for the live Commons and
+// Heights (#742). Opt-in and read once per page load, so a change takes a reload:
+// `?finish=pink-jet-age` for this load (`?finish=classic` overrides a stored choice), or
+// localStorage['river-oaks-finish'] to keep it. Without either it is classic. The lazily
+// loaded scene builders validate the name (catalog.js knownFinish), so an unknown one
+// renders classic; this reader keeps the catalog out of the main bundle.
+export const DEFAULT_FINISH = 'classic';
+const finishStorageKey = 'river-oaks-finish';
+const finishName = value => typeof value === 'string' && /^[a-z][a-z0-9-]{0,31}$/.test(value) ? value : DEFAULT_FINISH;
+export function readFinishPreference({ search, storage: given } = {}) {
+  try {
+    const query = new URLSearchParams(search ?? globalThis.location?.search ?? '').get('finish');
+    if (query !== null) return finishName(query);
+  } catch { /* An unreadable address keeps the stored or default finish. */ }
+  try {
+    const storage = given === undefined ? globalThis.localStorage : given;
+    return finishName(storage?.getItem(finishStorageKey));
+  } catch { return DEFAULT_FINISH; }
+}
+
 // A 60 Hz display delivers 16.7 ms frames. A window median at or above 26 ms
 // means the GPU is missing every other refresh, so Auto steps resolution down.
 // Repeated missed refreshes can also hide behind a fast median while moving.

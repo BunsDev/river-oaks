@@ -2,8 +2,9 @@
   "id": "studewood-north",
   "kit": "city-kit-1",
   "seed": 1931,
-  "hash": "f5cfe1200d45ce2e",
-  "recipeHash": "6a24761394c84511",
+  "hash": "1c50cb4108ab7adf",
+  "geometry": "7d97beb81f558c1a",
+  "recipeHash": "3351bf58871cf9ca",
   "overridesHash": "174b1d836bafee25",
   "stats": {
     "pieces": 181,

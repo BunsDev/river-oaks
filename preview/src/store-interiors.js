@@ -119,7 +119,8 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const glow = standard({ color: '#fff1d6', emissive: '#ffd9a6', emissiveIntensity: 1.9, roughness: 0.4 });
   const lamp = standard({ color: '#fff6e6', emissive: '#ffe1b8', emissiveIntensity: 2.4, roughness: 0.4 });
   const warmPanel = standard({ color: '#f1dfc4', emissive: '#f4c98d', emissiveIntensity: 0.9, roughness: 0.9 });
-  const mirror = standard({ color: '#ffffff', roughness: 0.03, metalness: 1, envMapIntensity: 1 });
+  // Every mirror pane lies on its brass surround or a wall: pulled forward a couple of depth steps, it wins.
+  const mirror = standard({ color: '#ffffff', roughness: 0.03, metalness: 1, envMapIntensity: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
   reflectionMaterials.push(mirror);
   const foliage = standard({ color: '#3f6a45', roughness: 0.95 });
   const bronze = standard({ color: '#5a4a3a', roughness: 0.4, metalness: 0.7 });
@@ -516,7 +517,8 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * W / tile, uv.getY(i) * D / tile);
     const floor = new THREE.Mesh(floorGeometry, floorOf(room)); floor.receiveShadow = true;
     placeMesh(floor, c, D / 2, 0.012);
-    add(box, black, c, D / 2, -0.3, [W, 0.6, D], 0, '#5a5148');
+    // The slab under the floor starts 6 cm back, so its front face stays clear of the shop glass 3 cm in front.
+    add(box, black, c, D / 2 + 0.03, -0.3, [W, 0.6, D - 0.06], 0, '#5a5148');
     // Walls sit inside the room's own footprint so neighbours never show through.
     add(box, ceiling, c, D / 2, H + 0.125, [W, 0.25, D]);
     add(box, walls[room.theme], c, D - 0.075, H / 2, [W, H, 0.15]);

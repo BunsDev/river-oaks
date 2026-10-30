@@ -28,6 +28,9 @@ import { paverSurface, physicalSurface } from './materials.js';
 import { FINISH, campusFurniture, entranceCanopies, freeRuns as runs, greenWalls, luminaires, slabBands } from './garden-campus-finish.js';
 import { buildCampusPlanting, campusPlantingPlan } from './garden-campus-planting.js';
 import { campusPartitions } from '../../shared/garden-campus-partitions.js';
+import { applyKitFields, campusKitFinish, campusKitFinishName } from './garden-campus-kit-finish.js';
+import { campusJetAgeParts } from './garden-campus-jet-age.js';
+import { mergeJetAgeParts } from './jet-age-forms.js';
 
 const GLASS_INSET = FINISH.glassInset, GLASS_THICKNESS = 0.04, MULLION = 0.08, MULLION_STEP = 1.5, MULLION_DEPTH = 0.18;
 const PARAPET = 1, GUARD_GLASS = 0.03, RAIL = 0.06, DOOR_HEIGHT = 2.6;
@@ -43,9 +46,17 @@ const ACCENT = '#f486a1';
 // towers read pink against the district's stone and bronze, and the floors behind show through.
 const GLASS_TINT = '#fbe4eb', GUARD_TINT = '#fdf1f5';
 
-/** The campus shells as a Three.js group with dispose(); null without the campus. */
-export function buildGardenCampus(world) {
+/**
+ * The campus shells as a Three.js group with dispose(); null without the campus. `kitFinish`
+ * (garden-campus-kit-finish.js CAMPUS_KIT_FINISHES) recolours the materials below and nothing
+ * else; unknown or absent is classic. A finish with `forms` (Pink Jet-Age) also reshapes parts
+ * (garden-campus-jet-age.js); `jetAgeForms: false` keeps its colours on the classic shapes.
+ */
+export function buildGardenCampus(world, { kitFinish, jetAgeForms = true } = {}) {
   if (!world?.gardenCampus) return null;
+  // A finish with forms (Pink Jet-Age) also reshapes the headhouses, canopies, pergola and more
+  // (garden-campus-jet-age.js); the boxes those forms replace are skipped below.
+  const style = campusKitFinish(kitFinish), forms = jetAgeForms === false ? null : style.forms;
   const root = new THREE.Group();root.name = 'The Gardens (garden campus)';
   const [x0, y0, z0] = campusToScene([0, 0, 0]), east = CAMPUS.frame.east;
   root.position.set(x0, y0, z0);root.rotation.y = Math.atan2(east[1], east[0]);
@@ -58,7 +69,7 @@ export function buildGardenCampus(world) {
     timber: new THREE.MeshStandardMaterial({ name: 'campus:timber', color: '#8c7660', roughness: 0.78 }),
     // Emerald-cut panes (applyEmeraldCut below), with a clear lacquer and a faint iridescence.
     glass: applyEmeraldCut(new THREE.MeshPhysicalMaterial({ name: 'campus:glass', color: GLASS_TINT, metalness: 0.1, roughness: 0.04, ior: 1.52, specularIntensity: 1,
-      clearcoat: 1, clearcoatRoughness: 0.03, iridescence: 0.3, iridescenceIOR: 1.35, transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide })),
+      clearcoat: 1, clearcoatRoughness: 0.03, iridescence: 0.3, iridescenceIOR: 1.35, transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide }), style.emerald),
     guard: new THREE.MeshPhysicalMaterial({ name: 'campus:guard-glass', color: GUARD_TINT, roughness: 0.05, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide }),
     // The planted platform and the paths share the district's own grass and paver programs.
     lawn: physicalSurface('grass', { tileSize: 14, variation: 0.6, color: '#a9bb8c', roughness: 1 }),
@@ -73,6 +84,7 @@ export function buildGardenCampus(world) {
     door: new THREE.MeshStandardMaterial({ name: 'campus:suite-door', color: '#9a7350', roughness: 0.72 }),
   };
   materials.lawn.name = 'campus:lawn';materials.paving.name = 'campus:paving';materials.stone.name = 'campus:stone';
+  for (const [key, fields] of Object.entries(style.campus)) applyKitFields(materials[key], fields);
   // A suite's walls and door stay opaque at any camera distance (near-camera-fade.js): a
   // resident walking a 3 m gallery never sees through them into a private suite.
   materials.partition.userData.nearCameraSolid = materials.door.userData.nearCameraSolid = true;
@@ -80,6 +92,9 @@ export function buildGardenCampus(world) {
   // A box spanning [u0, u1] x [v0, v1] x [z0, z1] in campus metres.
   // Glass also carries its facade's mullion origin, so each emerald pane fills exactly one bay.
   const box = (finish, u0, v0, u1, v1, za, zb, origin) => { if (u1 - u0 > 1e-6 && v1 - v0 > 1e-6 && zb - za > 1e-6) batches.get(finish).push([u0, v0, u1, v1, za, zb, origin]); };
+  // A bronze part that is a trim (rail, coping, canopy edge, fascia): the same box in the same
+  // batch, remembered so a kit finish can colour it apart from the mullions (style.trim).
+  const trims = new Set(), trim = (...rect) => { const parts = batches.get('bronze'), n = parts.length;box('bronze', ...rect);if (parts.length > n) trims.add(n); };
 
   const levels = campusLevels(CAMPUS), walls = greenWalls(CAMPUS), slab = CAMPUS.bridges[0].slab;
   // Openings in each facade at each floor, from the contract: skywalk portals, terrace doors and lobby entrances.
@@ -141,14 +156,18 @@ export function buildGardenCampus(world) {
     box('core', tower.core.stair.rect[0], tower.core.stair.rect[1], tower.core.stair.rect[2], tower.core.stair.rect[3], 0, roof.z);
     // Headhouse: limestone over the shafts and the lobby part, like the parapets, with its door
     // to the east under a bronze cap at the declared headhouse top.
-    box('stone', tower.core.lift.rect[0], tower.core.lift.rect[1], tower.core.lift.rect[2], tower.core.lift.rect[3], roof.z, head.z1 - cap);
-    box('stone', tower.core.stair.rect[0], tower.core.stair.rect[1], tower.core.stair.rect[2], tower.core.stair.rect[3], roof.z, head.z1 - cap);
-    box('stone', tower.core.lobby.rect[0], c1, c2, head.door[1] - 0.85, roof.z, head.z1 - cap);
-    box('stone', tower.core.lobby.rect[0], head.door[1] + 0.85, c2, c3, roof.z, head.z1 - cap);
+    if (!forms) {
+      box('stone', tower.core.lift.rect[0], tower.core.lift.rect[1], tower.core.lift.rect[2], tower.core.lift.rect[3], roof.z, head.z1 - cap);
+      box('stone', tower.core.stair.rect[0], tower.core.stair.rect[1], tower.core.stair.rect[2], tower.core.stair.rect[3], roof.z, head.z1 - cap);
+      box('stone', tower.core.lobby.rect[0], c1, c2, head.door[1] - 0.85, roof.z, head.z1 - cap);
+      box('stone', tower.core.lobby.rect[0], head.door[1] + 0.85, c2, c3, roof.z, head.z1 - cap);
+    }
     box('timber', tower.core.lobby.rect[0], head.door[1] - 0.85, c2, head.door[1] + 0.85, roof.z + DOOR_HEIGHT, head.z1 - cap);
     // The roof garden's floor: flush limestone over the deck, around the headhouse.
     for (const [a, b, c, d] of [[roof.rect[0], roof.rect[1], roof.rect[2], c1], [roof.rect[0], c3, roof.rect[2], roof.rect[3]], [roof.rect[0], c1, c0, c3], [c2, c1, roof.rect[2], c3]])
       box('stone', a, b, c, d, roof.z, roof.z + ROOM.floor);
+    // Forms draw a saucer crown with a ring light instead of the cap and its lantern line.
+    if (forms) continue;
     box('bronze', c0, c1, c2, c3, head.z1 - cap, head.z1);
     // A lantern line on the cap's east face, above body clearance over the roof garden.
     box('luminaire', c2, head.door[1] - 0.8, c2 + 0.02, head.door[1] + 0.8, head.z1 - cap + 0.05, head.z1 - cap + 0.08);
@@ -158,19 +177,22 @@ export function buildGardenCampus(world) {
   for (const level of levels) for (const obstacle of level.obstacles) {
     const [u0, v0, u1, v1] = obstacle.rect, z = level.z;
     if (obstacle.kind === 'guard' && obstacle.id.includes('/parapet-')) {
-      box('stone', u0, v0, u1, v1, z, z + PARAPET - FINISH.coping);box('bronze', u0, v0, u1, v1, z + PARAPET - FINISH.coping, z + PARAPET);
+      box('stone', u0, v0, u1, v1, z, z + PARAPET - FINISH.coping);trim(u0, v0, u1, v1, z + PARAPET - FINISH.coping, z + PARAPET);
     } else if (obstacle.kind === 'guard' && /\/edge-(west|east)$/.test(obstacle.id)) {
       // Skywalk edge zone: a planted trough (planting plan) and a glass guard on its outer line.
       const outer = obstacle.id.endsWith('west') ? u0 : u1 - GUARD_GLASS, bridge = CAMPUS.bridges.find(item => obstacle.id.startsWith(`${item.id}/`));
       box('guard', outer, v0, outer + GUARD_GLASS, v1, z, z + bridge.guard);
       // The rail stays on the edge zone's own rect: nothing overhangs the route or a terrace.
       const rail = obstacle.id.endsWith('west') ? [u0, u0 + RAIL] : [u1 - RAIL, u1];
-      box('bronze', rail[0], v0, rail[1], v1, z + bridge.guard - RAIL, z + bridge.guard);
+      trim(rail[0], v0, rail[1], v1, z + bridge.guard - RAIL, z + bridge.guard);
     } else if (obstacle.kind === 'guard') {
       // Terrace guard: glass with a bronze rail, on the rect the contract reserves for it.
       box('guard', u0, v0, u1, v1, z, z + 1.1);
-      box('bronze', u0, v0, u1, v1, z + 1.1 - RAIL, z + 1.1);
-    } else if (obstacle.kind === 'post') box('timber', u0, v0, u1, v1, z, CAMPUS.groundBuildings.find(item => item.id === 'S').height);
+      trim(u0, v0, u1, v1, z + 1.1 - RAIL, z + 1.1);
+    } else if (obstacle.kind === 'post') {
+      // Forms stand a tapered pilotis in the same rect.
+      if (!forms) box('timber', u0, v0, u1, v1, z, CAMPUS.groundBuildings.find(item => item.id === 'S').height);
+    }
     // The contract's finishes (#506 furnishings: planter, seat, table, tree) are drawn once
     // each, over their whole footprint, by campusFurniture and the planting plan below.
   }
@@ -216,9 +238,10 @@ export function buildGardenCampus(world) {
       box('glass', u0, v1 - GLASS_INSET - GLASS_THICKNESS / 2, u1, v1 - GLASS_INSET + GLASS_THICKNESS / 2, 0, top);
       // A bronze fascia round the planted roof, 2 cm proud of the footprint, overhead.
       for (const [a, b, c, d] of [[u0 - 0.02, v0 - 0.02, u1 + 0.02, v0 + 0.04], [u0 - 0.02, v1 - 0.04, u1 + 0.02, v1 + 0.02], [u0 - 0.02, v0 + 0.04, u0 + 0.04, v1 - 0.04], [u1 - 0.04, v0 + 0.04, u1 + 0.02, v1 - 0.04]])
-        box('bronze', a, b, c, d, top - 0.12, item.height + 0.2);
+        trim(a, b, c, d, top - 0.12, item.height + 0.2);
     } else if (item.kind === 'pergola') {
-      for (let v = v0 + 0.6; v < v1 - 0.3; v += 0.9) box('timber', u0, v - 0.06, u1, v + 0.06, item.height - 0.22, item.height - 0.06);
+      // Forms replace the flat slats with a vault of parabolic ribs; the edge beams stay.
+      if (!forms) for (let v = v0 + 0.6; v < v1 - 0.3; v += 0.9) box('timber', u0, v - 0.06, u1, v + 0.06, item.height - 0.22, item.height - 0.06);
       box('timber', u0, v0, u1, v0 + 0.3, item.height - 0.4, item.height - 0.22);box('timber', u0, v1 - 0.3, u1, v1, item.height - 0.4, item.height - 0.22);
     } else if (item.kind === 'pool') {
       // A raised basin on the platform: stone coping and a still water surface below its lip.
@@ -229,12 +252,13 @@ export function buildGardenCampus(world) {
 
   // Finish: slab bands, entrance canopies and luminaires (garden-campus-finish.js).
   for (const band of slabBands(CAMPUS)) box('stone', ...band.box);
-  for (const canopy of entranceCanopies(CAMPUS)) {
+  for (const canopy of forms ? [] : entranceCanopies(CAMPUS)) {
     const [u0, v0, u1, v1] = canopy.rect;
-    box('timber', u0, v0, u1 - 0.05, v1, canopy.z0, canopy.z1);box('bronze', u1 - 0.05, v0, u1, v1, canopy.z0 - 0.04, canopy.z1 + 0.02);
+    box('timber', u0, v0, u1 - 0.05, v1, canopy.z0, canopy.z1);trim(u1 - 0.05, v0, u1, v1, canopy.z0 - 0.04, canopy.z1 + 0.02);
     box('accent', u1 - 0.07, v0 + 0.05, u1 - 0.05, v1 - 0.05, canopy.z0 - 0.03, canopy.z0);
   }
-  for (const item of luminaires(levels, CAMPUS)) box('luminaire', ...item.rect, item.z0, item.z1);
+  // Under forms the upswept canopy carries its own glow line, so the flat canopy light goes.
+  for (const item of luminaires(levels, CAMPUS)) if (!(forms && item.kind === 'canopy')) box('luminaire', ...item.rect, item.z0, item.z1);
   for (const part of campusFurniture(levels)) box(part.finish, ...part.box);
   // Planting: planters as boxes here, foliage as the planting meshes below.
   const plan = campusPlantingPlan(CAMPUS, levels);
@@ -260,8 +284,29 @@ export function buildGardenCampus(world) {
     parts.forEach(([u0, v0, u1, v1, za, zb], index) => {
       dummy.position.set((u0 + u1) / 2, (za + zb) / 2, -(v0 + v1) / 2);dummy.scale.set(u1 - u0, zb - za, v1 - v0);dummy.updateMatrix();mesh.setMatrixAt(index, dummy.matrix);
     });
+    // Classic draws the hardware in one colour; a finish with a trim role tints its trims apart.
+    if (finish === 'bronze' && style.trim) {
+      const body = new THREE.Color(style.trim.body), accent = new THREE.Color(style.trim.accent);
+      parts.forEach((part, index) => mesh.setColorAt(index, trims.has(index) ? accent : body));
+    }
     mesh.castShadow = !['glass', 'guard', 'water', 'luminaire', 'soil', 'accent'].includes(finish);mesh.receiveShadow = true;mesh.userData.aoExclude = finish === 'glass' || finish === 'guard';
     root.add(mesh);meshes.push(mesh);
+  }
+  // Jet-Age forms: one merged mesh per material (garden-campus-jet-age.js), on the campus glow.
+  const formMaterials = forms ? {
+    ivory: new THREE.MeshStandardMaterial({ name: 'campus:jet-age:ivory', color: forms.ivory, roughness: 0.55 }),
+    chrome: new THREE.MeshStandardMaterial({ name: 'campus:jet-age:chrome', color: forms.chrome, metalness: 0.65, roughness: 0.26 }),
+    pink: new THREE.MeshStandardMaterial({ name: 'campus:jet-age:pink', color: forms.pink, roughness: 0.42 }),
+  } : {};
+  const formGeometries = [], formCounts = {};
+  if (forms) {
+    const parts = campusJetAgeParts(CAMPUS, levels);
+    for (const part of parts) formCounts[part.place] = (formCounts[part.place] ?? 0) + 1;
+    for (const [key, geometry] of mergeJetAgeParts(parts)) {
+      const mesh = new THREE.Mesh(geometry, formMaterials[key] ?? materials[key]);mesh.name = `campus:jet-age:${key}`;
+      mesh.castShadow = key !== 'luminaire';mesh.receiveShadow = true;
+      root.add(mesh);formGeometries.push(geometry);
+    }
   }
   // The planted platform under everything: the parcel polygon, lawn finish.
   const shape = new THREE.Shape(CAMPUS.parcel.polygon.slice(0, -1).map(([u, v]) => new THREE.Vector2(u, v)));
@@ -273,7 +318,8 @@ export function buildGardenCampus(world) {
   const planting = buildCampusPlanting(plan);
   for (const object of planting.objects) root.add(object);
 
-  root.userData.counts = { ...Object.fromEntries([...batches].map(([finish, parts]) => [finish, parts.length])), paving: CAMPUS.paths.length, plants: planting.counts };
+  root.userData.kitFinish = campusKitFinishName(kitFinish);
+  root.userData.counts = { ...Object.fromEntries([...batches].map(([finish, parts]) => [finish, parts.length])), paving: CAMPUS.paths.length, plants: planting.counts, ...(forms ? { jetAge: formCounts } : {}) };
   // The time of day (atmosphere.js): twilight 0 by day, 1 at its lowest light.
   root.userData.relight = ({ twilight = 0 } = {}) => {
     const t = Math.min(1, Math.max(0, Number(twilight) || 0));
@@ -282,6 +328,8 @@ export function buildGardenCampus(world) {
   root.userData.dispose = () => {
     for (const mesh of meshes) mesh.dispose();
     unit.dispose();platform.dispose();paths.dispose();planting.dispose();
+    for (const geometry of formGeometries) geometry.dispose();
+    Object.values(formMaterials).forEach(material => material.dispose());
     // Stone, grass and paver textures are the district's shared maps; only materials are owned.
     Object.values(materials).forEach(material => material.dispose());
   };
@@ -343,9 +391,13 @@ export function emeraldBays(a, b, origin, step = MULLION_STEP) {
   return [...edges, b];
 }
 
-/** Teach an instanced unit-box glass material the emerald cut. Returns the material. */
-export function applyEmeraldCut(material) {
-  const colours = { emeraldBronze: EMERALD.bronze, emeraldChampagne: EMERALD.champagne, emeraldBlush: EMERALD.blush };
+/**
+ * Teach an instanced unit-box glass material the emerald cut. Returns the material. `tint`
+ * replaces the collet, lip and facet colours ({ bronze, champagne, blush }); they are uniforms,
+ * so the program source and its cache key are the same under every kit finish.
+ */
+export function applyEmeraldCut(material, tint = {}) {
+  const colours = { emeraldBronze: tint.bronze ?? EMERALD.bronze, emeraldChampagne: tint.champagne ?? EMERALD.champagne, emeraldBlush: tint.blush ?? EMERALD.blush };
   const f = value => value.toFixed(4), steps = EMERALD.steps, tilts = EMERALD.tilts;
   // Nested ternaries over the step list: the ring index from 0 at the girdle, and each ring's tilt.
   const byStep = values => steps.map((limit, i) => `paneDepth < ${f(limit)} ? ${values(i)} : `).join('') + '0.0';

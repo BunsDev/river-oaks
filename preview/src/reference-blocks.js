@@ -255,10 +255,12 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
       for (const [a, b, lo, hi] of balconies) loggia(f, a, b, lo, hi, depth);
     });
   }
-  function eaves(f, W, { depth = 0.9, over = 1.3, material = n.white, ends = [depth, depth] } = {}) {
-    box(f, material, -ends[0] - over, W + ends[1] + over, EAVES, EAVES + 0.55, -0.05, depth + over);
+  // `grow` enlarges the whole cornice past a neighbour's flush one, burying that one's faces where they meet.
+  function eaves(f, W, { depth = 0.9, over = 1.3, material = n.white, ends = [depth, depth], grow = 0 } = {}) {
+    const reach = over + grow, base = EAVES - grow;
+    box(f, material, -ends[0] - reach, W + ends[1] + reach, base, EAVES + 0.55 + grow, -0.05, depth + reach);
     // The soffit board is 6 cm deep, so its face stays clear of the eaves' underside from afar.
-    box(f, n.soffit, -ends[0] - over + 0.02, W + ends[1] + over - 0.02, EAVES - 0.06, EAVES, depth, depth + over - 0.02);
+    box(f, n.soffit, -ends[0] - reach + 0.02, W + ends[1] + reach - 0.02, base - 0.06, base, depth, depth + reach - 0.02);
   }
   // A store sign box standing proud of the wall, lettered on its face.
   function signBox(f, a, b, lo, hi, d0, d1, material, text, style) {
@@ -1009,10 +1011,13 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
     for (let s = box0 + 3.1; s < W; s += 3.1) box(f, n.frame, s - 0.015, s + 0.015, 4.75, 8.6, 0.85, 0.87);
     box(f, n.sand, box0, W + 0.9, 4.55, 4.75, -0.05, 1.05);
     letter('DOLCE & GABBANA', { family: 'Didot, "Bodoni 72", Georgia, serif', weight: 400, color: '#dcdcd8', spacing: 0.05, metalness: 0.8, roughness: 0.3 }, f, (box0 + W) / 2, 6.8, 0.875, Math.min(8.4, W - box0 - 1), 0.72);
-    storeys(f, W, { material: n.sand, s0: 0, s1: box0, from: FLOORS[0], ends: [0.9, 0], patterns: ['pair', 'wide'], bay: 6.6 });
-    storeys(f, W, { material: n.sand, s0: box0, s1: W, from: FLOORS[1], ends: [0, 0.9], patterns: ['pair', 'wide'], bay: 6.6 });
-    box(f, n.sand, box0, W + 0.9, 8.6, FLOORS[1], -0.05, 0.9);
-    eaves(f, W, { material: n.sand, ends: [0.9, 0.9] });
+    // Stone storeys 6 cm deeper and longer than the tile ones they meet at each corner, so the
+    // tile walls' faces there are buried in the stone instead of lying flush with it.
+    storeys(f, W, { material: n.sand, s0: 0, s1: box0, from: FLOORS[0], depth: 0.96, ends: [0.96, 0], patterns: ['pair', 'wide'], bay: 6.6 });
+    storeys(f, W, { material: n.sand, s0: box0, s1: W, from: FLOORS[1], depth: 0.96, ends: [0, 0.96], patterns: ['pair', 'wide'], bay: 6.6 });
+    box(f, n.sand, box0, W + 0.96, 8.6, FLOORS[1], -0.05, 0.96);
+    // Its stone cornice is 6 cm larger all round than the white eaves its neighbours run into it at each corner.
+    eaves(f, W, { material: n.sand, ends: [0.9, 0.9], grow: 0.06 });
   }
   // The Westheimer face of the southern residences: Steak 48's dark box on
   // square columns at the west end, its planters spilling ivy over a timber
