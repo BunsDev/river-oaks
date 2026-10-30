@@ -254,11 +254,24 @@ Runtime dress-uniform details live in `preview/src/prince-costume.js`.
 
 The runtime keeps that dedicated young athletic body and its facial rig. Prince
 Jev's skin material uses the `young_caucasian_male` atlas from the already-shipped
-CC0 `man-casual.glb`; `sources.json` records that donor. His costume also applies
-natural blonde hair and a rose pink tunic to private material clones, leaving
-other residents unchanged. The GLB source receipt describes its original baked
-materials, before these runtime overrides. His shopping bag attaches to the
-animated right hand through `preview/src/prince-shopping-bag.js`.
+CC0 `man-casual.glb`; `sources.json` records that donor. Since 2026-10-29 his
+costume follows the reference `references/jev-angel-tunic-20261029.png`
+(supplied by Val on 2026-10-29, generated image file `hf_20261029_182709…`; not
+a photograph; art direction only, redistributed here as a reference): the one
+suit mesh is labelled into a cream tunic (pink placket in rose-gold trim with
+mint scrollwork, rose-gold neckline, hem and cuffs) and pink trousers; the boots
+become bare feet under rose-gold gladiator straps fitted to the trouser legs; a
+rose-gold belt with a lozenge buckle, rose-gold bracers fitted to the sleeves,
+caramel curls (the `short02` mesh, recoloured and given a little volume on a
+private clone; no curl mesh exists) and blue irises are applied to private
+material and geometry clones, leaving other residents and the GLB unchanged.
+His wings stay out, folded back, whenever he is not seated in the car. The GLB
+source receipt describes its original baked materials, before these runtime
+overrides. His shopping bag attaches to the animated right hand through
+`preview/src/prince-shopping-bag.js`. The likeness is measured, not asserted:
+`preview/e2e/jev-reference-likeness.js` renders the reference framing from
+`/e2e/fixtures/prince.html?view=reference` and reports silhouette overlap and
+per-region colour distance against the reference.
 
 For a comparison under the same studio lighting, open
 `/e2e/fixtures/prince.html` and `/e2e/fixtures/prince.html?reference=owen`.

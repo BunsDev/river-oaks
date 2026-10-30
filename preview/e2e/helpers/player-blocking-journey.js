@@ -14,7 +14,15 @@ export async function runPlayerBlocking(page, { interfaceOnly = false, origin } 
   const settings = async tab => openHudSpace(tab, 'settings-section', 'Account');
   const notice = tab => tab.locator('.multiplayer-roster > p[role=status]');
   const confirmBlock = async button => {
-    if (interfaceOnly) return button.dblclick({ delay: 50 });
+    // Two real pointer presses, each aimed at the button where it is now. A double-click sends
+    // both to one point measured before the first: a hosted run's second press landed on the
+    // panel's Contacts heading (selected as text in its failure screenshot), so the block was
+    // never confirmed. The first press must show the confirmation before the second is sent.
+    if (interfaceOnly) {
+      await button.click();
+      await button.filter({ hasText: 'Confirm block' }).waitFor({ timeout: 3000 });
+      return button.click();
+    }
     // CPU-rendered frames can consume the four-second confirmation window
     // between driver round trips. Activate the same two real click handlers in
     // one task; the interface-only journey covers native pointer activation.
