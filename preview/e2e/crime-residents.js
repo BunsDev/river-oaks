@@ -60,6 +60,9 @@ async page => {
     // The rule may skip a resident (held by a visitor, or no sight line past a planter): then the next one.
     let nearest = null, stood = null, startled = null;
     for (const candidate of candidates) {
+      // The figure must already be drawn: the startle lasts one second, a figure can take longer to load.
+      const figure = await visitor.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === `resident:${id}` && item.ready), candidate.id, { timeout: 20000 }).then(() => true).catch(() => false);
+      if (!figure) continue;
       const where = await approach(visitor, candidate.position, 4);
       if (!where) continue;
       startled = await visitor.waitForFunction(id => { const local = window.__riverMultiplayer().snapshot.locals.find(item => item.id === id);
@@ -67,12 +70,14 @@ async page => {
       if (startled) { nearest = candidate; stood = where; break; }
     }
     check(nearest, `A resident startles at a wanted player at arm's length (town state): ${nearest?.name}`);
+    // What the visitor's screen draws while the town says startle (review of #708: the earlier check
+    // accepted any resting figure).
+    const drawnStartle = await visitor.waitForFunction(id => { const figure = window.__riverMultiplayer().remotes.find(item => item.id === `resident:${id}`);
+      return figure?.gesture === 'startle' && figure; }, nearest.id, { timeout: 900 }).then(handle => handle.jsonValue()).catch(() => null);
+    check(drawnStartle, `The resident is drawn startled on the visitor's screen (gesture ${drawnStartle?.gesture ?? 'none within the startle'})`);
     await visitor.waitForTimeout(300);
     const still = await visitor.evaluate(id => window.__riverMultiplayer().snapshot.locals.find(item => item.id === id), nearest.id);
     check(still.life.reaction !== 'startle' || distance(still.position, startled.position) < .05, 'Startled, they stand still');
-    await visitor.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === `resident:${id}` && item.ready), nearest.id, { timeout: 20000 });
-    const drawn = await visitor.evaluate(id => window.__riverMultiplayer().remotes.find(item => item.id === `resident:${id}`), nearest.id);
-    check(drawn.gesture === 'startle' || drawn.gesture === null && drawn.movement === 'upright', `The resident is drawn as a figure (gesture ${drawn.gesture})`);
     // Cornering, a blocked step or the route search can hold one sample below a run: wait for the run itself.
     const running = await visitor.waitForFunction(id => { const local = window.__riverMultiplayer().snapshot.locals.find(item => item.id === id);
       return local?.life?.reaction === 'flee' && local.life.status === 'fleeing' && local.life.speed > 1.4 && local; }, nearest.id, { timeout: 12000 }).then(handle => handle.jsonValue()).catch(() => null);
@@ -82,7 +87,7 @@ async page => {
     check(fled, `${nearest.name} gets away from where they stood`);
     check(distance(fled.position, stood) > distance(startled.position, stood), 'away from the wanted player, not toward them');
     const peerView = await page.evaluate(id => { const local = window.__riverMultiplayer().snapshot.locals.find(item => item.id === id); return local?.life?.reaction; }, nearest.id);
-    check(['startle', 'flee'].includes(peerView), 'The owner\'s browser sees the same reaction from the town');
+    check(['startle', 'flee'].includes(peerView), 'The owner\'s browser receives the same reaction from the town (town state, not its drawn figure)');
     const during = await town(visitor);
     check(during.locals.length === population && during.rival, 'No resident was added or removed; the rival is still the town\'s');
     await visitor.waitForFunction(id => window.__riverMultiplayer().snapshot.locals.find(item => item.id === id)?.life?.reaction === null, nearest.id, { timeout: 15000 });
