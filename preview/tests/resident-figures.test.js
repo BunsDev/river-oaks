@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { RESIDENT_APPEARANCES, RESIDENT_FIGURE_CAP, RESIDENT_FIGURE_KEEP_M, RESIDENT_FIGURE_RANGE, RESIDENT_FIGURE_SWAP_M, residentFigures } from '../src/resident-figures.js';
+import { RESIDENT_APPEARANCES, RESIDENT_FIGURE_BUDGETS, RESIDENT_FIGURE_CAP, RESIDENT_FIGURE_KEEP_M, RESIDENT_FIGURE_RANGE, RESIDENT_FIGURE_SWAP_M, residentFigureBudget, residentFigures } from '../src/resident-figures.js';
+import { fidelityTierForQuality } from '../src/character-fidelity-runtime.js';
 import { canUseAppearance } from '../src/shared-appearances.js';
 import { poseFor } from '../src/crime-poses.js';
 
@@ -60,4 +61,23 @@ test('a reaction becomes a readable pose: startled stands out, cowering bends ov
   assert.deepEqual(figures.map(figure => [figure.reaction, figure.gesture]), [['startle', 'startle'], ['cower', 'cower'], ['flee', null], [null, null]]);
   assert.equal(poseFor('startle'), 'startled'); assert.equal(poseFor('cower'), 'bow');
   assert.deepEqual(figures[3].sitting, { id: 'bench:shop:0', height: .45, yaw: 1 }, 'a seated resident keeps the bench');
+});
+
+test('a low-tier or CPU-drawn client animates at most three neighbours, all within 30 m; the full tier keeps eight within 120 m', () => {
+  // The hosted CPU renderer walked about 15 % slower with the full budget (heights-return A/B, 2026-10-30).
+  const ids = figures => figures.map(figure => figure.id.slice('resident:'.length));
+  const row = Array.from({ length: 12 }, (_, i) => local(`local-${i}`, 4 + i * 6, 0)); // 4, 10, 16, 22, 28, 34 ... 70 m
+  const low = residentFigureBudget('low');
+  assert.deepEqual(low, { cap: 3, range: 30 });
+  assert.deepEqual(ids(residentFigures(row, me, null, low)), ['local-0', 'local-1', 'local-2']);
+  assert.deepEqual(ids(residentFigures(row.slice(4), me, null, low)), ['local-4'], 'only those inside 30 m, however few');
+  assert.equal(residentFigures(row, me).length, RESIDENT_FIGURE_CAP, 'the default is the full budget');
+  for (const tier of ['standard', 'high', undefined]) assert.equal(residentFigureBudget(tier), RESIDENT_FIGURE_BUDGETS.full);
+  // The tier is the character fidelity tier: a client that has shed render scale and occlusion is low.
+  assert.equal(residentFigureBudget(fidelityTierForQuality({ mode: 'auto', scale: .5, occlusion: false })), low);
+  assert.equal(residentFigureBudget(fidelityTierForQuality({ mode: 'auto', scale: 1, occlusion: true })), RESIDENT_FIGURE_BUDGETS.full);
+  // Stepping down mid-walk: a figure drawn at 40 m stays only within the keep margin, then goes.
+  const drawn = new Set(ids(residentFigures(row, me)));
+  assert.ok(drawn.has('local-6'), 'drawn at 40 m on the full budget');
+  assert.ok(!ids(residentFigures(row, me, drawn, low)).includes('local-6'), 'not among the three nearest on the low budget');
 });

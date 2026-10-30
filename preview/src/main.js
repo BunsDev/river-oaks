@@ -8,11 +8,14 @@ import { WOODLAND_REVISION } from '../../shared/woodland-heights-layout.js';
 import { TYPESAFE_REVISION } from '../../shared/typesafe-place-layout.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
-import { residentFigures } from './resident-figures.js';
+import { residentFigureBudget, residentFigures } from './resident-figures.js';
+import { fidelityTierForQuality } from './character-fidelity-runtime.js';
 import { combatStateFor } from './combat-motion.js';
 // The resident ids drawn last snapshot (#640): resident-figures.js keeps the set stable at the cut.
 let drawnResidents = new Set();
-const residents = (locals, at) => { const figures = residentFigures(locals, at, drawnResidents); drawnResidents = new Set(figures.map(figure => figure.id.slice('resident:'.length))); return figures; };
+// Fewer, nearer neighbours on a low-tier client and on the CPU acceptance renderer (resident-figures.js).
+const residentBudget = () => residentFigureBudget(softwareAcceptance ? 'low' : fidelityTierForQuality(quality?.stats));
+const residents = (locals, at) => { const figures = residentFigures(locals, at, drawnResidents, residentBudget()); drawnResidents = new Set(figures.map(figure => figure.id.slice('resident:'.length))); return figures; };
 import { createCommonsStream } from './commons-stream.js';
 import './spatial-stream.css';
 import { createCharacterStudio } from './character-studio.js';

@@ -61,6 +61,14 @@ async page => {
     let nearest = null, stood = null, startled = null;
     for (const candidate of candidates) {
       // The figure must already be drawn: the startle lasts one second, a figure can take longer to load.
+      // A CPU-drawn client draws residents only within 30 m (resident-figures.js), so first stop about
+      // 12 m off, outside the 6 m a wanted player startles from, then wait for the figure.
+      const near = (await town(visitor)).locals.find(local => local.id === candidate.id) ?? candidate, here = (await town(visitor)).self.position;
+      const gap = distance(here, near.position);
+      if (gap > 14) {
+        const k = 12 / gap, mark = [near.position[0] + (here[0] - near.position[0]) * k, near.position[1] + (here[1] - near.position[1]) * k];
+        if (!await approach(visitor, mark, 3)) continue;
+      }
       const figure = await visitor.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === `resident:${id}` && item.ready), candidate.id, { timeout: 20000 }).then(() => true).catch(() => false);
       if (!figure) continue;
       const where = await approach(visitor, candidate.position, 4);
