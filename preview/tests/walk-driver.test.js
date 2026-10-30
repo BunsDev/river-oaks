@@ -12,7 +12,7 @@ import {loadDistrictData} from '../../server/district-data.js';
 import {createWalkingEnvironment,createWalkingState,stepWalking} from '../../preview/src/walking.js';
 // One driver per journey: both players' walks share its turn queue.
 const driver=deps=>createWalkDriver({...deps,refusals:'__commonsRefusals'});
-const world=await loadDistrictData({districtRevision:'east-garden-commons-market-1'}),env=createWalkingEnvironment(world);
+const world=await loadDistrictData({districtRevision:'east-garden-commons-market-1'}),env=createWalkingEnvironment(world),district=env;
 const target=[world.eastGardenCommons.edge-1,-1336];
 const inputSource=await readFile(new URL('../src/walking-ui.js',import.meta.url),'utf8');
 const inputStart=inputSource.indexOf("  host.addEventListener('keydown', event => {");
@@ -20,7 +20,8 @@ const inputEnd=inputSource.indexOf("  host.addEventListener('blur', clear);",inp
 assert.ok(inputStart>=0&&inputEnd>inputStart);
 const installInput=new Function('host','document','keys','isGameplayKey','transport','dialogueOpen','getVoice',`const active=true; ${inputSource.slice(inputStart,inputEnd)}`);
 const savedWindow=globalThis.window;
-const run=async(makeDriver,latencyMs,fps,releaseDuringFast=false,offset=null,inputLatencyMs=latencyMs)=>{
+const run=async(makeDriver,latencyMs,fps,releaseDuringFast=false,offset=null,inputLatencyMs=latencyMs,walkEnv=district)=>{
+  const env=walkEnv;
   let clock=1000,frameClock=0,mouseX=0,mouseDown=false;
   const start=[target[0]+(offset??(releaseDuringFast?8:.8)),target[1]],yaw=Math.PI/2,keys=new Set(),physicalKeys=new Set();
   const host=new EventTarget(),doc=new EventTarget(),win=new EventTarget();
@@ -57,7 +58,7 @@ for(const latencyMs of [100,150,200])test(`near waypoint reaches15cm with9fps an
     assert.equal(result.status,'passed',result.error??'waypoint failed');
     assert.ok(result.remaining<=.15,`arrival beyond15cm: ${result.remaining}`);
     assert.equal(result.routes,1);
-    assert.ok(result.simulatedMs<120000,'keep the existing waypoint deadline');
+    assert.ok(result.simulatedMs<120000,'a near waypoint takes under two minutes');
   }finally{globalThis.window=savedWindow;}
 });
 
@@ -73,7 +74,7 @@ for(const [fps,latencyMs] of [[1,1000],[2,500],[3,333]])test(`near waypoint reac
     assert.equal(result.status,'passed',result.error??'waypoint failed');
     assert.ok(result.remaining<=.15,`arrival beyond15cm: ${result.remaining}`);
     assert.equal(result.routes,1);
-    assert.ok(result.simulatedMs<30000,`the last 0.21 m took ${result.simulatedMs} ms of a 120 s waypoint deadline`);
+    assert.ok(result.simulatedMs<30000,`the last 0.21 m took ${result.simulatedMs} ms`);
   }finally{globalThis.window=savedWindow;}
 });
 
@@ -86,7 +87,7 @@ test('a slow frame at the start of a walk does not make later presses overshoot'
     const result=await run(driver,100,elapsed=>elapsed<1500?1:30,false,.8,5);
     assert.equal(result.status,'passed',result.error??'waypoint failed');
     assert.ok(result.remaining<=.15,`arrival beyond15cm: ${result.remaining}`);
-    assert.ok(result.simulatedMs<30000,`the last 0.8 m took ${result.simulatedMs} ms of a 120 s waypoint deadline`);
+    assert.ok(result.simulatedMs<30000,`the last 0.8 m took ${result.simulatedMs} ms`);
   }finally{globalThis.window=savedWindow;}
 });
 
@@ -145,7 +146,7 @@ for(const latencyMs of [60,150])test(`two pages turning at once each get a worki
   try{
     const result=await runPair(driver,latencyMs,9);
     assert.deepEqual(result.results,['passed','passed']);assert.equal(result.routes,2);
-    // Both walks share the clock; keep well inside the 120 s waypoint deadline (about 55 s at 150 ms).
+    // Both walks share the clock; keep well inside two minutes (about 55 s at 150 ms).
     assert.ok(result.simulatedMs<90000,`both walks took ${result.simulatedMs} ms`);
   }finally{globalThis.window=savedWindow;}
 });
@@ -163,5 +164,31 @@ test('one page facing while the other walks each get a working drag',async()=>{
   try{
     const result=await runPair(driver,150,9,(shared,tab,label)=>label==='owner'?shared.face(tab,Math.PI/2,label):shared.walk(tab,[target],label));
     assert.deepEqual(result.results,['passed','passed']);
+  }finally{globalThis.window=savedWindow;}
+});
+
+// On the CPU-rendered runner a page can draw two or three frames a second for minutes, and
+// walking moves at most 0.08 s of stride per frame: a hosted bayou-heights-return run walked
+// its last 65 m at about a sixth of walking speed and was still closing in, 0.16 m past the
+// waypoint and turning back, when a fixed 120 s per waypoint ran out and called it stalled
+// (run 41060785602). A walk is stalled when it stops getting closer, however slow it is.
+test('a long leg at two frames a second arrives while it keeps getting closer',async()=>{
+  try{
+    const result=await run(driver,500,2,false,70,5);
+    assert.equal(result.status,'passed',result.error??'waypoint failed');
+    assert.ok(result.remaining<=.15,`arrival beyond15cm: ${result.remaining}`);
+    assert.ok(result.simulatedMs>120000,`the leg took ${result.simulatedMs} ms; this case needs a walk longer than 120 s`);
+  }finally{globalThis.window=savedWindow;}
+});
+
+test('a walker held short of the waypoint is stalled two minutes after it last got closer',async()=>{
+  try{
+    // A wall 0.4 m before the waypoint, across the walker's path.
+    const env={...district,isFree:(x,z)=>x>target[0]+.4&&district.isFree(x,z)};
+    const result=await run(driver,150,9,false,6,150,env);
+    assert.equal(result.status,'failed');
+    assert.match(result.error,/^controlled slow observation: stalled /);
+    assert.ok(result.remaining>.35&&result.remaining<.5,`held ${result.remaining} m short`);
+    assert.ok(result.simulatedMs>120000&&result.simulatedMs<150000,`stalled after ${result.simulatedMs} ms`);
   }finally{globalThis.window=savedWindow;}
 });
