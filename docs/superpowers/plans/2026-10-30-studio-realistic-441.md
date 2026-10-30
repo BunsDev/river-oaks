@@ -136,6 +136,27 @@ Exact-head reruns (clean worktrees, after the PRs opened):
 - Hosted on #810 also ran `character-studio-realistic` in
   `preview shared (required-characters)` (job 124126473990): passed.
 
+WebKit (Playwright WebKit 2370, desktop Safari's engine, not iOS):
+- `RIVER_OAKS_EXPERIENCE_BROWSER=webkit pnpm run test:experience
+  character-studio character-studio-layout` on #810 `162e5aee`: layout passed;
+  `character-studio` failed at "Human character choices are one tab stop", a
+  check that runs before any realistic step. The same check fails on `main`
+  `e1ac3422` in WebKit (snapshot run), so it predates this stack. WebKit's
+  default Tab order skips buttons unless the system's keyboard navigation
+  setting is on.
+- To cover the realistic step in WebKit anyway, a one-off probe (not
+  committed) drove Morgan on the #810 `162e5aee` tree in WebKit and Chromium:
+  the detail step replaces colors; fit/body/hair are locked with reasons; a
+  locked control takes focus and Enter repeats its reason; arrow keys choose
+  Low detail; Undo/Redo shortcuts restore the tier; before/after shows the
+  original without Low; the step fits 1440x900; Save draft stores canonical
+  Morgan with no tier; the town look is unchanged; no runtime errors. Both
+  engines passed (12 checks each), and the WebKit screenshot matches Chromium.
+
+Up to date with main: `main` `e1ac3422` merged into #800 (`0607681c`), then
+up the stack. #800 merge: focused 40/40, `pnpm run verify` passed (6299 pass,
+0 fail, 291 skipped).
+
 ## Decisions for Val
 
 - The Studio tier is a preview choice for this device only. It is not saved and
@@ -146,9 +167,12 @@ Exact-head reruns (clean worktrees, after the PRs opened):
 - Visual approval of the close-up vs town captures is yours. I inspected them
   and found identity, outfit and tier consistent; the remaining differences are
   town lighting. Automation is not visual sign-off.
-- Human accessibility acceptance (physical iPhone, iOS VoiceOver, WebKit) is
-  outside automation; the keyboard, touch-context and reduced-motion paths are
-  covered by journeys only.
+- Human accessibility acceptance (physical iPhone, iOS VoiceOver) is outside
+  automation. Keyboard, touch-context and reduced-motion paths are covered by
+  Chromium journeys, and the realistic step also by the WebKit probe above.
+- `character-studio`'s "one tab stop" check fails in WebKit on `main` too.
+  Making it engine-aware (or the Studio's Tab order, if Safari users report it)
+  is outside this slice.
 
 ## Gaps
 
