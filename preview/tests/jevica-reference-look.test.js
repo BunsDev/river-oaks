@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { loadCharacterRig } from './helpers/character-rig.js';
 import { instantiateAvatar } from '../src/avatars.js';
 import { createJevicaCostume } from '../src/jevica-costume.js';
-import { SUIT, PUMP, upperHull } from '../src/jevica-suit.js';
+import { SUIT, PUMP, MAKEUP, upperHull } from '../src/jevica-suit.js';
 
 // Val's 2026-10-29 reference look on the real hero rig: a blazer and trousers cut
 // from her own skin, a peplum, a collar with its brooch, lilies, earrings, heels
@@ -204,4 +204,32 @@ test('the upper hull spans hollows and passes through peaks', () => {
   assert.equal(hull(1), 2); assert.equal(hull(4), 1);
   assert.ok(Math.abs(hull(2.5) - 1.5) < 1e-9, 'the hollow between the two peaks is bridged');
   assert.equal(hull(-1), 0); assert.equal(hull(9), 1);
+});
+
+test('makeup: rose lips about the mouth line and a soft blush, on her own copy of the skin', async () => {
+  const source = await loadCharacterRig('jevica'), bare = instantiateAvatar(source, { targetHeight: 1.685 });
+  const { rig, costume, body } = await dressed();
+  try {
+    const { marks, halfWidth } = costume.makeup;
+    // Her profile, top to bottom: nose tip, the dip under it, upper lip, mouth line, lower lip.
+    assert.ok(marks.noseTip > marks.underNose && marks.underNose > marks.upperLip && marks.upperLip > marks.mouth && marks.mouth > marks.lowerLip, JSON.stringify(marks));
+    assert.ok(marks.noseTip - marks.lowerLip > .02 && marks.noseTip - marks.lowerLip < .06, 'nose to lower lip is a face, not a stray bump');
+    assert.ok(halfWidth > .015 && halfWidth < .03, `mouth half-width ${halfWidth.toFixed(3)} m`);
+    assert.notEqual(body.geometry, bare.model.getObjectByName('Jevica').geometry, 'the shared rig keeps its own skin');
+    assert.equal(bare.model.getObjectByName('Jevica').geometry.attributes.color, undefined);
+    assert.equal(body.material.vertexColors, true);
+    const p = body.geometry.attributes.position, c = body.geometry.attributes.color;
+    let lips = 0, elsewhere = 0, blush = 0;
+    for (let i = 0; i < p.count; i++) {
+      // The lip tint pulls green well below blue; the blush pulls them about equally.
+      const [x, y] = [p.getX(i), p.getY(i)], tinted = c.getZ(i) - c.getY(i) > .05;
+      if (!tinted) { if (c.getX(i) - c.getY(i) > .05) blush++; continue; }
+      if (Math.abs(x) < halfWidth && y < marks.upperLip + .01 && y > marks.lowerLip - .012) lips++; else elsewhere++;
+    }
+    assert.ok(lips > 200, `${lips} lip vertices take the rose tint`);
+    assert.equal(elsewhere, 0, 'the lip tint stays on the lips');
+    assert.ok(blush > 200, `${blush} cheek vertices take a light blush`);
+    // Pinker than skin: red kept, green pulled down more than blue.
+    assert.ok(MAKEUP.lips[0] === 1 && MAKEUP.lips[1] < MAKEUP.lips[2]);
+  } finally { costume.dispose(); rig.dispose(); bare.dispose(); }
 });

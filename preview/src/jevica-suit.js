@@ -430,6 +430,64 @@ diffuseColor.rgb = mix(mix(diffuseColor.rgb, vec3(${hem.r.toFixed(4)}, ${hem.g.t
 // The ombré begins at the shoulders (fraction of the hair's height from its crown) and the
 // strands below the ears stand out by up to `flare` for volume.
 export const HAIR = Object.freeze({ pinkFrom: .2, pinkTo: .34, flare: .22, axisZ: .01 });
+// Makeup from the reference: rose lips and a soft blush, painted as vertex colours on the
+// costume's own copy of her skin (realism tiers leave vertex colours alone). Landmarks come
+// from her midline profile: the nose tip is the profile's peak below the eyes, then the
+// profile dips under the nose, peaks at the upper lip, dips at the mouth line and peaks at
+// the lower lip. The lips are an ellipse about the mouth line, its half-width a fraction of
+// half the pupils' spacing; the blush sits on each cheek, just outside the pupil line.
+export const MAKEUP = Object.freeze({ lips: [1, .56, .68], blush: [1, .78, .81], mouthWidth: .78, blushRadius: .022 });
+export function faceLandmarks(geometry, eyes) {
+  const p = geometry.attributes.position, profile = new Map(), bin = .003;
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i);
+    if (Math.abs(p.getX(i)) > .004 || y > eyes.y || y < eyes.y - .14) continue;
+    const k = Math.round(y / bin); profile.set(k, Math.max(profile.get(k) ?? -Infinity, p.getZ(i)));
+  }
+  const rows = [...profile].sort((a, b) => b[0] - a[0]).map(([k, z]) => [k * bin, z]);
+  const peakBelow = (from, rising) => { for (let j = from + 1; j < rows.length - 1; j++) if (rising ? rows[j][1] >= rows[j - 1][1] && rows[j][1] >= rows[j + 1][1] : rows[j][1] <= rows[j - 1][1] && rows[j][1] <= rows[j + 1][1]) return j; return -1; };
+  let nose = -1; for (let j = 0; j < rows.length; j++) if (rows[j][0] < eyes.y - .02 && rows[j][0] > eyes.y - .06 && (nose < 0 || rows[j][1] > rows[nose][1])) nose = j;
+  const under = nose < 0 ? -1 : peakBelow(nose, false), upper = under < 0 ? -1 : peakBelow(under, true);
+  const line = upper < 0 ? -1 : peakBelow(upper, false), lower = line < 0 ? -1 : peakBelow(line, true);
+  if (lower < 0) return null;
+  const at = j => rows[j][0];
+  return { noseTip: at(nose), noseZ: rows[nose][1], underNose: at(under), upperLip: at(upper), mouth: at(line), lowerLip: at(lower), mouthZ: rows[line][1] };
+}
+export function applyJevicaMakeup(model, owned) {
+  const body = model.getObjectByName('Jevica'), eyes = model.getObjectByName('Jevicahigh-poly');
+  if (!body || !eyes) return null;
+  eyes.geometry.computeBoundingBox();
+  // The eyes' box spans both eyeballs; less one eyeball's diameter it is the pupils' spacing.
+  const box = eyes.geometry.boundingBox, centre = { y: (box.min.y + box.max.y) / 2 }, spacing = (box.max.x - box.min.x) - (box.max.y - box.min.y);
+  const marks = faceLandmarks(body.geometry, centre);
+  if (!marks) return null;
+  const geometry = body.geometry.clone(); owned.add(geometry); body.geometry = geometry;
+  const p = geometry.attributes.position, colour = new Float32Array(p.count * 3).fill(1);
+  const halfWidth = spacing / 2 * MAKEUP.mouthWidth, top = marks.upperLip + (marks.upperLip - marks.mouth) * .9, bottom = marks.lowerLip - (marks.mouth - marks.lowerLip) * 1.1;
+  const cheekY = marks.noseTip + .006, cheekX = spacing / 2 * 1.15;
+  let lips = 0, blush = 0;
+  for (let i = 0; i < p.count; i++) {
+    const [x, y, z] = [p.getX(i), p.getY(i), p.getZ(i)];
+    let r = 1, g = 1, b = 1;
+    // Lips: front surface only (the inside of the mouth sits behind the mouth line).
+    const reach = y >= marks.mouth ? top - marks.mouth : marks.mouth - bottom, e = (x / halfWidth) ** 2 + ((y - marks.mouth) / reach) ** 2;
+    if (e < 1 && z > marks.mouthZ - .012) {
+      const k = THREE.MathUtils.smoothstep(1 - e, 0, .45); lips++;
+      r *= 1 + (MAKEUP.lips[0] - 1) * k; g *= 1 + (MAKEUP.lips[1] - 1) * k; b *= 1 + (MAKEUP.lips[2] - 1) * k;
+    }
+    // Blush: a soft disc on each cheek, front-facing.
+    const d = Math.hypot(Math.abs(x) - cheekX, y - cheekY) / MAKEUP.blushRadius;
+    if (d < 2.5 && z > marks.noseZ - .06) {
+      const k = Math.exp(-d * d); if (k > .05) blush++;
+      r *= 1 + (MAKEUP.blush[0] - 1) * k; g *= 1 + (MAKEUP.blush[1] - 1) * k; b *= 1 + (MAKEUP.blush[2] - 1) * k;
+    }
+    colour[i * 3] = r; colour[i * 3 + 1] = g; colour[i * 3 + 2] = b;
+  }
+  geometry.setAttribute('color', new THREE.BufferAttribute(colour, 3));
+  body.material.vertexColors = true; body.material.needsUpdate = true;
+  return { marks, lips, blush, halfWidth };
+}
+
 export function applyHairOmbre(model, material, owned) {
   let hair = null; model.traverse(item => { if (item.isMesh && item.material === material) hair = item; });
   if (!hair) return null;
