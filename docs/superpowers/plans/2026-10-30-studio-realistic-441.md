@@ -81,8 +81,13 @@ Captures (local, `output/playwright/character-studio-realistic-*.png`,
   blouse, skirt and socks. Studio and town draw both at `high`.
 - Walk and wave read the same in both views (stride; right hand across the chest).
 - Differences are lighting, not identity: the town's sun leaves faces darker and
-  shoes darker in shadow. Imani's town close-up shows a small dark spot at the
-  nostril that the Studio close-up does not (likely shadow; recorded for Val).
+  shoes darker in shadow. The realism reports match in both views (tier `high`,
+  all seven components, skin, cornea, hair, brows and lashes applied).
+- A white pixel at Imani's nose tip (town close-up) and on Morgan's sweater
+  (town full shots) is not the avatar: it sits at the exact screen centre
+  (720, 500) of every town capture whatever the framing, and the same dot is at
+  the screen centre of the unrelated #443 `character-studio-tiers-sharp-owner.png`
+  capture, on a wooden surface. It is a page overlay in render-audit captures.
 - The missing-map fallback (Standard) is visually close to High at portrait
   distance, as the contract's tiers share geometry and textures.
 
@@ -120,6 +125,17 @@ Increment 3, source = increment 2 + this diff:
   did not move (canvas not focused), and the realistic step overflowed 1440×900
   by 53 then 17 px. Each was fixed and the final run above is on the final source.
 
+Exact-head reruns (clean worktrees, after the PRs opened):
+- #807 head `46441969`: `pnpm run test:experience character-studio
+  character-studio-layout character-studio-disabled character-studio-paused` 4/4.
+- #810 head `f62a46f4`: `pnpm run test:shared development-world` 4/4;
+  `pnpm run test:shared required` 12/13: `multiplayer-exclusivity` failed on
+  "A resident is not driving the motorcycle herself" (vehicle seating; the stack
+  changes no server, vehicle or ride code). One rerun of that journey on the same
+  head passed, as did hosted `preview shared (required)` on this head.
+- Hosted on #810 also ran `character-studio-realistic` in
+  `preview shared (required-characters)` (job 124126473990): passed.
+
 ## Decisions for Val
 
 - The Studio tier is a preview choice for this device only. It is not saved and
@@ -127,9 +143,12 @@ Increment 3, source = increment 2 + this diff:
   Reopening the Studio starts at Match graphics.
 - Morgan's catalog description (from #545) says "authored casual suit"; the
   bundle is a sweater and jeans. Wording change left to the catalog owner.
-- Visual approval of the close-up vs town captures (lighting differences and the
-  spot at Imani's nostril in town) is yours; automation shows only that one
-  definition is drawn at one tier in both views.
+- Visual approval of the close-up vs town captures is yours. I inspected them
+  and found identity, outfit and tier consistent; the remaining differences are
+  town lighting. Automation is not visual sign-off.
+- Human accessibility acceptance (physical iPhone, iOS VoiceOver, WebKit) is
+  outside automation; the keyboard, touch-context and reduced-motion paths are
+  covered by journeys only.
 
 ## Gaps
 
