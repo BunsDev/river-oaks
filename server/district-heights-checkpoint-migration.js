@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { createSharedWorld } from './world.js';
-import { recoverDistrictCommonsCheckpoint } from './district-commons-checkpoint-migration.js';
+import { recoverDistrictCommonsCheckpoint, relocateResidents } from './district-commons-checkpoint-migration.js';
 import { attachEastGardenCommons } from '../preview/src/east-garden-commons-world.js';
 import { attachBayouHeights, detachBayouHeights } from '../preview/src/bayou-heights-world.js';
 import { COMMONS_REVISION } from '../shared/east-garden-commons-layout.js';
@@ -21,8 +21,10 @@ const seal = (worldData,envelope,options) => {
  * checkpoint, or anything the Commons migration recovers, restores unchanged into
  * Heights. Back to the Commons, players at the icehouse table stand up (ordinary
  * departure semantics) and everyone east of the footbridge, or airborne where the
- * Commons cannot fly them, moves to free Commons plaza ground by the bridge. Back to
- * Gardens chains through the Commons. The Redis district epoch still fences writers.
+ * Commons cannot fly them, moves to free Commons plaza ground by the bridge. Residents
+ * on Heights ground walk home to Commons ground their planner reaches, searching from
+ * the bridge when nothing near them is clear. Back to Gardens chains through the
+ * Commons. The Redis district epoch still fences writers.
  */
 export function recoverDistrictHeightsCheckpoint({worldData,checkpoint,worldId=DEFAULT_WORLD_ID,...options}={}) {
   try {
@@ -38,14 +40,16 @@ export function recoverDistrictHeightsCheckpoint({worldData,checkpoint,worldId=D
       }
       const {checksum:_checksum,...envelope}=source.checkpoint();
       const result=seal(worldData,envelope,settings);
-      return result?{ok:true,checkpoint:result,from,to:'heights',moved:[]}:rejected();
+      return result?{ok:true,checkpoint:result,from,to:'heights',moved:[],movedResidents:[],reroutedResidents:[]}:rejected();
     }
     if(!worldData.eastGardenCommons){
       // Heights to Gardens: back to the Commons first, then the Commons rollback.
       const commons=recoverDistrictHeightsCheckpoint({worldData:attachEastGardenCommons(worldData),checkpoint,...settings});
       if(!commons.ok)return rejected();
       const gardens=recoverDistrictCommonsCheckpoint({worldData,checkpoint:commons.checkpoint,...settings});
-      return gardens.ok?{...gardens,from:'heights',moved:[...new Set([...commons.moved,...gardens.moved])]}:rejected();
+      return gardens.ok?{...gardens,from:'heights',moved:[...new Set([...commons.moved,...gardens.moved])],
+        movedResidents:[...new Set([...commons.movedResidents,...gardens.movedResidents])],
+        reroutedResidents:[...new Set([...commons.reroutedResidents,...gardens.reroutedResidents])]}:rejected();
     }
     if(revision!==COMMONS_REVISION)return rejected();
     const sourceData=attachBayouHeights(worldData),source=createSharedWorld(sourceData,settings);
@@ -72,7 +76,12 @@ export function recoverDistrictHeightsCheckpoint({worldData,checkpoint,worldId=D
       Object.assign(player,{position:destination,altitude:0,buildingId:null,levelId:null,vehicle:null,sitting:null,cycling:null,gesture:null,gestureUntil:0});
       placed.push(destination);moved.push(player.id);
     }
-    const result=seal(worldData,envelope,settings);
-    return result?{ok:true,checkpoint:result,from:'heights',to:'commons',moved}:rejected();
+    const {id,bounds,footbridge:{deck}}=sourceData.eastGardenCommons.heights;
+    const residents=relocateResidents({fromData:sourceData,toData:worldData,checkpoint:envelope,
+      inside:(east,north)=>east>=bounds[0]&&east<=bounds[2]&&north>=bounds[1]&&north<=bounds[3],
+      gone:stop=>typeof stop==='string'&&stop.startsWith(`${id}/`),toward:[deck[0],(deck[1]+deck[3])/2]});
+    if(!residents)return rejected();
+    const result=seal(worldData,residents.checkpoint,settings);
+    return result?{ok:true,checkpoint:result,from:'heights',to:'commons',moved,movedResidents:residents.moved,reroutedResidents:residents.rerouted}:rejected();
   } catch {return rejected();}
 }

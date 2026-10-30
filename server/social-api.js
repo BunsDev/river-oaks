@@ -1,8 +1,9 @@
 import { guardContact, guardMessage, guardResult } from './name-guard.js';
 import { ABSENT_RESIDENT } from './blocks.js';
+import { screenText } from './content-filter.js';
 
 /** Shared HTTP behavior for local and Redis backed resident relationships. */
-export async function socialAction({ action, identity, social, presence, readBody, visiblePlayer, inviteWorld, invitePlace, allowWrite, blocks = null }) {
+export async function socialAction({ action, identity, social, presence, readBody, visiblePlayer, inviteWorld, invitePlace, allowWrite, blocks = null, contentFilter = null }) {
   if (!social) return { status: 503, value: { error: 'Contacts are unavailable.' } };
   if (action === 'list') {
     const hidden = blocks ? await blocks.hidden(identity.userId) : null;
@@ -54,7 +55,12 @@ export async function socialAction({ action, identity, social, presence, readBod
     if(!destination)return {status:409,value:{error:'Join the world and select an available place.'}};
     result=await social.invitePlace(identity,peerId,destination.world,destination.place);
   }
-  else result = await social.send(identity, peerId, data.text);
+  else {
+    // The content filter (#292) screens a message before the store sees it; a refusal is 400, as for invalid text.
+    const screened = screenText(contentFilter, 'message', data.text);
+    if (!screened.ok) return { status: 400, value: { error: screened.message, reason: screened.reason } };
+    result = await social.send(identity, peerId, screened.text);
+  }
   if (result.ok) return { status: 200, value: guardResult(result) };
   const status = result.reason === 'invalid' ? 400 : result.reason === 'limit' ? 429 : 409;
   return { status, value: { error: result.reason === 'existing' ? 'A contact invitation already exists.'

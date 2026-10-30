@@ -17,7 +17,7 @@ import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
 import { buildKind, buildGeometry, buildYaw, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, BUILD_REASONS, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.js';
 import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
-import { plazaSalonRack } from '../preview/src/plaza-salon-plan.js';
+import { bikeRackSlots } from '../preview/src/bike-racks.js';
 import { objectCollider, blocksPlayer, blocksResident } from '../preview/src/creator-object.js';
 import { verifyApprovedSpaceRoutes } from '../preview/src/approved-space-plan.js';
 import { cafeSeat, plazaSalonPlan } from '../preview/src/plaza-salon-plan.js';
@@ -256,10 +256,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const suiteAdmits=(player,seat,time=now())=>campus.suiteAccess(player.id,seat.unitId,time).ok;
   const campusWorkstation=player=>Boolean(player?.sitting && (campusWorkstations.has(player.sitting.buildId)
     || suiteSeats.get(player.sitting.buildId)?.workstation && suiteAdmits(player,suiteSeats.get(player.sitting.buildId))));
-  // The plaza bike rack: a slot is held by at most one player (player.cycling),
+  // The bike racks (bike-racks.js): a slot is held by at most one player (player.cycling),
   // exactly as a seat is. Metres ride on the player until the transport drains
   // them into the account store (drainRides), so a disconnect loses nothing.
-  const rackSlots=new Map(plazaSalonRack(worldData).map(slot=>[slot.id,slot]));
+  const rackSlots=new Map(bikeRackSlots(worldData).map(slot=>[slot.id,slot]));
   const slotHolder=slotId=>[...players.values()].find(p=>p.cycling===slotId)??null;
   const takenSlots=()=>[...players.values()].filter(p=>p.cycling).map(p=>p.cycling).sort();
   // Banked metres are process-local and not checkpointed: the transports drain

@@ -269,10 +269,11 @@ Vehicle exits use the server-checked travel command before completing the local
 dismount. This keeps the seat-to-ground transition from being rejected as an
 ordinary walking-speed violation. A refused exit keeps the rider seated.
 
-The plaza bike rack is arbitrated like seating: `cycle {rackId, slot}` claims a
-free slot within seat reach and mounts the rider on a `bicycle`; `uncycle` hands
-it back, as do a travel, leaving, and a pose without the bike once the 1.5 s
-hand-over grace has passed (a walking pose already in flight when the slot was
+The bike racks (the plaza rack and six curbside racks, `preview/src/bike-racks.js`)
+are arbitrated like seating: `cycle {rackId, slot}` claims a free slot within
+seat reach and mounts the rider on a `bicycle`; `uncycle` hands it back, as do
+a travel, leaving, and a pose without the bike once the 1.5 s hand-over grace
+has passed (a walking pose already in flight when the slot was
 granted is ignored). A `bicycle` pose
 is accepted only from a slot holder, under an 8.05 m/s (18 mph) budget; the
 owner-only rule still covers the car and motorcycle. Each accepted bicycle pose
@@ -408,6 +409,9 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `REDIS_NAMESPACE` | Explicit isolated namespace for preview/local Redis; Production defaults to `river-oaks:production:v1` |
 | `MODERATION_FILE` | Standalone server only: path on a private writable volume |
 | `MODERATOR_USER_IDS` | Comma-separated WorkOS user IDs, or empty for no moderators |
+| `MODERATION_NOTIFY_URL` | Optional. HTTPS endpoint each saved player report is posted to as JSON (`{ type: 'report', id, at, reason, reporter, reported, content, respondBy }`): a chat tool's incoming webhook, an email relay or a ticket queue. At most 20 sends in ten minutes; a failed send is logged by report id and the report stays saved. Empty: nobody is told |
+| `MODERATION_NOTIFY_TOKEN` | Optional. Sent as a bearer token with each notice |
+| `MODERATION_RESPONSE_HOURS` | Hours a moderator has to respond to a report, recorded with it as `respondBy`; 24 when empty |
 | `WAITLIST_ADMIN_USER_IDS` | Comma-separated WorkOS user IDs that may approve requests; approvers are automatically approved |
 | `WAITLIST_FILE` | Standalone server only: private persistent waitlist store |
 | `WAITLIST_NAMESPACE` | Separate Redis namespace for durable approval decisions; Production defaults to `river-oaks:production:access:v1` |

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
+import { KIT_CONVENTIONS, kitFinish, knownFinish } from '../../shared/city-kit/catalog.js';
 import { RETRO } from './retro-palette.js';
 import { buildCityKit, cityKitLandscape, cullPlanting, disposeLandscape } from './city-kit/render.js';
 import { buildMatureTrees, buildPlanterPlanting } from './landscape-models.js';
@@ -19,9 +19,10 @@ const near = (mesh, position) => position.distanceTo(mesh.boundingSphere.center)
 /**
  * One Bayou Heights neighborhood (a plan in layout.heights.plans), streamed as its own
  * chunk by heights-stream.js. Its street trees and planting draw in buildHeightsLandscape.
+ * `finish` (catalog.js KIT_FINISHES) is the kit finish; unknown is classic.
  */
-export function buildHeightsNeighborhood(layout, plan) {
-  const kit = buildCityKit(plan, { groundAt: () => layout.ground, ground: layout.ground, landscape: false });
+export function buildHeightsNeighborhood(layout, plan, { finish } = {}) {
+  const kit = buildCityKit(plan, { groundAt: () => layout.ground, ground: layout.ground, landscape: false, finish: knownFinish(finish) });
   kit.name = `bayou-heights/${plan.id}`;
   return kit;
 }
@@ -31,9 +32,11 @@ export function buildHeightsNeighborhood(layout, plan) {
  * bandstand and Heights Hall, and every street tree and planted bed. Built once, the
  * tree and planting models are cloned once rather than in each neighborhood. A tree or
  * planting batch draws only while its neighborhood does, and only near the camera.
+ * `finish` recolours the landmarks through the kit's slots; tree and planting models keep theirs.
  */
-export function buildHeightsLandscape(layout) {
+export function buildHeightsLandscape(layout, { finish: requested } = {}) {
   const group = new THREE.Group(); group.name = 'bayou-heights/landscape';
+  const finish = knownFinish(requested); group.userData.finish = finish;
   const { heights, ground } = layout, trees = [], planters = [];
   for (const plan of heights.plans) {
     const placements = cityKitLandscape(plan, { groundAt: () => ground, ground });
@@ -44,7 +47,7 @@ export function buildHeightsLandscape(layout) {
   treeGroup.name = 'bayou-heights trees'; treeGroup.userData.placements = trees.length; group.add(treeGroup);
   const planting = planters.length && !headless ? buildPlanterPlanting(planters) : new THREE.Group();
   planting.name = 'bayou-heights planting'; group.add(planting);
-  const landmarks = buildLandmarks(layout); group.add(landmarks);
+  const landmarks = buildLandmarks(layout, finish); group.add(landmarks);
   group.userData.plantingModules = planters.length;
   group.userData.ready = Promise.all([treeGroup.userData.ready, planting.userData.ready]);
   // A batch belongs to the neighborhood whose site is nearest its centre; batches arrive after loading.
@@ -91,17 +94,21 @@ export function buildHeightsLandscape(layout) {
 // The footbridge deck structure under the kit paving, the bayou beneath it, the
 // bandstand on the green and Heights Hall's clock tower, in the Commons materials.
 // They always draw, so the parts merge into one mesh per material (and shadow choice).
-function buildLandmarks(layout) {
+// A finish recolours them through the kit slot each plays (catalog.js KIT_FINISHES):
+// stone as ivory trim, railings as lamp columns, brass, the roofs as deep-teal trim,
+// brick, glass. Water, banks and the lit clock faces keep their colours.
+function buildLandmarks(layout, finish = 'classic') {
   const group = new THREE.Group(); group.name = 'bayou-heights/landmarks';
+  const recolour = kitFinish(finish).materials;
   const { heights, ground } = layout, geometries = [], buckets = new Map(), materials = {
-    stone: new THREE.MeshStandardMaterial({ color: RETRO.ivory, roughness: .85 }),
-    rail: new THREE.MeshStandardMaterial({ color: RETRO.teal, roughness: .45, metalness: .35 }),
-    brass: new THREE.MeshStandardMaterial({ color: RETRO.brass, roughness: .4, metalness: .6 }),
+    stone: new THREE.MeshStandardMaterial({ color: RETRO.ivory, roughness: .85, ...recolour['trim-ivory'] }),
+    rail: new THREE.MeshStandardMaterial({ color: RETRO.teal, roughness: .45, metalness: .35, ...recolour['lamp-teal'] }),
+    brass: new THREE.MeshStandardMaterial({ color: RETRO.brass, roughness: .4, metalness: .6, ...recolour['metal-brass'] }),
     water: new THREE.MeshPhysicalMaterial({ color: '#3e5f55', roughness: .12, metalness: .1, clearcoat: 1 }),
     bank: new THREE.MeshStandardMaterial({ color: '#6f8f58', roughness: 1 }),
-    roof: new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, roughness: .6 }),
-    brick: new THREE.MeshStandardMaterial({ color: '#a9826e', roughness: .9 }),
-    glass: new THREE.MeshStandardMaterial({ color: RETRO.glass, roughness: .2, metalness: .2 }),
+    roof: new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, roughness: .6, ...recolour['trim-deep-teal'] }),
+    brick: new THREE.MeshStandardMaterial({ color: '#a9826e', roughness: .9, ...recolour['brick-umber'] }),
+    glass: new THREE.MeshStandardMaterial({ color: RETRO.glass, roughness: .2, metalness: .2, ...recolour.glass }),
     face: new THREE.MeshStandardMaterial({ color: RETRO.porcelain, roughness: .5, emissive: '#fff1d0', emissiveIntensity: .25 }),
   };
   for (const [name, material] of Object.entries(materials)) material.name = `bayou-heights/${name}`;

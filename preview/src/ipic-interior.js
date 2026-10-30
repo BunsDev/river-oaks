@@ -5,7 +5,7 @@ import { createIpicMaterials, districtSignLayout } from './ipic-materials.js';
 
 // Where the upper lounge's carpet meets the Tuck Room's boards, west of the bar stools (a = 3.4).
 const TUCK_ROOM_EDGE = 2.65;
-import { IPIC_BACK_BAR, IPIC_BAR, IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_PLANTERS, IPIC_AUDITORIUM_RISERS, IPIC_AUDITORIUM_ROWS, IPIC_AUDITORIUM_SEAT_D, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D, IPIC_WING, RISER_RAMP, ipicFloor, ipicSeatForward } from './ipic-plan.js';
+import { IPIC_BACK_BAR, IPIC_BAR, IPIC_CEILINGS, IPIC_COCOON, IPIC_COCOONS, IPIC_DARTS, IPIC_ESCALATOR, IPIC_FLIGHTS, IPIC_INTERIOR, IPIC_RUN_WALL, IPIC_PLANTERS, IPIC_AUDITORIUM_RISERS, IPIC_AUDITORIUM_ROWS, IPIC_AUDITORIUM_SEAT_D, IPIC_SCREEN, IPIC_SOFA_ARMS, IPIC_SOFA_D, IPIC_WING, RISER_RAMP, ipicFloor, ipicSeatForward } from './ipic-plan.js';
 import { dartboardPixel } from './dartboard-texture.js';
 
 // Editable metre-scale scene. Local +X=across frontage, -Z=into the venue,
@@ -79,9 +79,9 @@ export function buildIpicInterior(room, options = {}) {
     }
   }
   // An elongated woven cocoon (photo review P8, IMG_9758): a closed rattan shell ribbed by its weave, open
-  // at the bottom where the lamp shines through. Centred on y, it is 1.15 m tall at size 1.
+  // at the bottom where the lamp shines through. Centred on y; its size is IPIC_COCOON's, scaled.
   function cocoon(a, y, d, size = 1) {
-    const height = 1.15 * size, radius = .24 * size, at = t => radius * Math.sin(Math.PI * t) ** .75;
+    const height = IPIC_COCOON.height * size, radius = IPIC_COCOON.radius * size, at = t => radius * Math.sin(Math.PI * t) ** .75;
     const profile = scale => Array.from({ length: 19 }, (_, i) => { const t = .1 + .9 * i / 18; return new THREE.Vector2(at(t) * scale, (t - .5) * height); });
     box(m.rattan, a, y, d, 1, 1, 1, { shape: keep(new THREE.LatheGeometry(profile(1), 24)) });
     const ribs = profile(1.03);
@@ -112,7 +112,7 @@ export function buildIpicInterior(room, options = {}) {
   }
 
   // Reception from IMG_9738 (photo review P3, P4, P6; Val, 2026-10-18).
-  section('Reception'); floor(m.receptionStone, 0, 6, 0); ceiling(0, 6, 3.9, m.plaster);
+  section('Reception'); floor(m.receptionStone, 0, 6, 0); ceiling(0, 6, IPIC_CEILINGS.reception, m.plaster);
   for (const a of [room.aMin, room.aMax]) box(a === room.aMin ? m.timber : m.plaster, a, 1.95, 3, .15, 3.9, 6);
   // Large-format stone, its joints a shade darker than the stone rather than dark grout.
   for (let d = 0; d < 6; d += 1.2) box(m.stoneJoint, room.center, .006, d, room.width, .008, .008);
@@ -141,13 +141,28 @@ export function buildIpicInterior(room, options = {}) {
   // unimplemented interaction: the continuous escalator path is the public route.
   box(m.black, 5.3, 1.4, 5.88, 1.85, 2.8, .14);
   for (const a of [4.86, 5.74]) box(m.bronze, a, 1.4, 5.79, .86, 2.7, .055);
-  label('IPIC & THE TUCK ROOM  ↗', -3.3, 2.45, 5.92, 3.8, .5);
+  // Walls close the side bays beside the first run at reception, up to its ceiling (Val, 2026-10-26): the opening
+  // under the sign showed the street's ground and the next shop's shelves. The sign hangs on the west one, beside
+  // the escalator, instead of across the head of its lane.
+  const bayFront = [[room.aMin, -IPIC_RUN_WALL - .09, m.timber], [IPIC_RUN_WALL + .09, room.aMax, m.plaster]];
+  for (const [a0, a1, mat] of bayFront) box(mat, (a0 + a1) / 2, IPIC_CEILINGS.reception / 2, 6.09, a1 - a0, IPIC_CEILINGS.reception, .18);
+  label('IPIC & THE TUCK ROOM  ↗', (room.aMin - IPIC_RUN_WALL) / 2, 2.45, 5.98, 3.2, .42);
 
   section('Escalators');
-  // The runs share the ceilings of the floors they rise to (the mural landing's, then the upper
-  // lounge's), so the atrium is closed overhead: from the landing the district's sky showed through
-  // both runs (docs/ipic-review/photo-review.md, P1; IMG_9771 shows a closed ceiling).
-  ceiling(6, 12, 6.7, m.plaster); ceiling(14, 20, 10.3, m.plaster);
+  // One well from reception to the lounge, closed overhead at the lounge's ceiling (Val, 2026-10-26). The mural
+  // landing's ceiling had run across both lanes at 6.7 m, 0.7 m above the lounge floor: a roof in the middle of the
+  // escalator from the lounge, and the walking camera rose through it. Overhead the well stays closed, so the
+  // district's sky never shows from the runs (docs/ipic-review/photo-review.md, P1). Above reception's ceiling a
+  // header wall closes its front.
+  const { upper } = IPIC_CEILINGS;
+  box(m.plaster, 0, upper, 10, 2 * IPIC_RUN_WALL + .18, .18, 8);
+  ceiling(14, 20, upper, m.plaster);
+  box(m.stone, 0, (IPIC_CEILINGS.reception + upper) / 2, 6.09, 2 * IPIC_RUN_WALL - .18, upper - IPIC_CEILINGS.reception, .18);
+  // Split-face stone from y0 to y1 along d0..d1, its horizontal joints standing proud of the face on the well's side.
+  const stoneWall = (a, y0, y1, d0, d1) => {
+    box(m.stone, a, (y0 + y1) / 2, (d0 + d1) / 2, .18, y1 - y0, d1 - d0);
+    for (let y = y0 + .25; y < y1 - .1; y += .19) for (let d = d0; d < d1; d += .7) box(m.stone, a + (a < 0 ? .025 : -.025), y, d + .3, .21 + .025 * Math.sin((y - y0) * 29 + d), .16, .64);
+  };
   for (const f of IPIC_FLIGHTS) {
     const length = f.end - f.start, pitch = Math.atan2(3, length);
     for (const a of IPIC_ESCALATOR.lanes) {
@@ -170,10 +185,9 @@ export function buildIpicInterior(room, options = {}) {
     for (const [a0, a1] of [[-.65, .65], [-2.63, -2.15], [2.15, 2.63]]) {
       box(m.steel, (a0 + a1) / 2, f.base + 1.53, (f.start + f.end) / 2, a1 - a0, .04, Math.hypot(length, 3), { pitch });
     }
-    for (const a of [-2.72, 2.72]) {
-      box(m.stone, a, f.base + 3, (f.start + f.end) / 2, .18, 6, length);
-      // Horizontal split-face stone joints and recessed candle niches.
-      for (let y = .25; y < 5.9; y += .19) for (let d = f.start; d < f.end; d += .7) box(m.stone, a + (a < 0 ? .025 : -.025), f.base + y, d + .3, .21 + .025 * Math.sin(y * 29 + d), .16, .64);
+    // The run walls rise to the well's ceiling, with recessed candle niches.
+    for (const a of [-IPIC_RUN_WALL, IPIC_RUN_WALL]) {
+      stoneWall(a, f.base, upper, f.start, f.end);
       for (const d of [f.start + 1.6, f.end - 1.1]) {
         const side = a < 0 ? 1 : -1;
         box(m.black, a + side * .15, f.base + (d - f.start) / 2 + 1.7, d, .03, .45, .3);
@@ -182,23 +196,39 @@ export function buildIpicInterior(room, options = {}) {
     }
   }
 
-  section('Mural landing'); floor(m.tile, 12, 14, 3); ceiling(12, 14, 6.7, m.plaster);
-  // The landing's side bays are walled in, front, back and at the room's edge, from the landing to its
-  // ceiling: they had opened onto the street and the sky (photo review P18; IMG_9771 shows a closed
-  // landing). Each wall stands outside the walkable floor, inside the run walls' colliders or the room.
-  for (const [inner, edge] of [[-2.72, room.aMin], [2.72, room.aMax]]) {
+  section('Mural landing'); floor(m.tile, 12, 14, 3);
+  // The landing's side bays are walled in, front, back and at the room's edge, under their own ceiling: they had
+  // opened onto the street and the sky (photo review P18; IMG_9771 shows a closed landing). Each wall stands
+  // outside the walkable floor, inside the run walls' colliders or the room. Over the lanes the landing is open to
+  // the well's ceiling, and stone fascias continue the run walls above the bays' ceilings.
+  const bay = IPIC_CEILINGS.landingBays;
+  for (const [inner, edge] of [[-IPIC_RUN_WALL, room.aMin], [IPIC_RUN_WALL, room.aMax]]) {
     const a = (inner + edge) / 2, w = Math.abs(edge - inner), side = Math.sign(edge);
-    for (const d of [11.91, 14.09]) box(m.stone, a, 3 + 1.85, d, w, 3.7, .18);
-    box(m.stone, edge + side * .09, 3 + 1.85, 13, .18, 3.7, 2.36);
+    box(m.stone, a, (3 + bay) / 2, 11.91, w, bay - 3, .18);
+    // The back wall rises to the ceiling: past it is the light well beside the second run.
+    box(m.stone, a, (3 + upper) / 2, 14.09, w, upper - 3, .18);
+    box(m.stone, edge + side * .09, (3 + bay) / 2, 13, .18, bay - 3, 2.36);
+    box(m.plaster, a, bay, 13, w, .18, 2.36);
+    stoneWall(inner, bay, upper, 12, 14);
   }
   const mural = room.fixtures.find(f => f.kind === 'ipic-mural-wall');
   box(m.black, mural.a, mural.y + mural.h / 2, mural.d, mural.w, mural.h, mural.l);
   panel(finishes.photo('book-spine-mural', 'IMG_9771.jpg'), mural.a, mural.y + mural.h / 2, mural.d - .1, mural.w, mural.h, 0,
     [[.245, .298], [.875, .312], [.246, .70], [.86, .702]]);
-  for (const a of [-2, .5, 3.8]) downlight(a, 6.58, 12.7);
+  for (const a of [-2, .5]) downlight(a, upper - .12, 12.7);
+  downlight(3.8, bay - .12, 12.7);
+  // Beside the second run the side bays are light wells under the lounge's glass guardrails: a stone floor at the
+  // landing's level, walls up to the ceiling and a tall planter, where the street's ground had shown at the bottom.
+  for (const [inner, edge] of [[-IPIC_RUN_WALL, room.aMin], [IPIC_RUN_WALL, room.aMax]]) {
+    const a = (inner + edge) / 2, w = Math.abs(edge - inner), side = Math.sign(edge);
+    box(m.tile, a, 3 - .12, 17.09, w, .24, 5.82);
+    box(m.stone, edge + side * .09, (3 + upper) / 2, 17.09, .18, upper - 3, 5.82);
+    box(m.stone, a, (3 + 5.76) / 2, 19.91, w, 2.76, .18);
+    planter(a, 3, 17.2, 2.6);
+  }
 
   // The lounge is carpeted as far as the Tuck Room, whose bar stands on boards (IMG_9756; review P12).
-  section('Upper lounge'); box(m.carpet, (room.aMin + TUCK_ROOM_EDGE) / 2, 6 - .12, 23, TUCK_ROOM_EDGE - room.aMin, .24, 6); ceiling(20, 26, 10.3);
+  section('Upper lounge'); box(m.carpet, (room.aMin + TUCK_ROOM_EDGE) / 2, 6 - .12, 23, TUCK_ROOM_EDGE - room.aMin, .24, 6); ceiling(20, 26, IPIC_CEILINGS.upper);
   for (const a of [room.aMin, room.aMax]) box(m.timber, a, 8.15, 23, .15, 4.3, 6);
   for (const d of [20.2, 25.7]) box(m.timber, room.center, 9.9, d, room.width, .52, .42);
   // The sofa group as in IMG_9758 (P11): the sofa backs onto the glass over the escalators and faces into
@@ -212,7 +242,7 @@ export function buildIpicInterior(room, options = {}) {
   box(m.sunburst, sofaA, 6.4, 22.1, 1.5, .075, .9, { shape: cylinder });
   for (const a of [sofaA - .5, sofaA + .5]) rod(m.black, [a, 6, 22.1], [a, 6.38, 22.1], .025);
   tub(-4.75, 6, 23.2, .3); tub(-3.45, 6, 23.2, -.3);
-  for (const [a, d, y, size] of [[-4.5, 21.9, 8.8, 1.15], [-3.3, 22.8, 9.05, .9], [-5.3, 24.2, 9, .85], [-1.8, 21.5, 9.1, .8], [-1.4, 24, 8.85, 1.05], [.6, 22.3, 9.05, .8]]) cocoon(a, y, d, size);
+  for (const [a, d, y, size] of IPIC_COCOONS) cocoon(a, y, d, size);
   label(["I'm Busy for the rest of my Life.", "I'm Busy for the rest of my Life.", "I'm Busy for the rest of my Life."], room.aMin + .13, 8.4, 23.6, 3.8, 1.45, { yaw: Math.PI / 2, font: 'cursive', color: '#ccb68c', height: 512 });
   // Glass arrival guardrails stop at the two escalator openings.
   for (const a of [-4.5, 4.7]) {
@@ -384,15 +414,15 @@ export function buildIpicInterior(room, options = {}) {
   // ceiling's own underside, and with the district culled a texel of sun leaked in along the back wall
   // (#428's pixel check). The seal's underside is the depth the sun now meets there.
   for (const y of [10.4, 10.85]) box(m.black, (W.aMin + W.aMax) / 2, y, (W.d0 - .09 + W.d1) / 2, W.aMax - W.aMin + .18, .18, wingWidth + .09);
-  // Walls: the screen's north end, the south end behind the foyer, the long back wall and, beyond the 13 m room,
-  // the long front wall that continues the cinema partition (drawn above, with the doorway). Under the partition
-  // the floor is the back row's level, so it meets the floor; past the room the front rows sit lower, and the
-  // long front wall reaches down to them.
+  // Walls: the screen's north end, the south end behind the cross aisle (back of house beyond it, ipic-plan.js), the
+  // long back wall and, west of the 13 m room, the long front wall that continues the cinema partition (drawn above,
+  // with the doorway). Under the partition the floor is the back row's level, so it meets the floor; past the room
+  // the front rows sit lower, and the long front wall reaches down to them.
   const wallTop = 10.94;
   box(m.black, W.aMin, (low + wallTop) / 2, wingD, .18, wallTop - low, wingWidth);
   box(m.black, W.aMax, (low + wallTop) / 2, wingD, .18, wallTop - low, wingWidth);
   box(m.black, (W.aMin + W.aMax) / 2, (low + wallTop) / 2, W.d1 - .08, W.aMax - W.aMin, wallTop - low, .16);
-  for (const [a0, a1] of [[W.aMin, room.aMin], [room.aMax, W.aMax]]) box(m.black, (a0 + a1) / 2, (low + wallTop) / 2, W.d0, a1 - a0, wallTop - low, .18);
+  box(m.black, (W.aMin + room.aMin) / 2, (low + wallTop) / 2, W.d0, room.aMin - W.aMin, wallTop - low, .18);
   // A plane faces +z (-d) unturned; the screen turns to face IPIC_SCREEN.facing.
   panel(m.screen, IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, IPIC_SCREEN.d, IPIC_SCREEN.width, IPIC_SCREEN.height, Math.atan2(IPIC_SCREEN.facing[0], -IPIC_SCREEN.facing[1]));
   for (const seat of room.ipicSeats.filter(s => s.key.startsWith('recliner'))) recliner(seat);

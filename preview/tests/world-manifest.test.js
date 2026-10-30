@@ -196,10 +196,12 @@ test('authored Commons partitions the original reservation without overlaps or t
   assert.equal(commons.entries[0].position_m[0],district.bounds_m[2]);
   assert.equal(commons.entries[0].position_m[1],-1335);
   const area=location=>{const [w,s,e,n]=locationWorldBounds(location);return (e-w)*(n-s);};
-  // Woodland Heights (woodland-heights-1) is new land east of the original envelope, which the rest still partition exactly.
-  const woodland=value.locations.find(location=>location.id==='woodland-heights');
-  assert.ok(Math.abs(value.locations.filter(location=>location!==woodland).reduce((sum,location)=>sum+area(location),0)-area(district)*3)<1e-8);
+  // Woodland Heights (woodland-heights-1) and TypeSafe Place (typesafe-place-1) are new land east of the
+  // original envelope, which the rest still partition exactly.
+  const woodland=value.locations.find(location=>location.id==='woodland-heights'),typesafe=value.locations.find(location=>location.id==='typesafe-place');
+  assert.ok(Math.abs(value.locations.filter(location=>location!==woodland&&location!==typesafe).reduce((sum,location)=>sum+area(location),0)-area(district)*3)<1e-8);
   assert.ok(Math.abs(area(woodland)-45*(district.bounds_m[3]-district.bounds_m[1]))<1e-6);
+  assert.ok(Math.abs(area(typesafe)-150*(district.bounds_m[3]-district.bounds_m[1]))<1e-6);
   // Bayou Heights and Studewood authored the east reserve, and the Bayou Terraces the strips beside the Commons: none remains reserved.
   assert.equal(value.locations.filter(location=>location.status==='reserved').length,0);
   assert.ok(value.locations.filter(location=>location.status==='reserved').every(location=>location.entries.length===0));

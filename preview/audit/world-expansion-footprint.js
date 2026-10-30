@@ -11,6 +11,7 @@ import { HEIGHTS_REVISION } from '../../shared/bayou-heights-layout.js';
 import { STUDEWOOD_REVISION } from '../../shared/studewood-layout.js';
 import { TERRACES_REVISION } from '../../shared/bayou-terraces-layout.js';
 import { WOODLAND_REVISION } from '../../shared/woodland-heights-layout.js';
+import { TYPESAFE_REVISION } from '../../shared/typesafe-place-layout.js';
 const districtBytes = await readFile(new URL('../public/data/district.json', import.meta.url));
 const world = await loadDistrictData({ districtRevision: DISTRICT_REVISION_GARDENS });
 const manifest = validateWorldManifest(JSON.parse(await readFile(new URL('../public/data/world-manifest.json', import.meta.url))));
@@ -82,7 +83,7 @@ function reachableSample(data, cell) {
 if(process.argv.includes('--reachable')) {
   const expanded=await loadDistrictData({districtRevision:COMMONS_REVISION}), garage=await loadDistrictData();
   const connected=await loadDistrictData({districtRevision:HEIGHTS_REVISION}),beyond=await loadDistrictData({districtRevision:STUDEWOOD_REVISION}),banks=await loadDistrictData({districtRevision:TERRACES_REVISION});
-  const woods=await loadDistrictData({districtRevision:WOODLAND_REVISION});
+  const woods=await loadDistrictData({districtRevision:WOODLAND_REVISION}),place=await loadDistrictData({districtRevision:TYPESAFE_REVISION});
   report.groundReachability=[];
   for(const cell of [1,.5]) {
     const original=reachableSample(world,cell),commons=reachableSample(expanded,cell),defaultRevision=reachableSample(garage,cell);
@@ -94,11 +95,15 @@ if(process.argv.includes('--reachable')) {
     const terraces=reachableSample(banks,cell);
     // Woodland Heights is reached on foot along Twentieth or Eighteenth Street from Studewood.
     const woodland=reachableSample(woods,cell);
+    // TypeSafe Place is reached on foot along Twentieth or Eighteenth Street from Woodland Heights.
+    // Its 0.5 m grid (1.11 million cells) exceeds the audit's cell budget, so it is sampled at 1 m only.
+    const typesafe=cell>=1?reachableSample(place,cell):null;
     report.groundReachability.push({defaultRevision,original,commons,addedSampledAreaM2:commons.sampledAreaM2-original.sampledAreaM2,ratio:commons.sampledAreaM2/original.sampledAreaM2,
       heights,heightsAddedSampledAreaM2:heights.sampledAreaM2-commons.sampledAreaM2,heightsRatio:heights.sampledAreaM2/original.sampledAreaM2,
       studewood,studewoodAddedSampledAreaM2:studewood.sampledAreaM2-heights.sampledAreaM2,studewoodRatio:studewood.sampledAreaM2/original.sampledAreaM2,
       terraces,terracesAddedSampledAreaM2:terraces.sampledAreaM2-studewood.sampledAreaM2,terracesRatio:terraces.sampledAreaM2/original.sampledAreaM2,
-      woodland,woodlandAddedSampledAreaM2:woodland.sampledAreaM2-terraces.sampledAreaM2,woodlandRatio:woodland.sampledAreaM2/original.sampledAreaM2});
+      woodland,woodlandAddedSampledAreaM2:woodland.sampledAreaM2-terraces.sampledAreaM2,woodlandRatio:woodland.sampledAreaM2/original.sampledAreaM2,
+      ...(typesafe&&{typesafe,typesafeAddedSampledAreaM2:typesafe.sampledAreaM2-woodland.sampledAreaM2,typesafeRatio:typesafe.sampledAreaM2/original.sampledAreaM2})});
   }
   // 3–5x is measured reachable ground. Project the remaining reserved envelopes at
   // the District's own measured density to show whether the layout can hold it.
