@@ -97,6 +97,18 @@ after 8c0240af):
   checks, in 137 s.
 - **Scope:** loopback with `TSC_AUTH=off` dev users. This is not hosted WorkOS and not the
   real origin pair.
+- **`office-computer-embed` against the same Computer:** a probe at Place 1d190f22, using a
+  one-off copy of the runner (`.runtime/computer-486/`, not committed) that starts the real
+  checkout in place of the fixture.
+  - **Result:** it failed at the first Computer step, 4 checks in: `waitState('signin')`
+    timed out after 20 s. The journey expects a signed-out child, the fixture default,
+    and the real Computer runs with `TSC_AUTH=off` dev users.
+  - **Why it can't go further:** the rest of the journey drives the fixture's
+    `/api/fixture` controls (slow and failed saves, hang on close, denied framing) and
+    the fixture's DOM, which the real Computer lacks.
+  - **Missing:** a test-control surface in Computer, or a real-child mode in this
+    journey. `office-computer-real` is the real-child counterpart.
+- **On #487:** both revisions are recorded in comment 6524829656, edited to add the probe.
 
 ## Checks and results
 
