@@ -271,7 +271,8 @@ async page => {
       grabEvaded = Boolean(settled && !settled.subdued);
       row('grab evaded (U at contact)', grabEvaded ? 'pass' : 'fail', { firstGrab, settled });
     } else row('grab evaded (U at contact)', 'not-run', { firstGrab, reason: firstGrab.seen === null ? 'no grab telegraph seen within 25 s' : 'the telegraph was seen too late to time the key' });
-    check(grabEvaded || firstGrab.late, `The telegraphed grab is avoidable: ${JSON.stringify(firstGrab)}`);
+    // A telegraph seen too late to time the key is a not-run row above, not a passing check (review of #732).
+    if (grabEvaded || !firstGrab.late) check(grabEvaded, `The telegraphed grab is avoidable: ${JSON.stringify(firstGrab)}`);
     await shoot(visitor, 'grab-visitor'); await shoot(witness, 'grab-witness');
     // Now stand still and let the next grab land.
     const subdued = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.police.subdued.includes(m.selfId); }, null, { timeout: 30000 }).then(() => true).catch(() => false);
@@ -298,21 +299,25 @@ async page => {
     const state3 = await town(visitor);
     const candidates = state3.locals.filter(local => !local.indoor && local.life && local.life.reaction === null && ['walking', 'resting', 'turning'].includes(local.life.status))
       .sort((a, b) => distance(a.position, state3.self.position) - distance(b.position, state3.self.position)).slice(0, 3);
-    let reacted = null, reactedPeer = null;
+    let reacted = null, reactedPeer = null, drawnStartle = null;
     for (const candidate of candidates) {
       const where = await approach(visitor, candidate.position, 4);
       if (!where) continue;
       await face(witness, candidate.position[0], candidate.position[1]);
       const startled = await visitor.waitForFunction(id => { const local = window.__riverMultiplayer().snapshot.locals.find(item => item.id === id); return local?.life?.reaction === 'startle' && local; }, candidate.id, { timeout: 8000 }).then(handle => handle.jsonValue()).catch(() => null);
       if (!startled) continue;
+      // What the witness's screen draws while the town says startle (review of #732: drawn was recorded, never checked).
+      drawnStartle = await witness.waitForFunction(id => { const figure = window.__riverMultiplayer().remotes.find(item => item.id === `resident:${id}`);
+        return figure?.gesture === 'startle' && { gesture: figure.gesture, ready: figure.ready }; }, candidate.id, { timeout: 900 }).then(handle => handle.jsonValue()).catch(() => null);
       const running = await visitor.waitForFunction(id => { const local = window.__riverMultiplayer().snapshot.locals.find(item => item.id === id); return local?.life?.reaction === 'flee' && local.life.speed > 1.4 && local; }, candidate.id, { timeout: 12000 }).then(handle => handle.jsonValue()).catch(() => null);
       reactedPeer = await witness.evaluate(id => { const local = window.__riverMultiplayer().snapshot.locals.find(item => item.id === id); return { reaction: local?.life?.reaction, drawn: window.__riverMultiplayer().remotes.find(item => item.id === `resident:${id}`)?.gesture ?? null }; }, candidate.id);
       reacted = { id: candidate.id, name: candidate.name, distanceFromVisitor: Math.round(distance(startled.position, where) * 10) / 10, fled: running ? Math.round(running.life.speed * 100) / 100 : null };
       break;
     }
-    if (reacted) { row('civilian reaction', 'pass', { ...reacted, witness: reactedPeer }); await shoot(visitor, 'resident-visitor'); await shoot(witness, 'resident-witness'); }
+    if (reacted) { row('civilian reaction', 'pass', { ...reacted, witness: reactedPeer, drawnStartle }); await shoot(visitor, 'resident-visitor'); await shoot(witness, 'resident-witness'); }
     else row('civilian reaction', 'fail', { candidates: candidates.map(local => ({ id: local.id, distance: Math.round(distance(local.position, state3.self.position)) })) });
     check(reacted, `A resident startles and runs from the wanted visitor: ${reacted?.name}`);
+    check(drawnStartle, `The witness's screen draws the resident startled: ${JSON.stringify(drawnStartle)}`);
     // Emergency off while the officer is on the visitor: back within sight of the lane post first
     // (the resident may stand beyond the 35 m an officer sees from it).
     await goTo(visitor, RX + 6, RN + 2); await face(witness, RX + 6, RN + 2);
@@ -472,10 +477,10 @@ async page => {
     // server proof only. Flight belongs to one owner's appearance (canFlyAs), so a development
     // identity cannot change altitude inside a windup: a raw move with altitude is refused as
     // flight_not_allowed. Writer takeover needs a second world process and a switching proxy in
-    // front of the page; the Redis suites prove it on real transports.
-    row('perception-led search after sight loss (browser)', 'not-run', { reason: 'no sight-blocking geometry inside either authored danger zone; server/tests/police.test.js and police-capture.test.js cover it' });
-    row('altitude transition during windup (browser)', 'not-run', { reason: 'flight is refused for development identities (canFlyAs); server/tests/crime-phases.test.js and crime.test.js cover altitude at contact' });
-    row('writer takeover mid-pursuit (browser)', 'not-run', { reason: 'needs two world processes behind a switching proxy; server/tests/redis-room.test.js (an upgraded coordinator takes over an older lease) and world-policy-transport.test.js (an older writer is fenced) cover it on real Redis transports' });
+    // front of the page: crime-takeover-runner.js stages it, with search and the airborne windup.
+    row('perception-led search after sight loss (browser)', 'not-run', { reason: 'not staged in this journey: preview/e2e/crime-takeover.js shows search after sight loss by distance; escape by concealment needs a sight-blocking prop in the lane' });
+    row('altitude transition during windup (browser)', 'not-run', { reason: 'flight is refused for development identities (canFlyAs); preview/e2e/crime-takeover.js shows it with the owner fixture identity' });
+    row('writer takeover mid-pursuit (browser)', 'not-run', { reason: 'needs two world processes behind a switching proxy: preview/e2e/crime-takeover-runner.js (pnpm run test:crime:takeover) runs it' });
 
     await emergencyOff();
     const [v, w] = await Promise.all([visitor, witness].map(tab => tab.evaluate(() => { clearInterval(window.__encPoll); const n = window.__enc; n.done = true; return { fps: Math.round(n.frames / ((performance.timeOrigin + performance.now() - n.framesFrom) / 1000)), frames: n.frames }; })));

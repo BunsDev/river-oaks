@@ -190,7 +190,10 @@ async (page, { takeover }) => {
     const replay = await visitor.evaluate(async () => { const r = await window.__riverMultiplayerCommand({ type: 'evade', evadeId: 'takeover-once-0001' }).catch(error => ({ ok: false, error: String(error) })); return { ok: r?.ok, error: r?.error ?? null, remainingMs: r?.evade?.remainingMs ?? null, replayed: Boolean(r?.replayed) }; });
     const once = { pre, replay, carriedOver: pre.ok && replay.replayed, lostWithTheWriter: pre.ok && !replay.replayed };
     console.log(`crime-takeover once: ${JSON.stringify(once)}`);
-    check(pre.ok && (replay.replayed || replay.ok || replay.error === 'evade_cooldown'), `One evade id sent to the dying writer and again to its replacement opens at most one window: ${once.carriedOver ? 'carried over in the checkpoint and replayed' : 'not committed before the kill, opened once on the new writer'} (${JSON.stringify(once)})`);
+    // redis-room commits before it replies, so an acknowledged evade is in the checkpoint: the new writer
+    // must replay it, never open a second window for the same id (review of #732: the old check also
+    // accepted a fresh ok, the very double-window outcome it exists to catch).
+    check(pre.ok && replay.ok && replay.replayed === true, `One evade id acknowledged by the dying writer is replayed by its replacement, not opened again: ${JSON.stringify(once)}`);
     const peerAfter = await witness.evaluate(id => { const m = window.__riverMultiplayer(); return { seesVisitor: m.remotes.some(item => item.id === id && item.ready), seesOfficer: m.remotes.some(item => item.id.startsWith('police:') && item.ready), selfId: m.selfId }; }, visitorId);
     check(peerAfter.selfId === witnessBefore.selfId && peerAfter.seesVisitor, `The witness came back as the same identity and still draws the visitor (${JSON.stringify(peerAfter)})`);
     await shoot(visitor, 'after-takeover-visitor'); await shoot(witness, 'after-takeover-witness');

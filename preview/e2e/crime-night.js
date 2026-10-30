@@ -133,6 +133,8 @@ async page => {
       if (outcome === 'evaded') evaded = { attempt, remainingMs: counter.remainingMs };
     }
     await visitor.evaluate(attempts => { window.__night.counterOutcome = attempts; }, attempts);
+    // The header promises an evade of the rival's counter with U (review of #732: it was only recorded).
+    check(evaded, `The visitor evades the rival's counter with U within three attempts: ${JSON.stringify(attempts)}`);
 
     // Emergency off, then the stamps.
     await rules.getByRole('button', { name: 'Emergency off: stop all danger now' }).click();

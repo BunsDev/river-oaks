@@ -392,3 +392,46 @@ paragraph) and committed signed as `aeb95f85`, d1 credited in the message. Logs 
     demonstrated render regression. Frame p95 is 16.7 ms at one player and 33 ms (30 fps) from 16
     players on both heads on this host, against at most 16.8 ms on 2026-10-24 on a quiet host; the
     absolute render budget stays unproven until a quiet-host run.
+
+## Two independent reviews and their fixes (2026-10-30, claude:river-oaks-3d)
+
+Two reviewers read #708, #710, #732 and #731 without each other's notes. Every finding is
+addressed below; journey edits are committed only after their browser run.
+
+- **#708** (`ad03f2f6`, on `92df9b6d` merge of main and `567d8514` render-audit filter): a
+  resident waiting for help it asked for keeps waiting and takes no reaction slot; a swing from
+  the air alarms nobody; contacts and pending police alarms are cleared on load, reset and
+  in-process restore; the reaction state raises the checkpoint to v18 with writers 23/24 (main
+  restored a #708 checkpoint and kept a stale flee). `crime-residents` now checks the drawn
+  startle gesture on the visitor's screen (browser run pending).
+- **#710** (`6b2e422f` merge, `d65d9f56`): each flinch carries its hit's id, so a second hit
+  inside the stagger plays its own recoil (regression failed first: progress 0.5 vs 0.086).
+  `crime-shared` holds a walk button before surrendering, so the release check has something to
+  release (browser run pending).
+- **#732** (`5ba6effa` merge, `b706f1f6`): the workload's sustained mode adds one unmeasured
+  settling step after each restore; both arms are re-run with it before the matrix cites them.
+  Journeys: `crime-takeover` requires the replacement writer to replay the acknowledged evade id;
+  `crime-encounter` no longer passes a late grab telegraph as a check, checks the witness's drawn
+  startle, and names `crime-takeover` for the takeover, search and altitude rows; `crime-night`
+  asserts the evade its header promises (browser runs pending).
+- **#731** (`c1f3f4b0`): rollback line corrected (never roll back below the room's checkpoint),
+  v18 playbook note, lost spaces before numbers restored, counts and the dirty baseline noted.
+- Escape by concealment moves to its own branch (`feat/lane-cover-concealment-599-20261030`,
+  `07c72bce`): a service yard inside the south service lane that blocks police sight.
+
+### Browser runs of the review fixes (2026-10-30)
+
+Local, development shared runner, fixture identities; logs, reports and `SHA256SUMS` in
+`.runtime/evidence-640/journeys-20261030/` (not committed).
+
+| Journey | Head (journey edits applied, uncommitted) | Result |
+|---|---|---|
+| `crime-night` | `32273062` | passed, 10 checks, 20.5 s |
+| `crime-encounter` attempt 1 | `32273062` | **failed** on the unchanged witness check: visitor on screen 354 of 443 frames (79.9 %, needs > 80 %), load 14–18 |
+| `crime-encounter` attempt 2 | `5ff91278` (main `5dcac231` merged) | passed, 38 checks, 190 s, load 8.5 at start |
+| `crime-takeover` | `5ff91278` | passed, 27 checks, 129 s; the replacement writer replayed the acknowledged evade |
+
+`crime-residents` (#708) and `crime-shared` (#710) ran in the hosted `preview shared
+(development)` shard on `5a9f5ff4` and `26a04c38` and passed. One `crime-encounter` failure is
+cited, not hidden: it sits 0.1 point under the bar on a loaded host and is outside the edited
+checks; the rerun passed.
