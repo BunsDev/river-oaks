@@ -89,6 +89,27 @@ test('a rival telegraphs its counter, flinches when hit, goes down and faces the
   assert.equal(waiting.kind, null); assert.ok(sameVector(waiting.facing, [1, 0]));
 });
 
+test('a second hit inside the stagger plays its own recoil instead of the tail of the first', () => {
+  // Review of #710: every flinch shared one blend key, so the blend kept the larger progress and a
+  // hit 400 ms after another only finished the first recoil. Each flinch carries its hit's id.
+  const staggered = rival({ health: 50, staggered: true, engagedId: 'a', yaw: ENGAGED_YAW });
+  const first = strike({ id: 'strike:1', phase: 'recovery', remainingMs: 250, outcome: 'hit', effect: HIT });
+  const one = combatStateFor('rival:westcreek', { crime: crimeOf([first], [staggered]) });
+  const two = combatStateFor('rival:westcreek', { crime: crimeOf([{ ...first, remainingMs: 150 }, strike({ id: 'strike:2', actorId: 'b', phase: 'contact', remainingMs: 60, outcome: 'hit', effect: HIT })], [staggered]) });
+  assert.equal(one.kind, 'flinch'); assert.equal(one.id, 'strike:1');
+  assert.equal(two.kind, 'flinch'); assert.equal(two.id, 'strike:2', 'the newest hit owns the recoil');
+  assert.ok(two.progress < .2, `the second recoil starts near its beginning: ${two.progress}`);
+  const blend = createCombatBlend();
+  blend.step(one, 1000);
+  const layers = blend.step(two, 1100);
+  assert.equal(layers.at(-1).id, 'strike:2', 'a new layer crossfades in');
+  assert.ok(near(layers.at(-1).progress, two.progress), `and plays from its own start: ${layers.at(-1).progress}`);
+  // A player's recoils from two counters work the same way.
+  const landed = id => counter({ id, phase: 'recovery', remainingMs: id === 'counter:2' ? 500 : 250, outcome: 'hit', effect: { damage: 10, health: 80, down: false } });
+  const player = combatStateFor('a', { crime: crimeOf([landed('counter:2')], [rival({ engagedId: 'a', yaw: ENGAGED_YAW })]), players: [{ id: 'a', position: [-2906.8, -1320, 17.8], health: 80 }] });
+  assert.equal(player.kind, 'flinch'); assert.equal(player.id, 'counter:2');
+});
+
 test('a struck rival whose strike has finished but who is still staggered keeps a facing-only state, not a legacy pose', () => {
   // The town's strike ends at 900 ms and the stagger at 1000 ms (contact + 700): in between the
   // action is gone from the snapshot. The state stays an object (kind null, facing kept) so the
