@@ -19,7 +19,7 @@ const src = name => readFileSync(new URL(`../src/${name}`, import.meta.url), 'ut
 const CASCADE = [
   'access-theme.css', 'style.css', 'playground-theme.css', 'district-theme.css', 'immersive.css', 'sidebar.css',
   'visual-finish.css', 'retro-finish.css', 'rail-navigation.css', 'hud-glass.css', 'game-hud.css',
-  'settings-dialog.css', 'play-rail-menu.css',
+  'settings-dialog.css', 'play-rail-menu.css', 'pink-jet-age-hud.css',
 ];
 
 const stripComments = css => css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -80,13 +80,16 @@ function rootDeclarations(file, css, conditions = [], out = []) {
 
 const DECLARATIONS = CASCADE.flatMap(name => rootDeclarations(name, stripComments(src(name))));
 
-// The variants a player can be in. `software` is hardware-acceleration.js's data-rendering.
-const SCENARIOS = ['light', 'dark'].flatMap(theme => [
+// The variants a player can be in. `software` is hardware-acceleration.js's data-rendering;
+// `finish` is main.js's data-finish (render-quality.js readFinishPreference). Classic
+// scenarios keep their unprefixed names; the Pink Jet-Age skin repeats each one.
+const FINISHES = [undefined, 'pink-jet-age'];
+const SCENARIOS = FINISHES.flatMap(finish => ['light', 'dark'].flatMap(theme => [
   { name: `${theme}`, theme },
   { name: `${theme}+reduced-transparency`, theme, reducedTransparency: true },
   { name: `${theme}+no-backdrop-filter`, theme, noBackdropFilter: true },
   { name: `${theme}+software`, theme, software: true },
-]);
+].map(scenario => finish ? { ...scenario, finish, name: `${finish}:${scenario.name}` } : scenario)));
 
 const RECOGNISED = [
   [/^@media\s*\(\s*prefers-reduced-transparency\s*:\s*reduce\s*\)$/, s => !!s.reducedTransparency],
@@ -97,7 +100,7 @@ const conditionHolds = (condition, scenario) => {
   return known ? known[1](scenario) : false;
 };
 const attrHolds = ({ name, value }, scenario) => {
-  const actual = { 'data-theme': scenario.theme, 'data-rendering': scenario.software ? 'software' : undefined }[name];
+  const actual = { 'data-theme': scenario.theme, 'data-rendering': scenario.software ? 'software' : undefined, 'data-finish': scenario.finish }[name];
   return actual !== undefined && (value === undefined || value === actual);
 };
 
@@ -179,23 +182,23 @@ const byTheme = (light, dark) => ({ light, dark });
 // foreground and the stack it sits on; `min` is the WCAG threshold for that use.
 const PAIRS = [
   // Smoked-glass sheets: Map/People/Settings launchers, Explore and People spaces, Play dock, walking console, chat dock.
-  { id: 'sheet-ink', uses: 'sheet text', fg: 'var(--ink)', surfaces: [glass()], min: TEXT, where: 'hud-glass.css:98; game-hud.css:43,115' },
-  { id: 'sheet-hud-muted', uses: 'place line, More, chat subtitle', fg: 'var(--hud-muted)', surfaces: [glass()], min: TEXT, where: 'hud-glass.css:218-219; game-hud.css:121' },
+  { id: 'sheet-ink', uses: 'sheet text', fg: 'var(--ink)', surfaces: [glass()], min: TEXT, where: 'hud-glass.css:104; game-hud.css:43,115' },
+  { id: 'sheet-hud-muted', uses: 'place line, More, chat subtitle', fg: 'var(--hud-muted)', surfaces: [glass()], min: TEXT, where: 'hud-glass.css:224-225; game-hud.css:121' },
   { id: 'sheet-muted', uses: 'chat status and empty chat (legacy --muted)', fg: 'var(--muted)', surfaces: [glass()], min: TEXT, where: 'game-hud.css:131-132' },
-  { id: 'tile-ink', uses: 'secondary actions, dock cards, chat messages', fg: 'var(--ink)', surfaces: [glass('var(--hud-tile)')], min: TEXT, where: 'hud-glass.css:208; play-rail-menu.css:41; game-hud.css:126' },
-  { id: 'tile-hud-muted', uses: 'pane body, bird cams, disabled chat send', fg: 'var(--hud-muted)', surfaces: [glass('var(--hud-tile)')], min: TEXT, where: 'play-rail-menu.css:43,67; hud-glass.css:281' },
-  { id: 'tile-hover-ink', uses: 'hovered secondary actions and tabs', fg: 'var(--ink)', surfaces: [glass('var(--hud-tile-hover)')], min: TEXT, where: 'hud-glass.css:211; play-rail-menu.css:11' },
-  { id: 'raised-ink', uses: 'pane buttons, people pills, chat input, held pad', fg: 'var(--ink)', surfaces: [glass('var(--hud-raised)'), glass('var(--hud-tile)', 'var(--hud-raised)')], min: TEXT, where: 'play-rail-menu.css:44; hud-glass.css:214,275; game-hud.css:129' },
-  { id: 'keycap-ink', uses: 'keycaps', fg: 'var(--ink)', surfaces: [glass('var(--hud-key-bg)'), glass('var(--hud-tile)', 'var(--hud-key-bg)')], min: TEXT, where: 'hud-glass.css:126-128,145-147' },
+  { id: 'tile-ink', uses: 'secondary actions, dock cards, chat messages', fg: 'var(--ink)', surfaces: [glass('var(--hud-tile)')], min: TEXT, where: 'hud-glass.css:214; play-rail-menu.css:41; game-hud.css:126' },
+  { id: 'tile-hud-muted', uses: 'pane body, bird cams, disabled chat send', fg: 'var(--hud-muted)', surfaces: [glass('var(--hud-tile)')], min: TEXT, where: 'play-rail-menu.css:43,67; hud-glass.css:287' },
+  { id: 'tile-hover-ink', uses: 'hovered secondary actions and tabs', fg: 'var(--ink)', surfaces: [glass('var(--hud-tile-hover)')], min: TEXT, where: 'hud-glass.css:217; play-rail-menu.css:11' },
+  { id: 'raised-ink', uses: 'pane buttons, people pills, chat input, held pad', fg: 'var(--ink)', surfaces: [glass('var(--hud-raised)'), glass('var(--hud-tile)', 'var(--hud-raised)')], min: TEXT, where: 'play-rail-menu.css:44; hud-glass.css:220,281; game-hud.css:129' },
+  { id: 'keycap-ink', uses: 'keycaps', fg: 'var(--ink)', surfaces: [glass('var(--hud-key-bg)'), glass('var(--hud-tile)', 'var(--hud-key-bg)')], min: TEXT, where: 'hud-glass.css:132-134,151-153' },
   { id: 'context-chip', uses: 'activity context chip', fg: 'var(--ink)', surfaces: [glass('color-mix(in srgb, var(--hud-action) 18%, transparent)')], min: TEXT, where: 'play-rail-menu.css:35' },
   { id: 'chat-accent', uses: 'chat unread count and author (accent)', fg: 'var(--accent)', surfaces: [glass(), glass('var(--hud-tile)')], min: TEXT, where: 'game-hud.css:123,127' },
   { id: 'chat-jump', uses: 'chat jump (accent on accent-soft)', fg: 'var(--accent)', surfaces: [glass('var(--accent-soft)')], min: TEXT, where: 'game-hud.css:133' },
-  { id: 'action-fill', uses: 'primary prompt, selected Play tab, office enter, chat send', fg: 'var(--hud-on-action)', surfaces: [['var(--hud-action)']], min: TEXT, where: 'hud-glass.css:202; play-rail-menu.css:12,56; game-hud.css:130' },
-  { id: 'action-keycap', uses: 'primary prompt keycap', fg: 'var(--hud-on-action)', surfaces: [['var(--hud-action)', 'rgb(255 255 255 / .16)']], min: TEXT, where: 'hud-glass.css:217' },
-  { id: 'community-primary', uses: 'community primary (on-accent)', fg: 'var(--on-accent)', surfaces: [['var(--accent)']], min: TEXT, where: 'playground-theme.css:22; hud-glass.css:174' },
+  { id: 'action-fill', uses: 'primary prompt, selected Play tab, office enter, chat send', fg: 'var(--hud-on-action)', surfaces: [['var(--hud-action)']], min: TEXT, where: 'hud-glass.css:208; play-rail-menu.css:12,56; game-hud.css:130' },
+  { id: 'action-keycap', uses: 'primary prompt keycap', fg: 'var(--hud-on-action)', surfaces: [['var(--hud-action)', 'var(--hud-action-key)']], min: TEXT, where: 'hud-glass.css:223' },
+  { id: 'community-primary', uses: 'community primary (on-accent)', fg: 'var(--on-accent)', surfaces: [['var(--accent)']], min: TEXT, where: 'playground-theme.css:22; hud-glass.css:180' },
   { id: 'places-error', uses: 'places status error (raw red)', fg: byTheme('#b3261e', '#ffb4ab'), surfaces: [glass()], min: TEXT, where: 'places-guide.css:42,138-139' },
-  { id: 'movement-legend', uses: 'movement legend (raw #c9c5d2)', fg: '#c9c5d2', surfaces: [glass()], min: TEXT, where: 'visual-finish.css:238 on hud-glass.css:92' },
-  { id: 'sheet-focus', uses: 'focus ring on sheets', fg: 'var(--hud-focus)', surfaces: [glass(), glass('var(--hud-tile)')], min: UI, where: 'hud-glass.css:109-113; game-hud.css:141-142' },
+  { id: 'movement-legend', uses: 'movement legend', fg: 'var(--hud-muted)', surfaces: [glass()], min: TEXT, where: 'visual-finish.css:239 on hud-glass.css:98' },
+  { id: 'sheet-focus', uses: 'focus ring on sheets', fg: 'var(--hud-focus)', surfaces: [glass(), glass('var(--hud-tile)')], min: UI, where: 'hud-glass.css:115-119; game-hud.css:141-142' },
   // Map button and town gate: liquid glass (a gradient between the two tints).
   { id: 'map-button-ink', uses: 'Map button label (liquid glass)', fg: 'var(--liquid-ink)', surfaces: liquid(), min: TEXT, where: 'game-hud.css:53-55' },
   { id: 'map-button-keycap', uses: 'Map button keycap (--muted on liquid glass)', fg: 'var(--muted)', surfaces: liquid(), min: TEXT, where: 'game-hud.css:49,53-55' },
@@ -222,22 +225,20 @@ const PAIRS = [
   { id: 'signin-on-pink', uses: 'text on pink buttons', fg: 'var(--gate-on-pink)', surfaces: [['var(--gate-pink)'], ['var(--gate-pink-hover)']], min: TEXT, where: 'access-gate.css:87,91,110-111,115', gate: true },
 ];
 
-// Pairs that fail today. Colours are not changed in this slice: each stays visible as a
-// todo until the R8 treatment fixes it, the ledger records the measurement, and the test
-// below fails once a gap passes so its entry is removed and the pair becomes enforced.
-// OPAQUE fails on an opaque surface, whatever is behind the HUD. BOUND fails only when the
-// translucent sheet is composited over pure black or white (its backdrop filter ignored),
-// and passes with reduced transparency; measure it in the browser before calling it a defect.
-const OPAQUE = 'below threshold on an opaque surface';
+// Pairs that fail today. Each stays visible as a todo until a treatment fixes it, the
+// ledger records the measurement, and the test below fails once a gap passes so its entry
+// is removed and the pair becomes enforced. The four opaque-surface gaps (action-fill dark,
+// action-keycap, movement-legend light, gate-town-primary light) were fixed and are
+// enforced: docs/superpowers/plans/2026-10-29-pink-jet-age-r8-hud-skin.md.
+// BOUND fails only when the translucent sheet is composited over pure black or white (its
+// backdrop filter ignored), and passes with reduced transparency; measure it in the
+// browser before calling it a defect.
 const BOUND = 'below threshold only under the black/white backdrop bound';
-const LIGHT = SCENARIOS.filter(s => s.theme === 'light').map(s => s.name);
-const DARK = SCENARIOS.filter(s => s.theme === 'dark').map(s => s.name);
-const gaps = (id, reason, scenarios) => scenarios.map(scenario => [`${id}|${scenario}`, reason]);
+// A bound gap is a glass-tint property, and the Pink Jet-Age skin leaves the tints alone,
+// so each one is recorded for both finishes.
+const gaps = (id, reason, scenarios) => FINISHES.flatMap(finish =>
+  scenarios.map(scenario => [`${id}|${finish ? `${finish}:` : ''}${scenario}`, reason]));
 const KNOWN_GAPS = new Map([
-  ...gaps('action-fill', OPAQUE, DARK),
-  ...gaps('action-keycap', OPAQUE, [...LIGHT, ...DARK]),
-  ...gaps('movement-legend', OPAQUE, LIGHT),
-  ...gaps('gate-town-primary', OPAQUE, LIGHT),
   ...gaps('sheet-muted', BOUND, ['light']),
   ...gaps('tile-hud-muted', BOUND, ['light', 'dark']),
   ...gaps('raised-ink', BOUND, ['dark']),
@@ -283,6 +284,30 @@ test('the resolved tokens match the theme layers they come from', () => {
   assert.equal(software.get('--hud-filter').value, 'none');
 });
 
+test('an unknown finish resolves exactly the classic tokens', () => {
+  for (const scenario of SCENARIOS.filter(s => !s.finish)) {
+    const classic = tokensFor(scenario), unknown = tokensFor({ ...scenario, finish: 'neon' });
+    assert.deepEqual([...unknown].map(([prop, d]) => [prop, d.value]), [...classic].map(([prop, d]) => [prop, d.value]), scenario.name);
+  }
+});
+
+test('the Pink Jet-Age skin changes accents only, and only for its own finish and a named theme', () => {
+  const skin = DECLARATIONS.filter(d => d.file === 'pink-jet-age-hud.css');
+  assert.ok(skin.length > 0);
+  for (const d of skin) {
+    assert.deepEqual(d.attrs.map(a => a.name).sort(), ['data-finish', 'data-theme'], `${d.prop}`);
+    assert.equal(d.attrs.find(a => a.name === 'data-finish').value, 'pink-jet-age');
+    assert.equal(d.conditions.length, 0);
+    // Glass tints carry the bound gaps; the skin must not move them.
+    assert.ok(!/^--(hud-glass|hud-tile|hud-raised|hud-key-bg|liquid-tint|liquid-well|panel|ink|muted|hud-muted|liquid-ink|liquid-muted)/.test(d.prop), d.prop);
+  }
+  for (const theme of ['light', 'dark']) {
+    const pink = tokensFor({ theme, finish: 'pink-jet-age' });
+    assert.equal(pink.get('--hud-action').file, 'pink-jet-age-hud.css', theme);
+  }
+  assert.equal(tokensFor({ theme: 'dark', finish: 'pink-jet-age' }).get('--hud-action').value.toLowerCase(), PINK_JET_AGE.pink.toLowerCase());
+});
+
 const MEASURED = SCENARIOS.flatMap(scenario => {
   const color = colorIn(tokensFor(scenario))(scenario.theme);
   // The sign-in gate has no theme rules; measure it once.
@@ -311,8 +336,8 @@ test('measured ratios (report)', t => {
   for (const { scenario, pair, value } of MEASURED) t.diagnostic(`${scenario}\t${pair.id}\t${value.toFixed(2)}\t${pair.min}`);
 });
 
-// Report only: what the Pink Jet-Age roles (#739) would give for the same uses. Nothing
-// here is shipped; the numbers inform the future skin and are printed as diagnostics.
+// Report only: what the raw Pink Jet-Age roles (#739) give for the same uses. The shipped
+// skin (pink-jet-age-hud.css) is measured above with every other pair; these are diagnostics.
 test('Pink Jet-Age role projections (report only)', t => {
   const P = PINK_JET_AGE, c = parseColor;
   const glassOf = (hex, alpha) => [...c(hex).slice(0, 3), alpha];

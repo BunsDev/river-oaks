@@ -35,8 +35,14 @@ async page => {
   await page.locator('.asset-progress').waitFor({ state: 'hidden' });
   const buttons = page.locator('.walking-pad button');
   check(await buttons.count() === 6, 'All six movement controls are present');
-  for (const theme of ['light', 'dark']) {
-    await page.evaluate(theme => { document.documentElement.dataset.theme = theme; }, theme);
+  // The opt-in Pink Jet-Age HUD skin (pink-jet-age-hud.css, #746) is token-only, so the
+  // finish switches live; classic is measured first under its own unprefixed labels.
+  for (const finish of ['classic', 'pink-jet-age']) for (const shade of ['light', 'dark']) {
+    const theme = finish === 'classic' ? shade : `${finish}-${shade}`;
+    await page.evaluate(([shade, finish]) => {
+      document.documentElement.dataset.theme = shade;
+      document.documentElement.dataset.finish = finish;
+    }, [shade, finish]);
     // Expose the actual notice surface with fixture text. This checks its CSS,
     // not the interaction or announcement path that produced the message.
     const notice = page.locator('#walking-notice');
