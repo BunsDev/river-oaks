@@ -10,7 +10,7 @@ const json = (res, status, value) => {
 };
 export function chauffeurChoices(packet) {
   if (!packet || packet.schema_version !== 1 || !Number.isSafeInteger(packet.tick) || packet.tick < 0
-    || !Number.isSafeInteger(packet.generation) || packet.generation < 0 || !['rolls', 'motorcycle'].includes(packet.vehicle)
+    || !Number.isSafeInteger(packet.generation) || packet.generation < 0 || !['rolls', 'motorcycle', 'hover'].includes(packet.vehicle)
     || !number(packet.speed, 0, 20) || !number(packet.remaining_m, 0, 100000) || !number(packet.turn_radians, -3.142, 3.142)
     || typeof packet.road_clear !== 'boolean' || (packet.rear_clear !== undefined && typeof packet.rear_clear !== 'boolean')
     || (packet.recovery !== undefined && typeof packet.recovery !== 'boolean') || !Array.isArray(packet.candidates)

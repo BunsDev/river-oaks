@@ -62,3 +62,23 @@ test('the actual district has safe road parking near Jevica’s starting point',
   assert.ok(Math.hypot(placement.position[0]-x,placement.position[2]+north)<25);
   assert.ok(placement.terrainError<.035);
 });
+
+test('the Ribbonwing can be called from anywhere outdoors, on foot or aloft, and sets down only on clear, level open ground',()=>{
+ const world=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url))),environment=createWalkingEnvironment(world);
+ const xs=[],zs=[];for(const road of world.roads)for(const [e,n] of road.points){xs.push(e);zs.push(-n);}
+ const points=[];for(let x=Math.min(...xs);x<=Math.max(...xs);x+=24)for(let z=Math.min(...zs);z<=Math.max(...zs);z+=24)if(environment.isFree(x,z)&&!environment.roomAt(x,z))points.push([x,environment.groundAt(x,z),z]);
+ assert.ok(points.length>40,`${points.length} outdoor points`);
+ let road=0;
+ for(const position of points) {
+  if(findCarriageParking(world,{position,flying:false,altitude:0},[],1,false,'rolls'))road++;
+  for(const pose of [{position,flying:false,altitude:0},{position:[position[0],position[1]+8,position[2]],flying:true,altitude:8}]) {
+   const spot=findCarriageParking(world,pose,[],1,false,'hover');
+   assert.ok(spot,`the Ribbonwing finds a spot from ${position.map(v=>v.toFixed(0))}${pose.flying?' aloft':''}`);
+   assert.ok(Math.hypot(spot.position[0]-position[0],spot.position[2]-position[2])<=40);
+   assert.ok(carriageFootprint(spot).every(([x,z])=>environment.isFree(x,z)&&!environment.roomAt(x,z)),'clear, outdoor ground under the whole craft');
+   assert.ok(Math.abs(spot.pitch)<=.08&&Math.abs(spot.roll)<=.08,'level');
+  }
+ }
+ assert.ok(road<points.length,'(road vehicles still keep to lanes, so some points have no car spot)');
+ assert.equal(findCarriageParking(world,{position:points[0],flying:false,altitude:0,roomId:'shop'},[],1,false,'hover'),null,'not from indoors');
+});

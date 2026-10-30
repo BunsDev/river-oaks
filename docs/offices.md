@@ -12,7 +12,7 @@ Jevica can invite residents currently in town and revoke access from **Play →
 Jevica’s office** or **Office access** upstairs. Revocation returns an occupant to
 the lobby immediately. Legacy accepted-request grants do not become invitations.
 
-The arrival sequence starts from your current street view, opens the lobby doors, and follows your selected avatar into the elevator. The same cabin rides to level 6 and opens into the furnished office. **Skip arrival** bypasses the sequence; reduced motion skips it automatically. Inside:
+The arrival sequence starts from your current street view, opens the lobby doors, and follows your selected avatar into the phase tube: a chrome-ribbed glass drum on a tangerine plinth whose curved leaves slide round to close behind you. A ring of warm light then sweeps up the tube and back; your avatar dissolves beneath it, is absent for a beat at the top while the floor display counts to 6, and condenses again under the ring as it falls. The front leaves open into the furnished office. **Skip arrival** bypasses the sequence; reduced motion skips it automatically. Inside:
 
 - **WASD** walks; drag or **← / →** turns the view.
 - On-screen movement controls support touch and keyboard activation.
