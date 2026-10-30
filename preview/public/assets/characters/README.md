@@ -33,9 +33,16 @@ before the rig and accessories are fitted. Gentle waves modify only the hero's
 hair mesh and retain its skin weights. The six resident assets retain their neutral geometry and textures; all seven
 models now include the eyelid animation data described below.
 
-`preview/src/jevica-costume.js` adds strand-color shading, woven rose silk,
-gold floral neckline and hem embroidery, one flowing skirt, an open gold crown,
-earrings and a glowing star wand. This is a higher-detail real-time character, not a scanned
+`preview/src/jevica-costume.js` and `preview/src/jevica-suit.js` add, over the
+shipped rig, the October 29, 2026 reference look: an iridescent pink satin
+blazer and trousers cut from her own skin as skinned offset shells, a peplum,
+a mandarin-collar blouse (the fitted bodice re-dressed) with a flower brooch,
+rose-gold heels on the shoes, lily clusters, flower-drop earrings, ombré hair
+shading and a star wand shown only while casting. The reference
+(`references/jevica-pink-suit-20261029.png`) was supplied by Val on 2026-10-29
+as generated image file `hf_20261029_182708…`; it is not a photograph, is used as
+art direction only and is redistributed here as a reference. The rig, its
+receipt and its CC0 sources are unchanged. This is a higher-detail real-time character, not a scanned
 actor or a claim of film-quality photorealism. The supplied Glinda and premiere
 photos informed costume design; those photos are not redistributed.
 
