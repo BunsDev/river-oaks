@@ -245,6 +245,17 @@ edge, piped rose-gold. The notched outline now reads in front and three-quarter 
 - Core verify passed again: agent 294/294; preview 4773 pass, 1 skipped; server 1110 pass,
   285 skipped; desktop 127 pass, 5 skipped.
 
+**Follow-up: raised gilt.** The piping, vine and leaves stand 0.7 mm proud of the satin,
+scaled by how much gilt each vertex carries. At three-quarter view the piped rims catch a
+highlight.
+- The test measures each gilt point's height above the midpoint of its row neighbours,
+  along the lapel's outward direction. Outward is taken from her body, because the mesh
+  normals face inward.
+- It passes 46 of 46 with the raise and 0 of 46 without. Two earlier versions of the
+  measure were wrong (a slope-polluted neighbour comparison, then an inverted normal), and
+  their debug output is in the session.
+- Likeness is unchanged: IoU 0.598, mean ΔE 17.2. Core verify passed with the same counts.
+
 **Follow-up: leaves.**
 - Five leaves branch off each vine on alternating sides: pointed ellipses 11 mm by 4 mm,
   leaning 40° up and out. The vine widened to 2.4 mm half-width, and the grid went to
@@ -258,7 +269,7 @@ edge, piped rose-gold. The notched outline now reads in front and three-quarter 
   285 skipped; desktop 127 pass, 5 skipped.
 
 **Gaps.**
-- The filigree is a vine with simple leaves, painted onto the lapel. The reference's
-  is raised, with curling tendrils.
+- The filigree has no curling tendrils, and its relief is only 0.7 mm (a vertex offset, no
+  bevel or separate mesh).
 - The lapel is a rolled ribbon pinned to the chest, not a separate collar piece.
 - No human review.

@@ -278,8 +278,8 @@ test('the lapels lie on the blazer front, not behind it', async () => {
   } finally { costume.dispose(); rig.dispose(); }
 });
 
-test('a rose-gold vine winds unbroken up each lapel, between the piped edges, with leaves', async () => {
-  const { rig, costume } = await dressed();
+test('a rose-gold vine winds unbroken up each lapel, between the piped edges, with raised leaves', async () => {
+  const { object, rig, costume, body } = await dressed();
   try {
     for (const lapel of costume.suit.lapels) {
       const piping = lapel.geometry.attributes.piping, columns = 22, rows = piping.count / columns;
@@ -299,6 +299,23 @@ test('a rose-gold vine winds unbroken up each lapel, between the piped edges, wi
         if (runs >= 2) branched++;
       }
       assert.ok(branched >= 4, `${lapel.name}: ${branched} rows cross a leaf beside the stem`);
+      // The gilt work stands proud of the satin: each gilt point sits above the midpoint of its
+      // neighbours across the row by about the raise times how much more gilt it carries.
+      const pos = lapel.geometry.attributes.position, normals = lapel.geometry.attributes.normal, outward = new THREE.Vector3(), a = new THREE.Vector3(), b = new THREE.Vector3(), here = new THREE.Vector3();
+      for (let i = 0; i < normals.count; i++) outward.add(a.fromBufferAttribute(normals, i));
+      outward.normalize();
+      // Face it away from her body (the winding decides which way the normals point).
+      object.updateMatrixWorld(true);
+      const front = outward.clone().transformDirection(lapel.matrixWorld).transformDirection(body.matrixWorld.clone().invert());
+      if (front.z < 0) outward.negate();
+      let raised = 0, compared = 0;
+      for (let r = 1; r < rows - 1; r++) for (let c = 3; c < columns - 3; c++) {
+        const i = r * columns + c, excess = piping.getX(i) - (piping.getX(i - 1) + piping.getX(i + 1)) / 2;
+        if (excess < .4) continue; compared++;
+        const bump = here.fromBufferAttribute(pos, i).sub(a.fromBufferAttribute(pos, i - 1).add(b.fromBufferAttribute(pos, i + 1)).multiplyScalar(.5)).dot(outward);
+        if (bump > .0004 * excess) raised++;
+      }
+      assert.ok(compared > 20 && raised > compared * .9, `${lapel.name}: ${raised} of ${compared} gilt points stand proud of the satin beside them`);
     }
   } finally { costume.dispose(); rig.dispose(); }
 });

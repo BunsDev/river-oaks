@@ -315,8 +315,10 @@ export function createJevicaSuit(avatar, { surface, owned, attach, mesh }) {
             const leaf = 1 - Math.hypot(along / .0055, side2 / (.002 * (1 - Math.min(1, Math.abs(along) / .0055) ** 2) + 1e-4));
             if (across > a - .0005 && across < b + .0005) vine = Math.max(vine, Math.min(1, leaf * 3));
           }
-          positions.push(...toRoot(new THREE.Vector3(xEdge + side * across, y, zFront + BLAZER.torso + .008 - across * .15 + roll)).sub(chestOrigin).toArray());
-          edge.push(k < 2 || k > cuts.length - 3 ? 1 : vine);
+          // The rose-gold work is raised 0.7 mm proud of the satin, so it catches light in relief.
+          const gild = k < 2 || k > cuts.length - 3 ? 1 : vine;
+          positions.push(...toRoot(new THREE.Vector3(xEdge + side * across, y, zFront + BLAZER.torso + .008 - across * .15 + roll + .0007 * gild)).sub(chestOrigin).toArray());
+          edge.push(gild);
         }
         if (s < steps) for (let k = 0; k < columns - 1; k++) { const a = s * columns + k, b = a + columns; indices.push(a, a + 1, b, a + 1, b + 1, b); }
       }
