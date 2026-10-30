@@ -13,7 +13,7 @@ import { grantWish, undoWish, stepWishes, wishFor, refreshWishTrouble } from '..
 import { storefrontSpot } from '../preview/src/arrival.js';
 import { placesOf } from '../preview/src/places.js';
 import { APPEARANCE_COOLDOWN_MS, MOVEMENTS, canFlyAs, canUseAppearance, isJevicaOwner, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
-import { VEHICLES, vehicleKind } from '../preview/src/vehicle-config.js';
+import { VEHICLES, vehicleKind, vehicleShared } from '../preview/src/vehicle-config.js';
 import { buildKind, buildGeometry, buildYaw, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, BUILD_REASONS, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.js';
 import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
@@ -718,7 +718,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     // not a dismount: ignore it briefly instead of releasing the slot.
     if (!message.vehicle && player.cycling && time-(player.cycledAt??0)<CYCLE_GRACE_MS) return {ok:true,player:publicPlayer(player)};
     if (message.vehicle==='bicycle' && !player.cycling) return correction('bike_required');
-    if (message.vehicle && message.vehicle!=='bicycle' && !isJevicaOwner(player.id)) return correction('exclusive_vehicle');
+    // A shared kind (the motorcycle) is open to every account; the rest of the garage is the owner's.
+    if (message.vehicle && message.vehicle!=='bicycle' && !vehicleShared(message.vehicle) && !isJevicaOwner(player.id)) return correction('exclusive_vehicle');
     if (message.vehicle && altitude>0.1) return correction('invalid_pose');
     if (altitude>0 && (!canFlyAs(player.id,player.appearance) || assignedUpper)) return correction('flight_not_allowed');
     const ground = movementEnvironment.groundAt(position[0],-position[1]);
@@ -1416,7 +1417,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           || interiorLevels.get(player.levelId)?.plan.buildingId===player.buildingId)
         && (player.rideMeters===undefined || nonnegative(player.rideMeters) && player.rideMeters<=1e6)
         && (player.cycling==null || typeof player.cycling==='string' && rackSlots.has(player.cycling) && player.vehicle==='bicycle')
-        && (player.vehicle==null || (player.vehicle==='bicycle' ? player.altitude<=0.1 : isJevicaOwner(player.id) && vehicleKind(player.vehicle) && player.altitude<=0.1))
+        && (player.vehicle==null || (player.vehicle==='bicycle' ? player.altitude<=0.1 : vehicleKind(player.vehicle) && (vehicleShared(player.vehicle) || isJevicaOwner(player.id)) && player.altitude<=0.1))
         && nonnegative(player.altitude) && player.altitude<=environment.flightCeiling && Number.isFinite(player.poseAt)
         && (player.gesture===undefined && player.gestureUntil===undefined
           || (player.gesture===null || SHOWN_GESTURES.includes(player.gesture)) && nonnegative(player.gestureUntil))
