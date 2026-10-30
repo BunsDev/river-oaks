@@ -90,3 +90,29 @@
 .cs-height,.cs-build{grid-template-columns:6.2em minmax(0,1fr) 3.6em!important}
 @media(min-width:1100px){.cs-controls>.cs-create{grid-column:1/-1}.cs-create{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px;margin:0}.cs-category[data-category=face]{grid-column:1/-1}.cs-face{grid-template-columns:repeat(auto-fill,minmax(15rem,1fr))}}
 @media(max-width:700px){.cs-face{grid-template-columns:1fr}}
+
+/* Dark mode follows the app's resolved theme (theme.js: System follows the OS).
+   Surfaces, text and controls keep the light theme's contrast relationships;
+   the live preview's backdrop changes with it (character-studio-theme.js). */
+:root[data-theme=dark] .character-studio{--cs-ink:#e3ebe5;--cs-paper:#17211e;--cs-line:#34453f;--cs-soft:#1f2b28;--cs-muted:#a6b9b0;--cs-raised:#22302c;--cs-selected:#2c3f39;--cs-strong:#5e9d8c;color-scheme:dark;border-color:#ffffff1a;box-shadow:0 32px 100px #000a}
+:root[data-theme=dark] .character-studio::backdrop{background:#050b0dcc}
+:root[data-theme=dark] .cs-stage,:root[data-theme=dark] .cs-view-tools{background:#1b2724}
+:root[data-theme=dark] .cs-eyebrow,:root[data-theme=dark] .cs-caption,:root[data-theme=dark] .cs-controls fieldset p,:root[data-theme=dark] .cs-segments small,:root[data-theme=dark] .cs-help,:root[data-theme=dark] .cs-status,:root[data-theme=dark] .cs-footer p,:root[data-theme=dark] .cs-portrait p,:root[data-theme=dark] .cs-slider output,:root[data-theme=dark] .cs-summary [data-cs-summary-title],:root[data-theme=dark] .cs-controls .cs-summary p{color:var(--cs-muted)}
+:root[data-theme=dark] .cs-caption [data-comparing]{background:#17211ee8;color:var(--cs-ink)}
+:root[data-theme=dark] .cs-summary,:root[data-theme=dark] .cs-segments,:root[data-theme=dark] .cs-edit-tools button,:root[data-theme=dark] .cs-favorites>button,:root[data-theme=dark] .cs-portrait button,:root[data-theme=dark] .cs-portrait a,:root[data-theme=dark] .cs-tools button{background:var(--cs-raised);color:var(--cs-ink)}
+:root[data-theme=dark] .cs-roster label:has(input:checked){background:var(--cs-selected);border-color:var(--cs-strong)}
+:root[data-theme=dark] .cs-segments label:has(input:checked){background:var(--cs-selected);box-shadow:0 1px 4px #0008}
+:root[data-theme=dark] .cs-controls .cs-summary p:first-child,:root[data-theme=dark] .cs-controls .cs-summary .cs-summary-options,:root[data-theme=dark] .cs-controls .cs-summary .cs-summary-edit{color:var(--cs-ink)}
+:root[data-theme=dark] .cs-step-mark,:root[data-theme=dark] .cs-rotation button[aria-pressed=true],:root[data-theme=dark] .cs-edit-tools button[aria-pressed=true],:root[data-theme=dark] .cs-tools [data-lock][aria-pressed=true],:root[data-theme=dark] .cs-footer button[data-keep],:root[data-theme=dark] .cs-save-actions [data-wear]{background:#3f8070;border-color:#3f8070;color:#fff}
+:root[data-theme=dark] .cs-save-actions [data-keep]{background:transparent;border-color:transparent;color:var(--cs-ink)}
+:root[data-theme=dark] .cs-rotation button,:root[data-theme=dark] .cs-header button,:root[data-theme=dark] .cs-footer button{border-color:var(--cs-line)}
+:root[data-theme=dark] .cs-swatches .cs-swatch{box-shadow:0 0 0 1px #6f857c}:root[data-theme=dark] .cs-swatches .cs-swatch:has(input:checked){box-shadow:0 0 0 2px #cfe3da}
+:root[data-theme=dark] .cs-swatch:has(input:checked)::after{background:#17211edd;color:#e3ebe5}
+:root[data-theme=dark] .character-studio button:focus-visible,:root[data-theme=dark] .character-studio select:focus-visible,:root[data-theme=dark] .character-studio input:focus-visible,:root[data-theme=dark] .cs-roster label:has(input:focus-visible),:root[data-theme=dark] .cs-segments label:has(input:focus-visible),:root[data-theme=dark] .cs-swatch:has(input:focus-visible),:root[data-theme=dark] .cs-portrait a:focus-visible{outline-color:#7cc7c2}
+:root[data-theme=dark] dialog.character-studio select{border-color:#4b5f58;background-color:#1f2b28;color:var(--cs-ink);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='m1 1 5 5 5-5' fill='none' stroke='%23e3ebe5' stroke-width='1.5'/%3E%3C/svg%3E")}
+:root[data-theme=dark] .cs-rotation input[type=range]::-webkit-slider-runnable-track,:root[data-theme=dark] .cs-slider input[type=range]::-webkit-slider-runnable-track{background:#4f645c}
+:root[data-theme=dark] .cs-rotation input[type=range]::-moz-range-track,:root[data-theme=dark] .cs-slider input[type=range]::-moz-range-track{background:#4f645c}
+:root[data-theme=dark] .cs-rotation input[type=range]::-webkit-slider-thumb,:root[data-theme=dark] .cs-slider input[type=range]::-webkit-slider-thumb{background:#6fb3a1}
+:root[data-theme=dark] .cs-rotation input[type=range]::-moz-range-thumb,:root[data-theme=dark] .cs-slider input[type=range]::-moz-range-thumb{background:#6fb3a1}
+:root[data-theme=dark] .cs-rotation input{accent-color:#6fb3a1}
+:root[data-theme=dark] .character-studio[data-account-phase=conflict] [data-account-status],:root[data-theme=dark] .character-studio[data-account-phase=error] [data-account-status]{color:#f0a88a}
