@@ -3,7 +3,8 @@ async page => {
   const check = (condition, message) => { if (!condition) throw new Error(message); };
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('console', message => { if (message.type() === 'error') errors.push(`${message.text()} ${message.location().url}`); });
+  for (const provider of ['jev', 'elevenlabs']) await page.route(`**/v1/settings/${provider}`, route => route.fulfill({ json: { source: 'none', configured: false } }));
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto('http://127.0.0.1:5173/');
   await page.locator('#loading').waitFor({ state: 'hidden' });
@@ -19,11 +20,20 @@ async page => {
     for (const option of select.options) { select.value = option.value; select.dispatchEvent(new Event('change')); out.push([option.textContent, document.querySelector('#store-inside').textContent]); }
     return out;
   });
-  check(summaries.length === 30 && summaries.every(([, text]) => /walk-in floor/.test(text) && /associate/.test(text)), 'Each destination must describe its walk-in interior');
+  const mappedNames = await page.evaluate(async () => (await fetch('/data/district.json').then(response => response.json())).stores.map(store => store.name));
+  check(mappedNames.every(name => summaries.some(([label, text]) => label === name && /walk-in floor/.test(text) && /associate|resident/.test(text))), `Each mapped destination must describe its walk-in interior: ${JSON.stringify(summaries)}`);
   await page.locator('#destination').selectOption({ label: 'Cartier' });
   await page.locator('#visit-destination').click(); await page.waitForTimeout(1500);
   await page.screenshot({ path: 'output/playwright/store-interiors-cartier-street.png' });
-  await page.locator('#enter-destination').click(); await page.waitForTimeout(1500);
+  // Each journey has a fresh fixture, so every store entered here is a first visit. Its modal
+  // intro halts walking and holds focus for up to 6 s; skip it as a visitor would.
+  const enterDestination = async () => {
+    const claim = page.waitForResponse(response => response.url().includes('/api/profile/claim-intro'));
+    await page.locator('#enter-destination').click();
+    if ((await (await claim).json()).firstVisit) { await page.locator('.store-intro button').click(); await page.locator('.store-intro').waitFor({ state: 'hidden' }); }
+    await page.waitForTimeout(1500);
+  };
+  await enterDestination();
   check(await page.locator('#walking-hud').getAttribute('data-inside'), 'Step inside must place the visitor in a room');
   check((await page.locator('#walking-place').textContent()).startsWith('Inside Cartier'), 'The HUD must name the room');
   await page.screenshot({ path: 'output/playwright/store-interiors-cartier.png' });
@@ -32,14 +42,17 @@ async page => {
   await page.keyboard.down('KeyW'); await page.waitForTimeout(3000); await page.keyboard.up('KeyW'); await page.waitForTimeout(300);
   const inside = await page.locator('#walking-hud').evaluate(hud => ({ inside: hud.dataset.inside, distance: Number(hud.dataset.distance) }));
   check(inside.inside && inside.distance > 0.5 && inside.distance < 6, `Walking inside must be bounded by the room: ${JSON.stringify(inside)}`);
+  // Walk back to the doorway: F is intentionally unavailable deeper in the room.
+  await page.keyboard.down('KeyS');
+  try { await page.waitForFunction(() => { const button = document.querySelector('#walking-enter'); return button && !button.hidden && button.textContent.includes('Step outside'); }, null, { timeout: 10000 }); } finally { await page.keyboard.up('KeyS'); }
   // F steps back onto the pavement and F again re-enters.
-  await page.keyboard.press('KeyF'); await page.waitForTimeout(700);
+  await page.keyboard.press('KeyF'); await page.waitForTimeout(1100);
   check(!(await page.locator('#walking-hud').getAttribute('data-inside')), 'F must step outside');
-  await page.keyboard.press('KeyF'); await page.waitForTimeout(700);
+  await page.keyboard.press('KeyF'); await page.waitForTimeout(1100);
   check(await page.locator('#walking-hud').getAttribute('data-inside'), 'F at the door must step back inside');
   const rooms = {};
   for (const label of ['Dior', 'Le Colonial', 'Bella Rinova', 'Laura Rathe Fine Art']) {
-    await page.locator('#destination').selectOption({ label }); await page.locator('#enter-destination').click(); await page.waitForTimeout(1500);
+    await page.locator('#destination').selectOption({ label }); await enterDestination();
     await page.screenshot({ path: `output/playwright/store-interiors-${label.split(' ')[0].toLowerCase()}.png` });
     rooms[label] = await page.locator('#walking-place').textContent();
   }
