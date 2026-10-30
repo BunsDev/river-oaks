@@ -106,9 +106,9 @@ async function costumedJevica(id, realism) {
   const costume = createPlayerCostume(avatar, 'jevica');
   const material = pattern => [...avatar.rig.materials].find(([original]) => pattern.test(original.name))[1];
   const skin = material(/^young_/), hair = material(/^long01$/), brows = material(/^jevica_brows$/);
-  // Her rose-gold hair and soft-brow shaders, and the costume's alpha and skin values.
+  // Her ombré hair (espresso to rose, 2026-10-29) and soft-brow shaders, and the costume's alpha and skin values.
   const shaders = () => {
-    assert.equal(hair.customProgramCacheKey(), 'jevica-rose-gold-hair-v2');
+    assert.equal(hair.customProgramCacheKey(), 'jevica-ombre-hair-v1');
     assert.equal(brows.customProgramCacheKey(), 'jevica-soft-brows-v1');
   };
   const costumed = () => {
