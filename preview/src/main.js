@@ -101,6 +101,7 @@ import { createGuideEntry } from './salon-guide.js';
 import { createMultiplayer } from './multiplayer-client.js';
 import { createRemotePlayers } from './remote-players.js';
 import { createRibbonwingSeat } from './ribbonwing-seat.js';
+import { createRibbonwingSounds } from './ribbonwing-sounds.js';
 import { VEHICLES } from './vehicle-config.js';
 import { createSharedBuildLayer } from './shared-build-layer.js';
 import { createSeatAndWater } from './seat-and-water.js';
@@ -203,7 +204,8 @@ let worldRegionSha256 = null;
 let worldDistrictRevision;
 let landmarkAccountId = null;
 let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
-let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater, ribbonwingSeat;
+let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater, ribbonwingSeat, ribbonwingSounds;
+const craftWorld = new THREE.Vector3();
 let plazaSalon = null, cityBikeRacks = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
@@ -1137,6 +1139,14 @@ function render(now) {
   renderAudit?.phase('interactions');
   remotePlayers?.update(now, camera);
   ribbonwingSeat?.update();
+  // Ribbonwing sounds (#777): this page's craft and the remote ones, heard from the camera.
+  if (playerAvatar) {
+    ribbonwingSounds ??= createRibbonwingSounds();
+    const own = playerAvatar.carriage, crafts = [];
+    if (own.kind === 'hover' && own.placement && own.object.visible && own.mechanisms) crafts.push({ id: 'self', object: own.object, mechanisms: own.mechanisms, maneuvering: Boolean(own.maneuver) });
+    for (const craft of remotePlayers?.ribbonwings() ?? []) if (craft.mechanisms) crafts.push(craft);
+    ribbonwingSounds.update(camera.position.toArray(), crafts.map(({ id, object, mechanisms, maneuvering }) => ({ id, position: object.getWorldPosition(craftWorld).toArray(), fanRate: mechanisms.fanRate, canopy: mechanisms.canopy, gear: mechanisms.gear, maneuvering })));
+  }
   buildLayer?.update(camera.position);
   updateBuilder();
   playerAvatar?.update(now, camera, renderer.getSize(viewportSize).y, Boolean(multiplayer?.connected));
@@ -1566,6 +1576,8 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverMultiplayerCommand = message => multiplayer?.command(message);
   // The Ribbonwing passenger seat as this page draws it (#777): each hover craft's passenger
   // seat, where each remote player is drawn, and this page's own seat state.
+  // Ribbonwing effects (#777): the sound bounds in use and each drawn craft's wingtip ribbons.
+  window.__riverRibbonwingEffects = () => ({ sounds: ribbonwingSounds?.stats() ?? null, trails: playerAvatar?.carriage.trails ?? null });
   window.__riverRibbonwingSeat = () => {
     const seat = new THREE.Vector3(...VEHICLES.hover.passengerSeat), players = multiplayer?.snapshot?.players ?? [], selfId = multiplayer?.identity?.id;
     const craft = id => id === selfId ? (playerAvatar?.carriage.kind === 'hover' && playerAvatar.carriage.riding ? playerAvatar.carriage.object : null) : remotePlayers?.craftOf(id);

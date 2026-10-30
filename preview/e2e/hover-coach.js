@@ -83,19 +83,23 @@ async page => {
   const admitted=(await page.evaluate(()=>window.__riverCarriage())).maneuver;
   checks.push('The town admits the roll and publishes it in the snapshot');
   // Sample the craft's tilt through the roll: its local up against world up.
-  let tilt=0;
+  let tilt=0,ribbons=0,ribbonSamples=0;
   for(let i=0;i<12;i++){
-    const sample=await page.evaluate(()=>{const c=window.__riverCarriage();return {q:c.craftQuaternion,maneuver:c.maneuver};});
+    const sample=await page.evaluate(()=>{const c=window.__riverCarriage();return {q:c.craftQuaternion,maneuver:c.maneuver,trails:window.__riverRibbonwingEffects().trails};});
     if(!sample.maneuver)break;
     const [x,y,z,w]=sample.q;tilt=Math.max(tilt,Math.acos(Math.max(-1,Math.min(1,1-2*(x*x+z*z)))));
+    ribbons=Math.max(ribbons,sample.trails?.draws??0);ribbonSamples=Math.max(ribbonSamples,...(sample.trails?.samples??[0]));
     await page.waitForTimeout(180);
   }
   check(tilt>1.2,`The craft rolls through the maneuver (max tilt ${tilt.toFixed(2)} rad)`);
+  check(ribbons===2&&ribbonSamples<=40,`Two wingtip ribbons stream during the roll, each within its 40-sample ring (${ribbons} drawn, longest ${ribbonSamples})`);
   await step('roll ended',()=>page.waitForFunction(()=>window.__riverCarriage().maneuver===null,{},{timeout:10000}));
   await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return !m.snapshot.players.find(p=>p.id===m.selfId)?.maneuver;},{},{timeout:10000});
   const exit=await page.evaluate(()=>window.__riverCarriage()),townExit=await self();
   const [qx,,qz]=exit.craftQuaternion;
   check(1-2*(qx*qx+qz*qz)>.999,'The roll finishes level');
+  await step('ribbons fade',()=>page.waitForFunction(()=>window.__riverRibbonwingEffects().trails?.draws===0,{},{timeout:5000}));
+  checks.push('The ribbons fade away after the roll');
   check(exit.riding&&await host().getAttribute('data-riding')==='true'&&townExit.vehicle==='hover',`Jevica is still at the controls after the roll${exit.riding&&townExit.vehicle==='hover'?'':` ${JSON.stringify({riding:exit.riding,attr:await host().getAttribute('data-riding'),town:townExit,trace:exit.maneuverTrace,refusals:refusals.slice(-6),status:await page.locator('#player-status').textContent(),notice:await page.locator('#town-notice, .town-notice').first().textContent().catch(()=>null)})}`}`);
   // The path ends 22 m along the admitted heading from its origin (server frame: [east, north]; three z = -north).
   const endEast=admitted.origin[0]+22*Math.cos(admitted.heading),endNorth=admitted.origin[1]+22*Math.sin(admitted.heading);

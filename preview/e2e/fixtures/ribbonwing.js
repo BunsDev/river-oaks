@@ -47,7 +47,7 @@ let camera = new THREE.PerspectiveCamera(30, width / height, .05, 200);
 const setCamera = view => {
   const aspect = width / height;
   if (view.projection === 'orthographic') { const h = view.height / 2;camera = new THREE.OrthographicCamera(-h * aspect, h * aspect, h, -h, .05, 200); }
-  else camera = new THREE.PerspectiveCamera(view.fov, aspect, .02, 200);
+  else camera = new THREE.PerspectiveCamera(view.fov, aspect, .05, 200);
   camera.up.fromArray(view.up ?? [0, 1, 0]);camera.position.fromArray(view.position);camera.lookAt(new THREE.Vector3(...view.target));camera.updateProjectionMatrix();
 };
 const state = { phase: 'parked', altitude: 0, occupied: withAvatars, boarding: false, tuck: 0, turn: 0, speed: 0 };

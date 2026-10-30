@@ -90,7 +90,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   setEnabled(value){enabled=value;if(!enabled){activeManeuver=null;if(mounted){const seat=ride.pose.seat;walking.dismount([seat[0],environment.groundAt(seat[0],seat[2]),seat[2]]);}driver.reset();placement=null;loadedWorld=null;model.object.visible=false;driver.object.visible=false;}},
   get driver(){return driver.object;},get prince(){return driver;},get unicorns(){return [];},get spinners(){return model.spinners;},get placement(){return placement;},get chauffeured(){return chauffeured();},get riding(){return mounted;},get airborne(){return airborne();},land(){return ride.land();},
   // The Ribbonwing's mechanism state (canopy, steps, gear, tuck, fans, nozzles), for the journeys.
-  get mechanisms(){return model.ribbonwing?.rig.value??null;},
+  get mechanisms(){return model.ribbonwing?.rig.value??null;},get trails(){return model.trails??null;},
   get maneuver(){return activeManeuver?{...activeManeuver}:null;},get maneuverTrace(){return maneuverTrace.map(entry=>({...entry}));},
   // The town's word on this player's maneuver (each snapshot): adopt one this page
   // missed (a lost reply, a reload mid-path); when the town ended it early (recovery),

@@ -96,6 +96,8 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
     });},
     // Where each remote player is drawn (debug: a passenger's seat as observers see it).
     holderOf(id){const entry=entries.get(id);return entry?{position:entry.holder.position.toArray(),quaternion:entry.holder.quaternion.toArray(),aboard:Boolean(entry.aboard)}:null;},
+    // Every remote Ribbonwing as drawn here, for its sounds (ribbonwing-sounds.js).
+    ribbonwings(){return [...entries].filter(([,entry])=>entry.road?.spec.kind==='hover'&&entry.holder.visible).map(([id,entry])=>({id,object:entry.road.object,mechanisms:entry.road.ribbonwing?.rig.value??null,maneuvering:Boolean(entry.maneuvering)}));},
     // The Ribbonwing a remote pilot flies, as drawn here (a passenger rides in it, #777).
     craftOf(id){const road=entries.get(id)?.road;return road?.spec.kind==='hover'?road.object:null;},
     sync(players,selfId){

@@ -14,7 +14,7 @@
 /** @typedef {[number,number]} Point2 */
 /** @typedef {[number,number,number]} Point3 */
 
-export const RIBBONWING_VERSION = 'd1-blockout-2';
+export const RIBBONWING_VERSION = 'd2-paint-1';
 
 // Exact palette tokens (checked separately from lit pixels). Lacquer is the
 // TypeSafe pink the issue fixes; the others were sampled from the exterior and

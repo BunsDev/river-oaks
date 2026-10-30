@@ -320,6 +320,98 @@ Limits:
 - During the 30 s grace after a pilot disconnects, the passenger hovers where
   the craft stopped. The craft does not land itself.
 
+## D2 paint pass
+
+Files:
+
+- `preview/src/ribbonwing.js`:
+  - pink insets on both faces of each wing, from behind an ivory leading-edge
+    band to a thin trailing rim, with a fan hole;
+  - the far wing is lacquer;
+  - the body swoosh is widened;
+  - `bendWing` gains a `surface` mode that lays a 4 mm skin 5 mm off the
+    tapered face;
+  - `tessellate` splits cap triangles before bending.
+- `preview/src/ribbonwing-design.js`: version `d2-paint-1`.
+- `preview/e2e/fixtures/ribbonwing.js`: perspective near plane 0.05. At 0.02 the
+  depth precision at 24 m (about 1.7 mm) let the skins z-fight.
+- `docs/design/ribbonwing/d2-paint.json` and `evidence/d2-{comparison,canonical}.png`,
+  plus brief decision 12.
+
+Results:
+
+- The first render, with flat caps, buried the upper paint: top pink fell from
+  0.19 to 0.14.
+- With tessellated caps:
+  - pink rises in every view (top 0.19 → 0.23, front 0.19 → 0.27, underside
+    0.10 → 0.30);
+  - every view stays at or above its D1 floor except the rear, at 0.401 against
+    0.429;
+  - brief decision 12 records why: the true, thinner wing replaces a thickened
+    artifact.
+- Near level: 57 draws and 92k triangles (it was 71k). Medium: 41 draws and
+  32k. Far: unchanged.
+- `node --test preview/tests/ribbonwing.test.js`: 8 passed.
+
+## Increment 4a: effects and export
+
+Effects (`preview/src/ribbonwing-sounds.js`, `ribbonwing-trails.js`):
+
+- **Sounds** are synthesized, with no audio files:
+  - a fan hum per craft that follows its fan rate and distance;
+  - one-shots for the canopy, the gear and a maneuver's start.
+- **Sound bounds:**
+  - at most 2 hums, for the nearest crafts within 45 m;
+  - at most 6 one-shot voices at once;
+  - each one-shot kind no more than once every 0.4 s per craft.
+- **Sound gating:**
+  - no audio context until a click or key;
+  - the page's one game-sounds switch (`throw-sounds.js`) silences everything, and the garage's maneuver row carries its toggle;
+  - a hidden tab is silent;
+  - `dispose()` stops every node, closes the context and removes the gesture listeners.
+- **Wingtip ribbons:** one mint ribbon per wing side, drawn only during a maneuver.
+  - Each is a fixed 40-sample ring in preallocated buffers, with one draw per side.
+  - They fade out over 1.1 s afterwards.
+  - Reduced motion draws none.
+  - They are freed once with the vehicle.
+- **Debug hook:** `window.__riverRibbonwingEffects()`.
+
+Export (`scripts/ribbonwing/export-glb.mjs`, manifest `docs/design/ribbonwing/export-manifest.json`):
+
+- **Contents:** the editable source is exported to a GLB.
+  - It holds the three LOD levels as named nodes, 30 attachments, 6 colliders as named empty nodes with their shapes in extras, 16 materials and 13 mechanism pivots.
+  - GLTFLoader sanitizes node names; match on `userData.name`.
+- **Round trip:** loading the GLB back with three's GLTFLoader gives identical triangle counts (near 92,055, medium 31,829, far 1,872), attachment positions within 1e-5 m, every material and every pivot.
+- **Determinism:** the export is byte-for-byte deterministic. Runtime handles in `userData` were made plain; before that, the file embedded random uuids.
+- **Size and hash:** 10,744,884 bytes, sha256 `3518a80d…41a74b3b`. The binary is not committed; the exporter reproduces it.
+- **Omitted:** the procedural micro-detail DataTexture, because GLTFExporter needs a DOM canvas to encode images. The game still builds the craft from source.
+
+Tests:
+
+- `preview/tests/ribbonwing-effects.test.js` (3 tests), with a counting WebAudio stand-in. Covers the gesture gate, hum bounds, the switch and hidden tab, one-shot crossings, rate limits, the voice cap, ribbon bounds and fade, reduced motion and dispose-once.
+- `preview/tests/ribbonwing-export.test.js` (1 test): round trip, determinism and the size cap.
+- hover-coach adds two ribbons during the roll, at most 40 samples each, which fade afterwards.
+
+Verification on the paint, effects and export tree:
+
+| Check | Result |
+| --- | --- |
+| `pnpm run verify` (core) | passed |
+| agent | 289 passed, 0 failed |
+| preview | 4361 passed, 0 failed, 1 skipped |
+| server | 1092 passed, 0 failed, 283 skipped |
+| desktop | 127 passed, 0 failed, 5 skipped |
+| python | 171 passed |
+| build, demo, secrets | passed |
+| `pnpm run test:experience hover-coach` | passed, 33 checks in 23.5 s |
+
+An earlier preview run was voided: it read `ribbonwing.js` mid-edit (4 failures, `createRibbonwingTrails is not defined`). It was stopped and rerun on the frozen tree.
+
+Not covered:
+
+- No one has listened to the sounds; the tests prove bounds, not how they sound.
+- No device audio test.
+
 ## Rollback
 
 Revert the increment's merge commit. The `hover` kind, its server rules and the

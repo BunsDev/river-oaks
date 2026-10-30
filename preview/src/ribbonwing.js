@@ -8,6 +8,7 @@ import {
 } from './ribbonwing-design.js';
 import { createRibbonwingRig, ribbonwingTargets, mechanismAngles } from './ribbonwing-rig.js';
 import { createVehicleGlints } from './vehicle-glints.js';
+import { createRibbonwingTrails } from './ribbonwing-trails.js';
 
 // The Ribbonwing (#777): authored geometry built from the metric contract in
 // ribbonwing-design.js, in the road-vehicle frame (front -X, up +Y, left +Z).
@@ -82,7 +83,7 @@ export function createRibbonwing({ rubberName = 'Road tyre rubber' } = {}) {
   }, M.ivory, parent);
   // Pink lacquer flank swoosh (both sides), 4 mm proud of the ivory.
   const swoosh = (parent, nu, nv, side) => surface(nu, nv, (u, v) => {
-    const x = cosine(-2.86, 1.62, u), s = (x + 2.86) / 4.48, centre = .34 - .62 * s, half = .02 + .34 * Math.sin(Math.min(1, s * 1.7) * Math.PI / 2) * (1 - .45 * Math.max(0, s - .6) / .4);
+    const x = cosine(-2.86, 1.62, u), s = (x + 2.86) / 4.48, centre = .34 - .62 * s, half = .02 + .5 * Math.sin(Math.min(1, s * 1.7) * Math.PI / 2) * (1 - .45 * Math.max(0, s - .6) / .4);
     const angle = centre + half * (v * 2 - 1), section = bodyAt(x), [y, z] = sectionPoint({ ...section, halfWidth: section.halfWidth + .004, bottom: section.bottom - .004, top: section.top + .004 }, side > 0 ? angle : Math.PI - angle);return [x, y, z];
   }, M.lacquer, parent);
   const canopySample = (u, v) => {
@@ -111,20 +112,47 @@ export function createRibbonwing({ rubberName = 'Road tyre rubber' } = {}) {
   };
   // Extrude a planform shape (x, z) and bend it onto the chord surface. The
   // remap swaps two axes, so the winding is flipped back to face outward.
-  const bendWing = (geometry, thickness, lift = 0) => {
+  // `surface` 1 / -1 lays a thin skin (paint) 5 mm off the wing's tapered
+  // upper / lower face instead of bending it through the wing's thickness.
+  const bendWing = (geometry, thickness, surface = 0) => {
     const p = geometry.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i), z = p.getY(i), d = p.getZ(i), taper = 1 - .75 * Math.max(0, Math.min(1, (z - WING.planformRoot) / (2.92 - WING.planformRoot)));
-      p.setXYZ(i, x, wingHeightAt(z) + (d - thickness / 2 + lift) * taper, z);
+      const y = surface ? surface * (WING.thickness / 2 * taper + .005) + (surface > 0 ? d : d - thickness) : (d - thickness / 2) * taper;
+      p.setXYZ(i, x, wingHeightAt(z) + y, z);
     }
     return flip(geometry);
   };
+  // Split every triangle whose planform (x, z) edge is longer than `maxEdge`, so a
+  // bent surface follows the true curve between its vertices. Extruded caps are a
+  // few long triangles; flat between their corners they rose above or sank below
+  // the 5 mm paint skin. The bend moves only y, so planform coverage stays exact.
+  const tessellate = (geometry, maxEdge) => {
+    const flat = geometry.index ? geometry.toNonIndexed() : geometry;
+    const names = Object.keys(flat.attributes), sources = names.map(name => flat.attributes[name]), at = names.indexOf('position'), out = names.map(() => []);
+    const vertex = i => sources.map(a => Array.from({ length: a.itemSize }, (_, k) => a.array[i * a.itemSize + k]));
+    const middle = (a, b) => a.map((values, j) => values.map((v, k) => (v + b[j][k]) / 2));
+    const span = (a, b) => Math.hypot(a[at][0] - b[at][0], a[at][1] - b[at][1]);
+    const emit = (a, b, c, depth) => {
+      const ab = span(a, b), bc = span(b, c), ca = span(c, a), longest = Math.max(ab, bc, ca);
+      if (longest <= maxEdge || depth > 14) { for (const v of [a, b, c]) v.forEach((values, j) => out[j].push(...values));return; }
+      if (longest === ab) { const m = middle(a, b);emit(a, m, c, depth + 1);emit(m, b, c, depth + 1); }
+      else if (longest === bc) { const m = middle(b, c);emit(a, b, m, depth + 1);emit(a, m, c, depth + 1); }
+      else { const m = middle(c, a);emit(a, b, m, depth + 1);emit(m, b, c, depth + 1); }
+    };
+    for (let i = 0; i < flat.attributes.position.count; i += 3) emit(vertex(i), vertex(i + 1), vertex(i + 2), 0);
+    const result = new THREE.BufferGeometry();names.forEach((name, j) => result.setAttribute(name, new THREE.Float32BufferAttribute(out[j], sources[j].itemSize)));
+    if (flat !== geometry) flat.dispose();geometry.dispose();
+    return result;
+  };
   // Mirror a left-wing geometry to the right (z -> -z, winding flipped).
   const mirror = geometry => flip(geometry.clone().scale(1, 1, -1));
+  // The references lacquer the wing from just behind an ivory leading-edge
+  // band to a thin ivory trailing rim, top and bottom, out to the tip.
   const pinkInset = () => {
-    const outline = [];
-    for (let i = 0; i <= 24; i++) { const z = .92 + (2.86 - .92) * i / 24, [le] = chordAt(z);outline.push(new THREE.Vector2(le + .035 + .02 * (1 - i / 24), z)); }
-    for (let i = 24; i >= 0; i--) { const z = .92 + (2.86 - .92) * i / 24, [le, te] = chordAt(z);outline.push(new THREE.Vector2(le + (te - le) * (.6 + .12 * i / 24), z)); }
+    const outline = [], from = .7, to = 2.86;
+    for (let i = 0; i <= 32; i++) { const z = from + (to - from) * i / 32, [le, te] = chordAt(z);outline.push(new THREE.Vector2(Math.min(le + .14 - .08 * i / 32, (le + te) / 2), z)); }
+    for (let i = 32; i >= 0; i--) { const z = from + (to - from) * i / 32, [le, te] = chordAt(z);outline.push(new THREE.Vector2(Math.max(te - .06, (le + te) / 2 + .01), z)); }
     const shape = new THREE.Shape(outline), [fx, fz] = FANS.centres[0], hole = new THREE.Path();hole.absarc(fx, fz, FANS.shroud + .03, 0, TAU, true);shape.holes.push(hole);
     return shape;
   };
@@ -138,10 +166,14 @@ export function createRibbonwing({ rubberName = 'Road tyre rubber' } = {}) {
     const local = geometry => { geometry.translate(-px, -py, -pz);return side > 0 ? geometry : (() => { const m = mirror(geometry);geometry.dispose();return m; })(); };
     const curveSegments = detail === 'far' ? 10 : detail === 'medium' ? 18 : 36;
     const wing = new THREE.ExtrudeGeometry(wingShape(0, detail !== 'far'), { depth: WING.thickness, bevelEnabled: false, curveSegments });
-    mesh(local(bendWing(wing, WING.thickness)), M.ivory, pivot);
+    // At distance the whole wing reads as its lacquer.
+    const capEdge = detail === 'near' ? .2 : detail === 'medium' ? .4 : Infinity;
+    mesh(local(bendWing(tessellate(wing, capEdge), WING.thickness)), detail === 'far' ? M.lacquer : M.ivory, pivot);
     if (detail !== 'far') {
-      const inset = new THREE.ExtrudeGeometry(pinkInset(), { depth: .004, bevelEnabled: false, curveSegments });
-      mesh(local(bendWing(inset, .004, WING.thickness / 2 + .001)), M.lacquer, pivot);
+      for (const surface of [1, -1]) {
+        const inset = new THREE.ExtrudeGeometry(pinkInset(), { depth: .004, bevelEnabled: false, curveSegments });
+        mesh(local(bendWing(tessellate(inset, capEdge), .004, surface)), M.lacquer, pivot);
+      }
       // Blue-chrome trailing edge from the tip back to the root.
       const edge = tePoints.map(([x, z]) => [x - px, wingHeightAt(z) - py, side * (z - pz)]);
       tube(edge, detail === 'near' ? .022 : .018, M.edge, pivot, 6);
@@ -402,17 +434,20 @@ export function createRibbonwingVehicle(spec) {
     return samples;
   });
   const glints = createVehicleGlints(spec);object.add(glints.object);
-  let lastTime = null, disposed = false;
+  // Wingtip ribbons stream while a maneuver flies (ribbonwing-trails.js).
+  const trails = createRibbonwingTrails(craft);
+  let lastTime = null, disposed = false, maneuvering = false;
   return {
     object, wheels: craft.wheels, wheelTreads, spec, spinners: [], pedals: {}, ribbonwing: craft,
     get steering() { return craft.steering; },
-    setFlightState(state) { craft.setFlightState(state); },
+    setFlightState(state) { craft.setFlightState(state);maneuvering = state.phase === 'maneuver'; },
+    get trails() { return trails.stats(); },
     animate(now, speed = 0, reducedMotion = false) {
       const dt = lastTime === null ? 0 : Math.max(0, Math.min(.08, (now - lastTime) / 1000));lastTime = now;
-      craft.setFlightState({ speed });craft.animate(dt, reducedMotion);glints.update(now, reducedMotion);
+      craft.setFlightState({ speed });craft.animate(dt, reducedMotion);glints.update(now, reducedMotion);trails.update(dt, maneuvering, reducedMotion);
     },
     setSaddle() {}, setCrank() {},
     updateSteering(angle) { craft.setSteering(angle); },
-    dispose() { if (disposed) return;disposed = true;glints.dispose();craft.dispose(); },
+    dispose() { if (disposed) return;disposed = true;trails.dispose();glints.dispose();craft.dispose(); },
   };
 }

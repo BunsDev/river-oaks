@@ -1,7 +1,7 @@
 # Ribbonwing design brief (#777)
 
-Status: **D1 metric blockout** (`RIBBONWING_VERSION = 'd1-blockout-2'`). This is
-a procedural, game-ready blockout matched to the two final references. It is
+Status: **D2 paint pass** (`RIBBONWING_VERSION = 'd2-paint-1'`) on the D1 metric
+blockout. This is a procedural, game-ready model matched to the two final references. It is
 not finished detail art, not a pixel match and not Val's visual acceptance.
 
 ## Sources
@@ -71,6 +71,20 @@ Frame: metres, front −X, up +Y, left +Z, origin on the ground under the planfo
 11. **Tuck.** The wings sweep 0.8 rad about the root pivot with 0.12 rad droop.
     The half-span drops from 2.92 m to 1.93 m.
 
+12. **Wing surface and the D2 floor.** The wing and its paint skins are
+    tessellated (0.2 m edges near, 0.4 m medium) before bending onto the chord
+    surface. The extruded caps had been a few long flat triangles. They showed
+    the wing as nearly straight plates, not the authored gull curve with
+    upturned tips, and they buried the upper paint. With the true surface:
+    - pink coverage rises in every matched view (`d2-paint.json`);
+    - the rear IoU falls from 0.459 to 0.401, below its D1 floor of 0.429;
+    - the front IoU falls from 0.648 to 0.622, still above its floor.
+
+    In those two views the D1 artifact had thickened the wing. The references
+    draw a thicker wing section that rises steadily from the root, which is
+    detail-art geometry. The D2 values are the floor from here (D2 − 0.03). The
+    near level grows from 71k to 92k triangles, within the 130k budget.
+
 ## D1: camera calibration and tolerances
 
 `camera-manifest.json` freezes the renderer, lights, background and every
@@ -99,8 +113,21 @@ avatar scaling. The fitted skinned bounds are in `d1-baseline.json`.
 
 ## Open for Val's review
 
-- Pink coverage. The references lacquer most of the upper wing and body in
-  #F486A1; the blockout is ivory with pink insets (pink ≈ 0.1–0.2 of the
-  silhouette against 0.25–0.38). This is detail-art work.
+- Pink coverage after the D2 paint pass (`d2-paint.json`):
+
+  | View | Pink | Reference |
+  | --- | --- | --- |
+  | top | 0.23 | 0.38 |
+  | hover | 0.23 | 0.31 |
+  | stunt | 0.22 | 0.32 |
+  | right profile | 0.21 | 0.29 |
+  | left | 0.36 | 0.26 |
+  | rear | 0.38 | 0.26 |
+  | underside | 0.30 | 0.24 |
+
+  The body is still ivory where the references lacquer it, and the lacquer
+  reads lighter than the references.
+- Wing section (decision 12): the references' wing is thicker and rises from
+  the root. That costs rear and front IoU.
 - Size (decision 1), gear-up altitude (8), and the inboard wing root (3).
 - The low-IoU views: boarding (0.38), ¾ (0.45) and rear (0.46).

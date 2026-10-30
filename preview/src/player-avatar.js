@@ -20,6 +20,7 @@ import { APPEARANCE_COOLDOWN_MS, CHARACTERS, appearanceFor, canFlyAs, canUseAppe
 import './player-avatar.css';
 import { isGameplayKey } from './keyboard-input.js';
 import { RIBBONWING_MANEUVERS, RIBBONWING_MANEUVER_KINDS, maneuverMinimumAltitude } from './ribbonwing-maneuvers.js';
+import { soundToggle } from './throw-sounds.js';
 
 export function createPlayerAvatar({ scene, host, walking, userId, getLocals, getWorld, getConversation=()=>null, requestAppearance=()=>Promise.resolve({ok:false}), requestMovement=()=>Promise.resolve({ok:false}), requestVehicleExit=async()=>({ok:true}), requestManeuver=async()=>({ok:false}), requestChauffeur, getPortrait=null, reducedMotion }) {
   const lifetime = new AbortController();
@@ -69,6 +70,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   });
   // Ribbonwing maneuvers (#777): the town admits and flies them; refusals say why.
   const maneuverGroup=panel.querySelector('.ribbonwing-maneuvers');
+  // The page's one game-sounds switch also silences the Ribbonwing's hum and effects.
+  maneuverGroup.append(soundToggle());
   const maneuverRefusal={maneuver_too_low:result=>`Climb higher first: the ${result.label} needs ${Math.ceil(result.minimum??0)} m.`,maneuver_blocked:result=>`No clear sky here for the ${result.label}.`,
     maneuver_ceiling:result=>`Too close to the sky's ceiling for the ${result.label}.`,maneuver_active:()=>'Finish the current maneuver first.',maneuver_requires_ribbonwing:()=>'Pilot the Ribbonwing aloft to fly maneuvers.',stale_maneuver:()=>'That maneuver request was out of date. Try again.'};
   const flyManeuver=async kind=>{
@@ -403,7 +406,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       }
       previous = pose ? now : null;
       flightButton.querySelector('[data-flight-label]').textContent=pose?.flying?(pose.landing?'Cancel landing':'Land'):'Take flight';
-      maneuverGroup.hidden=!(carriage.riding&&carriage.kind==='hover');for(const button of maneuverGroup.querySelectorAll('button'))button.disabled=!carriage.airborne||Boolean(carriage.maneuver);
+      maneuverGroup.hidden=!(carriage.riding&&carriage.kind==='hover');for(const button of maneuverGroup.querySelectorAll('[data-maneuver]'))button.disabled=!carriage.airborne||Boolean(carriage.maneuver);
       panel.querySelector('#player-mode').textContent=pose?.sitting?'Seated':pose?.riding?'Riding':pose?.flying?(pose.landing?'Landing':'In flight'):'On foot';flightButton.setAttribute('aria-pressed',String(Boolean(pose?.flying)));
       panel.querySelector('.player-flight-pad').hidden=!pose?.flying||!canFlyAs(userId,appearance);host.dataset.flightVehicle=pose?.flying?form:'';
       // No flashing or camera shake: character motion respects reduced motion.
