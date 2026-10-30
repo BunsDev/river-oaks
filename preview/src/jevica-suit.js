@@ -496,15 +496,18 @@ export const BANGS = Object.freeze({ halfWidth: .058, above: .05, gap: .006, sid
 export function bangsStrands(size = 128, seed = 7) {
   const pixels = new Uint8Array(size * size * 4);
   let r = seed; const random = () => (r = (Math.imul(r, 1664525) + 1013904223) >>> 0) / 2 ** 32;
-  const tips = Array.from({ length: 48 }, () => .82 + random() * .18);
+  const tips = Array.from({ length: 48 }, () => .82 + random() * .18), roots = Array.from({ length: 48 }, () => random() * .14);
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const u = x / size, v = y / size, strand = Math.floor(u * tips.length), k = (y * size + x) * 4;
     // Each strand has its own tone, lighter along its middle, like the hair cards' strands.
-    const across = Math.abs((u * tips.length) % 1 - .5) * 2, shade = 175 + 50 * ((strand * 37 % 11) / 10) + 30 * (1 - across);
+    // The roots darken toward the hair cap, so the fringe's top shows no light edge.
+    const across = Math.abs((u * tips.length) % 1 - .5) * 2, root = .55 + .45 * Math.min(1, v / .3);
+    const shade = (175 + 50 * ((strand * 37 % 11) / 10) + 30 * (1 - across)) * root;
     pixels[k] = pixels[k + 1] = pixels[k + 2] = Math.min(255, shade);
     // v runs from the roots (0) to the tips (1); each strand ends at its own length, tapered.
     const tip = tips[strand], edge = Math.abs((u * tips.length) % 1 - .5) * 2;
-    pixels[k + 3] = v < tip - .06 * edge ? 255 : 0;
+    // Each strand starts at its own height under the cap, so the top is no straight line.
+    pixels[k + 3] = v >= roots[strand] && v < tip - .06 * edge ? 255 : 0;
   }
   const texture = new THREE.DataTexture(pixels, size, size); texture.needsUpdate = true;
   texture.wrapS = THREE.RepeatWrapping; texture.repeat.set(2, 1);

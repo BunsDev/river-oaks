@@ -193,7 +193,8 @@ as in the reference:
 **Tries.**
 1. Grey-black, blotchy noise, with the top edge fighting the hair cap.
 2. Warm colour, a tucked top and clean strands, but it copied the forehead's bumps.
-3. Final: the blurred depth.
+3. The blurred depth. The likeness lighting still showed a faint light edge at the cap.
+4. Final: each strand starts at its own height under the cap, with darker roots. The full-figure render then showed no edge.
 
 All three are in the session's face captures.
 
@@ -208,5 +209,4 @@ All three are in the session's face captures.
 **Gaps.**
 - It is one sheet, not hair cards. The strands don't move independently or react to wind.
 - The reference's side-swept face-framing locks are not attempted.
-- In the likeness lighting, a faint lighter edge shows where the fringe's top meets the hair cap.
 - No human review.
