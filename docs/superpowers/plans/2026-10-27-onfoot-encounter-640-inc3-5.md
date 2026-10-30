@@ -105,10 +105,41 @@ Logs under the worktree's `.runtime/evidence-640/` (not committed).
   include up to eight resident rigs; one hidden flight vehicle per resident entry.
 - Hosted CI: on the pushed head, recorded on the PR.
 
+## Results (increment 4, 2026-10-27, worktree `../river-oaks-onfoot-640-inc4`)
+
+Logs under the worktree's `.runtime/evidence-640/` (not committed). Branch
+`feat/onfoot-encounter-640-inc4-20261027`, stacked on increment 3.
+
+- `preview/src/combat-motion.js` written to the adopted spec
+  (`preview/tests/combat-motion.test.js`, copied from the untracked presentation worktree):
+  15 pass after the pose and settle fixes (axis probes in `.runtime/evidence-640/probe*.mjs`).
+- Wiring: `crime-ui.js` publishes `combatState` / `combatFocus` / `telegraph`; `player-avatar.js`
+  faces the focus and layers the pose after `avatar.update()`, releasing held inputs once when
+  held; `remote-players.js` plays the state forward from the snapshot's arrival; `main.js`
+  attaches the state to player, rival and officer figures; `multiplayer.css` pulses the evade
+  button on a telegraph; `docs/crime.md` "How a fight looks".
+- `node --test` on combat-motion, crime-ui, remote-players: 50 pass, 0 fail after the reviews.
+- `crime-shared` journey under the browser lock: run 1 passed (`inc4-crime-shared-run1.txt`),
+  run 2 passed after the review fixes (`inc4-crime-shared-run2.txt`, 30.9 s; receipt copied to
+  `inc4-crime-shared-run2-receipt.json`, tracked report restored).
+- `pnpm run verify`: core passed before the reviews (`inc4-verify-core.txt`); core passed again on the reviewed tree (`inc4-verify-core-2.txt`, receipt `.runtime/agent/core.json`, dirty: uncommitted candidate): tooling 289/289; preview 4307 tests, 4306 pass, 1 existing skip; server 1320 tests, 1042 pass, 278 Redis-gated skips (no `REDIS_URL`; this increment touches no server code); desktop 132, 127 pass, 5 skips; then build, Python, demo and secrets.
+- Two independent reviews (module; wiring and journey). Fixed with regressions: travel turn vs
+  combat turn stacking on the local figure; legacy shove stacking on the strike layer; evade
+  double-counting snapshot age; rival stagger pop after the strike ends; zero-duration
+  `combatState` never ending / NaN; dead `arrest` hold; doc wording (hold releases push-to-talk and
+  the look drag; subdued shows hands up). Noted for Val: start the local strike from the reply
+  instead of the next snapshot (increment 5 measures the cost).
+- Hosted CI: recorded on the PR.
+
 ## Gaps and next step
 
 - Lane resident stops (optional re-routing) not added: the wanted-player alarm makes the journey
   deterministic without them.
 - Reduced motion keeps the rest pose for residents; increment 4's layer owns poses.
-- Next: increment 4 (`feat/onfoot-encounter-640-inc4-20261027`, `../river-oaks-onfoot-640-inc4`,
-  stacked on this branch): `preview/src/combat-motion.js` to the adopted spec test.
+- Increment 4 delivered as a draft PR (stacked on #708); see its results above.
+- Next: increment 5 (`feat/onfoot-encounter-640-inc5-20261027`, `../river-oaks-onfoot-640-inc5`,
+  stacked on increment 4): `server/crime-workload.js` (the #599 protocol of 2026-10-24, main vs
+  branch), `preview/tests/combat-timing.test.js` (30/60/120 Hz under the proposed RTT 0/100/200 ms
+  profiles, input-to-pose and contact alignment), the on-demand `crime-night` journey (two browsers
+  in the south service lane at the latest authored hour), `pnpm run verify full` with isolated
+  Redis from a clean detached snapshot.
