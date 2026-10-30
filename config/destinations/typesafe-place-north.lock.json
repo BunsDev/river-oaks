@@ -1,0 +1,16 @@
+{
+  "id": "typesafe-place-north",
+  "kit": "city-kit-1",
+  "seed": 2026,
+  "hash": "a39e4826f84cda24",
+  "geometry": "957c39f17f50971f",
+  "recipeHash": "9ffd89b9da247cdf",
+  "overridesHash": "8eeae18cc87e6336",
+  "stats": {
+    "pieces": 69,
+    "buildings": 6,
+    "solids": 33,
+    "materials": 8,
+    "triangles": 90324
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "typesafe-place-green",
+  "kit": "city-kit-1",
+  "seed": 2026,
+  "hash": "b2048a9ef768ee2c",
+  "geometry": "6cabe31bb88f45dd",
+  "recipeHash": "dfa7cf2c4c51421a",
+  "overridesHash": "43e61412ee3b6304",
+  "stats": {
+    "pieces": 95,
+    "buildings": 9,
+    "solids": 51,
+    "materials": 9,
+    "triangles": 76264
+  }
+}

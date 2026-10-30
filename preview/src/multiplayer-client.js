@@ -10,12 +10,15 @@ import { createGroupsUI } from './groups-ui.js';
 import { createWorkplaceUI } from './workplace-ui.js';
 import { accountName } from './resident-names.js';
 import { travelRefusal } from './travel-message.js';
+import { noticeSessionAccount } from './session-account-notice.js';
 import { watchConnection } from './connection-deadline.js';
 import { CONNECTING, IMPROVED, UPDATING, closeNotice, createStalenessWatch, retryDelay } from './connection-policy.js';
 import { createVoiceChat } from './voice-chat.js';
 import { createVoiceUI } from './voice-ui.js';
 import { sharedVoicePreferences } from './voice-preferences.js';
 import { listenerFromPose } from './voice-spatial.js';
+import { sharedBlockList, createBlockUI } from './player-blocks.js';
+import { observeServerTime, serverNow } from './server-clock.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
 export function createMultiplayer({ getPose, getEnvironment = () => null, getRegionSha256 = () => null, getDistrictRevision = () => undefined, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false, getWalking = () => null, onVoiceChange = () => {} }) {
@@ -69,7 +72,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   // Residents and the local meeting action lead; connected-town tools follow.
   document.querySelector('#community-more')?.before(panel);
   let socket=null,identity=null,csrfToken=null,selfId=null,connected=false,connecting=false,retryTimer=null,attempt=0,sequence=0,stopped=false,latestSnapshot=null,moderator=false,worldId=DEFAULT_WORLD_ID,homeAccess=[];
-  let lastPose=0,lastFocus=0,traveling=false,returnFocus=null;const pending=new Map(),rows=new Map();
+  let lastPose=0,lastFocus=0,traveling=false,returnFocus=null,signingOut=false,authorization=0,townAttempt=0;const pending=new Map(),rows=new Map();
   const setStatus=(message,locked=true)=>{
     const active=document.activeElement,inside=gate.contains(active);
     if(locked&&!inside)returnFocus=active;
@@ -93,17 +96,34 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   });
   const api=async(path,options={})=>{
     lifetime.signal.throwIfAborted();
+    const asked=blocks.session;
     const signal=options.signal?AbortSignal.any([lifetime.signal,options.signal]):lifetime.signal;
     const response=await fetch(path,{...options,signal,credentials:'same-origin',headers:{...options.headers,'X-CSRF-Token':csrfToken??''}});
     const data=await response.json();
     lifetime.signal.throwIfAborted();
     if(!response.ok){
+      if(response.status===401&&asked===blocks.session)detachBlocks();
       const message=data.error==='auth_unavailable'?'Sign-in is not configured yet. Please try again later.':data.error??'Online play is unavailable. Please try again.';
       const error=new Error(message);error.status=response.status;throw error;
     }
     return data;
   };
   const socialRequest=(action,data={})=>api(`/api/social/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const blocks=sharedBlockList();let blockSession=null,blockGeneration=null;
+  const blockUI=createBlockUI({blocks,announce:text=>{notice.textContent=text;}});
+  const detachBlocks=()=>{if(blockGeneration===blocks.session)blocks.attach(null);blockSession=null;blockGeneration=null;notice.textContent='';};
+  const attachBlocks=()=>{
+    if(signingOut||stopped)return;
+    if(blockGeneration===blocks.session&&blockSession?.id===identity?.id&&blockSession?.csrfToken===csrfToken)return;
+    blockSession={id:identity.id,csrfToken};notice.textContent='';displayPlayers([]);
+    blocks.attach((action,data={})=>api(`/api/blocks/${action}?world=${encodeURIComponent(worldId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}));
+    blockGeneration=blocks.session;
+  };
+  const refreshBlocks=()=>{
+    if(signingOut||!blocks.connected||blockGeneration!==blocks.session)return;
+    const asked=blocks.session;
+    void blocks.refresh().catch(error=>{if(!stopped&&asked===blocks.session)notice.textContent=error.message;});
+  };
   const canManageHomes=()=>Boolean(latestSnapshot?.players.find(player=>player.id===selfId)?.canBuild);
   const social=createSocialUI({panel,connected:()=>connected,selfId:()=>selfId,getMeetingPlaces,getOwnerHomes,
     getHomeAccess:()=>homeAccess,canManageHomes,
@@ -141,7 +161,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   const displayPlayers=players=>{
     latestPlayers.clear();for(const player of players)latestPlayers.set(player.id,player);
     summary.textContent=`${players.length} ${players.length===1?'player':'players'} in town`;
-    for(const [id,row]of rows)if(!players.some(player=>player.id===id)){row.remove();rows.delete(id);voiceUI.forgetRow(id);}
+    for(const [id,row]of rows)if(!players.some(player=>player.id===id)){row.remove();rows.delete(id);voiceUI.forgetRow(id);blockUI.forgetRow(id);}
     for(const player of players){
       let row=rows.get(player.id);
       if(row && row.dataset.name!==player.name) {
@@ -160,6 +180,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
           invite.addEventListener('click',()=>social.invite(latestPlayers.get(player.id)??player));row.append(invite);
           const report=element('button','Report');report.type='button';report.dataset.label='Report disruption by {name}';report.setAttribute('aria-label',`Report disruption by ${player.name}`);
           report.addEventListener('click',async()=>{report.disabled=true;try{const result=await command({type:'report',playerId:player.id,reason:'disruption'});notice.textContent=result.message;}catch(error){notice.textContent=error.message;}finally{report.disabled=false;}});row.append(report);
+          blockUI.rosterButton(row,player);
           if(moderator){const ban=element('button','Ban');ban.type='button';ban.addEventListener('click',async()=>{ban.disabled=true;try{await api('/api/moderation/ban',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:player.id,banned:true})});notice.textContent='Account removed from the town.';}catch(error){notice.textContent=error.message;ban.disabled=false;}});row.append(ban);}
           voiceUI.rosterButton(row,player);
         }
@@ -204,12 +225,16 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   const schedule=()=>{if(stopped||retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;connect();},retryDelay(attempt++));};
   // The session and a fresh ticket for one town socket.
   async function townUrl(continues=null){
+    if(signingOut)return null;
+    const asked=authorization,attempt=++townAttempt;
     worldId=worldIdFromSearch(location.search);
     const session=await api('/auth/session');
-    if(stopped)return null;
-    if(!session.authenticated){identity=null;return 'signed-out';}
+    if(stopped||signingOut||asked!==authorization||attempt!==townAttempt)return null;
+    if(!session.authenticated){identity=null;csrfToken=null;detachBlocks();displayPlayers([]);return 'signed-out';}
     identity=session.user;csrfToken=session.csrfToken;
-    const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});if(stopped)return null;moderator=access.moderator;
+    noticeSessionAccount(identity.id);
+    attachBlocks();
+    const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});if(stopped||signingOut||asked!==authorization||attempt!==townAttempt)return null;moderator=access.moderator;
     // Ask for the protocol this world's ticket names, so an older server or world keeps protocol 3.
     const protocol=ticketProtocol(access.protocolVersion);
     if((access.worldId??DEFAULT_WORLD_ID)!==worldId || protocol===null){
@@ -222,15 +247,17 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     return url;
   }
   async function connect(){
-    if(stopped||connecting||connected)return;connecting=true;halted=false;retry.hidden=true;login.hidden=true;
+    if(stopped||signingOut||connecting||connected)return;connecting=true;halted=false;retry.hidden=true;login.hidden=true;
+    const asked=authorization;
     show(updating?UPDATING:CONNECTING);
     try{
       const url=await townUrl();
-      if(!url)return;
+      if(stopped||signingOut||asked!==authorization)return;
+      if(!url){if(asked===authorization)connecting=false;return;}
       if(url==='signed-out'){login.hidden=false;halted=true;show({...CONNECTING,status:'Sign in to play.'});connecting=false;return;}
       openSocket(url);
     }catch(error){
-      if(stopped)return;connecting=false;
+      if(stopped||signingOut||asked!==authorization)return;connecting=false;
       if(error.status===426){updating=false;halted=true;show(IMPROVED);retry.hidden=false;return;}
       // While an update lands the town answers slowly or not at all; keep saying so.
       show(updating&&![403,404].includes(error.status)?UPDATING:{...CONNECTING,status:error.message});
@@ -284,8 +311,8 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     if(Array.isArray(data.players))for(const player of data.players)player.name=accountName(player.id,player.name);
     if(Array.isArray(data.chat))for(const entry of data.chat)entry.authorName=accountName(entry.authorId,entry.authorName);
     if(Array.isArray(data.builds))for(const item of data.builds)item.ownerName=accountName(item.ownerId,item.ownerName);
-    selfId=data.selfId??selfId;latestSnapshot=data;
-    if(!connected){connected=true;connecting=false;attempt=0;updating=false;deadline.stop();onCorrection(data.players.find(player=>player.id===selfId));title.textContent=CONNECTING.title;description.textContent=CONNECTING.description;setStatus('',false);social.refresh(true);groups?.refresh(true);void workplace?.refresh();void refreshHomeAccess();}
+    selfId=data.selfId??selfId;latestSnapshot=data;observeServerTime(data.serverTimeMs);
+    if(!connected){connected=true;connecting=false;attempt=0;updating=false;deadline.stop();onCorrection(data.players.find(player=>player.id===selfId));title.textContent=CONNECTING.title;description.textContent=CONNECTING.description;setStatus('',false);social.refresh(true);groups?.refresh(true);void workplace?.refresh();void refreshHomeAccess();refreshBlocks();}
     const self=data.players.find(player=>player.id===selfId);
     if(self?.interaction?.id&&self.interaction.id!==activeGreeting)onCorrection(self);
     activeGreeting=self?.interaction?.id??null;
@@ -332,6 +359,8 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     if(rotation){const {ws:replacement,queued}=rotation;rotation=null;try{replacement?.close();}catch{ /* never opened */ }for(const item of queued)item.resolve({ok:false,message:'Reconnect before taking an action.'});}
     socket=null;previousSocket=null;connected=false;connecting=false;latestSnapshot=null;worldRules.sync(null);crimeHud.sync();homeAccess=[];onHomeAccess(homeAccess);social.refreshHomeAccess();chatInput.disabled=chatSend.disabled=true;gestureButtons.forEach(button=>button.disabled=true);clearPending();onPlayers([],selfId);
     const notice=closeNotice(code,reason);
+    displayPlayers([]);
+    if(notice.terminal)detachBlocks();
     // Voice leases die with the connection; a non-terminal close rejoins voice with the town.
     voice.onConnectionLost(notice.terminal);
     if(stopped)return;
@@ -362,7 +391,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   };
   window.addEventListener('online',resume,{signal:lifetime.signal});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')resume();},{signal:lifetime.signal});
-  let flightRequest=null,flightTracking=false;
+  let flightRequest=null,flightTracking=false,maneuverUntil=0,maneuverSeq=0;
   function command(message){
     if(stopped||!connected)return Promise.resolve({ok:false,message:'Reconnect before taking an action.'});
     const requestId=String(++sequence);
@@ -391,9 +420,19 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   retry.addEventListener('click',()=>{if(retry.dataset.action==='refresh'){location.reload();return;}clearTimeout(retryTimer);retryTimer=null;connect();});
   const signOut=async()=>{
     logout.disabled=gateLogout.disabled=true;
+    signingOut=true;authorization++;connecting=false;clearTimeout(retryTimer);retryTimer=null;
+    detachBlocks();
     voice.leave('sign-out');
     try{const result=await api('/auth/logout',{method:'POST'});stopped=true;clearTimeout(retryTimer);socket?.close();location.assign(result.url??'/');}
-    catch(error){notice.textContent=error.message;if(!gate.hidden)status.textContent=error.message;logout.disabled=gateLogout.disabled=false;}
+    catch(error){
+      signingOut=false;authorization++;
+      // A failed sign-out may be retried, but only a fresh session can restore its controls.
+      if(!stopped&&error.status!==401)try{
+        const session=await api('/auth/session');
+        if(session.authenticated&&session.user.id===identity?.id){identity=session.user;csrfToken=session.csrfToken;attachBlocks();if(connected)refreshBlocks();else connect();}
+      }catch{ /* Keep the list detached if the session could not be verified. */ }
+      notice.textContent=error.message;if(!gate.hidden)status.textContent=error.message;logout.disabled=gateLogout.disabled=false;
+    }
   };
   logout.addEventListener('click',signOut);gateLogout.addEventListener('click',signOut);
   connect();
@@ -412,6 +451,22 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
       if(!connected)return Promise.reject(new Error('Reconnect before changing landmarks.'));
       return api(`/api/landmarks/${action}?world=${encodeURIComponent(worldId)}${action==='list'?'&allWorlds=1':''}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     },
+    // A Ribbonwing maneuver (#777). The seq only rises, across reloads too (it
+    // starts from the clock); a lost reply is retried once with the same id,
+    // which the town answers without starting the path again.
+    async maneuver(kind){
+      maneuverSeq=Math.max(maneuverSeq+1,Date.now());
+      const request={type:'maneuver',kind,id:`rw-${crypto.randomUUID()}`,seq:maneuverSeq};
+      // No poses while the town decides: one arriving after the maneuver began would be refused.
+      let result;maneuverUntil=Infinity;
+      try{result=await command(request);}
+      catch{try{result=await command(request);}catch(error){maneuverUntil=0;return {ok:false,message:error.message};}}
+      observeServerTime(result?.serverTimeMs);
+      const m=result?.ok?result.player?.maneuver:null;maneuverUntil=m?m.startedAt+m.duration:0;
+      return result;
+    },
+    // The Ribbonwing passenger seat (#777): invite, cancel, board or leave.
+    ribbonwing:body=>command({type:'ribbonwing',...body}),
     async travel(target){
       if(traveling)return {ok:false,message:'Please wait for your arrival.'};
       traveling=true;
@@ -424,7 +479,10 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     update(now){
       greetings.update(now);crimeHud.update(now);
       if(!connected||socket?.readyState!==WebSocket.OPEN)return;
-      if(!traveling&&now-lastPose>=200){
+      // A Ribbonwing maneuver owns this player's pose on the server until it ends (#777).
+      // A Ribbonwing passenger's seat is the town's to move (#777).
+      const aboard=Boolean(latestSnapshot?.players?.find(player=>player.id===selfId)?.passengerOf);
+      if(!traveling&&!aboard&&now-lastPose>=200&&serverNow()>maneuverUntil){
         lastPose=now;const pose=getPose();
         if(pose&&!pose.office){
           const message={type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,levelId:pose.levelId??null,...(activeGreeting?{interactionId:activeGreeting}:{}),...(pose.riding?{vehicle:pose.riding.kind}:{})};
@@ -444,6 +502,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     dispose(){
       if(lifetime.signal.aborted)return;
       voice.dispose();voiceUI.dispose();
+      blockUI.dispose();detachBlocks();
       stopped=true;lifetime.abort();clearTimeout(retryTimer);connectionDeadline?.stop();clearInterval(homeAccessTimer);clearInterval(watchdog);
       try{rotation?.ws?.close();}catch{ /* never opened */ }rotation=null;previousSocket=null;
       const current=socket;socket=null;connected=connecting=traveling=false;latestSnapshot=null;homeAccess=[];

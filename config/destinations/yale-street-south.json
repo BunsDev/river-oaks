@@ -56,76 +56,6 @@
     }
   ],
   "plazas": [],
-  "blocks": [
-    {
-      "id": "eighteenth-south-w",
-      "style": "heights-row",
-      "rect": [
-        250,
-        -118,
-        300.5,
-        -77.5
-      ],
-      "front": "north",
-      "sides": [
-        "west",
-        "east"
-      ],
-      "depth": [
-        12,
-        16
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        6.5
-      ],
-      "names": [
-        "Sweetgum Market",
-        "Ironwood Joinery",
-        "Dewberry Pies",
-        "Low Water Cafe",
-        "Chicory & Sage"
-      ]
-    },
-    {
-      "id": "eighteenth-south-e",
-      "style": "market-row",
-      "rect": [
-        313.5,
-        -118,
-        364,
-        -77.5
-      ],
-      "front": "north",
-      "sides": [
-        "west",
-        "east"
-      ],
-      "depth": [
-        12,
-        16
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        6.5
-      ],
-      "names": [
-        "Tumbleweed Toys",
-        "Firefly Lamps",
-        "Silver Bell Dry Goods",
-        "Okra & Fig",
-        "Bayside Bindery"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -141,5 +71,82 @@
   ],
   "context": [],
   "overrides": {},
-  "additions": []
+  "additions": [],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "eighteenth-south-w",
+        "rect": [
+          250,
+          -118,
+          300.5,
+          -77.5
+        ],
+        "style": "heights-row",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          6.5
+        ],
+        "names": [
+          "Sweetgum Market",
+          "Ironwood Joinery",
+          "Dewberry Pies",
+          "Low Water Cafe",
+          "Chicory & Sage"
+        ],
+        "front": "north",
+        "sides": [
+          "west",
+          "east"
+        ]
+      },
+      {
+        "id": "eighteenth-south-e",
+        "rect": [
+          313.5,
+          -118,
+          364,
+          -77.5
+        ],
+        "style": "market-row",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          6.5
+        ],
+        "names": [
+          "Tumbleweed Toys",
+          "Firefly Lamps",
+          "Silver Bell Dry Goods",
+          "Okra & Fig",
+          "Bayside Bindery"
+        ],
+        "front": "north",
+        "sides": [
+          "west",
+          "east"
+        ]
+      }
+    ],
+    "migrated": {
+      "blocks": 2,
+      "geometry": "e9cbe520dbc54b0a"
+    }
+  }
 }

@@ -9,7 +9,7 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' data: blob: https://*.livekit.cloud wss://*.livekit.cloud; worker-src 'self' blob:; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' data: blob: https://*.livekit.cloud wss://*.livekit.cloud; worker-src 'self' blob:; frame-src https://challenges.cloudflare.com https://computer.typesafe.place; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" },
         { "key": "Permissions-Policy", "value": "microphone=(self), camera=(), geolocation=(), display-capture=()" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "same-origin" },
@@ -56,7 +56,7 @@
   "functions": {
     "api/server.js": {
       "maxDuration": 300,
-      "includeFiles": "{preview/public/data/district*.json,src/river_oaks/chauffeur-policy.json}"
+      "includeFiles": "{preview/public/data/district*.json,src/river_oaks/chauffeur-policy.json,config/content-filter.json}"
     }
   },
   "regions": [
@@ -169,6 +169,10 @@
     {
       "source": "/api/moderation/reports",
       "destination": "/api/server?_river_path=/api/moderation/reports"
+    },
+    {
+      "source": "/api/moderation/reports/close",
+      "destination": "/api/server?_river_path=/api/moderation/reports/close"
     },
     {
       "source": "/api/waitlist/status",

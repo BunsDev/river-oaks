@@ -269,11 +269,12 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-11-delivered-source-retirement](2026-10-11-delivered-source-retirement.md)<br>Delivered source reconciliation | `reconcile-delivered-sources` | retired | — | 2026-10-11 |
 | [2026-10-11-ci-parallel-preview](2026-10-11-ci-parallel-preview.md)<br>Parallel preview check | `ci-parallel-preview` | retired | #252 | 2026-10-11 |
 
-## Historical, not in the register (118)
+## Historical, not in the register (119)
 
 | Plan | PRs mentioned |
 | --- | --- |
 | [2026-10-24-crime-release-599](2026-10-24-crime-release-599.md)<br>Crime release #599 Implementation Plan | #599, #637, #596 |
+| [2026-10-27-player-blocking-ui-292](2026-10-27-player-blocking-ui-292.md)<br>Resident blocking UI — #292 | #292, #710, #708 |
 | [2026-10-24-prune-ancestor-tip](2026-10-24-prune-ancestor-tip.md)<br>Retire a local tip behind its merged head | #631 |
 | [2026-10-24-movement-pad-contrast](2026-10-24-movement-pad-contrast.md)<br>Walking movement control contrast | — |
 | [2026-10-24-likeness-closeout-518](2026-10-24-likeness-closeout-518.md)<br>Likeness closeout #518 ledger | #518, #590, #591 |

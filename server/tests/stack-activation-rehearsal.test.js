@@ -78,7 +78,14 @@ test('Stack rehearsal from Gardens: up one step at a time, occupants in every di
     await new Promise(resolve => gateway.server.listen(0, '127.0.0.1', resolve));
     return { gateway, base: `http://127.0.0.1:${gateway.server.address().port}`, revision, epoch };
   }
-  async function stop(node) { for (const ws of sockets) ws.terminate(); sockets.clear(); await node.gateway.close(); await delay(50); }
+  // Production deploy steps are minutes apart; here they are seconds apart, so the ticket
+  // window (10 per user per minute, redis-security.js) would refuse the 11th step on a fast
+  // runner: a 429 for bob at epoch 10, seen on hosted runs that reached it in under 40 s.
+  // Every step starts with a fresh window, as a real deploy would.
+  async function stop(node) {
+    for (const ws of sockets) ws.terminate(); sockets.clear(); await node.gateway.close(); await delay(50);
+    const windows = await redis.keys(`{${namespace}}:limit:tickets:*`); if (windows.length) await redis.del(...windows);
+  }
   async function join(node, id) {
     const headers = { Origin: origin, Cookie: `fixture=${id}`, 'X-CSRF-Token': 'fixture-csrf' };
     const response = await fetch(`${node.base}/api/multiplayer/ticket`, { method: 'POST', headers });
@@ -86,11 +93,24 @@ test('Stack rehearsal from Gardens: up one step at a time, occupants in every di
     const { ticket } = await response.json();
     const ws = new WebSocket(`${node.base.replace('http:', 'ws:')}/multiplayer?ticket=${ticket}&world=river-oaks&protocol=3`, { headers });
     sockets.add(ws);
-    let snapshot = null, sequence = 0;
-    const pending = new Map();
+    let snapshot = null, sequence = 0, opened = null, closed = null, first = null;
+    const pending = new Map(), received = [], started = Date.now();
     ws.on('error', () => {});
-    ws.on('message', raw => { const value = JSON.parse(raw); if (value.type === 'snapshot') snapshot = value; if (value.type === 'result') pending.get(value.requestId)?.(value); });
-    await until(() => snapshot, `${id} snapshot on ${node.revision}@${node.epoch}`);
+    ws.on('open', () => { opened = Date.now() - started; });
+    ws.on('close', (code, reason) => { closed = { code, reason: String(reason), afterMs: Date.now() - started }; });
+    ws.on('message', raw => { const value = JSON.parse(raw); first ??= Date.now() - started; if (received.length < 12) received.push(value.type); if (value.type === 'snapshot') snapshot = value; if (value.type === 'result') pending.get(value.requestId)?.(value); });
+    // The first join of a freshly booted node waits on that node's boot work: loading the room
+    // from Redis and, after a stack step, migrating the checkpoint to the revision now served.
+    // The one-step rollback from Woodland Heights to Gardens is the longest (1.6 s locally at
+    // load 6, every other step under 1.4 s); on hosted runners it outlived the 7 s request
+    // window and the node closed the join with 1013 (#754). redis-room.js now pays that load
+    // outside the first request's budget, so the join waits for it; thirty seconds here is a
+    // margin for the runner, not a behavior change: a node that never answers still fails.
+    // When the snapshot never comes, say what did: the socket's open and close, the first
+    // message types, and the node's own log lines for this epoch (migration events, refusals),
+    // so a hosted failure attributes itself instead of reading as a slow runner.
+    await until(() => snapshot || closed, `${id} snapshot on ${node.revision}@${node.epoch}`, 600);
+    if (!snapshot) assert.fail(`${id} snapshot on ${node.revision}@${node.epoch}: ${JSON.stringify({ waitedMs: Date.now() - started, openedAfterMs: opened, firstMessageAfterMs: first, received, closed, readyState: ws.readyState, log: logs.slice(-12) })}`);
     const send = message => new Promise((resolve, reject) => {
       const requestId = String(++sequence), timer = setTimeout(() => { pending.delete(requestId); reject(new Error(`${message.type} timed out`)); }, 8000);
       pending.set(requestId, value => { clearTimeout(timer); pending.delete(requestId); resolve(value); });

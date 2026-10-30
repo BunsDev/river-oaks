@@ -62,8 +62,9 @@ test('Woodland Heights registers new land east of Studewood, and loading checks 
   assert.ok(Math.abs(location.bounds_m[2] - location.bounds_m[0] - 45) < 1e-9);
   assert.deepEqual(locationWorldBounds(location), location.bounds_m);
   assert.ok(location.adjacent.includes('studewood') && studewood.adjacent.includes('woodland-heights'));
-  // New land: wholly east of the original envelope, which every other location still partitions.
-  assert.ok(validated.locations.every(item => item.id === 'woodland-heights' || item.bounds_m[2] <= location.bounds_m[0]));
+  // New land: wholly east of the original envelope, which every other location still partitions
+  // (TypeSafe Place, typesafe-place-1, is newer land east of Woodland).
+  assert.ok(validated.locations.every(item => ['woodland-heights', 'typesafe-place'].includes(item.id) || item.bounds_m[2] <= location.bounds_m[0]));
   assert.equal(validateWoodlandRegistration(manifest, layout), layout);
   for (const mutate of [item => { item.content_revision = 'woodland-heights-0'; }, item => { item.bounds_m[2] += 1; }, item => { item.entries[0].position_m[1] += 1; }, item => { item.status = 'reserved'; }]) {
     const changed = structuredClone(manifest); mutate(changed.locations.find(item => item.id === 'woodland-heights'));
@@ -138,6 +139,25 @@ test('building land, the location edge and every Woodland solid stay closed', ()
     assert.equal(environment.isFree(x, -n), false, solid.id);
   }
   assert.equal(environment.isAreaFree(...(([x, n]) => [x, -n])(frame([545, 40])), 2), true, 'open green lawn');
+});
+
+test('Jevica flies over every roof from the Commons to Woodland Heights, never through one', () => {
+  const environment = createWalkingEnvironment(world);
+  const plans = [layout.destination, layout.heights, layout.studewood, layout.terraces, woodland].flatMap(part => part.plans ?? [part]);
+  const shells = plans.flatMap(plan => plan.pieces).filter(piece => piece.piece.startsWith('building/'));
+  assert.ok(shells.length > 390);
+  let roomy = 0;
+  for (const shell of shells) {
+    const [w, s, e, n] = shell.rect, x = (w + e) / 2, y = (s + n) / 2;
+    const ground = Math.max(...[[w, s], [e, s], [e, n], [w, n], [x, y]].map(([east, north]) => environment.groundAt(east, -north)));
+    assert.equal(environment.canFly(x, ground + shell.height, -y), false, `${shell.id}: not through the roof`);
+    // A rear wing narrower than the bubble's 2.6 m backs onto ground flight never covers.
+    if (e - w < 3 || n - s < 3) continue;
+    roomy++;
+    assert.equal(environment.canFly(x, ground + shell.height + 3.2, -y), true, `${shell.id}: just over the roof`);
+    assert.equal(environment.canFly(x, ground + environment.flightCeiling, -y), true, `${shell.id}: at the ceiling`);
+  }
+  assert.ok(roomy >= 377, `${roomy} roofs`);
 });
 
 test('the location label names Woodland Heights beyond Studewood and Studewood before it', () => {

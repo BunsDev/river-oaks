@@ -7,6 +7,7 @@ import { createPlayerCostume } from './player-costume.js';
 import { createCharacterMaterials } from './character-studio-materials.js';
 import { validateCharacterDefinition } from './character-definition.js';
 import { sharedAppearance } from './shared-appearances.js';
+import { studioBackdrop, watchStudioTheme } from './character-studio-theme.js';
 
 export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatus=()=>{}}){
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
@@ -17,18 +18,25 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
   const softwareRendering=import.meta.env.DEV&&import.meta.env.VITE_SHARED_SOFTWARE_RENDERING==='1';
   renderer.shadowMap.enabled=!softwareRendering;renderer.shadowMap.type=THREE.PCFShadowMap;
   renderer.domElement.setAttribute('aria-label','Live character preview');renderer.domElement.setAttribute('role','img');host.append(renderer.domElement);
-  const scene=new THREE.Scene();scene.background=new THREE.Color('#cbd8d1');
+  const scene=new THREE.Scene();scene.background=new THREE.Color(studioBackdrop().background);
   const camera=new THREE.PerspectiveCamera(30,1,.05,30);
   const key=new THREE.DirectionalLight('#fff0df',3.1),fill=new THREE.HemisphereLight('#f2f6ff','#64766d',2),rim=new THREE.DirectionalLight('#c5e6e5',2.2);
   key.castShadow=!softwareRendering;key.shadow.mapSize.set(1024,1024);
   Object.assign(key.shadow.camera,{left:-1.5,right:1.5,top:2,bottom:-1.5,near:.1,far:12});key.shadow.normalBias=.012;key.shadow.bias=-.0001;
   key.position.set(3,4,4);rim.position.set(-3,3,-2);scene.add(key,fill,rim);
   const pedestal=new THREE.Mesh(new THREE.CylinderGeometry(.65,.68,.05,64),new THREE.MeshStandardMaterial({color:'#a8bdb2',roughness:.87}));pedestal.position.y=-.028;pedestal.receiveShadow=true;scene.add(pedestal);
+  // The backdrop follows the app theme (System follows the OS) and the chosen lighting.
+  let theme='light',lighting='neutral';
+  const paint=()=>{const backdrop=studioBackdrop(theme,lighting);scene.background.set(backdrop.background);pedestal.material.color.set(backdrop.pedestal);fill.groundColor.set(backdrop.ground);renderDirty=true;};
   let avatar=null,costume=null,colors=null,loadedId=null,wanted=null,loading=false,disposed=false,frame=0,previous=null,distance=0;
   let visible=true;
   const visibility=new IntersectionObserver(entries=>{visible=entries.at(-1)?.isIntersecting??false;if(visible)renderDirty=true;previous=null;});visibility.observe(host);
   let yaw=0,turntable=false,pose='idle',framing='full',renderDirty=true;
+  const unwatchTheme=watchStudioTheme(next=>{theme=next;host.dataset.theme=next;paint();});
   const resize=new ResizeObserver(()=>{const {width,height}=host.getBoundingClientRect();renderer.setSize(Math.max(1,width),Math.max(1,height),false);camera.aspect=Math.max(1,width)/Math.max(1,height);camera.updateProjectionMatrix();renderDirty=true;});resize.observe(host);
+  // A player-made look is its recipe on its own body: a new recipe is a new load.
+  const lookKey=definition=>definition.schemaVersion===3?`${definition.appearanceId}:${JSON.stringify(definition.parameters)}`:definition.appearanceId;
+  let stature=1;
   const release=()=>{colors?.dispose();costume?.dispose();avatar?.dispose();avatar?.object.removeFromParent();avatar=costume=colors=null;loadedId=null;};
   async function load(){
     if(loading||disposed)return;loading=true;
@@ -38,15 +46,16 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
           onStatus('loading');host.dataset.ready='false';
           let next,nextCostume;
           try{
-            next=await loadResidentAvatar(Math.max(0,AVATAR_PROFILES.indexOf(definition.rig)),`remote-studio-${definition.appearanceId}`,definition.rig,{folk:false,appearanceId:definition.appearanceId,faceRecipe:{}});
+            next=await loadResidentAvatar(Math.max(0,AVATAR_PROFILES.indexOf(definition.rig)),`remote-studio-${definition.appearanceId}`,definition.rig,{folk:false,appearanceId:definition.appearanceId,faceRecipe:{},...(definition.schemaVersion===3?{recipe:definition.parameters}:{})});
             if(sharedAppearance(definition.appearanceId).costume==='jevica')nextCostume=createPlayerCostume(next,'jevica');
             return {avatar:next,costume:nextCostume,colors:createCharacterMaterials(next.object)};
           }catch(error){nextCostume?.dispose();next?.dispose();throw error;}
         },
         discard:resource=>{resource.colors.dispose();resource.costume?.dispose();resource.avatar.dispose();},
         accept:(resource,definition)=>{
-          resource.colors.apply(definition);release();avatar=resource.avatar;costume=resource.costume;colors=resource.colors;loadedId=definition.appearanceId;scene.add(avatar.object);
-          host.dataset.ready='true';host.dataset.appearance=loadedId;onStatus('ready');renderDirty=true;previous=null;distance=0;
+          resource.colors.apply(definition);release();avatar=resource.avatar;costume=resource.costume;colors=resource.colors;loadedId=lookKey(definition);scene.add(avatar.object);
+          stature=definition.schemaVersion===3?definition.parameters.height/170:1;
+          host.dataset.ready='true';host.dataset.appearance=definition.appearanceId;host.dataset.loadedLook=loadedId;onStatus('ready');renderDirty=true;previous=null;distance=0;
         },onError:()=>{if(!disposed){onStatus('error');host.dataset.ready='false';}},
       });
     }finally{loading=false;}
@@ -65,14 +74,15 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
         costume?.update(false,reducedMotion?0:now);costume?.updateOptics(camera,host.clientHeight);
       }
     }
-    const full=framing==='full',focus=full?.9:1.52;
-    const range=full?Math.max(3.8,2.1/camera.aspect):Math.max(1.35,.75/camera.aspect);
-    camera.position.set(0,full?1.08:1.59,range);camera.lookAt(0,focus,0);
+    // Authored looks are framed for their 1.7 m figures; a recipe's height scales the frame.
+    const full=framing==='full',focus=(full?.9:1.52)*stature;
+    const range=(full?Math.max(3.8,2.1/camera.aspect):Math.max(1.35,.75/camera.aspect))*(full?stature:1);
+    camera.position.set(0,(full?1.08:1.59)*stature,range);camera.lookAt(0,focus,0);
     if(!reducedMotion||renderDirty){renderer.render(scene,camera);renderDirty=false;}
   };frame=requestAnimationFrame(draw);
   return {
     setDefinition(value){const result=validateCharacterDefinition(value,{ownerId});if(!result.ok)throw new TypeError(result.error);wanted=result.definition;
-      if(loadedId===wanted.appearanceId){colors.apply(wanted);renderDirty=true;}else load();},
+      if(loadedId===lookKey(wanted)){colors.apply(wanted);renderDirty=true;}else load();},
     async capturePortrait(){
       if(disposed||loading||!avatar)throw new Error('Wait for the preview to finish loading.');
       let hero;
@@ -86,8 +96,8 @@ export function createCharacterPreview({host,ownerId,reducedMotion=false,onStatu
     },
     setView(options){if(options.yaw!==undefined)yaw=options.yaw*Math.PI/180;if(options.turntable!==undefined)turntable=options.turntable;
       if(['idle','walk','wave'].includes(options.pose))pose=options.pose;if(['full','portrait'].includes(options.framing))framing=options.framing;
-      if(options.lighting){const warm=options.lighting==='warm';scene.background.set(warm?'#dfcdbb':'#cbd8d1');key.color.set(warm?'#ffd1a6':'#fff0df');fill.intensity=warm?1.6:2;}
+      if(options.lighting){const warm=options.lighting==='warm';lighting=warm?'warm':'neutral';key.color.set(warm?'#ffd1a6':'#fff0df');fill.intensity=warm?1.6:2;paint();}
       renderDirty=true;},
-    dispose(){disposed=true;cancelAnimationFrame(frame);resize.disconnect();visibility.disconnect();release();pedestal.geometry.dispose();pedestal.material.dispose();key.shadow.dispose();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();},
+    dispose(){disposed=true;unwatchTheme();cancelAnimationFrame(frame);resize.disconnect();visibility.disconnect();release();pedestal.geometry.dispose();pedestal.material.dispose();key.shadow.dispose();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();},
   };
 }

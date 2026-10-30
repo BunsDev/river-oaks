@@ -3,7 +3,7 @@
 **Jevica belongs to the approved waitlist administrator account**
 (`user_01M40Y914S1H4EJCEHH91DKTAY` in Staging; `user_01M402HKJYDTH1QJM5NAQDZ4HH` in Production). Other accounts start as Sable and cannot
 select either Jevica form. Only that account
-can call Jev and her vehicle in multiplayer. Among playable characters, only Jevica can fly. Players can choose the seven other
+can call Jev and her pink car in multiplayer; the rose motorcycle is in every account's garage, and its rider drives it. Among playable characters, only Jevica can fly. Players can choose the seven other
 characters, and every character comes in a humanoid and a beast form; see
 [characters, styles and forms](#characters-styles-and-forms). The Witch and Alien forms were removed
 on September 23, 2026, together with their portraits, costumes, broom and personal
@@ -89,12 +89,36 @@ and `pnpm run test:shared required`.
 
 ## Reference direction
 
-The reference direction retains adult proportions and animated rigs. The supplied
-September 23 pink-gown image supersedes the earlier statue styling for Jevica:
+The reference direction retains adult proportions and animated rigs. The
+October 29, 2026 reference (`preview/public/assets/characters/references/jevica-pink-suit-20261029.png`,
+supplied by Val on 2026-10-29 as generated image file `hf_20261029_182708…`; not a
+photograph; art direction only, redistributed in the repository as a reference)
+supersedes the September 23 pink-gown image for Jevica:
 
-- Jevica: a single flowing rose-pink ballgown, fitted bodice, gold floral
-  embroidery at the neckline and hem, an open gold crown, warm blonde hair,
-  and a luminous pink-white star wand. The district layout stays intact.
+- Jevica: an iridescent pink satin pantsuit. A tailored blazer with notched
+  lapels, one rose-gold button at the waist, a short peplum over the hips and
+  rose-gold vine piping along the lapels, hem, cuffs and sleeves; a high
+  mandarin-collar pale pink satin blouse with a flower brooch; slim satin
+  trousers with a front crease; glossy pink pumps on a slim rose-gold heel;
+  pink lily clusters pinned above each ear; flower-drop earrings that swing
+  with her head; long waves fading from espresso roots to rose ends. No crown.
+  The star wand is kept for spell emission but shown only while casting.
+  `preview/src/jevica-suit.js` cuts the blazer and trousers from her own skin
+  as offset shells skinned to her skeleton, so they follow every pose; the
+  peplum is draped by `jevica-drape.js`. `preview/e2e/jevica-reference-likeness.js`
+  measures silhouette overlap and region colour against the illustration;
+  a procedural rig on CC0 assets is not pixel-identical and the journey records
+  the distance rather than claiming it.
+- Jev (reference supplied by Val on 2026-10-29,
+  `preview/public/assets/characters/references/jev-angel-tunic-20261029.png`):
+  a cream tunic with a pink placket in rose-gold trim and mint scrollwork, a
+  rose-gold belt with a lozenge buckle, rose-gold bracers, pink trousers,
+  rose-gold gladiator sandals over bare feet, caramel curls, blue eyes, and his
+  white wings out and folded back whenever he is not seated in the car. The
+  dress uniform (coronet, royal sash, epaulettes, star of order) is retired.
+  `preview/e2e/jev-reference-likeness.js` measures the silhouette overlap and
+  per-region colour distance against the reference; it is a baseline for a
+  procedural rig on CC0 geometry, not pixel identity.
 The references are visual inputs, not shipped textures or purchased statue
 meshes. The existing local character assets retain their source receipts.
 The costume uses procedural geometry. Jevica and all six resident rigs have
@@ -112,11 +136,10 @@ Jevica's September 22 refinement gives her a softer oval face, less angular
 jaw, subtle cheek and lip shaping, warm brown brows, refined shoulder and neck
 proportions, and gently waved blonde hair. These are authored changes to her
 dedicated mesh and materials. This refinement preserved the six resident meshes. Her
-rose gown, crown, wand, and bubble flight are retained, and the character portrait
-is regenerated from the updated model. The single skirt now adjusts around her
-animated lower body, expanding with a step and relaxing as she stops. This
-pose-driven clearance preserves the skin and walking animation; it is not a
-physical cloth simulation.
+bubble flight is retained. The gown and crown were retired on 2026-10-29 for the
+pantsuit above; the peplum still adjusts around her animated hips, expanding with
+a step and relaxing as she stops. This pose-driven clearance preserves the skin and
+walking animation; it is not a physical cloth simulation.
 
 The September 23 refinement adds a subtle bust adjustment, narrower shoulders,
 closer resting arms, and a sewn bodice envelope that bridges skin concavities.

@@ -89,7 +89,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   // Local-only movement vetoes, e.g. presentation readiness. They never enter the
   // shared environment, so map, encounter and carriage queries stay unaffected.
   const stepGuards = [];
-  let transport = null, sitting = null, performing = false, seatedGround = 0, doorwayPending = false;
+  let mountRefusal = null, transport = null, sitting = null, performing = false, seatedGround = 0, doorwayPending = false;
   let flight = createFlightState();
   let flightAllowed=false,fastWalkSpeed=WALK_SPEED.fast;
   let thirdPerson = true, bodyVisible = true;
@@ -285,8 +285,15 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     allowsStep(from, to) { return stepGuards.every(guard => guard(from, to)); },
     get active() { return active; },
     get riding() { return Boolean(transport); },
+    // Why the last mount() refused, for the debug hooks.
+    get mountRefusal() { return mountRefusal; },
     mount(controller) {
-      if(!active||flight.active||currentRoom()||transport||sitting||performing)return false;
+      // A craft already aloft (resuming a ride after a reload) takes over from the flight
+      // the page adopted from the town's altitude; any other ride needs her on the ground.
+      const aloft=Boolean(controller.pose.flying);
+      mountRefusal=!active?'inactive':flight.active&&!aloft?'flying':currentRoom()?'indoors':transport?'riding':sitting?'sitting':performing?'performing':null;
+      if(mountRefusal)return false;
+      if(flight.active)flight=createFlightState();
       clear();transport=controller;
       thirdPerson=true;state.yaw=controller.pose.yaw+Math.PI+.38;state.pitch=-.25;
       state.position=[controller.pose.seat[0],controller.pose.seat[1]+.62,controller.pose.seat[2]];
@@ -342,7 +349,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     notify,
     get environment() { return environment ?? null; },
     setThirdPerson(enabled) { thirdPerson = Boolean(enabled);if (active) place(); },
-    getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting||performing?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, levelId:environment.levelId??currentRoom()?.planId??null, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
+    getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting||performing?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:transport?transport.pose.altitude??0:flight.altitude, levelId:environment.levelId??currentRoom()?.planId??null, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
     canSee(point,eyeHeight) {
       if (!state) return false;
       const local=(getLocals()??[]).find(local=>local.position===point);
@@ -425,7 +432,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
       const room = currentRoom(), door = room ? null : doorway();
       const up = nearbyStairs(room, 'up'), down = nearbyStairs(room, 'down'), stairs = up ?? down;
-      $('.walking-title strong').textContent = sitting ? 'Seated' : performing ? 'On stage' : transport ? (transport.pose.kind === 'bicycle' ? 'Cycling' : 'Riding with Jev') : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
+      $('.walking-title strong').textContent = sitting ? 'Seated' : performing ? 'On stage' : transport ? (transport.pose.kind === 'bicycle' ? 'Cycling' : transport.pose.kind === 'hover' ? (!transport.pose.driver ? 'Riding in the Ribbonwing' : transport.pose.landing ? 'Landing the Ribbonwing' : transport.pose.flying ? 'Flying the Ribbonwing' : 'Piloting the Ribbonwing') : transport.pose.driver ? 'Riding' : 'Riding with Jev') : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
       const farFromExit = Boolean(room && !stairs && !nearRoomExit(room, [state.position[0], -state.position[2]]));
       enter.hidden = Boolean(sitting||performing||transport)||(!room && !door)||Boolean(room?.generatedPlan?.index>0 && !stairs)||farFromExit;
@@ -447,7 +454,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const location = connectedLocationAt(walkingWorld, state.position[0], -state.position[2]), crossing = locationCrossing(connectedLocation, location);
       connectedLocation = location;
       if (crossing) notify(crossing);
-      $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : performing ? 'Drag to look around · X steps down' : transport ? (transport.pose.kind === 'bicycle' ? `${(transport.pose.distance / 1609.344).toFixed(2)} mi cycled this ride · W to pedal · Shift to sprint · G to step off` : 'W/S to ride or reverse · A/D or arrows to steer · G to step out') : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
+      $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : performing ? 'Drag to look around · X steps down' : transport ? (transport.pose.kind === 'bicycle' ? `${(transport.pose.distance / 1609.344).toFixed(2)} mi cycled this ride · W to pedal · Shift to sprint · G to step off` : transport.pose.kind === 'hover' ? `${transport.pose.flying ? `${transport.pose.altitude.toFixed(1)} m above ground · ` : ''}W/S to fly or reverse · A/D or arrows to steer · Space to climb · C to descend · G to land and step out` : 'W/S to ride or reverse · A/D or arrows to steer · G to step out') : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
         ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.guests} resident${roomSummary.guests === 1 ? '' : 's'}`
         // A campus floor names itself ("The Gardens · Floor 4") and has no staff or guests to count (#508).
         : room.campusLevel ? `Inside ${room.name} · ${roomSummary.label}`
