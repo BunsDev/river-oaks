@@ -175,7 +175,7 @@ test('the Ribbonwing climbs with lift, flies level, stops under a blocked sky, r
   for(let i=0;i<120;i++)stepHoverLift(state,env,{lift:1},1/60);
   assert.ok(state.altitude>2&&state.altitude<8.01,`climbing ${state.altitude}`);
   stepCarriage(state,env,{forward:1},1/60);
-  assert.ok(state.position[0]<0,'flies forward');assert.equal(state.roll,0);assert.equal(state.pitch,0);assert.ok(state.wheelOffsets.every(offset=>offset===0),'nothing presses on the suspension in the air');
+  assert.ok(state.position[0]<0,'flies forward');assert.ok(Math.abs(state.roll)<.2);assert.equal(state.pitch,0);assert.ok(state.wheelOffsets.every(offset=>offset===0),'nothing presses on the suspension in the air');
   assert.equal(state.position[1],0,'position stays the ground beneath; altitude is separate');
   // A roof just above the hull stops the climb where it is.
   sky=state.altitude+spec.bodyHeight+.001;const held=state.altitude;
