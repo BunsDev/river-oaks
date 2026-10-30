@@ -73,10 +73,13 @@ function workload(players) {
   const tick = (measure) => { clock.time += STEP_MS; const start = performance.now(); world.step(STEP_MS / 1000); const ms = performance.now() - start; if (measure) step.push(ms); };
   // Warm navigation and the police response before measuring: two simulated seconds (not tallied).
   for (let i = 0; i < 2000 / STEP_MS; i++) { if (i % (1000 / STEP_MS) === 0) { if (mode === 'sustained') reset(); for (const id of ids) world.command(id, { type: 'attack', targetId: RIVAL.id, attackKind: 'melee' }); } tick(false); }
+  let settled = 0;
   resets = 0; seen = new Set(world.snapshot().crime.actions.map(action => action.id));
   const steps = Math.round(seconds * 1000 / STEP_MS);
   for (let i = 0; i < steps; i++) {
-    if (i % (1000 / STEP_MS) === 0) { if (mode === 'sustained') reset(); strike(); }
+    // A restore rebuilds the town's derived state on the next step; that settling step is not
+    // measured (review of #732), so the measured steps are the fight, not the harness's reset.
+    if (i % (1000 / STEP_MS) === 0) { if (mode === 'sustained') { reset(); tick(false); settled++; } strike(); }
     tick(true);
     if (i % 4 === 0) {
       let start = performance.now(); const view = world.snapshot(); snapshot.push(performance.now() - start); snapshotBytes = Buffer.byteLength(JSON.stringify(view));
@@ -86,7 +89,7 @@ function workload(players) {
   }
   count();
   const view = world.snapshot();
-  return { players, mode, seconds, steps, resets, stepP95Ms: quantile(step, .95), stepMaxMs: quantile(step, 1), stepMeanMs: Math.round(step.reduce((a, b) => a + b, 0) / step.length * 100) / 100,
+  return { players, mode, seconds, steps, resets, unmeasuredSettleSteps: settled, stepP95Ms: quantile(step, .95), stepMaxMs: quantile(step, 1), stepMeanMs: Math.round(step.reduce((a, b) => a + b, 0) / step.length * 100) / 100,
     stepOver50Ms: step.filter(ms => ms > 50).length, snapshotP95Ms: quantile(snapshot, .95), checkpointP95Ms: quantile(checkpoint, .95), snapshotBytes, checkpointBytes,
     policeUnitsAtEnd: policeUnits, policeUnitsMax: policeMax, policeCap: POLICE_RULES.maxUnits, wantedAtEnd: view.crime.wanted.length, starsAtEnd: view.crime.wanted.length ? Math.min(...view.crime.wanted.map(([, stars]) => stars)) : 0,
     strikesAdmitted: strikes, admission: admitted, outcomes, actionsShown: view.crime.actions.length, rivalHealth: view.crime.targets.find(target => target.id === RIVAL.id).health, npcs: view.locals.length };
@@ -95,7 +98,7 @@ function workload(players) {
 const report = { at: new Date().toISOString(), label, mode, head: git('rev-parse', 'HEAD'), dirty: Boolean(git('status', '--porcelain')), runtime: process.version, platform: `${process.platform}/${process.arch}`, loadavg: loadavg().map(value => Math.round(value * 100) / 100),
   protocol: `Server simulation only (createSharedWorld, ${STEP_MS} ms steps on a synthetic clock); every player at five stars in ${ZONE} strikes ${RIVAL.id} every simulated second; officers respond up to the cap of ${POLICE_RULES.maxUnits} (one wanted player draws at most ${Math.ceil(CRIME_RULES.maxStars / 2)}); ${runs} runs of ${seconds} s per tier after a 2 s warm-up. `
     + (mode === 'literal' ? `Literal protocol: the rival is down after four hits for ${CRIME_RULES.recoveryMs / 1000} s and arrested strikers are returned to the safe arrival, so the town goes quiet within seconds and later strikes mostly miss. `
-      : 'Sustained: the rival, the five stars and the ring are restored every simulated second through a sealed checkpoint outside the measured step. ')
+      : 'Sustained: the rival, the five stars and the ring are restored every simulated second through a sealed checkpoint, followed by one unmeasured settling step, outside the measured steps. ')
     + 'Measurements on this host (see loadavg), not budgets.',
   tiers: [] };
 for (const players of tiers) report.tiers.push({ players, runs: Array.from({ length: runs }, () => workload(players)) });
