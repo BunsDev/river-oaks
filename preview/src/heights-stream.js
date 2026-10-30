@@ -65,9 +65,9 @@ export const HEIGHTS_CHUNK_BYTES = {
 };
 // A kit finish that adds geometry overrides only the chunks it outgrows, so classic streaming is
 // unchanged. Pink Jet-Age's rounded forms measure 2.32 MiB for TypeSafe Place north and 2.88 MiB
-// for uptown (#742).
+// for uptown (#742), and 3.33 MiB for Yale Icehouse once its party walls joined (#695).
 export const HEIGHTS_FINISH_CHUNK_BYTES = {
-  'pink-jet-age': { 'typesafe-place-north': 2.35 * MiB, 'typesafe-place-uptown': 2.9 * MiB },
+  'pink-jet-age': { 'yale-icehouse': 3.35 * MiB, 'typesafe-place-north': 2.35 * MiB, 'typesafe-place-uptown': 2.9 * MiB },
 };
 export const heightsChunkBytes = (id, finish = 'classic') => HEIGHTS_FINISH_CHUNK_BYTES[finish]?.[id] ?? HEIGHTS_CHUNK_BYTES[id];
 // The textures a neighborhood owns (render.js, `userData.owned`): one sign atlas row of
