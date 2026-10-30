@@ -1,10 +1,19 @@
 // Outdoor residents as figures for the remote-player renderer (#640 increment 3). Presentation
 // only: the town owns the population, routes, ground positions and reactions. Bounded to the
-// eight nearest neighbours within the renderer's own distance gate, so the street shows who is
+// eight nearest neighbours within the renderer's own distance gate (three within 30 m on a
+// low-tier or CPU-drawn client), so the street shows who is
 // there and how they react to trouble (`life.reaction`: startle, flee, cower) without a second
 // resident simulation on the client. Same figure ids as the outdoor-residents admin work
 // (`resident:<id>`), so either can replace the other.
 export const RESIDENT_FIGURE_CAP = 8, RESIDENT_FIGURE_RANGE = 120;
+// A client on the low character tier (fidelityTierForQuality), or drawing on the CPU, animates
+// fewer neighbours, only those close by: on the hosted CPU renderer the full budget slowed both
+// walkers by about 15 % with none of them near (heights-return A/B, 2026-10-30).
+export const RESIDENT_FIGURE_BUDGETS = Object.freeze({
+  full: Object.freeze({ cap: RESIDENT_FIGURE_CAP, range: RESIDENT_FIGURE_RANGE }),
+  low: Object.freeze({ cap: 3, range: 30 }),
+});
+export const residentFigureBudget = tier => tier === 'low' ? RESIDENT_FIGURE_BUDGETS.low : RESIDENT_FIGURE_BUDGETS.full;
 // A drawn resident stays until another is this much nearer, or they pass this far beyond the range,
 // so the figure set does not flicker at the cut while everyone walks (one swap per snapshot).
 export const RESIDENT_FIGURE_SWAP_M = 5, RESIDENT_FIGURE_KEEP_M = 10;
@@ -17,16 +26,16 @@ const hash = text => [...text].reduce((value, char) => (value * 31 + char.charCo
 export const residentGesture = reaction => reaction === 'startle' ? 'startle' : reaction === 'cower' ? 'cower' : null;
 
 /** `drawn`: the resident ids drawn last time (a Set), for a stable set across snapshots. */
-export function residentFigures(locals, visitor, drawn = null) {
+export function residentFigures(locals, visitor, drawn = null, { cap, range } = RESIDENT_FIGURE_BUDGETS.full) {
   if (!Array.isArray(locals) || !position(visitor)) return [];
   const ranked = locals.filter(local => typeof local?.id === 'string' && !local.indoor && position(local.position) && local.life)
     .map(local => ({ local, distance: Math.hypot(local.position[0] - visitor[0], local.position[1] - visitor[1]) }))
-    .filter(entry => entry.distance < RESIDENT_FIGURE_RANGE + (drawn?.has(entry.local.id) ? RESIDENT_FIGURE_KEEP_M : 0))
+    .filter(entry => entry.distance < range + (drawn?.has(entry.local.id) ? RESIDENT_FIGURE_KEEP_M : 0))
     .sort((a, b) => a.distance - b.distance || a.local.id.localeCompare(b.local.id));
-  let chosen = ranked.slice(0, RESIDENT_FIGURE_CAP);
+  let chosen = ranked.slice(0, cap);
   if (drawn?.size) {
-    const kept = ranked.filter(entry => drawn.has(entry.local.id)).slice(0, RESIDENT_FIGURE_CAP), fresh = ranked.filter(entry => !drawn.has(entry.local.id));
-    while (kept.length < RESIDENT_FIGURE_CAP && fresh.length) kept.push(fresh.shift());
+    const kept = ranked.filter(entry => drawn.has(entry.local.id)).slice(0, cap), fresh = ranked.filter(entry => !drawn.has(entry.local.id));
+    while (kept.length < cap && fresh.length) kept.push(fresh.shift());
     const farthest = kept.reduce((far, entry) => !far || entry.distance > far.distance ? entry : far, null);
     if (fresh.length && farthest && fresh[0].distance + RESIDENT_FIGURE_SWAP_M < farthest.distance) kept.splice(kept.indexOf(farthest), 1, fresh[0]);
     chosen = kept.sort((a, b) => a.distance - b.distance || a.local.id.localeCompare(b.local.id));
