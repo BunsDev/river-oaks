@@ -54,9 +54,13 @@ interpretations, not evidence of historical or surveyed Houston architecture.
 
 Houston street centerlines, buildings and store entrances stay in place. Human
 residents and existing worker roles remain the population standard. Jev chauffeurs
-Jevica in a compact pink four-wheel glass-canopy car, a rose motorcycle or the landowner
-hover coach (a seafoam, chrome-trimmed teardrop hover helicopter with a wrap-around canopy,
-a fold-out stair to its cream lounge and torpedo lift pods that float on their own light, and which lifts off to fly beneath the world's ceiling), with fitted seats, gold spinners and restrained jewel glints; see [character controls](character-forms.md).
+Jevica in a compact pink four-wheel glass-canopy car or a rose motorcycle, with fitted seats,
+gold spinners and restrained jewel glints; see [character controls](character-forms.md).
+Landowners pilot the Ribbonwing themselves (the `hover` kind; [design brief](design/ribbonwing/brief.md)):
+a two-seat, side-by-side VTOL in #F486A1 lacquer, ivory, mint glass and chrome, with petal
+wings around two lift fans, twin gimballed rear thrusters, a split petal tail, a rear-hinged
+canopy, telescoping steps and three landing feet. Jevica flies from the left seat; it lifts off
+to fly beneath the world's ceiling.
 
 ## Streets and planting
 

@@ -7,6 +7,8 @@ import { createPlayerAttention } from './player-attention.js';
 import { createPlayerCostume } from './player-costume.js';
 import { createFlightVehicle } from './flight-vehicles.js';
 import { createParkedCarriage } from './parked-carriage.js';
+import { createDrivingHands } from './driving-hands.js';
+import { VEHICLES } from './vehicle-config.js';
 import { createCarriageEncounter } from './carriage-encounter.js';
 import * as THREE from 'three';
 import { AVATAR_PROFILES, loadResidentAvatar } from './avatars.js';
@@ -51,7 +53,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     <div class="player-actions"><button id="player-camera" type="button" aria-pressed="true"><span data-camera-label>Third person</span><kbd>V</kbd></button></div>
     <section class="vehicle-garage" aria-label="Jev chauffeur">
       <div class="vehicle-garage-title"><span>Your chauffeur</span><span aria-hidden="true">✧</span></div>
-      <label for="player-vehicle">Your ride</label><select id="player-vehicle"><option value="rolls">Pink Rolls-Royce</option><option value="motorcycle">Rose motorcycle</option><option value="hover">Landowner hover coach</option></select>
+      <label for="player-vehicle">Your ride</label><select id="player-vehicle"><option value="rolls">Pink Rolls-Royce</option><option value="motorcycle">Rose motorcycle</option><option value="hover">Ribbonwing</option></select>
       <div class="player-actions"><button id="player-carriage" type="button" aria-keyshortcuts="Q"><span>Call Jev</span><kbd>Q</kbd></button><button id="player-ride" type="button" aria-keyshortcuts="G"><span data-ride-label>Ride with Jev</span><kbd>G</kbd></button></div>
       <button id="player-chauffeur" type="button" aria-pressed="false">Jev smart drive</button><div class="player-actions"><button id="player-drive-pause" type="button">Pause ride</button><button id="player-drive-park" type="button">Brake & park</button></div><div class="player-drive-pad" aria-label="Driving directions"><button type="button" data-drive="forward">Accelerate ↑</button><button type="button" data-drive="left">Steer ←</button><button type="button" data-drive="reverse">Reverse ↓</button><button type="button" data-drive="right">Steer →</button></div><p id="player-drive-status" role="status" aria-live="polite">Jev is ready</p>
     </section>
@@ -89,7 +91,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   bindPageLifecycle({ release: holdRide, signal: lifetime.signal });
   const rideButton=panel.querySelector('#player-ride');
   rideButton.addEventListener('click',async()=>{
-    if(carriage.riding){if(carriage.airborne){carriage.land();status.textContent='The coach is landing. Press G again once it is down.';}else status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';}
+    if(carriage.riding){if(carriage.airborne){carriage.land();status.textContent='The Ribbonwing is landing. Press G again once it is down.';}else status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';}
     else status.textContent=carriage.board()?'Ride with Jev, or give directions with W/S and A/D.':'Walk closer to your vehicle before boarding.';
   });
   host.addEventListener('keydown',event=>{
@@ -119,7 +121,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   const recipeKey=definition=>definition.schemaVersion===3?JSON.stringify(definition.parameters):null;
   let loadedRecipe=null;
   let colors=null,selectedDefinition=migrateCharacterAppearance(userId,defaultAppearanceFor(userId)),definitionKey=JSON.stringify(selectedDefinition);
-  let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0,presentation=null;
+  let avatar = null, outfit = null, vehicle = null, version = 0, previous = null, disposed = false, castUntil = 0,presentation=null,pilotHands=null;
   // Watering: until when, and the planter the body turns toward (scene coordinates).
   let waterUntil = 0, waterTarget = null, throwStart = -Infinity;
   // Appearance and movement belong to the account and are confirmed by the town.
@@ -257,6 +259,8 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       nextColors=createCharacterMaterials(next.object);nextColors.apply(selectedDefinition);
       const firstLoad=!avatar;
       colors?.dispose();outfit?.dispose();vehicle?.dispose();avatar?.dispose();holder.clear();colors=nextColors;avatar = next;outfit = nextOutfit;vehicle = nextVehicle;holder.add(avatar.object,vehicle.object);
+      // The Ribbonwing's pilot keeps a palm on the side stick and one on the throttle.
+      pilotHands=avatar.rig?.model?createDrivingHands(avatar.rig.model,avatar.object):null;
       loadedAppearance=chosenProfile;loadedRecipe=recipeKey(definition);
       next = nextOutfit = nextVehicle = nextColors = null;
       if(firstLoad)toggleCamera(true);
@@ -365,7 +369,9 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         if(!seated&&focus.facing!==null&&!sharedInteraction)holder.rotation.y=focus.facing;
         if(sharedInteraction&&!presentation&&!seated&&!pose.flying)holder.rotation.y=turnToward(holder.rotation.y,sharedInteraction.heading,previous===null?1:dt);
         const throwing = !seated && !pose.flying && now - throwStart < 850;
+        pilotHands?.reset();
         avatar.update(now, now < castUntil ? 'amazed' : throwing ? (now - throwStart < 180 ? 'throw-windup' : 'throw-release') : watering ? 'water' : !pose.flying&&!pose.riding ? (poseFor(sharedGesture)??'continue') : 'continue', false, {...localLocomotion(pose,{seated}),flightSpeed:pose.flying?pose.speed:0,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,ridingDistance:pose.riding?.distance,ridingSpeed:pose.riding?.speed,ridingSteering:pose.riding?.steering,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
+        if(pose.riding?.driver&&pose.riding.kind==='hover'&&pilotHands){holder.updateMatrixWorld(true);pilotHands(carriage.object,VEHICLES.hover);}
         outfit.updateOptics(camera,viewportHeight);
         if(portraitWanted&&getPortrait){
           const id=portraitWanted;portraitWanted=null;

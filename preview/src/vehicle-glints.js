@@ -1,13 +1,18 @@
 import * as THREE from 'three';
+import { COCKPIT_OPENING, THRUSTERS, WING_PLANFORM, openingEdge, wingHeightAt } from './ribbonwing-design.js';
 
 // One small point draw for restrained jewelry-like highlights. No light sources,
 // shadows, particle allocation, or full-screen bloom passes.
 export function createVehicleGlints(spec) {
  const points=[];
  if(spec.kind==='rolls')for(const side of [-1,1])for(let i=0;i<14;i++)points.push([(-3.05+i*.46)*.7,1.01,side*1.074*.7]);
- // The hover coach: cool sparks along its chrome belt (the hull's ellipse in
- // plan, see road-vehicles.js) and one on each lift pod's chrome nose cone.
- else if(spec.hover){for(let i=0;i<24;i++){const a=i/24*Math.PI*2,axis=Math.cos(a)>=0?2.05:2.8;points.push([(-.85-axis*Math.cos(a)*.9987*1.012)*.7,1.35,1.05*Math.sin(a)*.9987*1.012*.7]);}for(const [x,,z] of spec.wheels)points.push([x-.65,.57,z]);}
+ // The Ribbonwing: cool sparks along its chrome canopy rim and both blue-chrome
+ // trailing edges (ribbonwing-design.js), one on each thruster's intake lip.
+ else if(spec.hover){
+  for(let i=0;i<=12;i++){const x=COCKPIT_OPENING.from+(COCKPIT_OPENING.to-COCKPIT_OPENING.from)*i/12,edge=openingEdge(x);if(edge)for(const side of [-1,1])points.push([x,edge[0]+.02,side*edge[1]]);}
+  for(const [x,z] of WING_PLANFORM.slice(9))for(const side of [-1,1])points.push([x+.02,wingHeightAt(z),side*z]);
+  for(const [x,y,z] of THRUSTERS.centres)points.push([x-THRUSTERS.length/2,y+.26,z]);
+ }
  else for(const side of [-1,1])for(let i=0;i<9;i++)points.push([-.6+i*.16,.65+.35*Math.sin(i*.52),side*.24]);
  if(!spec.hover)for(const [x,y,z] of spec.wheels)for(const side of [-1,1])points.push([x,y,z+side*(spec.kind==='rolls'?.13:.09)]);
  const tint=spec.hover?[.82,.95,1]:[1,.85,.52];

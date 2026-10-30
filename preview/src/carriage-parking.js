@@ -12,6 +12,14 @@ function localPoint(placement,x,z) {
   const dx=x-placement.position[0],dz=z-placement.position[2],c=Math.cos(placement.yaw),s=Math.sin(placement.yaw);
   return [dx*c-dz*s,dx*s+dz*c];
 }
+// A vehicle's half-width at local x: its plan envelope when it has one (the
+// widest point within `reach` of x), otherwise the full width.
+function planHalfWidth(vehicle,x,reach=0) {
+  const plan=vehicle.plan;if(!plan)return vehicle.width/2;
+  const at=v=>{if(v<=plan[0][0])return plan[0][1];for(let i=1;i<plan.length;i++)if(v<=plan[i][0]){const [x0,w0]=plan[i-1],[x1,w1]=plan[i];return w0+(w1-w0)*(v-x0)/(x1-x0);}return plan[plan.length-1][1];};
+  let widest=Math.max(at(x-reach),at(x+reach));for(const [px,w] of plan)if(Math.abs(px-x)<=reach)widest=Math.max(widest,w);
+  return widest;
+}
 export function carriageContains(placement,x,y,z,radius=0) {
   if(!placement)return false;
   const [a,b]=localPoint(placement,x,z),scale=placement.scale??1;
@@ -19,7 +27,7 @@ export function carriageContains(placement,x,y,z,radius=0) {
   if(vehicle) {
     // Glass above the body line stops bodies and the flight bubble, not a line of sight.
     const top=radius<.1?vehicle.bodyHeight:vehicle.height;
-    return Math.abs(a)<vehicle.length/2*scale+radius&&Math.abs(b)<vehicle.width/2*scale+radius&&y+radius>placement.position[1]-.15&&y-radius<placement.position[1]+top*scale;
+    return Math.abs(a)<vehicle.length/2*scale+radius&&Math.abs(b)<planHalfWidth(vehicle,a/scale,radius/scale)*scale+radius&&y+radius>placement.position[1]-.15&&y-radius<placement.position[1]+top*scale;
   }
   return a>-(placement.team?8:HALF_LENGTH)*scale-radius && a<HALF_LENGTH*scale+radius && Math.abs(b)<halfWidth(placement.team,a/scale)*scale+radius
     && y+radius>placement.position[1]-.15 && y-radius<placement.position[1]+(a< -3.12*scale?3.2:Math.abs(a)>1.65*scale?2:HEIGHT)*scale;

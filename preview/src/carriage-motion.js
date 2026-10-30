@@ -101,12 +101,15 @@ export function stepHoverLift(state,environment,input,delta) {
   return state;
 }
 
+// The follow camera's collision bubble (walking.js flightRadius): an exit
+// closer than this to the vehicle collapses the camera into the rider.
+const EXIT_CAMERA_CLEARANCE=1.3;
 export function findCarriageExit(placement,environment,people=[]) {
   const c=Math.cos(placement.yaw),s=Math.sin(placement.yaw);
   for(const side of [1,-1])for(const along of [-1.9,0,1.9])for(const distance of [3,3.5,4]) {
     const x=placement.position[0]+along*c+side*distance*s,z=placement.position[2]-along*s+side*distance*c;
     const y=environment.groundAt(x,z);
-    if(!environment.isFree(x,z)||environment.roomAt?.(x,z)||carriageContains(placement,x,y+.9,z,.45))continue;
+    if(!environment.isFree(x,z)||environment.roomAt?.(x,z)||carriageContains(placement,x,y+.9,z,.45)||carriageContains(placement,x,y+1.68,z,EXIT_CAMERA_CLEARANCE))continue;
     if(people.some(p=>!p.indoor&&Math.hypot(p.position[0]-x,p.position[1]+z)<.9))continue;
     return [x,y,z];
   }
