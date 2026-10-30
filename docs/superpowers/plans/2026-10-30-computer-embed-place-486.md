@@ -142,6 +142,11 @@ was superseded for the build fix below, so it is not cited as evidence.
 
 ## Decisions for Val
 
+**Resolved 2026-10-30.** Val authorized the recommendations below: the Computer origin
+is `https://computer.typesafe.place`, and #801 and #802 are to land. The Production env
+variable stays unset until Computer #34 serves that origin (decision 2). Unset remains the
+rollback.
+
 1. **Which Computer origin Place frames.**
    - Recommended: `https://computer.typesafe.place`. It is same-site, so Computer's Lax
      cookie is sent inside the frame. It needs a Computer deployment and WorkOS
@@ -170,7 +175,9 @@ was superseded for the build fix below, so it is not cited as evidence.
 
 ## Next step
 
-- Val: decisions 1–3.
+- Land #802 and #801 (authorized 2026-10-30).
+- Val: set `VITE_TYPESAFE_COMPUTER_ORIGIN=https://computer.typesafe.place` in Production once
+  Computer #34 is live there.
 - Computer owner: merge and deploy #34 at the chosen origin, and resolve #21 and #27.
 - Then run `office-computer-embed` and a manual desk visit against the hosted pair, and
   record both revisions on #487.
