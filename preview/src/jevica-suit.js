@@ -285,15 +285,53 @@ export function createJevicaSuit(avatar, { surface, owned, attach, mesh }) {
     // Notched lapels: two ribbons folded back along the V, from the button to the collar.
     const upper = attach('spine_03'), chestOrigin = boneRest('spine_03');
     for (const side of [-1, 1]) {
-      // Four columns across the lapel: the piped V edge (two columns 4 mm apart), then the
-      // satin out to the lapel's width, which peaks at the notch two thirds of the way up.
-      const steps = 14, positions = [], indices = [], edge = [], columns = 4;
+      // Across the lapel: the piped V edge (two columns 4 mm apart), the satin with a rose-gold
+      // vine winding up it, and the piped outer edge (as in the reference, so the lapel's shape
+      // reads), out to the lapel's width, which peaks at the notch two thirds of the way up.
+      // The satin rolls gently outward between the edges, like a pressed lapel.
+      const inner = 18, steps = 120, length = collarY - .01 - buttonY, positions = [], indices = [], edge = [], columns = inner + 4;
+      const band = tt => { const w = .012 + .03 * Math.sin(Math.PI * Math.min(1, tt / .7)) * (tt < .7 ? 1 : .35); return [.005, w - .0045]; };
+      const centreAt = tt => { const [a, b] = band(tt); return a + (b - a) * (.5 + .4 * Math.sin(tt * 10 + side)); };
+      // Curling tendrils between the leaves, on the side away from the leaf below: spirals
+      // 9 mm across that tighten through one and a quarter turns, sampled as polylines.
+      const tendrils = [0, 1, 2, 3, 4].map(n => {
+        const tl = .055 + n * .11, out = n % 2 ? 1 : -1, stem = centreAt(tl), cx = stem + out * .0045, cy = tl * length + .002;
+        return Array.from({ length: 40 }, (_, j) => { const u = j / 39, angle = (out > 0 ? Math.PI : 0) - out * u * 2.5 * Math.PI, r = .0045 * (1 - .7 * u); return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)]; });
+      });
       for (let s = 0; s <= steps; s++) {
         const t = s / steps, y = THREE.MathUtils.lerp(buttonY, collarY - .01, t), xEdge = side * (BLAZER.neckWidth + (y - buttonY) * BLAZER.slope);
         let zFront = 0; for (let i = 0; i < count; i++) if (torso[i] > .4 && Math.abs(rest[i * 3 + 1] - y) < .012 && Math.abs(rest[i * 3] - xEdge) < .03) zFront = Math.max(zFront, rest[i * 3 + 2]);
         const width = .012 + .03 * Math.sin(Math.PI * Math.min(1, t / .7)) * (t < .7 ? 1 : .35);
-        for (const [k, across] of [[0, 0], [1, .004], [2, .005], [3, width]]) {
-          positions.push(...toRoot(new THREE.Vector3(xEdge + side * across, y, zFront + BLAZER.torso + .008 - across * .15)).sub(chestOrigin).toArray()); edge.push(k < 2 ? 1 : 0);
+        const satin = Array.from({ length: inner }, (_, n) => .005 + (width - .0095) * n / (inner - 1));
+        const cuts = [0, .004, ...satin, width - .0035, width];
+        for (const [k, across] of cuts.entries()) {
+          const f = across / width, roll = .0035 * Math.sin(Math.PI * f);
+          // A vine of half-width 2.4 mm winding across the satin band (never off it, even at the
+          // narrow tip by the button), about one and a half turns per lapel; the grid's columns
+          // are under 2 mm apart, so the line stays continuous.
+          const centre = centreAt(t);
+          let vine = k > 1 && k < cuts.length - 2 && t < .68 ? Math.max(0, 1 - Math.abs(across - centre) / .0024) : 0;
+          // Leaves branch off the vine every ~1/9 of the lapel, alternating sides: pointed
+          // ellipses 11 mm long and 4 mm wide, leaning up and out at 40 degrees from the stem.
+          for (let n = 1; n < 6 && k > 1 && k < cuts.length - 2; n++) {
+            const tl = n * .11, out = n % 2 ? 1 : -1, [a, b] = band(tl), stem = centreAt(tl);
+            const dirX = out * Math.sin(.7), dirY = Math.cos(.7);
+            const tip = { x: stem + dirX * .0055, y: tl * length + dirY * .0055 };
+            const dx = across - tip.x, dy = t * length - tip.y, along = dx * dirX + dy * dirY, side2 = -dx * dirY + dy * dirX;
+            const leaf = 1 - Math.hypot(along / .0055, side2 / (.002 * (1 - Math.min(1, Math.abs(along) / .0055) ** 2) + 1e-4));
+            if (across > a - .0005 && across < b + .0005) vine = Math.max(vine, Math.min(1, leaf * 3));
+          }
+          if (k > 1 && k < cuts.length - 2) {
+            const [a, b] = band(t);
+            for (const curl of tendrils) for (const [x, yy] of curl) {
+              const d = Math.hypot(across - x, t * length - yy);
+              if (d < .0016 && across > a - .0005 && across < b + .0005) vine = Math.max(vine, 1 - d / .0016);
+            }
+          }
+          // The rose-gold work is raised 0.7 mm proud of the satin, so it catches light in relief.
+          const gild = k < 2 || k > cuts.length - 3 ? 1 : vine;
+          positions.push(...toRoot(new THREE.Vector3(xEdge + side * across, y, zFront + BLAZER.torso + .008 - across * .15 + roll + .0007 * gild)).sub(chestOrigin).toArray());
+          edge.push(gild);
         }
         if (s < steps) for (let k = 0; k < columns - 1; k++) { const a = s * columns + k, b = a + columns; indices.push(a, a + 1, b, a + 1, b + 1, b); }
       }

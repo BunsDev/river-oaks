@@ -259,3 +259,66 @@ test('bangs: a fringe in front of her forehead, ending just above the brows, mov
     assert.ok(Math.abs(turned - .5) < .05, `the fringe turns ${turned.toFixed(3)} rad with a 0.5 rad head turn`);
   } finally { costume.dispose(); rig.dispose(); }
 });
+
+test('the lapels lie on the blazer front, not behind it', async () => {
+  const { object, rig, costume, body } = await dressed();
+  try {
+    object.updateMatrixWorld(true);
+    const { blazer, lapels } = costume.suit, shell = blazer.geometry.attributes.position, point = new THREE.Vector3();
+    assert.equal(lapels.length, 2);
+    for (const lapel of lapels) {
+      const p = lapel.geometry.attributes.position; let hidden = 0, worst = 0;
+      for (let i = 0; i < p.count; i++) {
+        body.worldToLocal(lapel.localToWorld(point.fromBufferAttribute(p, i)));
+        let cloth = -Infinity; for (const k of blazer.covered) if (Math.abs(shell.getX(k) - point.x) < .006 && Math.abs(shell.getY(k) - point.y) < .006) cloth = Math.max(cloth, shell.getZ(k));
+        if (cloth > -Infinity && point.z < cloth + .001) { hidden++; worst = Math.max(worst, cloth - point.z); }
+      }
+      assert.ok(hidden <= p.count * .05, `${lapel.name}: ${hidden} of ${p.count} points behind the blazer (up to ${(worst * 1000).toFixed(1)} mm)`);
+    }
+  } finally { costume.dispose(); rig.dispose(); }
+});
+
+test('a rose-gold vine winds unbroken up each lapel, between the piped edges, with raised leaves and tendrils', async () => {
+  const { object, rig, costume, body } = await dressed();
+  try {
+    for (const lapel of costume.suit.lapels) {
+      const piping = lapel.geometry.attributes.piping, columns = 22, rows = piping.count / columns;
+      assert.equal(rows, Math.round(rows), 'a regular grid');
+      let lit = 0, vineRows = 0;
+      for (let r = 0; r < rows; r++) {
+        if (r / (rows - 1) >= .66) continue; vineRows++;
+        // The satin columns, inside both piped edges.
+        let best = 0; for (let c = 2; c < columns - 2; c++) best = Math.max(best, piping.getX(r * columns + c));
+        if (best > .5) lit++;
+      }
+      assert.equal(lit, vineRows, `${lapel.name}: the vine shows in ${lit} of ${vineRows} rows`);
+      // Leaves branch off it: some rows cross the stem and a leaf as two separate runs.
+      let branched = 0, curled = 0;
+      for (let r = 0; r < rows; r++) {
+        let runs = 0, on = false; for (let c = 2; c < columns - 2; c++) { const now = piping.getX(r * columns + c) > .5; if (now && !on) runs++; on = now; }
+        if (runs >= 2) branched++;
+        if (runs >= 3) curled++;
+      }
+      // Tendrils curl between the leaves: a row through a spiral crosses it twice beside the stem.
+      assert.ok(curled >= 2, `${lapel.name}: ${curled} rows cross a curling tendril`);
+      assert.ok(branched >= 4, `${lapel.name}: ${branched} rows cross a leaf beside the stem`);
+      // The gilt work stands proud of the satin: each gilt point sits above the midpoint of its
+      // neighbours across the row by about the raise times how much more gilt it carries.
+      const pos = lapel.geometry.attributes.position, normals = lapel.geometry.attributes.normal, outward = new THREE.Vector3(), a = new THREE.Vector3(), b = new THREE.Vector3(), here = new THREE.Vector3();
+      for (let i = 0; i < normals.count; i++) outward.add(a.fromBufferAttribute(normals, i));
+      outward.normalize();
+      // Face it away from her body (the winding decides which way the normals point).
+      object.updateMatrixWorld(true);
+      const front = outward.clone().transformDirection(lapel.matrixWorld).transformDirection(body.matrixWorld.clone().invert());
+      if (front.z < 0) outward.negate();
+      let raised = 0, compared = 0;
+      for (let r = 1; r < rows - 1; r++) for (let c = 3; c < columns - 3; c++) {
+        const i = r * columns + c, excess = piping.getX(i) - (piping.getX(i - 1) + piping.getX(i + 1)) / 2;
+        if (excess < .4) continue; compared++;
+        const bump = here.fromBufferAttribute(pos, i).sub(a.fromBufferAttribute(pos, i - 1).add(b.fromBufferAttribute(pos, i + 1)).multiplyScalar(.5)).dot(outward);
+        if (bump > .0004 * excess) raised++;
+      }
+      assert.ok(compared > 20 && raised > compared * .9, `${lapel.name}: ${raised} of ${compared} gilt points stand proud of the satin beside them`);
+    }
+  } finally { costume.dispose(); rig.dispose(); }
+});

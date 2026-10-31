@@ -210,3 +210,76 @@ All three are in the session's face captures.
 - It is one sheet, not hair cards. The strands don't move independently or react to wind.
 - The reference's side-swept face-framing locks are not attempted.
 - No human review.
+
+## Increment 5: piped lapel outlines (task `jevica-lapels-20261030`, stacked on #817)
+
+**Problem.** The lapels were piped only along the V edge, so in close-ups they read as a
+faint panel and the notched shape was lost. The reference pipes both edges.
+
+**First hypothesis, rejected.** I thought #815's tailoring had pushed the blazer in front
+of the lapels. A new test shows otherwise: under 5% of lapel points sit behind the blazer
+surface, and the test passed before any change. It stays as a guard.
+
+**What changes.** Each lapel ribbon gains two outer columns, 3.5 mm and 4.5 mm in from its
+edge, piped rose-gold. The notched outline now reads in front and three-quarter close-ups.
+
+**Results.**
+- Node: `jevica-reference-look` 11/11.
+- Browser: likeness IoU 0.598, mean ΔE 16.9; `jevica-gown`, `jevica-waist`, `jewel-optics`, `gown-sampling` and `gown-contact-samples` pass.
+- Core verify passed: agent 294/294; preview 4772 pass, 1 skipped; server 1110 pass, 285 skipped; desktop 127 pass, 5 skipped.
+
+**Follow-up: roll and vine.**
+- **Roll:** the satin now bows up to 3.5 mm outward between its edges, so it catches light
+  like a pressed lapel.
+- **Vine:** a rose-gold vine winds up the lower two thirds of each lapel, about one and a
+  half turns.
+  - The first try broke into dashes: the line was thinner than the 3.5 mm column spacing.
+    The grid went to 22 columns by 61 rows.
+  - The second try lost the vine at the narrow tip by the button. It is now placed within
+    the satin band itself.
+  - A test requires the vine in every row below the notch. It failed on both earlier tries.
+- **Likeness:** IoU 0.598 is unchanged. Mean ΔE went 16.9 → 17.1 and jacket-chest 9.9 → 11.6,
+  because that sample sits on the right lapel and now picks up the rolled shading and the
+  vine. It stays under the region's threshold. The reference has filigree at that spot too,
+  but the sample measures flat colour.
+- Core verify passed again: agent 294/294; preview 4773 pass, 1 skipped; server 1110 pass,
+  285 skipped; desktop 127 pass, 5 skipped.
+
+**Follow-up: raised gilt.** The piping, vine and leaves stand 0.7 mm proud of the satin,
+scaled by how much gilt each vertex carries. At three-quarter view the piped rims catch a
+highlight.
+- The test measures each gilt point's height above the midpoint of its row neighbours,
+  along the lapel's outward direction. Outward is taken from her body, because the mesh
+  normals face inward.
+- It passes 46 of 46 with the raise and 0 of 46 without. Two earlier versions of the
+  measure were wrong (a slope-polluted neighbour comparison, then an inverted normal), and
+  their debug output is in the session.
+- Likeness is unchanged: IoU 0.598, mean ΔE 17.2. Core verify passed with the same counts.
+
+**Follow-up: leaves.**
+- Five leaves branch off each vine on alternating sides: pointed ellipses 11 mm by 4 mm,
+  leaning 40° up and out. The vine widened to 2.4 mm half-width, and the grid went to
+  22 by 121.
+- The first leaf try was too fine to see at chest-camera distance.
+- A test counts rows that cross a leaf beside the stem: 6 on the right lapel with leaves,
+  0 with the leaves removed. The threshold is 4.
+- Likeness: IoU 0.598 is unchanged. Mean ΔE is 17.2, and jacket-chest is 12.7 (it sits on
+  the lapel).
+- Core verify passed: agent 294/294; preview 4773 pass, 1 skipped; server 1110 pass,
+  285 skipped; desktop 127 pass, 5 skipped.
+
+**Follow-up: tendrils.**
+- Five curling tendrils leave each vine on alternating sides at the leaf heights, each a
+  1.25-turn spiral that tightens from a 4.5 mm radius. They carry the same raised gilt.
+- A test counts rows that cross the vine in three or more runs: 2 on the right lapel with
+  tendrils, 0 without them. The threshold is 2.
+- Likeness: IoU 0.598 and mean ΔE 17.2 are unchanged; jacket-chest stays 12.7. All six
+  Jevica journeys pass.
+- The first core verify was cut off when the preview stage hit its 600 s timeout at load
+  48, with no failing test. Rerun gated on load: agent 294/294; preview 4773 pass,
+  1 skipped; server 1110 pass, 285 skipped; desktop 127 pass, 5 skipped; no leaks.
+
+**Gaps.**
+- The filigree relief is only 0.7 mm (a vertex offset, no bevel or separate mesh).
+- The lapel is a rolled ribbon pinned to the chest, not a separate collar piece.
+- No human review.
