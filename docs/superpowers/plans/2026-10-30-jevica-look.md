@@ -268,8 +268,18 @@ highlight.
 - Core verify passed: agent 294/294; preview 4773 pass, 1 skipped; server 1110 pass,
   285 skipped; desktop 127 pass, 5 skipped.
 
+**Follow-up: tendrils.**
+- Five curling tendrils leave each vine on alternating sides at the leaf heights, each a
+  1.25-turn spiral that tightens from a 4.5 mm radius. They carry the same raised gilt.
+- A test counts rows that cross the vine in three or more runs: 2 on the right lapel with
+  tendrils, 0 without them. The threshold is 2.
+- Likeness: IoU 0.598 and mean ΔE 17.2 are unchanged; jacket-chest stays 12.7. All six
+  Jevica journeys pass.
+- The first core verify was cut off when the preview stage hit its 600 s timeout at load
+  48, with no failing test. Rerun gated on load: agent 294/294; preview 4773 pass,
+  1 skipped; server 1110 pass, 285 skipped; desktop 127 pass, 5 skipped; no leaks.
+
 **Gaps.**
-- The filigree has no curling tendrils, and its relief is only 0.7 mm (a vertex offset, no
-  bevel or separate mesh).
+- The filigree relief is only 0.7 mm (a vertex offset, no bevel or separate mesh).
 - The lapel is a rolled ribbon pinned to the chest, not a separate collar piece.
 - No human review.

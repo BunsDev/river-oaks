@@ -278,7 +278,7 @@ test('the lapels lie on the blazer front, not behind it', async () => {
   } finally { costume.dispose(); rig.dispose(); }
 });
 
-test('a rose-gold vine winds unbroken up each lapel, between the piped edges, with raised leaves', async () => {
+test('a rose-gold vine winds unbroken up each lapel, between the piped edges, with raised leaves and tendrils', async () => {
   const { object, rig, costume, body } = await dressed();
   try {
     for (const lapel of costume.suit.lapels) {
@@ -293,11 +293,14 @@ test('a rose-gold vine winds unbroken up each lapel, between the piped edges, wi
       }
       assert.equal(lit, vineRows, `${lapel.name}: the vine shows in ${lit} of ${vineRows} rows`);
       // Leaves branch off it: some rows cross the stem and a leaf as two separate runs.
-      let branched = 0;
+      let branched = 0, curled = 0;
       for (let r = 0; r < rows; r++) {
         let runs = 0, on = false; for (let c = 2; c < columns - 2; c++) { const now = piping.getX(r * columns + c) > .5; if (now && !on) runs++; on = now; }
         if (runs >= 2) branched++;
+        if (runs >= 3) curled++;
       }
+      // Tendrils curl between the leaves: a row through a spiral crosses it twice beside the stem.
+      assert.ok(curled >= 2, `${lapel.name}: ${curled} rows cross a curling tendril`);
       assert.ok(branched >= 4, `${lapel.name}: ${branched} rows cross a leaf beside the stem`);
       // The gilt work stands proud of the satin: each gilt point sits above the midpoint of its
       // neighbours across the row by about the raise times how much more gilt it carries.
