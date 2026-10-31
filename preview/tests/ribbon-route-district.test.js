@@ -2,49 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { expandRibbon } from '../../shared/city-kit/ribbon-layout.js';
-import { laneFixtures, storefrontBenchSpots } from '../src/street-fixtures.js';
+import { storefrontBenchSpots } from '../src/street-fixtures.js';
+import { districtRibbonExclusions, RIBBON_DOOR } from '../src/ribbon-district.js';
 
 // The first District Ribbon route (#825 slice 2a): the east side of the central access lane,
 // from just south of the arrival spawn past Van Cleef & Arpels and IPIC to the lane's north end.
-// Its exclusions are derived here from the live District data, so a moved door, bench, lamp or
-// building fails this test instead of silently putting a post in someone's way.
+// Its exclusions come from the live District data (ribbon-district.js, the same builder the
+// renderer uses), so a moved door, bench, lamp or building fails this test instead of silently
+// putting a post in someone's way.
 const read = path => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
 const world = read('../public/data/district.json'), route = read('../../config/ribbon/district-spine.json');
-const LANE = 'osm-way-583333526-0';
-// A door's clear zone: 2.4 m along the facade, 2 m out from it. The repo states no door clearance;
-// these are this route's working values (ledger: 2026-10-31-ribbon-route-825.md).
-const DOOR_WIDTH = 2.4, DOOR_DEPTH = 2;
-const square = (x, y, half) => [x - half, y - half, x + half, y + half];
-const round = rect => rect.map(value => Math.round(value * 1000) / 1000);
-
-function districtExclusions() {
-  const out = [], add = (id, kind, rect) => out.push({ id, kind, rect: round(rect) });
-  for (const store of world.stores) {
-    const [fx, fy] = store.facade, [nx, ny] = store.outward, cx = fx + nx * DOOR_DEPTH / 2, cy = fy + ny * DOOR_DEPTH / 2;
-    const hx = Math.abs(nx) * DOOR_DEPTH / 2 + Math.abs(ny) * DOOR_WIDTH / 2, hy = Math.abs(ny) * DOOR_DEPTH / 2 + Math.abs(nx) * DOOR_WIDTH / 2;
-    add(`door-${store.id.replace(/[^a-z0-9]+/g, '-')}`.slice(0, 32), 'doorway', [cx - hx, cy - hy, cx + hx, cy + hy]);
-  }
-  // A storefront bench and the reach in front of it.
-  storefrontBenchSpots(world).forEach((bench, i) => add(`bench-${i}`, 'seat-access', square(bench.x + bench.outward[0] * 0.6, bench.north + bench.outward[1] * 0.6, 1.4)));
-  // Lane fixtures are in scene coordinates: [east, height, -north].
-  const { lamps, planters, bins } = laneFixtures(world);
-  [...lamps.map(f => ['lamp', f]), ...planters.map(f => ['planter', f]), ...bins.map(f => ['bin', f])].forEach(([kind, f], i) => add(`${kind}-${i}`, 'no-go', square(f[0], -f[2], 0.6)));
-  world.buildings.forEach((building, i) => {
-    const xs = building.ring.map(p => p[0]), ys = building.ring.map(p => p[1]);
-    add(`building-${i}`, 'no-go', [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]);
-  });
-  // The lane's carriageway and kerb, in pieces of at most 5 m so the boxes hug a slanting lane.
-  const lane = world.roads.find(road => road.id === LANE), half = lane.width_m / 2 + 0.15;
-  let piece = 0;
-  for (let i = 1; i < lane.points.length; i++) {
-    const a = lane.points[i - 1], b = lane.points[i], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 5));
-    for (let j = 0; j < n; j++) {
-      const p = [a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n], q = [a[0] + (b[0] - a[0]) * (j + 1) / n, a[1] + (b[1] - a[1]) * (j + 1) / n];
-      add(`carriageway-${piece++}`, 'no-go', [Math.min(p[0], q[0]) - half, Math.min(p[1], q[1]), Math.max(p[0], q[0]) + half, Math.max(p[1], q[1])]);
-    }
-  }
-  return out;
-}
+const DOOR_DEPTH = RIBBON_DOOR.depth;
+const districtExclusions = () => districtRibbonExclusions(world);
 
 test('the District spine clears every door, bench, lane fixture, building and the carriageway', () => {
   const plan = expandRibbon({ ...route, exclusions: districtExclusions() });
