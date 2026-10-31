@@ -15,6 +15,14 @@ async page => {
  check(desktop.width>=1412&&desktop.height>=872,'Desktop Studio fills the available viewport');
  check(desktop.scrollWidth<=desktop.clientWidth&&desktop.contentHeight<=desktop.controlHeight+1,`Desktop controls fit without scrolling: ${JSON.stringify(desktop)}`);
  await page.screenshot({path:'output/playwright/character-studio-layout-desktop.png'});
+ // A realistic person's detail step and locked reasons fit the same desktop window.
+ await studio.locator('[data-character=morgan]').click();
+ await page.waitForFunction(()=>document.querySelector('.character-studio[open] .cs-preview')?.dataset.appearance==='morgan-human'&&document.querySelector('.cs-preview').dataset.ready==='true');
+ const realistic=await studio.evaluate(n=>{const controls=n.querySelector('.cs-controls');return {scrollWidth:n.scrollWidth,clientWidth:n.clientWidth,controlHeight:controls.clientHeight,contentHeight:controls.scrollHeight};});
+ check(realistic.scrollWidth<=realistic.clientWidth&&realistic.contentHeight<=realistic.controlHeight+1,`Desktop realistic controls fit without scrolling: ${JSON.stringify(realistic)}`);
+ await page.screenshot({path:'output/playwright/character-studio-layout-realistic-desktop.png'});
+ await studio.locator('[data-character=sable]').click();
+ await page.waitForFunction(()=>document.querySelector('.cs-preview').dataset.appearance==='sable-human'&&document.querySelector('.cs-preview').dataset.ready==='true');
  await page.setViewportSize({width:390,height:844});
  check(await studio.evaluate(n=>n.scrollWidth<=n.clientWidth&&n.getBoundingClientRect().width<=innerWidth),'Phone Studio fits horizontally');
  const workspace=studio.locator('.cs-workspace');await workspace.evaluate(n=>n.scrollTop=n.scrollHeight);

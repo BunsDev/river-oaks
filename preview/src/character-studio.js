@@ -25,7 +25,7 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
         <fieldset class="cs-wardrobe" data-cs-wardrobe hidden><legend>Wardrobe</legend><div class="cs-segments" data-cs-variants></div></fieldset></fieldset>
       <fieldset class="cs-step" data-cs-realism hidden><legend><span class="cs-step-mark" data-cs-realism-step aria-hidden="true">2</span>Choose detail</legend>
         <div class="cs-segments" data-cs-tiers></div><p class="cs-help" data-cs-tier-status></p>
-        <p class="cs-help">Realistic people come as fitted bundles. These stay as designed:</p><ul class="cs-locked" data-cs-locked></ul></fieldset>
+        <ul class="cs-locked" data-cs-locked aria-label="Fixed in this realistic bundle"></ul></fieldset>
       <fieldset class="cs-step" data-cs-authored data-cs-color-set><legend><span class="cs-step-mark" data-cs-color-step aria-hidden="true">3</span>Add color</legend><div class="cs-colors" data-cs-colors>
         <fieldset data-palette><legend>Dress color</legend><div class="cs-swatches">${Object.entries(CHARACTER_PALETTES).map(([id,item])=>`<label class="cs-swatch" data-palette="${id}" title="${item.label}" style="--cs-swatch:${item.color}"><input type="radio" name="cs-palette" value="${id}" aria-label="${item.label}"></label>`).join('')}</div><p data-palette-name></p></fieldset>
         <fieldset data-hair><legend>Hair color</legend><div class="cs-swatches">${Object.entries(CHARACTER_HAIR).map(([id,item])=>`<label class="cs-swatch" data-hair="${id}" title="${item.label}" style="--cs-swatch:${item.color}"><input type="radio" name="cs-hair" value="${id}" aria-label="${item.label}"></label>`).join('')}</div><p data-hair-name></p></fieldset></div>
