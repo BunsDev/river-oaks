@@ -530,6 +530,37 @@ export function applyJevicaMakeup(model, owned) {
   return { marks, lips, blush, halfWidth };
 }
 
+// The reference's face is finer than the hero head: a softer V toward the chin and a
+// narrower nose. All are horizontal squeezes of her own skin in bind space, fading to
+// nothing at the lips, the jaw angle and the neck, so the lips, collar fit and skin
+// seams are untouched (seam duplicates share a position, so they move together).
+export const FACE = Object.freeze({ jaw: .2, cheek: .1, nose: .15 });
+export function shapeJevicaFace(model, marks, owned) {
+  const body = model.getObjectByName('Jevica'), eyes = model.getObjectByName('Jevicahigh-poly');
+  if (!body || !eyes || !marks) return null;
+  if (!owned.has(body.geometry)) { body.geometry = body.geometry.clone(); owned.add(body.geometry); }
+  eyes.geometry.computeBoundingBox();
+  const eyesY = (eyes.geometry.boundingBox.min.y + eyes.geometry.boundingBox.max.y) / 2, smooth = THREE.MathUtils.smoothstep;
+  const p = body.geometry.attributes.position, n = body.geometry.attributes.normal;
+  let moved = 0, largest = 0;
+  for (let i = 0; i < p.count; i++) {
+    const [x, y, z] = [p.getX(i), p.getY(i), p.getZ(i)], below = marks.mouth - y;
+    const jaw = smooth(below, .005, .04) * (1 - smooth(below, .05, .07)) * smooth(z, marks.mouthZ - .06, marks.mouthZ - .035);
+    const nose = smooth(y, marks.noseTip - .02, marks.noseTip - .012) * (1 - smooth(y, eyesY - .02, eyesY - .005))
+      * smooth(z, marks.noseZ - .03, marks.noseZ - .018) * (1 - smooth(Math.abs(x), .022, .03));
+    // The lower cheeks beside the mouth slim too, from 1.5 cm above the mouth line, outside the lips.
+    const cheek = smooth(below, -.015, .005) * (1 - smooth(below, .03, .06)) * smooth(Math.abs(x), .028, .042) * smooth(z, marks.mouthZ - .07, marks.mouthZ - .045);
+    const k = 1 - Math.max(FACE.jaw * jaw, FACE.cheek * cheek) - FACE.nose * nose;
+    if (k >= 1) continue;
+    p.setX(i, x * k); moved++; largest = Math.max(largest, Math.abs(x * (1 - k)));
+    // A squeeze along x tilts normals the other way: scale x by 1/k and renormalise.
+    if (n) { const v = new THREE.Vector3(n.getX(i) / k, n.getY(i), n.getZ(i)).normalize(); n.setXYZ(i, v.x, v.y, v.z); }
+  }
+  p.needsUpdate = true; if (n) n.needsUpdate = true;
+  body.geometry.computeBoundingSphere();
+  return { moved, largest };
+}
+
 export const BANGS = Object.freeze({ halfWidth: .058, above: .05, gap: .006, sides: .014, offset: .005, columns: 40, rows: 14 });
 export function bangsStrands(size = 128, seed = 7) {
   const pixels = new Uint8Array(size * size * 4);

@@ -283,3 +283,47 @@ highlight.
 - The filigree relief is only 0.7 mm (a vertex offset, no bevel or separate mesh).
 - The lapel is a rolled ribbon pinned to the chest, not a separate collar piece.
 - No human review.
+
+## Increment 6: face shape without the asset packs (task `jevica-face-20261030`, stacked on #818)
+
+**Approach.** Proper face shapes need the MPFB and Faceunits packs, which are not
+authorized for download. Instead, `shapeJevicaFace` in `preview/src/jevica-suit.js` squeezes
+her own copy of the skin horizontally in bind space, anchored on the makeup's landmarks.
+Each move is a function of the vertex position, so seam duplicates move together, and
+normals are corrected for the squeeze rather than recomputed, which would open UV seams.
+
+| Region | Squeeze | Fades out at |
+| --- | --- | --- |
+| Jaw | up to 20% toward the chin | the mouth line, 7 cm below it, and toward the jaw angle |
+| Lower cheeks | up to 10%, from 1.5 cm above the mouth | inside the lips (\|x\| < 2.8 cm) |
+| Nose | 15%, bridge to nostrils | the cheeks |
+
+**Measured** (front surface, against an undressed instance of the same rig):
+
+| Width | Before | After |
+| --- | --- | --- |
+| Lower face, mouth −3 cm | 66.6 mm | 61.4 mm |
+| Cheeks at the mouth line | 106.6 mm | 100.4 mm |
+| Nose at the tip | 33.4 mm | 28.6 mm |
+
+- Largest shift: 4.8 mm; 4,869 vertices moved.
+- The lips, neck, forehead, eyes and source asset are untouched; the test asserts this.
+
+**Tries.**
+1. Jaw and nose only. The cheeks at mouth level stayed round.
+2. Final: lower cheeks added outside the lips.
+
+Captures are in the session.
+
+**Results** (on top of the tendril commit `e4319b77`):
+- Node: `jevica-reference-look` 13/13. With the reshape removed, the face test fails.
+- Browser: likeness IoU 0.598 (unchanged), mean ΔE 17.2 → 17.4. `jevica-gown`,
+  `jevica-waist`, `jewel-optics`, `gown-sampling` and `gown-contact-samples` pass.
+- Core verify passed: agent 294/294; preview 4774 pass, 1 skipped; server 1110 pass,
+  285 skipped; desktop 127 pass, 5 skipped.
+
+**Gaps.**
+- No eye-shape, lid or brow changes. Those need the face rig's shape keys, which need the
+  packs.
+- The change is subtle.
+- No human review.
