@@ -31,7 +31,12 @@ right-thumb action cluster, without changing any movement contract.
 
 - 2026-10-31 `node --test preview/tests/touch-gamepad.test.js`: 8/8 pass.
 - 2026-10-31 `pnpm run build`: pass.
-- `pnpm run verify` and the touch journeys: see the handoff / PR for results.
+- 2026-10-31 `pnpm run verify` on 5204e4b8 (base 5b00fd0b): `core: passed`.
+  Preview unit 4821 tests, 4785 pass, 0 fail, 1 skipped, 35 todo (known
+  hud-token-contrast items); server 1395/1110 pass, 0 fail, 285 skipped;
+  desktop 132/127 pass, 0 fail, 5 skipped; secrets scan clean.
+- Not yet run: touch journeys (`district-polish`, `touch-people`,
+  `touch-hold`) under the browser lock; `pnpm run verify full`.
 
 ## Gaps
 
