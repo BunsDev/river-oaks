@@ -20,14 +20,22 @@ export function thirdPersonPose(state, environment) {
   const boomLength=state.cameraDistance??4.2;
   const distance = boomLength * Math.cos(pitch);
   const boom = [Math.sin(state.yaw) * distance, 1.05 - Math.sin(pitch) * boomLength, Math.cos(state.yaw) * distance];
-  const room = environment.roomAt?.(x, z)?.storeId ?? null;
+  // roomAt is a footprint lookup. Above a shop's ceiling it is open sky, not
+  // an indoor camera: walking clearance would pull the boom into the craft.
+  const roomAtHeight = (x, y, z) => {
+    const room = environment.roomAt?.(x, z);
+    if (!room) return null;
+    const ceiling = room.ceilingAt?.(x, -z) ?? (room.floorAt?.(x, -z) ?? room.floor) + room.height;
+    return y > ceiling ? null : room;
+  };
+  const room = roomAtHeight(x, target[1], z)?.storeId ?? null;
   let fraction = 0;
   for (let step = 1; step <= 42; step++) {
     const t = step / 42, px = x + boom[0] * t, pz = z + boom[2] * t;
     // Indoor rooms already define traversable floor space. Outdoor roof-height
     // restrictions would collapse the camera into the visitor inside every shop.
     const clear = room !== null ? environment.isFree(px, pz) : (environment.canFly?.(px, target[1] + boom[1] * t, pz) ?? environment.isFree(px, pz));
-    const here = environment.roomAt?.(px, pz) ?? null, y = target[1] + boom[1] * t;
+    const y = target[1] + boom[1] * t, here = roomAtHeight(px, y, pz);
     if (!clear || (here?.storeId ?? null) !== room) break;
     if (y < environment.groundAt(px, pz) + 0.25) break;
     // A room that draws its ceilings (IPIC's) keeps the camera under them and what hangs from them. Otherwise, on
