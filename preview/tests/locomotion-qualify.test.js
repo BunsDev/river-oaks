@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { createFootPlacement } from '../src/foot-placement.js';
+import { createFootPlacement, RUN_LAND } from '../src/foot-placement.js';
 import { instantiateAvatar, loadResidentAvatar } from '../src/avatars.js';
 import { OFFICE_LAYOUT_PENTHOUSE, officeElevationAt, officeLayout } from '../src/office-layouts.js';
 import { WALK_SPEED } from '../src/walking.js';
 import { loadCharacterRig } from './helpers/character-rig.js';
 
-// #637 follow-up: stairs, seated transitions and vertical motion on the shipped
-// rigs. Each threshold separates a measurement on main 163c204a from this fix;
+// #637 follow-up: foot contact, horizontal speed, stairs, seated transitions and
+// vertical motion on the shipped rigs. Each threshold separates a measurement on main 163c204a from this fix;
 // the measurements are in the plan
 // (docs/superpowers/plans/2026-10-30-locomotion-qualify-637.md).
 const RIGS = ['jevica', 'man-tailored'];
@@ -32,13 +32,14 @@ function walker(source) {
 }
 
 // Accelerate at the walk's response (walking.js WALK_RESPONSE), hold, then stop.
-function drive(rig, { speed: top, hz, seconds, stop = 1, groundAt = () => 0, from = 0, heading = 0 }, observe) {
+// An instant stop is a run into a wall (walking.js stepWalking zeroes the speed).
+function drive(rig, { speed: top, hz, seconds, stop = 1, groundAt = () => 0, from = 0, heading = 0, instant = false }, observe) {
   let speed = 0, distance = 0;
   const forward = [Math.sin(heading), Math.cos(heading)];
   rig.body.rotation.y = heading;
   for (let frame = 0; frame < (seconds + stop) * hz; frame++) {
     const time = frame / hz, wanted = time < seconds ? top : 0;
-    speed += (wanted - speed) * (1 - Math.exp(-16 / hz)); if (!wanted && speed < .01) speed = 0;
+    speed += (wanted - speed) * (1 - Math.exp(-16 / hz)); if (!wanted && (instant || speed < .01)) speed = 0;
     distance += speed / hz;
     const x = forward[0] * distance, z = from + forward[1] * distance;
     rig.body.position.set(x, groundAt(x, z), z); rig.body.updateMatrixWorld(true);
@@ -47,6 +48,84 @@ function drive(rig, { speed: top, hz, seconds, stop = 1, groundAt = () => 0, fro
     observe({ time, speed, distance, before, holding: time > 1.5 && time < seconds });
   }
 }
+
+test('a run takes running strides at a running cadence; a walk keeps its step and a foot down', async () => {
+  for (const profile of RIGS) {
+    const source = await loadCharacterRig(profile);
+    for (const [speed, shortest] of [[WALK_SPEED.normal, null], [WALK_SPEED.fast, .95], [WALK_SPEED.jevicaFast, 1.6]]) for (const hz of [60, 120]) {
+      const rig = walker(source), lifts = [];
+      let drop = 0, flight = 0, held = 0;
+      drive(rig, { speed, hz, seconds: 4 }, ({ distance, before, holding }) => {
+        rig.placement.legs.forEach((leg, i) => {
+          if (before[i].contact && leg.contact && before[i].target) assert.ok(leg.target.distanceTo(before[i].target) < 1e-9, `${profile} ${speed} m/s ${hz} Hz: a planted foot slides`);
+          if (leg.contact) assert.ok(leg.error < .01, `${profile} ${speed} m/s: a planted foot is out of reach by ${leg.error.toFixed(3)} m`);
+          if (holding && before[i].contact && !leg.contact) lifts.push(distance);
+        });
+        if (holding) { held++; drop = Math.max(drop, rig.hipDrop()); if (!rig.placement.legs.some(leg => leg.contact)) flight++; }
+      });
+      rig.avatar.dispose();
+      const steps = lifts.slice(1).map((at, i) => at - lifts[i]), mean = list => list.reduce((a, b) => a + b, 0) / list.length;
+      const step = mean(steps), odd = mean(steps.filter((_, i) => i % 2)), even = mean(steps.filter((_, i) => !(i % 2)));
+      const label = `${profile} ${speed} m/s ${hz} Hz: step ${step.toFixed(2)} m (${(speed / step).toFixed(1)} steps/s), alternate steps ${odd.toFixed(2)}/${even.toFixed(2)} m, pelvis ${drop.toFixed(3)} m low, ${flight}/${held} frames airborne`;
+      if (shortest === null) {
+        // The walk is unchanged: about 0.44 m steps with a foot always down.
+        assert.ok(Math.abs(step - .44) < .03 && flight === 0, label);
+      } else {
+        // On main every speed stepped about 0.43 m: 7.4 steps/s at 3.2 m/s and 14.9 at 6.4.
+        assert.ok(step > shortest && speed / step < 3.6, label);
+        assert.ok(Math.min(odd, even) / Math.max(odd, even) > .9, `${label}: limping`);
+        assert.ok(flight > held * .3, `${label}: a run has a flight phase`);
+      }
+      // A flight-phase swing that ignored the body reached 0.18 m of pelvis drop.
+      assert.ok(drop < .09, `${label}: crouching`);
+    }
+  }
+});
+
+test('walking and running keep the thighs inside the swing the shipped skirts and coats are fitted to', async () => {
+  // skirt-skinning, drape-skinning and coat-tails verify the garments with each
+  // thigh turned up to 0.75 rad either way. A 12 cm running swing clearance reached
+  // 0.89 rad forward and the mini dress and coat tails clipped at a run.
+  const hip = new THREE.Vector3(), knee = new THREE.Vector3();
+  for (const profile of RIGS) {
+    const source = await loadCharacterRig(profile);
+    for (const speed of [WALK_SPEED.normal, WALK_SPEED.fast, WALK_SPEED.jevicaFast]) {
+      const rig = walker(source);
+      let forward = 0, back = 0;
+      drive(rig, { speed, hz: 60, seconds: 4 }, ({ time }) => {
+        if (time < 1) return;
+        for (const leg of rig.placement.legs) {
+          leg.thigh.getWorldPosition(hip); leg.calf.getWorldPosition(knee);
+          const angle = Math.atan2(knee.z - hip.z, hip.y - knee.y);
+          forward = Math.max(forward, angle); back = Math.min(back, angle);
+        }
+      });
+      rig.avatar.dispose();
+      assert.ok(forward < .75 && back > -.75, `${profile} ${speed} m/s: thighs swing ${back.toFixed(2)} to ${forward.toFixed(2)} rad`);
+    }
+  }
+});
+
+test('stopping from a run lands both feet within RUN_LAND (before an eased stop ends), then settles them under it', async () => {
+  for (const profile of RIGS) {
+    const source = await loadCharacterRig(profile);
+    for (const speed of [WALK_SPEED.fast, WALK_SPEED.jevicaFast]) for (const hz of [30, 60, 120]) for (const seconds of [2, 2.07, 2.13, 2.2, 2.27]) for (const instant of [false, true]) {
+      const rig = walker(source);
+      let stillInAir = 0;
+      drive(rig, { speed, hz, seconds, stop: 1.2, instant }, ({ speed: now }) => {
+        if (now === 0 && !rig.placement.legs.some(leg => leg.contact)) stillInAir++;
+      });
+      // Eased, the feet land while the body is still moving. Stopped dead mid-stride,
+      // both may be in the air for at most the landing (main: one foot always down).
+      assert.ok(stillInAir <= (instant ? Math.ceil(RUN_LAND * hz) : 0), `${profile} ${speed} m/s ${hz} Hz${instant ? ' (instant stop)' : ''}: both feet in the air ${stillInAir} frames with the body stopped`);
+      for (const leg of rig.placement.legs) {
+        assert.ok(leg.contact, `${profile} ${speed} m/s ${hz} Hz${instant ? ' (instant stop)' : ''}: a foot still swinging after stopping`);
+        assert.ok(leg.target.distanceTo(rig.body.localToWorld(leg.rest.clone())) <= .09, `${profile}: a foot left out of stance after stopping`);
+      }
+      rig.avatar.dispose();
+    }
+  }
+});
 
 test('the office stair: walking, fast walking and sprinting up and down keep the feet reached and the body over them', async () => {
   const layout = officeLayout(OFFICE_LAYOUT_PENTHOUSE), { stair } = layout;

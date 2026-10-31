@@ -45,8 +45,15 @@ async page => {
   // A reload mid-flight (a crash, a dropped connection, a dev-server reload) puts Jevica
   // back at the controls where the town holds the craft, instead of on foot in the sky.
   // Let the climb coast to a hover first, so the height compared after the reload is where the craft holds.
-  let settled=await self();
-  for(let i=0;i<20;i++){await page.waitForTimeout(500);const next=await self();if(Math.abs(next.altitude-settled.altitude)<.03){settled=next;break;}settled=next;}
+  // Compare snapshots half a second of town time apart: a slow page can hold one snapshot for longer
+  // than the 500 ms between reads, and two reads of the same snapshot looked settled while the craft
+  // still rose from 11.1 to 11.8 m (run 41140523840).
+  const sample=()=>page.evaluate(()=>{const m=window.__riverMultiplayer();return {altitude:m.snapshot.players.find(p=>p.id===m.selfId).altitude,elapsed:m.snapshot.elapsed};});
+  let settled=await sample();
+  for(let i=0;i<20;i++){
+    await page.waitForFunction(since=>window.__riverMultiplayer().snapshot.elapsed>=since+.5,settled.elapsed,{timeout:10000});
+    const next=await sample();if(Math.abs(next.altitude-settled.altitude)<.03){settled=next;break;}settled=next;
+  }
   const before=settled,refusalsBeforeReload=refusals.length;
   await page.reload();
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',{},{timeout:120000});
