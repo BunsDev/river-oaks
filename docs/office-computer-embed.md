@@ -8,9 +8,10 @@ lifecycle contract that Computer's embed mode implements
 **Status.**
 
 - **Place side:** implemented and tested against a deterministic local child fixture.
-- **Computer side:** a candidate embed build is in draft
+- **Computer side:** the embed build merged in
   [TypeSafeAI/typesafe-computer#34](https://github.com/TypeSafeAI/typesafe-computer/pull/34)
-  (8c0240af, 2026-10-27). Its `docs/PLACE_EMBED.md` adopts version 1 below unchanged.
+  (2026-10-31, head 5d221a5a; the 2026-10-27 draft was 8c0240af). Its `docs/PLACE_EMBED.md`
+  adopts version 1 below unchanged. It is not deployed yet.
   `office-computer-real` runs the desk against it locally (see [Verification](#verification)).
 - **Hosting:** the Place frame policy lists `https://computer.typesafe.place`, the
   same-site Computer origin proposed in
@@ -307,8 +308,8 @@ cookies stay apart; that needs the real host pair (#21).
 These must be resolved before a hosted pilot (tracked in
 [combined acceptance #487](https://github.com/BunsDev/river-oaks/issues/487)):
 
-1. **Computer embed build (#33).** Candidate in draft #34 (8c0240af), with
-   `docs/PLACE_EMBED.md` adopting version 1. Not merged or deployed.
+1. **Computer embed build (#33).** Merged in #34 (2026-10-31), with
+   `docs/PLACE_EMBED.md` adopting version 1. Not deployed.
 2. **Hosting (#21).**
    - Prove the actual origin pair: same-site, separate origins.
    - Repair the staging WorkOS registrations.
