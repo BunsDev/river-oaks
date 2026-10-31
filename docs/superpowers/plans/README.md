@@ -4,13 +4,14 @@
 
 Each plan is a task ledger. Status comes from the task register, where the primary checkout's live copy can be newer than the committed one. Plans from before the register are listed as historical: their own text is the record of what was delivered.
 
-## Active and blocked (24)
+## Active and blocked (25)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-31-docs-plans-review](2026-10-31-docs-plans-review.md)<br>Docs and plans review (goal 2026-10-31) | `docs-plans-review-20261031` | active | #823 | 2026-10-31 |
 | [2026-10-31-docs-plans-review](2026-10-31-docs-plans-review.md)<br>Docs and plans review (goal 2026-10-31) | `docs-review-text-20261031` | active | #824 | 2026-10-31 |
 | [2026-10-30-phase3-acceptance](2026-10-30-phase3-acceptance.md)<br>Phase 3 (#584, #585, #586): acceptance audit on current main, and the gaps fixed | `phase3-tree-overlaps-20261030` | active | #819 | 2026-10-30 |
+| [2026-10-27-release-0.2.2](2026-10-27-release-0.2.2.md)<br>Release 0.2.2: macOS, Windows and Linux | `release-0-2-2` | queued | #712 | 2026-10-31 |
 | [2026-10-27-computer-desk-acceptance-487](2026-10-27-computer-desk-acceptance-487.md)<br>#487 Combined TypeSafe Computer desk acceptance | `computer-embed-33-20261027` | active | — | 2026-10-27 |
 | [2026-10-24-desktop-three-platform](2026-10-24-desktop-three-platform.md)<br>Desktop on Windows, Linux and macOS: release readiness (#369–#373) | `desktop-diag-runs-370-371-20261024` | blocked | — | 2026-10-30 |
 | [2026-10-24-default-appearance-517](2026-10-24-default-appearance-517.md)<br>#517 bounded default-appearance trial (Jevica and Sable) | `default-appearance-517-base-20261024` | queued | — | 2026-10-28 |
@@ -49,7 +50,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-15-studio-pilot-acceptance](2026-10-15-studio-pilot-acceptance.md)<br>Garden Office pilot acceptance (#417, parent #413) | `studio-417-closeout-f0d01729-20261030` | delivered | #806 | 2026-10-31 |
 | [2026-10-11-pending-integration](2026-10-11-pending-integration.md)<br>Pending delivery integration | `primary-reconciliation` | delivered | — | 2026-10-11 |
 
-## Retired (366)
+## Retired (365)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
@@ -88,7 +89,6 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-28-destination-layout](2026-10-28-destination-layout.md)<br>City-kit layout: blocks derived from streets | `destination-pipeline-20261028` | retired | #750 | 2026-10-29 |
 | [2026-10-28-destination-layout](2026-10-28-destination-layout.md)<br>City-kit layout: blocks derived from streets | `destination-effort-20261029` | retired | #759 | 2026-10-29 |
 | [2026-10-28-destination-layout](2026-10-28-destination-layout.md)<br>City-kit layout: blocks derived from streets | `destination-migrate-20261029` | retired | #760 | 2026-10-29 |
-| [2026-10-27-release-0.2.2](2026-10-27-release-0.2.2.md)<br>Release 0.2.2: macOS, Windows and Linux | `release-0-2-2` | retired | #712 | 2026-10-31 |
 | [2026-10-27-onfoot-encounter-640-inc3-5](2026-10-27-onfoot-encounter-640-inc3-5.md)<br>#640 GTA-inspired on-foot encounter: increments 3, 4 and 5 | `onfoot-encounter-640-inc3-20261027` | retired | #708 | 2026-10-30 |
 | [2026-10-27-onfoot-encounter-640-inc3-5](2026-10-27-onfoot-encounter-640-inc3-5.md)<br>#640 GTA-inspired on-foot encounter: increments 3, 4 and 5 | `onfoot-encounter-640-inc4-20261027` | retired | #710 | 2026-10-30 |
 | [2026-10-27-onfoot-encounter-640-inc3-5](2026-10-27-onfoot-encounter-640-inc3-5.md)<br>#640 GTA-inspired on-foot encounter: increments 3, 4 and 5 | `onfoot-encounter-640-inc5-20261027` | retired | #732 | 2026-10-30 |

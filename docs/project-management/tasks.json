@@ -33721,7 +33721,7 @@
     {
       "id": "release-0-2-2",
       "title": "Release 0.2.2: first three-platform desktop release (Val, 2026-10-27: \"dont wait for the signature to update\"; Windows ships unsigned)",
-      "status": "retired",
+      "status": "queued",
       "owner": null,
       "branches": [],
       "ledger": "docs/superpowers/plans/2026-10-27-release-0.2.2.md",
@@ -33739,8 +33739,8 @@
         "pnpm run desktop:package:check",
         "desktop:sign with notarization (spctl Notarized Developer ID)"
       ],
-      "nextAction": "2026-10-31T19:44:41Z docs review (river-oaks-48): retired. Delivery proof is the merged PR in evidence; the local checkout was already archived by the earlier stale cancellation (manifest under archive, verified present on this machine). Restore from that manifest before resuming any follow-up; remaining scope needs its own task.",
-      "updatedAt": "2026-10-31T19:44:43Z",
+      "nextAction": "2026-10-31T19:49:46Z docs review (river-oaks-48): back to queued. #712 (release branch: ledger and release prep) merged as f4dd959a on 2026-10-27, but no GitHub release v0.2.2 exists (releases/tags/v0.2.2 is 404) and the ledger's close-out lines are unfilled placeholders, so the release itself is not delivered. The local branch is archived (cancel-stale-jHNQyi); restore it before resuming. Publication waits on Val (steward 2026-10-30: the release lane waits on Val).",
+      "updatedAt": "2026-10-31T19:49:46Z",
       "pr": 712,
       "evidence": [
         {
@@ -38718,10 +38718,19 @@
         "docs/character-studio.md",
         "docs/ios-feasibility.md",
         "docs/acceptance/crime-release-599.md",
-        "docs/app-review-292.md"
+        "docs/app-review-292.md",
+        "docs/superpowers/plans/2026-10-28-landowner-hovercraft.md",
+        "docs/superpowers/plans/2026-10-26-rider-pose.md",
+        "docs/superpowers/plans/2026-10-24-default-appearance-517.md",
+        "docs/superpowers/plans/2026-10-29-pink-jet-age-architecture.md",
+        "docs/superpowers/plans/2026-10-26-depth-shader-audit.md",
+        "docs/superpowers/plans/2026-10-18-cartier-pilot-recovery.md",
+        "docs/superpowers/plans/2026-10-15-studio-pilot-acceptance.md",
+        "docs/superpowers/plans/2026-10-29-wave-3-steward.md",
+        "docs/superpowers/plans/2026-10-27-release-0.2.2.md"
       ],
-      "nextAction": "Draft #824 at 804d5761 (signed; core passed, 0 failures). Blocked on hosted preview unit until #821 (audit fix) lands; then Val marks ready and lands. This session cannot mark ready (permission policy).",
-      "updatedAt": "2026-10-31T19:48:03Z",
+      "nextAction": "Draft #824 at fbadc108 (signed; core passed on 804d5761, then prose-only ledger closeouts). Blocked on hosted preview unit until #821 lands; Val marks ready and lands. This session cannot mark ready (permission policy).",
+      "updatedAt": "2026-10-31T19:50:40Z",
       "pr": 824
     }
   ]
