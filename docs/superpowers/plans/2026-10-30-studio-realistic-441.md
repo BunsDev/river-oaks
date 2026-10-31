@@ -152,6 +152,11 @@ WebKit (Playwright WebKit 2370, desktop Safari's engine, not iOS):
   original without Low; the step fits 1440x900; Save draft stores canonical
   Morgan with no tier; the town look is unchanged; no runtime errors. Both
   engines passed (12 checks each), and the WebKit screenshot matches Chromium.
+- Fix: `character-studio` now presses Option+Tab in WebKit (how Safari reaches
+  every control) and plain Tab in Chromium, detected the way `touch-layout.js`
+  already does. With it, on #810 the four Studio journeys pass 4/4 in WebKit
+  and 4/4 in Chromium, and `pnpm run verify` passes (6300 pass, 0 fail, 291
+  skipped).
 
 Up to date with main: `main` `e1ac3422` merged into #800 (`0607681c`), then
 up the stack. #800 merge: focused 40/40, `pnpm run verify` passed (6299 pass,
@@ -170,9 +175,10 @@ up the stack. #800 merge: focused 40/40, `pnpm run verify` passed (6299 pass,
 - Human accessibility acceptance (physical iPhone, iOS VoiceOver) is outside
   automation. Keyboard, touch-context and reduced-motion paths are covered by
   Chromium journeys, and the realistic step also by the WebKit probe above.
-- `character-studio`'s "one tab stop" check fails in WebKit on `main` too.
-  Making it engine-aware (or the Studio's Tab order, if Safari users report it)
-  is outside this slice.
+- Safari users without full keyboard access reach Studio buttons and radios
+  only with Option+Tab, as everywhere else in Safari. The journey now checks
+  that path; changing Safari's default Tab behaviour is not something the page
+  controls.
 
 ## Gaps
 

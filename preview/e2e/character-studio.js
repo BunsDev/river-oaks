@@ -1,6 +1,8 @@
 async page => {
   const checks=[],errors=[];const check=(value,label)=>{if(!value)throw new Error(label);checks.push(label);};
   page.on('pageerror',e=>errors.push(e.message));await page.emulateMedia({reducedMotion:'reduce'});
+  // WebKit's plain Tab skips buttons and radios unless full keyboard access is on; Option+Tab is how Safari reaches every control.
+  const tab=page.context().browser().browserType().name()==='webkit'?'Alt+Tab':'Tab';
   await page.goto('http://127.0.0.1:5173/');await page.locator('#loading').waitFor({state:'hidden'});
   await page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.playerReady==='true');
   if(!await page.locator('.visit-tools').evaluate(n=>n.open))await page.locator('.visit-tools-toggle').click();
@@ -18,7 +20,7 @@ async page => {
   check(await dialog.getAttribute('data-mode')==='characters'&&/current town look/.test(await dialog.locator('[data-account-status]').innerText()),'Undo returns to the worn look, which is not reported as unsaved edits');
   // Guided start: each choice group is one tab stop, and the summary says what this character can change.
   await dialog.locator('[data-close]').focus();const stops=[];
-  for(let i=0;i<12;i++){await page.keyboard.press('Tab');stops.push(await page.evaluate(()=>document.activeElement.name||document.activeElement.dataset.close!==undefined&&'close'||document.activeElement.tagName));}
+  for(let i=0;i<12;i++){await page.keyboard.press(tab);stops.push(await page.evaluate(()=>document.activeElement.name||document.activeElement.dataset.close!==undefined&&'close'||document.activeElement.tagName));}
   check(stops.filter(name=>name==='cs-character').length===1&&!stops.includes('cs-form'),'Human character choices are one tab stop');
   await dialog.locator('[data-character=sable]').click();await ready('sable-human');
   check(/dress color and hair color/.test(await dialog.locator('[data-cs-summary-options]').innerText()),'The guided summary lists the validated changes for Sable');
@@ -91,7 +93,7 @@ async page => {
     if(!await board.locator('.visit-tools').evaluate(n=>n.open)){await board.locator('.visit-tools-toggle').focus();await board.keyboard.press('Enter');}
     await board.getByRole('button',{name:'Open character studio',exact:true}).focus();await board.keyboard.press('Enter');
     const studio=board.locator('.character-studio');await board.waitForFunction(()=>document.querySelector('.character-studio[open]')?.dataset.accountPhase==='ready'&&document.querySelector('.cs-preview').dataset.ready==='true');
-    const tabTo=async name=>{for(let i=0;i<40;i++){await board.keyboard.press('Tab');if(await board.evaluate(name=>document.activeElement.name===name||document.activeElement.matches(name),name))return true;}return false;};
+    const tabTo=async name=>{for(let i=0;i<40;i++){await board.keyboard.press(tab);if(await board.evaluate(name=>document.activeElement.name===name||document.activeElement.matches(name),name))return true;}return false;};
     const settled=id=>board.waitForFunction(id=>{const el=document.querySelector('.cs-preview');return el.dataset.ready==='true'&&el.dataset.appearance===id;},id);
     check(await tabTo('cs-character'),'Keyboard reaches the character choices');
     const start=await studio.getAttribute('data-appearance');
