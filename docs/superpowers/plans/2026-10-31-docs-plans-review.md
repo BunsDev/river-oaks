@@ -35,7 +35,7 @@ Marked `delivered` with `{pr, reviewedHead, merge, tree, checks}` from `gh api r
 | `rider-pose-20261026` | #691 | 2026-10-28 | `f424a492` | archived (`cancel-stale-S00Jkp`) | none |
 | `release-0-2-2` | #712 | 2026-10-27 | `f4dd959a` | archived (`cancel-stale-jHNQyi`) | none |
 
-The last four had been reset to `queued` by the 2026-10-29/30 stale cancellations although their PRs were already merged.
+The last four had been reset to `queued` by the 2026-10-29/30 stale cancellations although their PRs were already merged. Because each already carries a verified `archive` manifest (present under `~/worktree-backups/river-oaks/`) and no local branch, they were then set to `retired` (delivery proof plus archive), which is the state the check expects for a row with no checkout; `campus-readiness-512` also dropped its stale `branches`/`worktree` record (the branch is in `retiredBranches`).
 
 Left as they are, with the reason:
 
@@ -75,7 +75,8 @@ Preserved, with the blocker:
 
 - Snapshot: `pnpm run register snapshot` (658 tasks), `pnpm run plans:index`, `pnpm run plans:index --check` (exit 0), `pnpm run --silent project:status --tasks docs/project-management/tasks.json` (exit 0).
 - `pnpm run verify` (core) on this branch, 2026-10-31 19:41Z, host load 16 (dirty tree, snapshot + index + this ledger): **passed**. agent 294/294; preview 4,813 (4,777 pass, 1 skip, 35 todo, 0 fail); server 1,395 (1,110 pass, 285 Redis-gated skips, 0 fail); desktop 132 (127 pass, 5 skip); Python 215 passed, 66 warnings; lint and gitleaks clean. Receipt `.runtime/agent/core.json`, log `.runtime/verify-core-1.log` in `river-oaks-register-sweep-20261031`. Redis, browser, native, live auth and production acceptance are not part of core and did not run.
-- `pnpm run verify` (core) on `docs/docs-review-20261031`: recorded in that PR.
+- `pnpm run verify` (core) on `docs/docs-review-20261031` (#824, `804d5761`), 2026-10-31 19:47Z: **passed** with the same counts (agent 294, preview 4,813, server 1,395, desktop 132, Python 215; 0 failures).
+- PRs: #823 (this sweep, `c9058be4` + the ledger refresh) and #824 (doc fixes); both drafts, both signed.
 
 ## Results
 
@@ -85,10 +86,13 @@ Preserved, with the blocker:
 
 ## Gaps
 
+- `project:check --github` after the reconciliation: 169 gaps (173 at the baseline; the three merged-but-active rows became pending-retirement rows, the four re-marked rows left the list). Every remaining gap is another session's expired lease, a scratch-snapshot record whose directory is gone, a missing pre-10-22 archive, or a pending local retirement.
+- Hosted `preview unit` fails on every PR head since 2026-10-31 07:34Z, including #823, on `pnpm audit --audit-level=moderate` (new moderate advisories for `minimatch` <11.0.1 and `glob` <=14.0.1 under `@electron/packager > @electron/asar`; job 124638228160). `main` `fcc72b5c` passed the same job before the advisories were published. The fix is draft #821 (`audit-asar-glob-minimatch-20261031`, river-oaks-86), which waits on Val's landing authorization; until it merges, neither docs PR can get a green `preview` aggregate.
+- Marking a PR ready and `project:prune --apply` are both refused by this session's permission policy; the PRs stay drafts and the retirement candidates stay listed with their commands.
 - Local retirement needs a session allowed to remove worktrees; see the candidate table.
 - The register still carries ~60 scratch-snapshot rows for directories that no longer exist and 285 restore paths lost on 2026-10-22; both wait on Val's answers to steward Decisions 14 and 16.
 - A plans index generated from the snapshot goes stale as soon as the live register moves; this sweep records 2026-10-31.
 
 ## Next step
 
-Land this sweep (docs-only) and the docs PR once core verify and hosted Verify pass.
+Val (or an authorized session): land #821 so `preview unit` passes again, then mark #823 and the docs PR ready and land them (docs-only; core verify passed on both). Then run the guarded `project:prune` commands in the candidate table.

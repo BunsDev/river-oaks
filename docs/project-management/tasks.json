@@ -21992,12 +21992,9 @@
     {
       "id": "campus-readiness-512",
       "title": "Isolated campus readiness correction complementary to PR545",
-      "status": "delivered",
-      "branches": [
-        "fix/campus-readiness-socket-512-20261023"
-      ],
+      "status": "retired",
+      "branches": [],
       "owner": null,
-      "worktree": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-campus-readiness-512",
       "ledger": "docs/superpowers/plans/2026-10-23-campus-readiness-socket-512.md",
       "filesOwned": [
         "preview/e2e/garden-campus-readiness.js",
@@ -22011,8 +22008,8 @@
         "pnpm run verify",
         "pnpm run verify full"
       ],
-      "nextAction": "2026-10-31T19:38:07Z docs review (river-oaks-48): status reconciled from GitHub (PR #605 merged d9d8fff3bb894b28fc215b0e1ba40ff947e75166; no local branch, checkout archived by the earlier stale cancellation; see the previous nextAction's manifest). Remaining scope beyond this PR needs its own task.",
-      "updatedAt": "2026-10-31T19:38:08Z",
+      "nextAction": "2026-10-31T19:44:41Z docs review (river-oaks-48): retired. Delivery proof is the merged PR in evidence; the local checkout was already archived by the earlier stale cancellation (manifest under archive, verified present on this machine). Restore from that manifest before resuming any follow-up; remaining scope needs its own task.",
+      "updatedAt": "2026-10-31T19:44:42Z",
       "verification": {
         "currentCandidate": "f00e7987f1a45d4d0ba64f9dece0e0db8a2a14ad",
         "currentCore": "11phases passed with clean input at08:53:39UTC",
@@ -29345,7 +29342,7 @@
     {
       "id": "default-appearance-517-20261024",
       "title": "#517 bounded default-appearance trial: component-selective realism for Jevica and Sable, identity preserved (#638 lane 2b)",
-      "status": "delivered",
+      "status": "retired",
       "owner": null,
       "branches": [],
       "issues": [
@@ -29394,8 +29391,8 @@
         "data/reports/default-appearance-*-517.json",
         "docs/acceptance/default-appearance-517/*.png"
       ],
-      "nextAction": "2026-10-31T19:38:07Z docs review (river-oaks-48): status reconciled from GitHub (PR #656 merged caa1a7efe6f0ded9748b2469e13733ca8109feee; no local branch, checkout archived by the earlier stale cancellation; see the previous nextAction's manifest). Remaining scope beyond this PR needs its own task.",
-      "updatedAt": "2026-10-31T19:38:08Z",
+      "nextAction": "2026-10-31T19:44:41Z docs review (river-oaks-48): retired. Delivery proof is the merged PR in evidence; the local checkout was already archived by the earlier stale cancellation (manifest under archive, verified present on this machine). Restore from that manifest before resuming any follow-up; remaining scope needs its own task.",
+      "updatedAt": "2026-10-31T19:44:42Z",
       "pr": 656,
       "valDecision20261026": "Val, answering directly in river-oaks-71 session 2026-10-26 (about 20:00Z), after 71 flagged a conflict with river-oaks-a3 relays: land #656 switched off; river-oaks-71 runs the lander.",
       "pr656Landed": "#656 merged caa1a7efe6f0ded9748b2469e13733ca8109feee at 2026-10-26T23:29:40Z by river-oaks-71 (Val decision 2026-10-26: land switched off), reviewed head 8594d3f5 (update-branch), 22/22 complete. Owner river-oaks-32: mark delivered and retire branch and checkouts (archive evidence first).",
@@ -31493,7 +31490,7 @@
     {
       "id": "rider-pose-20261026",
       "title": "Bicycle riding pose: a turning crank, feet on the pedals, hands on the grips, a city-bike riding posture and a foot down at a stop (Val, 2026-10-26)",
-      "status": "delivered",
+      "status": "retired",
       "owner": null,
       "branches": [],
       "ledger": "docs/superpowers/plans/2026-10-26-rider-pose.md",
@@ -31519,9 +31516,9 @@
         "cycling-rack browser journey",
         "inspected captures at several crank phases, steering and stop"
       ],
-      "nextAction": "2026-10-31T19:38:07Z docs review (river-oaks-48): status reconciled from GitHub (PR #691 merged f424a492fb08dbab04dc6f0e6899984729abc8b1; no local branch, checkout archived by the earlier stale cancellation; see the previous nextAction's manifest). Remaining scope beyond this PR needs its own task.",
+      "nextAction": "2026-10-31T19:44:41Z docs review (river-oaks-48): retired. Delivery proof is the merged PR in evidence; the local checkout was already archived by the earlier stale cancellation (manifest under archive, verified present on this machine). Restore from that manifest before resuming any follow-up; remaining scope needs its own task.",
       "notes": "Distinct from queued rider-performance-contact (2026-10-13 scope incl. map/places UI; its archive cancel-stale-3c2tGJ is no longer on disk). Coordinate road-vehicles.js bicycle changes with river-oaks-f1 (city-bike-racks-20261026 instances parked bikes from the same model).",
-      "updatedAt": "2026-10-31T19:38:10Z",
+      "updatedAt": "2026-10-31T19:44:43Z",
       "pr": 691,
       "cancelledBranches": [
         "feat/rider-pose-20261026"
@@ -33724,7 +33721,7 @@
     {
       "id": "release-0-2-2",
       "title": "Release 0.2.2: first three-platform desktop release (Val, 2026-10-27: \"dont wait for the signature to update\"; Windows ships unsigned)",
-      "status": "delivered",
+      "status": "retired",
       "owner": null,
       "branches": [],
       "ledger": "docs/superpowers/plans/2026-10-27-release-0.2.2.md",
@@ -33742,8 +33739,8 @@
         "pnpm run desktop:package:check",
         "desktop:sign with notarization (spctl Notarized Developer ID)"
       ],
-      "nextAction": "2026-10-31T19:38:07Z docs review (river-oaks-48): status reconciled from GitHub (PR #712 merged f4dd959a88ddcdf242d9e79c73d75bb7e61b2aa2; no local branch, checkout archived by the earlier stale cancellation; see the previous nextAction's manifest). Remaining scope beyond this PR needs its own task.",
-      "updatedAt": "2026-10-31T19:38:11Z",
+      "nextAction": "2026-10-31T19:44:41Z docs review (river-oaks-48): retired. Delivery proof is the merged PR in evidence; the local checkout was already archived by the earlier stale cancellation (manifest under archive, verified present on this machine). Restore from that manifest before resuming any follow-up; remaining scope needs its own task.",
+      "updatedAt": "2026-10-31T19:44:43Z",
       "pr": 712,
       "evidence": [
         {
@@ -38676,7 +38673,7 @@
       "title": "Docs and plans review (goal 2026-10-31): reconcile the register against merged PRs, register sweep + plans index, dead doc references, ledger closeouts",
       "status": "active",
       "owner": "claude:river-oaks-48 (198acf2d)",
-      "leaseUntil": "2026-10-31T21:32:46Z",
+      "leaseUntil": "2026-10-31T21:48:03Z",
       "branches": [
         "docs/register-sweep-20261031"
       ],
@@ -38692,15 +38689,16 @@
         "docs/superpowers/plans/README.md",
         "docs/superpowers/plans/2026-10-31-docs-plans-review.md"
       ],
-      "nextAction": "Mark merged tasks delivered (#765 #737 #782), retire ended owners' delivered branches via guarded prune, then snapshot + plans:index on docs/register-sweep-20261031 and land it.",
-      "updatedAt": "2026-10-31T19:32:46Z"
+      "nextAction": "Draft #823 (sweep + ledger) and #824 (doc fixes), both core-verified. Blocked on hosted preview unit until #821 lands; Val marks ready and lands both, then runs the guarded project:prune commands in the ledger's candidate table. Scratch worktrees river-oaks-register-sweep-20261031 and river-oaks-docs-review-20261031 are clean and belong to this task.",
+      "updatedAt": "2026-10-31T19:48:03Z",
+      "pr": 823
     },
     {
       "id": "docs-review-text-20261031",
       "title": "Docs review (goal 2026-10-31): retire stale feature descriptions and dead references in docs/ (beast forms removed by #496; journeys removed by #170)",
       "status": "active",
       "owner": "claude:river-oaks-48 (198acf2d)",
-      "leaseUntil": "2026-10-31T21:35:56Z",
+      "leaseUntil": "2026-10-31T21:48:03Z",
       "branches": [
         "docs/docs-review-20261031"
       ],
@@ -38722,8 +38720,9 @@
         "docs/acceptance/crime-release-599.md",
         "docs/app-review-292.md"
       ],
-      "nextAction": "11 docs edited on docs/docs-review-20261031 (dead refs from #170/#496; merged-PR claims: typesafe-computer#34, #169, #484, #461-#464, #708/#710/#732, #711-#716). Run core verify after the sweep verify finishes, then open a draft PR.",
-      "updatedAt": "2026-10-31T19:40:43Z"
+      "nextAction": "Draft #824 at 804d5761 (signed; core passed, 0 failures). Blocked on hosted preview unit until #821 (audit fix) lands; then Val marks ready and lands. This session cannot mark ready (permission policy).",
+      "updatedAt": "2026-10-31T19:48:03Z",
+      "pr": 824
     }
   ]
 }

@@ -8,8 +8,8 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
-| [2026-10-31-docs-plans-review](2026-10-31-docs-plans-review.md)<br>Docs and plans review (goal 2026-10-31) | `docs-plans-review-20261031` | active | — | 2026-10-31 |
-| [2026-10-31-docs-plans-review](2026-10-31-docs-plans-review.md)<br>Docs and plans review (goal 2026-10-31) | `docs-review-text-20261031` | active | — | 2026-10-31 |
+| [2026-10-31-docs-plans-review](2026-10-31-docs-plans-review.md)<br>Docs and plans review (goal 2026-10-31) | `docs-plans-review-20261031` | active | #823 | 2026-10-31 |
+| [2026-10-31-docs-plans-review](2026-10-31-docs-plans-review.md)<br>Docs and plans review (goal 2026-10-31) | `docs-review-text-20261031` | active | #824 | 2026-10-31 |
 | [2026-10-30-phase3-acceptance](2026-10-30-phase3-acceptance.md)<br>Phase 3 (#584, #585, #586): acceptance audit on current main, and the gaps fixed | `phase3-tree-overlaps-20261030` | active | #819 | 2026-10-30 |
 | [2026-10-27-computer-desk-acceptance-487](2026-10-27-computer-desk-acceptance-487.md)<br>#487 Combined TypeSafe Computer desk acceptance | `computer-embed-33-20261027` | active | — | 2026-10-27 |
 | [2026-10-24-desktop-three-platform](2026-10-24-desktop-three-platform.md)<br>Desktop on Windows, Linux and macOS: release readiness (#369–#373) | `desktop-diag-runs-370-371-20261024` | blocked | — | 2026-10-30 |
@@ -33,27 +33,23 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-13-shared-voice](2026-10-13-shared-voice.md)<br>Shared voice with LiveKit Cloud | `shared-voice-acceptance` | queued | — | 2026-10-15 |
 | [2026-10-13-procedural-interiors-implementation](2026-10-13-procedural-interiors-implementation.md)<br>Procedural interiors implementation ledger | `procedural-interior-human-acceptance` | queued | — | 2026-10-15 |
 
-## Delivered, awaiting local retirement (15)
+## Delivered, awaiting local retirement (11)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
 | [2026-10-29-wave-3-steward](2026-10-29-wave-3-steward.md)<br>Wave-3 steward (goal 2026-10-29) | `wave-3-steward-20261029` | delivered | #765 | 2026-10-31 |
 | [2026-10-29-pink-jet-age-architecture](2026-10-29-pink-jet-age-architecture.md)<br>Pink Jet-Age R3 slice 2: jet-age architecture forms for the Gardens | `pink-jet-age-r3-architecture` | delivered | #774 | 2026-10-30 |
 | [2026-10-28-landowner-hovercraft](2026-10-28-landowner-hovercraft.md)<br>Landowner hover coach and the office phase tube | `landowner-hovercraft-20261028` | delivered | #737 | 2026-10-31 |
-| [2026-10-27-release-0.2.2](2026-10-27-release-0.2.2.md)<br>Release 0.2.2: macOS, Windows and Linux | `release-0-2-2` | delivered | #712 | 2026-10-31 |
-| [2026-10-26-rider-pose](2026-10-26-rider-pose.md)<br>Bicycle riding pose (2026-10-26) | `rider-pose-20261026` | delivered | #691 | 2026-10-31 |
 | [2026-10-26-quaternius-clip-import](2026-10-26-quaternius-clip-import.md)<br>Quaternius clip import (2026-10-26) | `quaternius-clip-import` | delivered | #722 | 2026-10-30 |
 | [2026-10-26-depth-shader-audit](2026-10-26-depth-shader-audit.md)<br>Depth layers and shader audit (2026-10-26) | `depth-shader-audit-20261026` | delivered | #695 | 2026-10-30 |
-| [2026-10-24-default-appearance-517](2026-10-24-default-appearance-517.md)<br>#517 bounded default-appearance trial (Jevica and Sable) | `default-appearance-517-20261024` | delivered | #656 | 2026-10-31 |
 | [2026-10-24-account-safety-292](2026-10-24-account-safety-292.md)<br>Account safety for store readiness (#292, web and server) | `account-safety-292-20261024` | delivered | — | 2026-10-28 |
 | [2026-10-23-integrated-expansion-mvp](2026-10-23-integrated-expansion-mvp.md)<br>Integrated world-expansion MVP (#582–#587) | `integrated-expansion-mvp-20261023` | delivered | #623 | 2026-10-30 |
-| [2026-10-23-campus-readiness-socket-512](2026-10-23-campus-readiness-socket-512.md)<br>Campus readiness socket-replacement correction (#512) | `campus-readiness-512` | delivered | #605 | 2026-10-31 |
 | [2026-10-18-cartier-pilot-recovery](2026-10-18-cartier-pilot-recovery.md)<br>Cartier pilot recovery — 2026-10-18 | `cartier-pilot` | delivered | #797 | 2026-10-30 |
 | [2026-10-18-cafe-publication-pilot](2026-10-18-cafe-publication-pilot.md)<br>#420 approved Corner Café publication pilot (2026-10-18) | `cafe-publication-pilot-420` | delivered | #489 | 2026-10-28 |
 | [2026-10-15-studio-pilot-acceptance](2026-10-15-studio-pilot-acceptance.md)<br>Garden Office pilot acceptance (#417, parent #413) | `studio-417-closeout-f0d01729-20261030` | delivered | #806 | 2026-10-31 |
 | [2026-10-11-pending-integration](2026-10-11-pending-integration.md)<br>Pending delivery integration | `primary-reconciliation` | delivered | — | 2026-10-11 |
 
-## Retired (362)
+## Retired (366)
 
 | Plan | Task | Status | PR | Updated |
 | --- | --- | --- | --- | --- |
@@ -92,6 +88,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-28-destination-layout](2026-10-28-destination-layout.md)<br>City-kit layout: blocks derived from streets | `destination-pipeline-20261028` | retired | #750 | 2026-10-29 |
 | [2026-10-28-destination-layout](2026-10-28-destination-layout.md)<br>City-kit layout: blocks derived from streets | `destination-effort-20261029` | retired | #759 | 2026-10-29 |
 | [2026-10-28-destination-layout](2026-10-28-destination-layout.md)<br>City-kit layout: blocks derived from streets | `destination-migrate-20261029` | retired | #760 | 2026-10-29 |
+| [2026-10-27-release-0.2.2](2026-10-27-release-0.2.2.md)<br>Release 0.2.2: macOS, Windows and Linux | `release-0-2-2` | retired | #712 | 2026-10-31 |
 | [2026-10-27-onfoot-encounter-640-inc3-5](2026-10-27-onfoot-encounter-640-inc3-5.md)<br>#640 GTA-inspired on-foot encounter: increments 3, 4 and 5 | `onfoot-encounter-640-inc3-20261027` | retired | #708 | 2026-10-30 |
 | [2026-10-27-onfoot-encounter-640-inc3-5](2026-10-27-onfoot-encounter-640-inc3-5.md)<br>#640 GTA-inspired on-foot encounter: increments 3, 4 and 5 | `onfoot-encounter-640-inc4-20261027` | retired | #710 | 2026-10-30 |
 | [2026-10-27-onfoot-encounter-640-inc3-5](2026-10-27-onfoot-encounter-640-inc3-5.md)<br>#640 GTA-inspired on-foot encounter: increments 3, 4 and 5 | `onfoot-encounter-640-inc5-20261027` | retired | #732 | 2026-10-30 |
@@ -101,6 +98,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-27-dev-town-expansion](2026-10-27-dev-town-expansion.md)<br>Development town serves the experimental land expansion | `dev-town-expansion-20261027` | retired | #706 | 2026-10-27 |
 | [2026-10-27-computer-desk-acceptance-487](2026-10-27-computer-desk-acceptance-487.md)<br>#487 Combined TypeSafe Computer desk acceptance | `computer-desk-487-20261027` | retired | #718 | 2026-10-28 |
 | [2026-10-27-app-review-292](2026-10-27-app-review-292.md)<br>App Review readiness (#292): content filter, moderation routing, support contact, readiness map | `app-review-292-20261027` | retired | #716 | 2026-10-30 |
+| [2026-10-26-rider-pose](2026-10-26-rider-pose.md)<br>Bicycle riding pose (2026-10-26) | `rider-pose-20261026` | retired | #691 | 2026-10-31 |
 | [2026-10-26-ipic-movement-design](2026-10-26-ipic-movement-design.md)<br>IPIC movement and design (2026-10-26) | `ipic-movement-design-20261026` | retired | #692 | 2026-10-30 |
 | [2026-10-26-city-bike-racks](2026-10-26-city-bike-racks.md)<br>More bike racks around the District | `city-bike-racks-20261026` | retired | #688 | 2026-10-28 |
 | [2026-10-26-character-recipes](2026-10-26-character-recipes.md)<br>Character recipes (2026-10-26) | `character-recipes-20261026` | retired | #694 | 2026-10-30 |
@@ -121,6 +119,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-24-desktop-three-platform](2026-10-24-desktop-three-platform.md)<br>Desktop on Windows, Linux and macOS: release readiness (#369–#373) | `desktop-e2e-settings-drop-371-20261026` | retired | #683 | 2026-10-27 |
 | [2026-10-24-desktop-three-platform](2026-10-24-desktop-three-platform.md)<br>Desktop on Windows, Linux and macOS: release readiness (#369–#373) | `desktop-ci-electron-scope-20261026` | retired | #690 | 2026-10-27 |
 | [2026-10-24-delivery-convergence](2026-10-24-delivery-convergence.md)<br>Delivery convergence: 2026-10-24 | `delivery-convergence-20261024` | retired | #635 | 2026-10-24 |
+| [2026-10-24-default-appearance-517](2026-10-24-default-appearance-517.md)<br>#517 bounded default-appearance trial (Jevica and Sable) | `default-appearance-517-20261024` | retired | #656 | 2026-10-31 |
 | [2026-10-24-crime-release-599](2026-10-24-crime-release-599.md)<br>Crime release #599 Implementation Plan | `crime-release-599-matrix-20261028` | retired | #731 | 2026-10-31 |
 | [2026-10-24-convergence-3x](2026-10-24-convergence-3x.md)<br>Convergence, release candidate and 3× (2026-10-24) | `convergence-3x-20261024` | retired | #664 | 2026-10-28 |
 | [2026-10-24-convergence-3x](2026-10-24-convergence-3x.md)<br>Convergence, release candidate and 3× (2026-10-24) | `studewood-3x-20261024` | retired | #662 | 2026-10-27 |
@@ -146,6 +145,7 @@ Each plan is a task ledger. Status comes from the task register, where the prima
 | [2026-10-23-destination-slice-584-586](2026-10-23-destination-slice-584-586.md)<br>Destination slice: city kit, assembly and Bayou Market Commons (#584, #585, #586) | `destination-slice-584-586` | retired | #611 | 2026-10-24 |
 | [2026-10-23-delivery-lifecycle](2026-10-23-delivery-lifecycle.md)<br>Verified delivery cadence and proactive retirement | `delivery-lifecycle-20261023` | retired | #625 | 2026-10-24 |
 | [2026-10-23-crime-melee-597](2026-10-23-crime-melee-597.md)<br>#597 First criminal action: melee, rival health, wanted stars | `crime-melee-597` | retired | #612 | 2026-10-30 |
+| [2026-10-23-campus-readiness-socket-512](2026-10-23-campus-readiness-socket-512.md)<br>Campus readiness socket-replacement correction (#512) | `campus-readiness-512` | retired | #605 | 2026-10-31 |
 | [2026-10-23-campus-followup-505](2026-10-23-campus-followup-505.md)<br>Garden Campus #505 follow-up ledger | `campus-followup-505` | retired | #614 | 2026-10-24 |
 | [2026-10-22-world-policy-596](2026-10-22-world-policy-596.md)<br>#596 World rules: shared clock, danger zones and owner policy | `world-policy-596` | retired | #603 | 2026-10-23 |
 | [2026-10-22-world-expansion](2026-10-22-world-expansion.md)<br>World expansion execution ledger | `world-expansion-580-581` | retired | #594 | 2026-10-30 |
