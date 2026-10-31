@@ -186,3 +186,37 @@ test('a pilot who is down leaves the maneuver on the next snapshot, without send
   assert.ok(close(back.altitude, at.altitude) && close(back.position[0], at.east) && close(back.position[1], at.north), 'level hover at the current path point');
   assert.equal(back.vehicle, 'hover', 'still in the craft');
 });
+
+test('a pilot who loses the connection mid-flight is landed by the town during the reconnect grace', () => {
+  const t = setup();
+  t.climb(12);
+  const tick = seconds => { for (let i = 0; i < seconds * 4; i++) { t.advance(250);t.world.step(.25); } };
+  tick(2);
+  assert.ok(close(t.self().altitude, 12), 'connected, the craft holds its height');
+  t.world.away(OWNER, true);
+  tick(1);
+  const after = t.self().altitude;
+  assert.ok(after < 12 && after >= 12 - 2.01, `it comes down at no more than 2 m/s (${after.toFixed(2)} m after 1 s)`);
+  t.world.away(OWNER, false);
+  tick(1);
+  assert.ok(close(t.self().altitude, after), 'reconnected, the descent stops where the page will resume it');
+  t.world.away(OWNER, true);
+  tick(8);
+  const landed = t.self();
+  assert.equal(landed.altitude, 0, 'it lands');
+  assert.equal(landed.vehicle, 'hover', 'and she is still in it, on the ground');
+  // A maneuver already flying finishes first: the town owns that path to its end.
+  t.world.away(OWNER, false);
+  t.climb(12);
+  assert.equal(t.fly('roll').ok, true);
+  t.world.away(OWNER, true);
+  tick(.5);
+  assert.ok(t.self().maneuver, 'the roll is still flying');
+  tick(10);
+  assert.equal(t.self().maneuver ?? null, null);
+  assert.equal(t.self().altitude, 0, 'then it lands');
+  // Leaving drops the mark, so a later join is not treated as away.
+  t.world.leave(OWNER);
+  t.world.join({ userId: OWNER, name: 'Jevica' });
+  t.world.away(OWNER, false);
+});

@@ -624,3 +624,68 @@ saved vehicles are unchanged, so the coach returns as it was on #737.
 
 Run `pnpm run verify`, sign and commit, then open a draft PR against #737's
 branch. After that, increment 2.
+
+## Auto-land during the disconnect grace (2026-10-30, follow-up PR)
+
+Closes the handoff gap "the craft does not auto-land during the pilot-disconnect grace".
+
+**What changes**
+
+- `world.away(userId, away)` is set by both transports and kept out of checkpoints.
+- An away pilot's flying craft descends at up to 2 m/s once any maneuver has ended. It holds over blocked sky or ground that isn't open, and otherwise lands with the pilot still aboard. A passenger rides down in the seat.
+- The bug found by the new journey: `app.js` stopped stepping the world when nobody was connected, so a lone pilot's craft never moved. The world now keeps stepping during the departure grace, and frames still go only to connected players.
+- The page's first look after loading also resumes a craft the town has already landed. After that, only an airborne craft is resumed.
+
+**Results**
+
+| Check | Result |
+| --- | --- |
+| Server unit tests | pass; with the descent removed, 2 fail |
+| `ribbonwing-away.test.js` (real WebSocket) | passes; fails with either piece of the transport wiring removed |
+| Server suite with Redis | 1440/1440 |
+| `ribbonwing-disconnect` (new journey) | away 14 s → landed at 0 m, resumed on the ground, steps out and stays out |
+| `ribbonwing-maneuvers` | a reload at 16 m resumes at 14.5 m, then climbs and flies the tricks with no corrections |
+| `ribbonwing-ceiling`, `ribbonwing-passenger` | pass |
+| Core verify | passed (stages 294/294; 4766 pass, 1 skipped; 1113 pass, 285 skipped; 127 pass, 5 skipped; no leaks) |
+
+**Not verified**
+
+- The descent cadence in a Redis-hosted room. No browser journey covers that transport.
+- Any human or device check.
+
+## Rollback against live checkpoints, exercised (2026-10-30)
+
+Closes the handoff gap "Rollback with live checkpoints carrying `maneuver` or passenger
+fields has not been exercised".
+
+**How.** A node probe (kept outside the repo as session evidence) uses today's town code to
+write a checkpoint, then restores it with the town code a revert would leave behind.
+
+| Restoring code | Writing code |
+| --- | --- |
+| main `2c475290` with #779's merge diff reverse-applied | main `2c475290` |
+| #779's parent `0d54a18d` | the #779 merge `c0b34397` |
+
+- In the reverted tree, the server files reverse cleanly. Three client files conflict
+  (`carriage-motion.js`, `player-avatar.js`, `remote-players.js`); the server imports none of them.
+- Both pairs gave the same results.
+
+| Checkpoint written while | Pre-#779 restore |
+| --- | --- |
+| A Ribbonwing roll was in flight, with a passenger aboard | **refused**: `invalid_checkpoint`, reason `invalid_entry` |
+| After the roll ended and the passenger stepped out on the ground. The owner still carries `maneuverSeq` and `lastManeuverId` | accepted |
+| No maneuver ever flown | accepted |
+
+**Effect of a refusal.** The room throws "Invalid durable town checkpoint", and
+`distributed-app.js` closes every admission with 1013 "Town temporarily unavailable"
+(logged as `checkpoint_invalid` / `invalid_entry`). With nobody admitted, the town probably
+never writes a newer checkpoint, so the outage could last until the stored checkpoint is
+fixed. The admission log's reason was read from the code, not exercised.
+
+**Rollback instructions (amended).** Before deploying a revert of #779, either:
+- have every Ribbonwing pilot land and every passenger step out, then wait for a checkpoint
+  written after that (a maneuver lasts seconds; a passenger can stay aboard indefinitely); or
+- keep a restore shim in the revert PR that drops `maneuver`, `passengerId` and `passengerOf`
+  from player entries instead of refusing them.
+
+A plain `git revert` of the merge, deployed while a passenger is aboard, takes the town down.
