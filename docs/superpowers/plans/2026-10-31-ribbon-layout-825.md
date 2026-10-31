@@ -30,6 +30,16 @@ seat sockets with stable IDs come out. No rendering, no client wiring, no Distri
 - The seed (via the city kit's `streamFor`, keyed by ID) picks only the fan finish.
 - Output is rounded to the millimetre and hashed with `stableHash`.
 
+## Post spans (follow-up, Val chose option 1 on 2026-10-31)
+
+The District route draft (slice 2a) found that posts every 3 m on both edges always hit a door,
+bench or lane fixture on the east side. A segment may now set `maxSpan` (3-6 m). A post that would
+stand in an exclusion is then left out, but never an end post. The canopy spans over the gap, and
+each edge's gap must stay within `maxSpan`. The lamp on an omitted post goes with it. Modules, fans,
+seats and every ID are unchanged. Output gains `skipped` (`id`, `segment`, `zone`, `kind`) and each
+post gains `station`, its distance along the segment. Seats are never skipped. Without `maxSpan`
+the behaviour is unchanged, but the message for a middle post now suggests setting `maxSpan`.
+
 ## Checks and results
 
 - `node --test preview/tests/ribbon-layout.test.js`: 7/7 pass. The first run failed 2/7 and
@@ -37,6 +47,9 @@ seat sockets with stable IDs come out. No rendering, no client wiring, no Distri
 - `pnpm run verify` (2026-10-31, base `fcc72b5c` plus these three files): exit 0, `core: passed`
   (`.runtime/agent/core.json`); pytest 215 passed; gitleaks found no leaks. The `hud-token-contrast`
   entries under "failing tests" are its 35 `todo` R8 gaps (fail 0), not failures.
+- Post spans follow-up: `node --test preview/tests/ribbon-layout.test.js` 9/9 (the first run caught
+  natural modules over 3 m being refused, fixed so only omitted-post gaps are held to `maxSpan`);
+  `pnpm run verify` exit 0, `core: passed`, pytest 215 passed, gitleaks clean.
 - Not run: `pnpm run verify full` (Redis, browser, audit). This slice has no browser surface.
 
 ## Gaps

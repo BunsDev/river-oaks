@@ -2,7 +2,10 @@
 // joining the Five Rooms. Its paths are drawn by hand as polylines; this module turns
 // them into canopy modules, edge posts, lamps, fans and seat sockets with stable IDs
 // (`ribbon:<segment>:module:012`), and refuses a layout that puts a post or a seat
-// where people need to pass. Data and validation only: nothing here renders.
+// where people need to pass. Data and validation only: nothing here renders. A segment
+// may set `maxSpan` (up to 6 m) to leave out a post that would stand in a door, bench
+// reach or fixture: the canopy spans over it, the module grid and every ID stay put, and
+// the output lists each omitted post with the zone that displaced it.
 //
 // Units and frame follow the city kit (catalog.js): metres, site-local x east, y north.
 // The expansion is pure arithmetic on the recipe. The seeded stream (assemble.js,
@@ -19,6 +22,10 @@ export const RIBBON_RULES = Object.freeze({
   // Each straight run is cut into equal modules as close to 3 m as the run allows.
   moduleLength: 3,
   minRun: 1.5,
+  // The longest the canopy may reach between posts on one edge. A segment that sets
+  // `maxSpan` above moduleLength may leave out a post that would stand in an exclusion
+  // (never an end post); the gap that leaves must stay within its maxSpan.
+  maxSpan: 6,
   // Sharper turns would fold the canopy over itself; draw two turns instead.
   maxTurnDegrees: 90,
   // Below this the turn reads as a bend (`curve`), at or above it as a `corner`.
@@ -81,7 +88,8 @@ export function validateRibbon(recipe) {
   for (const segment of recipe.segments) {
     if (!segment || typeof segment !== 'object') fail('segment');
     unique('segment', segment.id);
-    for (const key of Object.keys(segment)) if (!['id', 'points', 'width', 'clearHeight', 'style', 'seats'].includes(key)) fail(`segment ${segment.id}: unknown key ${key}`);
+    for (const key of Object.keys(segment)) if (!['id', 'points', 'width', 'clearHeight', 'style', 'seats', 'maxSpan'].includes(key)) fail(`segment ${segment.id}: unknown key ${key}`);
+    if (segment.maxSpan !== undefined && !(Number.isFinite(segment.maxSpan) && segment.maxSpan >= RIBBON_RULES.moduleLength && segment.maxSpan <= RIBBON_RULES.maxSpan + EPS)) fail(`segment ${segment.id} maxSpan must be between ${RIBBON_RULES.moduleLength} and ${RIBBON_RULES.maxSpan} m`);
     if (!Array.isArray(segment.points) || segment.points.length < 2 || !segment.points.every(pointOk)) fail(`segment ${segment.id} needs two or more [x, y] points`);
     if (!(Number.isFinite(segment.width) && segment.width + EPS >= RIBBON_RULES.minWidth)) fail(`segment ${segment.id} is narrower than ${RIBBON_RULES.minWidth} m`);
     if (!(Number.isFinite(segment.clearHeight) && segment.clearHeight + EPS >= RIBBON_RULES.minClearHeight)) fail(`segment ${segment.id} has less than ${RIBBON_RULES.minClearHeight} m headroom`);
@@ -105,19 +113,21 @@ export function validateRibbon(recipe) {
 // Expand a recipe into placements. Lists are in segment order, then index order.
 export function expandRibbon(source) {
   const recipe = validateRibbon(source), rules = RIBBON_RULES;
-  const modules = [], posts = [], fans = [], lamps = [], seats = [], footprints = [], corridors = [];
+  const modules = [], posts = [], fans = [], lamps = [], seats = [], footprints = [], corridors = [], skipped = [];
+  const lastBoundary = new Map();
   for (const segment of recipe.segments) {
     const runs = runsOf(segment), half = segment.width / 2, prefix = `ribbon:${segment.id}`;
-    let index = 0, boundary = 0;
+    let index = 0, boundary = 0, station = 0;
     const total = runs.reduce((sum, run) => sum + Math.max(1, Math.round(run.length / rules.moduleLength)), 0);
     const addBoundary = (at, offset, height) => {
       const id = n => `${prefix}:post:${pad(boundary)}:${n}`;
       for (const [side, sign] of [['l', 1], ['r', -1]]) {
         const position = [at[0] + offset[0] * sign, at[1] + offset[1] * sign];
-        posts.push({ id: id(side), segment: segment.id, boundary, side: side === 'l' ? 'left' : 'right', position, height });
+        posts.push({ id: id(side), segment: segment.id, boundary, side: side === 'l' ? 'left' : 'right', position, height, station });
         const p = rules.post / 2;
-        footprints.push({ id: id(side), segment: segment.id, shape: corners([position[0] - p, position[1] - p, position[0] + p, position[1] + p]) });
+        footprints.push({ id: id(side), segment: segment.id, post: true, shape: corners([position[0] - p, position[1] - p, position[0] + p, position[1] + p]) });
       }
+      lastBoundary.set(segment.id, boundary);
       if (boundary % rules.lampEvery === 0) lamps.push({ id: `${prefix}:lamp:${pad(boundary)}`, segment: segment.id, post: id('l'), position: [at[0] + offset[0], at[1] + offset[1]], height: segment.clearHeight - rules.lampDrop });
       boundary++;
     };
@@ -142,6 +152,7 @@ export function expandRibbon(source) {
           footprints.push({ id: seat, segment: segment.id, seat: true, shape: box(position, run.dir, rules.seat.length, rules.seat.depth) });
         }
         index++;
+        station += run.length / count;
         if (k < count - 1) addBoundary(to, [normal[0] * half, normal[1] * half], segment.clearHeight);
         else {
           const next = runs[r + 1];
@@ -158,19 +169,44 @@ export function expandRibbon(source) {
   }
   // Nothing stands where people must pass: no post or seat in a doorway, a seat's access
   // zone, a no-go zone or a step-free route, and no seat on any segment's walk.
+  // A segment with a maxSpan may leave such a post out instead, unless it is an end post.
+  const spanOf = id => recipe.segments.find(segment => segment.id === id).maxSpan ?? rules.moduleLength;
+  const postOf = new Map(posts.map(post => [post.id, post]));
   for (const item of footprints) {
-    for (const zone of recipe.exclusions ?? []) if (overlaps(item.shape, corners(zone.rect))) fail(`${item.id} lands in ${zone.kind} ${zone.id}; move a point of segment ${item.segment}`);
+    const zone = (recipe.exclusions ?? []).find(zone => overlaps(item.shape, corners(zone.rect)));
+    if (zone) {
+      const post = item.post && postOf.get(item.id), end = post && (post.boundary === 0 || post.boundary === lastBoundary.get(post.segment));
+      if (post && !end && spanOf(post.segment) > rules.moduleLength + EPS) skipped.push({ id: item.id, segment: post.segment, zone: zone.id, kind: zone.kind });
+      else fail(`${item.id} lands in ${zone.kind} ${zone.id}; ${post && !end ? `set maxSpan on segment ${item.segment} or move a point` : `move a point of segment ${item.segment}`}`);
+    }
     if (item.seat) for (const corridor of corridors) if (overlaps(item.shape, corridor.shape)) fail(`${item.id} lands on the walking corridor of ribbon:${corridor.segment}; move it to the other side or change every`);
   }
+  // What stays standing: along each edge, the canopy never reaches further than its maxSpan.
+  const gone = new Set(skipped.map(item => item.id));
+  for (const post of posts) {
+    if (gone.has(post.id)) continue;
+    const next = posts.find(other => other.segment === post.segment && other.side === post.side && other.boundary > post.boundary && !gone.has(other.id));
+    if (!next) continue;
+    // Only a gap left by an omitted post is held to maxSpan; a module's own length never is.
+    const span = next.station - post.station;
+    const blocked = skipped.filter(item => { const other = postOf.get(item.id); return other.segment === post.segment && other.side === post.side && other.boundary > post.boundary && other.boundary < next.boundary; });
+    if (blocked.length && span > spanOf(post.segment) + EPS) {
+      fail(`${post.segment} ${post.side} edge spans ${mm(span)} m from ${post.id} to ${next.id}, over its maxSpan ${spanOf(post.segment)} m (left out: ${blocked.map(item => `${item.id} in ${item.kind} ${item.zone}`).join(', ')})`);
+    }
+  }
+  const standing = posts.filter(post => !gone.has(post.id));
+  posts.length = 0; posts.push(...standing);
+  const kept = lamps.filter(lamp => !gone.has(lamp.post));
+  lamps.length = 0; lamps.push(...kept);
   // Every number to the millimetre (radians to the milliradian), so Node and browsers agree byte for byte.
   const round = value => Array.isArray(value) ? value.map(round)
     : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, round(item)]))
       : typeof value === 'number' ? mm(value) + 0 : value;
-  const placements = round({ modules, posts, lamps, fans, seats });
+  const placements = round({ modules, posts, lamps, fans, seats, skipped });
   return {
     id: recipe.id, kit: RIBBON_KIT, seed: recipe.seed,
     ...placements,
-    stats: { segments: recipe.segments.length, modules: modules.length, posts: posts.length, lamps: lamps.length, fans: fans.length, seats: seats.length },
+    stats: { segments: recipe.segments.length, modules: modules.length, posts: posts.length, lamps: lamps.length, fans: fans.length, seats: seats.length, skipped: skipped.length },
     hash: stableHash(placements),
   };
 }

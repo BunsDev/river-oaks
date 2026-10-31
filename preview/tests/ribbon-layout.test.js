@@ -21,7 +21,9 @@ const ofSegment = (plan, id) => ['modules', 'posts', 'lamps', 'fans', 'seats'].m
 test('the same recipe expands to byte-identical placements with stable IDs', () => {
   const first = expandRibbon(fixture()), second = expandRibbon(fixture());
   assert.equal(JSON.stringify(first), JSON.stringify(second));
-  assert.deepEqual(first.stats, { segments: 2, modules: 10, posts: 24, lamps: 6, fans: 10, seats: 3 });
+  assert.deepEqual(first.stats, { segments: 2, modules: 10, posts: 24, lamps: 6, fans: 10, seats: 3, skipped: 0 });
+  // Each post records how far along its segment it stands.
+  assert.deepEqual(first.posts.filter(post => post.segment === 'b' && post.side === 'left').map(post => post.station), [0, 3.333, 6.667, 10]);
   assert.deepEqual(first.modules.filter(m => m.segment === 'a').map(m => [m.id, m.kind]), [
     ['ribbon:a:module:000', 'end'], ['ribbon:a:module:001', 'straight'], ['ribbon:a:module:002', 'straight'], ['ribbon:a:module:003', 'straight'],
     ['ribbon:a:module:004', 'corner'], ['ribbon:a:module:005', 'straight'], ['ribbon:a:module:006', 'end'],
@@ -60,12 +62,38 @@ test('a post or seat in a doorway, seat access, no-go or step-free zone is refus
   // Post 001 left stands at [3, 1.5]; seat 001 (right side) spans x 3.7-5.3, y -2.5 to -1.9.
   for (const kind of RIBBON_RULES.exclusionKinds) {
     const onPost = withChange(recipe => { recipe.exclusions.push({ id: 'probe', kind, rect: [2.8, 1.2, 3.4, 1.8] }); });
-    assert.throws(() => expandRibbon(onPost), new RegExp(`ribbon:a:post:001:l lands in ${kind} probe; move a point of segment a`));
+    assert.throws(() => expandRibbon(onPost), new RegExp(`ribbon:a:post:001:l lands in ${kind} probe; set maxSpan on segment a or move a point`));
     const onSeat = withChange(recipe => { recipe.exclusions.push({ id: 'probe', kind, rect: [4, -2.4, 5, -2] }); });
     assert.throws(() => expandRibbon(onSeat), new RegExp(`ribbon:a:seat:001 lands in ${kind} probe`));
   }
   // Touching a post's edge is not standing in the zone.
   assert.doesNotThrow(() => expandRibbon(withChange(recipe => { recipe.exclusions.push({ id: 'edge', kind: 'no-go', rect: [3.15, 1, 4, 2] }); })));
+});
+
+test('with a maxSpan, a post in a zone is left out and the canopy spans over it; IDs and modules stay put', () => {
+  const base = expandRibbon(fixture());
+  // Post 002 left (with lamp 002) stands at [6, 1.5].
+  const spanning = withChange(recipe => { recipe.segments[0].maxSpan = 6; recipe.exclusions.push({ id: 'door', kind: 'doorway', rect: [5.8, 1.2, 6.4, 2] }); });
+  const plan = expandRibbon(spanning);
+  assert.deepEqual(plan.skipped, [{ id: 'ribbon:a:post:002:l', segment: 'a', zone: 'door', kind: 'doorway' }]);
+  assert.equal(plan.posts.some(post => post.id === 'ribbon:a:post:002:l'), false);
+  assert.equal(plan.posts.some(post => post.id === 'ribbon:a:post:002:r'), true, 'the other edge keeps its post');
+  assert.equal(plan.lamps.some(lamp => lamp.id === 'ribbon:a:lamp:002'), false, 'a lamp goes with its post');
+  assert.deepEqual(plan.stats, { ...base.stats, posts: 23, lamps: 5, skipped: 1 });
+  assert.deepEqual(plan.modules, base.modules);
+  assert.deepEqual(plan.fans, base.fans);
+  assert.deepEqual(plan.seats, base.seats);
+});
+
+test('a gap wider than maxSpan, an end post or a seat in a zone is still refused', () => {
+  // Posts 001 and 002 left both out: 9 m from post 000 to post 003.
+  const wide = withChange(recipe => { recipe.segments[0].maxSpan = 6; recipe.exclusions.push({ id: 'awning', kind: 'no-go', rect: [2.8, 1.2, 6.2, 1.8] }); });
+  assert.throws(() => expandRibbon(wide), /a left edge spans 9 m from ribbon:a:post:000:l to ribbon:a:post:003:l, over its maxSpan 6 m \(left out: ribbon:a:post:001:l in no-go awning, ribbon:a:post:002:l in no-go awning\)/);
+  const end = withChange(recipe => { recipe.segments[0].maxSpan = 6; recipe.exclusions.push({ id: 'door', kind: 'doorway', rect: [-0.3, 1.2, 0.3, 1.8] }); });
+  assert.throws(() => expandRibbon(end), /ribbon:a:post:000:l lands in doorway door; move a point of segment a/);
+  const seat = withChange(recipe => { recipe.segments[0].maxSpan = 6; recipe.exclusions.push({ id: 'probe', kind: 'no-go', rect: [4, -2.4, 5, -2] }); });
+  assert.throws(() => expandRibbon(seat), /ribbon:a:seat:001 lands in no-go probe/);
+  for (const maxSpan of [2, 6.5]) assert.throws(() => validateRibbon(withChange(recipe => { recipe.segments[0].maxSpan = maxSpan; })), /maxSpan must be between 3 and 6 m/);
 });
 
 test('a seat on the inside of a corner would block the next run and is refused', () => {
