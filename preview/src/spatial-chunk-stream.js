@@ -19,7 +19,7 @@ export function createSpatialChunkStream({ chunks, load, attach, detach,
       || !chunk.bounds.every(Number.isFinite) || chunk.bounds[0] >= chunk.bounds[2] || chunk.bounds[1] >= chunk.bounds[3]
       || !Number.isFinite(chunk.estimatedBytes) || chunk.estimatedBytes <= 0
       || chunk.estimatedTextureBytes !== undefined && !(Number.isFinite(chunk.estimatedTextureBytes) && chunk.estimatedTextureBytes >= 0)) throw new Error('Invalid chunk definition');
-    entries.set(chunk.id, { chunk, state: 'absent', resource: null, token: null, failures: 0, retryAt: 0, distance: Infinity, wanted: false });
+    entries.set(chunk.id, { chunk, state: 'absent', resource: null, token: null, failures: 0, retryAt: 0, distance: Infinity, wanted: false, measuredBytes: null });
   }
   let disposed = false, residentBytes = 0, residentTextureBytes = 0, loads = 0, unloads = 0, failures = 0, lastLoadMs = 0;
   const pending = new Set();
@@ -57,7 +57,7 @@ export function createSpatialChunkStream({ chunks, load, attach, detach,
         try { detach(entry.chunk, resource); } finally { resource.dispose(); }
         throw error;
       }
-      entry.resource = resource; residentBytes += resource.bytes; residentTextureBytes += textureBytes;
+      entry.resource = resource; residentBytes += resource.bytes; residentTextureBytes += textureBytes; entry.measuredBytes = resource.bytes;
       entry.state = 'ready'; entry.failures = 0; lastLoadMs = now() - token.started;
     }).catch(() => {
       if (!disposed && !token.cancelled) fail(entry);
@@ -80,7 +80,8 @@ export function createSpatialChunkStream({ chunks, load, attach, detach,
       let bytes = 0, textureBytes = 0, count = 0;
       const wanted = new Set();
       for (const entry of candidates) {
-        const size = entry.resource?.bytes ?? entry.chunk.estimatedBytes;
+        // Once a chunk has loaded, its measured size replaces the authored estimate.
+        const size = entry.resource?.bytes ?? entry.measuredBytes ?? entry.chunk.estimatedBytes;
         const textures = entry.resource ? entry.resource.textureBytes ?? 0 : entry.chunk.estimatedTextureBytes ?? 0;
         if (count >= maxResident || bytes + size > maxBytes || textureBytes + textures > maxTextureBytes) continue;
         wanted.add(entry); bytes += size; textureBytes += textures; count++;
@@ -101,7 +102,7 @@ export function createSpatialChunkStream({ chunks, load, attach, detach,
     retry(id) { const entry = entries.get(id); if (entry?.state === 'failed') entry.retryAt = 0; },
     debug() {
       return { disposed, residentBytes, residentTextureBytes, pending: pending.size, loads, unloads, failures, lastLoadMs,
-        chunks: [...entries.values()].map(({ chunk, state, distance, failures, retryAt }) => ({ id: chunk.id, state, distance, failures, retryAt })) };
+        chunks: [...entries.values()].map(({ chunk, state, distance, failures, retryAt, measuredBytes }) => ({ id: chunk.id, state, distance, failures, retryAt, measuredBytes })) };
     },
     dispose() {
       if (disposed) return; disposed = true;
