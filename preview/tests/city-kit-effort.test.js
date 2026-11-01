@@ -24,7 +24,7 @@ test('the committed report reproduces from the committed recipes', () => {
 test('every shipped neighborhood with authored blocks needs its rectangles retyped after the edit or leaves shells in the street; as quarters, nothing is retyped and nothing stands in the street', () => {
   const shipped = world.recipes.filter(entry => (entry.form === 'authored' || entry.form === 'migrated') && entry.change);
   assert.equal(shipped.length, 18);
-  assert.deepEqual(world.migrated, { recipes: 16, blocks: 30, frontageWords: 39 }, 'sixteen recipes migrated to quarters keep 39 of their 60 frontage words');
+  assert.deepEqual(world.migrated, { recipes: 18, blocks: 32, frontageWords: 45 }, 'eighteen recipes migrated to quarters keep 45 of their 64 frontage words');
   for (const entry of shipped) {
     assert.equal(entry.change.authored.blocksToRetype, entry.blocks, `${entry.id}: every block, authored or frozen from its quarters, sits flush to a street`);
     assert.ok(entry.change.authored.shellsInStreet > 0, `${entry.id}: unedited, shells stand in the wider street`);
@@ -32,7 +32,8 @@ test('every shipped neighborhood with authored blocks needs its rectangles retyp
     assert.equal(entry.change.quarters.shellsInStreet, 0, entry.id);
     assert.ok(entry.change.quarters.shells > 0 && entry.change.quarters.shells <= entry.change.shellsBefore, `${entry.id}: the wider street leaves less land, never more`);
   }
-  assert.deepEqual(world.shipped, { recipes: 18, blocks: 32, shells: 354, typed: { numbers: 2607, names: 205, words: 43 }, massing: { numbers: 697, names: 175, words: 43 },
+  // The terraces' quarters type eight numbers more than their blocks did (an inset each) and two words (split none).
+  assert.deepEqual(world.shipped, { recipes: 18, blocks: 32, shells: 354, typed: { numbers: 2617, names: 205, words: 45 }, massing: { numbers: 707, names: 175, words: 45 },
     authored: { blocksToRetype: 32, numbersToRetype: 128, shellsInStreet: 180 }, quarters: { blocksToRetype: 0, numbersToRetype: 0, shellsInStreet: 0, shells: 314 } });
 });
 

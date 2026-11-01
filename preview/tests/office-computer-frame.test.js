@@ -36,7 +36,7 @@ test('configuration accepts one exact public HTTPS origin and nothing else', () 
  assert.equal(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:loopback,VITE_TYPESAFE_COMPUTER_TEST_LOOPBACK:'1'}),null,'and a development build');
  assert.equal(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:loopback,DEV:true,VITE_TYPESAFE_COMPUTER_TEST_LOOPBACK:'1'}).origin,loopback);
  assert.equal(computerOrigin('http://example.test:80',{allowLoopback:true}),null,'only loopback hosts get the exception');
- const hosted='https://typesafe-computer.vercel.app';
+ const hosted='https://computer.typesafe.place';
  assert.deepEqual(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:hosted}),{origin:hosted,frameURL:`${hosted}/?embed=place`,signInURL:`${hosted}/api/auth/login`,openURL:`${hosted}/`},'the hosted Computer origin in Place\'s frame policy is accepted as configured');
 });
 
@@ -188,6 +188,25 @@ test('instance ids do not need crypto.randomUUID, which plain-http development o
  try{Object.defineProperty(crypto,'randomUUID',{value:undefined,configurable:true});
   const a=embedId(),b=embedId();assert.match(a,/^[0-9a-f]{32}$/);assert.notEqual(a,b);}
  finally{Object.defineProperty(crypto,'randomUUID',{value:original,configurable:true,writable:true});}
+});
+
+test('a Place account change removes a hung, usable Computer without asking it, and the next frame is a fresh instance', () => {
+ // The desk calls destroy() when the Place account changes (office-ui reset) or the page reloads into another account.
+ const t=setup();t.owner.open();t.frames[0].load();t.status('account-confirmation');t.status('usable','pending');
+ const old=t.owner.state.instanceId,oldWindow=t.frames[0].contentWindow,sent=t.posted.length;
+ t.owner.destroy();
+ assert.equal(t.posted.length,sent,'no prepare-close: the old account’s Computer is not asked anything');
+ assert.deepEqual([t.owner.state.state,t.owner.state.sync,t.owner.state.mounted,t.owner.state.instanceId],['idle','none',false,null]);
+ assert.deepEqual([t.mounted.length,t.listeners.size,t.timers.tasks.size,t.frames[0].src],[0,0,0,'about:blank']);
+ t.owner.open();t.frames[1].load();
+ assert.notEqual(t.owner.state.instanceId,old,'the next account’s frame gets a new instance');
+ assert.deepEqual(t.posted.at(-1).message,msg('init',t.owner.state.instanceId));
+ // The old document's late answers are fenced by window and by instance, even with the new instance id.
+ t.deliver(msg('status',old,{state:'usable',sync:'saved'}),{source:oldWindow});
+ t.deliver(msg('status',t.owner.state.instanceId,{state:'usable',sync:'saved'}),{source:oldWindow});
+ t.deliver(msg('status',old,{state:'usable',sync:'saved'}));
+ assert.deepEqual([t.owner.state.state,t.owner.state.sync],['loading','none'],'nothing from the old account carries over');
+ t.status('account-confirmation');assert.equal(t.owner.state.state,'account-confirmation','the new frame starts at Computer’s account gate');
 });
 
 test('a reload or navigation inside the frame starts a fresh, ungated instance and forgets the old document', async () => {

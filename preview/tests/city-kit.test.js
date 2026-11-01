@@ -241,6 +241,22 @@ test('street furniture speaks the District vocabulary: orbital lamps, grates, po
   kit.userData.dispose(); assert.ok(disposed, 'the grate texture is released with the kit');
 });
 
+test('no two parallel faces of a neighbourhood fight for depth within sight (depth-layer-audit.js)', async () => {
+  const { findDepthFights } = await import('../src/depth-layer-audit.js');
+  // The planter's mulch lay 1.5 mm over a brass slab and crawled through it from about 20 m (2026-10-26).
+  // Every city-kit neighbourhood in the destinations folder, so new ones are held to it too.
+  const { readdirSync } = await import('node:fs');
+  const recipes = readdirSync(new URL('../../config/destinations/', import.meta.url)).filter(file => file.endsWith('.json') && !file.endsWith('.lock.json'))
+    .map(file => [file.slice(0, -5), read(file.slice(0, -5))]).filter(([, recipe]) => recipe.kit);
+  assert.ok(recipes.length >= 8, `${recipes.length} city-kit neighbourhoods`);
+  for (const [name, recipe] of recipes) {
+    const kit = buildCityKit(assembleNeighborhood(recipe), { groundAt: () => 0, ground: 0 });
+    const fights = findDepthFights(kit, { groundAt: () => 0 });
+    assert.deepEqual(fights.map(({ a, b, gap, size, fightMetres, at }) => ({ a, b, gap: +gap.toFixed(4), size: +size.toFixed(2), fightMetres: Math.round(fightMetres), at: at.map(v => +v.toFixed(1)) })), [], name);
+    kit.userData.dispose();
+  }
+});
+
 test('finishes recolour named slots only, and classic is the unchanged default', () => {
   assert.deepEqual(Object.keys(KIT_FINISHES.classic.materials), []);
   assert.equal(kitFinish(), KIT_FINISHES.classic);
@@ -311,4 +327,40 @@ test('switching finishes back and forth releases every material it made', () => 
     kit.userData.dispose();
     assert.equal(released, materials.size + geometries.size, `${finish}: every material and geometry released`);
   }
+});
+
+test('no street lamp stands in a tree pit: where the spacings coincide the lamp moves between two trees', () => {
+  const { readdirSync } = process.getBuiltinModule('node:fs');
+  const names = readdirSync(new URL('../../config/destinations/', import.meta.url)).filter(f => f.endsWith('.json') && !f.endsWith('.lock.json')).map(f => f.slice(0, -5));
+  let lamps = 0;
+  for (const name of names) {
+    const plan = assembleNeighborhood(read(name)), trees = plan.pieces.filter(piece => piece.piece === 'landscape/street-tree');
+    for (const lamp of plan.pieces.filter(piece => piece.piece === 'furniture/lamp')) {
+      lamps++;
+      for (const tree of trees) assert.ok(Math.hypot(lamp.at[0] - tree.at[0], lamp.at[1] - tree.at[1]) >= 1, `${lamp.id} stands in ${tree.id}'s pit`);
+    }
+  }
+  assert.ok(lamps > 100, `${lamps} lamps checked`);
+  // A street whose lamp spacing is a multiple of its tree spacing: every lamp would land on a trunk.
+  const street = { id: 'probe', from: [0, 0], to: [96, 0], lane: 6, sidewalk: 3.5, trees: { offset: 4, spacing: 8 }, lamps: { offset: 4, spacing: 24 } };
+  const plan = assembleNeighborhood({ ...structuredClone(commons), id: 'lamp-probe', streets: [street], plazas: [], landmarks: [], furniture: [], context: [], layout: undefined, blocks: undefined, overrides: {}, additions: [] });
+  const placed = piecesOf(plan, 'lamp-probe/probe/lamp-');
+  assert.deepEqual(placed.map(lamp => lamp.at[0]), [8, 32, 56, 80], 'each lamp moves half a tree spacing, between trees');
+});
+
+test('no two solids overlap in any committed recipe, except hedge planters that continue one another', () => {
+  const { readdirSync } = process.getBuiltinModule('node:fs');
+  const names = readdirSync(new URL('../../config/destinations/', import.meta.url)).filter(f => f.endsWith('.json') && !f.endsWith('.lock.json')).map(f => f.slice(0, -5));
+  const overlap = (a, b) => Math.min(a[2], b[2]) - Math.max(a[0], b[0]) > .01 && Math.min(a[3], b[3]) - Math.max(a[1], b[1]) > .01;
+  let checked = 0;
+  for (const name of names) {
+    const { solids } = assembleNeighborhood(read(name));
+    checked += solids.length;
+    for (let i = 0; i < solids.length; i++) for (let j = i + 1; j < solids.length; j++) {
+      const a = solids[i], b = solids[j];
+      if (a.id.split('/leg-')[0] === b.id.split('/leg-')[0] || (a.kind === 'hedge' && b.kind === 'hedge')) continue;
+      assert.ok(!overlap(a.rect, b.rect), `${name}: ${a.id} overlaps ${b.id}`);
+    }
+  }
+  assert.ok(checked > 1000, `${checked} solids checked`);
 });

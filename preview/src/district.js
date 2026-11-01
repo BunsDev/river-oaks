@@ -11,7 +11,7 @@ import { thinStorefrontGlass, displayRoomSurface } from './storefront-materials.
 import { hedgeClusters } from './street-furniture.js';
 import { storefrontBenchSpots } from './street-fixtures.js';
 export { storefrontBenchSpots };
-import { storeRoomsFor, interiorLevelRoomsFor, uncoveredBay, coveringRoom } from './store-rooms.js';
+import { storeRoomsFor, interiorLevelRoomsFor, uncoveredBay, coveringRoom, roomAt } from './store-rooms.js';
 import { venueDoorSites } from './venue-rooms.js';
 import { CAMPUS_BUILDING_KIND, isCampusRoom } from './garden-campus-district.js';
 import { buildGardenCampus } from './garden-campus.js';
@@ -118,6 +118,19 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
   };
   // Photographed frontages (reference-facades.js) take over the edges they cover.
   const reference = createReferenceFacades(world, { part, pane, plane: pane, glass });
+  // The mass draws the mapped wall, and every facade part stands on it or in front of it. Pushed
+  // back a couple of depth steps (the finishes' rule in reverse), the parts win where glass or
+  // a sheet sits a few centimetres off it, which the depth buffer can't separate from afar.
+  const masses = new Map(), behind = material => {
+    if (!masses.has(material)) {
+      const back = material.clone();
+      // Material.clone copies maps, not shader callbacks. Preserve the authored finish.
+      back.onBeforeCompile = material.onBeforeCompile; back.customProgramCacheKey = material.customProgramCacheKey;
+      Object.assign(back, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 });
+      masses.set(material, back); materials.add(back);
+    }
+    return masses.get(material);
+  };
   world.buildings.forEach((building, index) => {
     // The Gardens draw their own shells from the campus contract (garden-campus.js).
     if (building.kind === CAMPUS_BUILDING_KIND) return;
@@ -132,7 +145,11 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
     for (const [outline, from, to] of step ? [[shape, retailHeight, step.height], [towerShape, step.height, roofHeight]] : [[shape, retailHeight, roofHeight]]) {
       const geometry = new THREE.ExtrudeGeometry(outline, { depth: to-from, bevelEnabled: false, steps: 1, curveSegments: 1 });
       geometry.rotateX(-Math.PI / 2); geometries.add(geometry);
-      const mesh = new THREE.Mesh(geometry, massMaterial);
+      // Walls only: the roof sheet just above is the one top, and the base stands on the ground
+      // floor. A cap 2 cm under the roof fought it for depth from the air (depth-layer-audit.js).
+      const walls = geometry.groups.find(group => group.materialIndex === 1);
+      if (walls) geometry.setDrawRange(walls.start, walls.count);
+      const mesh = new THREE.Mesh(geometry, behind(massMaterial));
       mesh.position.y = building.center[2]+from; mesh.castShadow = mesh.receiveShadow = true;
       mesh.userData.districtBuilding = building.id; group.add(mesh);
     }
@@ -252,12 +269,21 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
         if (retailHeight) {
           const bayStart=[a[0]+dx*k/bays,a[1]+dy*k/bays],bayEnd=[a[0]+dx*(k+1)/bays,a[1]+dy*(k+1)/bays];
           for (const [t0,t1] of officeRetailOpenings(officeLobby,building.id,bayStart,bayEnd,recessed)) {
-            const width = Math.max(0.2, span*(t1-t0)), shift = ((t0+t1)/2-0.5)*span;
+            // At a building corner the next edge's wall and glass stand in the alcove's end plane;
+            // the alcove stops 30 cm short of it, behind the corner pier (depth-layer-audit.js).
+            const lead = k===0 && t0<0.001 ? 0.3 : 0, tail = k===bays-1 && t1>0.999 ? 0.3 : 0;
+            const width = Math.max(0.2, span*(t1-t0)-lead-tail), shift = ((t0+t1)/2-0.5)*span+(lead-tail)/2;
+            // A boutique room starting just past the bay closes that side with its own wall.
+            const beside=side=>{ const past=side<0?bay0:bay1; return Boolean(roomAt(rooms,past[0]+dx/length*0.15*side,past[1]+dy/length*0.15*side,0)); };
+            const into=side=>(side<0?t0<0.001:t1>0.999)&&beside(side)?0.02:0;
             const atc=(depth,height)=>{const p=at(depth,height);p[0]+=dx/length*shift;p[2]-=dy/length*shift;return p;};
             const nearest=world.stores.filter(store=>store.building_id===building.id).sort((left,right)=>Math.hypot(left.facade[0]-x,left.facade[1]+z)-Math.hypot(right.facade[0]-x,right.facade[1]+z))[0];
-            part(floor,atc(1.35,0.28),[width,0.10,2.7],yaw,index);
-            part(interiors.forCategory(nearest?.category),atc(2.7,2.25),[width,4.0,0.12],yaw,index);
-            part(interior,atc(1.35,4.16),[width,0.12,2.7],yaw,index);
+            // Floor and ceiling end 5 mm inside the back wall's ends, so their end caps don't share its plane.
+            part(floor,atc(1.35,0.28),[width-0.01,0.10,2.7],yaw,index);
+            // The back wall runs 2 cm on into such a room's wall, so its end cap is buried there.
+            const back=atc(2.7,2.25),reach=(into(1)-into(-1))/2;back[0]+=dx/length*reach;back[2]-=dy/length*reach;
+            part(interiors.forCategory(nearest?.category),back,[width+into(-1)+into(1),4.0,0.12],yaw,index);
+            part(interior,atc(1.35,4.16),[width-0.01,0.12,2.7],yaw,index);
             // Warm display strips, ceiling spots and plinths reveal depth through recessed glass.
             part(light,atc(1.35,3.98),[Math.max(0.3,width-0.5),0.025,0.06],yaw,index);
             for (const offset of (width > 2.4 ? [-width * 0.3, 0, width * 0.3] : [0])) part(spot, along(atc(1.6, 4.09), offset), [0.12, 0.02, 0.12], yaw, index, 0, disc);
@@ -279,10 +305,16 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
             }
             for(const side of [-1,1]) {
               if(entryAt((k+(side>0?1:0))*span)) continue;
-              // A room wall already closes the side that borders a boutique.
+              // A room wall already closes the side that borders a boutique, inside this bay or just past it.
               if(side<0 ? t0>0.001 : t1<0.999) continue;
-              const p=at(1.35,2.2);p[0]+=dx/length*span/2*side;p[2]-=dy/length*span/2*side;
-              part(interior,p,[0.08,4.0,2.7],yaw,index);
+              if(beside(side)) continue;
+              // It rises from inside the floor slab, so no underside shows below the floor, and starts
+              // 2 cm behind the facade line, where a boutique room's wall ends too. At a corner it
+              // fills back to 20 cm from it, clear of the next edge's glass 11 cm in, so no gap
+              // behind the corner pier opens onto the empty building.
+              const inset=side<0?lead:tail, thick=inset?inset-0.2:0.08, edge=span/2-inset+(inset?thick/2:0);
+              const p=at(1.36,2.25);p[0]+=dx/length*edge*side;p[2]-=dy/length*edge*side;
+              part(interior,p,[thick,3.9,2.68],yaw,index);
             }
           }
         }
@@ -423,10 +455,16 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
     const id = `${batch.geometry.uuid}|${key}`;
     if (!finishes.has(id)) {
       const material = batch.material.clone(); material.color.set('#ffffff'); material.name = `finish:${key}`; materials.add(material);
+      // Plain finishes are the trim applied to textured cladding (frames, bands, rails, louvres):
+      // pulled forward a couple of depth steps, they win where they meet it on one plane.
+      Object.assign(material, { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
       finishes.set(id, { material, geometry: batch.geometry, parts: [] }); drawn.push(finishes.get(id));
     }
     for (const part of batch.parts) finishes.get(id).parts.push({ ...part, color: batch.material.color });
+    (finishes.get(id).names ??= new Set()).add(batch.material.name || 'plain');
   }
+  // A finish batch is named for the materials it draws, so audits and census reports can say what it is.
+  for (const finish of finishes.values()) finish.material.name = `finish:${[...finish.names].sort().join('+')}`;
   for (const { material, geometry, parts } of drawn) {
     const mesh = new THREE.InstancedMesh(geometry, material, parts.length);
     mesh.name = `facade:${material.name}`;

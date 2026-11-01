@@ -440,13 +440,18 @@ export function createReferenceFacades(world, { part, pane, plane, glass }) {
     const [corner, along, far, across] = hermesPavilionRing(frontage).slice(0, -1).map(p => new THREE.Vector2(...p));
     const shape = new THREE.Shape([corner, along, far, across]);
     const geometry = new THREE.ExtrudeGeometry(shape, { depth: 14.1 - 4.25, bevelEnabled: false, steps: 1, curveSegments: 1 }); geometry.rotateX(-Math.PI / 2); geometries.push(geometry);
-    const mass = new THREE.Mesh(geometry, m.limestone); mass.position.y = f.base + 4.25; mass.castShadow = mass.receiveShadow = true; mass.userData.districtBuilding = building.id; group.add(mass);
+    // Pushed back like the district masses (district.js), so the glass set off it wins; one step
+    // less, so it wins over the block's own mass where the two share the west wall.
+    const stone = m.limestone.clone();
+    stone.onBeforeCompile = m.limestone.onBeforeCompile; stone.customProgramCacheKey = m.limestone.customProgramCacheKey;
+    Object.assign(stone, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }); materials.push(stone);
+    const mass = new THREE.Mesh(geometry, stone); mass.position.y = f.base + 4.25; mass.castShadow = mass.receiveShadow = true; mass.userData.districtBuilding = building.id; group.add(mass);
     const roofGeometry = new THREE.ShapeGeometry(shape); roofGeometry.rotateX(-Math.PI / 2); geometries.push(roofGeometry);
     const top = new THREE.Mesh(roofGeometry, m.bronze); top.position.y = f.base + 14.45; top.receiveShadow = true; group.add(top);
-    // A stone cap on the two faces above the neighbouring roofs.
+    // A stone cap on the two faces above the neighbouring roofs, standing 7 cm over the bronze roof.
     const cap = (from, to) => {
       const dx = to.x - from.x, dy = to.y - from.y, length = Math.hypot(dx, dy);
-      part(m.limestone, [(from.x + to.x) / 2, f.base + 14.25, -(from.y + to.y) / 2], [length + 0.3, 0.4, 0.3], Math.atan2(dy, dx), -1);
+      part(m.limestone, [(from.x + to.x) / 2, f.base + 14.285, -(from.y + to.y) / 2], [length + 0.3, 0.47, 0.3], Math.atan2(dy, dx), -1);
     };
     cap(along, far); cap(far, across);
   }

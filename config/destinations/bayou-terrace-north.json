@@ -116,44 +116,6 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "studio-row",
-      "style": "garden-court",
-      "rect": [
-        3.5,
-        41,
-        24.5,
-        163
-      ],
-      "front": "east",
-      "sides": [
-        "north",
-        "south"
-      ],
-      "depth": [
-        12,
-        16
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        6.5
-      ],
-      "names": [
-        "Bayou Kayak Rental",
-        "Cypress Knee Ceramics",
-        "Water Oak Woodshop",
-        "Egret Print Studio",
-        "Lily Pad Plants",
-        "Riverbend Frames",
-        "Tadpole Art Club"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -290,7 +252,7 @@
       "piece": "furniture/bike-rack",
       "at": [
         36.5,
-        102.0
+        102
       ],
       "yaw": 1.5707963267948966
     },
@@ -367,5 +329,57 @@
   ],
   "context": [],
   "overrides": {},
-  "additions": []
+  "additions": [],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "studio-row",
+        "rect": [
+          0,
+          41,
+          25,
+          163
+        ],
+        "style": "garden-court",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          6.5
+        ],
+        "names": [
+          "Bayou Kayak Rental",
+          "Cypress Knee Ceramics",
+          "Water Oak Woodshop",
+          "Egret Print Studio",
+          "Lily Pad Plants",
+          "Riverbend Frames",
+          "Tadpole Art Club"
+        ],
+        "inset": [
+          3.5,
+          0,
+          0.5,
+          0
+        ],
+        "split": "none",
+        "front": "east",
+        "sides": [
+          "north",
+          "south"
+        ]
+      }
+    ],
+    "migrated": {
+      "blocks": 1,
+      "geometry": "64587cb9cfe05a23"
+    }
+  }
 }
