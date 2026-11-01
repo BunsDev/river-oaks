@@ -2,8 +2,9 @@
   "id": "typesafe-place-north",
   "kit": "city-kit-1",
   "seed": 2026,
-  "hash": "6521ade91cb4811f",
-  "recipeHash": "d4a9a28d0f917d17",
+  "hash": "a685343c2f8962e6",
+  "geometry": "b8fe1af9ce326b8b",
+  "recipeHash": "e5de2c14e83613ee",
   "overridesHash": "8eeae18cc87e6336",
   "stats": {
     "pieces": 69,

@@ -1,0 +1,16 @@
+{
+  "id": "layout-grid-example",
+  "kit": "city-kit-1",
+  "seed": 12,
+  "hash": "6b7fe7c394387e09",
+  "geometry": "c2a04526985bfba8",
+  "recipeHash": "c72e1dc187c8430f",
+  "overridesHash": "43dc8f07405100cd",
+  "stats": {
+    "pieces": 214,
+    "buildings": 44,
+    "solids": 74,
+    "materials": 13,
+    "triangles": 159440
+  }
+}

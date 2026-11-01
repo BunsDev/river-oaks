@@ -1,7 +1,12 @@
 # App Review readiness (#292)
 
 Recorded 2026-10-24, at the revision that adds report confirmation and the support
-contact. It is stacked on in-app deletion (#666), blocking (#665) and erasure (#661).
+contact; refreshed 2026-10-27 at the revision that adds the content filter (#713),
+moderation routing (#715) and the contact under the gate (#716), with the native
+sign-in design on #714 and the Block button wired in (#711). It is stacked on in-app
+deletion (#666), blocking (#665) and erasure (#661); #711, #713, #714, #715 and #716 have
+since merged to `main` (2026-10-28 and 10-29). Every row below is either met or
+integrated in source, or a named decision for Val.
 It compares what River Oaks does today with the App Review guidelines that #292 names.
 Apple's text was read on 2026-10-24 from the
 [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/) and
@@ -18,14 +23,14 @@ the binary is marked **native**.
 | 1.2 | Filter objectionable content | A server-side filter screens town chat, direct messages, groups, events, profiles and usernames before they're stored, on both servers (this change). Voice isn't filtered | Met in source; the list and the mode are Decision 1 |
 | 1.2 | Report offensive content, respond in time | Residents can be reported from the roster, including one who has left. A report keeps the quoted text and the reported account's last chat lines, records when it should be answered by, is posted to the moderators' inbox (`MODERATION_NOTIFY_URL`), and stays listed in Settings → Account → Reports until a moderator closes it (this change). Messages, events and groups can't be reported | Met in source; the inbox, its owner and the response time are Decision 2 |
 | 1.2 | Block abusive users | The server enforces blocks (#665), except voice. The roster now offers Block/Unblock and Settings → Account lists blocked residents | Integrated in source; fixture verification and native acceptance remain distinct |
-| 1.2 | Published contact information | Settings → Account → Support, once `VITE_SUPPORT_CONTACT` is set (this change). Not on the sign-in or waitlist pages | Needs a value; **gap** before approval |
-| 5.1.1(v) | Delete the account in the app | In-app deletion behind a default-off flag (#666), webhook erasure (#661) | Met in source, off |
-| 5.1.1(v) | Revoke social credentials; no social tokens kept off the device | WorkOS can return the resident's GitHub token, which the server then uses | **Decision** |
-| 5.1.2 | Consent before sharing personal data, including with third-party AI | No resident data reaches an AI provider in the hosted game; processors listed | Met in source, disclosures pending |
-| 4.8 | An equivalent sign-in beside a third-party one | GitHub and email codes; no option that keeps the email private | **Decision, blocking** (#287) |
-| 4.2 | More than a repackaged website | A 3D multiplayer game, but the iOS probe loads the hosted page | Unknown, **native** (#286) |
-| 2.5.2 | No downloaded code that changes features | The hosted page supplies the game's code today | Unknown, **native** (#286) |
-| 4.7 | Hosted mini apps and plug-ins meet 1.2, 5.1 and age rules | TypeSafe Computer embed (off); World Studio agent (desktop only) | Keep both out of iOS v1 |
+| 1.2 | Published contact information | Under the sign-in and waitlist gate in every state, and in Settings → Account → Support, once `VITE_SUPPORT_CONTACT` is set (this change) | Met in source; the value is Decision 3 |
+| 5.1.1(v) | Delete the account in the app | In-app deletion behind a default-off flag (#666), webhook erasure (#661) | Met in source; turning it on in production is in the table below |
+| 5.1.1(v) | Revoke social credentials; no social tokens kept off the device | WorkOS can return the resident's GitHub token, which the server then uses | **Decision 7** (a WorkOS setting) |
+| 5.1.2 | Consent before sharing personal data, including with third-party AI | No resident data reaches an AI provider in the hosted game; processors listed | Met in source; the privacy answers are Val's, from the inventory |
+| 4.8 | An equivalent sign-in beside a third-party one | GitHub and email codes; no option that keeps the email private. The native exchange is designed and tested host-independently on #714 (`docs/ios-auth.md`), which recommends adding Sign in with Apple through WorkOS, staged | **Decision 4** |
+| 4.2 | More than a repackaged website | A 3D multiplayer game, but the iOS probe loads the hosted page | **Native** (#286); bundling the client is Decision 5 |
+| 2.5.2 | No downloaded code that changes features | The hosted page supplies the game's code today | **Native** (#286); bundling the client is Decision 5 |
+| 4.7 | Hosted mini apps and plug-ins meet 1.2, 5.1 and age rules | TypeSafe Computer embed (off); World Studio agent (desktop only) | **Decision 5**: keep both out of iOS v1 |
 
 ## 1.2 User-generated content
 
@@ -161,15 +166,18 @@ does not close this App Review issue or authorize an iOS release. Voice isn't co
 the device mute is the only control today
 ([Decision 1 there](player-blocking.md)).
 
-**Contact. Needs a value, and a gap before approval.** `VITE_SUPPORT_CONTACT`, set at
-build time, is an email address or an https link (`preview/src/support-contact.js`).
-It's shown in Settings → Account → Support. Without a value, or with an example
-domain, nothing is shown. Settings exists only once a resident is approved and
-in the world, so signed-out, waitlisted, rejected and banned residents can't see it.
-A rejected resident reads "Contact the district team if you think this is a mistake."
-with no contact given. Those pages are in `preview/src/access-entry.js`, owned by
-`touch-network-288-290`, which can call `createSupportContact` there. App Store
-Connect needs a support URL too (Decision 3).
+**Contact. Met in source; needs a value.** `VITE_SUPPORT_CONTACT`, set at build
+time, is an email address or an https link (`preview/src/support-contact.js`). It's
+shown in two places: under the sign-in and waitlist gate's footer in every gate state
+(`createGateSupport`, mounted by `preview/src/access-entry.js`), so a visitor who is
+signed out, waiting, refused or banned can reach someone before they are ever in the
+world, and in Settings → Account → Support once they are
+(`preview/src/settings-support.js`, which copies the gate's link: the sign-in page's
+modules can't be shared with game code, or the asset gate refuses them before sign-in). A rejected resident reads
+"Contact the district team if you think this is a mistake." with the contact right
+below. Without a value, or with an example domain, nothing is shown anywhere. Test:
+`preview/tests/support-contact.test.js`. App Store Connect needs a support URL too;
+the value is Decision 3.
 
 ## 5.1.1(v) Account deletion
 
@@ -189,7 +197,7 @@ account is deleted at once, and that anything left is removed by the erasure's
 second run and retries, within minutes when every store answers. The policy has to say what stays: reports, bans and the moderation audit
 (inventory Decision 3).
 
-**Social credentials. Decision.** Apple says an app must let people revoke
+**Social credentials. Decision 7.** Apple says an app must let people revoke
 social-network credentials from inside it, must not keep social-network tokens off
 the device, and may use them only to connect from the app while it's in use. With
 WorkOS's "Return GitHub OAuth tokens" setting on, WorkOS hands the resident's GitHub
@@ -247,7 +255,11 @@ private. Two readings:
 - **Offer only email codes on iOS.** River Oaks' own account system may then fall
   under the exception for apps that use only the company's own sign-in.
 
-Decision 4, owned by #287.
+Decision 4. The sign-in design for the native host, the exchange contract and its
+host-independent server tests landed with #714 (`docs/ios-auth.md`, merged 2026-10-28); its 4.8 note
+weighs both readings and recommends adding Sign in with Apple through WorkOS, staged
+(Staging first), keeping GitHub and email codes. Enabling Apple in WorkOS is a
+configuration change for Val, not a code change.
 
 ## 4.2 Minimum functionality and 2.5.2 downloaded code
 
@@ -285,8 +297,8 @@ Recommended: leave Computer out of iOS v1 (Decision 5).
 | App Store privacy answers and the privacy policy | Val | Draft from the inventory |
 | Age rating: chat and voice with other residents | Val | Not answered |
 | Reviewer access: an approved waitlist account that signs in without a live inbox, with no public bypass | #293 | Not started |
-| Review notes: where Delete account, Report, Support and the moderators' Reports list are, and Block once it's wired in | #293 | This page lists them |
-| Support URL in App Store Connect | Val | Needs the contact |
+| Review notes: where Delete account, Report, Support, Block/Unblock and the moderators' Reports list are | #293 | This page lists them |
+| Support URL in App Store Connect | Val | Needs the contact (Decision 3) |
 | Deletion on in production, with `user.deleted` delivery checked | Val | Off |
 | Business model | Val | No purchase code exists; record that v1 is free, if it is |
 
@@ -308,8 +320,12 @@ Recommended: leave Computer out of iOS v1 (Decision 5).
    24-hour target. Name at least two moderators: a report about a moderator is shown
    only to the others, so with one, nobody sees it in the app.
 3. **Support contact.** The address or page for `VITE_SUPPORT_CONTACT` and App Store
-   Connect.
+   Connect. Both places that show it are built; the value is all that is missing.
+   Recommended: one mailbox more than one person reads (a group address on the
+   district's domain), used for both, so a safety concern never waits on one inbox.
 4. **Sign-in on iOS (4.8).** Add Sign in with Apple, or offer only email codes there.
+   `docs/ios-auth.md` (#714) recommends Apple through WorkOS, staged; the WorkOS
+   configuration is Val's to change.
 5. **Hosted software on iOS.** Bundled or hosted game code (2.5.2, 4.2), and
    whether Computer ships in v1. Recommended: bundle, and leave Computer out.
 6. **Age rating and business model.** The rating answers, and whether v1 is free.

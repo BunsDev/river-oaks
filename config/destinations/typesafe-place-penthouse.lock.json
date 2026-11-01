@@ -2,8 +2,9 @@
   "id": "typesafe-place-penthouse",
   "kit": "city-kit-1",
   "seed": 2026,
-  "hash": "e7f10ab68350e830",
-  "recipeHash": "c11edfa18cd1217f",
+  "hash": "4ca6bc9ec1735374",
+  "geometry": "27456442cebc0130",
+  "recipeHash": "1e21c8135f1ee649",
   "overridesHash": "05fc5abaa52000b0",
   "stats": {
     "pieces": 110,

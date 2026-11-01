@@ -129,44 +129,6 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "eighteenth-retail-west",
-      "style": "place-retail",
-      "rect": [
-        559,
-        -89.5,
-        619,
-        -77.5
-      ],
-      "front": "north",
-      "sides": [
-        "east",
-        "west"
-      ],
-      "depth": [
-        10,
-        12
-      ],
-      "storeys": [
-        2,
-        3
-      ],
-      "bays": [
-        6,
-        7.5
-      ],
-      "names": [
-        "Unknown Cat Cafe",
-        "Async Bagels",
-        "Await Ice Cream",
-        "Module Records",
-        "Export Supply Co",
-        "Import Grocer",
-        "Const Correct Cleaners"
-      ]
-    }
-  ],
   "landmarks": [
     {
       "id": "pink-ribbon",
@@ -427,5 +389,50 @@
       "variant": "gallery",
       "awning": "canvas-blush"
     }
-  ]
+  ],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "eighteenth-retail-west",
+        "rect": [
+          559,
+          -89.5,
+          619,
+          -77.5
+        ],
+        "style": "place-retail",
+        "depth": [
+          10,
+          12
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          6,
+          7.5
+        ],
+        "names": [
+          "Unknown Cat Cafe",
+          "Async Bagels",
+          "Await Ice Cream",
+          "Module Records",
+          "Export Supply Co",
+          "Import Grocer",
+          "Const Correct Cleaners"
+        ],
+        "front": "north",
+        "sides": [
+          "east",
+          "west"
+        ]
+      }
+    ],
+    "migrated": {
+      "blocks": 1,
+      "geometry": "89848a43c1d3f449"
+    }
+  }
 }

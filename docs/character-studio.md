@@ -3,7 +3,7 @@
 Status: contract increment #457 is on main, and so are the editor, rendering and
 persistence stack (#461, #462, #464), #441's guided creation (through #496),
 human-only characters, Jevica-only invited office access and the expanded Studio.
-#484 carries the remaining #441 tailoring fixes. Release acceptance remains
+#484 (merged 2026-10-18) added the remaining #441 tailoring fixes. Release acceptance remains
 subject to the verification and device gates below.
 
 ## Decision and evidence
@@ -184,9 +184,8 @@ The contract is the seam the next increments build on. Each must keep
   through `migrateCharacterAppearance`, and must pass in both the memory and Redis rooms.
   Appearance never grants flight, speed, admin or companion privileges.
 
-Codex's drafts #461 (editor), #462 (render) and #464 (persistence) are stacked on
-this PR, branched from its earlier head `b6ef443e`. The base gained a plain merge of
-`main` here, not a rewrite, so each can merge the new head forward.
+Codex's #461 (editor), #462 (render) and #464 (persistence) were stacked on this
+PR, branched from its earlier head `b6ef443e`; all three merged on 2026-10-18.
 
 ## Supported scope and quality gates
 Current direction (2026-10-18): human characters only, with ultra-realistic human
@@ -736,7 +735,7 @@ in the task ledger.
 ### Your own: player-made characters (2026-10-26)
 
 Val asked for the studio to start from a random character, with control down to the
-face (nose, mouth, eyes, cheeks, brows), skin, height, body and gender, hair, outfit,
+face (nose, mouth, eyes, cheeks, brows), skin, height, body type, body and gender, hair, outfit,
 shoes and eye colour. This supersedes, for this feature only, the earlier rule to keep
 face and body controls unavailable. The other rules still hold:
 
@@ -755,6 +754,12 @@ catalogue `river-oaks-recipes-v1`):
 - **body:** one of the six shipped CC0 bodies, a feminine or masculine frame with the
   outfit made for it;
 - **height:** 150–200 cm;
+- **build:** body type, slim (-100) to broad (100) in steps of 5, added 2026-10-29 (Val's
+  ask that the random start also varies the body type). The shipped bodies carry no
+  body morphs, so the build is a width scale of the figure (up to 8% either way) at the
+  recipe's exact height, not a different person. A record published before the build
+  has no `build` field; it validates and renders as a neutral build, and its canonical
+  copy carries `build: 0`, so stored revisions still equip and select exactly;
 - **face:** sixteen sliders over the bodies' face targets, in steps of 5, capped at a 0.7
   weight, with left and right moving together;
 - **colours:** skin tone, eye colour, hair colour, outfit colour and shoe colour;

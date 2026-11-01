@@ -7,6 +7,7 @@
 // after generation by stable ID: regeneration re-derives everything else and
 // reports, never drops, an override whose target no longer exists.
 import { KIT_CONVENTIONS, KIT_MATERIALS, KIT_PIECES, KIT_STYLES, KIT_VERSION, kitPiece } from './catalog.js';
+import { expandLayout, validateLayout } from './layout.js';
 
 const MODULE = KIT_CONVENTIONS.module;
 const mm = value => Math.round(value * 1000) / 1000;
@@ -64,6 +65,10 @@ export const stableHash = value => {
   return fnv32(text, 2166136261).toString(16).padStart(8, '0') + fnv32(text, 3735928559).toString(16).padStart(8, '0');
 };
 // mulberry32 per stable ID.
+// What a plan puts on the ground, independent of the recipe that produced it: the
+// lock records it so a recipe rewrite (authored blocks as quarters) proves itself.
+export const geometryHash = plan => stableHash({ pieces: plan.pieces, surfaces: plan.surfaces, solids: plan.solids, lanterns: plan.lanterns, stats: plan.stats });
+
 export function streamFor(seed, id) {
   let state = fnv32(`${seed}:${id}`, 2166136261);
   const next = () => {
@@ -96,7 +101,14 @@ export function validateRecipe(recipe) {
     if (street.bands !== undefined && !(street.bands.spacing > 0 && street.bands.offset >= 0)) fail(`street ${street.id} bands`);
     streets.set(street.id, street);
   }
-  for (const plaza of recipe.plazas ?? []) { unique('plaza', plaza.id); if (!rectOk(plaza.rect)) fail(`plaza ${plaza.id}`); }
+  for (const plaza of recipe.plazas ?? []) {
+    unique('plaza', plaza.id); if (!rectOk(plaza.rect)) fail(`plaza ${plaza.id}`);
+    // A row derives its items from one line: `y` with `from`/`to` along x (east-running) or `x` along y.
+    for (const key of ['treeRows', 'benchRows', 'lampRows']) for (const [i, row] of (plaza[key] ?? []).entries()) {
+      const axis = (row?.x !== undefined ? 1 : 0) + (row?.y !== undefined ? 1 : 0);
+      if (!row || axis !== 1 || !Number.isFinite(row.x ?? row.y) || !Number.isFinite(row.from) || !Number.isFinite(row.to) || row.from > row.to || !(row.spacing > 0) || (row.to - row.from) / row.spacing > 64 || (row.yaw !== undefined && !Number.isFinite(row.yaw))) fail(`plaza ${plaza.id} ${key} ${i}`);
+    }
+  }
   for (const block of recipe.blocks ?? []) {
     unique('block', block.id);
     if (!KIT_STYLES[block.style]) fail(`block ${block.id} style`);
@@ -117,6 +129,8 @@ export function validateRecipe(recipe) {
     if (Object.keys(override).some(key => !['set', 'suppress', 'note'].includes(key))) fail(`override ${id} keys`);
     for (const key of Object.keys(override.set ?? {})) if (!SETTABLE.has(key)) fail(`override ${id} cannot set ${key}`);
   }
+  // Quarters and reservations that derive further blocks from the streets (layout.js).
+  validateLayout(recipe);
   return recipe;
 }
 
@@ -222,10 +236,19 @@ function assembleStreet(recipe, street, seed, pieces, walks) {
     }
   }
   if (street.lamps) {
+    // Trees and lamps share the kerbside line at independent spacings. Where a lamp
+    // would stand in a tree pit (its column in the trunk, its globe in the canopy),
+    // it moves half a tree spacing along the street, between two trees.
+    const trees = new Set(pieces.filter(piece => piece.piece === 'landscape/street-tree' && piece.id.startsWith(`${base}/tree-`)).map(piece => `${piece.at[1]}|${piece.at[0]}`));
+    const inPit = (x, sign) => [...trees].some(key => { const [ty, tx] = key.split('|').map(Number); return ty === kerbside(sign) && Math.abs(tx - x) < 1; });
     let index = 0;
     for (let x = xa + street.lamps.offset; x <= xb - 1; x += street.lamps.spacing) {
       const sign = index % 2 ? -1 : 1;
-      if (open(x)) pieces.push({ id: `${base}/lamp-${index}`, piece: 'furniture/lamp', at: [mm(x), kerbside(sign)], yaw: sign > 0 ? Math.PI / 2 : -Math.PI / 2 });
+      let at = x;
+      if (inPit(at, sign) && street.trees) {
+        at = [x + street.trees.spacing / 2, x - street.trees.spacing / 2].find(candidate => candidate >= xa + 1 && candidate <= xb - 1 && open(candidate) && !inPit(candidate, sign)) ?? null;
+      }
+      if (at !== null && open(at)) pieces.push({ id: `${base}/lamp-${index}`, piece: 'furniture/lamp', at: [mm(at), kerbside(sign)], yaw: sign > 0 ? Math.PI / 2 : -Math.PI / 2 });
       index++;
     }
   }
@@ -237,14 +260,22 @@ function assemblePlaza(recipe, plaza, seed, pieces, walks) {
   pieces.push({ id: `${base}/paving`, piece: 'street/court', rect: [...plaza.rect] });
   (plaza.lawns ?? []).forEach((rect, i) => pieces.push({ id: `${base}/lawn-${i}`, piece: 'landscape/lawn', rect: [...rect] }));
   (plaza.hedges ?? []).forEach((rect, i) => pieces.push({ id: `${base}/hedge-${i}`, piece: 'landscape/hedge', rect: [...rect] }));
-  for (const [i, row] of (plaza.treeRows ?? []).entries()) {
-    let index = 0;
-    for (let x = row.from; x <= row.to + 1e-6; x += row.spacing) {
-      const id = `${base}/tree-row-${i}-${index++}`, random = streamFor(seed, id);
-      pieces.push({ id, piece: 'landscape/street-tree', at: [mm(x), row.y], height: mm(random.between(9, 13)), radius: mm(random.between(3.4, 4.6)), yaw: mm(random.between(0, Math.PI * 2)) });
-      pieces.push({ id: `${id}/pit`, piece: 'landscape/tree-pit', rect: rectAround([mm(x), row.y], [1.6, 1.6]) });
-    }
+  for (const [i, row] of (plaza.treeRows ?? []).entries()) for (const [index, at] of rowPoints(row).entries()) {
+    const id = `${base}/tree-row-${i}-${index}`, random = streamFor(seed, id);
+    pieces.push({ id, piece: 'landscape/street-tree', at, height: mm(random.between(9, 13)), radius: mm(random.between(3.4, 4.6)), yaw: mm(random.between(0, Math.PI * 2)) });
+    pieces.push({ id: `${id}/pit`, piece: 'landscape/tree-pit', rect: rectAround(at, [1.6, 1.6]) });
   }
+  // Benches and lamps by the row, like trees: one line and a spacing instead of an item each.
+  // Derived ids are stable (`<plaza>/bench-row-<row>-<n>`), so overrides address them.
+  for (const [i, row] of (plaza.benchRows ?? []).entries()) for (const [index, at] of rowPoints(row).entries()) pieces.push({ id: `${base}/bench-row-${i}-${index}`, piece: 'furniture/bench', at, yaw: mm(row.yaw ?? 0) });
+  for (const [i, row] of (plaza.lampRows ?? []).entries()) for (const [index, at] of rowPoints(row).entries()) pieces.push({ id: `${base}/lamp-row-${i}-${index}`, piece: 'furniture/lamp', at, yaw: mm(row.yaw ?? 0) });
+}
+
+// The points of a row: along x at `y` (east-running) or along y at `x` (north-running), `from` to `to` every `spacing`.
+function rowPoints(row) {
+  const points = [];
+  for (let v = row.from; v <= row.to + 1e-6; v += row.spacing) points.push(row.x === undefined ? [mm(v), mm(row.y)] : [mm(row.x), mm(v)]);
+  return points;
 }
 
 // Where an east street crosses a north street, paving is clipped to the crossing
@@ -304,6 +335,10 @@ function applyOverrides(recipe, pieces) {
 export function assembleNeighborhood(source, { seed = source?.seed } = {}) {
   const recipe = validateRecipe(structuredClone(source));
   if (!Number.isInteger(seed) || seed < 0 || seed >= 2 ** 32) fail('seed');
+  // The recipe hash is the authored intent: derived blocks are a function of it.
+  const recipeHash = stableHash({ ...recipe, seed: undefined, overrides: undefined, additions: undefined });
+  const layout = expandLayout(recipe);
+  if (layout) { recipe.blocks = [...(recipe.blocks ?? []), ...layout.blocks]; validateRecipe(recipe); }
   const generated = [], walks = [];
   const pinned = new Set(Object.values(recipe.overrides ?? {}).map(override => override.set?.sign).filter(Boolean));
   for (const street of recipe.streets ?? []) assembleStreet(recipe, street, seed, generated, walks);
@@ -336,9 +371,11 @@ export function assembleNeighborhood(source, { seed = source?.seed } = {}) {
   for (const material of materials) if (!KIT_MATERIALS[material]) fail(`unknown material ${material}`);
   const plan = {
     id: recipe.id, kit: KIT_VERSION, seed, site: [...recipe.site],
-    provenance: { recipe: recipe.id, recipeHash: stableHash({ ...recipe, seed: undefined, overrides: undefined, additions: undefined }),
+    provenance: { recipe: recipe.id, recipeHash,
       overridesHash: stableHash({ overrides: recipe.overrides ?? {}, additions: recipe.additions ?? [] }), inspiration: recipe.inspiration ?? null,
-      overrides: { applied, orphaned, added: (recipe.additions ?? []).map(item => `${recipe.id}/manual/${item.id}`) } },
+      overrides: { applied, orphaned, added: (recipe.additions ?? []).map(item => `${recipe.id}/manual/${item.id}`) },
+      // Only recipes with a layout record one: plans without it keep their committed hashes.
+      ...(layout ? { layout: { hash: stableHash(recipe.layout), cells: layout.diagnostics.cells.length, blocks: layout.diagnostics.blocks, warnings: layout.diagnostics.warnings } } : {}) },
     pieces, surfaces, solids, lanterns,
     stats: { pieces: pieces.length, buildings: pieces.filter(piece => piece.piece === 'building/shell').length, solids: solids.length, materials: materials.size, triangles: Math.round(triangles) },
   };

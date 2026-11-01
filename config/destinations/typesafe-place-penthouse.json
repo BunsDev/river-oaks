@@ -124,51 +124,13 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "twentieth-retail-east",
-      "style": "place-retail",
-      "rect": [
-        637,
-        94.5,
-        702.5,
-        104.5
-      ],
-      "front": "north",
-      "sides": [
-        "west"
-      ],
-      "depth": [
-        10,
-        10
-      ],
-      "storeys": [
-        2,
-        3
-      ],
-      "bays": [
-        6,
-        7.5
-      ],
-      "names": [
-        "Generic Goods Market",
-        "Enum Noodle House",
-        "Literal Juice Bar",
-        "Type Guard Pet Spa",
-        "Infer Wine Bar",
-        "Tuple and Twine Tailors",
-        "Narrowing Nails",
-        "Satisfies Sweets"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
       "id": "penthouse-cafe-0",
       "piece": "furniture/cafe-set",
       "at": [
-        652.0,
+        652,
         41.5
       ]
     },
@@ -184,7 +146,7 @@
       "id": "penthouse-cafe-2",
       "piece": "furniture/cafe-set",
       "at": [
-        661.0,
+        661,
         41.5
       ]
     },
@@ -200,7 +162,7 @@
       "id": "penthouse-cafe-4",
       "piece": "furniture/cafe-set",
       "at": [
-        670.0,
+        670,
         41.5
       ]
     },
@@ -318,5 +280,47 @@
       "variant": "loggia",
       "awning": "canvas-blush"
     }
-  ]
+  ],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "twentieth-retail-east",
+        "rect": [
+          637,
+          94.5,
+          702.5,
+          104.5
+        ],
+        "style": "place-retail",
+        "depth": [
+          10,
+          10
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          6,
+          7.5
+        ],
+        "names": [
+          "Generic Goods Market",
+          "Enum Noodle House",
+          "Literal Juice Bar",
+          "Type Guard Pet Spa",
+          "Infer Wine Bar",
+          "Tuple and Twine Tailors",
+          "Narrowing Nails",
+          "Satisfies Sweets"
+        ],
+        "front": "north"
+      }
+    ],
+    "migrated": {
+      "blocks": 1,
+      "geometry": "27456442cebc0130"
+    }
+  }
 }

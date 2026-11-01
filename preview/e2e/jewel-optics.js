@@ -7,7 +7,7 @@ async page=>{
  for(const view of ['full','portrait']){
   const result=await page.evaluate(view=>{
    const f=window.jevicaFixture;f.render(view,1000);let crystal;
-   f.avatar.object.traverse(o=>{if(o.material?.name==='Jevica crown crystals')crystal=o.material;});
+   f.avatar.object.traverse(o=>{if(o.material?.name==='Jevica jewel crystals')crystal=o.material;});
    const gl=f.renderer.getContext(),width=gl.drawingBufferWidth,height=gl.drawingBufferHeight;
    const capture=()=>{f.renderer.render(f.scene,f.camera);const pixels=new Uint8Array(width*height*4);gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);return {pixels,calls:f.renderer.info.render.calls,triangles:f.renderer.info.render.triangles};};
    crystal.transmission=.35;const baseline=capture();f.outfit.updateOptics(f.camera,innerHeight);const adaptive=capture();
@@ -30,7 +30,7 @@ async page=>{
     const {RenderPass}=await import(imports.find(u=>u.includes('RenderPass__js'))),original=RenderPass.prototype.render;
     const runs=[];let mode='baseline',sampling=false,cost=0,calls=0,triangles=0,frames=0,transmission=0,crystal;
     RenderPass.prototype.render=function(renderer,...args){
-     if(!crystal)this.scene.traverse(o=>{if(o.material?.name==='Jevica crown crystals')crystal=o.material;});
+     if(!crystal)this.scene.traverse(o=>{if(o.material?.name==='Jevica jewel crystals')crystal=o.material;});
      if(mode==='baseline')crystal.transmission=.35;
      transmission=crystal.transmission;
      const start=performance.now(),before={...renderer.info.render};

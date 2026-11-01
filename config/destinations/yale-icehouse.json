@@ -102,89 +102,6 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "icehouse-row",
-      "style": "heights-row",
-      "rect": [
-        161,
-        -36,
-        249.5,
-        -7.5
-      ],
-      "front": "north",
-      "sides": [
-        "west"
-      ],
-      "depth": [
-        12,
-        18
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        6
-      ],
-      "names": [
-        "Bluebonnet Bikes",
-        "Porch Swing Records",
-        "Little Oak Bakery",
-        "Gulf Breeze Tailor",
-        "Cypress Tool Library",
-        "Second Saturday Gallery",
-        "Pecan Street Pantry",
-        "Two Step Shoes",
-        "Crawfish Corner",
-        "Indigo Loom",
-        "Big Sky Maps",
-        "Hummingbird Herbs"
-      ],
-      "court": {
-        "at": 0.45,
-        "width": 22,
-        "depth": 18
-      }
-    },
-    {
-      "id": "eighteenth-row",
-      "style": "garden-court",
-      "rect": [
-        161,
-        -64.5,
-        249.5,
-        -36
-      ],
-      "front": "south",
-      "sides": [
-        "west"
-      ],
-      "depth": [
-        11,
-        15
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        5,
-        7
-      ],
-      "names": [
-        "Magnolia Yoga",
-        "Tidewater Bookbinders",
-        "Paper Kite Studio",
-        "Lucky Spur Barber",
-        "Sweet Olive Clinic",
-        "Wren & Willow",
-        "Coastal Prairie Seeds",
-        "Brass Button Repairs"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -604,5 +521,88 @@
       "note": "The icehouse is one tall storey whatever the seed, and keeps its name."
     }
   },
-  "additions": []
+  "additions": [],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "icehouse-row",
+        "rect": [
+          161,
+          -36,
+          249.5,
+          -7.5
+        ],
+        "style": "heights-row",
+        "depth": [
+          12,
+          18
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          6
+        ],
+        "names": [
+          "Bluebonnet Bikes",
+          "Porch Swing Records",
+          "Little Oak Bakery",
+          "Gulf Breeze Tailor",
+          "Cypress Tool Library",
+          "Second Saturday Gallery",
+          "Pecan Street Pantry",
+          "Two Step Shoes",
+          "Crawfish Corner",
+          "Indigo Loom",
+          "Big Sky Maps",
+          "Hummingbird Herbs"
+        ],
+        "court": {
+          "at": 0.45,
+          "width": 22,
+          "depth": 18
+        },
+        "front": "north"
+      },
+      {
+        "id": "eighteenth-row",
+        "rect": [
+          161,
+          -64.5,
+          249.5,
+          -36
+        ],
+        "style": "garden-court",
+        "depth": [
+          11,
+          15
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          5,
+          7
+        ],
+        "names": [
+          "Magnolia Yoga",
+          "Tidewater Bookbinders",
+          "Paper Kite Studio",
+          "Lucky Spur Barber",
+          "Sweet Olive Clinic",
+          "Wren & Willow",
+          "Coastal Prairie Seeds",
+          "Brass Button Repairs"
+        ]
+      }
+    ],
+    "migrated": {
+      "blocks": 2,
+      "geometry": "84bd41f84b27776a"
+    }
+  }
 }

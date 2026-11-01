@@ -3,7 +3,8 @@ import './access-gate.css';
 import { installDiagnostics, registerDiagnosticSource } from './debug-report.js';
 import { startArtRotation } from './access-art-rotation.js';
 import { generatedUsername } from './generated-username.js';
-import { answeredFetch, reloadAfterFailedCheck } from './access-recheck.js';
+import { ACCOUNT_CHANGED, answeredFetch, reloadAfterFailedCheck } from './access-recheck.js';
+import { createGateSupport } from './support-contact.js';
 
 // Problem reports start collecting with the sign-in page, so a failure before the
 // game loads is still in the report.
@@ -14,7 +15,7 @@ const gate = $('#access-gate'), message = $('#access-message'), providers = $('#
 const retry = $('#access-retry'), tools = $('#access-tools'), adminButton = $('#access-admin');
 const gateSignout = $('#access-gate-signout');
 const review = $('#access-review'), reviewList = $('#access-review-list'), reviewStatus = $('#access-review-status');
-let session = null, entered = false, checking = false, gateState = '', isAdmin = false;
+let session = null, entered = false, checking = false, recheck = false, gateState = '', isAdmin = false;
 const inviteForm = $('#access-invite-form'), redeemButton = $('#access-invite-redeem'), inviteHelp = $('#access-invite-help');
 // Joining is a waitlist: the gate names the step a visitor is on, so signing in once is clearly enough.
 const title = $('#access-title'), journey = $('#access-journey');
@@ -26,6 +27,9 @@ const INVITE_HELP = {
 // The steps take the kicker's place above the title, as a progress row: steps before the
 // visitor's own are done (data-done), theirs is current (aria-current).
 const kicker = $('#access-kicker'), waiting = $('#access-waiting');
+// The published support contact (#292) under the gate's footer, in every gate state; nothing when unset.
+const support = createGateSupport(import.meta.env?.VITE_SUPPORT_CONTACT);
+if (support) gate.querySelector('.access-footer')?.after(support);
 function showJourney(step, kickerShown = !step) {
   journey.hidden = !step; kicker.hidden = !kickerShown;
   let reached = !step;
@@ -156,7 +160,10 @@ async function checkAccess() {
     providers.hidden = true; retry.hidden = false; showJourney(null); usernameForm.hidden = true; waiting.hidden = true;
     redeemButton.disabled = true; title.textContent = WELCOME;
     say('Access could not be checked. Try again shortly.');
-  } finally { checking = false; }
+  } finally {
+    checking = false;
+    if (recheck) { recheck = false; checkAccess(); }
+  }
 }
 
 const post = (path, data) => api(path, { method: 'POST', headers: {
@@ -446,3 +453,5 @@ gateSignout.addEventListener('click', signout);
 await checkAccess();
 setInterval(checkAccess, 15_000);
 window.addEventListener('online', checkAccess);
+// The town connection found another account: recheck now, or right after a check in flight.
+window.addEventListener(ACCOUNT_CHANGED, () => { if (checking) recheck = true; else checkAccess(); });

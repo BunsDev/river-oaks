@@ -131,7 +131,11 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
     const present = new Map(view.connections.map(connection => [connection.userId, connection]));
     let frame = null;
     for (const connection of only ? [only] : connections.values()) {
-      if (!connection.joined) continue;
+      // A tick that began before this connection was admitted carries a roster without it
+      // (or with the account's previous socket) and says nothing about it: skip it rather
+      // than close the new socket as removed or as another tab. Admission sends the first view.
+      if (!connection.joined || connection.admittedRevision === undefined
+        || (Number.isFinite(view.revision) && Number.isFinite(connection.admittedRevision) && view.revision < connection.admittedRevision)) continue;
       const { ws, identity, connectionId } = connection, active = present.get(identity.userId);
       if (identity.expiresAt <= now()) { ws.close(4001, 'Session expired. Reconnecting securely.'); continue; }
       if (connection.regionSha256 && view.snapshot.regionSha256 && connection.regionSha256 !== view.snapshot.regionSha256) {
@@ -165,8 +169,9 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
       if (path === '/api/moderation/reports') { await handleModerationReports(req, res); return; }
       if (handleCharacters && await handleCharacters(req,res,path)) return;
       if (handleVoice && await handleVoice(req, res, path, url)) return;
-      // The default district answers with its served revision (#507) even without a catalog.
-      if (path === '/api/world-data' && req.method === 'GET' && (worldCatalog || room.districtRevision)) {
+      // The default district answers with its served revision (#507) even without a catalog,
+      // and the garage default (no revision) still answers for the world it serves.
+      if (path === '/api/world-data' && req.method === 'GET') {
         if (!await approvedIdentity(req, res)) return;
         const ids=url.searchParams.getAll('world');
         if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
@@ -433,6 +438,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
           admissionStage = 'snapshot';
           const view = await room.read();
           if (!view) throw new Error('No committed town');
+          connection.admittedRevision = view.revision ?? null;
           connection.regionSha256 = view.snapshot.regionSha256 ?? null;
           admissionStage = 'presence';
           if (presence) {

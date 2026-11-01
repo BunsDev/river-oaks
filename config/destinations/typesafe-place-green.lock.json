@@ -2,8 +2,9 @@
   "id": "typesafe-place-green",
   "kit": "city-kit-1",
   "seed": 2026,
-  "hash": "a1390fc102a0ef5b",
-  "recipeHash": "3a04517c0c5a2052",
+  "hash": "c2124e8e6930a0fc",
+  "geometry": "89848a43c1d3f449",
+  "recipeHash": "a16acccd86c98ccf",
   "overridesHash": "43e61412ee3b6304",
   "stats": {
     "pieces": 95,

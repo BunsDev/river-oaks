@@ -10,6 +10,7 @@ import { createGroupsUI } from './groups-ui.js';
 import { createWorkplaceUI } from './workplace-ui.js';
 import { accountName } from './resident-names.js';
 import { travelRefusal } from './travel-message.js';
+import { noticeSessionAccount } from './session-account-notice.js';
 import { watchConnection } from './connection-deadline.js';
 import { CONNECTING, IMPROVED, UPDATING, closeNotice, createStalenessWatch, retryDelay } from './connection-policy.js';
 import { createVoiceChat } from './voice-chat.js';
@@ -17,6 +18,7 @@ import { createVoiceUI } from './voice-ui.js';
 import { sharedVoicePreferences } from './voice-preferences.js';
 import { listenerFromPose } from './voice-spatial.js';
 import { sharedBlockList, createBlockUI } from './player-blocks.js';
+import { observeServerTime, serverNow } from './server-clock.js';
 
 const element = (tag,text,className) => { const node=document.createElement(tag);if(text)node.textContent=text;if(className)node.className=className;return node; };
 export function createMultiplayer({ getPose, getEnvironment = () => null, getRegionSha256 = () => null, getDistrictRevision = () => undefined, getMeetingPlaces = () => [], getOwnerHomes = () => [], onSnapshot, onCorrection, onPlayers, onHomeAccess = () => {}, creationToolsEnabled = false, getWalking = () => null, onVoiceChange = () => {} }) {
@@ -230,6 +232,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     if(stopped||signingOut||asked!==authorization||attempt!==townAttempt)return null;
     if(!session.authenticated){identity=null;csrfToken=null;detachBlocks();displayPlayers([]);return 'signed-out';}
     identity=session.user;csrfToken=session.csrfToken;
+    noticeSessionAccount(identity.id);
     attachBlocks();
     const access=await api(`/api/multiplayer/ticket?world=${encodeURIComponent(worldId)}`,{method:'POST'});if(stopped||signingOut||asked!==authorization||attempt!==townAttempt)return null;moderator=access.moderator;
     // Ask for the protocol this world's ticket names, so an older server or world keeps protocol 3.
@@ -308,7 +311,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     if(Array.isArray(data.players))for(const player of data.players)player.name=accountName(player.id,player.name);
     if(Array.isArray(data.chat))for(const entry of data.chat)entry.authorName=accountName(entry.authorId,entry.authorName);
     if(Array.isArray(data.builds))for(const item of data.builds)item.ownerName=accountName(item.ownerId,item.ownerName);
-    selfId=data.selfId??selfId;latestSnapshot=data;
+    selfId=data.selfId??selfId;latestSnapshot=data;observeServerTime(data.serverTimeMs);
     if(!connected){connected=true;connecting=false;attempt=0;updating=false;deadline.stop();onCorrection(data.players.find(player=>player.id===selfId));title.textContent=CONNECTING.title;description.textContent=CONNECTING.description;setStatus('',false);social.refresh(true);groups?.refresh(true);void workplace?.refresh();void refreshHomeAccess();refreshBlocks();}
     const self=data.players.find(player=>player.id===selfId);
     if(self?.interaction?.id&&self.interaction.id!==activeGreeting)onCorrection(self);
@@ -388,7 +391,7 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
   };
   window.addEventListener('online',resume,{signal:lifetime.signal});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')resume();},{signal:lifetime.signal});
-  let flightRequest=null,flightTracking=false;
+  let flightRequest=null,flightTracking=false,maneuverUntil=0,maneuverSeq=0;
   function command(message){
     if(stopped||!connected)return Promise.resolve({ok:false,message:'Reconnect before taking an action.'});
     const requestId=String(++sequence);
@@ -448,6 +451,22 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
       if(!connected)return Promise.reject(new Error('Reconnect before changing landmarks.'));
       return api(`/api/landmarks/${action}?world=${encodeURIComponent(worldId)}${action==='list'?'&allWorlds=1':''}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     },
+    // A Ribbonwing maneuver (#777). The seq only rises, across reloads too (it
+    // starts from the clock); a lost reply is retried once with the same id,
+    // which the town answers without starting the path again.
+    async maneuver(kind){
+      maneuverSeq=Math.max(maneuverSeq+1,Date.now());
+      const request={type:'maneuver',kind,id:`rw-${crypto.randomUUID()}`,seq:maneuverSeq};
+      // No poses while the town decides: one arriving after the maneuver began would be refused.
+      let result;maneuverUntil=Infinity;
+      try{result=await command(request);}
+      catch{try{result=await command(request);}catch(error){maneuverUntil=0;return {ok:false,message:error.message};}}
+      observeServerTime(result?.serverTimeMs);
+      const m=result?.ok?result.player?.maneuver:null;maneuverUntil=m?m.startedAt+m.duration:0;
+      return result;
+    },
+    // The Ribbonwing passenger seat (#777): invite, cancel, board or leave.
+    ribbonwing:body=>command({type:'ribbonwing',...body}),
     async travel(target){
       if(traveling)return {ok:false,message:'Please wait for your arrival.'};
       traveling=true;
@@ -460,7 +479,10 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
     update(now){
       greetings.update(now);crimeHud.update(now);
       if(!connected||socket?.readyState!==WebSocket.OPEN)return;
-      if(!traveling&&now-lastPose>=200){
+      // A Ribbonwing maneuver owns this player's pose on the server until it ends (#777).
+      // A Ribbonwing passenger's seat is the town's to move (#777).
+      const aboard=Boolean(latestSnapshot?.players?.find(player=>player.id===selfId)?.passengerOf);
+      if(!traveling&&!aboard&&now-lastPose>=200&&serverNow()>maneuverUntil){
         lastPose=now;const pose=getPose();
         if(pose&&!pose.office){
           const message={type:'pose',position:[pose.position[0],-pose.position[2],pose.ground],yaw:pose.riding?pose.riding.yaw+Math.PI/2:pose.yaw,altitude:pose.altitude,levelId:pose.levelId??null,...(activeGreeting?{interactionId:activeGreeting}:{}),...(pose.riding?{vehicle:pose.riding.kind}:{})};

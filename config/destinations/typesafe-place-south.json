@@ -102,43 +102,6 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "eighteenth-retail-east",
-      "style": "place-retail",
-      "rect": [
-        637,
-        -89.5,
-        702.5,
-        -77.5
-      ],
-      "front": "north",
-      "sides": [
-        "west"
-      ],
-      "depth": [
-        10,
-        12
-      ],
-      "storeys": [
-        2,
-        3
-      ],
-      "bays": [
-        6,
-        7.5
-      ],
-      "names": [
-        "Interface Optics",
-        "Decorator Homewares",
-        "Branded Type Boutique",
-        "Variance Vintage",
-        "Lexical Scope Books",
-        "Closure Kitchen",
-        "Hoisted Hot Pot"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -288,5 +251,46 @@
       "variant": "gallery",
       "awning": "canvas-blush"
     }
-  ]
+  ],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "eighteenth-retail-east",
+        "rect": [
+          637,
+          -89.5,
+          702.5,
+          -77.5
+        ],
+        "style": "place-retail",
+        "depth": [
+          10,
+          12
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          6,
+          7.5
+        ],
+        "names": [
+          "Interface Optics",
+          "Decorator Homewares",
+          "Branded Type Boutique",
+          "Variance Vintage",
+          "Lexical Scope Books",
+          "Closure Kitchen",
+          "Hoisted Hot Pot"
+        ],
+        "front": "north"
+      }
+    ],
+    "migrated": {
+      "blocks": 1,
+      "geometry": "8a27f2788a7c293e"
+    }
+  }
 }

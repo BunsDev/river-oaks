@@ -32,11 +32,13 @@ async page => {
     if(await tab.locator('.visit-tools').evaluate(node=>node.open))await tab.locator('.visit-tools-toggle').click();
   };
   const { createWalkDriver } = await import('./walk-driver.js');
+  const { greenwayReturn } = await import('./bayou-terraces-routes.js');
   const { walk } = createWalkDriver({self,routes,refusals:'__heightsRefusals'});
   const command=(tab,message)=>tab.evaluate(message=>window.__riverMultiplayerCommand(message),message);
   const chunk=(tab,id)=>tab.evaluate(id=>window.__riverBayouHeights()?.stream?.chunks.find(chunk=>chunk.id===id)?.state??null,id);
   try{
     await Promise.all([ready(page),ready(peer)]);
+    const arrivals=[await self(page),await self(peer)];
     const edge=layout.edge,bank=layout.heights.bounds[0],at=([x,y])=>[edge+x,-1335+y];
     check(await page.evaluate(()=>window.__riverBayouHeights?.()?.revision)==='bayou-terraces-1','The client composed the Bayou Terraces for the served revision');
     const views=[],capture=async(tab,name)=>{await tab.waitForTimeout(600);await tab.screenshot({path:`output/playwright/terraces-${name}.png`});
@@ -49,9 +51,13 @@ async page => {
     }
     for(const tab of [page,peer])await tab.waitForFunction(()=>window.__riverBayouHeights().stream.chunks.find(chunk=>chunk.id==='bayou-heights/bayou-terrace-north').state==='ready',null,{timeout:120000});
     const streamed=await page.evaluate(()=>window.__riverBayouHeights().stream);
-    console.log(`Heights resident ${streamed.residentBytes} of ${streamed.geometryBudgetBytes} bytes: measured ${JSON.stringify(streamed.measuredBytes)} estimated ${JSON.stringify(streamed.estimatedBytes)}`);
+    console.log(`Heights resident ${streamed.residentBytes} of ${streamed.geometryBudgetBytes} bytes: measured ${JSON.stringify(streamed.measuredBytes)} estimated ${JSON.stringify(streamed.estimatedBytes)}; owned textures ${streamed.residentTextureBytes} bytes resident: ${JSON.stringify(streamed.measuredTextureBytes)}`);
     check(streamed.residentBytes<=streamed.geometryBudgetBytes&&Object.entries(streamed.measuredBytes).every(([id,bytes])=>bytes<=streamed.estimatedBytes[id]),
       'The north terrace streams in at the greenway, within the Heights geometry ceiling and each part within its estimate');
+    // With a real canvas the sign atlases exist: each neighborhood's owned textures measure under the estimate its plan gave the texture ceiling.
+    console.log(`Owned textures ${streamed.residentTextureBytes} of ${streamed.textureBudgetBytes} bytes: estimated ${JSON.stringify(streamed.estimatedTextureBytes)}`);
+    check(streamed.residentTextureBytes>0&&streamed.residentTextureBytes<=streamed.textureBudgetBytes&&Object.entries(streamed.measuredTextureBytes).every(([id,bytes])=>bytes<=streamed.estimatedTextureBytes[id]),
+      'The owned textures sit within the Heights texture ceiling and each neighborhood within its estimate');
     await capture(page,'greenway-footbridge');
     await Promise.all([walk(page,[at([130,112]),at([101,112])],'owner footbridge'),walk(peer,[at([130,110]),at([100,110])],'alice footbridge')]);
     check((await self(page)).position[0]<bank&&(await self(peer)).position[0]<bank,'Two real clients crossed the Twentieth Street footbridge onto the west bank by keyboard');
@@ -92,14 +98,24 @@ async page => {
     const reconnectMs=Date.now()-reconnectStart;
 
     // Back over the footbridge to the greenway, one player at a time, as the Heights journey does on CPU-rendered CI.
-    await walk(peer,[at([96,124]),at([100,110]),at([156.5,110])],'alice greenway');
-    await walk(page,[at([101,128]),at([101,112]),at([156.5,112])],'owner greenway');
+    await walk(peer,greenwayReturn.alice.map(at),'alice greenway');
+    await walk(page,greenwayReturn.owner.map(at),'owner greenway');
     check((await self(page)).position[0]>bank&&(await self(peer)).position[0]>bank,'Both players walked back over the footbridge to the greenway');
     check(await page.evaluate(()=>{const notices=window.__heightsNotices,terraces=notices.indexOf('Entering Bayou Terraces');
       return terraces>=0&&notices.indexOf('Entering Bayou Heights',terraces)>terraces;}),'Returning names Bayou Heights');
     await capture(page,'greenway-return');
+    // Home: approved travel back to the District arrivals. With the terraces at the District edge the
+    // District anchors nothing in Heights, so every part and its owned textures stream out (#583).
+    for(const [tab,arrival] of [[page,arrivals[0]],[peer,arrivals[1]]]){
+      const home=await command(tab,{type:'travel',position:arrival.position.slice(0,2)});
+      check(home?.ok===true,`Travel home to the District arrival is approved (${arrival.position.slice(0,2).map(Math.round)})`);
+    }
+    for(const tab of [page,peer])await tab.waitForFunction(()=>{const heights=window.__riverBayouHeights();
+      return !heights.ready&&heights.stream.residentBytes===0&&heights.stream.residentTextureBytes===0&&heights.stream.pending===0;},null,{timeout:120000});
+    check((await self(page)).position[0]<edge&&(await self(peer)).position[0]<edge,'Back in the District, the Heights presentation and its owned textures are released');
+    await capture(page,'district-home');
     check(errors.length===0,`No page errors: ${errors.join('; ')}`);
     const refusals={owner:await page.evaluate(()=>window.__heightsRefusals),alice:await peer.evaluate(()=>window.__heightsRefusals)};
-    return {checks,routes,reconnectMs,drift,views,refusals,scope:'Two rendered fixture clients: approved travel to the Heights greenway, then normal keyboard walking over the Twentieth Street footbridge into the north terrace gardens; shared gardens table game and reconnect on the terrace; no physical-device or production acceptance'};
+    return {checks,routes,reconnectMs,drift,views,refusals,streamed,scope:'Two rendered fixture clients: approved travel to the Heights greenway, then normal keyboard walking over the Twentieth Street footbridge into the north terrace gardens; shared gardens table game and reconnect on the terrace; no physical-device or production acceptance'};
   }finally{await peerContext.close();}
 }

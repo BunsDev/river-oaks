@@ -4,8 +4,9 @@ import { createVoiceSettings } from './voice-ui.js';
 import { sharedVoicePreferences } from './voice-preferences.js';
 import { createAccountDeletionSettings } from './account-deletion.js';
 import { createModerationReports } from './moderation-reports.js';
-import { createSupportContact } from './support-contact.js';
+import { createSupportContact } from './settings-support.js';
 import { sharedBlockList, createBlockedPlayersSettings } from './player-blocks.js';
+import { soundSetting } from './throw-sounds.js';
 
 // Keep the navigation API shared by Commands and the HUD launchers.
 export function setupSidebar() {
@@ -124,13 +125,13 @@ export function setupSidebarSections({ graphics = null, sidebar } = {}) {
   const deletion = createAccountDeletionSettings();
   // Saved player reports, for moderators only (#292); it asks each time Account opens too.
   const reports = createModerationReports();
-  // The published support contact (#292), from VITE_SUPPORT_CONTACT; nothing when unset.
-  const support = createSupportContact(import.meta.env?.VITE_SUPPORT_CONTACT);
+  // The published support contact (#292), as the sign-in gate shows it; nothing when unset.
+  const support = createSupportContact();
   const blocked = createBlockedPlayersSettings({ blocks: sharedBlockList() });
   const groups = [
     ['Appearance', 'Light or dark, or follow your device.', [appearance]],
     ['Graphics', 'Sharper or smoother. Auto adjusts as you play.', graphics ? [graphics] : []],
-    ['Audio', 'What you hear in town, and how you talk.', [group(null, voiceNodes), createVoiceSettings({ preferences: sharedVoicePreferences() }), createJevSettings('elevenlabs')]],
+    ['Audio', 'What you hear in town, and how you talk.', [group('Sounds', [soundSetting()]), group(null, voiceNodes), createVoiceSettings({ preferences: sharedVoicePreferences() }), createJevSettings('elevenlabs')]],
     ['World', 'Light, weather and what the district shows.', [group('Light', light), group('Show in the district', layers.filter(node => node !== studio)), ...(studio ? [group('Build', [studio])] : [])]],
     ['Account', 'Invitations, problem reports and signing out.', [account, createJevSettings(), group('Blocked residents', [blocked]), group('World data', [connection]), reports, ...(support ? [support] : []), deletion]],
     ['About', 'Where this district comes from.', evidence],

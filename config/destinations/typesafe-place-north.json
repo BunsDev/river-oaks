@@ -151,43 +151,6 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "twentieth-retail-south",
-      "style": "place-retail",
-      "rect": [
-        559,
-        94.5,
-        619,
-        104.5
-      ],
-      "front": "north",
-      "sides": [
-        "east",
-        "west"
-      ],
-      "depth": [
-        10,
-        10
-      ],
-      "storeys": [
-        2,
-        3
-      ],
-      "bays": [
-        6,
-        7.5
-      ],
-      "names": [
-        "Strict Mode Coffee",
-        "Union Type Florist",
-        "Promise Kept Books",
-        "The Interface Bakery",
-        "Optional Chain Cyclery",
-        "Readonly Records"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -212,7 +175,7 @@
       "id": "forecourt-cafe-0",
       "piece": "furniture/cafe-set",
       "at": [
-        596.0,
+        596,
         90.5
       ]
     },
@@ -228,7 +191,7 @@
       "id": "forecourt-cafe-2",
       "piece": "furniture/cafe-set",
       "at": [
-        605.0,
+        605,
         90.5
       ]
     },
@@ -331,5 +294,49 @@
       "variant": "gallery",
       "awning": "canvas-blush"
     }
-  ]
+  ],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "twentieth-retail-south",
+        "rect": [
+          559,
+          94.5,
+          619,
+          104.5
+        ],
+        "style": "place-retail",
+        "depth": [
+          10,
+          10
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          6,
+          7.5
+        ],
+        "names": [
+          "Strict Mode Coffee",
+          "Union Type Florist",
+          "Promise Kept Books",
+          "The Interface Bakery",
+          "Optional Chain Cyclery",
+          "Readonly Records"
+        ],
+        "front": "north",
+        "sides": [
+          "east",
+          "west"
+        ]
+      }
+    ],
+    "migrated": {
+      "blocks": 1,
+      "geometry": "b8fe1af9ce326b8b"
+    }
+  }
 }
