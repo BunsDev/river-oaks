@@ -15,11 +15,13 @@ export function buildStarlightScreen(kit, frame) {
   frontageFrame(kit, frame, { fascia: 'pink' });
   const { clear } = frame;
   for (const run of glazingRuns(frame, 0.75)) {
-    kit.add('ivory', slab(run[0], run[1], 0, clear, FRONT.glass, FRONT.glass + 0.1));
+    // 4 cm proud of the glazing line: the IPIC block's grey-stone facade stands ~5 cm behind it,
+    // too close for the depth buffer (#841 depth journey under pink).
+    kit.add('ivory', slab(run[0], run[1], 0, clear, FRONT.glass + 0.04, FRONT.glass + 0.14));
     const mid = (run[0] + run[1]) / 2;
     if (run[1] - run[0] < 1.4) continue;
-    kit.add('ink', slab(mid - 0.48, mid + 0.48, 0.82, 2.38, FRONT.glass + 0.1, FRONT.glass + 0.17));
-    kit.add('chrome', framePlate(mid, 1.6, 1.16, 1.76, 0.08, FRONT.glass + 0.1, FRONT.glass + 0.26));
+    kit.add('ink', slab(mid - 0.48, mid + 0.48, 0.82, 2.38, FRONT.glass + 0.14, FRONT.glass + 0.21));
+    kit.add('chrome', framePlate(mid, 1.6, 1.16, 1.76, 0.08, FRONT.glass + 0.14, FRONT.glass + 0.3));
   }
   doorJambs(kit, frame);
   // The arch stands just in front of the jambs; spanning twice the door, it clears the door zone to 2.6 m.

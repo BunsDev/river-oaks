@@ -162,11 +162,16 @@ test('a contract at another version is refused', () => {
 });
 
 // Procedural canvas calls only (as cartier-pilot.test.js): GPU rendering is the browser journey's.
-const canvasContext = () => new Proxy({}, { get: (target, name) => name === 'createImageData' ? (w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }) : name === 'createLinearGradient' ? () => ({ addColorStop() {} }) : target[name] ?? (() => {}), set: (target, name, value) => { target[name] = value; return true; } });
+const canvasContext = () => new Proxy({}, { get: (target, name) => name === 'createImageData' ? (w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }) : ['createLinearGradient', 'createRadialGradient', 'createPattern'].includes(name) ? () => ({ addColorStop() {} }) : name === 'measureText' ? () => ({ width: 10 }) : target[name] ?? (() => {}), set: (target, name, value) => { target[name] = value; return true; } });
+
+const canvasElement = () => ({ width: 0, height: 0, getContext: canvasContext, style: {}, addEventListener() {}, removeEventListener() {} });
+function stubCanvas() {
+  globalThis.document ??= { createElement: canvasElement, createElementNS: canvasElement };
+  globalThis.requestIdleCallback ??= () => 0;
+}
 
 test('while the store rooms stay, interiors: false keeps the frontages and leaves nothing to fight the rooms', () => {
-  globalThis.document ??= { createElement: () => ({ width: 0, height: 0, getContext: canvasContext }) };
-  globalThis.requestIdleCallback ??= () => 0;
+  stubCanvas();
   const tenants = new Set(contract.venues.flatMap(venue => venue.retire?.tenants ?? []));
   const rooms = planStoreRooms(world).filter(room => tenants.has(room.storeId));
   assert.equal(rooms.length, 4, 'the four bays still hold their mapped rooms');
@@ -193,4 +198,17 @@ test('while the store rooms stay, interiors: false keeps the frontages and leave
     }
   }
   full.shells.userData.dispose(); open.shells.userData.dispose();
+});
+
+test('no shell surface the scene draws fights the District facades for depth', async () => {
+  stubCanvas();
+  const { buildDistrictBuildings } = await import('../src/district.js');
+  const buildings = buildDistrictBuildings(world, { kitFinish: PINK });
+  // The depth journey under pink found the Starlight frontage 49.7 mm from the IPIC block's stone.
+  // The scene draws `interiors: false` while the store rooms stay. With the envelope, its floor lies
+  // 4 mm on the mapped building's facade-floor: decision 5 must retire that floor with the rooms.
+  const shells = buildFiveRoomsShells(contract, { finish: PINK, interiors: false });
+  const found = scan(buildings, shells).filter(fight => /Five Rooms/.test(fight.a + fight.b));
+  assert.deepEqual(found.map(named), []);
+  shells.removeFromParent(); shells.userData.dispose();
 });
