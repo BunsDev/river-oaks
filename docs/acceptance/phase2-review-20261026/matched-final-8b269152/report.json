@@ -1,0 +1,4834 @@
+{
+  "status": "passed",
+  "startedAt": "2026-11-01T08:23:06.328Z",
+  "head": "8b2691527d8c644996dcef7adc1da6daa95c9326",
+  "sourceSha256": {
+    "preview/public/data/district.json": "c5662c26185ff0c6caa2fccfb9ef9839bb7e56706635dcf6d6aed68bffd50326",
+    "preview/public/data/world-manifest.json": "4566d5908b2174793c5479f29a182ced884baa1e9474f4119166a7db08012bf0",
+    "preview/src/world-manifest.js": "3cb50663459ad27d9402cce48769cd51c0096c2736263d4222ae241e4bcaea63",
+    "preview/src/district-interior-contract.js": "4c6dfcfa30c7c0f724db7e78a055970d4c0c1a6bb03f4b41967da78590e78a88",
+    "preview/src/garden-campus-district.js": "2d59587eef05eac67e6e14ea6157a6834d1379eafc47d268413d1095f5ecc60c",
+    "preview/src/main.js": "67ed0b17232c1d11c7b254dfaf46a59cfeb3b2bd8c14569e533f37f67657d1b9",
+    "preview/src/render-audit.js": "7bd34d0538d6d0b52c00a1d184b05917050547ea1ada609614ffcaeadc819ff9",
+    "preview/audit/world-streaming-matched.js": "6df2e6180c16cac5baecd72532ae21feeb05d5d6eda742ca8f59815bec297daa",
+    "preview/src/commons-stream.js": "23bd2892a9c3d6dbe343c424a75204043b4e55e66482464ec8d252de233341bd",
+    "preview/src/spatial-chunk-stream.js": "6eae41dda20b726d188d71b6aab6eb370b0c24f717a1861966bcfc3a7ecae1b2",
+    "preview/src/east-garden-commons.js": "f86b9e681c1d3591ee4fb3879c7fd798f7502e0bf881e503aaa4d24818492b3c",
+    "preview/src/walking.js": "0c5cedec20db60e94a0707bec46b8300a39aa07b76f1828329d5d03ca7240c40",
+    "preview/src/walking-ui.js": "f41b330a963edd7c7644c1876f30c12b26ea7483adae41d532949124b036c533",
+    "preview/src/flight.js": "59732fe24849269efbe73206d4e4370e745b0cc9f688edaf03df69d69b8408fe",
+    "server/district-data.js": "bbda64c17f5258f998dc729d1a275ad14affdeb6d80321b74b630876d0ef6bc9",
+    "shared/east-garden-commons-layout.js": "d0c34cfba7501bc3501ad44e72252907b8cef0ccde41e4fe3bc58212fad20d30",
+    "pnpm-lock.yaml": "b06715f7f54b356c58bf371270a112d3baac553367af30e5f7aaabdb9d68557d"
+  },
+  "machine": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M5 Max",
+    "logicalCpus": 18,
+    "loadAverage": [
+      7.1015625,
+      9.9130859375,
+      9.783203125
+    ]
+  },
+  "scope": "Local Chromium development build, Gardens and Commons revisions in the same current source, fixture accounts and in-memory loopback authority. Phone-sized viewport uses the same desktop GPU, not physical mobile hardware. Resource bytes include Vite development modules, not a production initial-download budget. Two-player samples render two full browser clients concurrently on this host. GPU memory bytes, live auth, hosted performance and human accessibility are not measured.",
+  "quality": "sharp",
+  "reducedMotion": "reduce",
+  "sampleDurationMs": 30000,
+  "windowsPerPlayerCount": 3,
+  "warmupMs": 5000,
+  "reconnectSamples": 9,
+  "profiles": [
+    {
+      "name": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "deviceScaleFactor": 1,
+      "revision": "river-oaks-gardens-3",
+      "status": "passed",
+      "samples": [
+        {
+          "players": 1,
+          "windowIndex": 0,
+          "network": {
+            "durationMs": 30036.09999999404,
+            "receivedBytes": 8884796,
+            "sentBytes": 17802
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 6983,
+              "calls": 1650,
+              "triangles": 5691696,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 527,
+              "textures": 162
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 42923,
+              "calls": 1668,
+              "triangles": 5694724,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 527,
+              "textures": 162
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 386000000,
+            "totalJSHeapSize": 462000000
+          },
+          "frame": {
+            "count": 1795,
+            "p50Ms": 16.7,
+            "p95Ms": 16.7,
+            "p99Ms": 16.8,
+            "maxMs": 33.4
+          },
+          "cpuSubmission": {
+            "count": 1795,
+            "p50Ms": 11.3,
+            "p95Ms": 14.6,
+            "p99Ms": 16,
+            "maxMs": 18.3
+          },
+          "phases": {
+            "setup": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "residents": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1795,
+              "p50Ms": 0.5,
+              "p95Ms": 0.8,
+              "p99Ms": 1,
+              "maxMs": 3.2
+            },
+            "players": {
+              "count": 1795,
+              "p50Ms": 1.9,
+              "p95Ms": 4.1,
+              "p99Ms": 4.7,
+              "maxMs": 5.4
+            },
+            "reflections": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1795,
+              "p50Ms": 8.5,
+              "p95Ms": 10.5,
+              "p99Ms": 11.8,
+              "maxMs": 14.5
+            },
+            "tail": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8716,
+            "loads": null,
+            "residentBytes": null,
+            "failures": null
+          },
+          "screenshot": "desktop-river-oaks-gardens-3-1-players-0.png",
+          "loadAverage": [
+            10.61669921875,
+            10.4638671875,
+            9.9921875
+          ]
+        },
+        {
+          "players": 1,
+          "windowIndex": 1,
+          "network": {
+            "durationMs": 30038.60000000149,
+            "receivedBytes": 8642578,
+            "sentBytes": 17560
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 49503,
+              "calls": 1668,
+              "triangles": 5694724,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 527,
+              "textures": 162
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 54,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 82983,
+              "calls": 1650,
+              "triangles": 5691696,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 527,
+              "textures": 162
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 386000000,
+            "totalJSHeapSize": 462000000
+          },
+          "frame": {
+            "count": 1673,
+            "p50Ms": 16.7,
+            "p95Ms": 33.3,
+            "p99Ms": 33.4,
+            "maxMs": 33.4
+          },
+          "cpuSubmission": {
+            "count": 1673,
+            "p50Ms": 13.7,
+            "p95Ms": 17.7,
+            "p99Ms": 19.5,
+            "maxMs": 23.3
+          },
+          "phases": {
+            "setup": {
+              "count": 1673,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "community": {
+              "count": 1673,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.4,
+              "maxMs": 0.6
+            },
+            "trees": {
+              "count": 1673,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 1673,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1673,
+              "p50Ms": 0.6,
+              "p95Ms": 1,
+              "p99Ms": 1.2,
+              "maxMs": 5.5
+            },
+            "players": {
+              "count": 1673,
+              "p50Ms": 2.4,
+              "p95Ms": 5.1,
+              "p99Ms": 5.7,
+              "maxMs": 6.5
+            },
+            "reflections": {
+              "count": 1673,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1673,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1673,
+              "p50Ms": 10.2,
+              "p95Ms": 13,
+              "p99Ms": 14.2,
+              "maxMs": 20.3
+            },
+            "tail": {
+              "count": 1673,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8716,
+            "loads": null,
+            "residentBytes": null,
+            "failures": null
+          },
+          "screenshot": "desktop-river-oaks-gardens-3-1-players-1.png",
+          "loadAverage": [
+            17.44189453125,
+            11.9794921875,
+            10.55078125
+          ]
+        },
+        {
+          "players": 1,
+          "windowIndex": 2,
+          "network": {
+            "durationMs": 30059.5,
+            "receivedBytes": 8835892,
+            "sentBytes": 17802
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 56,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 89263,
+              "calls": 1641,
+              "triangles": 5690182,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 527,
+              "textures": 162
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 125083,
+              "calls": 1668,
+              "triangles": 5694724,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 527,
+              "textures": 162
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 386000000,
+            "totalJSHeapSize": 462000000
+          },
+          "frame": {
+            "count": 1789,
+            "p50Ms": 16.7,
+            "p95Ms": 16.8,
+            "p99Ms": 16.8,
+            "maxMs": 33.5
+          },
+          "cpuSubmission": {
+            "count": 1789,
+            "p50Ms": 12.5,
+            "p95Ms": 15.5,
+            "p99Ms": 17.2,
+            "maxMs": 19.6
+          },
+          "phases": {
+            "setup": {
+              "count": 1789,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1789,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 1789,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 1789,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1789,
+              "p50Ms": 0.5,
+              "p95Ms": 0.9,
+              "p99Ms": 1,
+              "maxMs": 4.9
+            },
+            "players": {
+              "count": 1789,
+              "p50Ms": 2.2,
+              "p95Ms": 4.6,
+              "p99Ms": 4.9,
+              "maxMs": 6.1
+            },
+            "reflections": {
+              "count": 1789,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1789,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1789,
+              "p50Ms": 9.5,
+              "p95Ms": 11.5,
+              "p99Ms": 12.3,
+              "maxMs": 13.8
+            },
+            "tail": {
+              "count": 1789,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8716,
+            "loads": null,
+            "residentBytes": null,
+            "failures": null
+          },
+          "screenshot": "desktop-river-oaks-gardens-3-1-players-2.png",
+          "loadAverage": [
+            16.9111328125,
+            12.5283203125,
+            10.81201171875
+          ]
+        },
+        {
+          "players": 2,
+          "windowIndex": 0,
+          "network": {
+            "durationMs": 30219.39999999851,
+            "receivedBytes": 8574631,
+            "sentBytes": 16350
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 27,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 156523,
+              "calls": 1728,
+              "triangles": 6042472,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 543,
+              "textures": 166
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 27,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 172583,
+              "calls": 1710,
+              "triangles": 6039444,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 543,
+              "textures": 166
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 386000000,
+            "totalJSHeapSize": 462000000
+          },
+          "frame": {
+            "count": 801,
+            "p50Ms": 33.4,
+            "p95Ms": 66.7,
+            "p99Ms": 66.7,
+            "maxMs": 66.8
+          },
+          "cpuSubmission": {
+            "count": 801,
+            "p50Ms": 16.8,
+            "p95Ms": 20.9,
+            "p99Ms": 22.2,
+            "maxMs": 25.1
+          },
+          "phases": {
+            "setup": {
+              "count": 801,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 801,
+              "p50Ms": 0,
+              "p95Ms": 0.4,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 801,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "residents": {
+              "count": 801,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 801,
+              "p50Ms": 0.6,
+              "p95Ms": 1.1,
+              "p99Ms": 1.2,
+              "maxMs": 1.4
+            },
+            "players": {
+              "count": 801,
+              "p50Ms": 2.7,
+              "p95Ms": 5.7,
+              "p99Ms": 6.1,
+              "maxMs": 6.5
+            },
+            "reflections": {
+              "count": 801,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 801,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 801,
+              "p50Ms": 12.3,
+              "p95Ms": 15.2,
+              "p99Ms": 16.8,
+              "maxMs": 18.5
+            },
+            "tail": {
+              "count": 801,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8716,
+            "loads": null,
+            "residentBytes": null,
+            "failures": null
+          },
+          "screenshot": "desktop-river-oaks-gardens-3-2-players-0.png",
+          "loadAverage": [
+            33.78466796875,
+            17.4501953125,
+            12.7275390625
+          ]
+        },
+        {
+          "players": 2,
+          "windowIndex": 1,
+          "network": {
+            "durationMs": 30188.79999999702,
+            "receivedBytes": 8698837,
+            "sentBytes": 17197
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 30,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 176183,
+              "calls": 1710,
+              "triangles": 6039444,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 543,
+              "textures": 166
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 30,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 193783,
+              "calls": 1710,
+              "triangles": 6039444,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 543,
+              "textures": 166
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 386000000,
+            "totalJSHeapSize": 462000000
+          },
+          "frame": {
+            "count": 878,
+            "p50Ms": 33.3,
+            "p95Ms": 50,
+            "p99Ms": 50.1,
+            "maxMs": 50.1
+          },
+          "cpuSubmission": {
+            "count": 878,
+            "p50Ms": 15.1,
+            "p95Ms": 19.3,
+            "p99Ms": 21,
+            "maxMs": 22.8
+          },
+          "phases": {
+            "setup": {
+              "count": 878,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 878,
+              "p50Ms": 0,
+              "p95Ms": 0.4,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 878,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 878,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 878,
+              "p50Ms": 0.6,
+              "p95Ms": 0.9,
+              "p99Ms": 1.1,
+              "maxMs": 1.3
+            },
+            "players": {
+              "count": 878,
+              "p50Ms": 2.4,
+              "p95Ms": 5.3,
+              "p99Ms": 5.5,
+              "maxMs": 5.8
+            },
+            "reflections": {
+              "count": 878,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 878,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 878,
+              "p50Ms": 11,
+              "p95Ms": 14,
+              "p99Ms": 15.7,
+              "maxMs": 17.8
+            },
+            "tail": {
+              "count": 878,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8716,
+            "loads": null,
+            "residentBytes": null,
+            "failures": null
+          },
+          "screenshot": "desktop-river-oaks-gardens-3-2-players-1.png",
+          "loadAverage": [
+            52.0341796875,
+            23.33984375,
+            15.03369140625
+          ]
+        },
+        {
+          "players": 2,
+          "windowIndex": 2,
+          "network": {
+            "durationMs": 30164.79999999702,
+            "receivedBytes": 8883358,
+            "sentBytes": 17076
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 29,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 196983,
+              "calls": 1728,
+              "triangles": 6042472,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 543,
+              "textures": 166
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 30,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 213803,
+              "calls": 1728,
+              "triangles": 6042472,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 543,
+              "textures": 166
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 386000000,
+            "totalJSHeapSize": 462000000
+          },
+          "frame": {
+            "count": 839,
+            "p50Ms": 33.3,
+            "p95Ms": 50,
+            "p99Ms": 50.1,
+            "maxMs": 50.1
+          },
+          "cpuSubmission": {
+            "count": 839,
+            "p50Ms": 15.4,
+            "p95Ms": 19.5,
+            "p99Ms": 20.8,
+            "maxMs": 24
+          },
+          "phases": {
+            "setup": {
+              "count": 839,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 839,
+              "p50Ms": 0,
+              "p95Ms": 0.4,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 839,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "residents": {
+              "count": 839,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 839,
+              "p50Ms": 0.6,
+              "p95Ms": 1,
+              "p99Ms": 1.1,
+              "maxMs": 1.5
+            },
+            "players": {
+              "count": 839,
+              "p50Ms": 2.5,
+              "p95Ms": 5.3,
+              "p99Ms": 5.6,
+              "maxMs": 5.9
+            },
+            "reflections": {
+              "count": 839,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 839,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 839,
+              "p50Ms": 11.1,
+              "p95Ms": 13.8,
+              "p99Ms": 15.2,
+              "maxMs": 20.5
+            },
+            "tail": {
+              "count": 839,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8716,
+            "loads": null,
+            "residentBytes": null,
+            "failures": null
+          },
+          "screenshot": "desktop-river-oaks-gardens-3-2-players-2.png",
+          "loadAverage": [
+            37.1103515625,
+            22.8310546875,
+            15.18505859375
+          ]
+        }
+      ],
+      "errors": [],
+      "ownerJoinReadyMs": 5306.825834,
+      "ownerAssetReadyMs": 9437.217584000002,
+      "assets": {
+        "loaded": 102,
+        "total": 102,
+        "failed": 0,
+        "done": true
+      },
+      "resources": {
+        "count": 544,
+        "transferBytes": 75895236,
+        "decodedBodyBytes": 75732036
+      },
+      "peerJoinReadyMs": 15504.77491600001,
+      "reconnects": [
+        {
+          "reconnectMs": 1147.6870409999974,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1212.4107919999806,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1330.6393339999777,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1296.696208999987,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1277.345874999999,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1358.2818329999864,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1251.0444160000188,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1311.1564999999828,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1001.8439590000198,
+          "reconnectPositionDeltaM": 0
+        }
+      ],
+      "reconnectMs": 1277.345874999999,
+      "reconnectPositionDeltaM": 0
+    },
+    {
+      "name": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "deviceScaleFactor": 1,
+      "revision": "east-garden-commons-market-1",
+      "status": "passed",
+      "samples": [
+        {
+          "players": 1,
+          "windowIndex": 0,
+          "network": {
+            "durationMs": 30045.79999999702,
+            "receivedBytes": 8902662,
+            "sentBytes": 17802
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 6823,
+              "calls": 1661,
+              "triangles": 5802570,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 541,
+              "textures": 162
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 42843,
+              "calls": 1679,
+              "triangles": 5805598,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 541,
+              "textures": 162
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1799,
+            "p50Ms": 16.7,
+            "p95Ms": 16.7,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1799,
+            "p50Ms": 10.7,
+            "p95Ms": 13.8,
+            "p99Ms": 15.2,
+            "maxMs": 17.2
+          },
+          "phases": {
+            "setup": {
+              "count": 1799,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.2,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1799,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.3,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 1799,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 1799,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1799,
+              "p50Ms": 0.6,
+              "p95Ms": 0.9,
+              "p99Ms": 1,
+              "maxMs": 1.3
+            },
+            "players": {
+              "count": 1799,
+              "p50Ms": 1.8,
+              "p95Ms": 4.1,
+              "p99Ms": 4.5,
+              "maxMs": 4.7
+            },
+            "reflections": {
+              "count": 1799,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1799,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1799,
+              "p50Ms": 7.8,
+              "p95Ms": 9.7,
+              "p99Ms": 11,
+              "maxMs": 12.7
+            },
+            "tail": {
+              "count": 1799,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8726,
+            "loads": 0,
+            "residentBytes": 0,
+            "failures": 0
+          },
+          "screenshot": "desktop-east-garden-commons-market-1-1-players-0.png",
+          "loadAverage": [
+            22.44677734375,
+            21.21337890625,
+            15.10009765625
+          ]
+        },
+        {
+          "players": 1,
+          "windowIndex": 1,
+          "network": {
+            "durationMs": 30039.39999999851,
+            "receivedBytes": 8965327,
+            "sentBytes": 17802
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 49343,
+              "calls": 1679,
+              "triangles": 5805598,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 541,
+              "textures": 162
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 85263,
+              "calls": 1661,
+              "triangles": 5802570,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 541,
+              "textures": 162
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1795,
+            "p50Ms": 16.7,
+            "p95Ms": 16.8,
+            "p99Ms": 16.8,
+            "maxMs": 33.4
+          },
+          "cpuSubmission": {
+            "count": 1795,
+            "p50Ms": 10.7,
+            "p95Ms": 14.4,
+            "p99Ms": 16.2,
+            "maxMs": 18
+          },
+          "phases": {
+            "setup": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.2,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.3,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "residents": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1795,
+              "p50Ms": 0.5,
+              "p95Ms": 0.8,
+              "p99Ms": 1,
+              "maxMs": 1.2
+            },
+            "players": {
+              "count": 1795,
+              "p50Ms": 1.8,
+              "p95Ms": 4.2,
+              "p99Ms": 4.9,
+              "maxMs": 5.5
+            },
+            "reflections": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1795,
+              "p50Ms": 7.8,
+              "p95Ms": 10.4,
+              "p99Ms": 11.7,
+              "maxMs": 13.4
+            },
+            "tail": {
+              "count": 1795,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8726,
+            "loads": 0,
+            "residentBytes": 0,
+            "failures": 0
+          },
+          "screenshot": "desktop-east-garden-commons-market-1-1-players-1.png",
+          "loadAverage": [
+            18.1357421875,
+            20.2587890625,
+            14.99658203125
+          ]
+        },
+        {
+          "players": 1,
+          "windowIndex": 2,
+          "network": {
+            "durationMs": 30031,
+            "receivedBytes": 8973445,
+            "sentBytes": 17802
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 91743,
+              "calls": 1661,
+              "triangles": 5802570,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 541,
+              "textures": 162
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 127723,
+              "calls": 1661,
+              "triangles": 5802570,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 541,
+              "textures": 162
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1798,
+            "p50Ms": 16.7,
+            "p95Ms": 16.8,
+            "p99Ms": 16.8,
+            "maxMs": 33.4
+          },
+          "cpuSubmission": {
+            "count": 1798,
+            "p50Ms": 11.6,
+            "p95Ms": 14.6,
+            "p99Ms": 16.1,
+            "maxMs": 17.5
+          },
+          "phases": {
+            "setup": {
+              "count": 1798,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1798,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.3,
+              "maxMs": 0.4
+            },
+            "trees": {
+              "count": 1798,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 1798,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1798,
+              "p50Ms": 0.6,
+              "p95Ms": 0.9,
+              "p99Ms": 1,
+              "maxMs": 1.3
+            },
+            "players": {
+              "count": 1798,
+              "p50Ms": 2,
+              "p95Ms": 4.4,
+              "p99Ms": 4.8,
+              "maxMs": 5.4
+            },
+            "reflections": {
+              "count": 1798,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1798,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1798,
+              "p50Ms": 8.7,
+              "p95Ms": 10.6,
+              "p99Ms": 11.7,
+              "maxMs": 14
+            },
+            "tail": {
+              "count": 1798,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            }
+          },
+          "stream": {
+            "objects": 8726,
+            "loads": 0,
+            "residentBytes": 0,
+            "failures": 0
+          },
+          "screenshot": "desktop-east-garden-commons-market-1-1-players-2.png",
+          "loadAverage": [
+            15.3857421875,
+            19.3427734375,
+            14.87451171875
+          ]
+        },
+        {
+          "players": 2,
+          "windowIndex": 0,
+          "network": {
+            "durationMs": 30163.10000000149,
+            "receivedBytes": 8973569,
+            "sentBytes": 17076
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 27,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 159283,
+              "calls": 1739,
+              "triangles": 6153346,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 557,
+              "textures": 166
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 30,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 176443,
+              "calls": 1713,
+              "triangles": 6148827,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 557,
+              "textures": 166
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 856,
+            "p50Ms": 33.3,
+            "p95Ms": 50,
+            "p99Ms": 50.1,
+            "maxMs": 66.6
+          },
+          "cpuSubmission": {
+            "count": 856,
+            "p50Ms": 13.2,
+            "p95Ms": 16.7,
+            "p99Ms": 18.4,
+            "maxMs": 20.5
+          },
+          "phases": {
+            "setup": {
+              "count": 856,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.2,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 856,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 856,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 856,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 856,
+              "p50Ms": 0.6,
+              "p95Ms": 1,
+              "p99Ms": 1.1,
+              "maxMs": 1.4
+            },
+            "players": {
+              "count": 856,
+              "p50Ms": 2.4,
+              "p95Ms": 4.9,
+              "p99Ms": 5.2,
+              "maxMs": 5.6
+            },
+            "reflections": {
+              "count": 856,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 856,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 856,
+              "p50Ms": 9.6,
+              "p95Ms": 11.9,
+              "p99Ms": 12.8,
+              "maxMs": 13.9
+            },
+            "tail": {
+              "count": 856,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8726,
+            "loads": 0,
+            "residentBytes": 0,
+            "failures": 0
+          },
+          "screenshot": "desktop-east-garden-commons-market-1-2-players-0.png",
+          "loadAverage": [
+            13.59521484375,
+            18.12158203125,
+            14.720703125
+          ]
+        },
+        {
+          "players": 2,
+          "windowIndex": 1,
+          "network": {
+            "durationMs": 30200.10000000149,
+            "receivedBytes": 9030768,
+            "sentBytes": 16955
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 29,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 179643,
+              "calls": 1721,
+              "triangles": 6150318,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 557,
+              "textures": 166
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 27,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 196423,
+              "calls": 1721,
+              "triangles": 6150318,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 557,
+              "textures": 166
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 837,
+            "p50Ms": 33.3,
+            "p95Ms": 50,
+            "p99Ms": 50.1,
+            "maxMs": 50.1
+          },
+          "cpuSubmission": {
+            "count": 837,
+            "p50Ms": 15.5,
+            "p95Ms": 20.1,
+            "p99Ms": 22.2,
+            "maxMs": 26.1
+          },
+          "phases": {
+            "setup": {
+              "count": 837,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.2,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 837,
+              "p50Ms": 0,
+              "p95Ms": 0.4,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 837,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 837,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 837,
+              "p50Ms": 0.7,
+              "p95Ms": 1.1,
+              "p99Ms": 1.3,
+              "maxMs": 1.5
+            },
+            "players": {
+              "count": 837,
+              "p50Ms": 2.7,
+              "p95Ms": 5.7,
+              "p99Ms": 6.3,
+              "maxMs": 6.8
+            },
+            "reflections": {
+              "count": 837,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 837,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 837,
+              "p50Ms": 10.7,
+              "p95Ms": 14.1,
+              "p99Ms": 15.9,
+              "maxMs": 18.3
+            },
+            "tail": {
+              "count": 837,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8726,
+            "loads": 0,
+            "residentBytes": 0,
+            "failures": 0
+          },
+          "screenshot": "desktop-east-garden-commons-market-1-2-players-1.png",
+          "loadAverage": [
+            16.1337890625,
+            18.13623046875,
+            14.87744140625
+          ]
+        },
+        {
+          "players": 2,
+          "windowIndex": 2,
+          "network": {
+            "durationMs": 30194.90000000596,
+            "receivedBytes": 8797373,
+            "sentBytes": 16834
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 30,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 199703,
+              "calls": 1721,
+              "triangles": 6150318,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 557,
+              "textures": 166
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              1440,
+              1000
+            ],
+            "buffer": [
+              1440,
+              1000
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 27,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 216323,
+              "calls": 1723,
+              "triangles": 6150364,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 557,
+              "textures": 166
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 829,
+            "p50Ms": 33.3,
+            "p95Ms": 50,
+            "p99Ms": 50.1,
+            "maxMs": 50.1
+          },
+          "cpuSubmission": {
+            "count": 829,
+            "p50Ms": 15.2,
+            "p95Ms": 19.9,
+            "p99Ms": 21.5,
+            "maxMs": 23.7
+          },
+          "phases": {
+            "setup": {
+              "count": 829,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.2,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 829,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 829,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 829,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 829,
+              "p50Ms": 0.7,
+              "p95Ms": 1,
+              "p99Ms": 1.1,
+              "maxMs": 1.3
+            },
+            "players": {
+              "count": 829,
+              "p50Ms": 2.5,
+              "p95Ms": 5.4,
+              "p99Ms": 5.8,
+              "maxMs": 6
+            },
+            "reflections": {
+              "count": 829,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 829,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 829,
+              "p50Ms": 11,
+              "p95Ms": 14.2,
+              "p99Ms": 15.8,
+              "maxMs": 17.9
+            },
+            "tail": {
+              "count": 829,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8726,
+            "loads": 0,
+            "residentBytes": 0,
+            "failures": 0
+          },
+          "screenshot": "desktop-east-garden-commons-market-1-2-players-2.png",
+          "loadAverage": [
+            22.00927734375,
+            19.1806640625,
+            15.37646484375
+          ]
+        }
+      ],
+      "errors": [],
+      "ownerJoinReadyMs": 4930.241249999963,
+      "ownerAssetReadyMs": 7668.553291999968,
+      "assets": {
+        "loaded": 102,
+        "total": 102,
+        "failed": 0,
+        "done": true
+      },
+      "resources": {
+        "count": 544,
+        "transferBytes": 75895244,
+        "decodedBodyBytes": 75732044
+      },
+      "peerJoinReadyMs": 15496.643958,
+      "reconnects": [
+        {
+          "reconnectMs": 1059.1342500000028,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1041.5697079999954,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1365.2544169999892,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1140.710040999984,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1434.3493749999907,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1315.1370829999796,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1052.5091660000035,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1167.7367080000695,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1450.2389170000097,
+          "reconnectPositionDeltaM": 0
+        }
+      ],
+      "reconnectMs": 1167.7367080000695,
+      "reconnectPositionDeltaM": 0
+    },
+    {
+      "name": "phone-viewport",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 2,
+      "revision": "east-garden-commons-market-1",
+      "status": "passed",
+      "samples": [
+        {
+          "players": 1,
+          "windowIndex": 0,
+          "network": {
+            "durationMs": 30043.20000000298,
+            "receivedBytes": 8963684,
+            "sentBytes": 17802
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 6663,
+              "calls": 1250,
+              "triangles": 4995754,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 520,
+              "textures": 149
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 42683,
+              "calls": 1250,
+              "triangles": 4995754,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 520,
+              "textures": 149
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1800,
+            "p50Ms": 16.7,
+            "p95Ms": 16.7,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1800,
+            "p50Ms": 10.6,
+            "p95Ms": 12.9,
+            "p99Ms": 13.9,
+            "maxMs": 15.8
+          },
+          "phases": {
+            "setup": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.2,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.4,
+              "maxMs": 0.4
+            },
+            "trees": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1800,
+              "p50Ms": 0.6,
+              "p95Ms": 0.9,
+              "p99Ms": 1.1,
+              "maxMs": 1.3
+            },
+            "players": {
+              "count": 1800,
+              "p50Ms": 1.9,
+              "p95Ms": 3.6,
+              "p99Ms": 3.9,
+              "maxMs": 4.2
+            },
+            "reflections": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1800,
+              "p50Ms": 7.8,
+              "p95Ms": 9.3,
+              "p99Ms": 10.1,
+              "maxMs": 11
+            },
+            "tail": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8726,
+            "loads": 0,
+            "residentBytes": 0,
+            "failures": 0
+          },
+          "screenshot": "phone-viewport-east-garden-commons-market-1-1-players-0.png",
+          "loadAverage": [
+            18.75830078125,
+            19.25244140625,
+            15.7138671875
+          ]
+        },
+        {
+          "players": 1,
+          "windowIndex": 1,
+          "network": {
+            "durationMs": 30031.70000000298,
+            "receivedBytes": 8844231,
+            "sentBytes": 17802
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 49023,
+              "calls": 1250,
+              "triangles": 4995754,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 520,
+              "textures": 149
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 85043,
+              "calls": 1250,
+              "triangles": 4995754,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 520,
+              "textures": 149
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1800,
+            "p50Ms": 16.7,
+            "p95Ms": 16.8,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1800,
+            "p50Ms": 12,
+            "p95Ms": 14.9,
+            "p99Ms": 16.3,
+            "maxMs": 17.8
+          },
+          "phases": {
+            "setup": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.2,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.4,
+              "maxMs": 0.4
+            },
+            "trees": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1800,
+              "p50Ms": 0.6,
+              "p95Ms": 1,
+              "p99Ms": 1.1,
+              "maxMs": 1.2
+            },
+            "players": {
+              "count": 1800,
+              "p50Ms": 2.2,
+              "p95Ms": 4.2,
+              "p99Ms": 4.5,
+              "maxMs": 4.8
+            },
+            "reflections": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "debug": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1800,
+              "p50Ms": 8.8,
+              "p95Ms": 10.8,
+              "p99Ms": 11.8,
+              "maxMs": 13.1
+            },
+            "tail": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8726,
+            "loads": 0,
+            "residentBytes": 0,
+            "failures": 0
+          },
+          "screenshot": "phone-viewport-east-garden-commons-market-1-1-players-1.png",
+          "loadAverage": [
+            20.81005859375,
+            19.701171875,
+            16.017578125
+          ]
+        },
+        {
+          "players": 1,
+          "windowIndex": 2,
+          "network": {
+            "durationMs": 30051.79999999702,
+            "receivedBytes": 8853022,
+            "sentBytes": 17802
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 91403,
+              "calls": 1241,
+              "triangles": 4994240,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 520,
+              "textures": 149
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 127443,
+              "calls": 1250,
+              "triangles": 4995754,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 520,
+              "textures": 149
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1800,
+            "p50Ms": 16.7,
+            "p95Ms": 16.7,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1800,
+            "p50Ms": 11.5,
+            "p95Ms": 14.4,
+            "p99Ms": 16.1,
+            "maxMs": 19.5
+          },
+          "phases": {
+            "setup": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.4,
+              "maxMs": 0.4
+            },
+            "trees": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1800,
+              "p50Ms": 0.6,
+              "p95Ms": 0.9,
+              "p99Ms": 1,
+              "maxMs": 1.4
+            },
+            "players": {
+              "count": 1800,
+              "p50Ms": 2.1,
+              "p95Ms": 4.1,
+              "p99Ms": 4.7,
+              "maxMs": 5.1
+            },
+            "reflections": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1800,
+              "p50Ms": 8.3,
+              "p95Ms": 10.6,
+              "p99Ms": 11.6,
+              "maxMs": 13.1
+            },
+            "tail": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8726,
+            "loads": 0,
+            "residentBytes": 0,
+            "failures": 0
+          },
+          "screenshot": "phone-viewport-east-garden-commons-market-1-1-players-2.png",
+          "loadAverage": [
+            18.61376953125,
+            19.26123046875,
+            16.00439453125
+          ]
+        },
+        {
+          "players": 2,
+          "windowIndex": 0,
+          "network": {
+            "durationMs": 30187.69999999553,
+            "receivedBytes": 8972714,
+            "sentBytes": 17318
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 33,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 154223,
+              "calls": 1304,
+              "triangles": 5331834,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 536,
+              "textures": 153
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 33,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 174223,
+              "calls": 1288,
+              "triangles": 5328830,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 536,
+              "textures": 153
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 998,
+            "p50Ms": 33.3,
+            "p95Ms": 33.4,
+            "p99Ms": 33.5,
+            "maxMs": 50.1
+          },
+          "cpuSubmission": {
+            "count": 998,
+            "p50Ms": 14.2,
+            "p95Ms": 17.4,
+            "p99Ms": 18.5,
+            "maxMs": 20.1
+          },
+          "phases": {
+            "setup": {
+              "count": 998,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 998,
+              "p50Ms": 0,
+              "p95Ms": 0.4,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 998,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 998,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 998,
+              "p50Ms": 0.7,
+              "p95Ms": 1.1,
+              "p99Ms": 1.2,
+              "maxMs": 1.4
+            },
+            "players": {
+              "count": 998,
+              "p50Ms": 2.6,
+              "p95Ms": 4.9,
+              "p99Ms": 5.2,
+              "maxMs": 5.6
+            },
+            "reflections": {
+              "count": 998,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 998,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 998,
+              "p50Ms": 9.9,
+              "p95Ms": 12.3,
+              "p99Ms": 13.5,
+              "maxMs": 16.1
+            },
+            "tail": {
+              "count": 998,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8726,
+            "loads": 0,
+            "residentBytes": 0,
+            "failures": 0
+          },
+          "screenshot": "phone-viewport-east-garden-commons-market-1-2-players-0.png",
+          "loadAverage": [
+            20.6767578125,
+            19.90283203125,
+            16.45654296875
+          ]
+        },
+        {
+          "players": 2,
+          "windowIndex": 1,
+          "network": {
+            "durationMs": 30170.39999999851,
+            "receivedBytes": 8787055,
+            "sentBytes": 16955
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 31,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 177783,
+              "calls": 1288,
+              "triangles": 5328830,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 536,
+              "textures": 153
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 32,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 197503,
+              "calls": 1288,
+              "triangles": 5328830,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 536,
+              "textures": 153
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 984,
+            "p50Ms": 33.3,
+            "p95Ms": 50,
+            "p99Ms": 50.1,
+            "maxMs": 66.7
+          },
+          "cpuSubmission": {
+            "count": 984,
+            "p50Ms": 14.6,
+            "p95Ms": 18.1,
+            "p99Ms": 19.6,
+            "maxMs": 21.2
+          },
+          "phases": {
+            "setup": {
+              "count": 984,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 984,
+              "p50Ms": 0,
+              "p95Ms": 0.4,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 984,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 984,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 984,
+              "p50Ms": 0.7,
+              "p95Ms": 1.1,
+              "p99Ms": 1.2,
+              "maxMs": 1.3
+            },
+            "players": {
+              "count": 984,
+              "p50Ms": 2.5,
+              "p95Ms": 4.9,
+              "p99Ms": 5.3,
+              "maxMs": 6
+            },
+            "reflections": {
+              "count": 984,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 984,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 984,
+              "p50Ms": 10.7,
+              "p95Ms": 13.2,
+              "p99Ms": 14.2,
+              "maxMs": 15.9
+            },
+            "tail": {
+              "count": 984,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8726,
+            "loads": 0,
+            "residentBytes": 0,
+            "failures": 0
+          },
+          "screenshot": "phone-viewport-east-garden-commons-market-1-2-players-1.png",
+          "loadAverage": [
+            23.93310546875,
+            20.84814453125,
+            16.94140625
+          ]
+        },
+        {
+          "players": 2,
+          "windowIndex": 2,
+          "network": {
+            "durationMs": 30160.30000000447,
+            "receivedBytes": 8858337,
+            "sentBytes": 16713
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 32,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 201143,
+              "calls": 1288,
+              "triangles": 5328830,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 536,
+              "textures": 153
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 32,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 221263,
+              "calls": 1288,
+              "triangles": 5328830,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 536,
+              "textures": 153
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 435000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1004,
+            "p50Ms": 33.3,
+            "p95Ms": 50,
+            "p99Ms": 50.1,
+            "maxMs": 66.6
+          },
+          "cpuSubmission": {
+            "count": 1004,
+            "p50Ms": 14.3,
+            "p95Ms": 17.5,
+            "p99Ms": 19.2,
+            "maxMs": 21
+          },
+          "phases": {
+            "setup": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.2,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0.4,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1004,
+              "p50Ms": 0.7,
+              "p95Ms": 1.1,
+              "p99Ms": 1.2,
+              "maxMs": 1.4
+            },
+            "players": {
+              "count": 1004,
+              "p50Ms": 2.6,
+              "p95Ms": 5.1,
+              "p99Ms": 5.4,
+              "maxMs": 5.7
+            },
+            "reflections": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1004,
+              "p50Ms": 10,
+              "p95Ms": 12.6,
+              "p99Ms": 13.8,
+              "maxMs": 14.8
+            },
+            "tail": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8726,
+            "loads": 0,
+            "residentBytes": 0,
+            "failures": 0
+          },
+          "screenshot": "phone-viewport-east-garden-commons-market-1-2-players-2.png",
+          "loadAverage": [
+            24.57421875,
+            21.30126953125,
+            17.26025390625
+          ]
+        }
+      ],
+      "errors": [],
+      "ownerJoinReadyMs": 7709.863291000016,
+      "ownerAssetReadyMs": 10619.356540999957,
+      "assets": {
+        "loaded": 102,
+        "total": 102,
+        "failed": 0,
+        "done": true
+      },
+      "resources": {
+        "count": 544,
+        "transferBytes": 75895244,
+        "decodedBodyBytes": 75732044
+      },
+      "peerJoinReadyMs": 11640.54791600001,
+      "reconnects": [
+        {
+          "reconnectMs": 1317.973083000048,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 937.2929170000134,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1221.1729999999516,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 951.952249999973,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1819.6162920000497,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 969.9606670000358,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1343.5739580000518,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1350.2694590000901,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1215.168249999988,
+          "reconnectPositionDeltaM": 0
+        }
+      ],
+      "reconnectMs": 1221.1729999999516,
+      "reconnectPositionDeltaM": 0
+    },
+    {
+      "name": "phone-viewport",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 2,
+      "revision": "river-oaks-gardens-3",
+      "status": "passed",
+      "samples": [
+        {
+          "players": 1,
+          "windowIndex": 0,
+          "network": {
+            "durationMs": 30070.79999999702,
+            "receivedBytes": 8824943,
+            "sentBytes": 17802
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 6663,
+              "calls": 1239,
+              "triangles": 4884880,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 534,
+              "textures": 149
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 42723,
+              "calls": 1257,
+              "triangles": 4887908,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 534,
+              "textures": 149
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 386000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1801,
+            "p50Ms": 16.7,
+            "p95Ms": 16.8,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1801,
+            "p50Ms": 11.4,
+            "p95Ms": 13.9,
+            "p99Ms": 15.2,
+            "maxMs": 19
+          },
+          "phases": {
+            "setup": {
+              "count": 1801,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1801,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 1801,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "residents": {
+              "count": 1801,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1801,
+              "p50Ms": 0.6,
+              "p95Ms": 1,
+              "p99Ms": 1.1,
+              "maxMs": 2.6
+            },
+            "players": {
+              "count": 1801,
+              "p50Ms": 2.2,
+              "p95Ms": 4.1,
+              "p99Ms": 4.5,
+              "maxMs": 8.7
+            },
+            "reflections": {
+              "count": 1801,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1801,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1801,
+              "p50Ms": 8.2,
+              "p95Ms": 10,
+              "p99Ms": 10.8,
+              "maxMs": 12.4
+            },
+            "tail": {
+              "count": 1801,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8716,
+            "loads": null,
+            "residentBytes": null,
+            "failures": null
+          },
+          "screenshot": "phone-viewport-river-oaks-gardens-3-1-players-0.png",
+          "loadAverage": [
+            21.76806640625,
+            21.45947265625,
+            17.61767578125
+          ]
+        },
+        {
+          "players": 1,
+          "windowIndex": 1,
+          "network": {
+            "durationMs": 30045.59999999404,
+            "receivedBytes": 8700884,
+            "sentBytes": 17802
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 49343,
+              "calls": 1257,
+              "triangles": 4887908,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 534,
+              "textures": 149
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 85363,
+              "calls": 1239,
+              "triangles": 4884880,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 534,
+              "textures": 149
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 386000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1800,
+            "p50Ms": 16.7,
+            "p95Ms": 16.7,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1800,
+            "p50Ms": 12.1,
+            "p95Ms": 15,
+            "p99Ms": 16.3,
+            "maxMs": 18.1
+          },
+          "phases": {
+            "setup": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.4,
+              "maxMs": 0.4
+            },
+            "trees": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "residents": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1800,
+              "p50Ms": 0.6,
+              "p95Ms": 0.9,
+              "p99Ms": 1.1,
+              "maxMs": 1.3
+            },
+            "players": {
+              "count": 1800,
+              "p50Ms": 2.2,
+              "p95Ms": 4.4,
+              "p99Ms": 4.7,
+              "maxMs": 5.2
+            },
+            "reflections": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1800,
+              "p50Ms": 8.8,
+              "p95Ms": 10.9,
+              "p99Ms": 12.1,
+              "maxMs": 13.7
+            },
+            "tail": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8716,
+            "loads": null,
+            "residentBytes": null,
+            "failures": null
+          },
+          "screenshot": "phone-viewport-river-oaks-gardens-3-1-players-1.png",
+          "loadAverage": [
+            26.4765625,
+            22.78466796875,
+            18.2607421875
+          ]
+        },
+        {
+          "players": 1,
+          "windowIndex": 2,
+          "network": {
+            "durationMs": 30045.80000000447,
+            "receivedBytes": 8835678,
+            "sentBytes": 17802
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 92043,
+              "calls": 1239,
+              "triangles": 4884880,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 534,
+              "textures": 149
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 60,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 128083,
+              "calls": 1257,
+              "triangles": 4887908,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 534,
+              "textures": 149
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 386000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1800,
+            "p50Ms": 16.7,
+            "p95Ms": 16.7,
+            "p99Ms": 16.8,
+            "maxMs": 16.8
+          },
+          "cpuSubmission": {
+            "count": 1800,
+            "p50Ms": 10.9,
+            "p95Ms": 13.6,
+            "p99Ms": 14.7,
+            "maxMs": 17
+          },
+          "phases": {
+            "setup": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.3,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "residents": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1800,
+              "p50Ms": 0.5,
+              "p95Ms": 0.8,
+              "p99Ms": 1,
+              "maxMs": 1.2
+            },
+            "players": {
+              "count": 1800,
+              "p50Ms": 2.1,
+              "p95Ms": 3.9,
+              "p99Ms": 4.4,
+              "maxMs": 4.9
+            },
+            "reflections": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1800,
+              "p50Ms": 8,
+              "p95Ms": 9.8,
+              "p99Ms": 10.6,
+              "maxMs": 12.3
+            },
+            "tail": {
+              "count": 1800,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8716,
+            "loads": null,
+            "residentBytes": null,
+            "failures": null
+          },
+          "screenshot": "phone-viewport-river-oaks-gardens-3-1-players-2.png",
+          "loadAverage": [
+            24.5087890625,
+            22.78662109375,
+            18.447265625
+          ]
+        },
+        {
+          "players": 2,
+          "windowIndex": 0,
+          "network": {
+            "durationMs": 30199.60000000149,
+            "receivedBytes": 8939885,
+            "sentBytes": 16713
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 35,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 148963,
+              "calls": 1295,
+              "triangles": 5220984,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 550,
+              "textures": 153
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 31,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 169503,
+              "calls": 1277,
+              "triangles": 5217956,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 550,
+              "textures": 153
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 386000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1025,
+            "p50Ms": 33.2,
+            "p95Ms": 50,
+            "p99Ms": 50.1,
+            "maxMs": 66.6
+          },
+          "cpuSubmission": {
+            "count": 1025,
+            "p50Ms": 12.5,
+            "p95Ms": 16,
+            "p99Ms": 17.2,
+            "maxMs": 18.8
+          },
+          "phases": {
+            "setup": {
+              "count": 1025,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1025,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 1025,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "residents": {
+              "count": 1025,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1025,
+              "p50Ms": 0.6,
+              "p95Ms": 0.9,
+              "p99Ms": 1.1,
+              "maxMs": 1.2
+            },
+            "players": {
+              "count": 1025,
+              "p50Ms": 2.3,
+              "p95Ms": 4.5,
+              "p99Ms": 5.1,
+              "maxMs": 5.9
+            },
+            "reflections": {
+              "count": 1025,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1025,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1025,
+              "p50Ms": 9,
+              "p95Ms": 11.3,
+              "p99Ms": 12.3,
+              "maxMs": 14
+            },
+            "tail": {
+              "count": 1025,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            }
+          },
+          "stream": {
+            "objects": 8716,
+            "loads": null,
+            "residentBytes": null,
+            "failures": null
+          },
+          "screenshot": "phone-viewport-river-oaks-gardens-3-2-players-0.png",
+          "loadAverage": [
+            23.435546875,
+            22.45654296875,
+            18.5537109375
+          ]
+        },
+        {
+          "players": 2,
+          "windowIndex": 1,
+          "network": {
+            "durationMs": 30215.10000000149,
+            "receivedBytes": 8877613,
+            "sentBytes": 17197
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 32,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 173103,
+              "calls": 1277,
+              "triangles": 5217956,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 550,
+              "textures": 153
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 34,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 192743,
+              "calls": 1277,
+              "triangles": 5217956,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 550,
+              "textures": 153
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 386000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 980,
+            "p50Ms": 33.3,
+            "p95Ms": 33.4,
+            "p99Ms": 50,
+            "maxMs": 50.1
+          },
+          "cpuSubmission": {
+            "count": 980,
+            "p50Ms": 14.4,
+            "p95Ms": 17.7,
+            "p99Ms": 19.3,
+            "maxMs": 21
+          },
+          "phases": {
+            "setup": {
+              "count": 980,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 980,
+              "p50Ms": 0,
+              "p95Ms": 0.4,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 980,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "residents": {
+              "count": 980,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.2,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 980,
+              "p50Ms": 0.6,
+              "p95Ms": 1,
+              "p99Ms": 1.2,
+              "maxMs": 1.3
+            },
+            "players": {
+              "count": 980,
+              "p50Ms": 2.7,
+              "p95Ms": 5.3,
+              "p99Ms": 5.5,
+              "maxMs": 5.9
+            },
+            "reflections": {
+              "count": 980,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 980,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 980,
+              "p50Ms": 10.3,
+              "p95Ms": 12.7,
+              "p99Ms": 13.6,
+              "maxMs": 15.5
+            },
+            "tail": {
+              "count": 980,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8716,
+            "loads": null,
+            "residentBytes": null,
+            "failures": null
+          },
+          "screenshot": "phone-viewport-river-oaks-gardens-3-2-players-1.png",
+          "loadAverage": [
+            33.8525390625,
+            25.37353515625,
+            19.78515625
+          ]
+        },
+        {
+          "players": 2,
+          "windowIndex": 2,
+          "network": {
+            "durationMs": 30158.5,
+            "receivedBytes": 8886711,
+            "sentBytes": 17318
+          },
+          "before": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 34,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 196543,
+              "calls": 1277,
+              "triangles": 5217956,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 550,
+              "textures": 153
+            }
+          },
+          "after": {
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+            "viewport": [
+              390,
+              844
+            ],
+            "buffer": [
+              780,
+              1688
+            ],
+            "quality": {
+              "mode": "sharp",
+              "scale": 1,
+              "occlusion": true,
+              "fps": 31,
+              "tailShedding": false,
+              "steadyWindows": null
+            },
+            "pipeline": {
+              "samples": 4,
+              "ao": true,
+              "bloom": true,
+              "renderScale": 1,
+              "aoScale": 1,
+              "transmissionScale": 1
+            },
+            "render": {
+              "frame": 216663,
+              "calls": 1277,
+              "triangles": 5217956,
+              "points": 36,
+              "lines": 0
+            },
+            "memory": {
+              "geometries": 550,
+              "textures": 153
+            }
+          },
+          "heap": {
+            "usedJSHeapSize": 386000000,
+            "totalJSHeapSize": 491000000
+          },
+          "frame": {
+            "count": 1004,
+            "p50Ms": 33.3,
+            "p95Ms": 33.4,
+            "p99Ms": 33.4,
+            "maxMs": 50.1
+          },
+          "cpuSubmission": {
+            "count": 1004,
+            "p50Ms": 13.1,
+            "p95Ms": 16.4,
+            "p99Ms": 17.7,
+            "maxMs": 21.6
+          },
+          "phases": {
+            "setup": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "community": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0.3,
+              "p99Ms": 0.4,
+              "maxMs": 0.5
+            },
+            "trees": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "residents": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0.1,
+              "p99Ms": 0.1,
+              "maxMs": 0.2
+            },
+            "interactions": {
+              "count": 1004,
+              "p50Ms": 0.6,
+              "p95Ms": 1,
+              "p99Ms": 1.1,
+              "maxMs": 1.4
+            },
+            "players": {
+              "count": 1004,
+              "p50Ms": 2.4,
+              "p95Ms": 4.6,
+              "p99Ms": 5.1,
+              "maxMs": 5.5
+            },
+            "reflections": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            },
+            "debug": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0,
+              "maxMs": 0.1
+            },
+            "pipeline": {
+              "count": 1004,
+              "p50Ms": 9.2,
+              "p95Ms": 11.7,
+              "p99Ms": 13,
+              "maxMs": 15.5
+            },
+            "tail": {
+              "count": 1004,
+              "p50Ms": 0,
+              "p95Ms": 0,
+              "p99Ms": 0.1,
+              "maxMs": 0.1
+            }
+          },
+          "stream": {
+            "objects": 8716,
+            "loads": null,
+            "residentBytes": null,
+            "failures": null
+          },
+          "screenshot": "phone-viewport-river-oaks-gardens-3-2-players-2.png",
+          "loadAverage": [
+            33.13232421875,
+            26.00927734375,
+            20.259765625
+          ]
+        }
+      ],
+      "errors": [],
+      "ownerJoinReadyMs": 6053.379416999989,
+      "ownerAssetReadyMs": 9300.372916999971,
+      "assets": {
+        "loaded": 102,
+        "total": 102,
+        "failed": 0,
+        "done": true
+      },
+      "resources": {
+        "count": 544,
+        "transferBytes": 75895236,
+        "decodedBodyBytes": 75732036
+      },
+      "peerJoinReadyMs": 8364.368041999987,
+      "reconnects": [
+        {
+          "reconnectMs": 1155.2551669999957,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1339.609999999986,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1372.250791999977,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1296.2034579999745,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1180.5232499999693,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 944.1492919999873,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1356.596166000003,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 929.4966669999994,
+          "reconnectPositionDeltaM": 0
+        },
+        {
+          "reconnectMs": 1020.6920000000391,
+          "reconnectPositionDeltaM": 0
+        }
+      ],
+      "reconnectMs": 1180.5232499999693,
+      "reconnectPositionDeltaM": 0
+    }
+  ],
+  "browser": "156.0.8078.4",
+  "camera": {
+    "position": [
+      -2765.321977373157,
+      20.583264532037695,
+      1300.064162750871
+    ],
+    "target": [
+      -2765.321977373157,
+      19.583264532037695,
+      1283.064162750871
+    ],
+    "fov": 55
+  },
+  "finalSourceSha256": {
+    "preview/public/data/district.json": "c5662c26185ff0c6caa2fccfb9ef9839bb7e56706635dcf6d6aed68bffd50326",
+    "preview/public/data/world-manifest.json": "4566d5908b2174793c5479f29a182ced884baa1e9474f4119166a7db08012bf0",
+    "preview/src/world-manifest.js": "3cb50663459ad27d9402cce48769cd51c0096c2736263d4222ae241e4bcaea63",
+    "preview/src/district-interior-contract.js": "4c6dfcfa30c7c0f724db7e78a055970d4c0c1a6bb03f4b41967da78590e78a88",
+    "preview/src/garden-campus-district.js": "2d59587eef05eac67e6e14ea6157a6834d1379eafc47d268413d1095f5ecc60c",
+    "preview/src/main.js": "67ed0b17232c1d11c7b254dfaf46a59cfeb3b2bd8c14569e533f37f67657d1b9",
+    "preview/src/render-audit.js": "7bd34d0538d6d0b52c00a1d184b05917050547ea1ada609614ffcaeadc819ff9",
+    "preview/audit/world-streaming-matched.js": "6df2e6180c16cac5baecd72532ae21feeb05d5d6eda742ca8f59815bec297daa",
+    "preview/src/commons-stream.js": "23bd2892a9c3d6dbe343c424a75204043b4e55e66482464ec8d252de233341bd",
+    "preview/src/spatial-chunk-stream.js": "6eae41dda20b726d188d71b6aab6eb370b0c24f717a1861966bcfc3a7ecae1b2",
+    "preview/src/east-garden-commons.js": "f86b9e681c1d3591ee4fb3879c7fd798f7502e0bf881e503aaa4d24818492b3c",
+    "preview/src/walking.js": "0c5cedec20db60e94a0707bec46b8300a39aa07b76f1828329d5d03ca7240c40",
+    "preview/src/walking-ui.js": "f41b330a963edd7c7644c1876f30c12b26ea7483adae41d532949124b036c533",
+    "preview/src/flight.js": "59732fe24849269efbe73206d4e4370e745b0cc9f688edaf03df69d69b8408fe",
+    "server/district-data.js": "bbda64c17f5258f998dc729d1a275ad14affdeb6d80321b74b630876d0ef6bc9",
+    "shared/east-garden-commons-layout.js": "d0c34cfba7501bc3501ad44e72252907b8cef0ccde41e4fe3bc58212fad20d30",
+    "pnpm-lock.yaml": "b06715f7f54b356c58bf371270a112d3baac553367af30e5f7aaabdb9d68557d"
+  },
+  "finishedAt": "2026-11-01T08:40:27.183Z"
+}
