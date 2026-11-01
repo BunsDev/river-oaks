@@ -3,12 +3,24 @@ import XCTest
 @testable import ExperimentPolicy
 
 final class ExperimentPolicyTests: XCTestCase {
-    func testOnlyExplicitLoopbackHTTPFixtureOriginsAreAccepted() {
+    func testOnlyExplicitLoopbackHTTPOrHTTPSFixtureOriginsAreAccepted() {
         XCTAssertTrue(ExperimentPolicy.isFixtureOrigin(URL(string: "http://127.0.0.1:52145")!))
         XCTAssertTrue(ExperimentPolicy.isFixtureOrigin(URL(string: "http://127.0.0.1:52145/")!))
-        for value in ["https://typesafe.place", "http://localhost:52145", "http://127.0.0.1", "http://127.0.0.1:0", "http://127.0.0.1:65536", "http://127.0.0.1:52145/path", "http://127.0.0.1:52145/?token=x", "http://127.0.0.1:52145/#x", "http://user@127.0.0.1:52145", "file:///tmp"] {
+        XCTAssertTrue(ExperimentPolicy.isFixtureOrigin(URL(string: "https://127.0.0.1:52145")!))
+        for value in ["https://127.0.0.1", "https://127.0.0.1:52145/other", "https://typesafe.place", "http://localhost:52145", "http://127.0.0.1", "http://127.0.0.1:0", "http://127.0.0.1:65536", "http://127.0.0.1:52145/path", "http://127.0.0.1:52145/?token=x", "http://127.0.0.1:52145/#x", "http://user@127.0.0.1:52145", "file:///tmp"] {
             XCTAssertFalse(ExperimentPolicy.isFixtureOrigin(URL(string: value)!), value)
         }
+    }
+
+    func testCookieBootstrapRequiresExactHTTPSLoopbackDocument() {
+        let entry = ExperimentPolicy.secureBootstrapURL(URL(string: "https://127.0.0.1:52145/")!)
+        XCTAssertEqual(entry?.absoluteString, "https://127.0.0.1:52145/__host-cookie-bootstrap")
+        for value in ["http://127.0.0.1:52145", "https://remote.test:52145", "https://127.0.0.1:52145/path", "https://user@127.0.0.1:52145", "https://127.0.0.1:52145/?x=1"] {
+            XCTAssertNil(ExperimentPolicy.secureBootstrapURL(URL(string: value)!), value)
+        }
+        let policy = ExperimentPolicy(entry: entry!)
+        XCTAssertFalse(policy.allowsDocument(URL(string: "https://127.0.0.1:52145/")!))
+        XCTAssertFalse(policy.allowsDocument(URL(string: "https://127.0.0.1:52145/__host-cookie-bootstrap?redirect=1")!))
     }
 
     func testResultsRequireIntendedMainFrameAndCurrentDocument() throws {

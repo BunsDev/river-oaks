@@ -65,7 +65,7 @@ const runtime = runtimes.reverse().find(r => (r.supportedDeviceTypes ?? []).some
 if (!runtime) throw new Error(`No available iOS simulator runtime supports ${deviceType.name} (runtimes: ${runtimes.map(r => r.name).join(', ') || 'none'})`);
 
 const fixture = await startBrowserFixture();
-const witness = await startWitness();
+const witness = await startWitness({ allowedOrigins: [fixture.origin, 'capacitor://localhost'] });
 log(`fixture ${fixture.origin}; witness ${witness.origin}; runtime ${runtime.name}; device ${deviceType.name}`);
 const report = { scope: 'iOS Simulator, loopback fixture with the test identity bob, header witness; no device, signing or production origin', source: sh('git', ['rev-parse', 'HEAD'], { cwd: root }), dirty: sh('git', ['status', '--porcelain'], { cwd: root }) !== '', runtime: runtime.name, device: deviceType.name, fixtureOrigin: fixture.origin, witnessOrigin: witness.origin, playDir: options.playDir, playManifest: { files: manifest.totals.files, bytes: manifest.totals.bytes }, modes: {}, witness: {} };
 

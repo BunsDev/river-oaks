@@ -32,7 +32,7 @@ if (!type || !runtime) throw new Error('No installed iPhone 17-compatible iOS si
 const metadata = Object.fromEntries(['ProbeConfiguration', 'ProbeSourceSHA', 'ProbeSourceDirty', 'ProbeEntry'].map(key => [key, sh('plutil', ['-extract', key, 'raw', '-o', '-', join(app, 'Info.plist')])]));
 writeFileSync(join(out, 'app-metadata.json'), JSON.stringify(metadata, null, 2));
 const udid = sim('create', `river-oaks-probe-launch-${process.pid}`, type.identifier, runtime.identifier);
-writeFileSync(join(out, 'device.json'), JSON.stringify({ udid, runtime: runtime.name, device: type.name, app }, null, 2));
+writeFileSync(join(out, 'device.json'), JSON.stringify({ udid, runtime: runtime.name, runtimeIdentifier: runtime.identifier, runtimeBuild: runtime.buildversion, device: type.name, deviceTypeIdentifier: type.identifier, app }, null, 2));
 console.log(`Created owned simulator ${udid} (${runtime.name})`);
 let primaryError;
 const cleanupErrors = [];
@@ -52,7 +52,7 @@ try {
   const logs = spawnSync('xcrun', ['simctl', 'spawn', udid, 'log', 'show', '--last', '2m', '--style', 'compact', '--predicate', 'process == "TypeSafeProbe" AND eventMessage CONTAINS "UIScene"'], { encoding: 'utf8' });
   writeFileSync(join(out, 'scene-lifecycle.log'), logs.stdout ?? '');
   const sceneFailure = (logs.stdout ?? '').includes('UIScene life cycle is required');
-  const evidence = { scope: 'Simulator launch of diagnostic probe, native-only measurement mode; no physical or production-host acceptance', appMetadata: metadata, launchStatus: launch.status, aliveAfter10Seconds: alive, sceneFailure, sceneLogStatus: logs.status, runtime: runtime.name, device: type.name };
+  const evidence = { scope: 'Simulator launch of diagnostic probe, native-only measurement mode; no physical or production-host acceptance', appMetadata: metadata, launchStatus: launch.status, aliveAfter10Seconds: alive, sceneFailure, sceneLogStatus: logs.status, runtime: runtime.name, runtimeIdentifier: runtime.identifier, runtimeBuild: runtime.buildversion, device: type.name, deviceTypeIdentifier: type.identifier };
   writeFileSync(join(out, 'evidence.json'), JSON.stringify(evidence, null, 2));
   console.log(JSON.stringify(evidence));
   if (launch.status !== 0 || !alive || sceneFailure || logs.status !== 0) throw new Error('Probe launch regression: app did not remain alive without a scene-lifecycle failure');

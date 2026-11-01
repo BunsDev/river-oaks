@@ -34,3 +34,10 @@ The archived package proposed signIn, openExternal, share and hostInfo messages.
 5. Collect simulator and physical packaged-device evidence for navigation/redirects/popups, untrusted bridge messages, private-resource denial, unavailable service/offline loading, failure recovery and focus after lifecycle transitions. Keep human accessibility review separate.
 
 No production scaffold, server-policy change, signing, merge, deployment, distribution or expanded capability is authorized by this document. The paired iPhone was unavailable at the current audit; final acceptance remains open.
+
+
+## Current HTTPS and owned-host follow-up
+
+The [1 November follow-up](acceptance/ios-host-followup-20261101/README.md) adds actual controlled HTTPS cookie/Origin/socket evidence and unsigned Release host-control/error/lifecycle captures. Hosted HTTPS received the network-set Secure/HttpOnly/Lax fixture identity and opened a town socket; the custom-scheme page sent no cookie on the observed town requests and did not obtain a readable ticket. The fixture-origin allowlist is explicit, and unknown HTTP/WebSocket origins fail closed. This strengthens decision support without treating a synthetic WebKit scheme handler as actual Capacitor or selecting a production architecture.
+
+The shared native controls now follow the approved pink/ink capsule reference. Sticky loading/failure presentation survives late samples and lifecycle return; the actual HTTP404 capture retains the failure banner and all four narrow-layout actions. Response attribution rejects ambiguous repeated URLs rather than poisoning a retry. Physical-device, human focus/accessibility, authenticated real-client and content-update acceptance remain unresolved. Merging this diagnostic increment does not select the host or authorize production scaffolding.

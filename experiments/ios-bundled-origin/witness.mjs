@@ -1,10 +1,11 @@
 // The header witness for the bundled-origin experiment: a loopback server that
 // answers every request, and every WebSocket upgrade, with the request headers it
 // received, so the results show exactly what the WebView sent from each origin.
-// Cookies are reported by name only. It allows any origin (CORS, with
-// credentials) so a cross-origin page can read the answer; the fixture town,
+// Cookies are reported by name only. Explicit fixture origins may read the
+// credentialed answer; unknown origins fail closed. The fixture town,
 // which enforces the real policy, gives the real verdicts.
 import { createServer } from 'node:http';
+import { createServer as createTLSServer } from 'node:https';
 import { WebSocketServer } from 'ws';
 
 export const cookieNames = header => String(header ?? '').split(';').map(part => part.trim().split('=')[0]).filter(Boolean);
@@ -19,14 +20,22 @@ export function describeRequest(req) {
   };
 }
 
-export async function startWitness({ host = '127.0.0.1', port = 0 } = {}) {
+export async function startWitness({ host = '127.0.0.1', port = 0, tls, allowedOrigins = [] } = {}) {
+  if (host !== '127.0.0.1') throw new Error('Witness must bind explicit loopback');
+  if (!Array.isArray(allowedOrigins)) throw new Error('Expected fixture origin list');
+  const allowed = new Set(allowedOrigins.map(value => {
+    if (value === 'capacitor://localhost') return value;
+    const match = typeof value === 'string' && /^https?:\/\/127\.0\.0\.1:([1-9]\d{0,4})$/.exec(value);
+    if (!match || Number(match[1]) > 65535) throw new Error('Invalid fixture origin');
+    const url = new URL(value);
+    return url.origin;
+  }));
   const records = [];
-  const server = createServer((req, res) => {
+  const handle = (req, res) => {
     const seen = describeRequest(req);
     records.push(seen);
-    const allowedOrigins = new Set([`http://${host}:${server.address()?.port}`]);
     const requestOrigin = typeof req.headers.origin === 'string' ? req.headers.origin : null;
-    const originAllowed = requestOrigin !== null && allowedOrigins.has(requestOrigin);
+    const originAllowed = requestOrigin !== null && allowed.has(requestOrigin);
     const headers = {
       'Content-Type': 'application/json', 'Cache-Control': 'no-store', Vary: 'Origin',
       'Access-Control-Allow-Headers': 'content-type, x-csrf-token', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -35,18 +44,22 @@ export async function startWitness({ host = '127.0.0.1', port = 0 } = {}) {
       headers['Access-Control-Allow-Origin'] = requestOrigin;
       headers['Access-Control-Allow-Credentials'] = 'true';
     }
+    if (requestOrigin !== null && !originAllowed) { res.writeHead(403, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify({ error: 'origin-not-allowed' })); return; }
     if (req.method === 'OPTIONS') { res.writeHead(204, headers); res.end(); return; }
     res.writeHead(200, headers);
     res.end(JSON.stringify(seen));
-  });
+  };
+  const server = tls ? createTLSServer(tls, handle) : createServer(handle);
   const sockets = new WebSocketServer({ noServer: true });
   server.on('upgrade', (req, socket, head) => {
     const seen = describeRequest(req);
     records.push(seen);
+    if (typeof req.headers.origin !== 'string' || !allowed.has(req.headers.origin)) { socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\nContent-Length: 0\r\n\r\n'); return; }
     sockets.handleUpgrade(req, socket, head, ws => { ws.send(JSON.stringify(seen)); ws.close(1000, 'echoed'); });
   });
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, resolve); });
-  const origin = `http://${host}:${server.address().port}`;
+  const origin = `${tls ? 'https' : 'http'}://${host}:${server.address().port}`;
+  allowed.add(origin);
   return { origin, records, close: () => new Promise(resolve => { sockets.close(); server.close(resolve); }) };
 }
 

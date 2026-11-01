@@ -35,11 +35,16 @@ struct Launch {
     let csp: Bool         // bundled mode: deliver the archived source CSP snapshot
     let workerPath: String
     let contextParity: Bool
+    let httpsCookieBootstrap: Bool
     static func parse(_ arguments: [String]) throws -> Launch {
         var values: [String: String] = [:]
         var index = 1
         while index < arguments.count {
             let key = arguments[index]
+            if key == "--https-cookie-bootstrap" {
+                guard values["https-cookie-bootstrap"] == nil else { throw URLError(.badURL) }
+                values["https-cookie-bootstrap"] = "1"; index += 1; continue
+            }
             if key == "--context-parity" {
                 guard values["context-parity"] == nil else { throw URLError(.badURL) }
                 values["context-parity"] = "1"; index += 1; continue
@@ -53,7 +58,8 @@ struct Launch {
         let playDir = values["play-dir"].map { URL(fileURLWithPath: $0, isDirectory: true) }
         if mode == .bundled && playDir == nil { throw URLError(.badURL) }
         if values["context-parity"] == "1" && mode != .bundled { throw URLError(.badURL) }
-        return Launch(mode: mode, api: api, witness: witness, playDir: playDir, csp: values["csp"] == "1", workerPath: values["worker"] ?? "", contextParity: values["context-parity"] == "1")
+        if values["https-cookie-bootstrap"] == "1" && (values["context-parity"] == "1" || ExperimentPolicy.secureBootstrapURL(api) == nil) { throw URLError(.badURL) }
+        return Launch(mode: mode, api: api, witness: witness, playDir: playDir, csp: values["csp"] == "1", workerPath: values["worker"] ?? "", contextParity: values["context-parity"] == "1", httpsCookieBootstrap: values["https-cookie-bootstrap"] == "1")
     }
 }
 
@@ -116,6 +122,7 @@ final class ExperimentController: UIViewController, WKNavigationDelegate {
     private let contentWorld = WKContentWorld.world(name: "TypeSafeBundledOriginHarness")
     private var handler: PlayDirectoryHandler?
     private let status = UILabel()
+    private var bootstrapper: FixtureCookieBootstrap?
     private var originFinalizing = false
     private var finished = false
     private let captureID = UUID().uuidString
@@ -182,6 +189,15 @@ final class ExperimentController: UIViewController, WKNavigationDelegate {
             captureDeadline = Timer.scheduledTimer(withTimeInterval: launch.contextParity ? 30 : 110, repeats: false) { [weak self] _ in self?.captureFailure("native-capture-deadline") }
             if launch.contextParity {
                 web.load(URLRequest(url: entry))
+            } else if launch.httpsCookieBootstrap {
+                guard let bootstrapURL = ExperimentPolicy.secureBootstrapURL(launch.api) else { throw URLError(.badURL) }
+                bootstrapper = FixtureCookieBootstrap(entry: bootstrapURL, store: configuration.websiteDataStore) { [weak self] success in
+                    guard let self, !self.finished else { return }
+                    self.bootstrapper = nil
+                    if success { self.web.load(URLRequest(url: entry)) }
+                    else { self.captureFailure("https-cookie-bootstrap-failed") }
+                }
+                bootstrapper?.start()
             } else {
                 // The fixture's test identity, as the browser journeys set it, for the fixture host only.
                 guard let host = launch.api.host, let cookie = HTTPCookie(properties: [.domain: host, .path: "/", .name: "fixture_session", .value: "bob"]) else { throw URLError(.badURL) }
@@ -269,6 +285,7 @@ final class ExperimentController: UIViewController, WKNavigationDelegate {
             record["registeredMessageHandlers"] = 0
             record["navigationCount"] = self.navigationCount
             record["elapsedMs"] = Int(Date().timeIntervalSince(self.started) * 1000)
+            record["cookieSetup"] = self.launch.httpsCookieBootstrap ? "https-network-bootstrap" : "native-fixture-seed"
             record["cookieJar"] = cookies.map { ["name": $0.name, "domain": $0.domain, "path": $0.path, "secure": $0.isSecure, "httpOnly": $0.isHTTPOnly, "sameSite": $0.sameSitePolicy?.rawValue ?? "none-set"] }
             record["schemeRequests"] = self.handler?.requests ?? []
             record["webKitUserAgent"] = self.web.value(forKey: "userAgent") as? String ?? ""

@@ -44,7 +44,7 @@ for (const script of ['context-parity.js', 'harness.js']) assert.ok(readFileSync
 const report = { scope: 'Unsigned Debug iOS simulator; synthetic bundle, loopback witness and native main-frame polling; not actual Capacitor, client, production or device qualification', source: sh('git', ['rev-parse', 'HEAD'], { cwd: root }), dirty: sh('git', ['status', '--porcelain'], { cwd: root }) !== '', runtime: runtime.name, device: type.name, policyHash, sourceFiles: sourceBeforeBuild, appFiles: readdirSync(app).filter(path => !path.endsWith('.dSYM')).map(path => { const file = join(app, path); try { return { path, sha256: createHash('sha256').update(readFileSync(file)).digest('hex') }; } catch { return null; } }).filter(Boolean), trials: {} };
 const save = () => writeFileSync(join(out, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
 save(); console.log(`Evidence ${out}`);
-const witness = await startWitness();
+const witness = await startWitness({ allowedOrigins: ['capacitor://localhost'] });
 let udid, primaryError, interrupted;
 const onInterrupt = signal => { interrupted = signal; };
 const onSIGINT = () => onInterrupt('SIGINT');

@@ -10,7 +10,7 @@ node experiments/ios-bundled-origin/run.mjs            # builds the app, creates
 node experiments/ios-bundled-origin/run.mjs --skip-build --keep --modes hosted
 ```
 
-Needs Xcode with an iOS simulator runtime that supports the device type (default `iPhone 17`; `--device-type` chooses another) and `xcodegen`. The runner starts the fixture town (`preview/e2e/fixture-server.js`, test identity `bob`) and the header witness (`witness.mjs`), builds `BundledOrigin.app` unsigned, creates a simulator device, installs the app, launches it once per mode, waits for `Documents/results.json`, and writes `.runtime/ios-bundled-origin/report.json` plus a comparison table. The witness answers every request and WebSocket upgrade with the headers it received (cookies by name), to any origin, so the results show exactly what the WebView sent; the fixture town gives the real verdicts.
+Needs Xcode with an iOS simulator runtime that supports the device type (default `iPhone 17`; `--device-type` chooses another) and `xcodegen`. The runner starts the fixture town (`preview/e2e/fixture-server.js`, test identity `bob`) and the header witness (`witness.mjs`), builds `BundledOrigin.app` unsigned, creates a simulator device, installs the app, launches it once per mode, waits for `Documents/results.json`, and writes `.runtime/ios-bundled-origin/report.json` plus a comparison table. The witness records received headers (cookies by name) and permits credentialed HTTP/WebSocket responses only to explicitly configured loopback/custom-scheme fixture origins and itself; unknown origins fail closed. The fixture town independently enforces its real Origin/CSRF/socket policy.
 
 Modes:
 
@@ -42,3 +42,10 @@ Run `node scripts/browser-lock.mjs 'CSP context comparison' -- node experiments/
 `node scripts/browser-lock.mjs 'CSP cancellation regression' -- node experiments/ios-bundled-origin/context-cancellation.mjs` sends SIGTERM only to its own child after that child creates its own simulator, then verifies removal. Synchronous commands can delay signal processing until control returns; forced-kill cleanup is not established.
 
 The actual comparison, ordinary page-poll control/CSP results and interruption evidence are retained in `docs/acceptance/ios-csp-context-20261101/`. They qualify these controlled measurements, not HTTPS cookies, actual Capacitor, real asset/decoder/worker resolution, production/private resources, physical-device behavior or accessibility focus.
+
+
+## HTTPS control under development
+
+`https-origin.mjs` adds an opt-in comparison using the existing browser fixture behind an exact-origin HTTPS loopback front. The front preserves Origin/CSRF/Host and WebSocket upgrade headers; only the test fixture's explicit public-origin configuration changes. A bootstrap response sets the existing synthetic identity with Secure, HttpOnly and SameSite=Lax. A script-disabled, exact-document temporary WebView primes the same fresh nonpersistent store over normal TLS before the page-world measurement; no message handler or trust challenge override is registered.
+
+Run `node scripts/browser-lock.mjs 'HTTPS origin control' -- node experiments/ios-bundled-origin/https-origin.mjs`. It always builds current inputs, generates an ephemeral certificate/key, owns its simulator, verifies an untrusted negative before installing trust only in that simulator, and retains hosted/bundled observations. Generated private-key removal precedes shutdown waits; cleanup results are recorded. An unreadable bundled response is not proof of cookie isolation or server denial. HTTPS workers, actual Capacitor, real game assets/decoders, production authentication and physical-device/focus acceptance remain separate. The actual native HTTPS comparison completed successfully; see `docs/acceptance/ios-host-followup-20261101/` for source/package hashes, the untrusted negative, hosted/custom-scheme observations and cleanup limits.

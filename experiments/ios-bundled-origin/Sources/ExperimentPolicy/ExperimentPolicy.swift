@@ -7,11 +7,16 @@ public struct ExperimentPolicy {
     public init(entry: URL) { self.entry = entry }
 
     public static func isFixtureOrigin(_ url: URL) -> Bool {
-        guard url.scheme == "http", url.host == "127.0.0.1",
+        guard ["http", "https"].contains(url.scheme ?? ""), url.host == "127.0.0.1",
               let port = url.port, (1...65535).contains(port),
               url.user == nil, url.password == nil,
               url.query == nil, url.fragment == nil else { return false }
         return url.path.isEmpty || url.path == "/"
+    }
+
+    public static func secureBootstrapURL(_ origin: URL) -> URL? {
+        guard origin.scheme == "https", isFixtureOrigin(origin) else { return nil }
+        return origin.appendingPathComponent("__host-cookie-bootstrap")
     }
 
     public func allowsDocument(_ url: URL) -> Bool {

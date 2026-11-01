@@ -19,8 +19,8 @@ test('cookies are reported by name only', () => {
   assert.equal(seen.csrfToken, false);
 });
 
-test('the witness echoes request headers over HTTP, preflight and WebSocket, to any origin', async t => {
-  const witness = await startWitness();
+test('the witness echoes request headers over HTTP, preflight and WebSocket, to configured fixture origins', async t => {
+  const witness = await startWitness({ allowedOrigins: ['capacitor://localhost', 'http://127.0.0.1:5173'] });
   t.after(() => witness.close());
   const response = await fetch(`${witness.origin}/witness/post`, { method: 'POST', headers: { Origin: 'capacitor://localhost', Cookie: 'fixture_session=bob', 'X-CSRF-Token': 'fixture-bob', 'Content-Type': 'application/json' }, body: '{}' });
   assert.equal(response.status, 200);
@@ -35,7 +35,7 @@ test('the witness echoes request headers over HTTP, preflight and WebSocket, to 
   assert.equal(preflight.status, 204);
   assert.equal(preflight.headers.get('access-control-allow-headers'), 'content-type, x-csrf-token');
   const anonymous = await fetch(`${witness.origin}/witness/get`);
-  assert.equal(anonymous.headers.get('access-control-allow-origin'), '*');
+  assert.equal(anonymous.headers.get('access-control-allow-origin'), null);
   assert.equal(anonymous.headers.get('access-control-allow-credentials'), null);
   assert.equal((await anonymous.json()).origin, null);
   const upgrade = await new Promise((resolve, reject) => {
@@ -83,4 +83,22 @@ test('runner refuses a directory that cannot match its fixed play manifest', () 
   const run = spawnSync(process.execPath, ['experiments/ios-bundled-origin/run.mjs', '--play-dir', '/tmp/unrelated-play-bundle'], { encoding: 'utf8' });
   assert.notEqual(run.status, 0);
   assert.match(run.stderr, /play-dir must match dist\/play/);
+});
+
+
+test('witness denies unconfigured origins and validates loopback-only origin configuration', async t => {
+  const witness = await startWitness(); t.after(() => witness.close());
+  const denied = await fetch(`${witness.origin}/witness/get`, { headers: { Origin: 'capacitor://localhost', Cookie: 'fixture_session=bob' } });
+  assert.equal(denied.status, 403);
+  assert.equal(denied.headers.get('access-control-allow-origin'), null);
+  assert.equal(denied.headers.get('access-control-allow-credentials'), null);
+  assert.equal(JSON.stringify(await denied.json()).includes('bob'), false);
+  const status = await new Promise((resolve, reject) => {
+    const ws = new WebSocket(`${witness.origin.replace('http', 'ws')}/witness/socket`, { headers: { Origin: 'https://evil.test' } });
+    ws.on('unexpected-response', (_request, response) => { response.resume(); resolve(response.statusCode); });
+    ws.on('error', reject);
+  });
+  assert.equal(status, 403);
+  for (const origin of ['*', 'null', 'https://evil.test', 'https://user@127.0.0.1:1234', 'http://127.0.0.1:1234/path', 'http://127.0.0.1:1234?x=1', 'http://localhost:1234', 'http://127.0.0.1:0', 'http://127.0.0.1:65536']) await assert.rejects(startWitness({ allowedOrigins: [origin] }), /fixture origin/);
+  await assert.rejects(startWitness({ host: '0.0.0.0' }), /loopback/);
 });
