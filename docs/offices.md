@@ -106,6 +106,16 @@ Repeated pieces are one instanced draw per finish. One-off pieces are one static
 
 The surfaces are three shared 512 px seeded-noise maps, drawn in idle slots after arrival. The exported package, with its GLBs, editable `.blend`, textures, materials and receipts, is in `assets/office-penthouse/` (see its README), and its manifest entries are `repo-penthouse-*` in `docs/design/office-ipic/asset-manifest.json`. Reviews: `node scripts/export-office-penthouse.mjs preview` (asset preview) and `node preview/e2e/office-penthouse-review.mjs` (runtime, two accounts, noon and dusk).
 
+**Kit finish (#744 under #738).** The penthouse takes the city-kit finish the street follows
+(`render-quality.js readFinishPreference`: `?finish=pink-jet-age`, or the stored choice; classic
+by default). `preview/src/office-kit-finish.js` is render-only: under Pink Jet-Age the champagne
+bronze becomes satin chrome, the chair frames and display stands brushed steel, the lamp shades
+ivory, the mezzanine guard and terrace rails mint glass and the arrival core and back wall ivory.
+The art, its footprints, zones, instances, shadows, lamps and the per-vertex tints (walnut, boucle,
+blush and the one TypeSafe-pink accent) are the same under every finish, the idle displays stay
+dark glass with no content, and exports stay classic (`preview/tests/office-kit-finish.test.js`).
+The asset-preview fixture takes the same `?finish=`.
+
 ## Retired personal offices
 
 Personal workspace APIs and stores are no longer part of the runtime. Existing
