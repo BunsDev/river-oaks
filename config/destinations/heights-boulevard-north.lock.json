@@ -2,14 +2,15 @@
   "id": "heights-boulevard-north",
   "kit": "city-kit-1",
   "seed": 1928,
-  "hash": "5f84cb506bd462ce",
-  "recipeHash": "2656ee0b100c65d5",
+  "hash": "d053c7eae0c05e50",
+  "geometry": "398d0f21e3ab3f97",
+  "recipeHash": "2e268ea4a8abfb72",
   "overridesHash": "174b1d836bafee25",
   "stats": {
-    "pieces": 257,
+    "pieces": 253,
     "buildings": 21,
-    "solids": 83,
+    "solids": 81,
     "materials": 7,
-    "triangles": 114380
+    "triangles": 114300
   }
 }

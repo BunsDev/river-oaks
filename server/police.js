@@ -24,7 +24,7 @@ const within = (forward, from, to, degrees) => {
 };
 const reject = (error, message) => ({ ok: false, error, message });
 
-export function createPolice({ players, starsOf, eligible, navigation, posts, sight, arrest, changed, observe = () => {}, evading = () => false, participating = () => false }) {
+export function createPolice({ players, starsOf, eligible, navigation, posts, sight, arrest, changed, observe = () => {}, evading = () => false, participating = () => false, alarm = () => {} }) {
   // subdued: player id -> the officer whose grab landed; only that officer's arrest or release ends it.
   let units = [], surrendered = new Set(), subdued = new Map(), cursor = 0;
   // Paths are disposable caches, not authority. Restore recalculates them from current
@@ -91,7 +91,7 @@ export function createPolice({ players, starsOf, eligible, navigation, posts, si
           const gap = distance(unit.position, player.position);
           // The officer whose grab landed arrests from where it holds the player (grab reach).
           if (gap <= (subdued.get(player.id) === unit.id ? R.grabReach : R.arrestRange) && (surrendered.has(player.id) || subdued.has(player.id) || player.health === 0)) {
-            if (unit.state !== 'arrest') { unit.state = 'arrest'; unit.since = at; unit.arrestAt = at; }
+            if (unit.state !== 'arrest') { unit.state = 'arrest'; unit.since = at; unit.arrestAt = at; alarm([...unit.position], 'arrest'); }
             if (at - unit.arrestAt >= R.arrestMs) {
               arrest(player); surrendered.delete(player.id); subdued.delete(player.id);
               for (const other of units) if (other.targetId === player.id) returning(other, at);
@@ -104,7 +104,7 @@ export function createPolice({ players, starsOf, eligible, navigation, posts, si
             unit.closeSince = offering ? unit.closeSince ?? at : null;
             if (offering && at - unit.closeSince >= R.refusalMs && at >= unit.recoverUntil && !units.some(other => other.targetId === player.id && other.state === 'grab')
               && within(facing(unit.yaw), unit.position, player.position, R.fieldOfViewDegrees / 2)) {
-              unit.state = 'grab'; unit.since = at; unit.yaw = yawToward(unit.position, player.position); unit.grabDirection = facing(unit.yaw); routes.delete(unit.id);
+              unit.state = 'grab'; unit.since = at; unit.yaw = yawToward(unit.position, player.position); unit.grabDirection = facing(unit.yaw); routes.delete(unit.id); alarm([...unit.position], 'grab');
             }
           }
         } else {

@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { VEHICLES, drivingInput, chauffeurCommand, vehicleKind } from '../src/vehicle-config.js';
+import { VEHICLES, drivingInput, chauffeurCommand, vehicleKind, vehicleChauffeured, riderSeat, vehicleShared } from '../src/vehicle-config.js';
+import { canopyHeightAt } from '../src/ribbonwing-design.js';
 import { createRoadVehicle } from '../src/road-vehicles.js';
 
 test('chauffeur inputs accept only finite bounded controls and known commands',()=>{
@@ -21,12 +22,14 @@ test('Pink Rolls-Royce has a compact four-wheel footprint and full-height cabin'
   assert.ok(size.x<4.9&&size.z<1.7&&size.y>1.8,`compact dimensions ${size.toArray()}`);
  } finally { model.dispose(); }
 });
-for(const kind of ['rolls','motorcycle'])test(`${kind}: model, wheels and seats use real-scale vehicle dimensions with bounded rendering`,()=>{
+for(const kind of ['rolls','motorcycle','hover'])test(`${kind}: model, wheels and seats use real-scale vehicle dimensions with bounded rendering`,()=>{
  const model=createRoadVehicle(kind),spec=VEHICLES[kind];
  assert.equal(model.wheels.length,spec.wheels.length);
  assert.equal(model.wheelTreads.length,spec.wheels.length);
- let draws=0,triangles=0;
- model.object.traverse(o=>{if(o.isMesh){draws++;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;for(const n of o.geometry.attributes.position.array)assert.ok(Number.isFinite(n));}});
+ // Count what renders: the Ribbonwing's distance levels are hidden behind its LOD.
+ let draws=0,triangles=0;const shown=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
+ for(const lod of model.object.getObjectsByProperty('isLOD',true)){lod.autoUpdate=false;lod.levels.forEach((level,i)=>{level.object.visible=i===0;});}
+ model.object.traverse(o=>{if(o.isMesh){for(const n of o.geometry.attributes.position.array)assert.ok(Number.isFinite(n));if(!shown(o))return;draws++;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;}});
  const size=new THREE.Box3().setFromObject(model.object).getSize(new THREE.Vector3());
  assert.ok(size.x>spec.length*.9&&size.x<spec.length*1.12,`length ${size.x}`);
  assert.ok(draws<65,`${draws} draw calls`);assert.ok(triangles<130000,`${triangles} triangles`);
@@ -35,10 +38,10 @@ for(const kind of ['rolls','motorcycle'])test(`${kind}: model, wheels and seats 
  model.dispose();assert.equal(model.object.children.length,0);
 });
 
-import { fitCarriageToGround, stepCarriage } from '../src/carriage-motion.js';
+import { fitCarriageToGround, stepCarriage , stepHoverLift, hoverClear } from '../src/carriage-motion.js';
 import { carriageContains, findCarriageParking } from '../src/carriage-parking.js';
 import { readFileSync } from 'node:fs';
-for(const kind of ['rolls','motorcycle'])test(`${kind}: parking, swept driving, steering tyre contact and exit envelope use its own size`,()=>{
+for(const kind of ['rolls','motorcycle','hover'])test(`${kind}: parking, swept driving, steering tyre contact and exit envelope use its own size`,()=>{
  const world=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url))),model=createRoadVehicle(kind);
  const pose={position:[world.walkSpawn[0],0,-world.walkSpawn[1]],flying:false,altitude:0};
  const parked=findCarriageParking(world,pose,[],1,false,kind);assert.ok(parked,'parking near the actual spawn');
@@ -119,4 +122,84 @@ test('the plaza bicycle is a two-wheel frame under two metres with a saddle at t
   model.updateSteering(.3);
   assert.ok(Math.abs(model.steering.rotation.y-.3*.6)<1e-9,'the fork turns like the motorcycle');
  } finally {model.dispose();}
+});
+test('the Ribbonwing stands on three pad contacts, pilots from the left seat and its mechanisms follow accepted state',()=>{
+ const spec=VEHICLES.hover,model=createRoadVehicle('hover');
+ try {
+  assert.equal(spec.label,'Ribbonwing');assert.equal(spec.hover,true);assert.equal(spec.flies,true);assert.equal(spec.steeredWheels,0);assert.equal(spec.seats,2);
+  assert.equal(vehicleKind('hover'),'hover');assert.equal(vehicleChauffeured('hover'),false);assert.equal(vehicleChauffeured('rolls'),true);
+  assert.deepEqual(riderSeat(spec),spec.driverSeat,'the landowner rides in the pilot seat');assert.ok(spec.driverSeat[2]>0&&spec.passengerSeat[2]<0,'pilot on the left, passenger on the right');
+  assert.equal(spec.driverSeat[0],spec.passengerSeat[0],'side by side');
+  assert.equal(model.wheels.length,3);assert.equal(model.spinners.length,0);
+  for(const wheel of model.wheels){const meshes=[];wheel.traverse(m=>{if(m.isMesh)meshes.push(m);});assert.equal(meshes.length,1);assert.equal(meshes[0].material.name,'Road tyre rubber');assert.equal(meshes[0].visible,false);}
+  assert.ok(model.wheelTreads.every(samples=>samples.length>50));
+  const size=new THREE.Box3().setFromObject(model.ribbonwing.levels.near).getSize(new THREE.Vector3());
+  assert.ok(Math.abs(size.z-spec.width)<.12,`span ${size.z}`);assert.ok(size.y>spec.height-.12&&size.y<spec.height+.05,`height ${size.y}`);
+  // Mechanisms follow the state fed in: parked shut, boarding open, aloft gear up and fans at hover.
+  const canopy=model.object.getObjectByName('Ribbonwing canopy'),gear=model.object.getObjectByName('Ribbonwing left foot');
+  for(let now=0;now<=3000;now+=16)model.animate(now,0);
+  assert.ok(Math.abs(canopy.rotation.z)<1e-9);assert.equal(model.ribbonwing.rig.value.fanRate,0,'an empty parked craft is silent');
+  model.setFlightState({phase:'boarding',boarding:true});for(let now=3016;now<=6000;now+=16)model.animate(now,0);
+  assert.ok(canopy.rotation.z<-1,'the canopy opens up and back for boarding');assert.ok(model.ribbonwing.rig.value.steps>.99);
+  model.setFlightState({phase:'hover',boarding:false,occupied:true,altitude:6});for(let now=6016;now<=12000;now+=16)model.animate(now,0);
+  assert.ok(Math.abs(canopy.rotation.z)<1e-9);assert.equal(model.ribbonwing.rig.value.steps,0);assert.ok(Math.abs(gear.rotation.x)>1.4,'the gear retracts aloft');
+  const rotor=model.object.getObjectByName('Ribbonwing left fan rotor'),before=rotor.rotation.y;model.animate(12016,0);assert.ok(rotor.rotation.y!==before,'fans spin');
+  // Reduced motion slows the fans to a visible crawl and dims the thruster glow, without stopping the craft.
+  model.animate(12032,0,true);const slow=rotor.rotation.y;model.animate(12048,0,true);assert.ok(Math.abs(rotor.rotation.y-slow)<.11);
+  model.updateSteering(.3);assert.ok(Math.abs(model.steering.rotation.x-.3*.6)<1e-9,'the side stick tilts with steering');
+  assert.ok(model.object.getObjectByName('Chrome jewel glints'));
+ } finally {model.dispose();assert.equal(model.object.children.length,0);}
+});
+test('the Ribbonwing parks on the same streets as the car with both seats inside its envelope and canopy headroom',()=>{
+ const world=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url))),spec=VEHICLES.hover;
+ const pose={position:[world.walkSpawn[0],0,-world.walkSpawn[1]],flying:false,altitude:0};
+ const parked=findCarriageParking(world,pose,[],1,false,'hover');assert.ok(parked,'parking near the spawn');
+ assert.equal(parked.vehicle,'hover');
+ for(const seat of [spec.driverSeat,spec.passengerSeat]) {
+  assert.ok(carriageContains({vehicle:'hover',position:[0,0,0],yaw:0},seat[0],seat[1],seat[2]),`seat ${seat} inside the envelope`);
+  for(const [dx,dz] of [[0,0],[.1,.12],[.1,-.12],[-.1,.12],[-.1,-.12]])assert.ok(canopyHeightAt(seat[0]+dx,seat[2]+dz)>seat[1]+1,`headroom over seat ${seat}`);
+ }
+ assert.equal(spec.driverSeat[1]-spec.driverFloor,spec.passengerSeat[1]-spec.passengerFloor);
+});
+
+test('the Ribbonwing climbs with lift, flies level, stops under a blocked sky, respects the ceiling and lands before anyone steps out',()=>{
+ const model=createRoadVehicle('hover'),spec=VEHICLES.hover;
+ try {
+  let sky=Infinity;
+  const env={groundAt:()=>0,isFree:()=>true,canFly:(x,height,z)=>height<sky,flightCeiling:20,wheelTreads:model.wheelTreads,canOccupy:next=>(next.altitude??0)>.1?hoverClear(next,env):true};
+  const state={vehicle:'hover',position:[0,0,0],yaw:0,speed:0,distance:0,steering:0,altitude:0};
+  fitCarriageToGround(state,env.groundAt,model.wheelTreads);
+  assert.ok(state.wheelOffsets.some(offset=>offset!==0)||state.wheelOffsets.every(offset=>Math.abs(offset)<1e-9),'grounded fit ran');
+  assert.equal(VEHICLES.rolls.flies,undefined,'the car does not fly');
+  stepHoverLift({...state,vehicle:'rolls'},env,{lift:1},1/60);
+  for(let i=0;i<120;i++)stepHoverLift(state,env,{lift:1},1/60);
+  assert.ok(state.altitude>2&&state.altitude<8.01,`climbing ${state.altitude}`);
+  stepCarriage(state,env,{forward:1},1/60);
+  assert.ok(state.position[0]<0,'flies forward');assert.ok(Math.abs(state.roll)<.2);assert.equal(state.pitch,0);assert.ok(state.wheelOffsets.every(offset=>offset===0),'nothing presses on the suspension in the air');
+  assert.equal(state.position[1],0,'position stays the ground beneath; altitude is separate');
+  // A roof just above the hull stops the climb where it is.
+  sky=state.altitude+spec.bodyHeight+.001;const held=state.altitude;
+  for(let i=0;i<60;i++)stepHoverLift(state,env,{lift:1},1/60);
+  assert.ok(Math.abs(state.altitude-held)<.01,`blocked sky holds ${state.altitude} at ${held}`);
+  sky=Infinity;
+  for(let i=0;i<60*25;i++)stepHoverLift(state,env,{lift:1},1/60);
+  assert.ok(state.altitude<=20&&state.altitude>19.5,`ceiling ${state.altitude}`);
+  // Landing ignores lift and ends on the ground with the flag cleared.
+  state.landing=true;
+  for(let i=0;i<60*15&&state.altitude>0;i++)stepHoverLift(state,env,{lift:1},1/60);
+  assert.equal(state.altitude,0);assert.equal(state.landing,false);
+  fitCarriageToGround(state,env.groundAt,model.wheelTreads);
+ } finally {model.dispose();}
+});
+
+test('Jev chauffeurs only the pink car; the motorcycle is shared and ridden by its driver',()=>{
+ assert.equal(vehicleChauffeured('rolls'),true);
+ assert.equal(vehicleShared('rolls'),false,'the car stays the owner\'s');
+ assert.equal(vehicleChauffeured('motorcycle'),false,'the player drives the motorcycle');
+ assert.equal(vehicleShared('motorcycle'),true,'every account may ride the motorcycle');
+ assert.equal(vehicleChauffeured('bicycle'),false);
+ for(const value of ['hover','unknown',null,undefined,42])assert.equal(vehicleChauffeured(value)||vehicleShared(value),false,`${value} is neither chauffeured nor shared until its spec says so`);
+ // A chauffeured kind seats its rider as a passenger; the driver seat is ahead of it in the car and behind the bars on the bike.
+ assert.ok(VEHICLES.rolls.passengerSeat[0]>VEHICLES.rolls.driverSeat[0]);
+ assert.ok(VEHICLES.motorcycle.driverSeat[0]<VEHICLES.motorcycle.passengerSeat[0]&&VEHICLES.motorcycle.grips.every(grip=>grip[0]<VEHICLES.motorcycle.driverSeat[0]));
 });

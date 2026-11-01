@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { KIT_CONVENTIONS, KIT_MATERIALS, KIT_PIECES, KIT_STYLES } from '../../shared/city-kit/catalog.js';
+import { KIT_CONVENTIONS, KIT_FINISHES, KIT_MATERIALS, KIT_PIECES, KIT_STYLES, PINK_JET_AGE, kitFinish } from '../../shared/city-kit/catalog.js';
 import { assembleNeighborhood, canonicalJSON, insideRect, placePlan, walkableConnectivity } from '../../shared/city-kit/assemble.js';
 import { buildCityKit } from '../src/city-kit/render.js';
 
@@ -49,7 +49,7 @@ test('a seed varies only what the recipe leaves open', () => {
     assert.deepEqual(piecesOf(plan, 'bayou-market-commons/bayou-lantern-tower'), piecesOf(base, 'bayou-market-commons/bayou-lantern-tower'));
   }
   // Streams are per stable ID: re-rhythming one block leaves the other's pieces unchanged.
-  const changed = structuredClone(commons); changed.blocks[1].bays = [6, 7.5]; changed.blocks[1].storeys = [2, 3];
+  const changed = structuredClone(commons); changed.layout.quarters[1].bays = [6, 7.5]; changed.layout.quarters[1].storeys = [2, 3];
   const regenerated = assembleNeighborhood(changed);
   assert.notDeepEqual(piecesOf(regenerated, 'bayou-market-commons/garden-court/'), piecesOf(base, 'bayou-market-commons/garden-court/'));
   assert.deepEqual(piecesOf(regenerated, 'bayou-market-commons/market-row/'), piecesOf(base, 'bayou-market-commons/market-row/'));
@@ -80,7 +80,7 @@ test('invalid recipes and overrides fail with a reason instead of producing a br
     [recipe => { recipe.overrides['bayou-market-commons/market-row/parcel-0'] = { set: { glass: 'mirror' } }; }, /cannot set glass/],
     [recipe => { recipe.overrides['elsewhere/piece'] = { suppress: true }; }, /stable piece ID/],
     [recipe => { recipe.additions.push({ id: 'bench-in-shop', piece: 'furniture/bench', at: [20, 12] }); }, /not inside walkable ground/],
-    [recipe => { recipe.blocks[0].style = 'brutalist'; }, /style/],
+    [recipe => { recipe.layout.quarters[0].style = 'brutalist'; }, /style/],
     [recipe => { recipe.streets[0].to = [47, 5]; }, /must run east/],
     [recipe => { recipe.kit = 'city-kit-0'; }, /kit must be/],
     [recipe => { recipe.furniture.push({ ...recipe.furniture[0] }); }, /item id/],
@@ -239,4 +239,128 @@ test('street furniture speaks the District vocabulary: orbital lamps, grates, po
   assert.ok(grate.material.map instanceof THREE.DataTexture);
   let disposed = false; grate.material.map.addEventListener('dispose', () => { disposed = true; });
   kit.userData.dispose(); assert.ok(disposed, 'the grate texture is released with the kit');
+});
+
+test('no two parallel faces of a neighbourhood fight for depth within sight (depth-layer-audit.js)', async () => {
+  const { findDepthFights } = await import('../src/depth-layer-audit.js');
+  // The planter's mulch lay 1.5 mm over a brass slab and crawled through it from about 20 m (2026-10-26).
+  // Every city-kit neighbourhood in the destinations folder, so new ones are held to it too.
+  const { readdirSync } = await import('node:fs');
+  const recipes = readdirSync(new URL('../../config/destinations/', import.meta.url)).filter(file => file.endsWith('.json') && !file.endsWith('.lock.json'))
+    .map(file => [file.slice(0, -5), read(file.slice(0, -5))]).filter(([, recipe]) => recipe.kit);
+  assert.ok(recipes.length >= 8, `${recipes.length} city-kit neighbourhoods`);
+  for (const [name, recipe] of recipes) {
+    const kit = buildCityKit(assembleNeighborhood(recipe), { groundAt: () => 0, ground: 0 });
+    const fights = findDepthFights(kit, { groundAt: () => 0 });
+    assert.deepEqual(fights.map(({ a, b, gap, size, fightMetres, at }) => ({ a, b, gap: +gap.toFixed(4), size: +size.toFixed(2), fightMetres: Math.round(fightMetres), at: at.map(v => +v.toFixed(1)) })), [], name);
+    kit.userData.dispose();
+  }
+});
+
+test('finishes recolour named slots only, and classic is the unchanged default', () => {
+  assert.deepEqual(Object.keys(KIT_FINISHES.classic.materials), []);
+  assert.equal(kitFinish(), KIT_FINISHES.classic);
+  assert.throws(() => kitFinish('brutalist'), /Unknown kit finish brutalist/);
+  // TypeSafe pink is fixed brand colour, not a proposal.
+  assert.equal(PINK_JET_AGE.pink, '#F486A1');
+  for (const [name, finish] of Object.entries(KIT_FINISHES))
+    for (const [slot, spec] of Object.entries(finish.materials)) {
+      assert.ok(KIT_MATERIALS[slot], `${name} recolours unknown slot ${slot}`);
+      // A finish changes appearance only: never the PBR surface, glass or lantern behaviour.
+      for (const field of Object.keys(spec)) assert.ok(['color', 'roughness', 'metalness'].includes(field), `${name}/${slot} sets ${field}`);
+    }
+});
+
+test('the Pink Jet-Age finish keeps plans, locks, geometry and draw calls identical', async () => {
+  const THREE = await import('three');
+  for (const [recipe, name] of [[commons, 'bayou-market-commons'], [yale, 'nineteenth-and-yale']]) {
+    const plan = assembleNeighborhood(recipe), before = canonicalJSON(plan);
+    const build = finish => buildCityKit(plan, { groundAt: () => 0, ground: 0, ...(finish ? { finish } : {}) });
+    const summary = kit => { const meshes = []; kit.traverse(item => { if (item.isMesh) meshes.push([item.parent?.name ?? '', item.name, item.geometry.attributes.position.count]); }); return meshes; };
+    const classic = build(), defaulted = build('classic'), pink = build('pink-jet-age');
+    // Rendering never writes to the plan, so the committed lock still reproduces.
+    assert.equal(canonicalJSON(plan), before); assert.equal(plan.hash, read(`${name}.lock`).hash);
+    // Classic is the default. Under the finish, massing, ground, furniture and signs keep
+    // the same meshes and vertices; only facade detail may grow by the rounded forms.
+    assert.deepEqual(summary(defaulted), summary(classic));
+    const isDetail = ([parent]) => parent.endsWith(' detail');
+    assert.deepEqual(summary(pink).filter(entry => !isDetail(entry)), summary(classic).filter(entry => !isDetail(entry)));
+    const classicStats = classic.userData.stats(), pinkStats = pink.userData.stats(), drawCalls = summary(pink).length, added = pinkStats.triangles - classicStats.triangles;
+    // The rounded forms are present, and bounded.
+    assert.ok(added > 0 && added < 12000, `${name}: forms add ${added} triangles`);
+    assert.ok(pinkStats.materials - classicStats.materials <= 1, `${name}: forms add at most one shared slot`);
+    assert.ok(drawCalls <= KIT_CONVENTIONS.budgets.drawCallsPerNeighborhood, `${name}: ${drawCalls} draw calls`);
+    assert.equal(classic.userData.finish, 'classic'); assert.equal(pink.userData.finish, 'pink-jet-age');
+    const colourOf = (kit, slot) => { let found; kit.traverse(item => { if (item.isMesh && item.material.name === `city-kit/${slot}`) found = item.material; }); return found; };
+    let recoloured = 0;
+    for (const [slot, spec] of Object.entries(KIT_FINISHES['pink-jet-age'].materials)) {
+      const classicMaterial = colourOf(classic, slot), pinkMaterial = colourOf(pink, slot);
+      if (!classicMaterial) continue;
+      assert.equal(pinkMaterial.userData.finish, 'pink-jet-age');
+      assert.equal(`#${pinkMaterial.color.getHexString()}`, `#${new THREE.Color(spec.color).getHexString()}`, `${name} ${slot}`);
+      // Classic draws every slot in its catalog colour, untouched by the finish table.
+      if (!KIT_MATERIALS[slot].surface) assert.equal(`#${classicMaterial.color.getHexString()}`, `#${new THREE.Color(KIT_MATERIALS[slot].color).getHexString()}`, `classic ${slot}`);
+      recoloured++;
+    }
+    assert.ok(recoloured >= 6, `${name}: ${recoloured} recoloured slots in use`);
+    // Pink leads on every street: the luxury Commons once rendered without any (#749 review).
+    // Every block with storefronts shows pink in its own facade detail.
+    const brand = new THREE.Color(PINK_JET_AGE.pink).getHexString();
+    const storefrontBlocks = new Set(plan.pieces.filter(piece => piece.piece === 'building/shell' && piece.variant).map(piece => piece.id.split('/')[1]));
+    assert.ok(storefrontBlocks.size >= 2, `${name}: storefront blocks`);
+    for (const block of storefrontBlocks) {
+      const detail = pink.children.find(child => child.name === `${block} detail`); let found = false;
+      detail?.traverse(item => { if (item.isMesh && item.material.color?.getHexString() === brand) found = true; });
+      assert.ok(found, `${name}/${block}: no TypeSafe pink in its facade detail`);
+    }
+    for (const kit of [classic, defaulted, pink]) kit.userData.dispose();
+  }
+});
+
+test('switching finishes back and forth releases every material it made', () => {
+  const plan = assembleNeighborhood(commons);
+  for (const finish of ['pink-jet-age', 'classic', 'pink-jet-age']) {
+    const kit = buildCityKit(plan, { groundAt: () => 0, ground: 0, finish }), materials = new Set(), geometries = new Set();
+    kit.traverse(item => { if (item.isMesh) { materials.add(item.material); geometries.add(item.geometry); } });
+    let released = 0;
+    for (const resource of [...materials, ...geometries]) resource.addEventListener('dispose', () => released++);
+    kit.userData.dispose();
+    assert.equal(released, materials.size + geometries.size, `${finish}: every material and geometry released`);
+  }
+});
+
+test('no street lamp stands in a tree pit: where the spacings coincide the lamp moves between two trees', () => {
+  const { readdirSync } = process.getBuiltinModule('node:fs');
+  const names = readdirSync(new URL('../../config/destinations/', import.meta.url)).filter(f => f.endsWith('.json') && !f.endsWith('.lock.json')).map(f => f.slice(0, -5));
+  let lamps = 0;
+  for (const name of names) {
+    const plan = assembleNeighborhood(read(name)), trees = plan.pieces.filter(piece => piece.piece === 'landscape/street-tree');
+    for (const lamp of plan.pieces.filter(piece => piece.piece === 'furniture/lamp')) {
+      lamps++;
+      for (const tree of trees) assert.ok(Math.hypot(lamp.at[0] - tree.at[0], lamp.at[1] - tree.at[1]) >= 1, `${lamp.id} stands in ${tree.id}'s pit`);
+    }
+  }
+  assert.ok(lamps > 100, `${lamps} lamps checked`);
+  // A street whose lamp spacing is a multiple of its tree spacing: every lamp would land on a trunk.
+  const street = { id: 'probe', from: [0, 0], to: [96, 0], lane: 6, sidewalk: 3.5, trees: { offset: 4, spacing: 8 }, lamps: { offset: 4, spacing: 24 } };
+  const plan = assembleNeighborhood({ ...structuredClone(commons), id: 'lamp-probe', streets: [street], plazas: [], landmarks: [], furniture: [], context: [], layout: undefined, blocks: undefined, overrides: {}, additions: [] });
+  const placed = piecesOf(plan, 'lamp-probe/probe/lamp-');
+  assert.deepEqual(placed.map(lamp => lamp.at[0]), [8, 32, 56, 80], 'each lamp moves half a tree spacing, between trees');
+});
+
+test('no two solids overlap in any committed recipe, except hedge planters that continue one another', () => {
+  const { readdirSync } = process.getBuiltinModule('node:fs');
+  const names = readdirSync(new URL('../../config/destinations/', import.meta.url)).filter(f => f.endsWith('.json') && !f.endsWith('.lock.json')).map(f => f.slice(0, -5));
+  const overlap = (a, b) => Math.min(a[2], b[2]) - Math.max(a[0], b[0]) > .01 && Math.min(a[3], b[3]) - Math.max(a[1], b[1]) > .01;
+  let checked = 0;
+  for (const name of names) {
+    const { solids } = assembleNeighborhood(read(name));
+    checked += solids.length;
+    for (let i = 0; i < solids.length; i++) for (let j = i + 1; j < solids.length; j++) {
+      const a = solids[i], b = solids[j];
+      if (a.id.split('/leg-')[0] === b.id.split('/leg-')[0] || (a.kind === 'hedge' && b.kind === 'hedge')) continue;
+      assert.ok(!overlap(a.rect, b.rect), `${name}: ${a.id} overlaps ${b.id}`);
+    }
+  }
+  assert.ok(checked > 1000, `${checked} solids checked`);
 });

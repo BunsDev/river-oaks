@@ -3,7 +3,7 @@
 Status: contract increment #457 is on main, and so are the editor, rendering and
 persistence stack (#461, #462, #464), #441's guided creation (through #496),
 human-only characters, Jevica-only invited office access and the expanded Studio.
-#484 carries the remaining #441 tailoring fixes. Release acceptance remains
+#484 (merged 2026-10-18) added the remaining #441 tailoring fixes. Release acceptance remains
 subject to the verification and device gates below.
 
 ## Decision and evidence
@@ -184,9 +184,8 @@ The contract is the seam the next increments build on. Each must keep
   through `migrateCharacterAppearance`, and must pass in both the memory and Redis rooms.
   Appearance never grants flight, speed, admin or companion privileges.
 
-Codex's drafts #461 (editor), #462 (render) and #464 (persistence) are stacked on
-this PR, branched from its earlier head `b6ef443e`. The base gained a plain merge of
-`main` here, not a rewrite, so each can merge the new head forward.
+Codex's #461 (editor), #462 (render) and #464 (persistence) were stacked on this
+PR, branched from its earlier head `b6ef443e`; all three merged on 2026-10-18.
 
 ## Supported scope and quality gates
 Current direction (2026-10-18): human characters only, with ultra-realistic human
@@ -733,6 +732,79 @@ but still needs hosted acceptance. Current exact
 test counts, completed full-profile receipt and later reopen verification belong
 in the task ledger.
 
+### Your own: player-made characters (2026-10-26)
+
+Val asked for the studio to start from a random character, with control down to the
+face (nose, mouth, eyes, cheeks, brows), skin, height, body type, body and gender, hair, outfit,
+shoes and eye colour. This supersedes, for this feature only, the earlier rule to keep
+face and body controls unavailable. The other rules still hold:
+
+- exact validation;
+- pinned assets with receipts;
+- human, generic characters, with no uploads and no likeness;
+- graphics tier and quality never stored in the record;
+- the per-figure draw and resource budgets.
+
+Ledger: `docs/superpowers/plans/2026-10-26-character-recipes.md`.
+
+**The record.** A player-made character is a version 3 definition with
+`appearanceId: 'custom-human'`. Its `parameters` are a recipe (`character-recipe.js`,
+catalogue `river-oaks-recipes-v1`):
+
+- **body:** one of the six shipped CC0 bodies, a feminine or masculine frame with the
+  outfit made for it;
+- **height:** 150–200 cm;
+- **build:** body type, slim (-100) to broad (100) in steps of 5, added 2026-10-29 (Val's
+  ask that the random start also varies the body type). The shipped bodies carry no
+  body morphs, so the build is a width scale of the figure (up to 8% either way) at the
+  recipe's exact height, not a different person. A record published before the build
+  has no `build` field; it validates and renders as a neutral build, and its canonical
+  copy carries `build: 0`, so stored revisions still equip and select exactly;
+- **face:** sixteen sliders over the bodies' face targets, in steps of 5, capped at a 0.7
+  weight, with left and right moving together;
+- **colours:** skin tone, eye colour, hair colour, outfit colour and shoe colour;
+- **hairstyle:** one of the hairstyles.
+
+Every value is an integer or a catalogue key. The server accepts a publication only if
+rebuilding it from `(ownerId, recipe, revision)` gives exactly the same record, as it
+does for the authored looks. `rig` and `outfit` are the recipe's body, and the record
+carries no free text and no asset paths. No new assets were downloaded; the four bodies
+that were not pinned before are now pinned, with receipts.
+
+**The studio.**
+
+- "Your own" is the first chip in the character roster. On the first open in a visit,
+  the studio stages a random recipe as an unsaved draft; the town look changes only on
+  Wear. A visit is the browser tab's session: after a reload, a reconnect or travel to
+  another world, the studio reopens on the worn look.
+- In Your own, the recipe editor replaces the wardrobe and colour steps. "Surprise me"
+  re-rolls every category that isn't locked; each category has its own roll and its own
+  "Keep … when surprising" lock. Undo walks back through every edit, to the worn look.
+- Choosing an authored character returns to the authored steps, with its colours.
+
+**Rendering.** Players and peers build the same figure from the recipe:
+
+- `avatars.js`, `player-avatar.js` and `remote-players.js` render it in town, and the
+  hero and studio preview render it in the studio;
+- the face is baked from the targets at load, as for residents;
+- the hairstyle is moved onto the head and refitted;
+- skin, hair and garments are tinted, and an iris texture is drawn for the chosen eyes;
+- skin tones are albedos, stepped evenly from just above the shipped light skins to
+  just below the deep ones, so each is a near-uniform gain of a real skin texture. Used
+  as albedos, display colours needed nearly 3x in blue, and the lightest tone rendered
+  chalk-white.
+
+Builds older than `custom-human` show the account's authored fallback.
+
+**Deletion.** A recipe lives in the same per-account character store as any other
+draft or selection. Account deletion removes it with the rest, as described below,
+and no deletion path changes.
+
+**Not yet available.**
+
+- Separate tops, bottoms, dresses and suits on any body, and more shoes, need the pinned
+  MakeHuman asset download and Blender rebuilds, which await authorization.
+- Body build (slim to broad) and two-tone outfits are planned next.
 
 ### Signed account deletion
 

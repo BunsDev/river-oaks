@@ -222,7 +222,37 @@
         }
       ],
       "adjacent": [
-        "studewood"
+        "studewood",
+        "typesafe-place"
+      ]
+    },
+    {
+      "id": "typesafe-place",
+      "status": "authored",
+      "bounds_m": [
+        -2113.4479977351207,
+        -1457.6085898216527,
+        -1963.4479977351207,
+        -1167.1779702985634
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "content_revision": "typesafe-place-1",
+      "entries": [
+        {
+          "id": "twentieth-street",
+          "position_m": [
+            -2113.4479977351207,
+            -1224,
+            18.37222868285045
+          ]
+        }
+      ],
+      "adjacent": [
+        "woodland-heights"
       ]
     }
   ]

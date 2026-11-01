@@ -82,6 +82,27 @@ test('the same WorkOS account has Jevica and vehicle access under its Production
   assert.equal(world.command(owner,{type:'pose',position:joined.player.position,yaw:0,altitude:0,vehicle:'rolls'}).ok,true);
 });
 
+test('any account may ride the shared motorcycle; the pink car stays the owner\'s',()=>{
+  let time=1000;
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
+  const world=createSharedWorld(data,{now:()=>time});
+  world.join({userId:owner,name:'Owner'});
+  const guestPosition=world.join({userId:'guest',name:'Guest'}).player.position;
+  time+=1000;
+  const pose=vehicle=>({type:'pose',position:[guestPosition[0],guestPosition[1]+5.5,guestPosition[2]],yaw:0,altitude:0,vehicle});
+  assert.equal(world.command('guest',pose('rolls')).error,'exclusive_vehicle');
+  assert.equal(world.command('guest',pose('motorcycle')).ok,true,'the motorcycle is open to every account');
+  assert.equal(world.snapshot().players.find(player=>player.id==='guest').vehicle,'motorcycle');
+  assert.equal(world.command('guest',{...pose('motorcycle'),altitude:1}).error,'invalid_pose','no vehicle flies');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  const restored=createSharedWorld(data,{now:()=>time});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  assert.equal(restored.snapshot().players.find(player=>player.id==='guest').vehicle,'motorcycle','a guest\'s motorcycle survives a checkpoint');
+  const forged=JSON.parse(JSON.stringify(checkpoint));
+  forged.payload.players.find(player=>player.id==='guest').vehicle='rolls';
+  assert.equal(createSharedWorld(data,{now:()=>time}).restore(forged).ok,false,'a guest in the car is not a valid checkpoint');
+});
+
 test('only the Jevica owner can submit a vehicle pose in shared play',()=>{
   let time=1000;
   const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
@@ -874,4 +895,49 @@ test('a flying bubble may cover its 21 m/s fast speed (1.5x the old 14), and no 
   time += 1000; assert.equal(pose(north + 21, 3).ok, true, 'a second at the bubble\'s fast speed');
   time += 1000; assert.equal(pose(north - .7, 3).error, 'movement_too_fast', 'faster than the bubble flies');
   assert.equal(pose(north + 14, 3).ok, true, 'the refused pose moved nothing');
+});
+
+test('the landowner hover coach is owner-only, budgeted by its own speed and restored from a checkpoint',()=>{
+  let time=1000;
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
+  const world=createSharedWorld(data,{now:()=>time});
+  const ownerPosition=world.join({userId:owner,name:'Owner'}).player.position;
+  const guestPosition=world.join({userId:'guest',name:'Guest'}).player.position;
+  time+=1000;
+  const pose=(position,vehicle,north)=>({type:'pose',position:[position[0],position[1]+north,position[2]],yaw:0,altitude:0,vehicle});
+  assert.equal(world.command('guest',pose(guestPosition,'hover',5.5)).error,'exclusive_vehicle');
+  // 7.5 m in one second is beyond the car's 7 m/s budget and within the coach's 9 m/s.
+  assert.equal(world.command(owner,pose(ownerPosition,'rolls',7.5)).error,'movement_too_fast');
+  assert.equal(world.command(owner,pose(ownerPosition,'hover',7.5)).ok,true);
+  assert.equal(world.snapshot().players.find(player=>player.id===owner).vehicle,'hover');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  const restored=createSharedWorld(data,{now:()=>time});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  assert.equal(restored.snapshot().players.find(player=>player.id===owner).vehicle,'hover');
+});
+
+test('the hover coach flies for its owner in any appearance, the car never leaves the ground, and a checkpoint keeps the coach aloft',()=>{
+  let time=1000;
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
+  const world=createSharedWorld(data,{now:()=>time});
+  const position=world.join({userId:owner,name:'Owner'}).player.position;
+  world.join({userId:'guest',name:'Guest'});
+  time+=1000;
+  // Kai cannot fly on foot (canFlyAs), but the coach's flight is the coach's.
+  assert.equal(world.command(owner,{type:'appearance',appearance:'kai-noir'}).ok,true);
+  time+=1000;
+  assert.equal(world.command(owner,{type:'pose',position,yaw:0,altitude:2}).error,'flight_not_allowed');
+  assert.equal(world.command(owner,{type:'pose',position,yaw:0,altitude:2,vehicle:'rolls'}).error,'invalid_pose');
+  assert.equal(world.command(owner,{type:'pose',position,yaw:0,altitude:2,vehicle:'hover'}).ok,true);
+  const aloft=world.snapshot().players.find(player=>player.id===owner);
+  assert.deepEqual([aloft.vehicle,aloft.altitude],['hover',2]);
+  time+=1000;
+  assert.equal(world.command(owner,{type:'pose',position,yaw:0,altitude:world.environment?.flightCeiling??32+1,vehicle:'hover'}).ok,false,'the world ceiling still binds');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  const restored=createSharedWorld(data,{now:()=>time});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  const kept=restored.snapshot().players.find(player=>player.id===owner);
+  assert.deepEqual([kept.vehicle,kept.altitude],['hover',2],'restored still flying the coach');
+  checkpoint.payload.players.find(player=>player.id===owner).vehicle='rolls';
+  assert.equal(restored.restore(resign(checkpoint)).error,'invalid_checkpoint','an airborne car is not a valid checkpoint');
 });

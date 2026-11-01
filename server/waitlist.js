@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { newInvite, visibleInvite, inviteDigest, validInviteCode, validInviteId, INVITE_TRANSACTION, INVITE_CAPACITY, INVITE_RETENTION } from './invitations.js';
 import { usernameChoiceProblem, usernameKey, usernameProblem, validNewUsername, validUsername } from '../preview/src/resident-names.js';
 import { generatedUsername } from '../preview/src/generated-username.js';
+import { defaultContentFilter, screenText } from './content-filter.js';
 
 // The username offered first: the verified GitHub login when it can be chosen now
 // (including the 4-letter minimum), otherwise a generated name. `attempt` moves past
@@ -48,9 +49,13 @@ function defaultCandidates(identity) {
   }
   return out;
 }
-const usernameRequest = ({ userId, username, actorId }, adminIds) => {
+// A username is screened by the content filter too (#292); a name that reads as a filtered term is refused like a reserved one.
+const usernameRequest = ({ userId, username, actorId }, adminIds, contentFilter) => {
   if (!validId(userId) || !validId(actorId) || (actorId !== userId && !adminIds.has(actorId))) throw new Error('Invalid username authority');
-  return usernameProblem(username);
+  const problem = usernameProblem(username);
+  if (problem) return problem;
+  const screened = screenText(contentFilter, 'username', username);
+  return screened.ok ? null : screened.message;
 };
 
 /** Approval is independent of the town checkpoint and survives process restarts. */
@@ -59,7 +64,7 @@ const usernameRequest = ({ userId, username, actorId }, adminIds) => {
 // out real people; approved and refused residents are never removed. Someone
 // whose request gave way simply asks again the next time they sign in.
 export const MAX_WAITLIST_REQUESTS = 10_000;
-export async function createFileWaitlist(path, { admins = [], now = Date.now, autoApprove = false, maxRequests = MAX_WAITLIST_REQUESTS } = {}) {
+export async function createFileWaitlist(path, { admins = [], now = Date.now, autoApprove = false, maxRequests = MAX_WAITLIST_REQUESTS, contentFilter = defaultContentFilter() } = {}) {
   const adminIds = new Set(admins);
   let records = new Map(), invites = new Map(), audit = [], queue = Promise.resolve();
   try {
@@ -138,7 +143,7 @@ export async function createFileWaitlist(path, { admins = [], now = Date.now, au
       });
     },
     async setUsername({ userId, username, actorId }) {
-      const problem = usernameRequest({ userId, username, actorId }, adminIds), admin = adminIds.has(actorId);
+      const problem = usernameRequest({ userId, username, actorId }, adminIds, contentFilter), admin = adminIds.has(actorId);
       if (problem) return { ok: false, reason: 'invalid', message: problem };
       const key = usernameKey(username);
       return serialize(async () => {
@@ -427,7 +432,7 @@ if changed then
   for i = 1, #kept, 500 do redis.call('RPUSH', KEYS[1], unpack(kept, i, math.min(i + 499, #kept))) end
 end
 return 1`;
-export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now, maxRequests = MAX_WAITLIST_REQUESTS, inviteCapacity = INVITE_CAPACITY } = {}) {
+export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now, maxRequests = MAX_WAITLIST_REQUESTS, inviteCapacity = INVITE_CAPACITY, contentFilter = defaultContentFilter() } = {}) {
   if (!redis?.eval || typeof prefix !== 'string' || !/^[A-Za-z0-9:{}_-]{1,160}$/.test(prefix)) throw new Error('Invalid waitlist configuration');
   const adminIds = new Set(admins), users = `${prefix}:waitlist:users`, audit = `${prefix}:waitlist:audit`;
   const invites = `${prefix}:waitlist:invites`, pending = `${prefix}:waitlist:pending`, usernames = `${prefix}:waitlist:usernames`;
@@ -455,7 +460,7 @@ export function createRedisWaitlist({ redis, prefix, admins = [], now = Date.now
       return adminIds.has(identity.userId) ? { ...existing, status: 'approved' } : existing;
     },
     async setUsername({ userId, username, actorId }) {
-      const problem = usernameRequest({ userId, username, actorId }, adminIds), admin = adminIds.has(actorId);
+      const problem = usernameRequest({ userId, username, actorId }, adminIds, contentFilter), admin = adminIds.has(actorId);
       if (problem) return { ok: false, reason: 'invalid', message: problem };
       // As in the file store: only a real new choice on a changeable request meets the
       // 4-letter minimum; the script still decides missing, unchanged, locked and taken.

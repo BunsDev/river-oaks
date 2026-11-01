@@ -5,7 +5,7 @@ import { loadDistrictData } from '../../server/district-data.js';
 import { createWalkingEnvironment, createWalkingState, guardedStepEnvironment, stepWalking } from '../src/walking.js';
 import { createCommonsStream } from '../src/commons-stream.js';
 import { buildHeightsNeighborhood } from '../src/bayou-heights.js';
-import { createHeightsStream, heightsCommonsLayout, HEIGHTS_CHUNK_BYTES, HEIGHTS_MAX_BYTES, HEIGHTS_VIEW_HOLD_MS, HEIGHTS_VIEW_METRES } from '../src/heights-stream.js';
+import { createHeightsStream, heightsCommonsLayout, heightsChunkTextureBytes, ownedTextureBytes, HEIGHTS_CHUNK_BYTES, HEIGHTS_MAX_BYTES, HEIGHTS_MAX_TEXTURE_BYTES, HEIGHTS_TEXTURE_BYTES, HEIGHTS_VIEW_HOLD_MS, HEIGHTS_VIEW_METRES } from '../src/heights-stream.js';
 const world = await loadDistrictData({ districtRevision: 'bayou-heights-1' });
 const layout = world.eastGardenCommons, edge = layout.edge, west = layout.heights.bounds[0], MiB = 1024 * 1024;
 const at = ([x, y]) => [edge + x, -1335 + y];
@@ -163,4 +163,168 @@ test('the footbridge explains loading, failure and recovery; arrival elsewhere s
   waiting.update([[west + 150, -1300]]); await flush(); waiting.update([[west + 150, -1300]]);
   assert.match(restored.at(-1), /You can return west while it loads/, 'someone restored deep in Heights is told why they wait');
   waiting.dispose();
+});
+
+test('twenty round trips over the footbridge with the real builders: every lap bounded, released whole and rebuilt alike', async () => {
+  const parent = new THREE.Group(), before = structuredClone(world);
+  const stream = createHeightsStream({ world, parent });
+  const scene = parent.children[0], laps = [];
+  for (let lap = 1; lap <= 20; lap++) {
+    await settle(stream, [[west - 10, -1335]]);
+    assert.equal(stream.ready(), true);
+    assert.deepEqual(resident(stream), ['bayou-greenway', 'shared', 'yale-icehouse']);
+    const names = scene.children.map(part => part.name);
+    assert.equal(new Set(names).size, names.length, `no duplicate groups: ${names}`);
+    const { residentBytes, residentTextureBytes, measuredBytes, measuredTextureBytes, estimatedBytes, loads, unloads, pending } = stream.debug();
+    assert.ok(residentBytes <= HEIGHTS_MAX_BYTES && residentBytes > 0, `${residentBytes} bytes`);
+    for (const [id, bytes] of Object.entries(measuredBytes)) assert.ok(bytes <= estimatedBytes[id], `${id}: ${bytes} > ${estimatedBytes[id]}`);
+    // Each neighborhood's tree grate is a DataTexture it owns even headless; the sign atlases need a canvas.
+    const ready = resident(stream).map(id => id === 'shared' ? 'bayou-heights' : `bayou-heights/${id}`);
+    assert.equal(residentTextureBytes, ready.reduce((bytes, id) => bytes + measuredTextureBytes[id], 0));
+    assert.ok(measuredTextureBytes['bayou-heights/yale-icehouse'] > 0 && measuredTextureBytes['bayou-heights/bayou-greenway'] > 0);
+    assert.equal(loads, 3 * lap); assert.equal(unloads, 3 * (lap - 1)); assert.equal(pending, 0);
+    const geometries = new Set(), materials = new Set(), textures = new Set(); let disposed = 0;
+    scene.traverse(item => {
+      if (item.geometry) geometries.add(item.geometry);
+      for (const material of [item.material].flat().filter(Boolean)) { materials.add(material); for (const value of Object.values(material)) if (value?.isTexture && value.userData?.owned) textures.add(value); }
+    });
+    for (const item of [...geometries, ...materials, ...textures]) item.addEventListener('dispose', () => disposed++);
+    laps.push([geometries.size, materials.size, textures.size, residentBytes, residentTextureBytes]);
+    // Home to the District: every owned geometry, material and texture is disposed exactly once.
+    stream.update([[edge - 200, -1335]]);
+    assert.equal(scene.children.length, 0);
+    assert.deepEqual([stream.debug().residentBytes, stream.debug().residentTextureBytes, stream.debug().pending], [0, 0, 0]);
+    assert.equal(disposed, geometries.size + materials.size + textures.size);
+    assert.ok(textures.size > 0);
+  }
+  assert.ok(laps.every(lap => JSON.stringify(lap) === JSON.stringify(laps[0])), `laps differ: ${JSON.stringify(laps)}`);
+  assert.equal(stream.debug().unloads, 60);
+  stream.dispose();
+  assert.deepEqual(world, before);
+});
+
+test('laps along the whole chain to Woodland Heights and back, with the real builders, stay under the ceiling and release everything', async () => {
+  const { loadDistrictData: load } = await import('../../server/district-data.js');
+  const chain = await loadDistrictData({ districtRevision: 'woodland-heights-1' }), plans = chain.eastGardenCommons.heights.plans;
+  const parent = new THREE.Group(), stream = createHeightsStream({ world: chain, parent }), scene = parent.children[0];
+  const underfoot = ([x, y]) => plans.find(({ site: [w, s, e, n] }) => x >= w && x <= e && y >= s && y <= n)?.id ?? null;
+  // District, the Commons, the footbridge landing, then east along the Heights' central row into Studewood and Woodland.
+  const out = [[edge - 200, -1335], [edge + 60, -1335], [west - 10, -1335], [-2470, -1335], [-2360, -1335], [-2275, -1335], [-2210, -1335], [-2135, -1335]];
+  const route = [...out, ...out.slice(0, -1).reverse()], laps = [];
+  for (let lap = 1; lap <= 3; lap++) {
+    const stops = [];
+    for (const point of route) {
+      await settle(stream, [point]);
+      const { residentBytes, residentTextureBytes, measuredBytes, estimatedBytes, pending, chunks } = stream.debug();
+      assert.ok(residentBytes <= HEIGHTS_MAX_BYTES, `${point}: ${residentBytes} bytes`);
+      for (const [id, bytes] of Object.entries(measuredBytes)) assert.ok(bytes <= estimatedBytes[id], `${id}: ${bytes} > ${estimatedBytes[id]}`);
+      assert.equal(pending, 0);
+      const names = scene.children.map(part => part.name);
+      assert.equal(new Set(names).size, names.length, `no duplicate groups at ${point}: ${names}`);
+      assert.deepEqual(names.sort(), chunks.filter(chunk => chunk.state === 'ready').map(chunk => chunk.id === 'bayou-heights' ? 'bayou-heights/landscape' : chunk.id).sort(), 'the scene holds exactly the ready chunks');
+      const plan = underfoot(point);
+      if (plan) assert.equal(stream.state(`bayou-heights/${plan}`), 'ready', `${plan} presented at ${point}`);
+      if (plan === 'woodland-heights-north') assert.deepEqual(resident(stream).filter(id => id.startsWith('yale') || id.startsWith('bayou-greenway')), [], 'the Heights west of the bayou are released by Woodland');
+      stops.push([resident(stream).join(','), residentBytes, residentTextureBytes]);
+    }
+    assert.deepEqual([scene.children.length, stream.debug().residentBytes, stream.debug().residentTextureBytes], [0, 0, 0], 'home in the District nothing stays');
+    assert.equal(stream.debug().loads, stream.debug().unloads);
+    laps.push(stops);
+  }
+  assert.ok(laps.every(lap => JSON.stringify(lap) === JSON.stringify(laps[0])), 'every lap streams the same chunks at the same stops');
+  assert.ok(laps[0].some(([ids]) => ids.includes('studewood-north')) && laps[0].some(([ids]) => ids.includes('woodland-heights-north')));
+  stream.dispose();
+  assert.equal(parent.children.length, 0);
+});
+
+test('owned textures are measured beside the geometry ceiling; shared textures and the ceiling itself are untouched', async () => {
+  // A DataTexture makes no mipmaps unless asked; a CanvasTexture (the sign atlases) does.
+  const owned = new THREE.DataTexture(new Uint8Array(64 * 64 * 4), 64, 64); owned.userData.owned = true; owned.generateMipmaps = true;
+  const shared = new THREE.DataTexture(new Uint8Array(128 * 128 * 4), 128, 128), flat = new THREE.DataTexture(new Uint8Array(32 * 32 * 4), 32, 32);
+  flat.generateMipmaps = false; flat.userData.owned = true;
+  const textured = () => {
+    const group = sized(HEIGHTS_CHUNK_BYTES['yale-icehouse'] * .9);
+    group.add(new THREE.Mesh(new THREE.PlaneGeometry(1, 1), [new THREE.MeshStandardMaterial({ map: owned }), new THREE.MeshStandardMaterial({ map: shared, emissiveMap: flat })]));
+    return group;
+  };
+  assert.equal(ownedTextureBytes(textured()), Math.round(64 * 64 * 4 * 4 / 3) + 32 * 32 * 4, 'mipmapped and flat owned textures, never the shared one');
+  const stream = createHeightsStream({ world, parent: new THREE.Group(), now: () => 0, loadModule: async () => ({
+    buildHeightsLandscape: () => sized(HEIGHTS_CHUNK_BYTES['bayou-heights'] * .9),
+    buildHeightsNeighborhood: (_layout, plan) => plan.id === 'yale-icehouse' ? textured() : sized(HEIGHTS_CHUNK_BYTES[plan.id] * .9),
+  }) });
+  await settle(stream, [[west - 10, -1335]]);
+  const { residentBytes, residentTextureBytes, measuredTextureBytes, measuredBytes } = stream.debug();
+  assert.equal(measuredTextureBytes['bayou-heights/yale-icehouse'], 21845 + 4096);
+  assert.equal(measuredTextureBytes['bayou-heights/bayou-greenway'], 0);
+  assert.equal(residentTextureBytes, 21845 + 4096);
+  assert.equal(residentBytes, Object.entries(measuredBytes).filter(([id]) => resident(stream).includes(id.replace(/^bayou-heights\/?/, '') || 'shared')).reduce((n, [, bytes]) => n + bytes, 0), 'the geometry ceiling counts geometry only');
+  stream.update([[edge - 200, -1335]]);
+  assert.equal(stream.debug().residentTextureBytes, 0);
+  stream.dispose();
+});
+
+test('on the Terraces revisions, walking home into the District releases Heights instead of keeping it resident', async () => {
+  const chain = await loadDistrictData({ districtRevision: 'woodland-heights-1' }), ground = chain.eastGardenCommons.ground;
+  const stream = createHeightsStream({ world: chain, parent: new THREE.Group(), now: () => 0, loadModule: standIns() });
+  await settle(stream, [[west - 10, -1335]]);
+  assert.ok(stream.debug().residentBytes > 0 && stream.ready());
+  // The camera's ground point is in the District too (main.js passes both). An invalid position still evicts nothing.
+  const home = [edge - 200, -1335];
+  await settle(stream, [[NaN, -1335]], camera(home, [west, -1335]));
+  assert.ok(stream.debug().residentBytes > 0, 'an invalid position keeps the scene');
+  await settle(stream, [home], camera(home, [west, -1335]));
+  assert.deepEqual([stream.debug().residentBytes, stream.debug().pending, resident(stream)], [0, 0, []], 'the District anchors nothing in Heights');
+  // Back at the footbridge it all streams in again, so the way home is not one-way.
+  await settle(stream, [[west - 10, -1335]]);
+  assert.equal(stream.ready(), true);
+  stream.dispose();
+});
+
+test('texture estimates come from each plan, err high over the headless measure, and the ceiling refuses nothing the geometry ceiling admits today', async () => {
+  const chain = await loadDistrictData({ districtRevision: 'typesafe-place-1' }), plans = chain.eastGardenCommons.heights.plans;
+  const nineteenth = plans.find(plan => plan.id === 'nineteenth-and-yale'), tower = plans.find(plan => plan.id === 'studewood-north');
+  const signs = plan => new Set(plan.pieces.filter(piece => piece.sign && (piece.piece === 'building/shell' || piece.piece === 'furniture/market-stall')).map(piece => piece.sign)).size;
+  assert.equal(signs(nineteenth), 20);
+  assert.equal(heightsChunkTextureBytes(nineteenth), Math.ceil((20 * HEIGHTS_TEXTURE_BYTES.signRow + HEIGHTS_TEXTURE_BYTES.grate) * 1.02));
+  assert.ok(tower.pieces.some(piece => piece.piece === 'landmark/water-tower'));
+  assert.equal(heightsChunkTextureBytes(tower), Math.ceil((signs(tower) * HEIGHTS_TEXTURE_BYTES.signRow + HEIGHTS_TEXTURE_BYTES.lettering + HEIGHTS_TEXTURE_BYTES.grate) * 1.02));
+  assert.equal(heightsChunkTextureBytes({ id: 'bare', pieces: [] }), Math.ceil((HEIGHTS_TEXTURE_BYTES.signRow + HEIGHTS_TEXTURE_BYTES.grate) * 1.02), 'an unsigned plan still builds a one-row atlas and a grate');
+  // Headless, a neighborhood owns only its grate (no canvas, no atlas): the measure stays under the estimate.
+  const group = buildHeightsNeighborhood(chain.eastGardenCommons, nineteenth, {});
+  await group.userData.ready;
+  assert.equal(ownedTextureBytes(group), HEIGHTS_TEXTURE_BYTES.grate); assert.ok(ownedTextureBytes(group) <= heightsChunkTextureBytes(nineteenth));
+  group.userData.dispose();
+  // Along the whole chain and back, stand-ins owning exactly their estimated textures stream the same chunks at every stop with and without the ceiling.
+  const textured = (plan, bytes) => {
+    const g = sized(bytes); if (!plan) return g;
+    // A flat RGBA strip owning exactly the plan's estimated texture bytes (the data itself stays tiny).
+    const texture = new THREE.DataTexture(new Uint8Array(4), Math.floor(heightsChunkTextureBytes(plan) / 4), 1); texture.userData.owned = true; texture.generateMipmaps = false;
+    g.add(new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshStandardMaterial({ map: texture }))); return g;
+  };
+  const module = async () => ({ buildHeightsLandscape: () => textured(null, HEIGHTS_CHUNK_BYTES['bayou-heights'] * .9), buildHeightsNeighborhood: (_l, plan) => textured(plan, HEIGHTS_CHUNK_BYTES[plan.id] * .9) });
+  const bounded = createHeightsStream({ world: chain, parent: new THREE.Group(), now: () => 0, loadModule: module });
+  const unbounded = createHeightsStream({ world: chain, parent: new THREE.Group(), now: () => 0, loadModule: module, maxTextureBytes: Infinity });
+  assert.equal(bounded.debug().textureBudgetBytes, HEIGHTS_MAX_TEXTURE_BYTES);
+  assert.deepEqual(bounded.debug().estimatedTextureBytes['bayou-heights/nineteenth-and-yale'], heightsChunkTextureBytes(nineteenth));
+  const out = [[edge - 200, -1335], [edge + 60, -1335], [west - 10, -1335], [-2470, -1335], [-2360, -1335], [-2275, -1335], [-2210, -1335], [-2135, -1335], [-2060, -1335], [-1990, -1335], [-1920, -1335]];
+  const route = [...out, ...out.slice(0, -1).reverse()];
+  let heaviest = 0;
+  for (const point of route) {
+    await settle(bounded, [point]); await settle(unbounded, [point]);
+    assert.deepEqual(resident(bounded), resident(unbounded), `the texture ceiling changes nothing at ${point}`);
+    const estimated = bounded.debug().chunks.filter(chunk => chunk.state === 'ready').reduce((n, chunk) => n + bounded.debug().estimatedTextureBytes[chunk.id], 0);
+    heaviest = Math.max(heaviest, estimated);
+    assert.ok(estimated <= HEIGHTS_MAX_TEXTURE_BYTES, `${point}: ${estimated} estimated texture bytes`);
+  }
+  assert.ok(heaviest > 16 * MiB, `the chain holds more than a 16 MiB texture ceiling would allow (${heaviest})`);
+  bounded.dispose(); unbounded.dispose();
+  // A neighborhood measuring past the texture ceiling is refused and retried; the footbridge explains it.
+  const heavy = createHeightsStream({ world, parent: new THREE.Group(), now: () => 0, loadModule: async () => ({
+    buildHeightsLandscape: () => sized(HEIGHTS_CHUNK_BYTES['bayou-heights'] * .9),
+    buildHeightsNeighborhood(_l, plan) { const g = sized(HEIGHTS_CHUNK_BYTES[plan.id] * .9); if (plan.id === 'yale-icehouse') { const t = new THREE.DataTexture(new Uint8Array(4 * 4096 * 4096), 4096, 4096); t.userData.owned = true; t.generateMipmaps = true; g.add(new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshStandardMaterial({ map: t }))); } return g; } }) });
+  await settle(heavy, [[west - 10, -1335]]);
+  assert.equal(heavy.state('bayou-heights/yale-icehouse'), 'failed');
+  assert.equal(heavy.debug().residentTextureBytes, 0);
+  assert.ok(heavy.debug().residentBytes > 0 && heavy.debug().residentBytes <= HEIGHTS_MAX_BYTES);
+  heavy.dispose();
 });

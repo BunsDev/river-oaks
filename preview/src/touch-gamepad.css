@@ -1,0 +1,33 @@
+/* Touch gamepad (touch-gamepad.js): a floating left thumbstick and a right-thumb
+   action cluster. The scene keeps the free look drag everywhere else. */
+.touch-gamepad { position: absolute; inset: 0; pointer-events: none; z-index: 1; --gamepad-bottom: max(150px, calc(env(safe-area-inset-bottom) + 138px)); }
+.touch-gamepad[hidden] { display: none; }
+.touch-stick-zone { position: absolute; left: 0; bottom: var(--gamepad-bottom); width: min(46vw, 340px); height: min(38vh, 300px); pointer-events: auto; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.touch-stick-base { position: absolute; left: max(84px, calc(env(safe-area-inset-left) + 72px)); top: 58%; width: 112px; height: 112px; translate: -50% -50%; border-radius: 50%; border: 2px solid #ffffff38; background: radial-gradient(circle, #ffffff10 0 54%, #0b141a40 56%); box-shadow: inset 0 0 18px #00000040; opacity: .55; transition: opacity .12s; pointer-events: none; }
+.touch-stick-knob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: #f5f2ea; box-shadow: 0 2px 10px #0006; opacity: .85; }
+.touch-stick-sprint { position: absolute; left: 50%; bottom: calc(100% + 26px); translate: -50% 0; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: .04em; color: #1b1a17; background: #f2d27a; opacity: 0; transition: opacity .12s; pointer-events: none; white-space: nowrap; }
+.touch-gamepad[data-stick="held"] .touch-stick-base { opacity: 1; transition: none; }
+.touch-gamepad[data-sprint="true"] .touch-stick-sprint { opacity: 1; }
+.touch-gamepad[data-sprint="true"] .touch-stick-base { border-color: #f2d27a; }
+.touch-actions { position: absolute; right: max(16px, calc(env(safe-area-inset-right) + 12px)); bottom: calc(var(--gamepad-bottom) + 24px); display: grid; justify-items: end; gap: 12px; pointer-events: none; }
+.walking-hud .touch-action { pointer-events: auto; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; display: grid; place-items: center; width: 64px; height: 64px; padding: 0; border-radius: 50%; border: 1.5px solid #ffffff4d; background: #0f1c22b3; color: #f6f3ea; font-size: 12px; font-weight: 600; line-height: 1.1; box-shadow: 0 4px 14px #0005; }
+.walking-hud .touch-action[hidden] { display: none; }
+.walking-hud .touch-action.held { background: #f5f2ea; color: #172126; border-color: #f5f2ea; }
+.walking-hud .touch-use { width: 76px; height: 76px; padding: 6px; background: #f5f2eae6; color: #172126; text-align: center; overflow: hidden; }
+.walking-hud .touch-use:active { scale: .94; }
+.touch-action svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+/* Landscape phones: the classic two-thumb layout along the bottom corners. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .touch-gamepad { --gamepad-bottom: max(8px, env(safe-area-inset-bottom)); }
+  .touch-stick-zone { width: min(34vw, 300px); height: min(62vh, 260px); }
+  .touch-actions { right: max(24px, calc(env(safe-area-inset-right) + 16px)); bottom: calc(var(--gamepad-bottom) + 96px); }
+}
+/* A conversation or an open chat dock takes the screen; the stick steps aside. */
+.walking:has(.community-dialogue:not([hidden])) .touch-gamepad { visibility: hidden; }
+@media (max-width: 900px) {
+  .game-hud:has(.town-chat-dock[open]) .touch-gamepad, .game-hud:has(.hud-space:not([hidden])) .touch-gamepad { visibility: hidden; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .touch-stick-base, .touch-stick-sprint { transition: none; }
+  .walking-hud .touch-use:active { scale: none; }
+}

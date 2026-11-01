@@ -2,8 +2,9 @@
   "id": "yale-street-south",
   "kit": "city-kit-1",
   "seed": 1930,
-  "hash": "15d856273951a4e9",
-  "recipeHash": "e78780396112c56b",
+  "hash": "2ad52104fb035412",
+  "geometry": "d5dc6664d832ea3e",
+  "recipeHash": "185e34d7efc93ffd",
   "overridesHash": "174b1d836bafee25",
   "stats": {
     "pieces": 118,

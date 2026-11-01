@@ -4,7 +4,7 @@ Run `uv run pytest -q` for deterministic local checks. Tests use synthetic geome
 
 Run `pnpm test` for simulation and UI contracts, `pnpm run test:server` for authentication, shared state, transport, and abuse controls, `pnpm run test:desktop` for native contracts, and `pnpm run build` for the production bundle. `pnpm run dev` requires sign-in (GitHub or an email code) and waitlist approval, then joins the shared town. `pnpm run test:security:e2e` runs the email-access browser test, which serves the built app with the real CSP, against a local WorkOS fixture. Browser acceptance uses explicit loopback fixtures with temporary identities; it does not establish live WorkOS acceptance.
 
-Run `pnpm run test:experience` for the shared-runtime experience suite, including loading, graphics persistence, responsive controls, and movement/vehicle journeys. Run `pnpm run test:shared` for the shared-town journeys. It runs five modes (`development`, `development-world`, `development-publish`, `required`, `creator`) with about 19 journeys, including onboarding, authenticated two-player play, travel, publishing, seating and keyboard recovery. Pass mode names to run some (`pnpm run test:shared development-publish`), or set `RIVER_OAKS_SHARED_JOURNEY=<name>` for one journey. These runners start and stop their own servers; see [commands, port requirements, and acceptance limits](experience-polish.md). The [earlier shared receipt](../data/reports/shared-experience.json) records its original revision; removal verification is tracked in the [execution ledger](superpowers/plans/2026-10-06-remove-single-player.md).
+Run `pnpm run test:experience` for the shared-runtime experience suite, including loading, graphics persistence, responsive controls, and movement/vehicle journeys. Run `pnpm run test:shared` for the shared-town journeys. It runs six modes (`development`, `development-world`, `development-publish`, `required`, `required-characters`, `creator`) with about 19 journeys, including onboarding, authenticated two-player play, travel, publishing, seating and keyboard recovery. Pass mode names to run some (`pnpm run test:shared development-publish`), or set `RIVER_OAKS_SHARED_JOURNEY=<name>` for one journey. These runners start and stop their own servers; see [commands, port requirements, and acceptance limits](experience-polish.md). The [earlier shared receipt](../data/reports/shared-experience.json) records its original revision; removal verification is tracked in the [execution ledger](superpowers/plans/2026-10-06-remove-single-player.md).
 
 For an interactive two-player check, run `node server/tests/browser-fixture.js`, then:
 
@@ -130,7 +130,7 @@ Known intermittent journeys, all of which have passed on rerun:
 - `email access`: waiting for the connected roster. The client connect deadline (#260) and interior render cost (#268) addressed it.
 - `creator-objects`: #271.
 
-Rerun only the failed jobs (`gh run rerun <id> --failed`) and confirm a second pass before treating one as a regression.
+Every failure on `main` goes in [the hosted CI flake ledger](ci-flake-ledger.md) with its signature, cause and fix. Read the failing job's log and artifact before rerunning; a rerun that passes is evidence of intermittency, not a fix.
 
 ```mermaid
 %% diagram: ci-pipeline (placeholder; replace this block with the real diagram)

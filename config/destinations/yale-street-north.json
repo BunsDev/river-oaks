@@ -108,111 +108,6 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "twentieth-south-e",
-      "style": "heights-row",
-      "rect": [
-        313.5,
-        64,
-        364,
-        104.5
-      ],
-      "front": "north",
-      "sides": [
-        "west",
-        "east"
-      ],
-      "depth": [
-        12,
-        16
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        6.5
-      ],
-      "names": [
-        "Prairie Wool",
-        "Saltgrass Kitchen",
-        "Hollow Oak Guitars",
-        "Night Jar Wine",
-        "Thistle & Twine",
-        "Persimmon Press"
-      ]
-    },
-    {
-      "id": "twentieth-north-w",
-      "style": "garden-court",
-      "rect": [
-        250,
-        117.5,
-        300.5,
-        163
-      ],
-      "front": "south",
-      "sides": [
-        "west",
-        "east"
-      ],
-      "depth": [
-        12,
-        16
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        6.5
-      ],
-      "names": [
-        "Garden Gate Nursery",
-        "Monarch Dance Studio",
-        "Swallowtail Press",
-        "Live Oak Pilates",
-        "Muscadine Market"
-      ]
-    },
-    {
-      "id": "twentieth-north-e",
-      "style": "heights-row",
-      "rect": [
-        313.5,
-        117.5,
-        364,
-        163
-      ],
-      "front": "south",
-      "sides": [
-        "west",
-        "east"
-      ],
-      "depth": [
-        12,
-        16
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        6.5
-      ],
-      "names": [
-        "Cottonwood Mercantile",
-        "Lone Pine Leather",
-        "Wildflower Pottery",
-        "Red Bud Cyclery",
-        "Bramble Bakehouse"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -344,5 +239,117 @@
   ],
   "context": [],
   "overrides": {},
-  "additions": []
+  "additions": [],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "twentieth-south-e",
+        "rect": [
+          313.5,
+          64,
+          364,
+          104.5
+        ],
+        "style": "heights-row",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          6.5
+        ],
+        "names": [
+          "Prairie Wool",
+          "Saltgrass Kitchen",
+          "Hollow Oak Guitars",
+          "Night Jar Wine",
+          "Thistle & Twine",
+          "Persimmon Press"
+        ],
+        "front": "north",
+        "sides": [
+          "west",
+          "east"
+        ]
+      },
+      {
+        "id": "twentieth-north-w",
+        "rect": [
+          250,
+          117.5,
+          300.5,
+          163
+        ],
+        "style": "garden-court",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          6.5
+        ],
+        "names": [
+          "Garden Gate Nursery",
+          "Monarch Dance Studio",
+          "Swallowtail Press",
+          "Live Oak Pilates",
+          "Muscadine Market"
+        ],
+        "front": "south",
+        "sides": [
+          "west",
+          "east"
+        ]
+      },
+      {
+        "id": "twentieth-north-e",
+        "rect": [
+          313.5,
+          117.5,
+          364,
+          163
+        ],
+        "style": "heights-row",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          6.5
+        ],
+        "names": [
+          "Cottonwood Mercantile",
+          "Lone Pine Leather",
+          "Wildflower Pottery",
+          "Red Bud Cyclery",
+          "Bramble Bakehouse"
+        ],
+        "front": "south",
+        "sides": [
+          "west",
+          "east"
+        ]
+      }
+    ],
+    "migrated": {
+      "blocks": 3,
+      "geometry": "d71d96978a5fadd1"
+    }
+  }
 }

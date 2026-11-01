@@ -49,6 +49,12 @@
         "offset": 14,
         "spacing": 12
       },
+      "clear": [
+        [
+          158,
+          163
+        ]
+      ],
       "lamps": {
         "offset": 20,
         "spacing": 24
@@ -103,75 +109,6 @@
     }
   ],
   "plazas": [],
-  "blocks": [
-    {
-      "id": "frontage-mid",
-      "style": "garden-court",
-      "rect": [
-        406,
-        7.5,
-        420.5,
-        104.5
-      ],
-      "front": "west",
-      "sides": [
-        "north",
-        "south"
-      ],
-      "depth": [
-        11,
-        14.5
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        5,
-        7
-      ],
-      "names": [
-        "Mockingbird Tea",
-        "Sycamore Books",
-        "Grackle Coffee",
-        "Fireweed Florals",
-        "Esplanade Gelato",
-        "Porch Light Studio"
-      ]
-    },
-    {
-      "id": "frontage-north",
-      "style": "garden-court",
-      "rect": [
-        406,
-        117.5,
-        420.5,
-        163
-      ],
-      "front": "west",
-      "sides": [
-        "north",
-        "south"
-      ],
-      "depth": [
-        11,
-        14.5
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        5,
-        7
-      ],
-      "names": [
-        "Heron House Inn",
-        "Cicada Hall",
-        "Lamplighter Frames"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -336,5 +273,81 @@
     }
   ],
   "overrides": {},
-  "additions": []
+  "additions": [],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "frontage-mid",
+        "rect": [
+          406,
+          7.5,
+          420.5,
+          104.5
+        ],
+        "style": "garden-court",
+        "depth": [
+          11,
+          14.5
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          5,
+          7
+        ],
+        "names": [
+          "Mockingbird Tea",
+          "Sycamore Books",
+          "Grackle Coffee",
+          "Fireweed Florals",
+          "Esplanade Gelato",
+          "Porch Light Studio"
+        ],
+        "front": "west",
+        "sides": [
+          "north",
+          "south"
+        ]
+      },
+      {
+        "id": "frontage-north",
+        "rect": [
+          406,
+          117.5,
+          420.5,
+          163
+        ],
+        "style": "garden-court",
+        "depth": [
+          11,
+          14.5
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          5,
+          7
+        ],
+        "names": [
+          "Heron House Inn",
+          "Cicada Hall",
+          "Lamplighter Frames"
+        ],
+        "front": "west",
+        "sides": [
+          "north",
+          "south"
+        ]
+      }
+    ],
+    "migrated": {
+      "blocks": 2,
+      "geometry": "398d0f21e3ab3f97"
+    }
+  }
 }

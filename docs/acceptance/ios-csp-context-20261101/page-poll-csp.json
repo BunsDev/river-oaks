@@ -1,0 +1,125 @@
+{
+  "checks": {
+    "hostCaptureID": "40A5585F-9F11-4392-8872-CD4C6E998B7F",
+    "page": {
+      "csp": null,
+      "href": "capacitor://localhost/index.html",
+      "origin": "capacitor://localhost",
+      "protocol": "capacitor:",
+      "readyState": "complete"
+    },
+    "relative": {
+      "api": "capacitor://localhost/api/waitlist/status",
+      "socket": "capacitor://localhost/multiplayer"
+    },
+    "storage.cookie": {
+      "ok": false
+    },
+    "storage.indexedDB": {
+      "ok": true
+    },
+    "storage.local": {
+      "ok": true
+    },
+    "town.session.include": {
+      "error": "TypeError: Load failed",
+      "ok": false
+    },
+    "town.session.sameOrigin": {
+      "error": "TypeError: Load failed",
+      "ok": false
+    },
+    "town.socket": {
+      "error": "no ticket, so no socket attempt",
+      "ok": false
+    },
+    "town.status.include": {
+      "error": "TypeError: Load failed",
+      "ok": false
+    },
+    "town.ticket.include": {
+      "error": "TypeError: Load failed",
+      "ok": false
+    },
+    "witness.get.include": {
+      "error": "TypeError: Load failed",
+      "ok": false
+    },
+    "witness.get.sameOrigin": {
+      "error": "TypeError: Load failed",
+      "ok": false
+    },
+    "witness.post.include": {
+      "error": "TypeError: Load failed",
+      "ok": false
+    },
+    "witness.socket": {
+      "error": "SecurityError: The operation is insecure.",
+      "ok": false
+    }
+  },
+  "cookieJar": [
+    {
+      "domain": "127.0.0.1",
+      "httpOnly": false,
+      "name": "fixture_session",
+      "path": "/",
+      "sameSite": "none",
+      "secure": false
+    }
+  ],
+  "csp": true,
+  "elapsedMs": 5900,
+  "measurementWorld": "page",
+  "mode": "bundled",
+  "navigationCount": 1,
+  "registeredMessageHandlers": 0,
+  "resultTransport": "native-poll",
+  "schemeRequests": [
+    {
+      "bytes": 607,
+      "method": "GET",
+      "path": "/index.html",
+      "result": "200"
+    }
+  ],
+  "violations": [
+    {
+      "blocked": "inline",
+      "directive": "script-src-elem"
+    },
+    {
+      "blocked": "http://127.0.0.1:50740/witness/get",
+      "directive": "connect-src"
+    },
+    {
+      "blocked": "http://127.0.0.1:50740/witness/get",
+      "directive": "connect-src"
+    },
+    {
+      "blocked": "http://127.0.0.1:50740/witness/post",
+      "directive": "connect-src"
+    },
+    {
+      "blocked": "ws://127.0.0.1:50740/witness/socket",
+      "directive": "connect-src"
+    },
+    {
+      "blocked": "http://127.0.0.1:50710/auth/session",
+      "directive": "connect-src"
+    },
+    {
+      "blocked": "http://127.0.0.1:50710/auth/session",
+      "directive": "connect-src"
+    },
+    {
+      "blocked": "http://127.0.0.1:50710/api/waitlist/status",
+      "directive": "connect-src"
+    },
+    {
+      "blocked": "http://127.0.0.1:50710/api/multiplayer/ticket?world=river-oaks",
+      "directive": "connect-src"
+    }
+  ],
+  "webKitUserAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+}

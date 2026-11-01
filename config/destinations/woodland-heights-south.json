@@ -372,70 +372,6 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "eighteenth-corner-west",
-      "style": "market-row",
-      "rect": [
-        508,
-        -64.5,
-        523,
-        -54.5
-      ],
-      "front": "south",
-      "sides": [
-        "east"
-      ],
-      "depth": [
-        10,
-        10
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        7.5
-      ],
-      "names": [
-        "Wren & Willow Gifts",
-        "Corner Lot Deli",
-        "Live Oak Laundry"
-      ]
-    },
-    {
-      "id": "eighteenth-corner-east",
-      "style": "heights-row",
-      "rect": [
-        537,
-        -64.5,
-        552.5,
-        -54.5
-      ],
-      "front": "south",
-      "sides": [
-        "west"
-      ],
-      "depth": [
-        10,
-        10
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        7.5
-      ],
-      "names": [
-        "Garden Gate Nursery",
-        "Two Wheels Repair",
-        "Cicada Ice Cream"
-      ]
-    }
-  ],
   "landmarks": [],
   "furniture": [
     {
@@ -781,5 +717,70 @@
       "variant": "loggia",
       "awning": "canvas-rose"
     }
-  ]
+  ],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "eighteenth-corner-west",
+        "rect": [
+          508,
+          -64.5,
+          523,
+          -54.5
+        ],
+        "style": "market-row",
+        "depth": [
+          10,
+          10
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          7.5
+        ],
+        "names": [
+          "Wren & Willow Gifts",
+          "Corner Lot Deli",
+          "Live Oak Laundry"
+        ],
+        "front": "south"
+      },
+      {
+        "id": "eighteenth-corner-east",
+        "rect": [
+          537,
+          -64.5,
+          552.5,
+          -54.5
+        ],
+        "style": "heights-row",
+        "depth": [
+          10,
+          10
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          7.5
+        ],
+        "names": [
+          "Garden Gate Nursery",
+          "Two Wheels Repair",
+          "Cicada Ice Cream"
+        ],
+        "front": "south"
+      }
+    ],
+    "migrated": {
+      "blocks": 2,
+      "geometry": "330eaf0602357dc8"
+    }
+  }
 }

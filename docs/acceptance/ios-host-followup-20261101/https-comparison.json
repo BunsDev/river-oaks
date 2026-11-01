@@ -1,0 +1,736 @@
+{
+  "scope": "Unsigned iOS simulator; synthetic HTTPS/custom-scheme documents and existing fixture identities. Not actual Capacitor, real game package, production authentication or physical-device/focus acceptance.",
+  "source": "51c28e2a93782b747bb991237025e60018071fe9",
+  "dirty": true,
+  "sourceFiles": [
+    {
+      "path": "experiments/ios-bundled-origin/App/BundledOriginApp.swift",
+      "sha256": "621bd8b99c05406dcbdfc1e298db671b57a58f52d7091d9a5dccbf80b5838cba"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/App/FixtureCookieBootstrap.swift",
+      "sha256": "95845f241d46ce467b959617e164943092073c119ca8bf3e710fe337b5c8f13a"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/App/Info.plist",
+      "sha256": "2fb1649637b890810e2069ff418f9eafaebe71596ec6783ddf0a5abca7b67564"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/Sources/ExperimentPolicy/ExperimentPolicy.swift",
+      "sha256": "83bbb37574d85b7a454d8a3c843a74070bca0855b293c9f172b42168769393ce"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/Web/harness.js",
+      "sha256": "627c460019aff18641f518ca4af99847515282caaae4f81acfb5dac723e3ac59"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/project.yml",
+      "sha256": "ac0558654e9e43443714b68510394c15907002fa5e13009b40f0d80bcf45fabc"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/https-fixture.mjs",
+      "sha256": "d56aeb56480878d3f1f7c5277a1d5a347e2f357e767e53180f19071543bee48f"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/https-origin.mjs",
+      "sha256": "48fc0e0e6cc8e2042cbbfc1b05c6cec8aba59699a5a1938961c46b10510c2493"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/witness.mjs",
+      "sha256": "4cf2df155eb7bc010c884141124da07528c2b231d8be7c32063a5628c0eb89be"
+    },
+    {
+      "path": "server/tests/browser-fixture.js",
+      "sha256": "5d47d52d7f0bca79a70253b71c1b0e69a10500109a35c5c826f3e873a24b6eb1"
+    },
+    {
+      "path": "server/tests/browser-fixture-origin.js",
+      "sha256": "23d2f3f38fc030f8e99d698dd8259d550472c436b94fc758b9e001239bbc0a45"
+    },
+    {
+      "path": "server/app.js",
+      "sha256": "57f44c1b045d8f2e7cf9edf594aa56a2ce2021f05357e509f919314964506036"
+    }
+  ],
+  "trials": {
+    "untrusted-hosted": {
+      "native": {
+        "error": "https-cookie-bootstrap-failed",
+        "mode": "hosted"
+      },
+      "requests": [],
+      "witness": []
+    },
+    "trusted-hosted": {
+      "native": {
+        "checks": {
+          "hostCaptureID": "09489F8B-CFB6-49FB-8FFE-71AE5E280BF1",
+          "page": {
+            "csp": null,
+            "href": "https://127.0.0.1:65204/",
+            "origin": "https://127.0.0.1:65204",
+            "protocol": "https:",
+            "readyState": "complete"
+          },
+          "relative": {
+            "api": "https://127.0.0.1:65204/api/waitlist/status",
+            "socket": "wss://127.0.0.1:65204/multiplayer"
+          },
+          "storage.cookie": {
+            "ok": true
+          },
+          "storage.indexedDB": {
+            "ok": true
+          },
+          "storage.local": {
+            "ok": true
+          },
+          "town.session.include": {
+            "body": {
+              "authenticated": true,
+              "csrfToken": "fixture-bob",
+              "user": {
+                "id": "bob",
+                "name": "bob"
+              }
+            },
+            "ok": true,
+            "status": 200
+          },
+          "town.session.sameOrigin": {
+            "body": {
+              "authenticated": true,
+              "csrfToken": "fixture-bob",
+              "user": {
+                "id": "bob",
+                "name": "bob"
+              }
+            },
+            "ok": true,
+            "status": 200
+          },
+          "town.socket": {
+            "echo": "snapshot received",
+            "ok": true,
+            "open": true
+          },
+          "town.status.include": {
+            "body": {
+              "admin": false,
+              "github": "bob",
+              "invited": false,
+              "requestedAt": null,
+              "status": "approved",
+              "user": {
+                "id": "bob",
+                "name": "bob"
+              },
+              "username": null,
+              "usernameBy": null
+            },
+            "ok": true,
+            "status": 200
+          },
+          "town.ticket.include": {
+            "error": null,
+            "issued": true,
+            "ok": true,
+            "status": 200
+          },
+          "witness.get.include": {
+            "body": {
+              "cookieNames": [
+                "fixture_session"
+              ],
+              "csrfToken": false,
+              "host": "127.0.0.1:65224",
+              "method": "GET",
+              "origin": "https://127.0.0.1:65204",
+              "path": "/witness/get",
+              "referer": "https://127.0.0.1:65204/",
+              "secFetchDest": "empty",
+              "secFetchMode": "cors",
+              "secFetchSite": "same-site",
+              "upgrade": null
+            },
+            "ok": true,
+            "status": 200
+          },
+          "witness.get.sameOrigin": {
+            "body": {
+              "cookieNames": [],
+              "csrfToken": false,
+              "host": "127.0.0.1:65224",
+              "method": "GET",
+              "origin": "https://127.0.0.1:65204",
+              "path": "/witness/get",
+              "referer": "https://127.0.0.1:65204/",
+              "secFetchDest": "empty",
+              "secFetchMode": "cors",
+              "secFetchSite": "same-site",
+              "upgrade": null
+            },
+            "ok": true,
+            "status": 200
+          },
+          "witness.post.include": {
+            "body": {
+              "cookieNames": [
+                "fixture_session"
+              ],
+              "csrfToken": true,
+              "host": "127.0.0.1:65224",
+              "method": "POST",
+              "origin": "https://127.0.0.1:65204",
+              "path": "/witness/post",
+              "referer": "https://127.0.0.1:65204/",
+              "secFetchDest": "empty",
+              "secFetchMode": "cors",
+              "secFetchSite": "same-site",
+              "upgrade": null
+            },
+            "ok": true,
+            "status": 200
+          },
+          "witness.socket": {
+            "echo": {
+              "cookieNames": [
+                "fixture_session"
+              ],
+              "csrfToken": false,
+              "host": "127.0.0.1:65224",
+              "method": "GET",
+              "origin": "https://127.0.0.1:65204",
+              "path": "/witness/socket",
+              "referer": null,
+              "secFetchDest": "websocket",
+              "secFetchMode": "websocket",
+              "secFetchSite": "same-site",
+              "upgrade": "websocket"
+            },
+            "ok": true,
+            "open": true
+          }
+        },
+        "cookieJar": [
+          {
+            "domain": "127.0.0.1",
+            "httpOnly": true,
+            "name": "fixture_session",
+            "path": "/",
+            "sameSite": "lax",
+            "secure": true
+          }
+        ],
+        "cookieSetup": "https-network-bootstrap",
+        "csp": false,
+        "elapsedMs": 6361,
+        "measurementWorld": "page",
+        "mode": "hosted",
+        "navigationCount": 1,
+        "registeredMessageHandlers": 0,
+        "resultTransport": "native-poll",
+        "schemeRequests": [],
+        "violations": [],
+        "webKitUserAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/__host-cookie-bootstrap",
+          "origin": null,
+          "cookieNames": [],
+          "csrfToken": false,
+          "upgrade": null,
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/",
+          "origin": null,
+          "cookieNames": [
+            "fixture_session"
+          ],
+          "csrfToken": false,
+          "upgrade": null,
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/auth/session",
+          "origin": null,
+          "cookieNames": [
+            "fixture_session"
+          ],
+          "csrfToken": false,
+          "upgrade": null,
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/auth/session",
+          "origin": null,
+          "cookieNames": [
+            "fixture_session"
+          ],
+          "csrfToken": false,
+          "upgrade": null,
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/waitlist/status",
+          "origin": null,
+          "cookieNames": [
+            "fixture_session"
+          ],
+          "csrfToken": false,
+          "upgrade": null,
+          "status": 200
+        },
+        {
+          "method": "POST",
+          "path": "/api/multiplayer/ticket",
+          "origin": "https://127.0.0.1:65204",
+          "cookieNames": [
+            "fixture_session"
+          ],
+          "csrfToken": true,
+          "upgrade": null,
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/multiplayer",
+          "origin": "https://127.0.0.1:65204",
+          "cookieNames": [
+            "fixture_session"
+          ],
+          "csrfToken": false,
+          "upgrade": "websocket",
+          "status": 101
+        }
+      ],
+      "witness": [
+        {
+          "method": "GET",
+          "path": "/witness/get",
+          "host": "127.0.0.1:65224",
+          "origin": "https://127.0.0.1:65204",
+          "cookieNames": [],
+          "csrfToken": false,
+          "secFetchSite": "same-site",
+          "secFetchMode": "cors",
+          "secFetchDest": "empty",
+          "referer": "https://127.0.0.1:65204/",
+          "upgrade": null
+        },
+        {
+          "method": "GET",
+          "path": "/witness/get",
+          "host": "127.0.0.1:65224",
+          "origin": "https://127.0.0.1:65204",
+          "cookieNames": [
+            "fixture_session"
+          ],
+          "csrfToken": false,
+          "secFetchSite": "same-site",
+          "secFetchMode": "cors",
+          "secFetchDest": "empty",
+          "referer": "https://127.0.0.1:65204/",
+          "upgrade": null
+        },
+        {
+          "method": "OPTIONS",
+          "path": "/witness/post",
+          "host": "127.0.0.1:65224",
+          "origin": "https://127.0.0.1:65204",
+          "cookieNames": [],
+          "csrfToken": false,
+          "secFetchSite": "same-site",
+          "secFetchMode": "cors",
+          "secFetchDest": "empty",
+          "referer": "https://127.0.0.1:65204/",
+          "upgrade": null
+        },
+        {
+          "method": "POST",
+          "path": "/witness/post",
+          "host": "127.0.0.1:65224",
+          "origin": "https://127.0.0.1:65204",
+          "cookieNames": [
+            "fixture_session"
+          ],
+          "csrfToken": true,
+          "secFetchSite": "same-site",
+          "secFetchMode": "cors",
+          "secFetchDest": "empty",
+          "referer": "https://127.0.0.1:65204/",
+          "upgrade": null
+        },
+        {
+          "method": "GET",
+          "path": "/witness/socket",
+          "host": "127.0.0.1:65224",
+          "origin": "https://127.0.0.1:65204",
+          "cookieNames": [
+            "fixture_session"
+          ],
+          "csrfToken": false,
+          "secFetchSite": "same-site",
+          "secFetchMode": "websocket",
+          "secFetchDest": "websocket",
+          "referer": null,
+          "upgrade": "websocket"
+        }
+      ]
+    },
+    "trusted-bundled": {
+      "native": {
+        "checks": {
+          "hostCaptureID": "2CD0DFDC-60F8-4E58-A61C-307B27FE6A7B",
+          "page": {
+            "csp": null,
+            "href": "capacitor://localhost/index.html",
+            "origin": "capacitor://localhost",
+            "protocol": "capacitor:",
+            "readyState": "complete"
+          },
+          "relative": {
+            "api": "capacitor://localhost/api/waitlist/status",
+            "socket": "capacitor://localhost/multiplayer"
+          },
+          "storage.cookie": {
+            "ok": false
+          },
+          "storage.indexedDB": {
+            "ok": true
+          },
+          "storage.local": {
+            "ok": true
+          },
+          "town.session.include": {
+            "error": "TypeError: Load failed",
+            "ok": false
+          },
+          "town.session.sameOrigin": {
+            "error": "TypeError: Load failed",
+            "ok": false
+          },
+          "town.socket": {
+            "error": "no ticket, so no socket attempt",
+            "ok": false
+          },
+          "town.status.include": {
+            "error": "TypeError: Load failed",
+            "ok": false
+          },
+          "town.ticket.include": {
+            "error": "TypeError: Load failed",
+            "ok": false
+          },
+          "witness.get.include": {
+            "body": {
+              "cookieNames": [],
+              "csrfToken": false,
+              "host": "127.0.0.1:65224",
+              "method": "GET",
+              "origin": "capacitor://localhost",
+              "path": "/witness/get",
+              "referer": null,
+              "secFetchDest": "empty",
+              "secFetchMode": "cors",
+              "secFetchSite": "cross-site",
+              "upgrade": null
+            },
+            "ok": true,
+            "status": 200
+          },
+          "witness.get.sameOrigin": {
+            "body": {
+              "cookieNames": [],
+              "csrfToken": false,
+              "host": "127.0.0.1:65224",
+              "method": "GET",
+              "origin": "capacitor://localhost",
+              "path": "/witness/get",
+              "referer": null,
+              "secFetchDest": "empty",
+              "secFetchMode": "cors",
+              "secFetchSite": "cross-site",
+              "upgrade": null
+            },
+            "ok": true,
+            "status": 200
+          },
+          "witness.post.include": {
+            "body": {
+              "cookieNames": [],
+              "csrfToken": true,
+              "host": "127.0.0.1:65224",
+              "method": "POST",
+              "origin": "capacitor://localhost",
+              "path": "/witness/post",
+              "referer": null,
+              "secFetchDest": "empty",
+              "secFetchMode": "cors",
+              "secFetchSite": "cross-site",
+              "upgrade": null
+            },
+            "ok": true,
+            "status": 200
+          },
+          "witness.socket": {
+            "echo": {
+              "cookieNames": [],
+              "csrfToken": false,
+              "host": "127.0.0.1:65224",
+              "method": "GET",
+              "origin": "capacitor://localhost",
+              "path": "/witness/socket",
+              "referer": null,
+              "secFetchDest": "websocket",
+              "secFetchMode": "websocket",
+              "secFetchSite": "cross-site",
+              "upgrade": "websocket"
+            },
+            "ok": true,
+            "open": true
+          }
+        },
+        "cookieJar": [
+          {
+            "domain": "127.0.0.1",
+            "httpOnly": true,
+            "name": "fixture_session",
+            "path": "/",
+            "sameSite": "lax",
+            "secure": true
+          }
+        ],
+        "cookieSetup": "https-network-bootstrap",
+        "csp": false,
+        "elapsedMs": 4014,
+        "measurementWorld": "page",
+        "mode": "bundled",
+        "navigationCount": 1,
+        "registeredMessageHandlers": 0,
+        "resultTransport": "native-poll",
+        "schemeRequests": [
+          {
+            "bytes": 81,
+            "method": "GET",
+            "path": "/index.html",
+            "result": "200"
+          }
+        ],
+        "violations": [],
+        "webKitUserAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/__host-cookie-bootstrap",
+          "origin": null,
+          "cookieNames": [],
+          "csrfToken": false,
+          "upgrade": null,
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/auth/session",
+          "origin": "capacitor://localhost",
+          "cookieNames": [],
+          "csrfToken": false,
+          "upgrade": null,
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/auth/session",
+          "origin": "capacitor://localhost",
+          "cookieNames": [],
+          "csrfToken": false,
+          "upgrade": null,
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/waitlist/status",
+          "origin": "capacitor://localhost",
+          "cookieNames": [],
+          "csrfToken": false,
+          "upgrade": null,
+          "status": 401
+        },
+        {
+          "method": "OPTIONS",
+          "path": "/api/multiplayer/ticket",
+          "origin": "capacitor://localhost",
+          "cookieNames": [],
+          "csrfToken": false,
+          "upgrade": null,
+          "status": 204
+        }
+      ],
+      "witness": [
+        {
+          "method": "GET",
+          "path": "/witness/get",
+          "host": "127.0.0.1:65224",
+          "origin": "capacitor://localhost",
+          "cookieNames": [],
+          "csrfToken": false,
+          "secFetchSite": "cross-site",
+          "secFetchMode": "cors",
+          "secFetchDest": "empty",
+          "referer": null,
+          "upgrade": null
+        },
+        {
+          "method": "GET",
+          "path": "/witness/get",
+          "host": "127.0.0.1:65224",
+          "origin": "capacitor://localhost",
+          "cookieNames": [],
+          "csrfToken": false,
+          "secFetchSite": "cross-site",
+          "secFetchMode": "cors",
+          "secFetchDest": "empty",
+          "referer": null,
+          "upgrade": null
+        },
+        {
+          "method": "OPTIONS",
+          "path": "/witness/post",
+          "host": "127.0.0.1:65224",
+          "origin": "capacitor://localhost",
+          "cookieNames": [],
+          "csrfToken": false,
+          "secFetchSite": "cross-site",
+          "secFetchMode": "cors",
+          "secFetchDest": "empty",
+          "referer": null,
+          "upgrade": null
+        },
+        {
+          "method": "POST",
+          "path": "/witness/post",
+          "host": "127.0.0.1:65224",
+          "origin": "capacitor://localhost",
+          "cookieNames": [],
+          "csrfToken": true,
+          "secFetchSite": "cross-site",
+          "secFetchMode": "cors",
+          "secFetchDest": "empty",
+          "referer": null,
+          "upgrade": null
+        },
+        {
+          "method": "GET",
+          "path": "/witness/socket",
+          "host": "127.0.0.1:65224",
+          "origin": "capacitor://localhost",
+          "cookieNames": [],
+          "csrfToken": false,
+          "secFetchSite": "cross-site",
+          "secFetchMode": "websocket",
+          "secFetchDest": "websocket",
+          "referer": null,
+          "upgrade": "websocket"
+        }
+      ]
+    }
+  },
+  "certificateSHA256": "23b90f31667e8c43e47fac4bcf914168c4fa208159cefc086cb62c26a91fe268",
+  "appFiles": [
+    {
+      "path": "BundledOrigin",
+      "sha256": "613585c171cedfdfd3367e4b20066fa870d680a4a6c96ac0d5b70be55c9842e9"
+    },
+    {
+      "path": "BundledOrigin.debug.dylib",
+      "sha256": "f1c00d3220b243ecd7bfd9a5d8bae35e76ea703a5db39405c8977b15bb7bcfde"
+    },
+    {
+      "path": "Info.plist",
+      "sha256": "28510684a4bf6d9645e94866e6b78a2f60d39d2955f0ec8d927822d73bfde488"
+    },
+    {
+      "path": "PkgInfo",
+      "sha256": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0"
+    },
+    {
+      "path": "__preview.dylib",
+      "sha256": "ff22bfca74e14920f509d6b1a1da22a77ec9e3de942ad1679acdb6fa4bab1b02"
+    },
+    {
+      "path": "context-parity.js",
+      "sha256": "bb1ac2e9a6d8e8345d569ce729cdebb81aa1b96cca2dc8fa51883f7cb763b1df"
+    },
+    {
+      "path": "harness.js",
+      "sha256": "627c460019aff18641f518ca4af99847515282caaae4f81acfb5dac723e3ac59"
+    }
+  ],
+  "device": "iPhone 17",
+  "runtime": "iOS 27.2",
+  "api": "https://127.0.0.1:65204",
+  "witness": "https://127.0.0.1:65224",
+  "simulator": "E8716E2D-4C41-4A8F-9936-97ABF5DBF820",
+  "trustScope": "Generated certificate added only to owned disposable simulator; normal WebKit TLS validation, no challenge override",
+  "hostedTLSControlQualified": true,
+  "bundledObservation": {
+    "pageTicket": "unreadable",
+    "pageSocket": "not-attempted",
+    "townRequests": [
+      {
+        "method": "GET",
+        "path": "/auth/session",
+        "origin": "capacitor://localhost",
+        "cookieNames": [],
+        "csrfToken": false,
+        "upgrade": null,
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/auth/session",
+        "origin": "capacitor://localhost",
+        "cookieNames": [],
+        "csrfToken": false,
+        "upgrade": null,
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/waitlist/status",
+        "origin": "capacitor://localhost",
+        "cookieNames": [],
+        "csrfToken": false,
+        "upgrade": null,
+        "status": 401
+      },
+      {
+        "method": "OPTIONS",
+        "path": "/api/multiplayer/ticket",
+        "origin": "capacitor://localhost",
+        "cookieNames": [],
+        "csrfToken": false,
+        "upgrade": null,
+        "status": 204
+      }
+    ],
+    "scope": "Observed page results and server metadata only; an unreadable response alone does not prove cookie isolation or server denial"
+  },
+  "scopeLimits": [
+    "No real game assets or decoders",
+    "No module worker trial here",
+    "No actual Capacitor SDK",
+    "No production authentication or physical-device/focus proof"
+  ],
+  "privateKeyRemoved": true,
+  "cleanupErrors": [],
+  "simulatorAbsent": true
+}

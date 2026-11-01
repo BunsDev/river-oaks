@@ -276,12 +276,63 @@ a travel, leaving, and a pose without the bike once the 1.5 s hand-over grace
 has passed (a walking pose already in flight when the slot was
 granted is ignored). A `bicycle` pose
 is accepted only from a slot holder, under an 8.05 m/s (18 mph) budget; the
-owner-only rule still covers the car and motorcycle. Each accepted bicycle pose
+owner-only rule still covers the car and the Ribbonwing; the motorcycle is `shared` in
+`vehicle-config.js`, so any account may submit a `motorcycle` pose (Val, 2026-10-29). Of the
+vehicles only the Ribbonwing (`hover`, `flies` in `vehicle-config.js`) may carry altitude, which
+its owner may do in any appearance. Each accepted bicycle pose
 adds its ground distance to the rider's metres, which the transport drains into
 the cross-world `cycling-miles` account store (dev town: every 30 s and on
 `uncycle`; hosted room: on every tick, after the commit, through a pending map
 that retries on a store failure). The snapshot carries `cycling: {taken: [slotId]}`
 so clients hide bikes that are out.
+
+Ribbonwing maneuvers (#777) are server-owned. The pilot sends
+`{type:'maneuver', kind, id, seq}`, where `kind` is `roll`, `loop`, `tuck_dive`
+or `petal_roll` (`preview/src/ribbonwing-maneuvers.js`, shared by server and
+clients). The town admits it only for the entitled owner flying the `hover`
+kind on the street level. It sweeps the authored path's centre and both
+wingtips every 0.15 m and refuses with `maneuver_too_low`, `maneuver_ceiling`,
+`private_home` or `maneuver_blocked`.
+
+- A repeated `id` (the active or last one) replays without restarting.
+- A `seq` that does not rise is `stale_maneuver`. A second request while one
+  runs is `maneuver_active`.
+- While a maneuver runs, poses are refused with `maneuver_active`. Snapshots
+  publish the live path point and `maneuver:{id,seq,kind,heading,origin,altitude,startedAt,duration}`.
+  Every client replays the path from `startedAt` on the town clock, estimated
+  from each snapshot's `serverTimeMs`.
+- The tick ends a maneuver at its end, so a silent or unfocused pilot still
+  finishes level. It also ends early, in a level hover at the current path
+  point (already proven clear), when the craft or entitlement is lost or the
+  pilot is downed or held. Leaving the world drops it.
+- Checkpoints keep the active maneuver as admitted, so another instance replays
+  it from the same start. Restore requires it to match the player's saved pose,
+  heading and seq, and ends one whose path the restored town no longer clears.
+
+The Ribbonwing's right-hand seat is also server-owned (#777). Commands are
+`{type:'ribbonwing', action}`.
+
+- **Invite.** The owner, landed in the craft, sends `invite` with `peerId`: one
+  person on foot at street level within 8 m. The invitation lasts 60 s and is
+  not checkpointed. `cancel` withdraws it.
+- **Board.** The invited player boards with `board` and `pilotId`.
+- **Seated.** The snapshot then carries `passengerOf` on the passenger and
+  `passengerId` on the pilot. The town places the passenger 0.68 m to the
+  pilot's right from the pilot's live pose, maneuvers included. It refuses the
+  passenger's own poses and other actions with `passenger_aboard`, without a
+  correction; chat and look changes still work.
+- **Leaving.** `leave` is refused while the craft is aloft or maneuvering
+  (`ribbonwing_aloft`). On the ground it sets the passenger down beside the
+  craft.
+- **Set down by the town.** A pilot who leaves the town, loses the craft or
+  entitlement, steps out, or travels sets the passenger down on the first
+  clear spot below or beside the seat. A departed pilot leaves after the
+  transport's departure grace.
+- **Blocks.** Invitations and boarding toward a blocked account get the answer
+  for an absent one, and a stored block ends a ride under way.
+- **Checkpoints.** The seat is saved as a matched pair. Restore refuses
+  one-sided pairs, a pilot not flying the owner's craft, a passenger in a
+  vehicle, and saved invitations.
 `GET /api/cycling/leaderboard` (session required; the gateway limits it to 60
 reads a minute per account) returns the top 20 riders as `{rank, name, miles}`
 plus the caller's own `{rank, miles}`; the top list is cached for ten seconds
@@ -409,6 +460,9 @@ Copy `.env.example` to `.env` if you don't already have a private environment fi
 | `REDIS_NAMESPACE` | Explicit isolated namespace for preview/local Redis; Production defaults to `river-oaks:production:v1` |
 | `MODERATION_FILE` | Standalone server only: path on a private writable volume |
 | `MODERATOR_USER_IDS` | Comma-separated WorkOS user IDs, or empty for no moderators |
+| `MODERATION_NOTIFY_URL` | Optional. HTTPS endpoint each saved player report is posted to as JSON (`{ type: 'report', id, at, reason, reporter, reported, content, respondBy }`): a chat tool's incoming webhook, an email relay or a ticket queue. At most 20 sends in ten minutes; a failed send is logged by report id and the report stays saved. Empty: nobody is told |
+| `MODERATION_NOTIFY_TOKEN` | Optional. Sent as a bearer token with each notice |
+| `MODERATION_RESPONSE_HOURS` | Hours a moderator has to respond to a report, recorded with it as `respondBy`; 24 when empty |
 | `WAITLIST_ADMIN_USER_IDS` | Comma-separated WorkOS user IDs that may approve requests; approvers are automatically approved |
 | `WAITLIST_FILE` | Standalone server only: private persistent waitlist store |
 | `WAITLIST_NAMESPACE` | Separate Redis namespace for durable approval decisions; Production defaults to `river-oaks:production:access:v1` |
@@ -849,6 +903,6 @@ grants the microphone to this origin only.
 
 ### Jev smart rides
 
-Owner accounts can use manual acceleration, reverse, steering, braking and parking, or let Jev drive an authored road route. Pause/resume keeps the route but invalidates old AI decisions; manual directions cancel the route. Losing window focus pauses and stops the ride. A driven vehicle goes wherever its whole footprint fits where a walker could stand, on the road or off it, but never indoors, through a person or through a tree; Jev's route stays on the roads. The server checks each vehicle move like a walk, for speed, ground, solids and private rooms.
+Every account has a garage: the owner's holds the pink car, the rose motorcycle and the landowner Ribbonwing (the `hover` kind, which the owner pilots), everyone else's the motorcycle. Jev chauffeurs only the car (`chauffeur` in `vehicle-config.js`): its rider sits in the passenger seat and may hand him the route. Every other kind is driven by the player from its driver seat, hands on the grips, with no Jev aboard and no smart drive. The Ribbonwing parks, steers and clears kerbs by the car's rules on unseen contact points under its three landing feet, under a 9 m/s pose budget, and it alone may carry altitude: Space climbs and C descends at up to 3 m/s (the shared lift budget) beneath the world's flight ceiling, with its hull kept clear of roofs and trees, in any owner appearance; it lands before anyone steps out, at an exit clear of its wings and of the follow camera; its canopy, steps, feet, fans and nozzles follow the accepted pose on every client. Owner accounts can use manual acceleration, reverse, steering, braking and parking, or let Jev drive an authored road route. Pause/resume keeps the route but invalidates old AI decisions; manual directions cancel the route. Losing window focus pauses and stops the ride. A driven vehicle goes wherever its whole footprint fits where a walker could stand, on the road or off it, but never indoors, through a person or through a tree; Jev's route stays on the roads. The server checks each vehicle move like a walk, for speed, ground, solids and private rooms.
 
 Development uses the local `/v1/chauffeur` bridge and its Settings key override. Hosted play uses `/api/chauffeur` with server-only `TYPESAFE_API_KEY` and optional `JEV_AUTO_MODEL` (default `jev-1.14.0`). The endpoint requires an approved owner session, canonical Origin and CSRF token. It's limited to 40 decisions per minute per owner and `CHAUFFEUR_DAILY_LIMIT` (default 6,000, max 10,000) per UTC day across owners; three provider failures in a row pause calls for 60 seconds. On Redis these budgets are shared across instances; the standalone server keeps them in memory. Credentials never reach the browser; absent keys, invalid answers and expired decisions hold the vehicle. `src/river_oaks/chauffeur-policy.json` supplies both bridge and hosted action policies.

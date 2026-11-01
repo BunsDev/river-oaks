@@ -1,0 +1,438 @@
+{
+  "id": "typesafe-place-green",
+  "title": "TypeSafe Place: the Neighborhood Green, its ribbon and Eighteenth Street",
+  "kit": "city-kit-1",
+  "seed": 2026,
+  "inspiration": "Patterns only, no copied buildings: an elevated residential neighborhood east of Woodland Heights, after the concept art 'TypeSafe Place Residential Heights'. Two 20-storey balconied towers (Luxury Living, and Penthouse Row with its setback crown), garden-roofed mid-rises (Sky Gardens), everyday shop rows with garden roofs, a neighborhood green with a pink ribbon sculpture, and a tree-lined walking avenue. All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    552.5,
+    -122.5,
+    619,
+    5
+  ],
+  "streets": [
+    {
+      "id": "eighteenth-typesafe",
+      "from": [
+        552.5,
+        -71
+      ],
+      "to": [
+        619,
+        -71
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 8,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 14,
+        "spacing": 30
+      },
+      "clear": [
+        [
+          548,
+          560
+        ],
+        [
+          611,
+          620
+        ]
+      ]
+    }
+  ],
+  "plazas": [
+    {
+      "id": "neighborhood-green",
+      "rect": [
+        553,
+        -65.5,
+        620,
+        5
+      ],
+      "lawns": [
+        [
+          558,
+          -56,
+          584,
+          -38
+        ],
+        [
+          592,
+          -56,
+          616,
+          -38
+        ],
+        [
+          558,
+          -30,
+          584,
+          -6
+        ],
+        [
+          592,
+          -30,
+          616,
+          -6
+        ]
+      ],
+      "hedges": [
+        [
+          553,
+          -65.5,
+          554.2,
+          5
+        ]
+      ],
+      "treeRows": [
+        {
+          "y": -60,
+          "from": 566,
+          "to": 606,
+          "spacing": 8
+        },
+        {
+          "y": -1,
+          "from": 562,
+          "to": 610,
+          "spacing": 8
+        }
+      ]
+    },
+    {
+      "id": "south-walk-west",
+      "rect": [
+        553,
+        -94,
+        620,
+        -89.5
+      ],
+      "hedges": [
+        [
+          553,
+          -94,
+          554.2,
+          -89.5
+        ]
+      ]
+    },
+    {
+      "id": "south-passage",
+      "rect": [
+        554.2,
+        -90.5,
+        559,
+        -76.5
+      ]
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "pink-ribbon",
+      "piece": "landmark/ribbon",
+      "at": [
+        588,
+        -34
+      ],
+      "yaw": 0
+    }
+  ],
+  "furniture": [
+    {
+      "id": "ribbon-bench-n-584",
+      "piece": "furniture/bench",
+      "at": [
+        584.5,
+        -28.5
+      ],
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "ribbon-bench-n-591",
+      "piece": "furniture/bench",
+      "at": [
+        591.5,
+        -28.5
+      ],
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "ribbon-bench-s-584",
+      "piece": "furniture/bench",
+      "at": [
+        584.5,
+        -39.5
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "ribbon-bench-s-591",
+      "piece": "furniture/bench",
+      "at": [
+        591.5,
+        -39.5
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "green-cafe-560",
+      "piece": "furniture/cafe-set",
+      "at": [
+        560,
+        -62.5
+      ]
+    },
+    {
+      "id": "green-cafe-566",
+      "piece": "furniture/cafe-set",
+      "at": [
+        566,
+        -62.5
+      ]
+    },
+    {
+      "id": "green-cafe-572",
+      "piece": "furniture/cafe-set",
+      "at": [
+        572,
+        -62.5
+      ]
+    },
+    {
+      "id": "green-cafe-604",
+      "piece": "furniture/cafe-set",
+      "at": [
+        604,
+        -62.5
+      ]
+    },
+    {
+      "id": "green-cafe-610",
+      "piece": "furniture/cafe-set",
+      "at": [
+        610,
+        -62.5
+      ]
+    },
+    {
+      "id": "green-cafe-616",
+      "piece": "furniture/cafe-set",
+      "at": [
+        616,
+        -62.5
+      ]
+    },
+    {
+      "id": "green-lamp-0",
+      "piece": "furniture/lamp",
+      "at": [
+        556,
+        -47
+      ]
+    },
+    {
+      "id": "green-lamp-1",
+      "piece": "furniture/lamp",
+      "at": [
+        556,
+        -18
+      ]
+    },
+    {
+      "id": "green-lamp-2",
+      "piece": "furniture/lamp",
+      "at": [
+        618,
+        -47
+      ]
+    },
+    {
+      "id": "green-lamp-3",
+      "piece": "furniture/lamp",
+      "at": [
+        618,
+        -18
+      ]
+    },
+    {
+      "id": "green-lamp-4",
+      "piece": "furniture/lamp",
+      "at": [
+        588,
+        -60
+      ]
+    },
+    {
+      "id": "green-lamp-5",
+      "piece": "furniture/lamp",
+      "at": [
+        588,
+        -3
+      ]
+    },
+    {
+      "id": "green-bench-w--50",
+      "piece": "furniture/bench",
+      "at": [
+        555.5,
+        -50
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "green-bench-w--42",
+      "piece": "furniture/bench",
+      "at": [
+        555.5,
+        -42
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "green-bench-w--24",
+      "piece": "furniture/bench",
+      "at": [
+        555.5,
+        -24
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "green-bench-w--12",
+      "piece": "furniture/bench",
+      "at": [
+        555.5,
+        -12
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "south-rack-566",
+      "piece": "furniture/bike-rack",
+      "at": [
+        566,
+        -92
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "south-walk-bench-590",
+      "piece": "furniture/bench",
+      "at": [
+        590,
+        -92.2
+      ],
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "south-walk-bench-610",
+      "piece": "furniture/bench",
+      "at": [
+        610,
+        -92.2
+      ],
+      "yaw": 3.141592653589793
+    }
+  ],
+  "context": [],
+  "overrides": {},
+  "additions": [
+    {
+      "id": "residence-south-west",
+      "piece": "building/shell",
+      "rect": [
+        558,
+        -119,
+        590,
+        -97
+      ],
+      "storeys": 7,
+      "height": 25.6,
+      "wall": "concrete-warm",
+      "trim": "steel-black",
+      "roof": "garden",
+      "style": "place-residence",
+      "faces": [
+        "north",
+        "west",
+        "east"
+      ],
+      "bays": 1,
+      "sign": null,
+      "variant": "gallery",
+      "awning": "canvas-blush"
+    },
+    {
+      "id": "residence-south-mid",
+      "piece": "building/shell",
+      "rect": [
+        594,
+        -119,
+        618,
+        -97
+      ],
+      "storeys": 6,
+      "height": 22.1,
+      "wall": "stone-pearl",
+      "trim": "steel-black",
+      "roof": "garden",
+      "style": "place-residence",
+      "faces": [
+        "north",
+        "west"
+      ],
+      "bays": 1,
+      "sign": null,
+      "variant": "gallery",
+      "awning": "canvas-blush"
+    }
+  ],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "eighteenth-retail-west",
+        "rect": [
+          559,
+          -89.5,
+          619,
+          -77.5
+        ],
+        "style": "place-retail",
+        "depth": [
+          10,
+          12
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          6,
+          7.5
+        ],
+        "names": [
+          "Unknown Cat Cafe",
+          "Async Bagels",
+          "Await Ice Cream",
+          "Module Records",
+          "Export Supply Co",
+          "Import Grocer",
+          "Const Correct Cleaners"
+        ],
+        "front": "north",
+        "sides": [
+          "east",
+          "west"
+        ]
+      }
+    ],
+    "migrated": {
+      "blocks": 1,
+      "geometry": "ebd9f29eb6e43330"
+    }
+  }
+}

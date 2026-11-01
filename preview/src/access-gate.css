@@ -208,6 +208,11 @@
 .access-footer .access-report-link { display: inline-block; min-height: 24px; margin: 0; padding: 2px 4px; border: 0; background: none; color: var(--gate-muted); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .access-footer .access-report-link:hover { color: var(--gate-ink); }
 .access-footer .access-report-link:focus-visible { outline: 2px solid var(--gate-pink); outline-offset: 2px; border-radius: 4px; }
+/* The published support contact (support-contact.js), under the footer in every gate state. */
+.access-support { width: 100%; max-width: 460px; margin: 10px auto 0; color: var(--gate-quiet); font-size: 13.5px; text-align: center; overflow-wrap: anywhere; }
+.access-support a { color: var(--gate-muted); text-decoration: underline; text-underline-offset: 3px; }
+.access-support a:hover { color: var(--gate-ink); }
+.access-support a:focus-visible { outline: 2px solid var(--gate-pink); outline-offset: 2px; border-radius: 4px; }
 .access-tools { display: flex; gap: .5rem; padding: .5rem 1rem; }
 .access-tools button { padding: .45rem .7rem; font-size: .8rem; }
 .access-review { background: #153f4280; backdrop-filter: blur(8px); }

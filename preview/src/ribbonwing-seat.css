@@ -1,0 +1,9 @@
+/* The Ribbonwing passenger seat panel (#777): bottom centre, above the HUD. */
+.ribbonwing-seat{position:absolute;z-index:6;left:50%;bottom:118px;transform:translateX(-50%);display:flex;gap:12px;align-items:center;max-width:min(560px,calc(100% - 32px));padding:10px 14px;border:1px solid #ffffff38;border-radius:16px;background:var(--panel,#211d2aee);color:var(--ink,#f6eef9);box-shadow:0 8px 32px #0003;font-size:14px}
+.ribbonwing-seat[hidden]{display:none}
+.ribbonwing-seat p{margin:0}
+.ribbonwing-seat-actions{display:flex;gap:8px}
+.ribbonwing-seat button{padding:8px 12px;border:1px solid var(--line,#ffffff38);border-radius:10px;background:#f486a1;color:#2a1520;font-weight:600;cursor:pointer}
+.ribbonwing-seat button[data-seat-cancel]{background:transparent;color:inherit}
+.ribbonwing-seat button:disabled{opacity:.5;cursor:default}
+.ribbonwing-seat button:focus-visible{outline:2px solid var(--accent,#f5d2ed);outline-offset:2px}
