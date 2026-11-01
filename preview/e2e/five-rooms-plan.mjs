@@ -171,16 +171,18 @@ export function fiveRoomsCameras(contract, { ground = () => 0, world = null } = 
   n = 0;
   for (const [i, stop] of stops.entries()) {
     const venue = contract.venues[i], name = slug(venue.id), g = p => ground(p[0], p[1]);
-    const street = stop.approach[0], doorEye = [...stop.door, g(stop.door) + 1.4];
+    // The street view stands where the link leaves the Ribbon; an entrance on the spine itself has no link, so 6 m out along its outward.
+    const linkStart = stop.approach[0], street = Math.hypot(linkStart[0] - stop.door[0], linkStart[1] - stop.door[1]) >= 4 ? linkStart : along(stop.door, [-stop.inward[0], -stop.inward[1]], 6);
+    const doorEye = [...stop.door, g(stop.door) + 1.4];
     // A bay's indoor view stands at its interior floor's centroid; a threshold (no envelope) 3 m in from its opening.
     const inside = venue.interior ? centroid(venue.interior.floor) : along(stop.door, stop.inward, 3);
-    const seat = venue.seats[0] ?? along(stop.door, stop.inward, 1.5);
+    const seat = venue.seats[0] ?? along(stop.door, stop.inward, 4);
     const foot = centroid(venue.footprint);
     cameras.push(
-      camera(id('v', `${name}-street`), 'venue', 'street', `${stop.label}: from the Ribbon along ${stop.segment}, toward the entrance`, [...street, g(street) + EYE], doorEye, 66, { venue: venue.id }),
+      camera(id('v', `${name}-street`), 'venue', 'street', `${stop.label}: from the Ribbon (${stop.segment}), toward the entrance`, [...street, g(street) + EYE], doorEye, 66, { venue: venue.id }),
       camera(id('v', `${name}-entrance`), 'venue', 'entrance', `${stop.label}: standing ${1.2} m outside the door line, looking in`, [...stop.stand, g(stop.stand) + EYE], [...stop.face, g(stop.face) + 1.4], 72, { venue: venue.id }),
       camera(id('v', `${name}-indoor`), 'venue', 'indoor', `${stop.label}: inside the blank envelope (a threshold: 3 m in), looking back to the entrance`, [...inside, g(inside) + EYE], doorEye, 72, { venue: venue.id }),
-      camera(id('v', `${name}-seated`), 'venue', 'seated', `${stop.label}: seated height at the first seat attachment (or 1.5 m inside the door), toward the entrance`, [...seat, g(seat) + SEATED_EYE], doorEye, 70, { venue: venue.id }),
+      camera(id('v', `${name}-seated`), 'venue', 'seated', `${stop.label}: seated height at the first seat attachment (or 4 m inside the door), toward the entrance`, [...seat, g(seat) + SEATED_EYE], doorEye, 70, { venue: venue.id }),
       camera(id('v', `${name}-aerial`), 'venue', 'aerial', `${stop.label}: oblique aerial over the footprint`, [foot[0] - 22, foot[1] - 22, g(foot) + 30], [...foot, g(foot) + 2], 55, { venue: venue.id }),
     );
   }

@@ -93,6 +93,10 @@ test('the traversal walks the spine end to end, then each link segment to a stop
   // An entrance on the spine itself needs no link walk.
   const onSpine = synthetic(); onSpine.links[0].segment = 'spine';
   assert.deepEqual(ribbonTraversal(normalizeContract(onSpine)).stops[0].approach.map(p => p.map(v => +v.toFixed(3))), [[7.8, 10]]);
+  const seatless = synthetic(); seatless.venues[1].attachments = [];
+  assert.deepEqual(fiveRoomsCameras(normalizeContract(seatless), { ground }).find(item => item.id === 'v09-atelier-seated').source.position.slice(0, 2), [13, 30], 'without a seat the seated view is 4 m inside the door');
+  const street = fiveRoomsCameras(normalizeContract(onSpine), { ground }).find(item => item.id === 'v01-counter-street');
+  assert.deepEqual(street.source.position.slice(0, 2).map(v => +v.toFixed(3)), [3, 10], 'a spine entrance\'s street view stands 6 m out from the door');
 });
 
 test('every venue gets the five matched views and the route gets five, at eye, seated or aerial height over the ground given', () => {
