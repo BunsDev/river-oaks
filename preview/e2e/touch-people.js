@@ -14,9 +14,9 @@ async page => {
       await touch.waitForFunction(()=>{const d=document.querySelector('#canvas-host').dataset;return d.storePeopleTotal&&d.storePeopleReady===d.storePeopleTotal&&d.playerReady==='true';},null,{timeout:90000});
       if(await touch.locator('#panel-toggle').getAttribute('aria-expanded')==='true')await touch.locator('#panel-toggle').click();
       await touch.waitForTimeout(500);
-      check(await touch.locator('#walking-controls-toggle').getAttribute('aria-expanded')==='true',`${viewport.width}: touch movement pad starts available`);
-      // Keep the viewport clear for tapping actual people; the pad is tested below.
-      await touch.locator('#walking-controls-toggle').click();
+      // Touch walks with the thumbstick; the button pad starts collapsed, which also keeps
+      // the viewport clear for tapping actual people. The pad is tested below.
+      check(await touch.locator('.touch-gamepad').evaluate(node=>!node.hidden)&&await touch.locator('#walking-controls-toggle').getAttribute('aria-expanded')==='false',`${viewport.width}: touch starts with the thumbstick, the button pad one tap away`);
       if(viewport.width===1024) {
         const client=await context.newCDPSession(touch),x=500,y=300;
         const send=(type,points)=>client.send('Input.dispatchTouchEvent',{type,touchPoints:points.map(([id,x,y])=>({id,x,y,radiusX:1,radiusY:1,force:1}))});
