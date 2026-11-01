@@ -24,25 +24,29 @@ const shells = plan => plan.pieces.filter(piece => piece.piece.startsWith('build
 // Ground hashes the migrations proved against. On 2026-10-30 street lamps that the
 // generator had stood in tree pits moved half a tree spacing along the street; that
 // changed the ground of the authored and quarter forms alike, so ten hashes moved with it.
+// The same day, benches, a café set and the esplanade's last tree pair moved off street
+// trees in three of them (Heights Boulevard North, Nineteenth and Yale, Yale Icehouse).
+// Street-tree heights and crowns then widened toward the District's (7.5–14 m, 2.6–4.8 m),
+// which moved every hash.
 const AUTHORED_GEOMETRY = {
-  'bayou-market-commons': 'f0c1ce10921e2c7a',
-  'bayou-terrace-north': '57ec6291e36c63a3',
-  'bayou-terrace-south': '4bc9dd68a9b5780e',
-  'heights-boulevard-north': 'a291402bc9d3c659',
-  'heights-boulevard-south': 'faa0cc8b542c3705',
-  'nineteenth-and-yale': '6051230f64a03a61',
-  'studewood-north': 'd73843e9791c56c3',
-  'studewood-south': '1ac5d437d2fe3709',
-  'typesafe-place-green': '89848a43c1d3f449',
-  'typesafe-place-north': 'b8fe1af9ce326b8b',
-  'typesafe-place-penthouse': '27456442cebc0130',
-  'typesafe-place-south': '8a27f2788a7c293e',
-  'typesafe-place-uptown': 'ca693b37e58d6b15',
-  'woodland-heights-north': 'f96a8c08ba90ae6a',
-  'woodland-heights-south': 'a165e847736c5775',
-  'yale-icehouse': '84bd41f84b27776a',
-  'yale-street-north': '2fe550e1d513f36b',
-  'yale-street-south': '7ae3d23acc524824',
+  'bayou-market-commons': '52e0d598a2f7ca32',
+  'bayou-terrace-north': '64587cb9cfe05a23',
+  'bayou-terrace-south': '312ea40a26fa8b70',
+  'heights-boulevard-north': '398d0f21e3ab3f97',
+  'heights-boulevard-south': 'd8e94031cc3bb3af',
+  'nineteenth-and-yale': 'f00d112d4ebfdd7f',
+  'studewood-north': '853d10f703cba481',
+  'studewood-south': '341e5f31e73de4eb',
+  'typesafe-place-green': 'ebd9f29eb6e43330',
+  'typesafe-place-north': '02e65da62845f630',
+  'typesafe-place-penthouse': '5b970b86a44e6be0',
+  'typesafe-place-south': 'b12c7f5d72c5000f',
+  'typesafe-place-uptown': '5a027ef3de7456e9',
+  'woodland-heights-north': 'b860ef0e6f80ea7c',
+  'woodland-heights-south': '330eaf0602357dc8',
+  'yale-icehouse': '54fb404e50421eac',
+  'yale-street-north': 'd71d96978a5fadd1',
+  'yale-street-south': 'd5dc6664d832ea3e',
 };
 
 test('eighteen migrated neighborhoods, 32 blocks, put the same ground as their hand-authored blocks did', () => {
