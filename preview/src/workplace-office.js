@@ -10,7 +10,12 @@
 // art to those zones, so routes, sockets and the doorway stay as measured.
 // Units are metres in the room frame: x across, d inward from the door, y up.
 // Three.js frame: x east, y up, z = -d.
+//
+// `finish` (workplace-kit-finish.js) recolours this room render-only: the Pink Jet-Age
+// finish (#738/#744) paints the same meshes ivory, pink and chrome. Classic is the default
+// and is this file's original art, unchanged.
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { workplaceKitFinish, workplaceKitFinishName } from './workplace-kit-finish.js';
 
 // Showcase views for the finished room, beside the plan's CAM-01..04 (which
 // stay the measured review cameras). Same shape as room.cameras.
@@ -66,10 +71,33 @@ function obsidian(THREE) {
     return [base + mica, base + 2 + mica * 0.9, base + 4 + mica * 0.6];
   });
 }
+// Ivory terrazzo (the Pink Jet-Age floor), 1.8 m tiles: a warm ground, a grout line at the
+// tile edge and rounded chips of the finish's own colours, scattered once per cell so the
+// tile repeats seamlessly.
+function terrazzo(THREE, palette) {
+  const size = 256, cells = 24, cell = size / cells, ground = rgb(palette.ground), grout = rgb(palette.grout), chips = palette.chips.map(rgb);
+  const grid = [];
+  for (let cy = 0; cy < cells; cy++) for (let cx = 0; cx < cells; cx++)
+    grid.push(hash(cx, cy, 51) < 0.55 ? null : { x: (cx + hash(cx, cy, 52)) * cell, y: (cy + hash(cx, cy, 53)) * cell, rx: 1.2 + hash(cx, cy, 54) * 2.6, ry: 1.2 + hash(cx, cy, 55) * 2, tone: chips[Math.floor(hash(cx, cy, 56) * chips.length) % chips.length] });
+  const wrap = (a, b) => Math.min(Math.abs(a - b), size - Math.abs(a - b));
+  return surface(THREE, size, size, (x, y) => {
+    let color = mixRgb(ground, grout, 0.25 * fbm(x / size * 4, y / size * 4, 3, 3, 4));
+    if (x === 0 || y === 0) color = grout;
+    const cx = Math.floor(x / cell), cy = Math.floor(y / cell);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const flake = grid[((cy + dy + cells) % cells) * cells + (cx + dx + cells) % cells];
+      if (!flake) continue;
+      const fx = wrap(x, flake.x) / flake.rx, fy = wrap(y, flake.y) / flake.ry, d = fx * fx + fy * fy;
+      if (d < 1) return mixRgb(flake.tone, color, smooth(0.7, 1, d));
+    }
+    return color;
+  });
+}
 // Book-matched honey onyx: fine translucent bands flowing on a diagonal,
 // broader honey layers and thin amber veins; mirrored about the centre seam.
-function onyx(THREE) {
-  const w = 256, h = 512, ivory = rgb('#f6eedf'), honey = rgb('#dcb47a'), amber = rgb('#9c6a3a');
+// A finish may repaint the three tones (rose quartz under Pink Jet-Age).
+function onyx(THREE, palette = { ivory: '#f6eedf', band: '#dcb47a', vein: '#9c6a3a' }) {
+  const w = 256, h = 512, ivory = rgb(palette.ivory), honey = rgb(palette.band), amber = rgb(palette.vein);
   return surface(THREE, w, h, (x, y) => {
     const mx = Math.min(x, w - 1 - x) / w * 2, v = y / h;
     const warp = fbm(mx * 2, v * 3, 5, 5, 64), b = v * 6 + mx * 1.4 + warp * 1.9;
@@ -83,14 +111,20 @@ function onyx(THREE) {
 // A night skyline of the garden city seen from high up: dusk gradient, stars,
 // three layers of rounded towers with lit windows and two orbital ring halos.
 // Drawn top-down; DataTexture rows start at the bottom, so writes flip y.
-function skyline(THREE) {
+// A finish may repaint it (a dusk sky with ivory towers under Pink Jet-Age); the
+// composition, the towers' seeds and every window position are the same.
+const SKYLINE_NIGHT = Object.freeze({ top: '#070d22', mid: '#1b1d3f', horizon: '#7a3f5e', glow: '#e09a7c', stars: 160,
+  towers: [{ tone: '#3a2f55', windows: false }, { tone: '#211d38', windows: true }, { tone: '#120f20', windows: true }],
+  window: { cool: '#a9f3ff', warm: '#ffd59a', alpha: 0.85 }, spire: '#c9a86a', halo: '#b9fbff' });
+function skyline(THREE, palette = SKYLINE_NIGHT) {
   const w = 1024, h = 512, data = new Uint8Array(w * h * 4);
-  const top = rgb('#070d22'), mid = rgb('#1b1d3f'), horizon = rgb('#7a3f5e'), glow = rgb('#e09a7c');
+  const top = rgb(palette.top), mid = rgb(palette.mid), horizon = rgb(palette.horizon), glow = rgb(palette.glow);
+  const cool = rgb(palette.window.cool), warm = rgb(palette.window.warm), spire = rgb(palette.spire), halo = rgb(palette.halo);
   for (let y = 0; y < h; y++) {
     const t = y / h; // 0 top
     let color = t < 0.55 ? mixRgb(top, mid, t / 0.55) : t < 0.8 ? mixRgb(mid, horizon, (t - 0.55) / 0.25) : mixRgb(horizon, glow, Math.min(1, (t - 0.8) / 0.12));
     for (let x = 0; x < w; x++) {
-      const i = ((h - 1 - y) * w + x) * 4, star = t < 0.5 && hash(x, y, 7) > 0.9985 ? 160 * (1 - t) : 0;
+      const i = ((h - 1 - y) * w + x) * 4, star = t < 0.5 && hash(x, y, 7) > 0.9985 ? palette.stars * (1 - t) : 0;
       data[i] = clamp255(color[0] + star); data[i + 1] = clamp255(color[1] + star); data[i + 2] = clamp255(color[2] + star); data[i + 3] = 255;
     }
   }
@@ -106,28 +140,29 @@ function skyline(THREE) {
       for (let px = Math.floor(x); px < x + tw; px++) {
         const edge = (px - x) / tw, cap = dome ? Math.sqrt(Math.max(0, 1 - (2 * edge - 1) ** 2)) * tw * 0.5 : 0;
         for (let py = Math.floor(top - cap); py < base; py++) put(px, py, tone);
-        if (windows) for (let py = Math.floor(top + 4); py < base - 2; py += 5) if ((px - Math.floor(x)) % 4 === 1 && hash(px, py, seed + 9) > 0.45) put(px, py, hash(px, py, seed + 3) > 0.8 ? rgb('#a9f3ff') : rgb('#ffd59a'), 0.85);
+        if (windows) for (let py = Math.floor(top + 4); py < base - 2; py += 5) if ((px - Math.floor(x)) % 4 === 1 && hash(px, py, seed + 9) > 0.45) put(px, py, hash(px, py, seed + 3) > 0.8 ? cool : warm, palette.window.alpha);
       }
-      if (dome && hash(n, 4, seed) > 0.4) for (let py = Math.floor(top - tw * 0.5 - 18); py < top - tw * 0.5; py++) put(Math.floor(x + tw / 2), py, rgb('#c9a86a'));
+      if (dome && hash(n, 4, seed) > 0.4) for (let py = Math.floor(top - tw * 0.5 - 18); py < top - tw * 0.5; py++) put(Math.floor(x + tw / 2), py, spire);
       x += tw + 2 + hash(n, 5, seed) * 10;
     }
   };
-  towers(11, h * 0.9, rgb('#3a2f55'), false, 60, 190, 18, 46);
-  towers(23, h * 0.95, rgb('#211d38'), true, 50, 260, 22, 60);
-  towers(37, h * 1.0, rgb('#120f20'), true, 30, 170, 30, 80);
+  towers(11, h * 0.9, rgb(palette.towers[0].tone), palette.towers[0].windows, 60, 190, 18, 46);
+  towers(23, h * 0.95, rgb(palette.towers[1].tone), palette.towers[1].windows, 50, 260, 22, 60);
+  towers(37, h * 1.0, rgb(palette.towers[2].tone), palette.towers[2].windows, 30, 170, 30, 80);
   for (const [cx, cy, rx, ry] of [[w * 0.3, h * 0.42, 70, 12], [w * 0.74, h * 0.36, 54, 9]])
-    for (let a = 0; a < Math.PI * 2; a += 0.002) put(Math.round(cx + Math.cos(a) * rx), Math.round(cy + Math.sin(a) * ry), rgb('#b9fbff'), 0.75);
+    for (let a = 0; a < Math.PI * 2; a += 0.002) put(Math.round(cx + Math.cos(a) * rx), Math.round(cy + Math.sin(a) * ry), halo, 0.75);
   const texture = new THREE.DataTexture(data, w, h);
   texture.colorSpace = THREE.SRGBColorSpace; texture.flipY = false; texture.magFilter = THREE.LinearFilter;
   texture.minFilter = THREE.LinearMipmapLinearFilter; texture.generateMipmaps = true; texture.needsUpdate = true;
   return texture;
 }
 // Holographic interface: cyan rules, a gauge, bars and text-like rows on black
-// (additive blending makes black transparent).
-function interfaceTexture(THREE) {
+// (additive blending makes black transparent). A placeholder painted from `ink`
+// alone: no text, no data, never an owner's work.
+function interfaceTexture(THREE, ink = [120, 240, 255]) {
   const w = 256, h = 128;
   return surface(THREE, w, h, (x, y) => {
-    const cyan = [120, 240, 255];
+    const cyan = ink;
     let alpha = 0.04 + 0.05 * (1 - Math.abs(y / h - 0.5) * 2);
     if (x < 2 || x > w - 3 || y < 2 || y > h - 3) alpha = 0.9;
     if (y % 22 === 11 && x > 12 && x < 150) alpha = Math.max(alpha, 0.35);
@@ -149,8 +184,11 @@ function fluteNormals(THREE) {
 }
 
 // ---- the office -----------------------------------------------------------------
-export function buildWorkplaceOffice(THREE, room) {
+export function buildWorkplaceOffice(THREE, room, { finish = 'classic' } = {}) {
+  // The finish is a palette, never an input of data: an unknown name is classic.
+  const kit = workplaceKitFinish(finish), paint = kit.surfaces;
   const object = new THREE.Group(); object.name = `${room.site.label} office`;
+  object.userData.finish = workplaceKitFinishName(finish);
   const geometries = new Set(), materials = new Set(), textures = new Set();
   const g = geometry => { geometries.add(geometry); return geometry; };
   const t = texture => { textures.add(texture); return texture; };
@@ -164,7 +202,7 @@ export function buildWorkplaceOffice(THREE, room) {
   const rounded = (w, h, l, radius) => { const key = [w, h, l, radius].join(); if (!roundedCache.has(key)) roundedCache.set(key, g(new RoundedBoxGeometry(w, h, l, 4, radius))); return roundedCache.get(key); };
 
   // materials
-  const floorMap = t(obsidian(THREE)); floorMap.repeat.set(W / 1.8, D / 1.8);
+  const floorMap = t(paint.floor ? terrazzo(THREE, paint.floor) : obsidian(THREE)); floorMap.repeat.set(W / 1.8, D / 1.8);
   const floor = phys({ map: floorMap, roughness: 0.14, clearcoat: 0.85, clearcoatRoughness: 0.05, envMapIntensity: 1.1 });
   const graphite = std({ color: '#1b2022', roughness: 0.82 });
   const lacquer = phys({ color: '#101516', roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.0 });
@@ -175,17 +213,17 @@ export function buildWorkplaceOffice(THREE, room) {
   const gold = std({ color: '#d1b075', roughness: 0.24, metalness: 1, envMapIntensity: 1.2 });
   const flutes = t(fluteNormals(THREE)); flutes.repeat.set(D / 0.48, 1);
   const ivory = std({ color: '#e7dccb', roughness: 0.58, normalMap: flutes, normalScale: new THREE.Vector2(1.2, 1.2), emissive: '#ffffff', emissiveIntensity: 0.04, envMapIntensity: 0.6 });
-  const onyxMap = t(onyx(THREE));
+  const onyxMap = t(onyx(THREE, paint.feature));
   const onyxWall = std({ map: onyxMap, emissiveMap: onyxMap, emissive: '#ffffff', emissiveIntensity: 0.36, roughness: 0.32, envMapIntensity: 0.6 });
   const pearl = phys({ color: '#f2ede5', roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 0.9 });
   const blackGlass = phys({ color: '#07090a', roughness: 0.04, metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 1.4 });
   const warmLight = std({ color: '#fff4e2', emissive: '#ffe1b4', emissiveIntensity: 3.2, roughness: 0.4 });
   const coolLight = std({ color: '#effdff', emissive: '#bdf6ff', emissiveIntensity: 2.6, roughness: 0.4 });
-  const skyMap = t(skyline(THREE));
+  const skyMap = t(skyline(THREE, paint.skyline));
   const sky = std({ color: '#000000', emissive: '#ffffff', emissiveMap: skyMap, emissiveIntensity: 1.25, roughness: 1 });
   const glass = phys({ color: '#a7cfd2', transparent: true, opacity: 0.12, roughness: 0.02, metalness: 0.1, envMapIntensity: 1.4, depthWrite: false });
   const smoked = phys({ color: '#3b3029', transparent: true, opacity: 0.55, roughness: 0.05, metalness: 0.3, depthWrite: false });
-  const uiMap = t(interfaceTexture(THREE));
+  const uiMap = t(interfaceTexture(THREE, paint.interface?.ink));
   const holo = new THREE.MeshBasicMaterial({ map: uiMap, color: '#ffffff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }); materials.add(holo);
   const holoLine = new THREE.MeshBasicMaterial({ color: '#7fefff', transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false, wireframe: true }); materials.add(holoLine);
   const holoBeam = new THREE.MeshBasicMaterial({ color: '#56dcff', transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }); materials.add(holoBeam);
@@ -197,6 +235,11 @@ export function buildWorkplaceOffice(THREE, room) {
   const cabinetGlow = std({ color: '#17120f', emissive: '#ffcf96', emissiveIntensity: 0.05, roughness: 0.22, metalness: 0.75, envMapIntensity: 0.8 });
   const named = { floor, graphite, lacquer, satin, graphiteFlute, gold, ivory, onyxWall, pearl, blackGlass, warmLight, coolLight, sky, glass, smoked, holo, holoLine, holoBeam, leather, chrome, velvet, ceramic, foliage, cabinetGlow };
   for (const [name, material] of Object.entries(named)) material.name = `office-${name}`;
+  // The finish's field overrides (workplace-kit-finish.js): colours are set on the existing
+  // THREE.Color, numbers replace the field. Classic has none.
+  for (const [name, fields] of Object.entries(kit.materials)) for (const [field, value] of Object.entries(fields)) {
+    if (named[name][field]?.isColor) named[name][field].set(value); else named[name][field] = value;
+  }
 
   const add = (geometry, material, [x, y, d], zone, { s = [1, 1, 1], r = [0, 0, 0], shadow = true, name } = {}) => {
     const mesh = new THREE.Mesh(geometry, material);
