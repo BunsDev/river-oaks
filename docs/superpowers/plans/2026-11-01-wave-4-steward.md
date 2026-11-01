@@ -168,14 +168,18 @@ Run once, as the goal asks: a git-archive snapshot of `main` `decb4e9a` with its
 
 A local run of `crime-residents` on `cdf3425f`, with temporary per-stride logging (since reverted), got the browser lock at about 12:58Z and failed the same check. The log is `.runtime/wave4/crime-residents-local-cdf3425f.log` in the ledger worktree. The on-foot walk works: toward the first resident (Ima Hogg) the visitor closed 43 m to within reach in about 25 strides, with one officer in `pursue` on them. No startle came within the 8 s wait. On the second candidate (Hugo) the visitor walked 14 m, then froze at one position for the rest of the run. By the third candidate (Owen) the police list was empty, meaning the officer had taken the visitor and stood down. This confirms the cause in Decision 4: under #844 the pursuing officer catches a wanted visitor on foot before the startle can be observed. The walk helper is not at fault.
 
-## Finish-line status (13:02Z)
+### #844 green on `fe3e240b` (about 17:20Z)
+
+The journey is restaged inside #844's rule, with no speed, radius, threshold or timeout changed. After the shove the visitor walks about 20 m north on foot, out of `south-service-lane`. The journey then waits (bounded at 15 s) until no officer is pursuing, grabbing or arresting the visitor while the star is still held, travels to 12 m of the resident, and walks the last stretch to 4 m. Two new checks cover the walk out and the stand-down. Local `RIVER_OAKS_SHARED_JOURNEY=crime-residents node preview/e2e/shared-runner.js development` passed at load about 4.4; the single-journey receipt was set aside and `data/reports/shared-experience.json` restored. Core `pnpm run verify` passed. The commit `fe3e240b` is SSH-signed and verified, and all 31 hosted checks completed green on it, `preview shared (development)` included. `crime-encounter` runs only when selected by name, not in the hosted development shard. On `fe3e240b` it failed locally at "A resident startles and runs from the wanted visitor"; a control with the base `server/police.js` and `server/world.js` passed, so the cause is the rule. Restaged in `f572839c` (signed, verified) with no speed, radius, threshold or check changed: travel falls back to a walk on `pursued`, the visitor walks out of the lane and waits for the stand-down before the resident, returns to the rival under emergency off, strikes once more if the grab lands during the raw-command checks, and the cooling clock starts at the stand-down that the instant travel used to mark (that wait bounded at 30 s instead of 10 s, since a walk takes longer). Local runs: passed twice (once with temporary timeline logging, since removed, once without); 11 rows pass and the 3 unconditional not-run rows are unchanged. Core verify passed. All 31 hosted checks completed green on `f572839c` (the hosted shards do not run `crime-encounter`; the local runs above are its evidence). Decision 4 (the rule) is still Val's; #844 stays a draft.
+
+## Finish-line status (17:20Z)
 
 | Item | Status | Evidence |
 | --- | --- | --- |
 | 1 Main healthy | Met | Verify green on `main` for the last five pushes (`9d139387`, `5ba4a3f0`, `6a789759`, `d8e2a61d`, `8355e0ca`); `0d7b021d` in progress. Alert 20 diagnosed (Round 1) with the updater's text; no fix exists without an ignore, so a dismissal recommendation is Decision 1. |
 | 2 Open wave dispositioned | Met for my scope | Dispositions table covers every PR. #794 and #819 landed under the landing line; #786 held as superseded. I have no lander in the queue. The six queued PRs belong to live owners' landers, and I am not authorized to stop processes I did not start. The three snapshot rows are retired, with #717 evidence and an archive. `project:check --github`: 107 gaps. |
 | 3 CI headroom | Met | Draft #846, shards 10.2 and 6.3 min, all checks green (Decision 13). |
-| 4a #785 | Met as specified, hosted red | Draft #844 with failing-then-passing server tests and a journey inventory. `crime-residents` fails hosted and locally because the officer (3.4 m/s) catches a walking wanted player (3.2 m/s); the rule choice is Decision 4. |
+| 4a #785 | Met | Draft #844 with failing-then-passing server tests and a journey inventory; `crime-residents` restaged (walk out of the zone, then travel) and all 31 hosted checks green on `fe3e240b`; `crime-encounter` restaged in `f572839c`, passing locally, 31/31 hosted green on that head. The rule choice is Decision 4. |
 | 4b Redis repeat | Met (run once) | Ran at load 6.71 with its own Redis and `caffeinate -s`; recorded as not met on the comparison (Decision 12). |
 | 4c #784 | Met | Verdict: approve the mechanism, held on #785's order and a branch update. |
 | 4d Increment 6 | Met | Scoped in Round 4, not built. |
@@ -183,4 +187,4 @@ A local run of `crime-residents` on `cdf3425f`, with temporary per-stride loggin
 
 ## Next step
 
-Hosted results for #844 and #846; the Redis repeat result or its gate log; Val's answers to the Decisions above. Nothing else in this goal is landable without a line from Val.
+Hosted results for #846 on a current head; the Redis repeat result or its gate log; Val's answers to the Decisions above. Nothing else in this goal is landable without a line from Val.
