@@ -308,3 +308,12 @@ production activation, deployment or release claim.
   visual-approval rungs stay open, as before.
 - #787 (Route C) is a draft; when it lands, `districtFinish` joins the style-revision row
   above with no further change here.
+
+### Next step for this amendment
+
+- Draft PR #833 on `7f1f1089`; hosted checks pending. Val reviews the amendment and decides
+  whether to paste the amended prompt into #747. Do not mark ready or land without
+  authorization.
+- Follow-up tasks, each its own branch: a `--finish` passthrough for
+  `world-expansion-baseline.js` and the route journeys; a journey for the unavailable-chunk
+  escape; after #787 lands, rerun both arms over all three routes and all hours on one head.
