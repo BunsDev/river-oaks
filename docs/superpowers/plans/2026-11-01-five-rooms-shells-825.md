@@ -38,6 +38,7 @@ from the contract only, classic untouched (issue #839).
 |---|---|---|
 | 2026-11-01 | `node --test preview/tests/five-rooms-shells.test.js preview/tests/ribbon-finish.test.js` | 13/13 pass |
 | 2026-11-01 | `node --test preview/tests/ribbon-route-district.test.js` (after merge) | 5/5 pass |
+| 2026-11-01 | `ddf3f6a4` Shade Garden hoop widened to door + 1.5 m (legs cleared the Hermès door, found by #841): `node --test` shells + ribbon-finish 13/13, depth audit 0 pairs; core verify for this head ran on #862's tree (22:04-22:09Z, passed) | pass |
 | 2026-11-01 20:29-20:35Z | `pnpm run verify` (core, on `3f13ed66` plus these files, load 8-14) | passed: node 307/307, preview 5147 pass of 5178 (31 skipped), server 1111 of 1396 (285 skipped: Redis/browser/live), 127 of 132; build ok; python 215 passed; 0 failures |
 
 ## Gaps
@@ -48,4 +49,4 @@ from the contract only, classic untouched (issue #839).
 
 ## Next step
 
-Signed commit, push, draft PR against `feat/five-rooms-layout-825-20261101` (#849); hosted checks; then #841 stacks on this branch.
+Draft #860 is up (head `ddf3f6a4`), and #862 (#841) stacks on it. Next: wait for the hosted preview aggregate. Landing waits for Val.
