@@ -50,7 +50,21 @@ A/D barrel roll, Q/E spin, R restart, P pause. Aerial (Ribbonwing): unchanged.
   `output/playwright/racing-*.png` show Jev seated on the motorcycle.
 - `pnpm test`: 4823 tests, 4787 passed, 0 failed, 1 skipped, 35 todo (the todo contrast
   warnings in hud-token-contrast.test.js are pre-existing). Log in the scratchpad.
-- `pnpm run verify` (core gate): not run; no commit was requested.
+- `pnpm run verify` (core gate): passed on 066d0600 (2026-11-01 08:33 UTC, host load ~15),
+  receipt `.runtime/agent/core.json`.
+
+## Delivery
+
+- The 2026-11-01 02:30 CDT commit 1c6d820a (made from a desktop client, unsigned) was
+  re-created with the identical tree as signed commit 066d0600 and force-pushed with lease.
+- PR #834 opened as a draft over REST (GraphQL quota was exhausted at the time), marked
+  ready after this ledger commit, landed with `pnpm run land 834 --owner
+  claude-fable-garden-circuit-20261031`.
+- Retirement round after inventory (75 refs): three clean, zero-commit detached snapshots
+  (river-oaks-737-main-merge, river-oaks-ribbonwing, river-oaks-ribbonwing-main-merge)
+  archived and removed via `project:prune --cancel-stale`; every other candidate stayed
+  blocked on another session's unreleased ownership, dirty state, an open PR or the
+  touched-within-cutoff rule, and is listed in the handoff.
 
 ## Gaps
 
