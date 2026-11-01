@@ -444,7 +444,7 @@
       "typed": {
         "sections": {
           "streets": {
-            "numbers": 42,
+            "numbers": 44,
             "names": 0,
             "words": 0
           },
@@ -485,17 +485,17 @@
           }
         },
         "total": {
-          "numbers": 110,
+          "numbers": 112,
           "names": 9,
           "words": 4
         },
         "massing": {
-          "numbers": 62,
+          "numbers": 64,
           "names": 9,
           "words": 4
         },
         "author": {
-          "numbers": 110,
+          "numbers": 112,
           "names": 9,
           "words": 4
         },
@@ -505,7 +505,7 @@
           "words": 0
         }
       },
-      "perShell": 2.95,
+      "perShell": 3.05,
       "change": {
         "edit": "every street 2 m wider",
         "shellsBefore": 21,
@@ -1871,12 +1871,12 @@
     "blocks": 32,
     "shells": 354,
     "typed": {
-      "numbers": 2615,
+      "numbers": 2617,
       "names": 205,
       "words": 45
     },
     "massing": {
-      "numbers": 705,
+      "numbers": 707,
       "names": 175,
       "words": 45
     },

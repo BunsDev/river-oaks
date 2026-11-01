@@ -229,8 +229,10 @@ function assembleStreet(recipe, street, seed, pieces, walks) {
       let index = 0;
       for (let x = xa + street.trees.offset; x <= xb - 1; x += street.trees.spacing) {
         if (!open(x)) continue;
+        // Heights and crowns span most of the District's surveyed street trees (7.5–16 m, 2.1–5.2 m)
+        // so a row reads as planted over years, not as one repeated tree.
         const id = `${base}/tree-${side}-${index++}`, random = streamFor(seed, id);
-        pieces.push({ id, piece: 'landscape/street-tree', at: [mm(x), kerbside(sign)], height: mm(random.between(8.5, 11.5)), radius: mm(random.between(3.1, 3.9)), yaw: mm(random.between(0, Math.PI * 2)) });
+        pieces.push({ id, piece: 'landscape/street-tree', at: [mm(x), kerbside(sign)], height: mm(random.between(7.5, 14)), radius: mm(random.between(2.6, 4.8)), yaw: mm(random.between(0, Math.PI * 2)) });
         pieces.push({ id: `${id}/pit`, piece: 'landscape/tree-pit', rect: rectAround([mm(x), kerbside(sign)], [1.4, 1.2]) });
       }
     }
