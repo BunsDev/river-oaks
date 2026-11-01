@@ -16,6 +16,19 @@ test('district facades keep glass off the building mass, and display alcoves out
   const built = buildDistrictBuildings(world), group = new THREE.Group();
   group.add(built, built.userData.interiors);
   group.updateMatrixWorld(true);
+  // The building masses are depth-biased clones (district.js, reference-facades.js), and Material.clone
+  // drops shader callbacks: every opaque mass kept its colour but lost its metric UVs and cladding
+  // joints (2026-10-30). Each must still compile its authored patch.
+  const masses = new Set();
+  group.traverse(object => { if (object.userData.districtBuilding && object.material?.polygonOffset) masses.add(object.material); });
+  const opaque = [...masses].filter(material => !/glass/.test(material.name));
+  assert.ok(opaque.length >= 8, `${opaque.length} depth-biased mass materials`);
+  for (const material of opaque) {
+    const shader = { vertexShader: '#include <uv_vertex>', fragmentShader: 'void main() { #include <map_fragment> }', uniforms: {} };
+    material.onBeforeCompile(shader, {});
+    assert.ok(shader.vertexShader.includes('roUv'), `${material.name}: metric UV patch survives the depth clone`);
+    assert.match(material.customProgramCacheKey(), /river-oaks-metric-uv/, `${material.name}: authored program identity survives`);
+  }
   const fights = findDepthFights(group);
   const named = fight => `${fight.a} × ${fight.b} at ${fight.at.map(value => value.toFixed(1))}`;
   // Every facade part stands on the mapped wall or in front of it, so the mass behind them all
