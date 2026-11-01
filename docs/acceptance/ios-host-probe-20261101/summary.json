@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "scope": "Unsigned Release iPhone 17/iOS 27.2 simulator diagnostic probe; not a production host or physical-device qualification",
+  "sourceBase": "decb4e9ac8ee86ab0ed04fb97600550f96e502d5",
+  "dirty": true,
+  "nativeSourceFiles": [
+    {
+      "path": "experiments/ios-probe/App/ProbeApp.swift",
+      "sha256": "1bf98e4020c4062415d2db985cb2a2b7d9f427e1e06a4e2c632e23da18f2c198"
+    },
+    {
+      "path": "experiments/ios-probe/App/Info.plist",
+      "sha256": "4e6692a34c629832d3a1e9a3491d8831638cf4ca6c8d31deb52ebc28dce4db57"
+    },
+    {
+      "path": "scripts/ios-probe-launch-smoke.mjs",
+      "sha256": "1b7feb2d16edf126290b304ad8b38df8323b8540adb7b0d0d5cb6a802922faa0"
+    },
+    {
+      "path": "scripts/ios-probe-controls-smoke.swift",
+      "sha256": "7d8676e9fcbfbc399fcd229a47b3d86a33bb0fc319b861e737ab556d2e5d25c7"
+    }
+  ],
+  "launch": {
+    "scope": "Simulator launch of diagnostic probe, native-only measurement mode; no physical or production-host acceptance",
+    "appMetadata": {
+      "ProbeConfiguration": "Release",
+      "ProbeSourceSHA": "decb4e9ac8ee86ab0ed04fb97600550f96e502d5",
+      "ProbeSourceDirty": "true",
+      "ProbeEntry": "https://typesafe.place/play"
+    },
+    "launchStatus": 0,
+    "aliveAfter10Seconds": true,
+    "sceneFailure": false,
+    "sceneLogStatus": 0,
+    "runtime": "iOS 27.2",
+    "device": "iPhone 17"
+  },
+  "lifecycle": {
+    "sameProcessAfterForeground": true,
+    "recordingCount": 1,
+    "backgroundRecorded": true,
+    "foregroundRecorded": true,
+    "focusScope": "Keyboard, VoiceOver and first-responder restoration were not measured",
+    "events": [
+      "start",
+      "UIApplicationWillEnterForegroundNotification",
+      "navigation-start",
+      "navigation-finish",
+      "UIApplicationDidEnterBackgroundNotification",
+      "UIApplicationWillEnterForegroundNotification"
+    ]
+  },
+  "inputPackageFiles": [
+    {
+      "path": "Info.plist",
+      "sha256": "89649c1401bf31047b7a7ca41f5308d54d34b2f2172f9a7926a1bdf61ab32be4"
+    },
+    {
+      "path": "PkgInfo",
+      "sha256": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0"
+    },
+    {
+      "path": "TypeSafeProbe",
+      "sha256": "e072f0851b0b33f78f93b452949f2b03322f0894e34e690f3aed112616441cd7"
+    },
+    {
+      "path": "decode-queue.js",
+      "sha256": "3eff9c30a75445281d4838dfdaff69d4359441125df5bf028e813eba39a3fc1d"
+    },
+    {
+      "path": "phase-capture.js",
+      "sha256": "f4491dd5a844b3bed05dbb1630d3aa379460b2aa1f3bc040a4dd2fe8f1192ab9"
+    },
+    {
+      "path": "probe.js",
+      "sha256": "7f6f7317903264126d4a054f5e1ca67f5310b72619e940a13b207c027a636936"
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "before-controls.png",
+      "sha256": "3675599875dace980ce3f318866491d2bf5426c6cd48c037e56793d489fce0a5"
+    },
+    {
+      "path": "initial-loading.png",
+      "sha256": "a0377cd91782bc510be8ecdf80f9a0d7563bc470775b86e855e2189dfd2a6495"
+    },
+    {
+      "path": "after-controls-foreground.png",
+      "sha256": "27562ca501c8e9c07f6511de96c79ca26a747a77a4874236e598010431a80812"
+    }
+  ],
+  "nativeEventsSHA256": "0af231d457ef649f389b63217bc25c55a201b8d29aba07612485513742d7ce3b",
+  "limitations": [
+    "Before-controls image is the scene-repaired pre-toolbar build; its binary was not retained.",
+    "Initial-loading image shows blank page content while the native-only diagnostic banner remains visible. This is not qualified loading UX.",
+    "Hosted content revision is unknown; only the native code/package inputs are pinned.",
+    "OCR label presence requires manual confirmation that labels belong to the native toolbar.",
+    "No keyboard, VoiceOver, hit-testing, Dynamic Type, physical-device or production-host acceptance.",
+    "Native recording is unfinalized at deliberate simulator teardown; not performance evidence."
+  ],
+  "unavailableFixture": {
+    "scope": "Configuration-only copy of unsigned final app; only ProbeEntry changed to reserved unavailable HTTPS host; all non-Info.plist bytes compared identical",
+    "launch": {
+      "scope": "Simulator launch of diagnostic probe, native-only measurement mode; no physical or production-host acceptance",
+      "appMetadata": {
+        "ProbeConfiguration": "Release",
+        "ProbeSourceSHA": "decb4e9ac8ee86ab0ed04fb97600550f96e502d5",
+        "ProbeSourceDirty": "true",
+        "ProbeEntry": "https://unavailable.invalid/play"
+      },
+      "launchStatus": 0,
+      "aliveAfter10Seconds": true,
+      "sceneFailure": false,
+      "sceneLogStatus": 0,
+      "runtime": "iOS 27.2",
+      "device": "iPhone 17"
+    },
+    "lifecycle": {
+      "sameProcessAfterForeground": true,
+      "recordingCount": 1,
+      "backgroundRecorded": true,
+      "foregroundRecorded": true,
+      "focusScope": "Keyboard, VoiceOver and first-responder restoration were not measured",
+      "events": [
+        "start",
+        "UIApplicationWillEnterForegroundNotification",
+        "navigation-start",
+        "navigation-failed",
+        "UIApplicationDidEnterBackgroundNotification",
+        "UIApplicationWillEnterForegroundNotification"
+      ]
+    },
+    "screenshot": "unavailable-after-foreground.png",
+    "screenshotSHA256": "43f2d3d8a2f3d7c74b1b2566f92a42883717810f0d82bcdf758881e99353ef06",
+    "eventsSHA256": "c9c12d659e3805255c86a1c5e8540eb893c6d85663a01b421bd1f772860293a6"
+  },
+  "coreVerification": {
+    "status": "failed",
+    "attempts": [
+      {
+        "profile": "core",
+        "startedAt": "2026-11-01T08:43:32.310Z",
+        "finishedAt": "2026-11-01T08:54:49.681Z",
+        "status": "failed",
+        "revision": "decb4e9ac8ee86ab0ed04fb97600550f96e502d5",
+        "dirty": true,
+        "failedStages": [
+          {
+            "id": "preview-tests",
+            "command": [
+              "pnpm",
+              "test"
+            ],
+            "status": "failed",
+            "exitCode": null,
+            "expectedExit": 0,
+            "signal": "SIGKILL",
+            "error": "ETIMEDOUT",
+            "durationMs": 600032
+          }
+        ],
+        "notRun": [
+          "server-tests",
+          "desktop-tests",
+          "build",
+          "python-lint",
+          "python-format",
+          "python-tests",
+          "demo",
+          "demo-verify",
+          "secrets"
+        ]
+      },
+      {
+        "profile": "core",
+        "startedAt": "2026-11-01T08:58:12.103Z",
+        "finishedAt": "2026-11-01T09:09:47.300Z",
+        "status": "failed",
+        "revision": "decb4e9ac8ee86ab0ed04fb97600550f96e502d5",
+        "dirty": true,
+        "failedStages": [
+          {
+            "id": "preview-tests",
+            "command": [
+              "pnpm",
+              "test"
+            ],
+            "status": "failed",
+            "exitCode": null,
+            "expectedExit": 0,
+            "signal": "SIGKILL",
+            "error": "ETIMEDOUT",
+            "durationMs": 600035
+          }
+        ],
+        "notRun": [
+          "server-tests",
+          "desktop-tests",
+          "build",
+          "python-lint",
+          "python-format",
+          "python-tests",
+          "demo",
+          "demo-verify",
+          "secrets"
+        ]
+      }
+    ],
+    "standaloneBuild": "pnpm run build exited 0 after the timed core runs",
+    "standaloneSecrets": "uv run --locked python scripts/check_secrets.py --all exited 0; no leaks found; this does not turn core green"
+  },
+  "xcode": {
+    "version": "27.2",
+    "build": "27B52"
+  }
+}

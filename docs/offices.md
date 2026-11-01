@@ -12,7 +12,7 @@ Jevica can invite residents currently in town and revoke access from **Play →
 Jevica’s office** or **Office access** upstairs. Revocation returns an occupant to
 the lobby immediately. Legacy accepted-request grants do not become invitations.
 
-The arrival sequence starts from your current street view, opens the lobby doors, and follows your selected avatar into the elevator. The same cabin rides to level 6 and opens into the furnished office. **Skip arrival** bypasses the sequence; reduced motion skips it automatically. Inside:
+The arrival sequence starts from your current street view, opens the lobby doors, and follows your selected avatar into the phase tube: a chrome-ribbed glass drum on a tangerine plinth whose curved leaves slide round to close behind you. A ring of warm light then sweeps up the tube and back; your avatar dissolves beneath it, is absent for a beat at the top while the floor display counts to 6, and condenses again under the ring as it falls. The front leaves open into the furnished office. **Skip arrival** bypasses the sequence; reduced motion skips it automatically. Inside:
 
 - **WASD** walks; drag or **← / →** turns the view.
 - On-screen movement controls support touch and keyboard activation.
@@ -105,6 +105,16 @@ The art stays inside its footprints and on its floors (`preview/tests/office-pen
 Repeated pieces are one instanced draw per finish. One-off pieces are one static draw per finish in each visibility group (`furnishings:main-floor`, `:terrace`, `:mezzanine`), and each piece keeps its plan zone. The furnished office measures 92 draws and about 87,000 triangles before avatars, against a provisional 150-draw budget.
 
 The surfaces are three shared 512 px seeded-noise maps, drawn in idle slots after arrival. The exported package, with its GLBs, editable `.blend`, textures, materials and receipts, is in `assets/office-penthouse/` (see its README), and its manifest entries are `repo-penthouse-*` in `docs/design/office-ipic/asset-manifest.json`. Reviews: `node scripts/export-office-penthouse.mjs preview` (asset preview) and `node preview/e2e/office-penthouse-review.mjs` (runtime, two accounts, noon and dusk).
+
+**Kit finish (#744 under #738).** The penthouse takes the city-kit finish the street follows
+(`render-quality.js readFinishPreference`: `?finish=pink-jet-age`, or the stored choice; classic
+by default). `preview/src/office-kit-finish.js` is render-only: under Pink Jet-Age the champagne
+bronze becomes satin chrome, the chair frames and display stands brushed steel, the lamp shades
+ivory, the mezzanine guard and terrace rails mint glass and the arrival core and back wall ivory.
+The art, its footprints, zones, instances, shadows, lamps and the per-vertex tints (walnut, boucle,
+blush and the one TypeSafe-pink accent) are the same under every finish, the idle displays stay
+dark glass with no content, and exports stay classic (`preview/tests/office-kit-finish.test.js`).
+The asset-preview fixture takes the same `?finish=`.
 
 ## Retired personal offices
 

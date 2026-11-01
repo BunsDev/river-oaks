@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createCartierFinishes, isCartierRoom } from './cartier-pilot.js';
 import { RETRO } from './retro-palette.js';
 import { ROOM_HEIGHT } from './store-rooms.js';
 import { createLuxeFinishes, createSurfaceCollector, flutedPanels, luxeShellPlan, luxeSuiteFor, tintEmissiveByColor } from './interior-luxe.js';
@@ -84,7 +85,7 @@ function garmentGeometry() {
   const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: false }); geometry.translate(0, 0, -0.025); return geometry;
 }
 
-export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } = {}) {
+export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [], cartierPilot = true } = {}) {
   const group = new THREE.Group(); group.name = 'Boutique interiors';
   const geometries = new Set(), materials = new Set(), textures = new Set();
   const track = { g: g => { geometries.add(g); return g; }, m: m => { materials.add(m); return m; }, t: t => { textures.add(t); return t; } };
@@ -119,13 +120,18 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const glow = standard({ color: '#fff1d6', emissive: '#ffd9a6', emissiveIntensity: 1.9, roughness: 0.4 });
   const lamp = standard({ color: '#fff6e6', emissive: '#ffe1b8', emissiveIntensity: 2.4, roughness: 0.4 });
   const warmPanel = standard({ color: '#f1dfc4', emissive: '#f4c98d', emissiveIntensity: 0.9, roughness: 0.9 });
-  const mirror = standard({ color: '#ffffff', roughness: 0.03, metalness: 1, envMapIntensity: 1 });
+  // Every mirror pane lies on its brass surround or a wall: pulled forward a couple of depth steps, it wins.
+  const mirror = standard({ color: '#ffffff', roughness: 0.03, metalness: 1, envMapIntensity: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
   reflectionMaterials.push(mirror);
   const foliage = standard({ color: '#3f6a45', roughness: 0.95 });
   const bronze = standard({ color: '#5a4a3a', roughness: 0.4, metalness: 0.7 });
   const steel = standard({ color: '#bfc3c7', roughness: 0.3, metalness: 0.9 });
   const cream = standard({ color: '#ffffff', roughness: 0.6 });
   for (const [name, material] of Object.entries({ textile, leather, velvet, brass, chrome, black, oak, walnut, white, ceramic, marbleTop, stone, glassCase, bottleGlass, glow, lamp, warmPanel, mirror, foliage, bronze, steel, cream, ceiling, wall })) material.name = `interior-${name}`;
+  // Allocate the bounded finish set only when a mapped Cartier room is built.
+  const cartier = cartierPilot && rooms.some(isCartierRoom) ? createCartierFinishes(track) : null;
+  const pilotRoles = new Map([[textile, 'velvet'], [brass, 'brass'], [black, 'lacquer'], [velvet, 'velvet'], [stone, 'stone'], [marbleTop, 'stone'], [wall, 'wall'], [glassCase, 'glass']]);
+  const isDisplayGlass = material => material === glassCase || material === bottleGlass || material === cartier?.glass;
   // geometries
   const box = track.g(new THREE.BoxGeometry(1, 1, 1));
   const cylinder = track.g(new THREE.CylinderGeometry(1, 1, 1, 12));
@@ -157,6 +163,8 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const M = new THREE.Matrix4(), P = new THREE.Vector3(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), E = new THREE.Euler();
   let room = null, roomMatrix = new THREE.Matrix4();
   const add = (geometry, material, a, d, y, scale, yaw = 0, color = '#ffffff', tilt = [0, 0]) => {
+    const role = cartier && isCartierRoom(room) && pilotRoles.get(material);
+    if (role) { material = cartier[role]; color = '#ffffff'; }
     const key = `${room?.buildingId ?? 'x'}:${geometry.uuid}:${material.uuid}`;
     if (tinted.has(material) && color === '#ffffff') color = suiteOf(room)[tinted.get(material)];
     if (!batches.has(key)) batches.set(key, { geometry, material, matrices: [], colors: [] });
@@ -503,7 +511,8 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * W / tile, uv.getY(i) * D / tile);
     const floor = new THREE.Mesh(floorGeometry, floorOf(room)); floor.receiveShadow = true;
     placeMesh(floor, c, D / 2, 0.012);
-    add(box, black, c, D / 2, -0.3, [W, 0.6, D], 0, '#5a5148');
+    // The slab under the floor starts 6 cm back, so its front face stays clear of the shop glass 3 cm in front.
+    add(box, black, c, D / 2 + 0.03, -0.3, [W, 0.6, D - 0.06], 0, '#5a5148');
     // Walls sit inside the room's own footprint so neighbours never show through.
     add(box, ceiling, c, D / 2, H + 0.125, [W, 0.25, D]);
     add(box, walls[room.theme], c, D - 0.075, H / 2, [W, H, 0.15]);
@@ -528,12 +537,12 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     const mesh = new THREE.InstancedMesh(geometry, material, matrices.length);
     const color = new THREE.Color();
     matrices.forEach((matrix, index) => { mesh.setMatrixAt(index, matrix); mesh.setColorAt(index, color.set(colors[index])); });
-    mesh.castShadow = material !== generatedWallContact && material !== glow && material !== lamp && material !== luxe.halo && material !== glassCase && material !== bottleGlass && material !== warmPanel;
+    mesh.castShadow = material !== generatedWallContact && material !== glow && material !== lamp && material !== luxe.halo && !isDisplayGlass(material) && material !== warmPanel;
     mesh.receiveShadow = material !== generatedWallContact;
     if (material === generatedWallContact) mesh.userData.aoExclude = true;
     // One batch per building and material: the renderer culls by instance bounds without a draw-call explosion.
     mesh.computeBoundingSphere();
-    if (material === glassCase || material === bottleGlass) mesh.renderOrder = 2;
+    if (isDisplayGlass(material)) mesh.renderOrder = 2;
     group.add(mesh);
   }
   group.userData.lightPositions = lightPositions;

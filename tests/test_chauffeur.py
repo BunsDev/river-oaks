@@ -98,3 +98,9 @@ def test_comprehensive_controls_obey_direction_clearance_and_parking():
     assert "reverse" in choices(recovery=True, rear_clear=True, speed=0)
     assert "reverse" not in choices(recovery=True, rear_clear=False, speed=0)
     assert choices(remaining_m=1) == {"stop", "brake", "park"}
+
+
+def test_hover_coach_is_a_chauffeured_vehicle_and_the_bicycle_is_not():
+    assert packet(vehicle="hover").vehicle == "hover"
+    with pytest.raises(ValidationError):
+        packet(vehicle="bicycle")

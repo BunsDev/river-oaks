@@ -147,41 +147,6 @@
       ]
     }
   ],
-  "blocks": [
-    {
-      "id": "studewood-row-north",
-      "style": "heights-row",
-      "rect": [
-        436.5,
-        117.5,
-        452.5,
-        163
-      ],
-      "front": "west",
-      "sides": [
-        "south"
-      ],
-      "depth": [
-        12,
-        16
-      ],
-      "storeys": [
-        1,
-        2
-      ],
-      "bays": [
-        4.5,
-        6.5
-      ],
-      "names": [
-        "Waxwing Records",
-        "Blue Norther Barber",
-        "Sweetgum Toys",
-        "Okra & Oak Deli",
-        "Paper Kite Press"
-      ]
-    }
-  ],
   "landmarks": [
     {
       "id": "studewood-water-tower",
@@ -202,7 +167,7 @@
         452,
         13.3
       ],
-      "yaw": 0.0
+      "yaw": 0
     },
     {
       "id": "park-bench-s-466",
@@ -211,7 +176,7 @@
         466,
         13.3
       ],
-      "yaw": 0.0
+      "yaw": 0
     },
     {
       "id": "park-bench-s-480",
@@ -220,7 +185,7 @@
         480,
         13.3
       ],
-      "yaw": 0.0
+      "yaw": 0
     },
     {
       "id": "park-bench-s-494",
@@ -229,7 +194,7 @@
         494,
         13.3
       ],
-      "yaw": 0.0
+      "yaw": 0
     },
     {
       "id": "park-bench-n-452",
@@ -494,5 +459,43 @@
   ],
   "context": [],
   "overrides": {},
-  "additions": []
+  "additions": [],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "studewood-row-north",
+        "rect": [
+          436.5,
+          117.5,
+          452.5,
+          163
+        ],
+        "style": "heights-row",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          6.5
+        ],
+        "names": [
+          "Waxwing Records",
+          "Blue Norther Barber",
+          "Sweetgum Toys",
+          "Okra & Oak Deli",
+          "Paper Kite Press"
+        ]
+      }
+    ],
+    "migrated": {
+      "blocks": 1,
+      "geometry": "853d10f703cba481"
+    }
+  }
 }

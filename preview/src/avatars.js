@@ -3,6 +3,8 @@ import {createCharacterFidelity, followCharacterQuality} from './character-fidel
 import {defaultAppearanceRealism} from './default-appearance-realism.js';
 import {createCharacterExpressions} from './character-expressions.js';
 import { createArmContacts } from './arm-contact.js';
+import { createBicycleRider } from './bicycle-rider.js';
+import { createMotorcycleRider } from './motorcycle-rider.js';
 import { applyHandshakeContact } from './handshake-contact.js';
 import { shareAvatarSkeletons } from './avatar-skeletons.js';
 import { createConversationGaze } from './conversation-gaze.js';
@@ -13,6 +15,8 @@ import { createEyeTracking } from './eye-tracking.js';
 import { registerSpeechAvatar, speechAvatarPose } from './speech-avatar.js';
 import { applyResidentStyle } from './resident-style.js';
 import { applyResidentHairstyle } from './resident-hairstyle.js';
+import { applyCharacterRecipe } from './character-recipe-look.js';
+import { recipeFaceShapes, recipeWidth } from './character-recipe.js';
 import { residentFaceFor, bakeResidentFace } from './resident-face.js';
 import * as THREE from 'three';
 import { createAssetGLTFLoader, prefersHtmlAvatarImages } from './gltf-image-decoder.js';
@@ -96,10 +100,12 @@ export function shareSkeletons(model) { return [...shareAvatarSkeletons(model)];
 // One independently skinned clone of a cached template. Joint axes are expressed
 // in each bone's rest frame so poses can be authored in the character's terms:
 // x pitches forward/back, y turns, z tilts sideways.
-export function instantiateAvatar(source, { targetHeight, id, armSpread, face }) {
+// width: a recipe's build (character-recipe.js recipeWidth), scaling the figure's
+// east/west and front/back axes while the standing height stays targetHeight.
+export function instantiateAvatar(source, { targetHeight, id, armSpread, face, width = 1 }) {
   const model = clone(source.scene), materials = new Map(), skeletons = shareAvatarSkeletons(model);
   const scale = targetHeight/source.height;
-  model.scale.setScalar(scale); model.position.y=-source.floor*scale;
+  model.scale.set(scale*width, scale, scale*width); model.position.y=-source.floor*scale;
   model.traverse(item => {
     if (id !== undefined) item.userData.localId=id;
     if (!item.isMesh) return;
@@ -142,28 +148,35 @@ export function instantiateAvatar(source, { targetHeight, id, armSpread, face })
 }
 
 // faceRecipe: undefined picks residentFaceFor(id); {} keeps the rig's authored face.
-export async function loadResidentAvatar(index, id, profileOverride, { folk = true, appearanceId = profileOverride, faceRecipe, realism } = {}) {
+// recipe: a player-made character's canonical recipe (character-recipe.js) for its body.
+export async function loadResidentAvatar(index, id, profileOverride, { folk = true, appearanceId = profileOverride, faceRecipe, realism, recipe } = {}) {
   const profile = profileOverride ?? avatarProfile(index), source = await template(profile);
-  const targetHeight = characterFidelityContract(profile)?.targetHeightM ?? (profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025);
-  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, face:faceRecipe??(folk&&id!=='player'?residentFaceFor(id):undefined) });
+  if (recipe && recipe.body !== profile) throw new TypeError('A recipe dresses its own body');
+  const targetHeight = recipe ? recipe.height / 100 : characterFidelityContract(profile)?.targetHeightM ?? (profile === 'jevica' ? 1.685 : profile === 'prince-jev' ? 1.74 : profile.startsWith('woman') ? 1.66+(index%3)*0.025 : 1.78+(index%3)*0.025);
+  const avatar = instantiateAvatar(source, { targetHeight, id, armSpread:profile==='jevica'?0.32:undefined, width:recipe?recipeWidth(recipe):1, face:recipe?recipeFaceShapes(recipe):faceRecipe??(folk&&id!=='player'?residentFaceFor(id):undefined) });
   const { model, bones, rest } = avatar;
-  if(id !== 'player' && folk) {
+  if(recipe) {
+    try { await applyCharacterRecipe(avatar,recipe,template); }
+    catch(error) { avatar.dispose(); throw error; }
+  } else if(id !== 'player' && folk) {
     try { await applyResidentHairstyle(avatar,id,profile,template); applyResidentStyle(avatar,id); }
     catch(error) { avatar.dispose(); throw error; }
   }
   const root = new THREE.Group();
   root.add(model);
-  const look=(id==='player'||String(id).startsWith('remote-'))&&appearanceId!=='jevica'
+  const look=!recipe&&(id==='player'||String(id).startsWith('remote-'))&&appearanceId!=='jevica'
     ? createRomanceLook(avatar,root,sharedAppearance(appearanceId)) : null;
   const kit=supplyBag(),hand=model.getObjectByName('hand_r');root.add(kit);
   const can=wateringCan();root.add(can);
   const adjustment = new THREE.Quaternion();
-  const feet = createFootPlacement(model, root), baseY = model.position.y;
+  const feet = createFootPlacement(model, root), baseY = model.position.y, baseZ = model.position.z;
   const seatedShoes=new Map(feet.legs.map(leg=>[leg,leg.foot.getWorldQuaternion(new THREE.Quaternion())]));
   const noMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const gaze=createConversationGaze(),gazeOrigin=new THREE.Vector3(),gazeRotation=new THREE.Quaternion(),gazeForward=new THREE.Vector3();
   const gazeHead=model.getObjectByName('head'),gazeNeck=model.getObjectByName('neck_01');
-  const greetingArm=createArmContacts(model,root).find(arm=>arm.side==='r');
+  const arms=createArmContacts(model,root),greetingArm=arms.find(arm=>arm.side==='r');
+  const bicycle=createBicycleRider({model,root,feet,arms,seatedShoes,axes:avatar.axes,hipHeight:avatar.hipHeight});
+  const motorcycle=createMotorcycleRider({model,root,feet,arms,seatedShoes,axes:avatar.axes,hipHeight:avatar.hipHeight});
   const gestures=createResidentGestures({reducedMotion:noMotion});
   const conversation=createConversationMotion({seed:id??index,reducedMotion:noMotion});
   const conversationBody=createConversationBody(avatar);
@@ -179,7 +192,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       if(realism===undefined)unsubscribeQuality=await followCharacterQuality(fidelity);else await fidelity.setTier(realism);
     }catch(error){fidelity.dispose();expressions.dispose();upperBody.dispose();look?.dispose();avatar.dispose();throw error;}
   }
-  let previousTime=null,walkingSpeed=0;
+  let previousTime=null,walkingSpeed=0,feetAway=false;
   return {
     object:root, profile, rig:avatar, expressions,
     get realismReport(){return fidelity?.report??{tier:'off'};},
@@ -192,6 +205,8 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
     get conversationPose() {return conversation.pose;},
     get facePose() {return face.pose;},
     get feet() {return feet.legs;},
+    // The saddle height this rider sets on a bicycle (bicycle-rider.js).
+    get bicycleSaddle() {return bicycle.saddle;},
     update(now, action, speaking, locomotion, groundAt = () => root.getWorldPosition(new THREE.Vector3()).y, lookTarget = null, {conversing=false} = {}) {
       const t=now/1000+index*0.7;
       const elapsed=previousTime===null?0:Math.max(0,(now-previousTime)/1000);
@@ -206,7 +221,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       const strength = Math.min(1,walkingSpeed/0.65);
       // Let leg reach determine pelvis lowering; a fixed walking drop keeps
       // the supporting knee crouched even directly beneath the body.
-      model.position.y = baseY - 0.004*strength;
+      model.position.y = baseY - 0.004*strength; model.position.z = baseZ;
       for (const bone of bones) {
         bone.quaternion.copy(rest.get(bone));
         if(noMotion && !locomotion?.speed) continue;
@@ -215,7 +230,10 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         adjustment.setFromAxisAngle(avatar.axes.get(bone)[bone.name.startsWith('lowerarm') ? 'z' : 'x'],angle); bone.quaternion.multiply(adjustment);
         if(bone.name==='head') {adjustment.setFromAxisAngle(avatar.axes.get(bone).z,conversationPose.roll);bone.quaternion.multiply(adjustment);}
       }
-      if(!locomotion?.flying&&!locomotion?.riding)feet.update(dt,locomotion,groundAt);
+      // Seated, riding or flying, the feet are posed elsewhere; standing again (a
+      // seat 0.4-0.9 m from the last footprints) stretched the legs back to them (#637).
+      if(!locomotion?.flying&&!locomotion?.riding){if(feetAway)feet.reset();feetAway=false;feet.update(dt,locomotion,groundAt);}
+      else feetAway=true;
       upperBody.update(dt,locomotion?.riding?0:walkingSpeed,feet.legs,{flying:locomotion?.flying||locomotion?.riding,carrying:Boolean(locomotion?.visitId||locomotion?.carrying)});
       if(!locomotion?.flying&&!locomotion?.riding)conversationBody.apply(conversationPose);
       for(const bone of bones) {
@@ -233,16 +251,16 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
           adjustment.setFromAxisAngle(avatar.axes.get(bone).y,attention.yaw*weight);bone.quaternion.multiply(adjustment);
         }
       }
+      const cycling=Boolean(locomotion?.riding)&&locomotion.ridingKind==='bicycle';
+      if(!cycling)bicycle.release();
+      // Whoever drives the motorcycle rides it as a motorcyclist; a pillion passenger keeps the seated pose below.
+      const motorcycling=Boolean(locomotion?.riding)&&locomotion.ridingKind==='motorcycle'&&Boolean(locomotion.ridingDriver);
+      if(!motorcycling)motorcycle.release();
       if(locomotion?.riding) {
         const seated={thigh_l:[0,0,0],thigh_r:[0,0,0],calf_l:[0,0,0],calf_r:[0,0,0],foot_l:[0,0,0],foot_r:[0,0,0],spine_03:[.035,0,0],upperarm_l:[.20,0,.025],upperarm_r:[.20,0,-.025],lowerarm_l:[0,0,.60],lowerarm_r:[0,0,.60]};
-        if(locomotion.ridingKind==='motorcycle'&&locomotion.ridingDriver) {
-          const motion=noMotion?0:Math.min(1,Math.abs(locomotion.ridingSpeed??0)/6);
-          const lean=noMotion?0:Math.max(-.05,Math.min(.05,(locomotion.ridingSteering??0)*.1));
-          seated.spine_01=[.055+motion*.018,0,lean*.4];
-          seated.spine_02=[.045+motion*.012,0,lean*.35];
-          seated.spine_03=[.025+(noMotion?0:Math.sin(t*1.4)*.003),0,lean*.25];
-        }
         model.position.y=baseY;
+        if(cycling)bicycle.posture(seated,locomotion,dt,noMotion);
+        if(motorcycling)motorcycle.posture(seated,locomotion,dt,noMotion);
         for(const bone of bones)if(seated[bone.name]) {
           bone.quaternion.copy(rest.get(bone));
           seated[bone.name].forEach((angle,i)=>{adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);bone.quaternion.multiply(adjustment);});
@@ -250,23 +268,27 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
             adjustment.setFromAxisAngle(avatar.axes.get(bone)[['x','y','z'][i]],angle);bone.quaternion.multiply(adjustment);
           });
         }
-        root.updateWorldMatrix(true,true);
-        const worldRotation=root.getWorldQuaternion(new THREE.Quaternion()),forward=new THREE.Vector3(0,0,1).applyQuaternion(worldRotation);
-        const board=avatar.hipHeight-.025-(locomotion.seatToFloor??.5075);
-        for(const leg of feet.legs) {
-          leg.ikOrientation=worldRotation.clone().multiply(seatedShoes.get(leg));
-          const scale=leg.foot.getWorldScale(new THREE.Vector3());
-          const bottom=Math.min(...leg.sole.map(p=>p.clone().multiply(scale).applyQuaternion(seatedShoes.get(leg)).y));
-          const target=root.localToWorld(new THREE.Vector3(locomotion.ridingKind==='motorcycle'?Math.sign(leg.rest.x)*.32:leg.rest.x,board-bottom,locomotion.ridingKind==='motorcycle'?.26:.44));
-          if(locomotion.ridingKind==='seat') {
-            // These authored cushions are high. Let short legs hang naturally
-            // instead of stretching nearly straight to reach the floor.
-            const hip=root.worldToLocal(leg.thigh.getWorldPosition(new THREE.Vector3()));
-            target.copy(root.localToWorld(new THREE.Vector3(leg.rest.x,Math.max(board-bottom,hip.y-leg.lowerLength),hip.z+leg.upperLength)));
+        if(cycling)bicycle.place(locomotion);
+        else if(motorcycling)motorcycle.place(locomotion);
+        else {
+          root.updateWorldMatrix(true,true);
+          const worldRotation=root.getWorldQuaternion(new THREE.Quaternion()),forward=new THREE.Vector3(0,0,1).applyQuaternion(worldRotation);
+          const board=avatar.hipHeight-.025-(locomotion.seatToFloor??.5075);
+          for(const leg of feet.legs) {
+            leg.ikOrientation=worldRotation.clone().multiply(seatedShoes.get(leg));
+            const scale=leg.foot.getWorldScale(new THREE.Vector3());
+            const bottom=Math.min(...leg.sole.map(p=>p.clone().multiply(scale).applyQuaternion(seatedShoes.get(leg)).y));
+            const target=root.localToWorld(new THREE.Vector3(locomotion.ridingKind==='motorcycle'?Math.sign(leg.rest.x)*.32:leg.rest.x,board-bottom,locomotion.ridingKind==='motorcycle'?.26:.44));
+            if(locomotion.ridingKind==='seat') {
+              // These authored cushions are high. Let short legs hang naturally
+              // instead of stretching nearly straight to reach the floor.
+              const hip=root.worldToLocal(leg.thigh.getWorldPosition(new THREE.Vector3()));
+              target.copy(root.localToWorld(new THREE.Vector3(leg.rest.x,Math.max(board-bottom,hip.y-leg.lowerLength),hip.z+leg.upperLength)));
+            }
+            const pole=leg.thigh.getWorldPosition(new THREE.Vector3()).add(forward);
+            if(locomotion.ridingKind==='motorcycle')pole.add(new THREE.Vector3(Math.sign(leg.rest.x)*.28,0,0).applyQuaternion(worldRotation));
+            leg.error=applyLegIK(leg,target,pole);
           }
-          const pole=leg.thigh.getWorldPosition(new THREE.Vector3()).add(forward);
-          if(locomotion.ridingKind==='motorcycle')pole.add(new THREE.Vector3(Math.sign(leg.rest.x)*.28,0,0).applyQuaternion(worldRotation));
-          leg.error=applyLegIK(leg,target,pole);
         }
       }
       if(locomotion?.superheroFlight) {

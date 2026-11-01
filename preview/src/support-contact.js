@@ -3,6 +3,11 @@
 // or an address at a reserved example domain, shows nothing, so the page never shows a
 // placeholder. Plain ASCII addresses and named hosts only: no mailto fields, direction
 // overrides, trailing dots or bare IP addresses.
+//
+// This module belongs to the sign-in page (access-entry.js) only: a module shared with
+// game code is split into a chunk the asset gate refuses before sign-in
+// (scripts/check-access-entry.mjs). Settings → Account → Support (settings-support.js)
+// copies the link from the gate's node instead of importing these rules.
 const RESERVED = /(^|\.)(example\.(com|net|org)|example|test|invalid|localhost)$/i;
 const HOST = /^([A-Za-z0-9-]+\.)+[A-Za-z]{2,}$/;
 const EMAIL = /^[A-Za-z0-9._+-]+@([A-Za-z0-9-]+\.)+[A-Za-z]{2,}$/;
@@ -18,15 +23,17 @@ export function supportLink(value) {
   return { href: url.href, text: `${url.host}${url.pathname === '/' ? '' : url.pathname}` };
 }
 
-// Settings → Account → Support. Null when nothing is configured.
-export function createSupportContact(value) {
+export const SUPPORT_LEAD = 'Questions, problems or safety concerns: ';
+// The contact under the sign-in and waitlist gate (preview/src/access-entry.js), so a
+// visitor who is signed out, waiting, refused or banned can reach someone before they
+// are ever in the world. Null when nothing is configured.
+export function createGateSupport(value) {
   const link = supportLink(value);
   if (!link) return null;
-  const root = document.createElement('div'); root.className = 'settings-group support-contact';
-  const heading = document.createElement('h4'); heading.textContent = 'Support';
-  const line = document.createElement('p'); line.textContent = 'Questions, problems or safety concerns: ';
+  const line = document.createElement('p'); line.className = 'access-support'; line.id = 'access-support';
+  line.textContent = SUPPORT_LEAD;
   const anchor = document.createElement('a'); anchor.href = link.href; anchor.textContent = link.text;
   if (link.href.startsWith('https:')) { anchor.target = '_blank'; anchor.rel = 'noopener noreferrer'; }
-  line.append(anchor); root.append(heading, line);
-  return root;
+  line.append(anchor);
+  return line;
 }

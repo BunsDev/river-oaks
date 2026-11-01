@@ -1,0 +1,296 @@
+{
+  "id": "typesafe-place-south",
+  "title": "TypeSafe Place: Place Avenue south, Sky Gardens on the green and the south residences",
+  "kit": "city-kit-1",
+  "seed": 2026,
+  "inspiration": "Patterns only, no copied buildings: an elevated residential neighborhood east of Woodland Heights, after the concept art 'TypeSafe Place Residential Heights'. Two 20-storey balconied towers (Luxury Living, and Penthouse Row with its setback crown), garden-roofed mid-rises (Sky Gardens), everyday shop rows with garden roofs, a neighborhood green with a pink ribbon sculpture, and a tree-lined walking avenue. All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    619,
+    -122.5,
+    702.5,
+    5
+  ],
+  "streets": [
+    {
+      "id": "place-avenue-south",
+      "from": [
+        628,
+        -122
+      ],
+      "to": [
+        628,
+        -7
+      ],
+      "lane": 8,
+      "sidewalk": 5,
+      "paving": "plaza-stone",
+      "trees": {
+        "offset": 7,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 13,
+        "spacing": 24
+      }
+    },
+    {
+      "id": "eighteenth-place",
+      "from": [
+        619,
+        -71
+      ],
+      "to": [
+        702.5,
+        -71
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 8,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 14,
+        "spacing": 30
+      }
+    }
+  ],
+  "plazas": [
+    {
+      "id": "garden-court-south",
+      "rect": [
+        636,
+        -65.5,
+        702.5,
+        -58
+      ]
+    },
+    {
+      "id": "garden-court-west",
+      "rect": [
+        636,
+        -59,
+        644,
+        -15
+      ]
+    },
+    {
+      "id": "garden-court-north",
+      "rect": [
+        636,
+        -16,
+        702.5,
+        5
+      ],
+      "lawns": [
+        [
+          648,
+          -12,
+          696,
+          -4
+        ]
+      ]
+    },
+    {
+      "id": "south-walk-east",
+      "rect": [
+        636,
+        -94,
+        702.5,
+        -89.5
+      ]
+    }
+  ],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "court-cafe-650",
+      "piece": "furniture/cafe-set",
+      "at": [
+        650,
+        -61.8
+      ]
+    },
+    {
+      "id": "court-cafe-656",
+      "piece": "furniture/cafe-set",
+      "at": [
+        656,
+        -61.8
+      ]
+    },
+    {
+      "id": "court-cafe-662",
+      "piece": "furniture/cafe-set",
+      "at": [
+        662,
+        -61.8
+      ]
+    },
+    {
+      "id": "court-cafe-690",
+      "piece": "furniture/cafe-set",
+      "at": [
+        690,
+        -61.8
+      ]
+    },
+    {
+      "id": "court-bench--48",
+      "piece": "furniture/bench",
+      "at": [
+        638.5,
+        -48
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "court-bench--28",
+      "piece": "furniture/bench",
+      "at": [
+        638.5,
+        -28
+      ],
+      "yaw": -1.5707963267948966
+    },
+    {
+      "id": "court-lamp",
+      "piece": "furniture/lamp",
+      "at": [
+        640,
+        -38
+      ]
+    },
+    {
+      "id": "court-north-bench-660",
+      "piece": "furniture/bench",
+      "at": [
+        660,
+        -14
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "court-north-bench-680",
+      "piece": "furniture/bench",
+      "at": [
+        680,
+        -14
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "south-rack-660",
+      "piece": "furniture/bike-rack",
+      "at": [
+        660,
+        -92
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "south-walk-bench-680",
+      "piece": "furniture/bench",
+      "at": [
+        680,
+        -92.2
+      ],
+      "yaw": 3.141592653589793
+    }
+  ],
+  "context": [],
+  "overrides": {},
+  "additions": [
+    {
+      "id": "sky-gardens-green",
+      "piece": "building/shell",
+      "rect": [
+        644,
+        -58,
+        700,
+        -16
+      ],
+      "storeys": 12,
+      "height": 43.1,
+      "wall": "stone-pearl",
+      "trim": "steel-black",
+      "roof": "garden",
+      "style": "place-residence",
+      "faces": [
+        "west",
+        "south",
+        "north"
+      ],
+      "bays": 1,
+      "sign": "Sky Gardens",
+      "variant": "loggia",
+      "awning": "canvas-blush"
+    },
+    {
+      "id": "residence-south-east",
+      "piece": "building/shell",
+      "rect": [
+        642,
+        -119,
+        700,
+        -97
+      ],
+      "storeys": 8,
+      "height": 29.1,
+      "wall": "concrete-warm",
+      "trim": "steel-black",
+      "roof": "garden",
+      "style": "place-residence",
+      "faces": [
+        "north",
+        "west"
+      ],
+      "bays": 1,
+      "sign": null,
+      "variant": "gallery",
+      "awning": "canvas-blush"
+    }
+  ],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "eighteenth-retail-east",
+        "rect": [
+          637,
+          -89.5,
+          702.5,
+          -77.5
+        ],
+        "style": "place-retail",
+        "depth": [
+          10,
+          12
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          6,
+          7.5
+        ],
+        "names": [
+          "Interface Optics",
+          "Decorator Homewares",
+          "Branded Type Boutique",
+          "Variance Vintage",
+          "Lexical Scope Books",
+          "Closure Kitchen",
+          "Hoisted Hot Pot"
+        ],
+        "front": "north"
+      }
+    ],
+    "migrated": {
+      "blocks": 1,
+      "geometry": "b12c7f5d72c5000f"
+    }
+  }
+}

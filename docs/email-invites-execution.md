@@ -31,7 +31,7 @@
 
 ## Delivery
 
-- Delivery is tracked in [PR #169](https://github.com/BunsDev/river-oaks/pull/169),
+- Delivered in [PR #169](https://github.com/BunsDev/river-oaks/pull/169) (merged 2026-10-07),
   together with the follow-up [security review](security-review.md).
 - Updated the prior GitHub-only browser expectations for the new email form and
   pending invite flow. Both affected gameplay journeys passed locally before

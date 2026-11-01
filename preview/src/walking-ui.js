@@ -15,6 +15,8 @@ import { isGameplayKey } from './keyboard-input.js';
 import { primaryAction } from './contextual-action.js';
 import { travelRefusal } from './travel-message.js';
 import './walking.css';
+import { createTouchGamepad } from './touch-gamepad.js';
+import './touch-gamepad.css';
 import { venueDoorSites } from './venue-rooms.js';
 import { campusDoorSites } from './garden-campus-district.js';
 import { connectedLocationAt, locationCrossing } from './world-location-label.js';
@@ -89,14 +91,31 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   // Local-only movement vetoes, e.g. presentation readiness. They never enter the
   // shared environment, so map, encounter and carriage queries stay unaffected.
   const stepGuards = [];
-  let transport = null, sitting = null, performing = false, seatedGround = 0, doorwayPending = false;
+  let mountRefusal = null, transport = null, sitting = null, performing = false, seatedGround = 0, doorwayPending = false;
   let flight = createFlightState();
   let flightAllowed=false,fastWalkSpeed=WALK_SPEED.fast;
   let thirdPerson = true, bodyVisible = true;
   let active = false, environment, walkingWorld = null, stores = [], state, nearest = null, lastPaint = 0, pathLabel = 'public district paths', connectedLocation = null;
   const drag = createPointerGesture();
   const cameraBoom=createCameraBoom();
-  const clear = () => { keys.clear(); releaseButtons.forEach(release => release()); drag.cancel(); voiceHeld = false; getVoice()?.setTransmit(false); document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); stopHeldMovement(state, flight, transport); };
+  // Touch screens get a floating thumbstick and an action cluster (touch-gamepad.js).
+  // It presses the same held keys as the keyboard, so every movement contract is unchanged.
+  const coarsePointer = window.matchMedia('(pointer: coarse)');
+  let gamepadHeld = new Set();
+  const gamepad = createTouchGamepad({
+    canStart: () => active && !dialogueOpen(),
+    onKeys(next) {
+      const started = [...next].some(code => !gamepadHeld.has(code));
+      // Only keys the gamepad itself pressed are released; a held pad button keeps its own.
+      for (const code of gamepadHeld) if (!next.has(code)) keys.delete(code);
+      for (const code of next) keys.add(code);
+      gamepadHeld = next;
+      if (started) transport?.takeOver?.();
+    },
+    onUse() { const id = hud.dataset.primaryAction; if (id && active) actionButtons[id]?.click(); },
+  });
+  hud.append(gamepad.element);
+  const clear = () => { keys.clear(); gamepad.reset(); gamepadHeld = new Set(); releaseButtons.forEach(release => release()); drag.cancel(); voiceHeld = false; getVoice()?.setTransmit(false); document.querySelectorAll('[data-walk-key]').forEach(b => b.classList.remove('held')); stopHeldMovement(state, flight, transport); };
   const notify = (text, ms = 3200) => {
     const notice = $('#walking-notice');
     clearTimeout(notice._timer); notice.textContent = text; notice.hidden = false;
@@ -213,10 +232,11 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     $('#walking-controls-toggle').textContent = shown ? 'Hide movement controls' : 'Show movement controls';
     if (persist) try { localStorage.setItem('river-oaks-movement-pad', shown ? 'shown' : 'hidden'); } catch { /* storage may be unavailable */ }
   };
-  // Touch devices start with the pad open, pointer devices with it collapsed; a stored choice wins either way.
+  // The button pad starts collapsed: touch screens walk with the thumbstick, pointers with
+  // the keyboard. It stays one tap away as the fallback, and a stored choice wins.
   let storedMovement = null;
   try { storedMovement = localStorage.getItem('river-oaks-movement-pad'); } catch { /* storage may be unavailable */ }
-  showMovement(storedMovement ? storedMovement === 'shown' : window.matchMedia('(pointer: coarse)').matches, false);
+  showMovement(storedMovement === 'shown', false);
   $('#walking-controls-toggle').addEventListener('click', () => showMovement($('#walking-movement').hidden));
   $('#walking-meet-nearby').addEventListener('click', () => { clear(); onMeetNearby(); });
   $('#walking-talk').addEventListener('click', talk);
@@ -274,7 +294,9 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     setTraversal({canFly=false,kind=null,fastWalk=WALK_SPEED.fast}={}) {
       flightAllowed=Boolean(canFly);fastWalkSpeed=fastWalk;
       sprintButton.hidden=true;
-      hud.querySelector('.walking-help').innerHTML=`WASD to move · Drag to look · Shift to walk briskly<br>Arrow keys to turn · E to talk · F uses stairs or doors · Shift+F goes down · Z to sit or water<br>Y joins voice · M mutes<br>${flightAllowed?'B to fly · Space to rise · C to lower · ':''}Escape closes conversations`;
+      hud.querySelector('.walking-help').innerHTML=coarsePointer.matches
+        ? `Left thumb: drag anywhere for the stick · Push up past the ring to lock sprint<br>Right thumb: drag to look · Tap the round button to talk, sit or step inside<br>${flightAllowed?'Hold ▲ to rise · ▼ to lower while flying<br>':''}The arrow pad above is the fallback`
+        : `WASD to move · Drag to look · Shift to walk briskly<br>Arrow keys to turn · E to talk · F uses stairs or doors · Shift+F goes down · Z to sit or water<br>Y joins voice · M mutes<br>${flightAllowed?'B to fly · Space to rise · C to lower · ':''}Escape closes conversations`;
     },
     // The voice row sits under the actions, above the place line.
     mountVoice(element) { more.after(element); },
@@ -285,8 +307,15 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     allowsStep(from, to) { return stepGuards.every(guard => guard(from, to)); },
     get active() { return active; },
     get riding() { return Boolean(transport); },
+    // Why the last mount() refused, for the debug hooks.
+    get mountRefusal() { return mountRefusal; },
     mount(controller) {
-      if(!active||flight.active||currentRoom()||transport||sitting||performing)return false;
+      // A craft already aloft (resuming a ride after a reload) takes over from the flight
+      // the page adopted from the town's altitude; any other ride needs her on the ground.
+      const aloft=Boolean(controller.pose.flying);
+      mountRefusal=!active?'inactive':flight.active&&!aloft?'flying':currentRoom()?'indoors':transport?'riding':sitting?'sitting':performing?'performing':null;
+      if(mountRefusal)return false;
+      if(flight.active)flight=createFlightState();
       clear();transport=controller;
       thirdPerson=true;state.yaw=controller.pose.yaw+Math.PI+.38;state.pitch=-.25;
       state.position=[controller.pose.seat[0],controller.pose.seat[1]+.62,controller.pose.seat[2]];
@@ -342,7 +371,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     notify,
     get environment() { return environment ?? null; },
     setThirdPerson(enabled) { thirdPerson = Boolean(enabled);if (active) place(); },
-    getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting||performing?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:flight.altitude, levelId:environment.levelId??currentRoom()?.planId??null, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
+    getPose() { return active && state ? { position: [...state.position], riding:transport?.pose??null, sitting, ground: sitting||performing?seatedGround:environment.groundAt(state.position[0], state.position[2]), altitude:transport?transport.pose.altitude??0:flight.altitude, levelId:environment.levelId??currentRoom()?.planId??null, flying:flight.active, landing:flight.landing, yaw: state.yaw, speed: state.speed, velocity: [...state.velocity], distance: state.distance, roomId: currentRoom()?.storeId ?? null, showBody: thirdPerson && bodyVisible, groundAt: environment.groundAt } : null; },
     canSee(point,eyeHeight) {
       if (!state) return false;
       const local=(getLocals()??[]).find(local=>local.position===point);
@@ -425,7 +454,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const storefront = stores.reduce((best, store) => { const distance = Math.hypot(store.facade[0] - state.position[0], store.facade[1] + state.position[2]); return distance < (best?.distance ?? 16) ? { store, distance } : best; }, null);
       const room = currentRoom(), door = room ? null : doorway();
       const up = nearbyStairs(room, 'up'), down = nearbyStairs(room, 'down'), stairs = up ?? down;
-      $('.walking-title strong').textContent = sitting ? 'Seated' : performing ? 'On stage' : transport ? (transport.pose.kind === 'bicycle' ? 'Cycling' : 'Riding with Jev') : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
+      $('.walking-title strong').textContent = sitting ? 'Seated' : performing ? 'On stage' : transport ? (transport.pose.kind === 'bicycle' ? 'Cycling' : transport.pose.kind === 'hover' ? (!transport.pose.driver ? 'Riding in the Ribbonwing' : transport.pose.landing ? 'Landing the Ribbonwing' : transport.pose.flying ? 'Flying the Ribbonwing' : 'Piloting the Ribbonwing') : transport.pose.driver ? 'Riding' : 'Riding with Jev') : flight.active ? (flight.landing ? 'Landing' : 'In flight') : room?.name ?? storefront?.store.name ?? 'On foot';
       const enter = $('#walking-enter');
       const farFromExit = Boolean(room && !stairs && !nearRoomExit(room, [state.position[0], -state.position[2]]));
       enter.hidden = Boolean(sitting||performing||transport)||(!room && !door)||Boolean(room?.generatedPlan?.index>0 && !stairs)||farFromExit;
@@ -438,6 +467,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       else if (door) setAction(enter, canEnterStore(door) ? `Step inside ${door.name}` : `${door.name} · Invitation required`, canEnterStore(door) ? 'F' : null);
       else setAction(enter, '');
       presentActions();
+      gamepad.setEnabled(coarsePointer.matches);
+      gamepad.setMode({ lift: flight.active || Boolean(transport?.pose.kind === 'hover' && transport.pose.driver) });
+      const primaryButton = actionButtons[hud.dataset.primaryAction];
+      gamepad.setUse(primaryButton && !primaryButton.hidden && !primaryButton.disabled ? primaryButton.dataset.action?.split('|')[0] || primaryButton.textContent.trim() : null);
       hud.dataset.inside = room?.storeId ?? '';
       document.body.classList.toggle('inside-store', Boolean(room));
       // Seated in a cinema recliner: the HUD steps back for the film (ipic-screening.css).
@@ -447,7 +480,9 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       const location = connectedLocationAt(walkingWorld, state.position[0], -state.position[2]), crossing = locationCrossing(connectedLocation, location);
       connectedLocation = location;
       if (crossing) notify(crossing);
-      $('#walking-place').textContent = sitting ? 'Drag to look around · Z stands up' : performing ? 'Drag to look around · X steps down' : transport ? (transport.pose.kind === 'bicycle' ? `${(transport.pose.distance / 1609.344).toFixed(2)} mi cycled this ride · W to pedal · Shift to sprint · G to step off` : 'W/S to ride or reverse · A/D or arrows to steer · G to step out') : flight.active ? `${flight.altitude.toFixed(1)} m above ground · Space to rise · C to lower` : room ? room.theme === 'home'
+      // Touch screens name the thumbstick and buttons they actually have, not keys.
+      const touch = !gamepad.element.hidden;
+      $('#walking-place').textContent = sitting ? (touch ? 'Drag to look around' : 'Drag to look around · Z stands up') : performing ? (touch ? 'Drag to look around' : 'Drag to look around · X steps down') : transport ? (transport.pose.kind === 'bicycle' ? `${(transport.pose.distance / 1609.344).toFixed(2)} mi cycled this ride · ${touch ? 'Stick to pedal and steer · Push up past the ring to sprint' : 'W to pedal · Shift to sprint · G to step off'}` : transport.pose.kind === 'hover' ? `${transport.pose.flying ? `${transport.pose.altitude.toFixed(1)} m above ground · ` : ''}${touch ? 'Stick to fly and steer · Hold ▲ to climb, ▼ to descend' : 'W/S to fly or reverse · A/D or arrows to steer · Space to climb · C to descend · G to land and step out'}` : touch ? 'Stick to ride and steer' : 'W/S to ride or reverse · A/D or arrows to steer · G to step out') : flight.active ? `${flight.altitude.toFixed(1)} m above ground · ${touch ? 'Hold ▲ to rise, ▼ to lower' : 'Space to rise · C to lower'}` : room ? room.theme === 'home'
         ? `Inside ${room.name} · ${roomSummary.label} · ${roomSummary.guests} resident${roomSummary.guests === 1 ? '' : 's'}`
         // A campus floor names itself ("The Gardens · Floor 4") and has no staff or guests to count (#508).
         : room.campusLevel ? `Inside ${room.name} · ${roomSummary.label}`

@@ -8,12 +8,21 @@ lifecycle contract that Computer's embed mode implements
 **Status.**
 
 - **Place side:** implemented and tested against a deterministic local child fixture.
-- **Computer side:** a candidate embed build is in draft
+- **Computer side:** the embed build merged in
   [TypeSafeAI/typesafe-computer#34](https://github.com/TypeSafeAI/typesafe-computer/pull/34)
-  (8c0240af, 2026-10-27). Its `docs/PLACE_EMBED.md` adopts version 1 below unchanged.
+  (2026-10-31, head 5d221a5a; the 2026-10-27 draft was 8c0240af). Its `docs/PLACE_EMBED.md`
+  adopts version 1 below unchanged. It is not deployed yet.
   `office-computer-real` runs the desk against it locally (see [Verification](#verification)).
-- **Hosting:** no hosted origin is configured, and the deployed Place frame policy
-  still blocks every Computer frame (see [Staged blockers](#staged-blockers)).
+- **Hosting:** the Place frame policy lists `https://computer.typesafe.place`, the
+  same-site Computer origin proposed in
+  [TypeSafeAI/typesafe-computer#21](https://github.com/TypeSafeAI/typesafe-computer/issues/21)
+  (see [Staged blockers](#staged-blockers)). From 2026-10-29 it listed
+  `https://typesafe-computer.vercel.app`, which is cross-site from `typesafe.place`.
+  `VITE_TYPESAFE_COMPUTER_ORIGIN` is still unset in every hosted environment, so no
+  deployed desk loads a frame; setting it is the owner's configuration step. No Computer
+  deployment serves that origin yet, and Computer's main branch has no embed mode: until
+  #34 deploys there, a frame to it never answers `init`, and the desk reports that
+  Computer did not open and returns to Tasks.
 
 ## Ownership
 
@@ -63,7 +72,10 @@ Computer checks the parent origin against its own configuration.
 - **Computer's response:** it must allow framing by the reviewed Place origin only
   (`Content-Security-Policy: frame-ancestors <place origin>`), with no conflicting
   `X-Frame-Options`. The fixture sends exactly this.
-- **Place's response:** its `frame-src` must list Computer's origin. It does not yet.
+- **Place's response:** its `frame-src` must list Computer's origin. It lists
+  `https://computer.typesafe.place` (`vercel.json`, `server/security-headers.js`), and
+  `server/tests/hardening2-security-headers.test.js` requires that origin to be exact and
+  on Place's site.
 
 Computer's session cookie is `SameSite=Lax` (`src/server/auth.js`). A Lax cookie is
 sent inside a same-site frame and withheld from a cross-site one. Place and Computer
@@ -296,19 +308,25 @@ cookies stay apart; that needs the real host pair (#21).
 These must be resolved before a hosted pilot (tracked in
 [combined acceptance #487](https://github.com/BunsDev/river-oaks/issues/487)):
 
-1. **Computer embed build (#33).** Candidate in draft #34 (8c0240af), with
-   `docs/PLACE_EMBED.md` adopting version 1. Not merged or deployed.
+1. **Computer embed build (#33).** Merged in #34 (2026-10-31), with
+   `docs/PLACE_EMBED.md` adopting version 1. Not deployed.
 2. **Hosting (#21).**
    - Prove the actual origin pair: same-site, separate origins.
    - Repair the staging WorkOS registrations.
    - Prove Computer's `frame-ancestors`, its cookie behavior when framed, and top-level
      sign-in.
 3. **Continuity (#27).** Record the decision for a new Computer host's origin-local data.
-4. **Place frame policy.** After the origin is proven, add it to `frame-src` in both
-   `vercel.json` and `server/security-headers.js`. Update the expectation in
-   `server/tests/hardening2-security-headers.test.js`. Then set
-   `VITE_TYPESAFE_COMPUTER_ORIGIN` for the target environment.
+4. **Place frame policy and configuration.** `frame-src` in `vercel.json` and
+   `server/security-headers.js` lists `https://computer.typesafe.place`, with the
+   expectation in `server/tests/hardening2-security-headers.test.js` and the origin
+   accepted by `preview/tests/office-computer-frame.test.js`. What remains is the owner's
+   step: once Computer's embed build (#34) is deployed at that origin with
+   `frame-ancestors https://typesafe.place`, set
+   `VITE_TYPESAFE_COMPUTER_ORIGIN=https://computer.typesafe.place` for Production. Before
+   that the Computer tab appears, times out and returns to Tasks. Place Preview
+   deployments run on `*.vercel.app`, which is cross-site from that origin, so a Preview
+   desk would show framed players as signed out: prove the pair on a same-site staging
+   host instead.
 
-   This is a production policy and configuration change. It needs its own review and
-   authorization. Leaving the variable unset is the rollback: the desk returns to
-   Tasks only.
+   The variable is a production configuration change that needs its own authorization.
+   Leaving it unset is the rollback: the desk returns to Tasks only.
