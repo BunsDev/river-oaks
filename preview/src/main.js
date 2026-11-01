@@ -103,6 +103,7 @@ import { createPlazaXiangqi } from './plaza-xiangqi.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createQualityControl, readFinishPreference } from './render-quality.js';
+import { buildRibbonGraybox, ribbonAppliesTo } from './ribbon-graybox.js';
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
 import { createPhotoMode } from './photo-mode.js';
@@ -217,6 +218,7 @@ let landmarkAccountId = null;
 let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater, ribbonwingSeat, ribbonwingSounds;
 const craftWorld = new THREE.Vector3();
+let ribbonGraybox = null;
 let plazaSalon = null, cityBikeRacks = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
@@ -828,6 +830,9 @@ function populateWorld(data) {
   // Curbside bike racks around the District (bike-racks.js), beside the plaza's.
   cityBikeRacks = buildCityBikeRacks(data);
   worldGroup.add(cityBikeRacks);
+  // The Ribbon canopy walk, graybox, under the pink-jet-age finish only (#825; ribbon-graybox.js).
+  ribbonGraybox = ribbonAppliesTo(data, cityKitFinish) ? buildRibbonGraybox({ world: data, groundAt: (x, z) => groundSurfaceHeight(data, x, z) }) : null;
+  if (ribbonGraybox) worldGroup.add(ribbonGraybox);
   buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   scene.add(worldGroup);
@@ -1381,7 +1386,7 @@ if (import.meta.env.DEV) window.__riverSpatialStream = () => {
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
     renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls,
     // The opted-in kit finish and what each attached part was built with (#742).
-    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null } };
+    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null, ribbon: ribbonGraybox?.userData.ribbon ?? null } };
 };
 if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
 if (import.meta.env.DEV) window.__riverExteriorCull = () => {
