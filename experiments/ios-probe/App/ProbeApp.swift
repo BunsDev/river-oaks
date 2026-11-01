@@ -3,14 +3,18 @@ import WebKit
 import AuthenticationServices
 
 @main
-final class AppDelegate: UIResponder, UIApplicationDelegate {
+final class AppDelegate: UIResponder, UIApplicationDelegate {}
+
+// One diagnostic window, connected to the scene supplied by UIKit. Keep the
+// controller and its existing origin/auth/measurement boundaries unchanged.
+final class ProbeSceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        let window = UIWindow(frame: UIScreen.main.bounds)
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options: UIScene.ConnectionOptions) {
+        guard let windowScene = scene as? UIWindowScene else { return }
+        let window = UIWindow(windowScene: windowScene)
         window.rootViewController = ProbeController()
         window.makeKeyAndVisible()
         self.window = window
-        return true
     }
 }
 
@@ -88,12 +92,14 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
             let reload = button("Reload", #selector(reloadPage))
             let browser = button("Browser", #selector(openBrowser))
             let stop = button("Stop", #selector(stopRecording))
-            var controls: [UIView] = [status, reload, browser, stop]
+            var controls: [UIView] = [reload, browser, stop]
             if renderPhasesEnabled {
                 let phases = button("Phases", #selector(capturePhases)); phaseButton = phases; controls.append(phases)
             }
-            let toolbar = UIStackView(arrangedSubviews: controls)
-            toolbar.axis = .horizontal; toolbar.spacing = 8; toolbar.alignment = .center
+            let actions = UIStackView(arrangedSubviews: controls)
+            actions.axis = .horizontal; actions.spacing = 8; actions.distribution = .fillEqually
+            let toolbar = UIStackView(arrangedSubviews: [status, actions])
+            toolbar.axis = .vertical; toolbar.spacing = 4; toolbar.alignment = .fill
             toolbar.translatesAutoresizingMaskIntoConstraints = false
             web.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(toolbar); view.addSubview(web)
@@ -101,7 +107,8 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
                 toolbar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
                 toolbar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 8),
                 toolbar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
-                toolbar.heightAnchor.constraint(equalToConstant: 48),
+                toolbar.heightAnchor.constraint(equalToConstant: 84),
+                actions.heightAnchor.constraint(equalToConstant: 44),
                 web.topAnchor.constraint(equalTo: toolbar.bottomAnchor), web.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
                 web.leadingAnchor.constraint(equalTo: view.leadingAnchor), web.trailingAnchor.constraint(equalTo: view.trailingAnchor)
             ])
@@ -131,7 +138,14 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
         }
     }
     private func button(_ title: String, _ action: Selector) -> UIButton {
-        let result = UIButton(type: .system); result.setTitle(title, for: .normal); result.addTarget(self, action: action, for: .touchUpInside); return result
+        let result = UIButton(type: .system)
+        result.setTitle(title, for: .normal)
+        result.addTarget(self, action: action, for: .touchUpInside)
+        NSLayoutConstraint.activate([
+            result.widthAnchor.constraint(greaterThanOrEqualToConstant: 44),
+            result.heightAnchor.constraint(greaterThanOrEqualToConstant: 44)
+        ])
+        return result
     }
     private func beginRecording() throws {
         let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
