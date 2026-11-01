@@ -328,6 +328,54 @@ if(!(vBind.y>${(collarY - .03).toFixed(4)}&&abs(vBind.x)<.07)&&!(vBind.z>.0&&vBi
 // the crown, 1 at the longest strand) on the hair's own cloned geometry. The
 // blend runs from 16% to 36% of the hair's length (about the ear to the
 // shoulder on her 69 cm of hair), where the reference turns pink.
+// Pumps from the rig's ankle shoes (Jevica's feet end inside them at 16.5 cm, so the upper
+// cannot be cut away): in bind space each shoe is slimmed and its toe tapered to a point
+// below the ankle, the toe box lowered, and the upper above a pump's topline painted in the
+// trouser satin with a rose-gold edge, so the hem seems to fall onto a low-cut pointed pump on
+// the rose-gold heel column. The edge follows a signed distance, so it stays a clean line at
+// the shoe's coarse mesh density. The top, where the shoe meets the leg, is left as it was.
+export const PUMP = Object.freeze({ taperFrom: .55, point: .018, back: .072, front: .046, vampFrom: .6 });
+export function shapeJevicaPumps(model, material, owned) {
+  let shoe = null; model.traverse(item => { if (item.isMesh && item.material === material) shoe = item; });
+  if (!shoe) return null;
+  const geometry = shoe.geometry.clone(); owned.add(geometry); shoe.geometry = geometry;
+  const p = geometry.attributes.position, vamp = new Float32Array(p.count), sides = {};
+  for (let i = 0; i < p.count; i++) {
+    const side = p.getX(i) < 0 ? 'r' : 'l', box = sides[side] ??= { x0: Infinity, x1: -Infinity, z0: Infinity, z1: -Infinity };
+    box.x0 = Math.min(box.x0, p.getX(i)); box.x1 = Math.max(box.x1, p.getX(i)); box.z0 = Math.min(box.z0, p.getZ(i)); box.z1 = Math.max(box.z1, p.getZ(i));
+  }
+  const smooth = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+  for (let i = 0; i < p.count; i++) {
+    const box = sides[p.getX(i) < 0 ? 'r' : 'l'], cx = (box.x0 + box.x1) / 2, half = (box.x1 - box.x0) / 2;
+    let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const t = (z - box.z0) / (box.z1 - box.z0), low = 1 - smooth(.11, .17, y), toe = smooth(PUMP.taperFrom, 1, t);
+    const across = Math.min(1, Math.abs(x - cx) / half);
+    x = cx + (x - cx) * (1 - low * (.12 + .5 * toe));
+    z += low * PUMP.point * smooth(.75, 1, t) * (1 - across);
+    y *= 1 - .3 * toe * smooth(.03, .09, y) * low;
+    p.setXYZ(i, x, y, z);
+    // Metres above the topline (heel counter to toe box); the toe box stays below it.
+    const top = t < PUMP.vampFrom ? PUMP.back + (PUMP.front - PUMP.back) * t / PUMP.vampFrom : PUMP.back * 4;
+    vamp[i] = y - top;
+  }
+  p.needsUpdate = true; geometry.computeVertexNormals(); geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+  geometry.setAttribute('vamp', new THREE.BufferAttribute(vamp, 1));
+  const hem = new THREE.Color(SUIT.satin), edge = new THREE.Color(SUIT.roseGold);
+  material.onBeforeCompile = shader => {
+    shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nattribute float vamp;varying float vVamp;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvVamp=vamp;');
+    shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vVamp;')
+      .replace('#include <map_fragment>', `#include <map_fragment>
+float above = smoothstep(0.0015, 0.004, vVamp), rim = 1.0 - smoothstep(0.0012, 0.0024, abs(vVamp));
+diffuseColor.rgb = mix(mix(diffuseColor.rgb, vec3(${hem.r.toFixed(4)}, ${hem.g.toFixed(4)}, ${hem.b.toFixed(4)}), above), vec3(${edge.r.toFixed(4)}, ${edge.g.toFixed(4)}, ${edge.b.toFixed(4)}), rim * 0.9);`);
+  };
+  material.customProgramCacheKey = () => 'jevica-pumps-v2';
+  return { sides, vamp };
+}
+
+// The ombré begins at the shoulders (fraction of the hair's height from its crown) and the
+// strands below the ears stand out by up to `flare` for volume.
+export const HAIR = Object.freeze({ pinkFrom: .2, pinkTo: .34, flare: .22, axisZ: .01 });
 export function applyHairOmbre(model, material, owned) {
   let hair = null; model.traverse(item => { if (item.isMesh && item.material === material) hair = item; });
   if (!hair) return null;
@@ -335,6 +383,16 @@ export function applyHairOmbre(model, material, owned) {
   const p = geometry.attributes.position, ombre = new Float32Array(p.count);
   let top = -Infinity, bottom = Infinity; for (let i = 0; i < p.count; i++) { top = Math.max(top, p.getY(i)); bottom = Math.min(bottom, p.getY(i)); }
   for (let i = 0; i < p.count; i++) ombre[i] = (top - p.getY(i)) / (top - bottom);
+  // Volume (the reference's long waves): below the ears the strands stand out from the head's
+  // axis, most at the ends, so the hair falls fuller over the shoulders.
+  const ears = top - (top - bottom) * .17, flare = HAIR.flare;
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i), k = Math.max(0, Math.min(1, (ears - y) / (ears - bottom)));
+    if (k <= 0) continue;
+    const grow = 1 + flare * Math.sqrt(k), dz = p.getZ(i) - HAIR.axisZ;
+    p.setXYZ(i, p.getX(i) * grow, y, HAIR.axisZ + dz * grow);
+  }
+  p.needsUpdate = true; geometry.computeBoundingBox(); geometry.computeBoundingSphere();
   geometry.setAttribute('ombre', new THREE.BufferAttribute(ombre, 1));
   material.color.set('#ffffff'); material.roughness = .46; material.alphaTest = .35;
   material.onBeforeCompile = shader => {
@@ -343,9 +401,11 @@ export function applyHairOmbre(model, material, owned) {
     shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vOmbre;')
       .replace('#include <map_fragment>', `#include <map_fragment>
 float strand = clamp(dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722)) * 3.5, 0.0, 1.0);
-vec3 shade = mix(vec3(0.102, 0.051, 0.039), vec3(0.910, 0.627, 0.749), smoothstep(0.16, 0.36, vOmbre));
-diffuseColor.rgb = shade * mix(0.45, 1.12, pow(strand, 0.65));`);
+float pinkness = smoothstep(${HAIR.pinkFrom.toFixed(3)}, ${HAIR.pinkTo.toFixed(3)}, vOmbre);
+vec3 shade = mix(vec3(0.102, 0.051, 0.039), vec3(0.929, 0.596, 0.757), pinkness);
+// Dark strands keep their contrast; the pink ends stay bright enough to read as pink, not mauve.
+diffuseColor.rgb = shade * mix(mix(0.45, 0.78, pinkness), 1.12, pow(strand, 0.65));`);
   };
-  material.customProgramCacheKey = () => 'jevica-ombre-hair-v1';
+  material.customProgramCacheKey = () => 'jevica-ombre-hair-v2';
   return { top, bottom, ombre };
 }
