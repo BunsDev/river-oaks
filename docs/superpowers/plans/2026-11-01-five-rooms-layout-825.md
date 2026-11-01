@@ -88,7 +88,25 @@ draft PR #853 (`f42c3ae2`) on `feat/ribbon-route-825-20261031`: the spine starts
 in #827, this contract's `spine` must be re-carried from it (v2), and the side-lane blockers leave
 its record.
 
-## v2 inputs (requested by consumers, accepted, not yet in the contract)
+## v2 (2026-11-01, after #853 folded into #827)
+
+#853 merged into `feat/ribbon-route-825-20261031` at `af40b2e5` (12:25:03Z, river-oaks-0a, Val's OK
+on #835). Merging that base into this branch put the contract's spine out of step with #827, so v2:
+
+- re-carries the spine from `config/ribbon/district-spine.json` (start (-2759.588, -1285.5));
+- ends `south` at the side lane's south kerb (-2759.842, -1295) and joins it to the spine with a new
+  join kind `crossing` (9.503 m across `osm-way-625330795`, road pieces 7 and 8, no canopy); the
+  validator refuses a crossing over 12 m, one that crosses anything but its named road, or one that
+  crosses no road;
+- tees `link-studios` off `south` (station 72.508, gap 0.386 m);
+- drops the side-lane blockers and its move; tree-pit-36 leaves the spine's record (posts moved);
+- rewrites the route test's side-lane regression to the pre-#853 start points.
+
+Plan: 68 modules, 142 posts, 37 lamps, 5 links, 0 posts left out; hash `66797e9bb6160aa5`.
+Remaining blockers: 13 pits, 10 crowns, bench-5 body, REF-HW-01 bed. The 3.0 m clear-height
+measurement still holds (link-studios clears, south loses tree-108, spine keeps tree-104).
+
+## v2 inputs not yet in the contract (requested by consumers, accepted)
 
 From #840 Landscape (worker on `feat/five-rooms-landscape-courts-825-20261101`, built on #849
 `49862e17`), 2026-11-01:

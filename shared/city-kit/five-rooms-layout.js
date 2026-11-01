@@ -19,7 +19,7 @@ import { stableHash } from './assemble.js';
 import { expandRibbon, RIBBON_KIT, RIBBON_RULES } from './ribbon-layout.js';
 import { GARDEN_CAMPUS_LAYOUT, GARDEN_CAMPUS_VERSIONS, sourceToCampus, validateGardenCampus, rectContains } from '../garden-campus-layout.js';
 
-export const FIVE_ROOMS_VERSION = 'five-rooms-v1';
+export const FIVE_ROOMS_VERSION = 'five-rooms-v2';
 export const VENUE_IDS = Object.freeze(['venue:counter', 'venue:atelier', 'venue:starlight-screen', 'venue:shade-garden', 'venue:studios-overlook']);
 export const FIVE_ROOMS_RULES = Object.freeze({
   // A door's clear zone: along the facade and out from it. The repo states no door clearance;
@@ -50,6 +50,10 @@ export const FIVE_ROOMS_RULES = Object.freeze({
   venueKinds: Object.freeze(['bay', 'threshold']),
   retireStatuses: Object.freeze(['proposed', 'decided']),
   segmentStatuses: Object.freeze(['clear', 'blocked']),
+  // end: shared end posts; tee: starts beside another walk's edge; crossing: a marked crossing of
+  // one named road between one segment's end and the next one's start, no canopy over it.
+  joinKinds: Object.freeze(['end', 'tee', 'crossing']),
+  maxCrossing: 12,
   linkSides: Object.freeze(['left', 'right']),
   attachmentRoles: Object.freeze(['threshold', 'sign', 'counter', 'display-frame', 'seat-cluster', 'screen', 'bed', 'porch-light', 'lantern', 'anchor']),
 });
@@ -256,7 +260,8 @@ export function validateFiveRooms(contract) {
     } else if (segment.blocked !== undefined) fail(`segment ${segment.id} is clear and carries a blocked record`);
   }
   for (const join of contract.ribbon.joins ?? []) {
-    if (!join || !['end', 'tee'].includes(join.kind) || !contract.ribbon.segments.some(s => s.id === join.from) || !contract.ribbon.segments.some(s => s.id === join.to)) fail(`join ${join?.from}->${join?.to}`);
+    if (!join || !rules.joinKinds.includes(join.kind) || !contract.ribbon.segments.some(s => s.id === join.from) || !contract.ribbon.segments.some(s => s.id === join.to)) fail(`join ${join?.from}->${join?.to}`);
+    if ((join.kind === 'crossing') !== (typeof join.road === 'string')) fail(`join ${join.from}->${join.to}: a crossing names its road, and only a crossing does`);
   }
   if (!Array.isArray(contract.links)) fail('links');
   for (const link of contract.links) {
@@ -490,6 +495,23 @@ export function expandFiveRooms(source, site) {
       if (Math.hypot(a[0] - b[0], a[1] - b[1]) > 0.001 || Math.abs(from.width - to.width) > 1e-9) fail(`join ${join.from}->${join.to}: ${join.from} must end where ${join.to} starts, at the same width`);
       const shared = merged.posts.filter(post => post.segment === join.to && post.boundary === 0).map(post => [post.id, merged.posts.find(other => other.segment === join.from && other.boundary !== 0 && Math.hypot(other.position[0] - post.position[0], other.position[1] - post.position[1]) < 0.005)?.id ?? null]);
       return { ...join, at: a.map(mm), sharedPosts: shared };
+    }
+    if (join.kind === 'crossing') {
+      // A marked crossing, no canopy: from's end to to's start straight across one named road.
+      // The strip may cross only that road's carriageway pieces; anything else in it fails.
+      const a = from.points.at(-1), b = to.points[0], length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (!site.roads.some(road => road.id === join.road)) fail(`join ${join.from}->${join.to}: road ${join.road} is not in the site`);
+      if (length > rules.maxCrossing) fail(`join ${join.from}->${join.to}: the crossing is ${mm(length)} m, over ${rules.maxCrossing} m`);
+      const d = [(b[0] - a[0]) / length, (b[1] - a[1]) / length], n = [-d[1], d[0]], half = Math.min(from.width, to.width) / 2;
+      const strip = [[a[0] + n[0] * half, a[1] + n[1] * half], [b[0] + n[0] * half, b[1] + n[1] * half], [b[0] - n[0] * half, b[1] - n[1] * half], [a[0] - n[0] * half, a[1] - n[1] * half]];
+      const crosses = [], blocked = [];
+      for (const zone of allZones) {
+        if (zone.kind === 'step-free' || zone.kind === 'seat-access' || !overlaps(strip, corners(zone.rect))) continue;
+        if (zone.source === join.road) crosses.push(zone.id); else blocked.push(zone.id);
+      }
+      if (blocked.length) fail(`join ${join.from}->${join.to}: the crossing of ${join.road} is blocked by ${blocked.join(', ')}`);
+      if (!crosses.length) fail(`join ${join.from}->${join.to}: the crossing does not cross ${join.road}; use an end join`);
+      return { ...join, at: a.map(mm), to: join.to, length: mm(length), crosses };
     }
     const start = from.points[0], at = stationOf(to, start);
     if (!at || Math.abs(Math.abs(at.right) - to.width / 2) > 0.5) fail(`join ${join.from}->${join.to}: ${join.from} must start beside the walk edge of ${join.to}`);

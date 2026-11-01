@@ -1,10 +1,10 @@
 # Five Rooms layout (#838): the measured District and the proposed mapping
 
-Contract: [`config/ribbon/five-rooms.json`](../../../config/ribbon/five-rooms.json) (`five-rooms-v1`),
+Contract: [`config/ribbon/five-rooms.json`](../../../config/ribbon/five-rooms.json) (`five-rooms-v2`),
 validator: [`shared/city-kit/five-rooms-layout.js`](../../../shared/city-kit/five-rooms-layout.js),
 test: [`preview/tests/five-rooms-layout.test.js`](../../../preview/tests/five-rooms-layout.test.js).
 Every number below comes from `node docs/design/five-rooms/measure.mjs` on the live
-`preview/public/data/district.json` (plan hash `8e0c37a9f64dddfb`). Units are metres, site-local
+`preview/public/data/district.json` (plan hash `66797e9bb6160aa5`). Units are metres, site-local
 x east, y north; floors are district-datum altitudes from `groundSurfaceHeight`.
 
 **Status: proposed.** No retirement here is decided. Each venue carries `retire.status: "proposed"`
@@ -65,7 +65,7 @@ where the #827 spine runs; 26 tenants stay.
 
 ## Proposed mapping (option A) and the alternatives
 
-| Venue | Option A (in v1) | Alternatives | Why A |
+| Venue | Option A (in the contract) | Alternatives | Why A |
 |---|---|---|---|
 | Counter | Amorino bay (117 m2) | **B** MAD Houston bay, an end link at the spine's north end | On the spine's east frontage beside the Starlight Screen; a gelato counter already. |
 | Atelier | Van Cleef & Arpels bay (117 m2) | **B** Cartier bay (its door faces the side-lane kerb, so a link would cross `osm-way-625330795`; A avoids that) | On the spine; bench-5 stays and the spine keeps spanning it. |
@@ -77,9 +77,9 @@ Option A retires 4 of 30 tenants: Amorino, Van Cleef & Arpels, IPIC Theaters and
 
 | Venue | Kind | Host | Retires | Footprint (m2) | Floor (m) | Entrance (x, y), width | Link | Station (m) |
 |---|---|---|---|---|---|---|---|---|
-| Counter | bay | osm-way-625330798 | Amorino | 117.3 | 18.54 | -2755.00, -1216.44, 2.4 m | spine (right) | 83.747 |
-| Atelier | bay | osm-way-625330798 | Van Cleef & Arpels | 117.3 | 18.47 | -2755.41, -1245.95, 2.4 m | spine (right) | 54.227 |
-| Starlight Screen | bay | osm-way-625330798 | IPIC Theaters | 443.1 | 18.55 | -2755.16, -1228.17, 2.4 m | spine (right) | 72.017 |
+| Counter | bay | osm-way-625330798 | Amorino | 117.3 | 18.54 | -2755.00, -1216.44, 2.4 m | spine (right) | 69.131 |
+| Atelier | bay | osm-way-625330798 | Van Cleef & Arpels | 117.3 | 18.47 | -2755.40, -1245.79, 2.4 m | spine (right) | 39.78 |
+| Starlight Screen | bay | osm-way-625330798 | IPIC Theaters | 443.1 | 18.55 | -2755.16, -1228.17, 2.4 m | spine (right) | 57.401 |
 | Shade Garden | bay | osm-way-625330792 | Hermès | 115.6 | 18.47 | -2757.50, -1313.21, 2.4 m | south (right) | 58.339 |
 | Studios + Overlook | threshold | osm-way-625330790 | none | 23.8 | 18.29 | -2720.22, -1290.84, 6 m | link-studios (end) | 35.85 |
 
@@ -92,22 +92,25 @@ and one or two role anchors such as counter, display frame, screen, bed or seat 
 
 | Segment | Status | Length (m) | Width (m) | Clear (m) | Modules | Posts | Blockers |
 |---|---|---|---|---|---|---|---|
-| spine | blocked | 102.795 | 2 | 3.6 | 34 | 70 | bench-5-body, road-625330795-7, road-625330795-8, tree-104, tree-127, tree-153, tree-37, tree-77, tree-84, tree-85, tree-pit-103, tree-pit-126, tree-pit-152, tree-pit-27, tree-pit-36, tree-pit-76, tree-pit-83, tree-pit-84 |
-| south | blocked | 71.397 | 2 | 3.6 | 24 | 50 | harry-winston-south-bed, tree-108, tree-pit-107, tree-pit-130, tree-pit-16, tree-pit-165, tree-pit-3, tree-pit-96 |
+| spine | blocked | 88.18 | 2 | 3.6 | 30 | 62 | bench-5-body, tree-104, tree-127, tree-153, tree-37, tree-77, tree-84, tree-85, tree-pit-103, tree-pit-126, tree-pit-152, tree-pit-27, tree-pit-76, tree-pit-83, tree-pit-84 |
+| south | blocked | 76.51 | 2 | 3.6 | 26 | 54 | harry-winston-south-bed, tree-108, tree-pit-107, tree-pit-130, tree-pit-16, tree-pit-165, tree-pit-3, tree-pit-96 |
 | link-studios | blocked | 35.85 | 2 | 3.6 | 12 | 26 | tree-118, tree-48 |
+
+The spine is carried from #827 as it stands after #853: it starts just north of the side lane
+`osm-way-625330795`. The south segment ends at that lane's south kerb, and the two meet by a
+**marked crossing** (join kind `crossing`, 9.5 m, no canopy) that may cross only that road.
+`link-studios` tees off the south segment.
 
 All three segments are **blocked**, and the contract says so: each blocked record names the zones
 that must move, and the validator refuses a record that names a zone the site does not confirm, or
 leaves one out. What blocks them:
 
-- **Side-lane mouth.** `osm-way-625330795` meets the central lane at the spine's south end. Spine
-  modules 001-004 cross its 8.4 m carriageway and posts 002-004 stand in it. #827's own test
-  modelled only the central lane; `ribbon-route-district.test.js` now shows the refusal. Fix: a
-  crossing span on posts at both kerbs (a kit rule), or split the spine at the kerbs (new spine IDs,
-  v2).
+- **Side-lane mouth (fixed).** In v1 the spine started inside the carriageway of
+  `osm-way-625330795` (modules 001-004 crossed it, posts 002-004 stood in it). #853, folded into #827
+  with Val's OK, moved the start north of the kerb; v2 carries that spine.
 - **Street trees.** The east pavement is lined with trees at 6-10 m spacing. Pits 27, 76, 83, 84,
-  103, 126 and 152 are in the spine's walk and pit 36 is under its post 012:l; pits 16, 96, 107,
-  130 and 165 are in the south walk and pit 3 is in the walk and under post 012:l.
+  103, 126 and 152 are in the spine's walk (76 and 103 also under posts); pits 3, 16, 96, 107, 130
+  and 165 are in the south walk (3 also under a post).
   Crowns with a lowest branch below the 4.0 m canopy top (3.6 m clear + 0.4 m slab): tree-104 at
   3.19 m, -153 3.53, -84 3.62, -37 3.72, -127 3.79, -77 3.82, -85 3.89, -108 3.78, -118 3.46 and
   -48 3.83. Measured: at the kit's 3.0 m clear height, link-studios clears, the south segment loses
@@ -129,11 +132,12 @@ Walk width is 2.0 m on every segment (the #827 window); nothing here widens it.
    Studios + Overlook at the Gardens) or pick an alternative per venue from the table above.
 2. **Shade Garden court (decision 6).** Confirm the Hermès bay (or the chosen alternative) may open
    as a court inside its mapped building.
-3. **Street trees (decision 2).** Move the 14 pits named above out of the walks and lift the 10
+3. **Street trees (decision 2).** Move the 13 pits named above out of the walks and lift the 10
    crowns above 4.0 m (Landscape, #840), or lower the canopy to 3.0 m clear, which leaves only
    tree-104 and the pits.
-4. **Side-lane mouth (new).** Allow a ribbon-1 crossing span over `osm-way-625330795` at the spine's
-   south end, or split the spine at the kerbs (changes #827's spine IDs).
+4. **Side-lane crossing (resolved).** #853 moved the spine start; v2 crosses `osm-way-625330795`
+   at a marked crossing between the south segment and the spine. Confirm a crossing without canopy
+   is acceptable there.
 5. **Bench and bed.** Move the Van Cleef & Arpels bench out of the spine walk (or retire it with the
    Atelier), and move or trim the REF-HW-01 bed clear of the south walk (or end the south segment
    north of it and reach Le Colonial across `osm-way-627662384`).
@@ -146,6 +150,6 @@ Walk width is 2.0 m on every segment (the #827 window); nothing here widens it.
 interior, attachments), `segments` (status, blocked record, findings, crowns), `links` (reach
 polygons), `cameras`, `exclusions`, the merged Ribbon placements (`modules`, `posts`, `lamps`,
 `fans`, `seats`) and a `hash`. Build the site with `siteFromDistrict(world, ...)` as the test does.
-IDs are stable: `venue:*`, `entrance:*`, `link:*`, `attach:*`, `camera:*`, `ribbon:<segment>:*`.
+Joins are `end`, `tee` or `crossing` (`plan.joins`, with the crossed road pieces). IDs are stable: `venue:*`, `entrance:*`, `link:*`, `attach:*`, `camera:*`, `ribbon:<segment>:*`.
 A blocked segment's placements are its raw geometry: render it only behind a flag until its
-blockers move. Later changes bump `version` (`five-rooms-v2`, ...).
+blockers move. Later changes bump `version` (v2 re-carried the spine after #853; v3 records Val's decisions).

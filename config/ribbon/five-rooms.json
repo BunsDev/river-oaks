@@ -1,6 +1,6 @@
 {
   "id": "five-rooms",
-  "version": "five-rooms-v1",
+  "version": "five-rooms-v2",
   "kit": "ribbon-1",
   "seed": 825,
   "world": {
@@ -227,8 +227,8 @@
         {
           "id": "entrance:atelier",
           "centre": [
-            -2755.406,
-            -1245.954
+            -2755.403,
+            -1245.786
           ],
           "width": 2.4,
           "side": "west",
@@ -265,8 +265,8 @@
           "id": "attach:atelier:threshold",
           "role": "threshold",
           "position": [
-            -2755.406,
-            -1245.954,
+            -2755.403,
+            -1245.786,
             18.47
           ],
           "yaw": 3.128
@@ -275,8 +275,8 @@
           "id": "attach:atelier:sign",
           "role": "sign",
           "position": [
-            -2755.356,
-            -1245.955,
+            -2755.353,
+            -1245.787,
             21.47
           ],
           "yaw": 3.128
@@ -285,8 +285,8 @@
           "id": "attach:atelier:porch-light",
           "role": "porch-light",
           "position": [
-            -2755.333,
-            -1244.355,
+            -2755.331,
+            -1244.187,
             21.07
           ],
           "yaw": 3.128
@@ -295,8 +295,8 @@
           "id": "attach:atelier:display-frame",
           "role": "display-frame",
           "position": [
-            -2750.906,
-            -1246.016,
+            -2750.904,
+            -1245.848,
             19.67
           ],
           "yaw": -0.014
@@ -305,8 +305,8 @@
           "id": "attach:atelier:anchor",
           "role": "anchor",
           "position": [
-            -2747.906,
-            -1246.058,
+            -2747.904,
+            -1245.89,
             18.47
           ],
           "yaw": -0.014
@@ -316,13 +316,13 @@
         {
           "id": "camera:atelier:interior",
           "from": [
-            -2754.806,
-            -1245.962,
+            -2754.803,
+            -1245.794,
             20.07
           ],
           "to": [
-            -2747.206,
-            -1246.067,
+            -2747.204,
+            -1245.899,
             20.07
           ],
           "halfWidth": 0.5
@@ -784,12 +784,8 @@
         "id": "spine",
         "points": [
           [
-            -2759.834,
-            -1300.113
-          ],
-          [
-            -2759.67,
-            -1290.233
+            -2759.588,
+            -1285.5
           ],
           [
             -2758.824,
@@ -807,11 +803,9 @@
         "status": "blocked",
         "source": "config/ribbon/district-spine.json (#827), unchanged",
         "blocked": {
-          "reason": "spine left edge spans 12.703 m from ribbon:spine:post:001:l to ribbon:spine:post:005:l, over its maxSpan 6 m (left out: ribbon:spine:post:002:l in no-go road-625330795-8, ribbon:spine:post:003:l in no-go road-625330795-8, ribbon:spine:post:004:l in no-go road-625330795-8)",
+          "reason": "the walk of spine runs over tree-pit-103, tree-pit-76, tree-pit-84, tree-pit-152, bench-5-body, tree-pit-126, tree-pit-27, tree-pit-83",
           "blockers": [
             "bench-5-body",
-            "road-625330795-7",
-            "road-625330795-8",
             "tree-104",
             "tree-127",
             "tree-153",
@@ -823,14 +817,12 @@
             "tree-pit-126",
             "tree-pit-152",
             "tree-pit-27",
-            "tree-pit-36",
             "tree-pit-76",
             "tree-pit-83",
             "tree-pit-84"
           ],
           "moves": [
-            "Side-lane mouth (osm-way-625330795, road-625330795-7/-8): modules 001-004 cross the 8.4 m carriageway and posts 002-004 stand in it. Either carry the canopy over a marked crossing on posts at both kerbs (a ribbon-1 kit rule for a crossing span of about 9 m), or end the spine at the north kerb and start a crossing-free segment at the south kerb (new spine IDs: a v2 change for #827).",
-            "Street-tree pits in the walk (tree-pit-27, -36, -76, -83, -84, -103, -126, -152): move each pit out of the walk; tree-pit-36 also displaces post 012:l past the 6 m span. Landscape (#840) owns tree moves (decision 2).",
+            "Street-tree pits in the walk (tree-pit-27, -76, -83, -84, -103, -126, -152; -76 and -103 are also under posts): move each pit out of the walk. Landscape (#840) owns tree moves (decision 2).",
             "Crowns below the canopy top (3.6 m clear + 0.4 m slab = 4.0 m): tree-104 at 3.19 m, tree-153 3.53, tree-84 3.62, tree-37 3.72, tree-127 3.79, tree-77 3.82, tree-85 3.89. Lift each crown to at least 4.0 m, or lower this segment's clearHeight to 3.0 m (the kit minimum), which clears all but tree-104.",
             "Van Cleef & Arpels bench body (bench-5-body) under modules 018-019: move the bench out of the walk (it stays a seat-access zone the canopy spans), or retire it with the Atelier bay."
           ]
@@ -848,8 +840,8 @@
             -1308.689
           ],
           [
-            -2759.834,
-            -1300.113
+            -2759.842,
+            -1295
           ]
         ],
         "width": 2,
@@ -857,7 +849,7 @@
         "style": "canopy",
         "maxSpan": 6,
         "status": "blocked",
-        "source": "measured 2026-11-01: 6.9 m east of the lane centreline, joins the spine start",
+        "source": "measured 2026-11-01: 6.9 m east of the lane centreline, ends at the side-lane south kerb",
         "blocked": {
           "reason": "south left edge spans 8.974 m from ribbon:south:post:001:l to ribbon:south:post:004:l, over its maxSpan 6 m (left out: ribbon:south:post:002:l in no-go harry-winston-south-bed, ribbon:south:post:003:l in no-go harry-winston-south-bed)",
           "blockers": [
@@ -908,14 +900,15 @@
     ],
     "joins": [
       {
-        "kind": "end",
+        "kind": "crossing",
         "from": "south",
-        "to": "spine"
+        "to": "spine",
+        "road": "osm-way-625330795-0"
       },
       {
         "kind": "tee",
         "from": "link-studios",
-        "to": "spine"
+        "to": "south"
       }
     ]
   },
@@ -958,9 +951,10 @@
   ],
   "exclusions": [],
   "notes": [
-    "v1 (2026-11-01, #838). Every retirement is proposed, not decided: Val chooses from the options in docs/design/five-rooms/layout.md.",
+    "v1 (2026-11-01, #838) published the first draft. Every retirement is proposed, not decided: Val chooses from the options in docs/design/five-rooms/layout.md.",
     "Exclusions are rebuilt from the live District by siteExclusions(); this list holds only authored additions.",
-    "All three segments are blocked by the street trees, the side-lane mouth, a bench body and the REF-HW-01 bed. Each blocked record names what must move; the validator confirms every name against the site.",
+    "v2 (2026-11-01): the spine is re-carried from #827 after #853 moved its start north of the side lane; the south segment now ends at the side lane south kerb and meets the spine by a marked crossing of osm-way-625330795 (join kind crossing); link-studios tees off the south segment.",
+    "All three segments are blocked by street trees, a bench body and the REF-HW-01 bed. Each blocked record names what must move; the validator confirms every name against the site.",
     "Entrances sit midway between two edge posts of their segment so no post is left out at a door."
   ]
 }
