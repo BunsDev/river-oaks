@@ -33,9 +33,11 @@ const KEYS = { ArrowLeft: ['across', -1], KeyA: ['across', -1], ArrowRight: ['ac
 const GUIDE_KEY = 'river-oaks-darts-guide';
 const tenth = n => Math.round(n * 10) / 10;
 
+// Reading `localStorage` itself throws when site data is blocked, so the default is guarded too.
+const deviceStorage = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
 export function createPlazaDarts({ host = document.querySelector('#viewport'), getMirror = () => null, getBoard = () => null, getPose = () => null, focusWorld = () => {},
   random = Math.random, now = () => performance.now(), replyDelay = 650, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
-  shared = null, storage = globalThis.localStorage, sounds = throwSounds() } = {}) {
+  shared = null, storage = deviceStorage(), sounds = throwSounds() } = {}) {
   // pending: a shared throw is with the town; flying: a dart is in the air on the sheet.
   let game = null, release = [0, THROW.nominal], ready = now(), steady = false, last = null, generation = 0, thinking = false, pending = false, flying = false, frame = 0, lastKey = '';
   const controls = createHeldControls({ keys: KEYS, step: STEP, rate: RATE, now,

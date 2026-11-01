@@ -12,7 +12,9 @@ let shared = null;
 // The sound being built collects its voices here, so play() can hand back a stop.
 let voices = null;
 
-export function createThrowSounds({ storage = globalThis.localStorage, AudioContextClass = globalThis.AudioContext ?? globalThis.webkitAudioContext, volume = 0.3 } = {}) {
+// Reading `localStorage` itself throws when site data is blocked, so the default is guarded too.
+const deviceStorage = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
+export function createThrowSounds({ storage = deviceStorage(), AudioContextClass = globalThis.AudioContext ?? globalThis.webkitAudioContext, volume = 0.3 } = {}) {
   let context = null, noise = null, on = true;
   try { on = storage?.getItem(KEY) !== 'off'; } catch { /* storage may be unavailable */ }
   const listeners = new Set();

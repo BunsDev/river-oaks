@@ -165,7 +165,9 @@ export function guideStep({ game, page }, action) {
 
 // Which guides this player has opened, kept on this device. Storage can throw (a
 // private window, blocked site data), so every read and write is guarded.
-export function createGuideMemory(storage = globalThis.localStorage, key = 'river-oaks-salon-guide-seen') {
+// Reading `localStorage` itself throws when site data is blocked, so the default is guarded too.
+const deviceStorage = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
+export function createGuideMemory(storage = deviceStorage(), key = 'river-oaks-salon-guide-seen') {
   let seen = new Set();
   try { const saved = JSON.parse(storage?.getItem(key) ?? '[]'); if (Array.isArray(saved)) seen = new Set(saved.filter(id => typeof id === 'string')); } catch { /* Start fresh. */ }
   return {
