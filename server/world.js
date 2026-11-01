@@ -46,6 +46,8 @@ import { advanceClock, clockMinute, dangerActive, defaultWorldPolicy, evaluateVi
 import { campusInteriorPlan, isCampusLevelId } from '../preview/src/garden-campus-levels.js';
 
 const CYCLE_GRACE_MS = 1500;
+// Hours played stop counting this long after the player last moved, turned or chatted.
+export const PLAY_IDLE_MS = 10 * 60 * 1000;
 const WISH_COOLDOWN_MS = 5000, TRAVEL_COOLDOWN_MS = 1000, CHAT_COOLDOWN_MS = 1000, GESTURE_COOLDOWN_MS = 1500, GESTURE_DURATION_MS = 3200, FOCUS_MS = 30000;
 const LEDGER_TTL_MS = 60000, MAX_LEDGERS = 4096, MAX_ACTIVE_WISHES = 3;
 const MAX_CHAT_HISTORY = 40, MAX_CHAT_LENGTH = 280;
@@ -267,13 +269,31 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Banked metres are process-local and not checkpointed: the transports drain
   // after every world.step and before checkpoint(), so a checkpoint never
   // carries metres that a later drain would pay twice.
+  // Every leaderboard (leaderboard-boards.js) banks here the same way, keyed by
+  // board and account: bicycle metres from player.rideMeters, metres walked on
+  // the ground and driven per vehicle kind from accepted poses, and seconds
+  // played. A drained entry is {userId, name, board, amount}.
   const rides=new Map();
+  const credit=(player,board,amount)=>{
+    if(!(amount>0))return;
+    const key=`${board}\u0000${player.id}`,entry=rides.get(key)??{userId:player.id,name:accountName(player.id,player.name),board,amount:0};
+    entry.amount=Math.round((entry.amount+amount)*1000)/1000;entry.name=accountName(player.id,player.name);rides.set(key,entry);
+  };
   const bankRide=player=>{
     if(!(player.rideMeters>0))return;
-    const entry=rides.get(player.id)??{userId:player.id,name:accountName(player.id,player.name),meters:0};
-    entry.meters=Math.round((entry.meters+player.rideMeters)*1000)/1000;entry.name=accountName(player.id,player.name);rides.set(player.id,entry);
+    credit(player,'cycling',player.rideMeters);
     player.rideMeters=0;
   };
+  // Hours played: connected time, counted only up to PLAY_IDLE_MS after the
+  // player last moved, turned or sent a command, so an idle tab stops earning.
+  // Process-local like the metres; a restored checkpoint starts a fresh count.
+  const playedAt=new Map(),activeAt=new Map();
+  const bankPlayed=(player,time)=>{
+    const from=playedAt.get(player.id)??time,until=Math.min(time,(activeAt.get(player.id)??from)+PLAY_IDLE_MS);
+    if(until>from)credit(player,'played',(until-from)/1000);
+    playedAt.set(player.id,time);
+  };
+  const markActive=(userId,time)=>{if(players.has(userId))activeAt.set(userId,time);};
   const releaseBike=player=>{
     if(!player.cycling)return false;
     bankRide(player);player.cycling=null;if(player.vehicle==='bicycle')player.vehicle=null;revision++;return true;
@@ -317,7 +337,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // after every world.step and before checkpoint(), so a checkpoint never
   // carries metres that a later drain would pay twice.
   function drainRides() {
-    for(const player of players.values())bankRide(player);
+    const time=now();
+    for(const player of players.values()){bankRide(player);bankPlayed(player,time);}
     const drained=[...rides.values()];rides.clear();return drained;
   }
   const suiteSeatAt=(buildId,slot)=>{ const seat=suiteSeats.get(buildId);
@@ -569,6 +590,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const player = {id:identity.userId,name:accountName(identity.userId,identity.name).slice(0,80),appearance,position:[x,north,environment.groundAt(x,-north)],yaw:0,altitude:0,buildingId:null,levelId:null,
       poseAt:time,moveBudget:0.1,liftBudget:0.1,gesture:null,gestureUntil:0};
     players.set(player.id,player);
+    playedAt.set(player.id,time);activeAt.set(player.id,time);
     rememberAppearance(player.id,appearance);
     revision++;
     return {ok:true,player:publicPlayer(player)};
@@ -578,6 +600,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (!leaving) return false;
     offices.leave(userId);
     releaseBike(leaving);
+    bankPlayed(leaving,now());playedAt.delete(userId);activeAt.delete(userId);
     // A pilot who leaves sets the passenger down below the seat; a leaving passenger frees it.
     if(leaving.passengerId)releasePassenger(leaving,now());
     if(leaving.passengerOf){const pilot=players.get(leaving.passengerOf);if(pilot?.passengerId===userId)delete pilot.passengerId;}
@@ -609,7 +632,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     }
     syncColliders();
     const kept=chat.filter(entry=>entry.authorId!==userId);chat.splice(0,chat.length,...kept);
-    ledgers.delete(userId);focus.delete(userId);rides.delete(userId);inventory.delete(userId);
+    ledgers.delete(userId);focus.delete(userId);for(const key of [...rides.keys()])if(rides.get(key).userId===userId)rides.delete(key);playedAt.delete(userId);activeAt.delete(userId);inventory.delete(userId);
     appearanceByUser.delete(userId);characterByUser.delete(userId);movementByUser.delete(userId);
     for(const [storeId,guests] of [...homeGuests]){
       const rest=guests.filter(id=>id!==userId);
@@ -970,8 +993,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     player.liftBudget -= liftCost;
     // Metres count only from an accepted bicycle pose; stepping off the bike
     // (a pose without it) hands the slot back.
-    if (message.vehicle==='bicycle') player.rideMeters=(player.rideMeters??0)+distance(position,player.position);
+    const travelled=distance(position,player.position);
+    if (message.vehicle==='bicycle') player.rideMeters=(player.rideMeters??0)+travelled;
     else if (player.cycling) releaseBike(player);
+    // Other boards: metres driven per vehicle kind, and metres walked on the ground
+    // (not flown). A pilot's passenger is carried, not posed, so earns nothing here.
+    if (message.vehicle && message.vehicle!=='bicycle') credit(player,message.vehicle,travelled);
+    else if (!message.vehicle && Math.max(player.altitude,altitude)<=0.1) credit(player,'walking',travelled);
+    if (travelled>.015 || Math.abs(Math.atan2(Math.sin(yaw-player.yaw),Math.cos(yaw-player.yaw)))>.01) markActive(player.id,time);
     // Watering keeps the body turned to the planter; walking off ends it.
     if (player.gesture==='water' && distance(position,player.position)>0.3) {player.gesture=null;player.gestureUntil=0;}
     const watering = player.gesture==='water' && player.gestureUntil>time;
@@ -1199,6 +1228,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if(prepareSelection&&!['appearance','character','movement'].includes(message.type))return reject('invalid_command');
     const ledger=ledgers.get(userId),time=now();
     ledger.seen=time;
+    // Chat counts as play; so does a pose that moves or turns (pose()). Nothing a page
+    // sends on a timer does, so an unattended tab stops earning hours.
+    if(message.type==='chat')markActive(userId,time);
     settleManeuver(player,time);
     // The owner's world rules apply wherever she stands, an office or upper floor included.
     if(message.type==='worldPolicy')return worldPolicyCommand(userId,message,ledger,time);

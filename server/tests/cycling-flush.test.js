@@ -63,12 +63,12 @@ test('uncycle flushes the ride, and a rider still out is flushed by the tick', a
   f.advance(1000);
   assert.equal((await f.command({ type: 'pose', position: west(5), yaw: 0, altitude: 0, vehicle: 'bicycle' })).ok, true);
   assert.equal((await f.command({ type: 'uncycle' })).ok, true);
-  assert.deepEqual(await f.cyclingMiles.rank('alice'), { rank: 1, meters: 5 }, 'uncycle banked the ride before answering');
+  assert.deepEqual(await f.cyclingMiles.rank('alice'), { rank: 1, total: 5 }, 'uncycle banked the ride before answering');
   f.put(slot.approach);
   assert.equal((await f.command({ type: 'cycle', rackId: 'plaza-salon-rack', slot: 1 })).ok, true);
   f.advance(1000);
   assert.equal((await f.command({ type: 'pose', position: west(4), yaw: 0, altitude: 0, vehicle: 'bicycle' })).ok, true);
-  await until(() => f.cyclingMiles.rank('alice'), { rank: 1, meters: 9 });
+  await until(() => f.cyclingMiles.rank('alice'), { rank: 1, total: 9 });
   f.ws.close();
 });
 
@@ -81,7 +81,7 @@ test('a rider who disconnects mid-ride is banked when the departure grace ends',
   assert.equal((await f.command({ type: 'pose', position: west(3), yaw: 0, altitude: 0, vehicle: 'bicycle' })).ok, true);
   assert.equal(await f.cyclingMiles.rank('alice'), null, 'nothing is banked until the ride is drained');
   f.ws.close();
-  await until(() => f.cyclingMiles.rank('alice'), { rank: 1, meters: 3 });
+  await until(() => f.cyclingMiles.rank('alice'), { rank: 1, total: 3 });
   assert.equal(f.world.players.has('alice'), false, 'the departure grace removed the rider');
 });
 
@@ -93,10 +93,10 @@ test('the leaderboard route ranks the rider after a flushed ride', async t => {
   f.advance(1000);
   assert.equal((await f.command({ type: 'pose', position: west(6), yaw: 0, altitude: 0, vehicle: 'bicycle' })).ok, true);
   assert.equal((await f.command({ type: 'uncycle' })).ok, true);
-  await until(() => f.cyclingMiles.rank('alice'), { rank: 1, meters: 6 }, 3000);
+  await until(() => f.cyclingMiles.rank('alice'), { rank: 1, total: 6 }, 3000);
   const response = await fetch(f.origin + '/api/cycling/leaderboard', { headers: { Cookie: 'test_session=alice' } });
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { top: [{ rank: 1, name: 'Alice', miles: 0 }], me: { rank: 1, miles: 0 }, limit: 20 });
+  assert.deepEqual(await response.json(), { top: [{ rank: 1, name: 'Alice', miles: 0, you: true }], me: { rank: 1, miles: 0 }, limit: 20 });
   assert.equal((await fetch(f.origin + '/api/cycling/leaderboard')).status, 401, 'a session is required');
   f.ws.close();
 });
@@ -128,4 +128,27 @@ test('an account erased while its ride is being banked keeps no total, banked or
     await new Promise(resolve => setTimeout(resolve, 200));
     assert.equal(await totals.rank('alice'), null, outcome);
   }
+});
+
+test('walking banks on the tick and every board is served by name over the real route', async t => {
+  const f = await fixture(t);
+  await f.joined();
+  f.put(slot.approach);
+  const start = world => world.players.get('alice').position;
+  const [x, north] = start(f.world);
+  f.advance(1000);
+  // A 1.5 m step on foot (the walking budget allows it in a second) banks on the walking board.
+  const ground = (dx) => [x - dx, north, environment.groundAt(x - dx, -north)];
+  assert.equal((await f.command({ type: 'pose', position: ground(1.5), yaw: 0, altitude: 0 })).ok, true);
+  await until(async () => (await f.cyclingMiles.rank('alice', 'walking'))?.total, 1.5, 3000);
+  const read = async board => { const response = await fetch(`${f.origin}/api/leaderboards/${board}`, { headers: { Cookie: 'test_session=alice' } }); return { status: response.status, body: await response.json() }; };
+  const walking = await read('walking');
+  assert.equal(walking.status, 200);
+  assert.deepEqual(walking.body, { board: 'walking', label: 'Walking', unit: 'miles', top: [{ rank: 1, name: 'Alice', value: 0, you: true }], me: { rank: 1, value: 0 }, limit: 20 });
+  const played = await read('played');
+  assert.equal(played.body.unit, 'hours');
+  assert.equal(played.body.me.rank, 1, 'a second of play after moving ranks the player on hours played');
+  assert.deepEqual((await read('motorcycle')).body.top, [], 'no one has ridden the motorcycle');
+  assert.equal((await read('nowhere')).status, 404);
+  assert.equal((await fetch(`${f.origin}/api/leaderboards/walking`)).status, 401, 'a session is required');
 });
