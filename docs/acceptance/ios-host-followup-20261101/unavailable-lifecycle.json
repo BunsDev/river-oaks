@@ -1,0 +1,15 @@
+{
+  "sameProcessAfterForeground": true,
+  "recordingCount": 1,
+  "backgroundRecorded": true,
+  "foregroundRecorded": true,
+  "focusScope": "Keyboard, VoiceOver and first-responder restoration were not measured",
+  "events": [
+    "start",
+    "UIApplicationWillEnterForegroundNotification",
+    "navigation-start",
+    "navigation-failed",
+    "UIApplicationDidEnterBackgroundNotification",
+    "UIApplicationWillEnterForegroundNotification"
+  ]
+}

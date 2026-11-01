@@ -59,9 +59,17 @@ jobs:
           include-hidden-files: true
       - run: pnpm test
   preview-checks:
-    name: preview checks
+    # `pnpm run test:server` alone took 11.4 min (mean of 12 main runs, 2026-10-31) and the whole
+    # job 15 to 16 min, within 4 min of the cap. The server suite runs as two equal file shards
+    # (Node --test-shard); the desktop and browser steps stay on shard 1. The aggregate `preview`
+    # job needs this job id, so both shards must pass.
+    name: preview checks (${{ matrix.shard }}/2)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     # Redis-backed server tests (auth, sessions, rooms, presence, designs, groups)
     # skip without REDIS_URL; this service runs them, as production uses Redis.
     services:
@@ -86,20 +94,24 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Install local Redis recovery prerequisite
         run: command -v redis-server || (sudo apt-get update && sudo apt-get install -y redis-server)
-      - run: pnpm run test:server
+      - run: pnpm run test:server:shard
         env:
           REDIS_URL: redis://127.0.0.1:6379
+          RIVER_OAKS_TEST_SHARD: ${{ matrix.shard }}/2
       - run: pnpm run test:desktop
+        if: ${{ matrix.shard == 1 }}
       # Each browser job used to download Chromium from Playwright's CDN; restore
       # the browsers by Playwright version instead. Install still adds the system
       # packages and skips browsers that are already present.
       - name: Playwright version
+        if: ${{ matrix.shard == 1 }}
         id: playwright
         run: |
           echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
           echo "image=${ImageOS:-unknown}-${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
           echo "day=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
       - name: Playwright browser cache
+        if: ${{ matrix.shard == 1 }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
@@ -110,12 +122,14 @@ jobs:
       # already in its archive by size alone, so only files whose SHA256 matches the current
       # package index are placed there; anything else is downloaded as before.
       - name: Playwright system package cache
+        if: ${{ matrix.shard == 1 }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/playwright-apt
           key: playwright-apt-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}-${{ steps.playwright.outputs.day }}
           restore-keys: playwright-apt-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}-
-      - run: |
+      - if: ${{ matrix.shard == 1 }}
+        run: |
           if compgen -G "$HOME/.cache/playwright-apt/*.deb" > /dev/null; then
             sudo apt-get update -qq || true
             placed=0
@@ -135,7 +149,9 @@ jobs:
             cp /var/cache/apt/archives/*.deb "$HOME/.cache/playwright-apt/"
           fi
       - run: pnpm run build
+        if: ${{ matrix.shard == 1 }}
       - name: Email access and content security browser regressions
+        if: ${{ matrix.shard == 1 }}
         id: security_browser
         # Use the same Mesa path as shared journeys instead of headless SwiftShader.
         env:
@@ -144,14 +160,16 @@ jobs:
           LP_NUM_THREADS: '2'
         run: xvfb-run -a pnpm run test:security:e2e
       - name: Security browser failure evidence
-        if: ${{ failure() && steps.security_browser.outcome == 'failure' }}
+        if: ${{ matrix.shard == 1 && failure() && steps.security_browser.outcome == 'failure' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: security-browser-failure
           retention-days: 7
           path: output/playwright/security-*-failure.png
       - run: pnpm run test:reflections:webgl
+        if: ${{ matrix.shard == 1 }}
       - name: IPIC screening journey (two browsers, host controls, late join within 500 ms)
+        if: ${{ matrix.shard == 1 }}
         id: screening_browser
         # The same Mesa path as the shared and security journeys. Val chose hosted coverage of the
         # screening journey on 2026-10-18; the ten-cycle soak stays a local profile.
@@ -161,7 +179,7 @@ jobs:
           LP_NUM_THREADS: '2'
         run: xvfb-run -a pnpm run test:screening
       - name: Screening journey failure evidence
-        if: ${{ failure() && steps.screening_browser.outcome == 'failure' }}
+        if: ${{ matrix.shard == 1 && failure() && steps.screening_browser.outcome == 'failure' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: screening-browser-failure
@@ -315,6 +333,11 @@ jobs:
           # state (theme, gate, Character Studio button, character) moves one way only.
           - id: access
             journeys: access-gate login-flicker
+          # The draft-only workplace slice (#221): the fixture room under the classic and opt-in
+          # Pink Jet-Age finishes, and the companion panel's keyboard/privacy journey. The runner
+          # turns both default-off flags on for its own fixture server only; nothing hosted changes.
+          - id: workplace
+            journeys: workplace-room workplace
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
