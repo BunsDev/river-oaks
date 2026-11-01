@@ -18,6 +18,12 @@
 //   of parabolic ribs, crown at the pergola's declared height.
 // - Ground halls: a starburst chandelier inside each entrance and a field of ring lights.
 // - Slab bands: a bullnose at every plate corner, so each storey reads streamlined.
+//
+// Where a form meets a classic box (slab, stone band, timber beam or door head, guard glass) it
+// stops a few millimetres inside that box rather than flush with its face: two faces of
+// different materials on one plane fight for depth and show through each other at a distance
+// (depth-layer-audit.js; preview/e2e/depth-layers.js scans the town under each finish, #836).
+// preview/tests/pink-jet-age-depth.test.js keeps every meeting buried or apart.
 import * as THREE from 'three';
 import { GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels } from '../../shared/garden-campus-layout.js';
 import { roundedRectOutline } from '../../shared/city-kit/jet-age-forms.js';
@@ -25,12 +31,16 @@ import { FINISH, entranceCanopies } from './garden-campus-finish.js';
 import { archGeometry, boomerangGeometry, columnGeometry, hoopGeometry, prismGeometry, ringGeometry, saucerGeometry, starburstGeometry, starburstTips, tubeGeometry } from './jet-age-forms.js';
 
 export const CAMPUS_JET_AGE = Object.freeze({
-  headhouse: { inset: 0.04, radius: 1.2, door: 0.85, saucer: { belly: 0.05, rim: 0.03, dome: 0.15 }, reach: 0.9, bedGap: 0.12, band: 0.08 },
+  // The band sits `bandDrop` under the saucer's 2 cm reveal and `bandInset` inside the rect, so
+  // across the door bay it is buried in the timber door head (whose top is the classic cap line).
+  headhouse: { inset: 0.04, radius: 1.2, door: 0.85, saucer: { belly: 0.05, rim: 0.03, dome: 0.15 }, reach: 0.9, bedGap: 0.12, band: 0.08, bandDrop: 0.003, bandInset: 0.003 },
   canopy: { rise: 0.45, root: 0.2, tip: 0.06, edge: 0.035 },
   hoop: { edgeInset: 0.08, legHeight: 3.3, crownRise: 0.8, radius: 0.045, step: 2.4, faceGap: 1.5 },
-  pergola: { ribStep: 1.0, ribRadius: 0.05, columnFoot: 0.06, columnHead: 0.12 },
+  // A pilotis stops `columnRecess` short of the edge beam's top, its capital buried in the beam.
+  pergola: { ribStep: 1.0, ribRadius: 0.05, columnFoot: 0.06, columnHead: 0.12, columnRecess: 0.003 },
   hall: { chandelierInset: 4, chandelierZ: 4.0, rayLength: 0.6, ringRadius: 0.9, ringTube: 0.025, ringStep: 4.5, ringMargin: 3, ringZ: 4.58 },
-  bullnose: 0.2,
+  // Each bullnose stops `bullnoseRecess` inside the slab above and the stone band below it.
+  bullnose: 0.2, bullnoseRecess: 0.003,
 });
 
 // The parts a forms finish replaces in garden-campus.js, so the old box is not drawn under the new shape.
@@ -61,8 +71,8 @@ export function campusJetAgeParts(layout = CAMPUS, levels = campusLevels(layout)
     const notched = [...outline.slice(0, split), [w / 2, door - H.door], [lobby, door - H.door], [lobby, door + H.door], [w / 2, door + H.door], ...outline.slice(split)];
     const shift = points => points.map(([x, y]) => [x + cu, y + cv]);
     add(`${tower.id}/headhouse`, 'roof', 'ivory', prismGeometry(shift(notched), tower.roof.z, base + 0.02));
-    // A pink band round the top, above the door head, proud by the inset so it meets the rect.
-    const bandTop = base - 0.02, outer = roundedRectOutline(w + 2 * H.inset, d + 2 * H.inset, H.radius + H.inset);
+    // A pink band round the top, above the door head, proud by the inset to just inside the rect.
+    const bandTop = base - 0.02 - H.bandDrop, bandOut = H.inset - H.bandInset, outer = roundedRectOutline(w + 2 * bandOut, d + 2 * bandOut, H.radius + bandOut);
     add(`${tower.id}/headhouse-band`, 'roof', 'pink', prismGeometry(shift(outer), bandTop - H.band, bandTop, [shift(roundedRectOutline(w - 0.02, d - 0.02, H.radius - 0.01)).reverse()]));
     // The saucer: an ellipse reaching past the headhouse but never over a roof bed's planting.
     const beds = levels.find(level => level.z === tower.roof.z).obstacles.filter(item => item.kind === 'planter' && item.id.startsWith(`${tower.id}-`)).map(item => item.rect);
@@ -91,7 +101,8 @@ export function campusJetAgeParts(layout = CAMPUS, levels = campusLevels(layout)
     // Slab bands: a bullnose cylinder at each plate corner over the band's height.
     for (const floor of tower.levels) {
       const [u0, v0, u1, v1] = floor.rect, za = floor.z1 - slab - FINISH.fasciaDrop, zb = floor.z1;
-      for (const [u, v] of [[u0, v0], [u1, v0], [u1, v1], [u0, v1]]) add(`${floor.id}/bullnose`, 'band', 'ivory', at(new THREE.CylinderGeometry(CAMPUS_JET_AGE.bullnose, CAMPUS_JET_AGE.bullnose, zb - za, 16, 1), u, (za + zb) / 2, v));
+      const recess = CAMPUS_JET_AGE.bullnoseRecess;
+      for (const [u, v] of [[u0, v0], [u1, v0], [u1, v1], [u0, v1]]) add(`${floor.id}/bullnose`, 'band', 'ivory', at(new THREE.CylinderGeometry(CAMPUS_JET_AGE.bullnose, CAMPUS_JET_AGE.bullnose, zb - za - 2 * recess, 16, 1), u, (za + zb) / 2, v));
     }
   }
 
@@ -125,7 +136,7 @@ export function campusJetAgeParts(layout = CAMPUS, levels = campusLevels(layout)
     const [u0, v0, u1, v1] = item.rect, spring = item.height - 0.22, beam = spring;
     for (const post of item.posts ?? []) {
       const [p0, q0, p1, q1] = post.rect, half = Math.min(p1 - p0, q1 - q0) / 2;
-      add(`${post.id}/pilotis`, 'pergola', 'chrome', at(columnGeometry({ height: beam, foot: P.columnFoot, head: Math.min(P.columnHead, half - 0.03), capital: 0.04 }), (p0 + p1) / 2, 0, (q0 + q1) / 2));
+      add(`${post.id}/pilotis`, 'pergola', 'chrome', at(columnGeometry({ height: beam - P.columnRecess, foot: P.columnFoot, head: Math.min(P.columnHead, half - 0.03), capital: 0.04 }), (p0 + p1) / 2, 0, (q0 + q1) / 2));
     }
     for (let u = u0 + 0.6; u <= u1 - 0.6 + 1e-6; u += P.ribStep)
       add(`${item.id}/rib`, 'pergola', 'chrome', at(archGeometry({ span: v1 - v0 - 0.3, spring: spring + P.ribRadius, crown: item.height - P.ribRadius, segments: 12 }, P.ribRadius, 6), u, 0, (v0 + v1) / 2, Math.PI / 2));

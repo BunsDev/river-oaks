@@ -23,13 +23,14 @@ import { createVoiceService, createMemoryVoiceLeases } from '../voice.js';
 import { createFakeLiveKit } from './livekit-fixture.js';
 import { createLiveKitClient, livekitConfigured } from '../livekit-client.js';
 import { randomUUID } from 'node:crypto';
+import { browserFixtureOrigin } from './browser-fixture-origin.js';
 import { phoneFixtureHost } from './phone-fixture-host.js';
 import { phoneDecoderProbePlugin } from './phone-fixture-decoder.js';
 import { isolatedFixturePlugin } from './isolated-fixture.js';
 const webPort=Number(process.env.RIVER_OAKS_TEST_WEB_PORT??5180),townPort=Number(process.env.RIVER_OAKS_DEV_TOWN_PORT??8788);
 const phoneHost=phoneFixtureHost(process.env.RIVER_OAKS_PHONE_FIXTURE_HOST);
 const webHost=phoneHost??'127.0.0.1';
-const origin=`http://${webHost}:${webPort}`;
+const origin=browserFixtureOrigin({host:webHost,port:webPort,publicOrigin:process.env.RIVER_OAKS_TEST_PUBLIC_ORIGIN});
 // RIVER_OAKS_DISTRICT_REVISION=river-oaks-gardens-3 serves the Gardens campus (#507); unset keeps the garage.
 const data=await loadDistrictData({districtRevision:configuredDistrictRevision(process.env.RIVER_OAKS_DISTRICT_REVISION)});
 let app;
