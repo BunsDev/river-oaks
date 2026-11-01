@@ -139,7 +139,9 @@ Candidate (this branch; filled in below as each check runs):
   6,639 tests, 6,313 passed, 0 failed, 291 skipped (core's usual Redis/browser/native skips;
   the workplace server suites above ran on Redis with 0 skipped). Receipt:
   `.runtime/agent/core.json` in the worktree.
-- Hosted: pending (the draft PR's own run is the first hosted execution of these journeys).
+- Hosted (draft #832 at `a11b490e`): aggregate `preview` check success (run 41282132604, 31
+  check runs, all completed, none failed). The new `preview experience (workplace)` shard
+  passed its first hosted execution on Ubuntu/Mesa in 3 min 46 s (06:46:54Z → 06:50:40Z).
 
 ## Visual inspection (fixed cameras, 1280×800, DPR 1)
 
@@ -162,19 +164,17 @@ Captures live in `output/playwright/` of the worktree (classic `workplace-CAM-*.
   probe's touch emulation) are not phone proof (#747). Owner: Val / device matrix. Open.
 - **Human accessibility review** (screen reader, keyboard, touch) and the uncoached player
   sessions: Val, unchanged from the 2026-10-11 decision. Open.
-- **Hosted:** the new `workplace` shard runs in this PR's own CI for the first time; if Mesa
-  disagrees with Metal on the fixture page the shard is dropped and the gap recorded, not the
-  journey weakened.
+- **Hosted:** closed. The `workplace` shard passed on its first run (above); it stays.
 - **The HUD skin (#788) is not merged**; the panel's own CSS follows the roster tokens and
   will inherit that skin when it lands. No panel CSS change is made here unless the probe
   demonstrates a failing ratio or target.
 - **Decision package for Val** (retention, enable / merge into campus desks / retire) from
-  the 2026-10-22 prompt: not written here; this increment is the reconciliation and the
-  visual retrofit the 2026-10-28 amendment puts first. Next increment.
+  the 2026-10-22 prompt: written as
+  [2026-11-01-workplace-221-decision-package.md](2026-11-01-workplace-221-decision-package.md)
+  on the same branch. Four decisions are Val's; nothing changes until she chooses.
 
 ## Next step
 
-Draft PR from `feat/workplace-221-pink-jet-age-20261101` (two commits: the finish, fixture,
-journeys, runner flags, CSS rule, receipts and this ledger; then the hosted `workplace` shard
-alone). Watch its first hosted run of `workplace-room` and `workplace`; if Mesa fails the
-fixture page, drop the shard commit and record the gap. Then the #221 decision package.
+Draft #832 is green locally and hosted and waits for Val: review of the pink frames against
+the reference (a first proposal of values), merge authorization, and the four decisions in the
+decision package. No further code change is planned on this branch unless review asks.
