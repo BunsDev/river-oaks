@@ -72,3 +72,11 @@ test('without spans the same route is refused at the Van Cleef & Arpels bench', 
   delete rigid.segments[0].maxSpan;
   assert.throws(() => expandRibbon({ ...rigid, exclusions: districtExclusions() }), /ribbon:spine:post:019:l lands in seat-access bench-5; set maxSpan on segment spine/);
 });
+
+test('the spine crosses the side-lane mouth: with that carriageway excluded its posts are refused (#838)', () => {
+  // osm-way-625330795 meets the central lane at the spine's south end. #827 modelled only the
+  // central lane; the five-rooms contract (#838) records the spine as blocked here.
+  const side = world.roads.find(road => road.id === 'osm-way-625330795-0'), half = side.width_m / 2 + 0.15;
+  const [a, b] = side.points.slice(-2), mouth = { id: 'side-lane-mouth', kind: 'no-go', rect: round([Math.min(a[0], b[0]), Math.min(a[1], b[1]) - half, Math.max(a[0], b[0]), Math.max(a[1], b[1]) + half]) };
+  assert.throws(() => expandRibbon({ ...route, exclusions: [...districtExclusions(), mouth] }), /ribbon:spine:post:00[2-4]:l in no-go side-lane-mouth/);
+});
