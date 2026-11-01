@@ -1,0 +1,258 @@
+{
+  "scope": "Unsigned Debug iOS simulator; synthetic bundle, loopback witness and native main-frame polling; not actual Capacitor, client, production or device qualification",
+  "source": "decb4e9ac8ee86ab0ed04fb97600550f96e502d5",
+  "dirty": true,
+  "runtime": "iOS 27.2",
+  "device": "iPhone 17",
+  "policyHash": "ee9c6e6e1c50bf926c317384ff4dfbee23ef66ce62e659451dc071284c0ffa1f",
+  "sourceFiles": [
+    {
+      "path": "App/BundledOriginApp.swift",
+      "sha256": "6e88d1a456b453f8a6284d6805243f490a87ecaec8d158fa6966bfe9eb6d2247"
+    },
+    {
+      "path": "App/Info.plist",
+      "sha256": "2fb1649637b890810e2069ff418f9eafaebe71596ec6783ddf0a5abca7b67564"
+    },
+    {
+      "path": "project.yml",
+      "sha256": "ac0558654e9e43443714b68510394c15907002fa5e13009b40f0d80bcf45fabc"
+    },
+    {
+      "path": "Sources/ExperimentPolicy/ExperimentPolicy.swift",
+      "sha256": "70c11172bdd3178d4a316b6f259cc4bb4672157e8214c6dd10ca76fcf0a7a37d"
+    },
+    {
+      "path": "Web/context-parity.js",
+      "sha256": "bb1ac2e9a6d8e8345d569ce729cdebb81aa1b96cca2dc8fa51883f7cb763b1df"
+    },
+    {
+      "path": "Web/harness.js",
+      "sha256": "627c460019aff18641f518ca4af99847515282caaae4f81acfb5dac723e3ac59"
+    },
+    {
+      "path": "context-parity.mjs",
+      "sha256": "4cd456d84e7df01cbd8f48ec5460b4df0e469074e1d180d283abe579eb38d095"
+    },
+    {
+      "path": "context-parity-report.mjs",
+      "sha256": "08a7e56ea8ba68a8d46a47fe0425985c73d7e7d0d8b28a268478f4cededd88ee"
+    },
+    {
+      "path": "../../server/security-headers.js",
+      "sha256": "de2c26dba4fe907ffb4ef5dccddbbb403036fbc823ffc7d5f1bc5ba25b7697ac"
+    }
+  ],
+  "appFiles": [
+    {
+      "path": "BundledOrigin",
+      "sha256": "613585c171cedfdfd3367e4b20066fa870d680a4a6c96ac0d5b70be55c9842e9"
+    },
+    {
+      "path": "BundledOrigin.debug.dylib",
+      "sha256": "d8f05b0ab4c161409b21cc52e6cd61e1d2dd1144661ed474e034360e4aae8e58"
+    },
+    {
+      "path": "Info.plist",
+      "sha256": "28510684a4bf6d9645e94866e6b78a2f60d39d2955f0ec8d927822d73bfde488"
+    },
+    {
+      "path": "PkgInfo",
+      "sha256": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0"
+    },
+    {
+      "path": "__preview.dylib",
+      "sha256": "ff22bfca74e14920f509d6b1a1da22a77ec9e3de942ad1679acdb6fa4bab1b02"
+    },
+    {
+      "path": "context-parity.js",
+      "sha256": "bb1ac2e9a6d8e8345d569ce729cdebb81aa1b96cca2dc8fa51883f7cb763b1df"
+    },
+    {
+      "path": "harness.js",
+      "sha256": "627c460019aff18641f518ca4af99847515282caaae4f81acfb5dac723e3ac59"
+    }
+  ],
+  "trials": {
+    "no-csp": {
+      "native": {
+        "cspEnabled": false,
+        "execution": "main-frame WKUserScripts, native read-only polling",
+        "mode": "context-parity",
+        "navigationCount": 1,
+        "registeredMessageHandlers": 0,
+        "sourcePolicySHA256": "ee9c6e6e1c50bf926c317384ff4dfbee23ef66ce62e659451dc071284c0ffa1f",
+        "worlds": {
+          "isolated": {
+            "checks": {
+              "fetch": {
+                "outcome": "response",
+                "status": 200
+              },
+              "harnessHandlerPresent": false,
+              "role": "isolated",
+              "runID": "F70B8DDA-0A39-476B-9849-D1173CA4CA23",
+              "worker": {
+                "nonceValidated": true,
+                "outcome": "reply"
+              }
+            },
+            "violations": []
+          },
+          "page": {
+            "checks": {
+              "fetch": {
+                "outcome": "response",
+                "status": 200
+              },
+              "harnessHandlerPresent": false,
+              "role": "page",
+              "runID": "F70B8DDA-0A39-476B-9849-D1173CA4CA23",
+              "worker": {
+                "nonceValidated": true,
+                "outcome": "reply"
+              }
+            },
+            "violations": []
+          }
+        }
+      },
+      "witness": [
+        {
+          "method": "GET",
+          "path": "/witness/get?context=page&run=F70B8DDA-0A39-476B-9849-D1173CA4CA23",
+          "host": "127.0.0.1:59183",
+          "origin": "capacitor://localhost",
+          "cookieNames": [],
+          "csrfToken": false,
+          "secFetchSite": "cross-site",
+          "secFetchMode": "cors",
+          "secFetchDest": "empty",
+          "referer": null,
+          "upgrade": null
+        },
+        {
+          "method": "GET",
+          "path": "/witness/get?context=isolated&run=F70B8DDA-0A39-476B-9849-D1173CA4CA23",
+          "host": "127.0.0.1:59183",
+          "origin": "capacitor://localhost",
+          "cookieNames": [],
+          "csrfToken": false,
+          "secFetchSite": "cross-site",
+          "secFetchMode": "cors",
+          "secFetchDest": "empty",
+          "referer": null,
+          "upgrade": null
+        }
+      ],
+      "measured": {
+        "page": {
+          "cspRejectionQualified": false,
+          "fetch": "response",
+          "worker": "reply",
+          "witnessOrigins": [
+            "capacitor://localhost"
+          ]
+        },
+        "isolated": {
+          "cspRejectionQualified": false,
+          "fetch": "response",
+          "worker": "reply",
+          "witnessOrigins": [
+            "capacitor://localhost"
+          ]
+        }
+      }
+    },
+    "source-csp": {
+      "native": {
+        "cspEnabled": true,
+        "execution": "main-frame WKUserScripts, native read-only polling",
+        "mode": "context-parity",
+        "navigationCount": 1,
+        "registeredMessageHandlers": 0,
+        "sourcePolicySHA256": "ee9c6e6e1c50bf926c317384ff4dfbee23ef66ce62e659451dc071284c0ffa1f",
+        "worlds": {
+          "isolated": {
+            "checks": {
+              "fetch": {
+                "outcome": "response",
+                "status": 200
+              },
+              "harnessHandlerPresent": false,
+              "role": "isolated",
+              "runID": "3CDB7FE3-497F-4583-9033-BDE8AFB1E293",
+              "worker": {
+                "nonceValidated": true,
+                "outcome": "reply"
+              }
+            },
+            "violations": [
+              {
+                "canaryOrigin": true,
+                "directive": "connect-src"
+              }
+            ]
+          },
+          "page": {
+            "checks": {
+              "fetch": {
+                "errorName": "TypeError",
+                "outcome": "error"
+              },
+              "harnessHandlerPresent": false,
+              "role": "page",
+              "runID": "3CDB7FE3-497F-4583-9033-BDE8AFB1E293",
+              "worker": {
+                "nonceValidated": true,
+                "outcome": "reply"
+              }
+            },
+            "violations": [
+              {
+                "canaryOrigin": true,
+                "directive": "connect-src"
+              }
+            ]
+          }
+        }
+      },
+      "witness": [
+        {
+          "method": "GET",
+          "path": "/witness/get?context=isolated&run=3CDB7FE3-497F-4583-9033-BDE8AFB1E293",
+          "host": "127.0.0.1:59183",
+          "origin": "capacitor://localhost",
+          "cookieNames": [],
+          "csrfToken": false,
+          "secFetchSite": "cross-site",
+          "secFetchMode": "cors",
+          "secFetchDest": "empty",
+          "referer": null,
+          "upgrade": null
+        }
+      ],
+      "measured": {
+        "page": {
+          "cspRejectionQualified": true,
+          "fetch": "no-response",
+          "worker": "reply",
+          "witnessOrigins": []
+        },
+        "isolated": {
+          "cspRejectionQualified": false,
+          "fetch": "response",
+          "worker": "reply",
+          "witnessOrigins": [
+            "capacitor://localhost"
+          ]
+        }
+      }
+    }
+  },
+  "simulator": "CC4D3B21-33A5-44FF-A33D-3845F37B889B",
+  "workerComparisonQualified": true,
+  "workerComparisonScope": "Nonce-matched simple module-worker controls only",
+  "fetchResultsMatch": false,
+  "cleanupErrors": []
+}

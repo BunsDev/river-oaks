@@ -1,0 +1,130 @@
+[
+  {
+    "path": "before-http-status-fix.png",
+    "sha256": "354c47200d54707f81ff22b55fc6b7ea139a4522bed98811ff8c31a6c960b2b7"
+  },
+  {
+    "path": "capture-recipe.txt",
+    "sha256": "c72da6f21aeaa877216cd7112ec6fa5569713890e615390ed04407908a8a16d2"
+  },
+  {
+    "path": "default-after-foreground.png",
+    "sha256": "9ed5568922cc9fc7cfd90811c98fb839415eb51d6f8b6927e25c59ba42d38c0c"
+  },
+  {
+    "path": "default-after-foreground.png.controls.json",
+    "sha256": "099268412a258d95cfc56ec6f7fb92688a1f2dc0d9fc228c60ffe995ab675793"
+  },
+  {
+    "path": "default-cleanup.json",
+    "sha256": "d6c5b71631f3ee9533198f96e1792fb6f4ba19b55b5f7f8d5a4106ea1842a0fe"
+  },
+  {
+    "path": "default-evidence.json",
+    "sha256": "4d1d11ae9c537aeac3c15ccaaaa771d9408d2177be694f4c2c5541d946583eca"
+  },
+  {
+    "path": "default-lifecycle.json",
+    "sha256": "30b1e9bc30b567941b60c205a279f2d806f1adf4b2e9c2eb2883fad4374d6a32"
+  },
+  {
+    "path": "default-native-events.jsonl",
+    "sha256": "c337abba19abb10ed2799b420ad2ea46ea1c5b4927064e45975786f2b24c78e8"
+  },
+  {
+    "path": "default-screen.png",
+    "sha256": "4dc1ec2560611f8ded8b1a9c96e579cfa5f728a8b5b9685f3cbb34e8a6dcf7f9"
+  },
+  {
+    "path": "default-screen.png.controls.json",
+    "sha256": "099268412a258d95cfc56ec6f7fb92688a1f2dc0d9fc228c60ffe995ab675793"
+  },
+  {
+    "path": "https-comparison.json",
+    "sha256": "f7f657940715ac6b3e65d2238c20becf1be12b53b5bece40801f0ae63dba8418"
+  },
+  {
+    "path": "https-first-driver-failure.json",
+    "sha256": "315d134de7b06a7da6fa646499eba193d89134adfdc48a2081293f7d691984f9"
+  },
+  {
+    "path": "narrow-four-actions-after-foreground.png",
+    "sha256": "eb77cf29438f776e56829c9cb8cf0c8176f3f9372f7ceec93563d80bf91a40de"
+  },
+  {
+    "path": "narrow-four-actions-after-foreground.png.controls.json",
+    "sha256": "099268412a258d95cfc56ec6f7fb92688a1f2dc0d9fc228c60ffe995ab675793"
+  },
+  {
+    "path": "narrow-four-actions-cleanup.json",
+    "sha256": "f0ef798252f103b97a25ce20208de3424ef72083ab717e193e0fb363e909ce7b"
+  },
+  {
+    "path": "narrow-four-actions-evidence.json",
+    "sha256": "3214dd593a9aba5db1a0fb0a428f6f4b1c8cd5e6c9be637d9609ef436bb07c96"
+  },
+  {
+    "path": "narrow-four-actions-lifecycle.json",
+    "sha256": "3c33addf4ec2b3d0f155fec1d33a4e12c9688f1c934246919fd7ab83a6edb8a2"
+  },
+  {
+    "path": "narrow-four-actions-native-events.jsonl",
+    "sha256": "46481d1b03740f93814b2ab13f1cc41c1f7ce538851d9fbbc663fdabd0141b84"
+  },
+  {
+    "path": "narrow-four-actions-screen.png",
+    "sha256": "8863dd3c7f01eb0c7649ae5f54c9ada61263346e71b8fe4b9334b6019df0a862"
+  },
+  {
+    "path": "narrow-four-actions-screen.png.controls.json",
+    "sha256": "099268412a258d95cfc56ec6f7fb92688a1f2dc0d9fc228c60ffe995ab675793"
+  },
+  {
+    "path": "probe-package-files.json",
+    "sha256": "b32223be218c289ba316ae11cb40d5a02286f1bbf7d8dc248b533b2b7c35e070"
+  },
+  {
+    "path": "probe-source-inputs.json",
+    "sha256": "4b6f6c40e0b2dd672648e5a90cf53b8de3e3881387cd90c84ea929e83097e299"
+  },
+  {
+    "path": "probe-summary.json",
+    "sha256": "8c0244cca20917b753c4270c6daf247d4fc19d1c377eb93c14471867c80cfbc0"
+  },
+  {
+    "path": "unavailable-after-foreground.png",
+    "sha256": "900cdebf1811f8a4172061da79d33956ac7407d9543a0f82a087688b488355ba"
+  },
+  {
+    "path": "unavailable-after-foreground.png.controls.json",
+    "sha256": "099268412a258d95cfc56ec6f7fb92688a1f2dc0d9fc228c60ffe995ab675793"
+  },
+  {
+    "path": "unavailable-cleanup.json",
+    "sha256": "73a7391f5bba7741553fc6b0ff39f568da95cbcdd3b6556451626c2f3dfca938"
+  },
+  {
+    "path": "unavailable-evidence.json",
+    "sha256": "3c732a152b208e310152892cae27bb1419059d7076c00f79da0e5e05d6914c3d"
+  },
+  {
+    "path": "unavailable-lifecycle.json",
+    "sha256": "89e961c70fecfec1fcd4b72418f04c472d97bd7a04e5013523ff9a0efeac912d"
+  },
+  {
+    "path": "unavailable-native-events.jsonl",
+    "sha256": "cbbc7c9193e77da9ec0cf69b62bc2ee13c7b9c468d2613d308fabbc720193580"
+  },
+  {
+    "path": "unavailable-screen.png",
+    "sha256": "5e577d42e218241d237b07ae63daae6eb26ce5fc54c83a52f6bd8d8ec41efdac"
+  },
+  {
+    "path": "unavailable-screen.png.controls.json",
+    "sha256": "099268412a258d95cfc56ec6f7fb92688a1f2dc0d9fc228c60ffe995ab675793"
+  },
+  {
+    "path": "unsupported-timing-status.png",
+    "sha256": "d9db49f4a302315eae229074cf4a09fe2c5886a6651163e5dcfcac094f022a16"
+  }
+]

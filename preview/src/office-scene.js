@@ -10,6 +10,7 @@ import { officePeerVisible } from './office-world-presentation.js';
 import { buildOfficeGeometry } from './office-penthouse-graybox.js';
 import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeElevationAt, officeLayout, officeLevelElevation, officeSeatedPose, officeView } from './office-layouts.js';
 import { releaseSceneGraphics } from './graphics-resources.js';
+import { readFinishPreference } from './render-quality.js';
 
 // Keep the eye clear when residents share the arrival point or pass each other.
 export const officePlayerVisible=officePeerVisible;
@@ -32,7 +33,8 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
   scene.add(new THREE.HemisphereLight('#fff5e6','#647386',1.6));
   const light=new THREE.DirectionalLight('#fff1de',2.5);light.position.set(2,6,2);scene.add(light);
   const layout=officeLayout(self.office?.layout??OFFICE_LAYOUT_LEGACY)??{id:self.office.layout};
-  office=buildOfficeGeometry(THREE,layout.id,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM)});scene.add(office.object);
+  // The kit finish (office-kit-finish.js) is the visitor's render-quality.js preference, the one the street follows.
+  office=buildOfficeGeometry(THREE,layout.id,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM),finish:readFinishPreference()});scene.add(office.object);
   lift=buildOfficeArrival();scene.add(lift.object);
   // Behind the penthouse glass the lift and lobby would show once the visitor walks.
   const glass=arrivalBehindGlass(lift,layout.id!==OFFICE_LAYOUT_LEGACY);
