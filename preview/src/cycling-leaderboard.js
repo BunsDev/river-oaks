@@ -100,7 +100,7 @@ export function createCyclingLeaderboard({ fetcher = (path, options) => fetch(pa
     mine: () => cyclingMine,
     show,
     refresh: load,
-    debug: () => ({ open: panel.open, board: current.id, rows: [...list.children].map(row => row.textContent), me: page?.me ?? null, footer: footer.hidden ? null : footer.textContent, status: status.hidden ? null : status.textContent }),
+    debug: () => ({ open: panel.open, board: current.id, loaded: page !== null, rows: [...list.children].map(row => row.textContent), me: page?.me ?? null, footer: footer.hidden ? null : footer.textContent, status: status.hidden ? null : status.textContent }),
     dispose() { stop(); panel.remove(); },
   };
 }

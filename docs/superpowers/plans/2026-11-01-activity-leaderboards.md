@@ -46,7 +46,7 @@ server mark the caller's own row.
 | focused server suites with Redis (`REDIS_URL` own server, port 6491): cycling, ride-flush, cycling-miles, cycling-api, cycling-flush, account-erasure ×3, leaderboards | 67/67 pass, 0 skipped |
 | `node --test preview/tests/cycling-leaderboard.test.js` | 3/3 pass |
 | `pnpm run verify` (core) | VERIFY_RESULT |
-| browser `cycling-leaderboard` journey | not run locally |
+| `pnpm run test:experience cycling-leaderboard` (dev fixture, local Chromium) | passed 15:49Z after two fixes below; screenshots `output/playwright/leaderboard-hours.png`, `-walking.png` |
 | hosted `preview` aggregate | pending |
 
 ## Gaps
@@ -55,7 +55,16 @@ server mark the caller's own row.
   (office movement is a separate command); chat still counts there.
 - Totals start from deployment: nothing before it was measured, so walking, vehicle and hours
   boards begin empty. Cycling totals carry over unchanged.
-- No browser run or screenshot of the picker yet; the hosted shared journeys cover the sheet.
+- `cycling-leaderboard` is not in any hosted experience shard; it runs only locally.
+
+## Found by the dev run
+
+- `preview/vite.config.js` proxies an explicit `/api/*` list; `/api/leaderboards` was missing, so
+  dev answered from Vite. Production routes are unaffected (the servers serve them directly).
+- The journey opened the board with `panel.open = true`, but since the Play dock gave the board its
+  own tab, the dock keeps it closed unless that tab shows; the journey now clicks the tab. (This step
+  was stale on main too.) The tab is renamed Leaderboards with a trophy icon, and the sheet's empty
+  state waits for the first read (`debug().loaded`).
 
 ## Next step
 
