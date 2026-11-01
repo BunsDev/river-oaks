@@ -1,0 +1,32 @@
+/* Pink Jet-Age HUD skin (#746 under #738): opt-in, like the world finish. main.js sets
+   <html data-finish> from render-quality.js readFinishPreference (`?finish=pink-jet-age` or
+   localStorage['river-oaks-finish']); without it these rules never match and the HUD is
+   classic. Only accent roles change: the glass tints, radii and every reduced-transparency
+   and software-rendering variant stay as hud-glass.css sets them.
+   Light keeps pink as a deep rose where it is text or carries light text; dark uses
+   TypeSafe pink #F486A1 itself with ink labels. Every pair in
+   tests/hud-token-contrast.test.js is also measured under this skin.
+   Both blocks name the theme so neither outranks the other (theme.js always sets it). */
+:root[data-finish=pink-jet-age][data-theme=light] {
+  --accent: #9b2f55;
+  --accent-soft: #fbe3ea;
+  --on-accent: #fff8f2;
+  --hud-action: #9b2f55;
+  --hud-on-action: #fff8f2;
+  --hud-focus: #9b2f55;
+  /* The town gate's button blends 18% white into its lighter stop, so it is one step deeper. */
+  --liquid-accent: #8e2a4e;
+  --liquid-on-accent: #f7f1e8;
+  --liquid-caustic: rgb(244 134 161 / .5);
+}
+:root[data-finish=pink-jet-age][data-theme=dark] {
+  --accent: #fbd0dc;
+  --accent-soft: #4a2a36;
+  --on-accent: #24242a;
+  --hud-action: #f486a1;
+  --hud-on-action: #24242a;
+  --hud-focus: #f486a1;
+  --liquid-accent: #f486a1;
+  --liquid-on-accent: #24242a;
+  --liquid-caustic: rgb(244 134 161 / .3);
+}

@@ -10,6 +10,12 @@ async (page) => {
  await page.waitForFunction(()=>Number(document.querySelector('#race-speed').textContent)>5);
  await page.keyboard.down('KeyA');await page.waitForTimeout(300);await page.keyboard.up('KeyA');await page.keyboard.up('KeyW');
  check(Number(await page.locator('#race-time').textContent())>0,'Keyboard drives the running motorcycle lap');
+ await page.locator('.race-view[data-driver-ready="true"]').waitFor({timeout:60000});
+ check(await page.evaluate(()=>Boolean(document.querySelector('.race-view'))&&document.querySelector('#race-tricks-stat').hidden===false),'Jev is seated at the wheel and the trick ledger shows on a road course');
+ await page.keyboard.down('KeyW');await page.keyboard.press('Space',{delay:40});
+ await page.waitForFunction(()=>document.querySelector('.race-view').dataset.airborne==='true');
+ await page.waitForFunction(()=>document.querySelector('.race-view').dataset.airborne==='false');await page.keyboard.up('KeyW');
+ check(true,'A Space tap hops the motorcycle and it lands again');
  await page.keyboard.press('KeyP');
  const paused=await page.locator('#race-time').textContent();await page.waitForTimeout(250);
  check(await page.locator('#race-time').textContent()===paused,'Pause freezes timer');
@@ -29,6 +35,7 @@ async (page) => {
  await page.setViewportSize({width:1440,height:1000});
  await page.locator('#race-vehicle').selectOption('hover');
  check(await page.locator('#race-altitude-stat').isVisible(),'Ribbonwing shows current and next-gate altitude');
+ check(await page.locator('#race-tricks-stat').isHidden(),'The aerial course keeps its own flight controls without the trick ledger');
  await page.locator('#race-start').click();await page.waitForFunction(()=>document.querySelector('#race-announcement').textContent.startsWith('Go'));
  await page.keyboard.down('Space');await page.waitForFunction(()=>parseFloat(document.querySelector('#race-altitude').textContent)>8.5);await page.keyboard.up('Space');
  check(true,'Ribbonwing lift controls raise the craft');
