@@ -150,10 +150,12 @@ export function buildGardenCampus(world, { kitFinish, jetAgeForms = true } = {})
       facade('south', u0, u1, v0 + GLASS_INSET, true, v0);facade('north', u0, u1, v1 - GLASS_INSET, true, v1);
       facade('west', v0, v1, u0 + GLASS_INSET, false, u0);facade('east', v0, v1, u1 - GLASS_INSET, false, u1);
     }
-    // The core: lift and stair shafts from the ground to the roof deck.
-    const [c0, c1, c2, c3] = tower.core.rect, roof = tower.roof, head = roof.headhouse, cap = 0.25;
-    box('core', tower.core.lift.rect[0], tower.core.lift.rect[1], tower.core.lift.rect[2], tower.core.lift.rect[3], 0, roof.z);
-    box('core', tower.core.stair.rect[0], tower.core.stair.rect[1], tower.core.stair.rect[2], tower.core.stair.rect[3], 0, roof.z);
+    // The core: lift and stair shafts from the ground to the roof deck. Under forms they stop at
+    // the roof slab's soffit, which closes them: the rounded ivory headhouse leaves the rect's
+    // corners open, where the shafts' tops would otherwise meet the slab's top on one plane (#836).
+    const [c0, c1, c2, c3] = tower.core.rect, roof = tower.roof, head = roof.headhouse, cap = 0.25, shaftTop = forms ? roof.z - slab : roof.z;
+    box('core', tower.core.lift.rect[0], tower.core.lift.rect[1], tower.core.lift.rect[2], tower.core.lift.rect[3], 0, shaftTop);
+    box('core', tower.core.stair.rect[0], tower.core.stair.rect[1], tower.core.stair.rect[2], tower.core.stair.rect[3], 0, shaftTop);
     // Headhouse: limestone over the shafts and the lobby part, like the parapets, with its door
     // to the east under a bronze cap at the declared headhouse top.
     if (!forms) {
