@@ -45,7 +45,7 @@ server mark the caller's own row.
 |---|---|
 | focused server suites with Redis (`REDIS_URL` own server, port 6491): cycling, ride-flush, cycling-miles, cycling-api, cycling-flush, account-erasure ×3, leaderboards | 67/67 pass, 0 skipped |
 | `node --test preview/tests/cycling-leaderboard.test.js` | 3/3 pass |
-| `pnpm run verify` (core) | VERIFY_RESULT |
+| `pnpm run verify` (core) | run 1 (13:35Z) SIGKILLed at the preview stage cap under load 100+, no failure; run 2 (15:19Z) server 1114/1 fail, `blocks-town` "lifting the block restores chat" (3/3 alone, known load flake); **run 3 on `de0b129b` (16:09Z, load 12/15): passed**: agent 294/294, preview 5080 pass 0 fail, server 1115 pass 0 fail, desktop 127 pass 0 fail, build, python, demo, gitleaks no leaks |
 | `pnpm run test:experience cycling-leaderboard` (dev fixture, local Chromium) | passed 15:49Z after two fixes below; screenshots `output/playwright/leaderboard-hours.png`, `-walking.png` |
 | hosted `preview` aggregate | pending |
 
@@ -68,4 +68,4 @@ server mark the caller's own row.
 
 ## Next step
 
-Core verify, signed commit, draft PR; hosted checks; Val's merge authorization.
+Val authorized merge (15:39Z). Hosted checks, then `pnpm run land 858`.
