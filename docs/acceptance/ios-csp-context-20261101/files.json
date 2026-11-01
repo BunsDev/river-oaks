@@ -1,0 +1,26 @@
+[
+  {
+    "path": "qualified-comparison.json",
+    "sha256": "2b967d0c6ae9d76a45098d06a374d6ff8fdebb4b813145839ce62fd9716ecd91"
+  },
+  {
+    "path": "page-poll-control.json",
+    "sha256": "68de6ed12af4b6ad224472e474df7827c2be9ab20b64f3b0137731f7fd20168f"
+  },
+  {
+    "path": "page-poll-csp.json",
+    "sha256": "3ca3c872a60b2b99324394af25ab0a051163dbc2256122c10f2498c054db457a"
+  },
+  {
+    "path": "interrupted-run.json",
+    "sha256": "5e452301a9721b02960594dfff10712baf9af0c28214ea0f05d486db6331377e"
+  },
+  {
+    "path": "interruption-observation.json",
+    "sha256": "04abfcab01387606879c07efa576c311cd926e5aaa137034b6941e13cc7b4f9b"
+  },
+  {
+    "path": "source-csp.txt",
+    "sha256": "ee9c6e6e1c50bf926c317384ff4dfbee23ef66ce62e659451dc071284c0ffa1f"
+  }
+]
