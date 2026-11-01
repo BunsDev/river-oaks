@@ -8,6 +8,8 @@ import { buildFiveRoomsShells, VENUE_BUILDERS } from '../src/five-rooms/index.js
 import { FRONT, SHELL_MATERIALS, createShellKit, shellMaterials, venueFrame } from '../src/five-rooms/shells.js';
 import { buildRibbon } from '../src/ribbon-finish.js';
 import { findDepthFights } from '../src/depth-layer-audit.js';
+import { planStoreRooms } from '../src/store-rooms.js';
+import { buildStoreInteriors } from '../src/store-interiors.js';
 
 const read = path => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
 const contract = read('../../config/ribbon/five-rooms.json'), world = read('../public/data/district.json');
@@ -157,4 +159,38 @@ test('the floor each venue stands on is recorded against the ground given, and t
 
 test('a contract at another version is refused', () => {
   assert.throws(() => buildFiveRoomsShells({ ...contract, version: 'five-rooms-v1' }, { finish: PINK }), /five-rooms-v2|Invalid five rooms layout/);
+});
+
+// Procedural canvas calls only (as cartier-pilot.test.js): GPU rendering is the browser journey's.
+const canvasContext = () => new Proxy({}, { get: (target, name) => name === 'createImageData' ? (w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }) : name === 'createLinearGradient' ? () => ({ addColorStop() {} }) : target[name] ?? (() => {}), set: (target, name, value) => { target[name] = value; return true; } });
+
+test('while the store rooms stay, interiors: false keeps the frontages and leaves nothing to fight the rooms', () => {
+  globalThis.document ??= { createElement: () => ({ width: 0, height: 0, getContext: canvasContext }) };
+  globalThis.requestIdleCallback ??= () => 0;
+  const tenants = new Set(contract.venues.flatMap(venue => venue.retire?.tenants ?? []));
+  const rooms = planStoreRooms(world).filter(room => tenants.has(room.storeId));
+  assert.equal(rooms.length, 4, 'the four bays still hold their mapped rooms');
+  const fights = interiors => {
+    const shells = buildFiveRoomsShells(contract, { finish: PINK, interiors }), found = scan(buildStoreInteriors(rooms), shells).filter(fight => /Five Rooms/.test(fight.a + fight.b));
+    return { shells, found };
+  };
+  // The full envelope lies on the rooms' floors, ceilings and walls (the depth journey's 18 pairs).
+  const full = fights(true);
+  assert.ok(full.found.length > 0, 'the envelope and the rooms fight');
+  const open = fights(false);
+  assert.deepEqual(open.found.map(named), []);
+  assert.equal(open.shells.userData.fiveRooms.interiors, false);
+  // Every venue still draws its frontage, and nothing of a bay stands deeper than its walls' front.
+  assert.equal(open.shells.userData.fiveRooms.venues.length, 5);
+  for (const venue of contract.venues.filter(item => item.kind === 'bay')) {
+    const frame = venueFrame(venue), inverse = frame.matrix.clone().invert(), local = new THREE.Vector3(), kit = createShellKit(shellMaterials());
+    VENUE_BUILDERS[venue.id](kit, { ...frame, envelope: false });
+    const { merged } = kit.finish();
+    assert.ok(merged.size > 0, `${venue.id} keeps its frontage`);
+    for (const [key, geometry] of merged) for (const p of vertices(geometry)) {
+      local.set(...p).applyMatrix4(inverse);
+      assert.ok(local.z > -0.2, `${venue.id} ${key}: ${local.z.toFixed(2)} m behind the frontage`);
+    }
+  }
+  full.shells.userData.dispose(); open.shells.userData.dispose();
 });

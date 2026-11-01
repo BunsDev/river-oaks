@@ -20,7 +20,8 @@ export function buildAtelier(kit, frame) {
   // width plus a reveal, drawn as one U-shaped outline so the opening stays clear to the floor.
   kit.add('glow-usable', plate(portalOutline(frame.door + 0.2, 3.35, 0.2), FRONT.glass, FRONT.glass + 0.16));
   kit.add('pink', roundedPrism(0, (FRONT.frame + FRONT.reach) / 2 - 0.03, frame.door + 1.8, FRONT.reach - FRONT.frame + 0.06, clear + 0.05, clear + 0.17, 0.3));
-  const display = frame.attachments.get('display-frame');
+  // The display frame stands inside the room: left out with the envelope (index.js `interiors`).
+  const display = frame.envelope === false ? null : frame.attachments.get('display-frame');
   if (display) {
     const [x, , z] = frame.toLocal(display.position), geometry = framePlate(0, 1.55, 1.6, 1.1, 0.07, -0.03, 0.03);
     kit.add('glow-usable', placeLocal(geometry, x, 0, z, frame.yawOf(display.yaw)));
