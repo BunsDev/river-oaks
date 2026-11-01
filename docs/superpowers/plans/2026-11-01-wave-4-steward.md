@@ -164,6 +164,10 @@ Run once, as the goal asks: a git-archive snapshot of `main` `decb4e9a` with its
 
 `project:check --github` reports 107 gaps (180 at baseline). River-oaks-41 landed #789 and #832; #788 and #850 are in their queue. The land queue holds six PRs (#788, #834, #826, #830, #814, #850), all started by other live owners; I have no lander queued. #844's task is `blocked` on Decision 4. #846's task stays `active` and waits on Decision 13.
 
+### #844 local confirmation (13:00Z)
+
+A local run of `crime-residents` on `cdf3425f`, with temporary per-stride logging (since reverted), got the browser lock at about 12:58Z and failed the same check. The log is `.runtime/wave4/crime-residents-local-cdf3425f.log` in the ledger worktree. The on-foot walk works: toward the first resident (Ima Hogg) the visitor closed 43 m to within reach in about 25 strides, with one officer in `pursue` on them. No startle came within the 8 s wait. On the second candidate (Hugo) the visitor walked 14 m, then froze at one position for the rest of the run. By the third candidate (Owen) the police list was empty, meaning the officer had taken the visitor and stood down. This confirms the cause in Decision 4: under #844 the pursuing officer catches a wanted visitor on foot before the startle can be observed. The walk helper is not at fault.
+
 ## Next step
 
 Hosted results for #844 and #846; the Redis repeat result or its gate log; Val's answers to the Decisions above. Nothing else in this goal is landable without a line from Val.
