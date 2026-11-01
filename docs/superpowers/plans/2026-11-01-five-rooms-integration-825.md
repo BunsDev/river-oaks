@@ -82,5 +82,11 @@
 
 ## Next step
 
-Core verify, signed commit, draft PR against `feat/five-rooms-shells-825-20261101` (#860). Then
-browser checks from a snapshot, and the #851 merge once it is on v2.
+Draft #862 is up (head `9e618462`, base #860), and #851 has a coordination comment. Next:
+
+- hosted checks;
+- browser route-clearance, depth journey and render budget from a detached snapshot;
+- isolated-Redis server tests;
+- the #851 merge once it is on v2.
+
+Landing waits for Val.
