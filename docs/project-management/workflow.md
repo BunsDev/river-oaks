@@ -449,6 +449,16 @@ hours, so the interval is capped at 110 minutes. `print` shows the generated run
 and plist without installing, `status` reports whether it is loaded and in which
 mode, and `uninstall` removes it while keeping receipts and the log.
 
+Every run ends its log (`~/Library/Application Support/river-oaks/project-sweep/sweep.log`)
+with one `exit N` line; 2 or more is a failed run and also posts a notification.
+macOS privacy protection (TCC) applies to launch agents: when the checkout lives
+under `~/Documents`, `~/Desktop` or `~/Downloads`, the first scheduled run on
+2026-11-01 failed with `fatal: Unable to read current working directory: Operation
+not permitted` although the same commands succeed in a terminal session. The job
+then needs Full Disk Access for `/bin/sh` (the program launchd starts), granted by
+the maintainer in System Settings > Privacy & Security, or a checkout outside those
+folders. Granting it is a host security decision, not something the installer does.
+
 ## Register sweeps
 
 The committed `docs/project-management/tasks.json` is a snapshot of the live

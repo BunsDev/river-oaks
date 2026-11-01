@@ -65,8 +65,20 @@ First live run (2026-11-01T14:00Z, report
 only): worktrees 56, branches 67; retire 0, stale-claim 25, reconcile-delivered 3,
 archive-ignored 1, cancel-review 3, orphan 1, remote-review 15.
 
+## Install and first scheduled run
+
+- 2026-11-01 ~14:21Z: installed report-only, 60 min, `--fallback-ref
+  refs/remotes/origin/ops/project-sweep-automation-20261101` (Val's choice);
+  `status`: installed, loaded, report-only.
+- 15:21:04Z: first launchd run failed at the first `git -C <primary>` with
+  `fatal: Unable to read current working directory: Operation not permitted` and
+  no exit line (set -e aborted the runner). Same commands succeed in a terminal
+  session; likely TCC denying the launch agent access to `~/Documents` (the TCC
+  log itself was not read). Runner now always logs `exit N` and notifies on failure.
+
 ## Gaps / next step
 
-- Installing the agent (and choosing report-only vs `--apply`) is Val's decision.
+- The scheduled job needs Full Disk Access for `/bin/sh`, or a checkout outside
+  `~/Documents`; Val decides. Until then every scheduled run fails visibly.
 - The 25 stale claims and 3 cancel-review rows need owners or Val; the sweep only
   queues them.

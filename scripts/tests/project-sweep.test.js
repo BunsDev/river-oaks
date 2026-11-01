@@ -166,6 +166,13 @@ test('the runner stages the fallback branch only until main carries the sweep', 
   assert.doesNotMatch(execFileSync('sh', [runner], { encoding: 'utf8' }), /staging/);
   assert.equal(ran().from, 'main', 'main wins once it has the sweep');
   assert.ok(!existsSync(join(base, 'state', 'stage.next')), 'staging directory swapped into place');
+  // A failure before the sweep starts (here: the repository is unreadable) still ends
+  // the log with one exit line, as the 2026-11-01 launchd privacy denial did not.
+  const broken = join(base, 'broken.sh');
+  writeFileSync(broken, renderRunner({ root: join(base, 'missing'), stateDir: join(base, 'state2'), node: process.execPath, path: process.env.PATH, apply: false }));
+  const failure = (() => { try { execFileSync('sh', [broken], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, RIVER_OAKS_SWEEP_NO_NOTIFY: '1' } }); } catch (error) { return error; } })();
+  assert.ok(failure && failure.status >= 2, 'failure exit status preserved');
+  assert.match(failure.stdout, new RegExp(`^exit ${failure.status}: run failed`, 'm'));
   assert.throws(() => parseAgentArgs(['install', '--fallback-ref', 'main']), /refs\/remotes\/origin/);
 });
 
