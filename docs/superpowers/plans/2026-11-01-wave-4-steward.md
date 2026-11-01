@@ -121,8 +121,9 @@ Each needs one line from you; nothing below is simulated. Wave-3 items 11–20 t
 9. **#685 #719 #709 (held since wave 3).** Still expected from their owners, or close.
 10. **#755.** Close as superseded by #756 (the session may not close PRs).
 11. **Docs drafts #668 #687 #697 #724 #748 #795.** Land as docs (each needs a branch update and a green run) or close. #697 is live with `river-oaks-71`.
-12. **Redis 8-player quiet repeat (#599).** The gate for load <8 is armed for six hours this morning; if it does not open, say whether to run it at the next quiet window on this host or accept "Not met at load 7–10" as the record.
-13. **Carried from wave 3 (still open):** 11 coordinator idle-tick A/B; 13 `ops/browser-lock-turns-20261024`; 14 archives lost on 10-22 (285 rows); 15 record-only rows sweep; 16 missing-worktree records (`character-fidelity-517-review`, `integrated-expansion-mvp-20261023`); 17 orphan siblings; 18 `crime-melee-597` dirty worktree; 19 the f1 streaming mirror; 20 local-only ledgers.
+12. **Redis 8-player quiet repeat (#599).** Run at load 6.7 today: 8 and 32 players within their comparisons, 1 and 16 outside, every limit set by noisy baselines. Choose a pinned baseline (fixed limits from one quiet run), a host without other sessions, or accept "Not met, noise-bound" as the record.
+13. **#846 (CI split).** Green, shard 1 10.2 min and shard 2 6.3 min. Mark it ready and land it, or ask for changes. The session's ready mutation is refused here.
+14. **Carried from wave 3 (still open):** 11 coordinator idle-tick A/B; 13 `ops/browser-lock-turns-20261024`; 14 archives lost on 10-22 (285 rows); 15 record-only rows sweep; 16 missing-worktree records (`character-fidelity-517-review`, `integrated-expansion-mvp-20261023`); 17 orphan siblings; 18 `crime-melee-597` dirty worktree; 19 the f1 streaming mirror; 20 local-only ledgers.
 
 ### Core verify under host load (09:00Z)
 
@@ -136,6 +137,24 @@ Committed signed as `547d706b` (`G val@opencoven.ai`) after core verify passed o
 ### Core receipts and drafts (10:05Z)
 
 Gated reruns (1-minute load under 16) passed core verify on all three branches: #785 branch 09:24–09:32Z, CI-shard branch 09:50–09:56Z, this ledger branch 09:57–10:03Z (loads 14–35). The CI split is committed signed as `16e04be3` and open as draft **#846** (register `preview-checks-server-shard-20261101`); its hosted shard durations are recorded against the 11.4 min baseline when the run completes. The Redis 8-player repeat gate (pid 45676, load under 8, six hours from 08:53Z) is still waiting.
+
+### Hosted results (10:40Z)
+
+- **#846 (CI split), all 39 checks green on `16e04be3`.** `preview checks (1/2)` took 10.2 min and `(2/2)` 6.3 min, against 15–16 min for the single job on `main`. Finish-line item 3 holds: the hottest job is under 15 min with no timeout, journey or threshold change. Ready for Val (Decision 13).
+- **#844 (#785 rule), red on `preview shared (development)`.** `crime-residents` failed with "A resident startles at a wanted player at arm's length (town state): undefined". The cause is the rule, not a flake: the journey's `approach()` calls `__riverSeatAndWater().goTo()`, which sends `travel`, and both of its approaches to a resident run after the shove, while an officer pursues. My inventory above missed this journey. `cdf3425f` replaces those two approaches with W strides, re-aimed by dragging the view (garden-campus-traversal's pattern); the approach to the rival, before any star, still travels. The runner stops at the first failure, so `crime-night` and `crime-encounter`, which also call `goTo`, had not run on #844; the hosted run on `cdf3425f` shows whether they need the same change.
+
+### #599 Redis 8-player quiet repeat (10:55Z)
+
+Run once, as the goal asks: a git-archive snapshot of `main` `decb4e9a` with its own local commit `4adbdf19` (the harness records `git rev-parse HEAD`; the first attempt at 10:11Z died at startup without one), the Codex harness `crime-redis-audit.js` (sha256 `36cdb751…`, matching the 10-30 run), an isolated Redis on 127.0.0.1:6418, `caffeinate -s`, started when the 1-minute load read 6.71 (gate under 8), finished in 2 min 53 s at load 6.42 (5-minute load fell from 19 to 14 during the run). Report `.runtime/wave4/crime599-redis-decb4e9a.json` in the ledger worktree (sha256 `8278868d…`), status `measured`.
+
+| Players | Active warm-idle p95 | Limit (highest repeated baseline p95 × 1.2 + 5 ms) | Within | Ticks over 200 ms |
+| --- | --- | --- | --- | --- |
+| 1 | 134.8 ms | 106.2 ms | no | 0 |
+| 8 | 90.2 ms | 168.5 ms | yes | 1 |
+| 16 | 82.1 ms | 81.0 ms | no | 0 |
+| 32 | 61.8 ms | 79.5 ms | yes | 0 |
+
+**Reading: still not met, and still noise-bound.** The 8-player row is within its comparison only because one noisy baseline window set a 168 ms limit, the same pattern as 10-30's run 3 (182 ms). The 1- and 16-player tiers fall outside theirs. Warm-idle p50 stays 6–8 ms in every arm; the p95s move by tens of milliseconds between arms of the same tier with no crime load at all, which is host scheduling, not the policy. The row stays **Not met** for #599. A clean result needs a host without other sessions or a pinned baseline (Decision 12).
 
 ## Next step
 
