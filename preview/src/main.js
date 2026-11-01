@@ -843,7 +843,9 @@ function populateWorld(data) {
   const fiveRoomsApply = ribbonAppliesTo(data, cityKitFinish), surfaceAt = (x, z) => groundSurfaceHeight(data, x, z);
   ribbonGraybox = fiveRoomsApply ? buildRibbon({ world: data, groundAt: surfaceAt }) : null;
   if (ribbonGraybox) worldGroup.add(ribbonGraybox);
-  fiveRoomsShells = fiveRoomsApply ? buildFiveRoomsShells(fiveRoomsContract, { finish: cityKitFinish, groundAt: surfaceAt }) : null;
+  // The bays' mapped store rooms stay until decision 5 (Val, 2026-11-01), so the shells keep their
+  // frontages and leave the room interiors to them (their floors and walls would fight for depth).
+  fiveRoomsShells = fiveRoomsApply ? buildFiveRoomsShells(fiveRoomsContract, { finish: cityKitFinish, groundAt: surfaceAt, interiors: false }) : null;
   if (fiveRoomsShells) worldGroup.add(fiveRoomsShells);
   buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });

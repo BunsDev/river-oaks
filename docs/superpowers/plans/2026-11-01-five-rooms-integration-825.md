@@ -23,6 +23,8 @@
     and the five shells (`buildFiveRoomsShells`).
   - `updateAtmosphere` relights both (`twilight`), and world teardown disposes them.
   - `__riverSpatialStream()` reports `finish.fiveRooms`.
+  - The shells are built with `interiors: false` while the bays' store rooms stay (decision 5): the
+    envelope's floor, ceiling and walls lay on the rooms' (18 depth pairs under pink).
   - Classic builds neither.
 - `preview/src/five-rooms/solids.js` (new, renderer-free) provides the discs:
   - Ribbon posts: r 0.21 m, height post + 0.4.
@@ -42,8 +44,12 @@
   - The curb-to-post footway (~1.75 m) cannot hold a rack (~2.9 m).
   - The new spot is the nearest of a 0.5 m search grid that keeps every bike-racks.test.js rule and
     stays 1 m off the Ribbon walk. The id is kept.
-- `preview/src/five-rooms/shade-garden.js` (on #860, `ddf3f6a4`): the hoop is widened to door + 1.5 m,
-  so its legs clear the Hermès door, which stays in use.
+- From #860, merged here:
+  - `ddf3f6a4`: the Shade Garden hoop is widened to door + 1.5 m, so its legs clear the Hermès door,
+    which stays in use.
+  - `1127046a`: `buildFiveRoomsShells(..., { interiors })`.
+  - `115b5752`: the Starlight frontage moves 4 cm proud of the IPIC stone facade, which was 49.7 mm
+    behind it.
 - `preview/tests/fixtures/district-routes-main.json`: six cases recaptured with a `recaptured2` note.
   - Two resident routes now return null: their stop is 0.31 m from a post.
   - Two resident routes and two police routes are each one waypoint shorter.
@@ -56,9 +62,10 @@
 | No-flag startup builds shells, Ribbon, landscape; classic none | main.js wiring (pink only); landscape waits on #851 v2 | shells + Ribbon done; landscape pending |
 | Posts and shell walls solid; Ribbon walk spawn→IPIC clear for the 1.01 m body; court floors support standing | `five-rooms-integration.test.js` (walk sampled at 0.2 m, centre and body edges), `world.test.js` "Five Rooms posts and frontages are solid" | posts/frontages done; courts wait on #851 |
 | Pre-change checkpoint loads with every player on valid ground | `world.test.js` "a town saved before the Five Rooms solids…" | done (players); residents are not relocated (see gaps) |
-| Camera: no clip, `route-clearance.js` passes | not run yet (browser) | pending |
+| Camera: no clip, `route-clearance.js` passes | `preview/tests/route-clearance.test.js` in core; the browser walk (world-streaming) not run | unit only |
+| Depth under pink: 0 new pairs | `RIVER_OAKS_FINISH=pink-jet-age node preview/e2e/experience-runner.js depth-layers` passed (third run) | done |
 | Teardown: resource counts return to baseline | dispose wired; browser inventory not run | pending |
-| Core verify, server tests with isolated Redis, hosted green | core passed (Checks); Redis and hosted pending | core done |
+| Core verify, server tests with isolated Redis, hosted green | core and Redis passed (Checks); hosted pending | core + Redis done |
 
 ## Checks
 
@@ -69,6 +76,11 @@
 | 2026-11-01 | `node --test preview/tests/bike-racks.test.js server/tests/cycling.test.js` | 15/15 |
 | 2026-11-01 | `node --test preview/tests/resident-locations.test.js` | 10/10 (after recapture) |
 | 2026-11-01 | full preview suite before the fixes | 8 failures, all fixed above (rack ×1, Hermès walk-in ×6, routes ×1) |
+| 2026-11-01 ~22:05Z | depth-layers under pink, run 1 (`9e618462` tree) | failed: 18 new pairs, the shell envelope against the store-room interiors (brass, leather, textile) |
+| 2026-11-01 ~22:12Z | `REDIS_URL=<own redis-server :6487> pnpm run test:server` (`8e55a65a` code) | 1440/1440, 0 skipped |
+| 2026-11-01 22:20Z | depth-layers under pink, run 2 (with `interiors: false`) | failed: 1 pair, Starlight ivory against the IPIC grey stone, 49.7 mm |
+| 2026-11-01 22:23-22:28Z | `pnpm run verify` (core; tree = `115b5752` shells + this main.js) | passed: node 307/307, preview 5153 of 5185, server 1113 of 1398, 127 of 132; 0 failures |
+| 2026-11-01 22:29Z | depth-layers under pink, run 3 (same tree) | **passed**; the receipt is kept in `.runtime/841/experience-depth-pink.json` and `data/reports/experience.json` is restored (the run rewrites it to one journey) |
 | 2026-11-01 ~22:04-22:09Z | `pnpm run verify` (core, `ddf3f6a4` plus these changes, load ~7-10) | passed: node 307/307, preview 5151 of 5183 (32 skipped), server 1113 of 1398 (285 skipped: Redis/browser/live), 127 of 132; build ok; 0 failures |
 
 ## Gaps
@@ -76,9 +88,14 @@
 - A District resident stop at (-2759.18, -1215.19) is 0.31 m from a Ribbon post, so residents
   cannot reach it. The stop or the post must move (request to #838 / Ribbon route).
 - Residents saved standing on a new solid are not relocated on restore (players are).
-- Live checks not yet run: browser route-clearance, the depth journey under pink, render budget on
-  the District spawn frame, teardown inventory and matched captures.
-- Redis server tests on an isolated Redis have not run yet.
+- Live checks not yet run:
+  - render budget under pink: `render-budget.js` loads the default (classic) finish and takes no
+    finish option, so it needs a journey change;
+  - the browser teardown inventory;
+  - matched noon/night captures;
+  - the world-streaming route walk.
+- When decision 5 retires the rooms, interiors return, and the envelope floor then lies 4 mm on the
+  building's facade-floor (`five-rooms-shells.test.js` notes this).
 
 ## Next step
 
