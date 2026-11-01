@@ -4,6 +4,7 @@
 import { archGeometry, hoopGeometry } from '../jet-age-forms.js';
 import { FRONT, frontageFrame, glazingRuns, interiorEnvelope, rodX, rodY, signAndPorch, slab, placeLocal } from './shells.js';
 
+export const SHADE_GARDEN_HOOP = Object.freeze({ width: door => door + 1.5, z: FRONT.frame + 0.12 });
 export const SHADE_GARDEN_FORM = Object.freeze({ roof: 'open pergola ribs', entrance: 'lit hoop gateway', glazing: 'garden wall and trellis' });
 
 export function buildShadeGarden(kit, frame) {
@@ -17,8 +18,9 @@ export function buildShadeGarden(kit, frame) {
     const count = Math.max(1, Math.round((run[1] - run[0]) / 0.5));
     for (let i = 1; i < count; i++) kit.add('chrome', rodY(run[0] + (run[1] - run[0]) * i / count, FRONT.glass + 0.12, wall, clear - 0.15, 0.025, 6));
   }
-  // The gateway hoop: legs just outside the door width, standing on the threshold.
-  kit.add('glow-usable', placeLocal(hoopGeometry({ width: frame.door + 0.5, legHeight: 2.75, crownRise: 0.6, segments: 14 }, 0.07, 8), 0, 0, FRONT.frame + 0.12));
+  // The gateway hoop, wide enough that both legs stand clear of the Hermès door beside the
+  // contract entrance (0.6 m off it), which stays in use until retirement is decided (#841).
+  kit.add('glow-usable', placeLocal(hoopGeometry({ width: SHADE_GARDEN_HOOP.width(frame.door), legHeight: 2.75, crownRise: 0.6, segments: 14 }, 0.07, 8), 0, 0, SHADE_GARDEN_HOOP.z));
   // Pergola ribs across the court, from wall to wall at even stations through its depth.
   if (interior) {
     const xs = interior.map(p => p[0]), zs = interior.map(p => p[2]), x0 = Math.min(...xs), x1 = Math.max(...xs), z0 = Math.min(...zs), z1 = Math.max(...zs);
