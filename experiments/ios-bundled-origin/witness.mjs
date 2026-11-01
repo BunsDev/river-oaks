@@ -23,25 +23,26 @@ export function describeRequest(req) {
 export async function startWitness({ host = '127.0.0.1', port = 0, tls, allowedOrigins = [] } = {}) {
   if (host !== '127.0.0.1') throw new Error('Witness must bind explicit loopback');
   if (!Array.isArray(allowedOrigins)) throw new Error('Expected fixture origin list');
-  const allowed = new Set(allowedOrigins.map(value => {
-    if (value === 'capacitor://localhost') return value;
+  const allowed = new Map(allowedOrigins.map(value => {
+    if (value === 'capacitor://localhost') return [value, value];
     const match = typeof value === 'string' && /^https?:\/\/127\.0\.0\.1:([1-9]\d{0,4})$/.exec(value);
     if (!match || Number(match[1]) > 65535) throw new Error('Invalid fixture origin');
     const url = new URL(value);
-    return url.origin;
+    return [url.origin, url.origin];
   }));
   const records = [];
   const handle = (req, res) => {
     const seen = describeRequest(req);
     records.push(seen);
     const requestOrigin = typeof req.headers.origin === 'string' ? req.headers.origin : null;
-    const originAllowed = requestOrigin !== null && allowed.has(requestOrigin);
+    const responseOrigin = requestOrigin === null ? undefined : allowed.get(requestOrigin);
+    const originAllowed = responseOrigin !== undefined;
     const headers = {
       'Content-Type': 'application/json', 'Cache-Control': 'no-store', Vary: 'Origin',
       'Access-Control-Allow-Headers': 'content-type, x-csrf-token', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     };
     if (originAllowed) {
-      headers['Access-Control-Allow-Origin'] = requestOrigin;
+      headers['Access-Control-Allow-Origin'] = responseOrigin;
       headers['Access-Control-Allow-Credentials'] = 'true';
     }
     if (requestOrigin !== null && !originAllowed) { res.writeHead(403, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify({ error: 'origin-not-allowed' })); return; }
@@ -59,7 +60,7 @@ export async function startWitness({ host = '127.0.0.1', port = 0, tls, allowedO
   });
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, resolve); });
   const origin = `${tls ? 'https' : 'http'}://${host}:${server.address().port}`;
-  allowed.add(origin);
+  allowed.set(origin, origin);
   return { origin, records, close: () => new Promise(resolve => { sockets.close(); server.close(resolve); }) };
 }
 
