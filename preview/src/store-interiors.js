@@ -188,6 +188,19 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [], ca
   const pick = (list, i) => list[Math.abs(i) % list.length];
   const wallYaw = side => side > 0 ? -Math.PI / 2 : Math.PI / 2;
 
+  // A border, not a brass slab through the reflective face. Borders reuse the cube batch;
+  // freestanding fitting mirrors retain an outward-facing rear cover in a shared pane batch.
+  const framedMirror = (a,d,y,w,h,yaw,back=0,closedBack=false) => {
+    add(pane,mirror,a,d,y,[w,h,1],yaw);
+    const ca=a-Math.sin(yaw)*back, cd=d+Math.cos(yaw)*back, rim=.03;
+    for (const side of [-1,1]) {
+      add(box,brass,ca,cd,y+side*(h/2+rim/2),[w+2*rim,rim,.02],yaw);
+      const across=side*(w/2+rim/2);
+      add(box,brass,ca+Math.cos(yaw)*across,cd+Math.sin(yaw)*across,y,[rim,h,.02],yaw);
+    }
+    if (closedBack) add(pane,brass,a-Math.sin(yaw)*(back+.01),d+Math.cos(yaw)*(back+.01),y,[w+2*rim,h+2*rim,1],yaw+Math.PI);
+  };
+
   // ---- fixture builders (room-local: x = across, z = -depth, y = height) ---
   const builders = {
     rail({ a, d0, d1, side, shelf }) {
@@ -285,7 +298,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [], ca
       add(box, style === 'gallery' ? white : walnut, a, d, 0.74, [w, 0.04, l]);
       for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) add(box, brass, a + sx * (w / 2 - 0.06), d + sz * (l / 2 - 0.06), 0.36, [0.04, 0.72, 0.04]);
       if (style === 'consultation') { add(box, velvet, a, d, 0.775, [0.4, 0.03, 0.3], 0, '#2a2530'); add(pane, mirror, a + w / 2 - 0.25, d, 0.95, [0.24, 0.3, 1], Math.PI, ); }
-      if (style === 'fitting') { add(pane, mirror, a, d + l / 2 - 0.03, 1.2, [0.7, 0.8, 1]); add(box, brass, a, d + l / 2 - 0.03, 1.2, [0.76, 0.86, 0.02]); }
+      if (style === 'fitting') framedMirror(a,d+l/2-.03,1.2,.7,.8,0,0,true);
       if (style === 'gallery') { add(box, black, a + 0.3, d, 0.79, [0.32, 0.03, 0.22]); add(vase, ceramic, a - 0.4, d, 0.76, [0.5, 0.5, 0.5], 0, '#f0ebe4'); }
     },
     chair({ a, d, style, yaw = 0 }) {
@@ -303,7 +316,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [], ca
       if (style === 'sculpture') add(knot, bronze, a, d, 1.22, [1, 1, 1], seed, '#ffffff', [seed * 0.4, 0]);
       else { add(carafe, bottleGlass, a - 0.1, d, 1.0, [1, 1, 1], 0, '#e8f0f2'); for (let k = 0; k < 3; k++) add(glassware, bottleGlass, a + 0.08 + k * 0.08, d + (k - 1) * 0.06, 1.0, [1, 1, 1], 0, '#f0f5f6'); }
     },
-    mirror({ a, d, side, w = 0.9, h = 2.2 }) { add(pane, mirror, a - side * 0.03, d, 1.2, [w, h, 1], wallYaw(side)); add(box, brass, a - side * 0.02, d, 1.2, [0.02, h + 0.06, w + 0.06]); },
+    mirror({ a, d, side, w = 0.9, h = 2.2 }) { framedMirror(a-side*.03,d,1.2,w,h,wallYaw(side),.01); },
     feature({ a, d, w, h, quadrant }) {
       const material = atlas?.materials?.[quadrant];
       if (material) add(pane, material, a, d, 1.55, [w, h, 1]);

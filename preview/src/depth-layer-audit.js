@@ -62,6 +62,38 @@ const insideTriangle = ([x, y], [[ax, ay], [bx, by], [cx, cy]]) => {
   return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
 };
 
+// Compare the appearance actually interpolated over an overlap, not material identity alone.
+// Unknown shader patches remain conservative. physicalSurface declares its metric UV mapping;
+// its instanced scale is applied here exactly as in that vertex patch.
+function equalAppearance(first, second, project, polygon) {
+  if (first.material !== second.material || first.tint !== second.tint) return false;
+  const info=first.appearance;
+  if (info.unknown) return false;
+  if (!info.channels.length && !info.colours) return true;
+  const sample=(face,channel,component,p)=>{
+    const geometry=face.object.geometry, metric=info.metric;
+    const attribute=geometry.attributes[channel==='color'?'color':metric?'uv':channel];
+    if (!attribute) return null;
+    const values=face.indices.map(index=>{
+      let value=component<attribute.itemSize?attribute.getComponent(index,component):1;
+      if (metric && channel!=='color') {
+        const normal=geometry.attributes.normal, n=normal?[Math.abs(normal.getX(index)),Math.abs(normal.getY(index)),Math.abs(normal.getZ(index))]:[0,0,1];
+        const scale=face.uvScale, axes=n[0]>n[1]&&n[0]>n[2]?[2,1]:n[1]>n[2]?[0,2]:[0,1];
+        value*=scale[axes[component]]/metric.tileSize;
+      }
+      return value;
+    });
+    return planeHeight(face.points.map(project),values,p);
+  };
+  const channels=info.channels.map(channel=>[channel,2]);
+  if(info.colours)channels.push(['color',4]);
+  for(const [channel,components] of channels)for(let component=0;component<components;component++)for(const p of polygon){
+    const a=sample(first,channel,component,p),b=sample(second,channel,component,p);
+    if(a===null || b===null || Math.abs(a-b)>1e-5)return false;
+  }
+  return true;
+}
+
 // Visible, depth-writing triangles in world space, with their plane. Skinned and morphing
 // meshes (people, animals, cloth) move every frame and are left out, as are lines and points.
 // Triangles smaller than `minArea` (trim, lettering) are skipped for speed. Past `maxFaces` the
@@ -71,7 +103,16 @@ export function depthFaces(root, { minArea = 0.002, skip = () => false, maxFaces
   const near = focus ? new THREE.Vector3(focus.at[0], focus.at[1], -focus.at[2]) : null, centre = new THREE.Vector3();
   root.updateMatrixWorld(true);
   const faces = [], a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), ab = new THREE.Vector3(), ac = new THREE.Vector3(), normal = new THREE.Vector3();
-  const world = new THREE.Matrix4(), instance = new THREE.Matrix4();
+  const world = new THREE.Matrix4(), instance = new THREE.Matrix4(), colour = new THREE.Color(), batchColour = new THREE.Vector4();
+  const appearances=new Map();
+  const appearance=material=>{
+    if(appearances.has(material))return appearances.get(material);
+    const metric=material.userData.depthAuditMetricUv;
+    const channels=[...new Set(Object.entries(material).filter(([key,value])=>value?.isTexture && (key==='map'||key.endsWith('Map')) && !['envMap','gradientMap'].includes(key))
+      .map(([,texture])=>metric||!texture.channel?'uv':`uv${texture.channel}`))];
+    const info={channels,colours:material.vertexColors,metric,unknown:material.onBeforeCompile!==THREE.Material.prototype.onBeforeCompile&&!metric};
+    appearances.set(material,info);return info;
+  };
   root.traverseVisible(object => {
     if (!object.isMesh || object.isSkinnedMesh || object.morphTargetInfluences?.length || skip(object)) return;
     const geometry = object.geometry, position = geometry?.attributes.position, index = geometry?.index;
@@ -79,16 +120,32 @@ export function depthFaces(root, { minArea = 0.002, skip = () => false, maxFaces
     // Only what is drawn: the geometry's draw range, by group when it has them.
     const total = index ? index.count : position.count, from = geometry.drawRange.start, count = Math.min(total, from + geometry.drawRange.count), materials = [object.material].flat();
     const groups = (geometry.groups.length && Array.isArray(object.material) ? geometry.groups : [{ start: 0, count: total, materialIndex: 0 }])
-      .map(group => ({ ...group, start: Math.max(group.start, from) })).filter(group => group.start < count);
-    const copies = object.isInstancedMesh ? object.count : 1;
-    for (let copy = 0; copy < copies; copy++) {
+      .map(group => ({ ...group, end: Math.min(count, group.start + group.count), start: Math.max(group.start, from) })).filter(group => group.start < group.end);
+    const copies = [];
+    if (object.isBatchedMesh) {
+      // IDs can have holes after deletion. Public getters validate live IDs; stop once all live
+      // instances have been visited so spare capacity does not cost a scan of its entire range.
+      let active = 0;
+      for (let id = 0; id < object.maxInstanceCount && active < object.instanceCount; id++) {
+        let visible;
+        try { visible = object.getVisibleAt(id); } catch { continue; }
+        active++;
+        if (visible) copies.push({ id, range: object.getGeometryRangeAt(object.getGeometryIdAt(id)) });
+      }
+    } else for (let id = 0; id < (object.isInstancedMesh ? object.count : 1); id++) copies.push({ id });
+    for (const { id: copy, range } of copies) {
       world.copy(object.matrixWorld);
-      if (object.isInstancedMesh) { object.getMatrixAt(copy, instance); world.multiply(instance); }
+      let tint = '1,1,1,1';
+      if (object.isInstancedMesh || object.isBatchedMesh) { object.getMatrixAt(copy, instance); world.multiply(instance); }
+      if (object.isBatchedMesh) tint = object.getColorAt(copy, batchColour).toArray().join(',');
+      else if (object.isInstancedMesh && object.instanceColor) tint = `${object.getColorAt(copy, colour).toArray().join(',')},1`;
+      const uvScale=object.isInstancedMesh?new THREE.Vector3().setFromMatrixScale(instance).toArray():[1,1,1];
       for (const group of groups) {
         const material = Array.isArray(object.material) ? materials[group.materialIndex] : object.material;
         if (exempt(material)) continue;
-        const end = Math.min(count, group.start + group.count);
-        for (let i = group.start; i + 2 < end; i += 3) {
+        const info=appearance(material), scale=info.metric?.instanced?uvScale:[1,1,1];
+        const start = Math.max(group.start, range?.start ?? 0), end = Math.min(group.end, range ? range.start + range.count : count);
+        for (let i = start; i + 2 < end; i += 3) {
           const [ia, ib, ic] = index ? [index.getX(i), index.getX(i + 1), index.getX(i + 2)] : [i, i + 1, i + 2];
           a.fromBufferAttribute(position, ia).applyMatrix4(world); b.fromBufferAttribute(position, ib).applyMatrix4(world); c.fromBufferAttribute(position, ic).applyMatrix4(world);
           normal.crossVectors(ab.subVectors(b, a), ac.subVectors(c, a));
@@ -97,7 +154,7 @@ export function depthFaces(root, { minArea = 0.002, skip = () => false, maxFaces
           if (near && centre.copy(a).add(b).add(c).divideScalar(3).distanceTo(near) > focus.radius) continue;
           normal.divideScalar(length);
           if (faces.length >= maxFaces) { faces.truncated = true; return; }
-          faces.push({ object, material, normal: normal.toArray(), offset: normal.dot(a), points: [a.toArray(), b.toArray(), c.toArray()], doubleSided: material.side === THREE.DoubleSide });
+          faces.push({ object, material, tint, appearance:info, indices:[ia,ib,ic], uvScale:scale, instance: copy, normal: normal.toArray(), offset: normal.dot(a), points: [a.toArray(), b.toArray(), c.toArray()], doubleSided: material.side === THREE.DoubleSide });
         }
       }
     }
@@ -118,7 +175,7 @@ function planeHeight([a, b, c], [ha, hb, hc], [x, y]) {
   return ha + s * (hb - ha) + t * (hc - ha);
 }
 
-export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minOverlap = 0.004, minArea, skip, groundAt = null, focus = null } = {}) {
+export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minOverlap = 0.004, minArea, skip, groundAt = null, focus = null, occurrences = false } = {}) {
   const faces = depthFaces(root, { minArea, skip, focus });
   const direction = n => n.map(v => Math.round(v * 100) + 0).join(',');
   // Bucket by direction (to 0.01) and by plane offset in maxGap steps; a face meets its own and
@@ -134,7 +191,9 @@ export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minO
   }
   const bases = new Map(), basisFor = (d, n) => {
     if (bases.has(d)) return bases.get(d);
-    const axis = Math.abs(n[1]) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0), normal = new THREE.Vector3(...n);
+    // A canonical bucket frame makes measurements independent of scene traversal order.
+    const normal = new THREE.Vector3(...d.split(',').map(Number)).normalize();
+    const axis = Math.abs(normal.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
     const u = new THREE.Vector3().crossVectors(axis, normal).normalize(), w = new THREE.Vector3().crossVectors(normal, u);
     const project = p => [u.x * p[0] + u.y * p[1] + u.z * p[2], w.x * p[0] + w.y * p[1] + w.z * p[2]];
     project.unproject = ([a, b], h) => [u.x * a + w.x * b + normal.x * h, u.y * a + w.y * b + normal.y * h, u.z * a + w.z * b + normal.z * h];
@@ -178,7 +237,7 @@ export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minO
     for (const value of balance.values()) if (value > 0) return false;
     return true;
   };
-  const pairs = new Map(), name = face => `${face.object.name || face.object.type}|${face.material.name || face.material.type}`;
+  const pairs = new Map(), occurrenceGroups = new Map(), name = face => `${face.object.name || face.object.type}|${face.material.name || face.material.type}`;
   for (const [id, list] of buckets) {
     const [d, slot] = id.split('|'), next = buckets.get(`${d}|${Number(slot) + 1}`) ?? [];
     const project = basisFor(d, list[0].n);
@@ -197,13 +256,15 @@ export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minO
         if ((other <= index && other < list.length) || seen.has(other)) continue;
         seen.add(other);
         const second = others[other];
-        if (first.face.material === second.face.material) continue;
+        const same=first.face.material===second.face.material&&first.face.tint===second.face.tint, info=first.face.appearance;
+        if(same&&!info.unknown&&!info.channels.length&&!info.colours)continue;
         const dot = first.n[0] * second.n[0] + first.n[1] * second.n[1] + first.n[2] * second.n[2];
         if (dot < 0.99995 || Math.abs(first.offset - second.offset) > maxGap) continue;
         const [u0, v0, u1, v1] = box(second);
         if (u1 <= x0 || u0 >= x1 || v1 <= y0 || v0 >= y1) continue;
         const polygon = overlapPolygon(flat(first), flat(second)), overlap = polygon.length < 3 ? 0 : Math.abs(area2(polygon));
         if (overlap < minOverlap) continue;
+        if(same&&equalAppearance(first.face,second.face,project,polygon))continue;
         const centre = polygon.reduce((sum, p) => [sum[0] + p[0] / polygon.length, sum[1] + p[1] / polygon.length], [0, 0]);
         const heights = [heightAt(first, centre), heightAt(second, centre)], gap = Math.abs(heights[0] - heights[1]);
         if (gap > maxGap) continue;
@@ -218,11 +279,21 @@ export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minO
         const nearer = Math.max(...heights), blockers = occludersFor(d, first.n);
         if (!samples.some(point => open(blockers, project, point, nearer, first.n))) continue;
         const pair = [first.face, second.face].sort((p, q) => name(p) < name(q) ? -1 : 1);
+        if (occurrences) {
+          const at = project.unproject(centre, nearer), cell = [at[0],at[1],-at[2]].map(v=>Math.floor(v/4));
+          const normal = first.n.map(v=>Math.round(v*1000)/1000+0), a=name(pair[0]), b=name(pair[1]);
+          const id=JSON.stringify([a,b,normal,cell]), points=polygon.map(p=>project.unproject(p,nearer)).map(([e,y,s])=>[e,y,-s]);
+          const bounds=[0,1,2].map(i=>Math.min(...points.map(p=>p[i]))).concat([0,1,2].map(i=>Math.max(...points.map(p=>p[i]))));
+          const old=occurrenceGroups.get(id) ?? {a,b,normal,cell,bounds,count:0,overlap:0,size:0,gapMin:gap,gapMax:gap};
+          old.count++;old.overlap+=overlap;old.size=Math.max(old.size,size);old.gapMin=Math.min(old.gapMin,gap);old.gapMax=Math.max(old.gapMax,gap);
+          old.bounds=old.bounds.map((v,i)=>i<3?Math.min(v,bounds[i]):Math.max(v,bounds[i]));
+          occurrenceGroups.set(id,old);
+        }
         const pairKey = `${name(pair[0])}~${name(pair[1])}~${gap.toFixed(4)}~${d}`;
         const at = front.face.points[0];
         const found = pairs.get(pairKey) ?? { a: name(pair[0]), b: name(pair[1]), gap, normal: first.n.map(v => Math.round(v * 1000) / 1000), overlap: 0, largest: 0, count: 0, at: [at[0], at[1], -at[2]] };
         found.overlap += overlap; found.count++; found.size = Math.max(found.size ?? 0, size);
-        if (overlap > found.largest) { found.largest = overlap; const c = polygon.reduce((sum, p) => [sum[0] + p[0] / polygon.length, sum[1] + p[1] / polygon.length], [0, 0]); found.at = [at[0], at[1], -at[2]]; found.centre2d = c; found.faces = [first, second].map(entry => ({ offset: entry.offset, object: entry.face.object, points: entry.face.points.map(p => p.map(v => Math.round(v * 1000) / 1000)) })); }
+        if (overlap > found.largest) { found.largest = overlap; const c = polygon.reduce((sum, p) => [sum[0] + p[0] / polygon.length, sum[1] + p[1] / polygon.length], [0, 0]); found.at = [at[0], at[1], -at[2]]; found.centre2d = c; found.faces = [first, second].map(entry => ({ offset: entry.offset, object: entry.face.object, instance:entry.face.instance,tint:entry.face.tint,points: entry.face.points.map(p => p.map(v => Math.round(v * 1000) / 1000)) })); }
         pairs.set(pairKey, found);
       } });
     });
@@ -231,7 +302,7 @@ export function findDepthFights(root, { model = DEPTH_MODEL, maxGap = 0.25, minO
     const fight = fightMetres(pair.gap, model), visible = visibleMetres(pair.size, model);
     return { ...pair, fightMetres: fight, visibleMetres: visible, needs: safeGap(pair.size, model) };
   }).sort((p, q) => q.visibleMetres / Math.max(q.fightMetres, 1e-3) - p.visibleMetres / Math.max(p.fightMetres, 1e-3));
-  return Object.assign(fights, { faces: faces.length, truncated: Boolean(faces.truncated) });
+  return Object.assign(fights, { faces: faces.length, truncated: Boolean(faces.truncated), occurrences: [...occurrenceGroups.values()] });
 }
 
 // The depth buffer's real reach, measured on this renderer: a red plane a known gap under a green

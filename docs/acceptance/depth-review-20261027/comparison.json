@@ -1,0 +1,16 @@
+{
+  "size": [
+    1280,
+    900
+  ],
+  "changedPixels": 864,
+  "changedPercent": 0.075,
+  "meanAbsoluteChannelDifference": 0.004682581018518518,
+  "maxChannelDifference": 56,
+  "changedBounds": [
+    0,
+    0,
+    1279,
+    232
+  ]
+}

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { DEPTH_MODEL, fightMetres, findDepthFights, safeGap, visibleMetres } from '../src/depth-layer-audit.js';
+import { DEPTH_MODEL, depthFaces, fightMetres, findDepthFights, safeGap, visibleMetres } from '../src/depth-layer-audit.js';
 
 const material = (name, options = {}) => Object.assign(new THREE.MeshStandardMaterial(options), { name });
 // A box from [east, up, north] to [east, up, north], in world metres (three's z is south).
@@ -13,6 +13,63 @@ const box = (surface, [e0, u0, n0], [e1, u1, n1]) => {
 const scene = (...meshes) => { const group = new THREE.Group(); group.add(...meshes); return group; };
 // Material pairs that fight, once each (one pair of boxes can fight on several faces).
 const pairs = (root, options) => [...new Set(findDepthFights(root, options).map(fight => [fight.a.split('|')[1], fight.b.split('|')[1]].sort().join(' / ')))].sort();
+
+test('batched faces use each active instance geometry, placement and visibility under its parent', () => {
+  const batch = new THREE.BatchedMesh(8, 24, 36, material('batch'));
+  const small = batch.addGeometry(new THREE.PlaneGeometry(4, 4));
+  const large = batch.addGeometry(new THREE.PlaneGeometry(8, 8));
+  const deleted = batch.addInstance(large); batch.deleteInstance(deleted);
+  const first = batch.addInstance(small), second = batch.addInstance(large), hidden = batch.addInstance(large);
+  batch.setMatrixAt(first, new THREE.Matrix4().makeTranslation(100, 0, 0));
+  batch.setMatrixAt(second, new THREE.Matrix4().makeTranslation(200, 0, 0));
+  batch.setMatrixAt(hidden, new THREE.Matrix4().makeTranslation(300, 0, 0));batch.setVisibleAt(hidden, false);
+  // Leave an actual deleted ID between live ones, not just an unused trailing capacity.
+  const hole = batch.addInstance(small); batch.deleteInstance(first);
+  batch.setMatrixAt(hole, new THREE.Matrix4().makeTranslation(100, 0, 0));
+  const root = scene(batch);root.position.set(5, 2, 0);
+  const faces = depthFaces(root);
+  assert.equal(faces.length, 4, 'two quads, no hidden, deleted or reserved triangles');
+  assert.deepEqual(faces.map(f => Math.min(...f.points.map(p => p[0]))).sort((a,b)=>a-b), [103,103,201,201]);
+  const plain = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), material('plain'));plain.position.set(105,2,0);
+  assert.deepEqual(pairs(scene(root,plain)), ['batch / plain'], 'a real overlap at the transformed instance');
+  plain.position.set(5,2,0);
+  assert.deepEqual(pairs(scene(root,plain)), [], 'no phantom overlap at the packed geometry origin');
+});
+
+test('coincident instances with different colours fight even when their material is shared', () => {
+  const mesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(4,4), material('shared'), 2);
+  mesh.setMatrixAt(0,new THREE.Matrix4());mesh.setMatrixAt(1,new THREE.Matrix4());
+  mesh.setColorAt(0,new THREE.Color('red'));mesh.setColorAt(1,new THREE.Color('green'));
+  assert.equal(findDepthFights(scene(mesh)).length,1);
+  mesh.setColorAt(1,new THREE.Color('red'));
+  assert.equal(findDepthFights(scene(mesh)).length,0,'equivalent uniform colours do not create a visual conflict');
+});
+
+test('shared materials only suppress equal appearance across the whole overlap', () => {
+  const surface=material('mapped',{map:new THREE.Texture()}), make=()=>new THREE.Mesh(new THREE.PlaneGeometry(4,4),surface);
+  const a=make(),b=make();
+  assert.equal(findDepthFights(scene(a,b)).length,0,'equal map coordinates');
+  const uv=b.geometry.attributes.uv;
+  for(let i=0;i<uv.count;i++)uv.setX(i,(uv.getX(i)-.5)*2+.5);
+  assert.equal(findDepthFights(scene(a,b)).length,1,'UV slopes differ although both agree at the centre');
+  surface.map.channel=1;
+  a.geometry.setAttribute('uv1',a.geometry.attributes.uv.clone());b.geometry.setAttribute('uv1',a.geometry.attributes.uv.clone());
+  assert.equal(findDepthFights(scene(a,b)).length,0,'the inactive uv attribute does not affect this texture');
+  b.geometry.attributes.uv1.setX(0,1);
+  assert.equal(findDepthFights(scene(a,b)).length,1,'the texture-selected UV channel is checked');
+  surface.map=null;surface.vertexColors=true;
+  a.geometry.setAttribute('color',new THREE.Float32BufferAttribute([1,0,0,1,0,0,1,0,0,1,0,0],3));
+  b.geometry.setAttribute('color',new THREE.Float32BufferAttribute([0,0,1,0,0,1,0,0,1,0,0,1],3));
+  assert.equal(findDepthFights(scene(a,b)).length,1,'different vertex colours are visible with the same material');
+});
+
+test('clipping a material-array group to drawRange never extends it into the next group', () => {
+  const geometry = new THREE.PlaneGeometry(4,4);
+  geometry.clearGroups();geometry.addGroup(0,3,0);geometry.addGroup(3,3,1);geometry.setDrawRange(3,3);
+  const mesh = new THREE.Mesh(geometry,[material('hidden'),material('drawn')]);
+  const faces=depthFaces(scene(mesh));
+  assert.equal(faces.length,1);assert.equal(faces[0].material.name,'drawn');
+});
 
 test('the depth model: faces 1.5 mm apart part ways about 19 m out, and a larger patch needs a larger gap', () => {
   assert.ok(Math.abs(fightMetres(0.0015) - 19.4) < 0.1, `${fightMetres(0.0015)}`);
@@ -102,4 +159,17 @@ test('two near-parallel faces are as far apart as they are where they overlap, n
   assert.deepEqual(pairs(scene(sheet(ground, 0), roof)), [], 'a level roof 5.6 m above sloping ground');
   // A paving sheet 3 mm over the same slope still fights it.
   assert.deepEqual(pairs(scene(sheet(ground, 0), sheet(paver, .003), roof)), ['ground / paver']);
+});
+
+
+test('occurrence measurements do not depend on an unrelated face arriving first in a direction bucket', () => {
+  const near=(name,z,angle=0)=>{
+    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(4,4),material(name));
+    mesh.name=name;mesh.rotation.y=angle;mesh.position.set(2800,20,z);return mesh;
+  };
+  const a=near('a',0,.001),b=near('b',.003,.001),unrelated=near('unrelated',-3.2,.002);
+  unrelated.position.x=3000;
+  const scan=root=>findDepthFights(root,{occurrences:true}).occurrences.filter(g=>g.a==='a|a'&&g.b==='b|b');
+  const expected=scan(scene(a,b,unrelated));assert.ok(expected.length>0);
+  assert.deepEqual(scan(scene(unrelated,a,b)),expected);
 });

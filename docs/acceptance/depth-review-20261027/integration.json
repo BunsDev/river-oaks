@@ -1,0 +1,78 @@
+{
+  "integratedParent": "882a27d564a86a74c4ffef6920ec4fe695500de8",
+  "previousTestedSource": "b86ccc018b92440bb7b22ffa10a7cef8a23c5358",
+  "status": "draft; combined spatial baseline remeasurement unfinished after interrupted run",
+  "focused": {
+    "command": "node --test preview/tests/depth-layer-audit.test.js preview/tests/depth-layer-baseline.test.js preview/tests/interior-depth-joins.test.js preview/tests/city-kit.test.js preview/tests/district-depth.test.js preview/tests/room-ground-clip.test.js preview/tests/material-finish.test.js",
+    "passed": 45,
+    "failed": 0,
+    "skipped": 0
+  },
+  "build": {
+    "schemaVersion": 1,
+    "profile": "build",
+    "startedAt": "2026-10-27T17:59:36.565Z",
+    "status": "passed",
+    "revision": "b86ccc018b92440bb7b22ffa10a7cef8a23c5358",
+    "dirty": true,
+    "scope": "Selected repository checks only; not production, live auth, native Unreal, human accessibility, or target GPU acceptance.",
+    "results": [
+      {
+        "id": "build",
+        "command": [
+          "pnpm",
+          "run",
+          "build"
+        ],
+        "status": "passed",
+        "exitCode": 0,
+        "expectedExit": 0,
+        "signal": null,
+        "durationMs": 7478
+      }
+    ],
+    "finishedAt": "2026-10-27T17:59:44.088Z"
+  },
+  "shaderCloneRegression": {
+    "before": "fails: facade-roof metric UV patch lost",
+    "after": "passes for actual district and Hermes depth-biased mass materials",
+    "correction": "retain original onBeforeCompile and customProgramCacheKey; preserve local polygon offset"
+  },
+  "preexistingSameMaterialAlcoves": {
+    "normal": [
+      0,
+      -1,
+      0
+    ],
+    "preIncrementSource": "3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8",
+    "maximumClassOverlap": 219.062,
+    "maximumTriangleOverlap": 2.763,
+    "policy": "only the two known underside classes are bounded; different-material protection and spatial regression gate remain"
+  },
+  "spatialBaseline": {
+    "geometryBaseline": "3d666a2982b1c422f1ad7e1d0acde9dc3b8d13e8",
+    "occurrences": 9255,
+    "newExceptionsAccepted": 0,
+    "validatedAgainstIntegratedParent": false
+  },
+  "sourceSha256": {
+    "preview/src/depth-layer-audit.js": "b0f7b077e9240759464298a49f56ea0b28dcaa3505581d1760e5e54b8512880e",
+    "preview/src/depth-layer-baseline.js": "ab1c0e112d6a48011a72ce5fd3654fa19055b2ee2bc93d7835ab92c518feba3f",
+    "preview/src/district.js": "d60271f19d7222f8369da725f69af34ead5b33879e3a7dd907ec415deb0a253f",
+    "preview/src/reference-blocks.js": "bdd5f19138681796dd4851c777e870058118606cfd1ab3b73d227b356c3cc3c8",
+    "preview/src/reference-facades.js": "ebb3956f8594d5380156bf0e0dab10fe663fef48058412e93c3a397da7b022b9",
+    "preview/src/store-interiors.js": "ae70879b504b5b763ea667a500660fbaede3f172cc6dd1ac5c5cffbb00864820",
+    "preview/src/ipic-interior.js": "dc96798f6b556e28e65ba05d5650747f91a259225ea850daa0f017cd066daa64",
+    "preview/src/materials.js": "e91848932446dda65ba3a27c63eaef021a600a67393e5285b9caa8368aef21b3",
+    "preview/e2e/depth-layers.js": "81ec1070c4ff7aa550067d9ba904dc8da24e81823f5a0cb299cc1d2a556b3fb2",
+    "preview/e2e/depth-layers-known.json": "0d7f7e43ede61d34116b8d513271ef08e830a729bb7eabfd2690ed77b05d3e11",
+    "preview/tests/district-depth.test.js": "d05f52b29f19fa85d290973149d40430de10ba532d2b01e6b6c5d81c8c9d0001"
+  },
+  "remaining": [
+    "remeasure exact updated-parent occurrence coverage and review its delta",
+    "burn down resolved upstream exceptions without accepting new artifacts",
+    "normal combined depth journey and full hosted aggregate",
+    "fixed-light player-height approach/strafe/turn/back-away desktop and phone acceptance",
+    "premium-frontage material visual parity and target-device performance"
+  ]
+}
