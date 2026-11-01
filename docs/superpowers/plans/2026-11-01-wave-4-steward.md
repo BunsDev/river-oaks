@@ -168,6 +168,19 @@ Run once, as the goal asks: a git-archive snapshot of `main` `decb4e9a` with its
 
 A local run of `crime-residents` on `cdf3425f`, with temporary per-stride logging (since reverted), got the browser lock at about 12:58Z and failed the same check. The log is `.runtime/wave4/crime-residents-local-cdf3425f.log` in the ledger worktree. The on-foot walk works: toward the first resident (Ima Hogg) the visitor closed 43 m to within reach in about 25 strides, with one officer in `pursue` on them. No startle came within the 8 s wait. On the second candidate (Hugo) the visitor walked 14 m, then froze at one position for the rest of the run. By the third candidate (Owen) the police list was empty, meaning the officer had taken the visitor and stood down. This confirms the cause in Decision 4: under #844 the pursuing officer catches a wanted visitor on foot before the startle can be observed. The walk helper is not at fault.
 
+## Finish-line status (13:10Z)
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| 1 Main healthy | Met | Verify green on `main` for the last five pushes (`9d139387`, `5ba4a3f0`, `6a789759`, `d8e2a61d`, `8355e0ca`); `0d7b021d` in progress. Alert 20 diagnosed (Round 1) with the updater's text; no fix exists without an ignore, so a dismissal recommendation is Decision 1. |
+| 2 Open wave dispositioned | Met for my scope | Dispositions table covers every PR. #794 and #819 landed under the landing line; #786 held as superseded. I have no lander in the queue. The six queued PRs belong to live owners' landers, and I am not authorized to stop processes I did not start. The three snapshot rows are retired, with #717 evidence and an archive. `project:check --github`: 107 gaps. |
+| 3 CI headroom | Met | Draft #846, shards 10.2 and 6.3 min, all checks green (Decision 13). |
+| 4a #785 | Met as specified, hosted red | Draft #844 with failing-then-passing server tests and a journey inventory. `crime-residents` fails hosted and locally because the officer (3.4 m/s) catches a walking wanted player (3.2 m/s); the rule choice is Decision 4. |
+| 4b Redis repeat | Met (run once) | Ran at load 6.71 with its own Redis and `caffeinate -s`; recorded as not met on the comparison (Decision 12). |
+| 4c #784 | Met | Verdict: approve the mechanism, held on #785's order and a branch update. |
+| 4d Increment 6 | Met | Scoped in Round 4, not built. |
+| 5 Decisions | Met | 14 numbered decisions above. |
+
 ## Next step
 
 Hosted results for #844 and #846; the Redis repeat result or its gate log; Val's answers to the Decisions above. Nothing else in this goal is landable without a line from Val.
