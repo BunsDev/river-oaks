@@ -29,6 +29,33 @@ async page => {
     }
     return null;
   };
+  // On foot (#785): once wanted, an officer is on the visitor and travel is refused, so the walk to a
+  // resident is the visitor's own W strides, re-aimed by dragging the view every stride
+  // (walking-ui: yaw -= dx * 0.003; garden-campus-traversal.js does the same).
+  const pagePose = tab => tab.evaluate(() => { const n = document.querySelector('#walking-hud'), m = window.__riverMultiplayer();
+    return { position: JSON.parse(n.dataset.position), yaw: m.snapshot?.players.find(p => p.id === m.selfId)?.yaw ?? 0 }; });
+  const turnTo = async (tab, heading) => {
+    const box = await tab.locator('#canvas-host').boundingBox();
+    let delta = Math.atan2(Math.sin(heading + (await pagePose(tab)).yaw), Math.cos(heading + (await pagePose(tab)).yaw));
+    while (Math.abs(delta) > 0.05) {
+      const limit = box.width * 0.4, px = Math.max(-limit, Math.min(limit, delta / 0.003)), x = box.x + box.width / 2, y = box.y + box.height * 0.35;
+      await tab.mouse.move(x, y);await tab.mouse.down();await tab.mouse.move(x + px, y, { steps: 6 });await tab.mouse.up();
+      delta -= px * 0.003;
+    }
+  };
+  const walkNear = async (tab, [east, north], reach) => {
+    for (let stride = 0; stride < 40; stride++) {
+      const { position: [x, , z] } = await pagePose(tab), de = east - x, dn = north + z, gap = Math.hypot(de, dn);
+      if (gap <= reach) return (await town(tab)).self.position;
+      await turnTo(tab, Math.atan2(de, dn));
+      await tab.locator('#canvas-host').focus();
+      const fast = gap > 3;if (fast) await tab.keyboard.down('ShiftLeft');
+      await tab.keyboard.down('KeyW');await tab.waitForTimeout(Math.min(450, Math.max(80, (gap - reach * 0.6) * (fast ? 130 : 260))));await tab.keyboard.up('KeyW');
+      if (fast) await tab.keyboard.up('ShiftLeft');
+      await tab.waitForTimeout(100);
+    }
+    return null;
+  };
   try {
     await join(page);await join(visitor);
     if (await visitor.locator('.visit-tools[open]').count()) await visitor.locator('.visit-tools-toggle').click();
@@ -68,14 +95,14 @@ async page => {
       const gap = distance(here, near.position);
       if (gap > 14) {
         const k = 12 / gap, mark = [near.position[0] + (here[0] - near.position[0]) * k, near.position[1] + (here[1] - near.position[1]) * k];
-        if (!await approach(visitor, mark, 3)) continue;
+        if (!await walkNear(visitor, mark, 3)) continue;
       }
       const figure = await visitor.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === `resident:${id}` && item.ready), candidate.id, { timeout: 12000 }).then(() => true).catch(() => false);
       if (!figure) continue;
       // Where they are now: they may have walked on while the figure loaded (review of 92d7336a).
       const now = (await town(visitor)).locals.find(local => local.id === candidate.id);
       if (!now || now.life?.reaction !== null) continue;
-      const where = await approach(visitor, now.position, 4);
+      const where = await walkNear(visitor, now.position, 4);
       if (!where) continue;
       startled = await visitor.waitForFunction(id => { const local = window.__riverMultiplayer().snapshot.locals.find(item => item.id === id);
         return local?.life?.reaction === 'startle' && local.life.status === 'startled' && local; }, candidate.id, { timeout: 8000 }).then(handle => handle.jsonValue()).catch(() => null);
