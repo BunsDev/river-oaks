@@ -9,7 +9,7 @@ import { createHeightsStream, heightsChunkBytes, heightsCommonsLayout, HEIGHTS_C
 import { buildEastGardenCommons } from '../src/east-garden-commons.js';
 import { buildHeightsLandscape, buildHeightsNeighborhood } from '../src/bayou-heights.js';
 
-// The live Commons and Heights take the city-kit finish only by opt-in (#742, under #738).
+// The live finish reader defaults to Pink Jet-Age; builders retain explicit Classic fallbacks.
 const commonsWorld = await loadDistrictData({ districtRevision: 'east-garden-commons-market-1' });
 const heightsWorld = await loadDistrictData({ districtRevision: 'bayou-heights-1' });
 const PINK = 'pink-jet-age', brand = new THREE.Color(PINK_JET_AGE.pink).getHexString();
@@ -21,20 +21,21 @@ const shape = group => { const meshes = []; group.traverse(item => { if (item.is
 const colours = group => { const found = new Set(); group.traverse(item => { if (item.isMesh) found.add(item.material.color?.getHexString()); }); return found; };
 const dispose = group => group.userData.dispose();
 
-test('the finish preference is classic unless opted in, and never throws', () => {
-  assert.equal(DEFAULT_FINISH, 'classic');
-  assert.equal(readFinishPreference({ search: '', storage: store(null) }), 'classic');
-  assert.equal(readFinishPreference({ search: '', storage: null }), 'classic');
+test('the live finish defaults to Pink Jet-Age, keeps explicit overrides, and never throws', () => {
+  assert.equal(DEFAULT_FINISH, PINK);
+  assert.equal(readFinishPreference({ search: '', storage: store(null) }), PINK);
+  assert.equal(readFinishPreference({ search: '', storage: null }), PINK);
+  assert.equal(readFinishPreference({ search: '', storage: store('classic') }), 'classic', 'an explicit stored Classic override remains valid');
   // Node has neither location nor localStorage: the live default.
-  assert.equal(readFinishPreference(), 'classic');
+  assert.equal(readFinishPreference(), PINK);
   assert.equal(readFinishPreference({ search: '?finish=pink-jet-age', storage: store(null) }), PINK);
-  assert.equal(readFinishPreference({ search: '?world=x', storage: store(PINK) }), PINK, 'a stored opt-in persists');
+  assert.equal(readFinishPreference({ search: '?world=x', storage: store(PINK) }), PINK, 'a stored choice persists');
   assert.equal(readFinishPreference({ search: '?finish=classic', storage: store(PINK) }), 'classic', 'the address overrides a stored choice');
-  // Malformed values read as classic here; unknown well-formed names are rejected by the builders.
+  // Malformed values use the live default here; unknown well-formed names are rejected by the builders.
   for (const value of ['', 'PINK', '<script>', 'x'.repeat(40), '../classic'])
-    assert.equal(readFinishPreference({ search: `?finish=${encodeURIComponent(value)}`, storage: store(PINK) }), 'classic', value);
-  assert.equal(readFinishPreference({ search: '', storage: { getItem() { throw new Error('blocked'); } } }), 'classic');
-  assert.equal(readFinishPreference({ search: '', storage: store('{"mode":"pink"}') }), 'classic');
+    assert.equal(readFinishPreference({ search: `?finish=${encodeURIComponent(value)}`, storage: store(PINK) }), PINK, value);
+  assert.equal(readFinishPreference({ search: '', storage: { getItem() { throw new Error('blocked'); } } }), PINK);
+  assert.equal(readFinishPreference({ search: '', storage: store('{"mode":"pink"}') }), PINK);
 });
 
 test('the Commons builder passes a valid finish to the kit and its pavilion, and an unknown one renders classic', () => {
