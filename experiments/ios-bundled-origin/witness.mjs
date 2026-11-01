@@ -24,11 +24,17 @@ export async function startWitness({ host = '127.0.0.1', port = 0 } = {}) {
   const server = createServer((req, res) => {
     const seen = describeRequest(req);
     records.push(seen);
+    const allowedOrigins = new Set([`http://${host}:${server.address()?.port}`]);
+    const requestOrigin = typeof req.headers.origin === 'string' ? req.headers.origin : null;
+    const originAllowed = requestOrigin !== null && allowedOrigins.has(requestOrigin);
     const headers = {
       'Content-Type': 'application/json', 'Cache-Control': 'no-store', Vary: 'Origin',
-      'Access-Control-Allow-Origin': req.headers.origin ?? '*', 'Access-Control-Allow-Headers': 'content-type, x-csrf-token', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'content-type, x-csrf-token', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     };
-    if (req.headers.origin) headers['Access-Control-Allow-Credentials'] = 'true';
+    if (originAllowed) {
+      headers['Access-Control-Allow-Origin'] = requestOrigin;
+      headers['Access-Control-Allow-Credentials'] = 'true';
+    }
     if (req.method === 'OPTIONS') { res.writeHead(204, headers); res.end(); return; }
     res.writeHead(200, headers);
     res.end(JSON.stringify(seen));
