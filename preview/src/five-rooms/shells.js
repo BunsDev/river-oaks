@@ -158,7 +158,7 @@ export function framePlate(x, y, w, h, b, z0, z1) {
 /** The blank interior envelope: floor slab, side and back walls on the interior ring, ceiling. */
 export function interiorEnvelope(kit, frame, { ceiling = true } = {}) {
   const ring = frame.interior;
-  if (!ring) return;
+  if (!ring || frame.envelope === false) return;
   const outline = ring.map(p => [p[0], p[2]]), { wall, floor } = SHELL_STOREY;
   kit.add('ivory', planPrism(outline, 0, floor));
   if (ceiling) kit.add('ivory', planPrism(outline, frame.clear, frame.clear + SHELL_STOREY.ceiling));

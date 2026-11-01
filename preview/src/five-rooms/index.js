@@ -32,7 +32,11 @@ const box = bounds => ({ min: bounds.min.toArray().map(round), max: bounds.max.t
  * (scene x, z -> height) is optional: when given, each venue records how far its contract floor
  * stands from the ground there (`floorDelta`), for the Integration slice to reconcile.
  */
-export function buildFiveRoomsShells(contract, { finish = 'classic', groundAt = null } = {}) {
+// `interiors: false` leaves out what stands inside each footprint (floor, ceiling, back walls,
+// the Shade Garden's pergola ribs) and keeps the frontage. The scene passes it while the mapped
+// store rooms still fill the bays (decision 5 pending, Val 2026-11-01): their floors, ceilings
+// and walls lie on the envelope's and fight for depth.
+export function buildFiveRoomsShells(contract, { finish = 'classic', groundAt = null, interiors = true } = {}) {
   const group = new THREE.Group(); group.name = 'Five Rooms shells';
   if (finish !== FIVE_ROOMS_SHELL_FINISH) return group;
   validateFiveRooms(contract);
@@ -41,7 +45,7 @@ export function buildFiveRoomsShells(contract, { finish = 'classic', groundAt = 
   for (const id of VENUE_IDS) {
     const venue = contract.venues.find(item => item.id === id);
     if (!venue) throw new Error(`five rooms: the contract has no ${id}`);
-    VENUE_BUILDERS[id](kit, venueFrame(venue));
+    VENUE_BUILDERS[id](kit, { ...venueFrame(venue), envelope: interiors });
   }
   const { merged, venues } = kit.finish();
   for (const [key, geometry] of merged) {
@@ -53,7 +57,7 @@ export function buildFiveRoomsShells(contract, { finish = 'classic', groundAt = 
   }
   const attachments = contract.venues.flatMap(venue => venue.attachments.map(item => ({ id: item.id, venue: venue.id, role: item.role, frame: item.frame ?? 'site', position: item.position, yaw: item.yaw })));
   group.userData.fiveRooms = {
-    version: contract.version, finish,
+    version: contract.version, finish, interiors,
     drawCalls: group.children.length,
     materials: group.children.map(mesh => mesh.material.name),
     venues: venues.map(item => {

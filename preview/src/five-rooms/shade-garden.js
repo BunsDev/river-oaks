@@ -22,7 +22,7 @@ export function buildShadeGarden(kit, frame) {
   // contract entrance (0.6 m off it), which stays in use until retirement is decided (#841).
   kit.add('glow-usable', placeLocal(hoopGeometry({ width: SHADE_GARDEN_HOOP.width(frame.door), legHeight: 2.75, crownRise: 0.6, segments: 14 }, 0.07, 8), 0, 0, SHADE_GARDEN_HOOP.z));
   // Pergola ribs across the court, from wall to wall at even stations through its depth.
-  if (interior) {
+  if (interior && frame.envelope !== false) {
     const xs = interior.map(p => p[0]), zs = interior.map(p => p[2]), x0 = Math.min(...xs), x1 = Math.max(...xs), z0 = Math.min(...zs), z1 = Math.max(...zs);
     const ribs = Math.max(2, Math.round((z1 - z0) / 2.2));
     for (let i = 0; i < ribs; i++) {
