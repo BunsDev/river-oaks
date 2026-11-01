@@ -160,8 +160,11 @@ Captures live in `output/playwright/` of the worktree (classic `workplace-CAM-*.
 
 ## Gaps, with owner and disposition
 
-- **Physical devices:** none available in this session. Desktop viewports (including the
-  probe's touch emulation) are not phone proof (#747). Owner: Val / device matrix. Open.
+- **Physical devices:** none reachable in this session. `xcrun devicectl list devices` at
+  ~07:30Z shows Val's iPhone 16 Pro Max paired but `unavailable` (not connected) and five iOS
+  simulators, which #747 does not accept as phone proof; no Android tooling. Desktop viewports
+  (including the probe's touch emulation) are not phone proof either. Owner: Val, by
+  connecting the phone and opening the fixture page and the People sheet on it. Open.
 - **Human accessibility review** (screen reader, keyboard, touch) and the uncoached player
   sessions: Val, unchanged from the 2026-10-11 decision. Open.
 - **Hosted:** closed. The `workplace` shard passed on its first run (above); it stays.
