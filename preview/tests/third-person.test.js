@@ -1,6 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCameraBoom, pitchAfterSeatChange, seatedEyeView } from '../src/third-person.js';
+import { readFileSync } from 'node:fs';
+import { createCameraBoom, thirdPersonPose, pitchAfterSeatChange, seatedEyeView } from '../src/third-person.js';
+import { createWalkingEnvironment } from '../src/walking.js';
+
+test('a Ribbonwing chase camera above a boutique keeps its outdoor boom across room footprints',()=>{
+  const world=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url)));
+  const environment=createWalkingEnvironment(world);
+  const position=[-2831.9384618692047,80,1358.439548752362];
+  assert.ok(environment.roomAt(position[0],position[2]),'the flight crosses a real boutique footprint');
+  assert.ok(environment.canFly(...position),'the flight is above the roof clearance');
+  for(let k=0;k<8;k++) {
+    const state={position,yaw:k*Math.PI/4,pitch:0,cameraDistance:10.4};
+    const camera=thirdPersonPose(state,environment);
+    const gap=Math.hypot(...camera.position.map((v,i)=>v-camera.target[i]));
+    assert.ok(gap>10.4,`heading ${k}: clear sky must not push the camera inside the craft (${gap} m)`);
+    assert.equal(camera.showBody,true);
+  }
+});
+
+test('above-room cameras still retract against outdoor flight obstacles',()=>{
+  const room={storeId:'boutique',floor:0,height:4};
+  const environment={roomAt:()=>room,groundAt:()=>0,isFree:()=>true,canFly:(x,y,z)=>z<2};
+  const camera=thirdPersonPose({position:[0,12,0],yaw:0,pitch:0,cameraDistance:10.4},environment);
+  assert.ok(camera.position[2]>1&&camera.position[2]<2,'outdoor obstruction still stops the boom');
+});
 
 test('camera retracts immediately at obstructions and eases back out at any frame rate',()=>{
   const results=[];
