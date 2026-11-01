@@ -23,14 +23,14 @@ test('the Ribbon draws only under pink-jet-age, and only in a world with the Dis
 test('the graybox is the spine expanded against the District: one grey material, four draw calls', () => {
   const plan = districtRibbonPlan(world), group = buildRibbonGraybox({ world });
   assert.deepEqual(group.children.map(mesh => [mesh.name, mesh.isInstancedMesh, mesh.count]), [
-    ['Ribbon posts', true, 69], ['Ribbon canopy', true, 34], ['Ribbon fans', true, 34], ['Ribbon lamp heads', true, 18],
+    ['Ribbon posts', true, 61], ['Ribbon canopy', true, 30], ['Ribbon fans', true, 30], ['Ribbon lamp heads', true, 16],
   ]);
   const materials = new Set(group.children.map(mesh => mesh.material));
   assert.equal(materials.size, 1);
   const [material] = materials;
   assert.equal(`#${material.color.getHexString()}`, RIBBON_GRAYBOX.color);
   assert.equal(material.emissive.getHex(), 0, 'graybox gives off no light');
-  assert.deepEqual(group.userData.ribbon, { id: 'district-spine', hash: plan.hash, stats: plan.stats, skipped: ['ribbon:spine:post:019:l'], drawCalls: 4 });
+  assert.deepEqual(group.userData.ribbon, { id: 'district-spine', hash: plan.hash, stats: plan.stats, skipped: ['ribbon:spine:post:015:l'], drawCalls: 4 });
 });
 
 test('instances stand where the plan puts them, north at -z, on the ground given', () => {
@@ -50,7 +50,7 @@ test('instances stand where the plan puts them, north at -z, on the ground given
   near(instance(fans, 0).p.y, ground + plan.fans[0].height, 'fan height');
   near(instance(lamps, 0).p.x, plan.lamps[0].position[0], 'lamp x');
   // The post left out over the Van Cleef & Arpels bench has no instance anywhere near its spot.
-  const left = expandRibbon(spine).posts.find(post => post.id === 'ribbon:spine:post:019:l');
+  const left = expandRibbon(spine).posts.find(post => post.id === 'ribbon:spine:post:015:l');
   const drawn = Array.from({ length: posts.count }, (_, i) => instance(posts, i).p);
   assert.ok(drawn.every(p => Math.hypot(p.x - left.position[0], p.z + left.position[1]) > 0.5), 'no post drawn over the bench');
 });

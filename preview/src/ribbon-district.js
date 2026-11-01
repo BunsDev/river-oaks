@@ -6,6 +6,8 @@ import districtSpine from '../../config/ribbon/district-spine.json' with { type:
 // itself so a moved door, bench, lamp or building is caught at expansion rather than drawn into
 // someone's way. The renderer (ribbon-graybox.js) and the route test read this one builder.
 export const DISTRICT_RIBBON_LANE = 'osm-way-583333526-0';
+// The side lane that meets the central lane at the arrival spawn (#827, #838).
+export const DISTRICT_RIBBON_SIDE_LANE = 'osm-way-625330795-0';
 // A door's clear zone: 2.4 m along the facade, 2 m out from it. The repo states no door
 // clearance; these are the route's working values (docs/superpowers/plans/2026-10-31-ribbon-route-825.md).
 export const RIBBON_DOOR = Object.freeze({ width: 2.4, depth: 2 });
@@ -39,6 +41,21 @@ export function districtRibbonExclusions(world) {
       for (let j = 0; j < n; j++) {
         const p = [a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n], q = [a[0] + (b[0] - a[0]) * (j + 1) / n, a[1] + (b[1] - a[1]) * (j + 1) / n];
         add(`carriageway-${piece++}`, 'no-go', [Math.min(p[0], q[0]) - half, Math.min(p[1], q[1]), Math.max(p[0], q[0]) + half, Math.max(p[1], q[1])]);
+      }
+    }
+  }
+  // The side lane that meets the central lane at the spawn (osm-way-625330795), carriageway and
+  // kerb in pieces of at most 5 m, padded across its direction so the boxes suit an east-west lane.
+  const side = (world.roads ?? []).find(road => road.id === DISTRICT_RIBBON_SIDE_LANE);
+  if (side) {
+    const sideHalf = side.width_m / 2 + 0.15;
+    let sidePiece = 0;
+    for (let i = 1; i < side.points.length; i++) {
+      const a = side.points[i - 1], b = side.points[i], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 5));
+      for (let j = 0; j < n; j++) {
+        const p = [a[0] + (b[0] - a[0]) * j / n, a[1] + (b[1] - a[1]) * j / n], q = [a[0] + (b[0] - a[0]) * (j + 1) / n, a[1] + (b[1] - a[1]) * (j + 1) / n];
+        const length = Math.hypot(q[0] - p[0], q[1] - p[1]), ox = Math.abs(q[1] - p[1]) / length * sideHalf, oy = Math.abs(q[0] - p[0]) / length * sideHalf;
+        add(`side-lane-${sidePiece++}`, 'no-go', [Math.min(p[0], q[0]) - ox, Math.min(p[1], q[1]) - oy, Math.max(p[0], q[0]) + ox, Math.max(p[1], q[1]) + oy]);
       }
     }
   }
