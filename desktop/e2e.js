@@ -367,7 +367,8 @@ try {
   const failedPage=await app.firstWindow();
   report.failureUI=await failedPage.evaluate(()=>({position:document.querySelector('#walking-hud')?.dataset.position,body:document.body.className,places:document.querySelector('#explore-section')?.textContent,walking:document.querySelector('#walking-hud')?.textContent})).catch(()=>null);
   await failedPage.screenshot({path:join(root,`output/playwright/desktop-${report.mode}-failure.png`)}).catch(()=>{});
-  report.diag = await failedPage.evaluate(() => ({ ...window.__diag, now: Math.round(performance.now()), settingsOpen: document.querySelector('#settings-dialog')?.open, gateHidden: document.querySelector('#access-gate, .access-gate, [data-access-gate]')?.hidden ?? null })).catch(() => null);
+const failureDiag = await failedPage.evaluate(() => ({ ...window.__diag, now: Math.round(performance.now()), settingsOpen: document.querySelector('#settings-dialog')?.open, gateHidden: document.querySelector('#access-gate, .access-gate, [data-access-gate]')?.hidden ?? null })).catch(() => null);
+  if (failureDiag) report.diag = failureDiag;
   throw error;
 } finally {
   await mkdir(join(root, 'data/reports'), { recursive: true });
