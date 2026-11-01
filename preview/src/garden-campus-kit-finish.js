@@ -6,8 +6,9 @@
 // campus already builds. It never adds, moves or removes a part, so every instance, level,
 // suite and bridge ID, support, clearance, collision rect and lease is the same under each
 // finish. The one exception is `forms` (Pink Jet-Age), which reshapes parts inside the same
-// contract envelopes (garden-campus-jet-age.js) and still moves no surface, rect or ID. `classic` is the default and changes nothing; the client opts in with
-// render-quality.js readFinishPreference (`?finish=pink-jet-age` or localStorage).
+// contract envelopes (garden-campus-jet-age.js) and still moves no surface, rect or ID. `classic` is this table's own default and changes nothing; the live client passes
+// render-quality.js readFinishPreference, which defaults to `pink-jet-age` (#837), with
+// `?finish=classic` or a saved Classic choice as the comparison override.
 //
 // The palette comes from its own dependency-free module (catalog.js re-exports it), so the kit
 // catalog stays out of the main bundle: the campus is built with the district, eagerly.
