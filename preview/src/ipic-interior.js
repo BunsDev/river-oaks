@@ -139,8 +139,9 @@ export function buildIpicInterior(room, options = {}) {
   for (let d = 1; d < 6; d += 2) for (const a of [-2.5, 1]) downlight(a, 3.77, d);
   // Brass lift doors visible in the ground lobby. They are architecture, not an
   // unimplemented interaction: the continuous escalator path is the public route.
-  box(m.black, 5.3, 1.4, 5.88, 1.85, 2.8, .14);
-  for (const a of [4.86, 5.74]) box(m.bronze, a, 1.4, 5.79, .86, 2.7, .055);
+  // The surround stands 8 cm behind the doors' faces, which fill the depth back to it.
+  box(m.black, 5.3, 1.4, 5.895, 1.85, 2.8, .11);
+  for (const a of [4.86, 5.74]) box(m.bronze, a, 1.4, 5.80125, .86, 2.7, .0775);
   // Walls close the side bays beside the first run at reception, up to its ceiling (Val, 2026-10-26): the opening
   // under the sign showed the street's ground and the next shop's shelves. The sign hangs on the west one, beside
   // the escalator, instead of across the head of its lane.
@@ -215,7 +216,8 @@ export function buildIpicInterior(room, options = {}) {
     stoneWall(inner, bay, soffit, 12, 14);
   }
   const mural = room.fixtures.find(f => f.kind === 'ipic-mural-wall');
-  box(m.black, mural.a, mural.y + mural.h / 2, mural.d, mural.w, mural.h, mural.l);
+  // The backing's face stands 7 cm behind the photograph, inside the wall's collision block.
+  box(m.black, mural.a, mural.y + mural.h / 2, mural.d + .0475, mural.w, mural.h, mural.l - .095);
   panel(finishes.photo('book-spine-mural', 'IMG_9771.jpg'), mural.a, mural.y + mural.h / 2, mural.d - .1, mural.w, mural.h, 0,
     [[.245, .298], [.875, .312], [.246, .70], [.86, .702]]);
   for (const a of [-2, .5]) downlight(a, upper - .12, 12.7);
@@ -268,12 +270,15 @@ export function buildIpicInterior(room, options = {}) {
   }
   box(m.black, bar.a, 6.03, bar.d, east - west - 2 * rim, .06, south - north - 2 * rim);
   // The back bar: two wine fridges with shelves of bottles between and above them, on a burgundy wall.
-  box(m.red, room.aMax - .05, 7.9, 23, .1, 2.8, 4.8);
+  // The burgundy wall stands 8 cm off the lounge's timber (its face at aMax - .075).
+  box(m.red, room.aMax - .115, 7.9, 23, .08, 2.8, 4.8);
   const backA = (IPIC_BACK_BAR + room.aMax) / 2 + .005, backW = room.aMax - IPIC_BACK_BAR - .02;
   for (const d of [21.35, 24.65]) {
-    box(m.black, backA, 6.95, d, backW, 1.9, 1.4);
-    box(m.fridge, IPIC_BACK_BAR + .015, 6.95, d, .01, 1.72, 1.24);
-    for (let y = 6.3; y < 7.8; y += .2) box(m.black, IPIC_BACK_BAR + .022, y, d, .01, .012, 1.24);
+    // Each fridge door is 7 cm deep, set into its cabinet, so the glass stands clear of the cabinet's face.
+    const cabinet = IPIC_BACK_BAR + .085;
+    box(m.black, (cabinet + room.aMax - .005) / 2, 6.95, d, room.aMax - .005 - cabinet, 1.9, 1.4);
+    box(m.fridge, IPIC_BACK_BAR + .05, 6.95, d, .07, 1.72, 1.24);
+    for (let y = 6.3; y < 7.8; y += .2) box(m.black, IPIC_BACK_BAR + .01, y, d, .01, .012, 1.24);
   }
   for (const y of [7.2, 8, 8.8]) box(m.timber, backA, y, 23, backW, .06, y > 8.5 ? 4.7 : 1.85);
   for (let i = 0; i < 30; i++) {
