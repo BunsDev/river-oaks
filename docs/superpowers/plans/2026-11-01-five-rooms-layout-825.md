@@ -106,6 +106,13 @@ Plan: 68 modules, 142 posts, 37 lamps, 5 links, 0 posts left out; hash `66797e9b
 Remaining blockers: 13 pits, 10 crowns, bench-5 body, REF-HW-01 bed. The 3.0 m clear-height
 measurement still holds (link-studios clears, south loses tree-108, spine keeps tree-104).
 
+v2 checks on `b27ea051`: focused tests 25/25. Core verify run 1 (12:29Z, load 30-90) failed 9
+server transport/checkpoint tests (log `.runtime/five-rooms/verify-core-v2-1-server-load.log`);
+run 2 (13:48Z) and the leaderboards run before it were SIGKILLed at the 10-min preview stage cap
+under load 80-185 with no test failure (`verify-core-v2-2-preview-timeout.log`). Run 3, 15:29Z at
+1-/5-min load 10/15: **passed**. Agent 294/294; preview 4813 pass, 0 fail, 1 skip; server 1110
+pass, 0 fail, 285 skip; desktop 127 pass, 0 fail, 5 skip; build, python, demo; gitleaks no leaks.
+
 ## v2 inputs not yet in the contract (requested by consumers, accepted)
 
 From #840 Landscape (worker on `feat/five-rooms-landscape-courts-825-20261101`, built on #849
