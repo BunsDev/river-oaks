@@ -302,9 +302,13 @@ jobs:
             journeys: garden-campus-office garden-campus-suite
           - id: campus-traversal
             journeys: garden-campus-traversal
-          # The landowner hover coach: garage, call, board, drive, climb, land and step out (#737).
+          # East Garden Commons, and the landowner hover coach in its own shard: garage, call, board,
+          # drive, climb, land and step out (#737). Together they peaked at 13.4 min of the 20-min
+          # timeout (wave-4 steward, Decision 3); split, same journeys, no budget change.
           - id: commons
-            journeys: east-garden-commons hover-coach
+            journeys: east-garden-commons
+          - id: hover-coach
+            journeys: hover-coach
           # The Ribbonwing (#777): the passenger seat with a pilot, passenger and observer, and the
           # tuck dive, loop and Petal Roll flown in the browser. Commons alone is about 16 min.
           - id: ribbonwing
