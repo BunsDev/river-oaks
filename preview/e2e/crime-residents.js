@@ -29,8 +29,8 @@ async page => {
     }
     return null;
   };
-  // On foot (#785): once wanted, an officer is on the visitor and travel is refused, so the walk to a
-  // resident is the visitor's own W strides, re-aimed by dragging the view every stride
+  // On foot (#785): while an officer is on the visitor, travel is refused, so leaving the danger zone is
+  // the visitor's own W strides, re-aimed by dragging the view every stride
   // (walking-ui: yaw -= dx * 0.003; garden-campus-traversal.js does the same).
   const pagePose = tab => tab.evaluate(() => { const n = document.querySelector('#walking-hud'), m = window.__riverMultiplayer();
     return { position: JSON.parse(n.dataset.position), yaw: m.snapshot?.players.find(p => p.id === m.selfId)?.yaw ?? 0 }; });
@@ -78,8 +78,15 @@ async page => {
     await visitor.locator('#canvas-host').focus();await visitor.keyboard.press('KeyT');
     await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.crime.wanted.some(([id, stars]) => id === m.selfId && stars === 1); });
     check(true, 'One landed shove: the visitor is wanted');
-    // Step out of the rival's reach at once, toward the nearest outdoor resident who is not already
-    // reacting, and stop at arm's length from them.
+    // #785: an officer is on the visitor, so they walk out of the lane (15 m north of the rival is clear
+    // ground outside the zone), the officers stand down, and travel opens again with the star still cooling.
+    const out = await walkNear(visitor, [RX, -1420], 1.5);
+    check(out, 'The wanted visitor walks out of the danger zone on foot');
+    const loose = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), s = m.snapshot;
+      return !(s.police?.units ?? []).some(unit => unit.targetId === m.selfId && ['pursue', 'grab', 'arrest'].includes(unit.state))
+        && s.crime.wanted.some(([id, stars]) => id === m.selfId && stars >= 1); }, null, { timeout: 15000 }).then(() => true).catch(() => false);
+    check(loose, 'Out of the zone no officer is on the visitor, and the star is still there');
+    // Toward the nearest outdoor resident who is not already reacting, and stop at arm's length.
     const state = await town(visitor);
     const candidates = state.locals.filter(local => !local.indoor && local.life && local.life.reaction === null && ['walking', 'resting', 'turning'].includes(local.life.status))
       .sort((a, b) => distance(a.position, state.self.position) - distance(b.position, state.self.position)).slice(0, 3);
@@ -95,14 +102,14 @@ async page => {
       const gap = distance(here, near.position);
       if (gap > 14) {
         const k = 12 / gap, mark = [near.position[0] + (here[0] - near.position[0]) * k, near.position[1] + (here[1] - near.position[1]) * k];
-        if (!await walkNear(visitor, mark, 3)) continue;
+        if (!await approach(visitor, mark, 3)) continue;
       }
       const figure = await visitor.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === `resident:${id}` && item.ready), candidate.id, { timeout: 12000 }).then(() => true).catch(() => false);
       if (!figure) continue;
       // Where they are now: they may have walked on while the figure loaded (review of 92d7336a).
       const now = (await town(visitor)).locals.find(local => local.id === candidate.id);
       if (!now || now.life?.reaction !== null) continue;
-      const where = await walkNear(visitor, now.position, 4);
+      const where = await approach(visitor, now.position, 4);
       if (!where) continue;
       startled = await visitor.waitForFunction(id => { const local = window.__riverMultiplayer().snapshot.locals.find(item => item.id === id);
         return local?.life?.reaction === 'startle' && local.life.status === 'startled' && local; }, candidate.id, { timeout: 8000 }).then(handle => handle.jsonValue()).catch(() => null);
