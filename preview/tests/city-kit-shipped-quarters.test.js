@@ -21,25 +21,28 @@ const names = readdirSync(dir).filter(n => n.endsWith('.json') && !n.endsWith('.
 const shells = plan => plan.pieces.filter(piece => piece.piece.startsWith('building/'));
 
 // What the hand-authored blocks put on the ground, recorded by `destination build --lock` before the migration.
+// Ground hashes the migrations proved against. On 2026-10-30 street lamps that the
+// generator had stood in tree pits moved half a tree spacing along the street; that
+// changed the ground of the authored and quarter forms alike, so ten hashes moved with it.
 const AUTHORED_GEOMETRY = {
   'bayou-market-commons': 'f0c1ce10921e2c7a',
   'bayou-terrace-north': '57ec6291e36c63a3',
   'bayou-terrace-south': '4bc9dd68a9b5780e',
-  'heights-boulevard-north': 'fcd0476b880c4c99',
+  'heights-boulevard-north': 'a291402bc9d3c659',
   'heights-boulevard-south': 'faa0cc8b542c3705',
-  'nineteenth-and-yale': '2e05bf8475d0be92',
-  'studewood-north': '7d97beb81f558c1a',
-  'studewood-south': '5e3f03e0d88a273e',
-  'typesafe-place-green': '6cabe31bb88f45dd',
-  'typesafe-place-north': '957c39f17f50971f',
-  'typesafe-place-penthouse': 'd9c496480ad1a43a',
-  'typesafe-place-south': '3d7fd1c6189c3df0',
+  'nineteenth-and-yale': '6051230f64a03a61',
+  'studewood-north': 'd73843e9791c56c3',
+  'studewood-south': '1ac5d437d2fe3709',
+  'typesafe-place-green': '89848a43c1d3f449',
+  'typesafe-place-north': 'b8fe1af9ce326b8b',
+  'typesafe-place-penthouse': '27456442cebc0130',
+  'typesafe-place-south': '8a27f2788a7c293e',
   'typesafe-place-uptown': 'ca693b37e58d6b15',
   'woodland-heights-north': 'f96a8c08ba90ae6a',
   'woodland-heights-south': 'a165e847736c5775',
-  'yale-icehouse': 'b2fff3a812887f3e',
+  'yale-icehouse': '84bd41f84b27776a',
   'yale-street-north': '2fe550e1d513f36b',
-  'yale-street-south': 'e9cbe520dbc54b0a',
+  'yale-street-south': '7ae3d23acc524824',
 };
 
 test('eighteen migrated neighborhoods, 32 blocks, put the same ground as their hand-authored blocks did', () => {
