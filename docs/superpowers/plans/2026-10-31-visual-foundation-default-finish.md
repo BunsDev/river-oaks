@@ -40,7 +40,7 @@ The missing gates require a full execution checkout. Isolated passing tests do n
 
 ## Execution checkout results (#837, 2026-11-01)
 
-Owner: claude:river-oaks-f0, taken over from river-oaks-6d worker:activation-837 at Val's direction (handover confirmed by river-oaks-6d). Worktree `../river-oaks-finish-default-825` (the registered checkout; the branch was already checked out there, so a second worktree of it was not possible). Live register task `finish-default-on-825-20261101`.
+Owner: claude:river-oaks-f0, taken over from river-oaks-6d worker:activation-837 at Val's direction (handover confirmed by river-oaks-6d). Work through `665147dd` ran in the previously registered checkout `../river-oaks-finish-default-825`. After that push, that checkout was detached at the same commit and the branch moved to a new worktree, `../river-oaks-finish-default-837`, with the `.runtime/finish-default/` and `.runtime/agent/` evidence copied there. The focused suites rerun in the new worktree: 61/61 pass, including the 4 blocked-storage tests. Live register task `finish-default-on-825-20261101`.
 
 - Merged main `5ba4a3f0` (13 commits, includes #832 workplace finish) into the branch: merge `2ce693b2`, signed. Committed the preserved `docs/city-kit.md` live-default section (`1ec0ae58`) and a stale campus comment that still said the client "opts in" (`9d81dadb`, `preview/src/garden-campus-kit-finish.js`, comment only).
 - Focused finish suites (`finish-default-foundation`, `render-quality`, `kit-finish-live`, `workplace-kit-finish`, `garden-campus-kit-finish`): 57 pass, 0 fail, 0 skipped.
@@ -54,6 +54,7 @@ Owner: claude:river-oaks-f0, taken over from river-oaks-6d worker:activation-837
 - `pnpm run verify` (core) on `d87e25c4` (storage fix committed, worktree clean): passed, 11/11 stages, receipt `.runtime/agent/core.json`, log `.runtime/finish-default/verify-4.log`. Agent 294/294; preview 4841 (4805 pass, 0 fail; +4 regression tests); server 1395 (1110 pass, 285 Redis-gated skipped); desktop 132 (127 pass); pytest 215 passed. Host load 1-min ~100–200 during the run.
 - Journeys that assumed Classic was the default: none found. Capture scripts that mean Classic already name it (`pink-jet-age-routes-plan.mjs` `districtPath`, `city-kit-review.js`, the workplace fixture). Every hosted experience and shared shard passed under the new default except depth. No assertion was relaxed.
 - Hosted checks on `2ce693b2`: 29 success, 2 failure. The failures are `preview experience (depth)` and the `preview` aggregate it gates. Depth reports 10 new same-depth pairs, all `campus:jet-age:*`/campus shell and `garden-court:city-kit` trim/bronze. That is exactly #836 (Pink Jet-Age depth burndown), which is expected to stay red until #836 lands. Depth is not patched here.
+- Hosted checks on `665147dd` (storage fix and ledger): 29 success, 2 failure. The failures are again `preview experience (depth)` and the `preview` aggregate, with the same 10 #836 pairs (campus jet-age/shell 7, campus core/slab 1, garden-court bronze/trim 2) and no new pair from the storage fix. Every other experience and shared shard, unit, CodeQL and verify (3.11/3.13) passed.
 
 ## Prepared specialist workstreams for the remaining foundation
 
