@@ -106,6 +106,21 @@ each in its own worktree, claiming its register task:
 - #826 was marked ready (no longer a draft).
 - #839, #840 and #841 have no owner yet.
 
+- 2026-11-01 ~10:05Z: Val answered decisions 1–3 on #835. The 2.0 m walk and the trees are
+  accepted for M0, and the merges #826 → #827 → #828 are authorized. `river-oaks-0a` lands them.
+- river-oaks-c2's #838 work found that #827's posts 002–004 stand in side-lane
+  `osm-way-625330795`. #827 and #828 were held. The fix is #853: the spine now starts 0.37 m north
+  of the kerb, 11.15 m from the spawn. Val OKed it on #835 (~10:50Z), and `river-oaks-0a`
+  fast-forwarded #827 to `af40b2e5`.
+- 11:06Z: GitHub's stacked-PR UI force-pushed #827, #828 and #848. The code was unchanged and
+  only the history moved. Val was asked on #835 to leave the stack UI alone until #828 lands.
+- #838 v1 is draft #849 (`b18aef51`, 24/24 tests). v2 (68 modules, 142 posts, crossing join) is
+  pending river-oaks-c2's core verify.
+- #840: tree clearance is draft #848, and the courts are draft #851 (33/33 tests). Val's tree fix
+  choice is on #840.
+- #828 update: worker `graybox-update` merged `af40b2e5` into #828 as `b1708111` (signed, 18/18
+  focused tests, build ok). Capture and core verify wait on load.
+
 ## Gaps
 
 - No merge is authorized; M0 cannot land without Val's decisions 1–3.
