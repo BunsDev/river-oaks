@@ -19,9 +19,39 @@ Run one with `pnpm run test:experience <journey>`. Prefix
 `*-local.json` `RIVER_OAKS_E2E_REPORT` so the tracked one stays untouched.
 These journeys are local. No hosted shard runs them.
 
+## Touch gamepad
+
+Touch screens (`pointer: coarse`) walk with a two-thumb layout in the style of
+mobile shooters such as CoD Mobile and PUBG Mobile (`preview/src/touch-gamepad.js`):
+
+- **Left thumb: floating stick.** Put a thumb down anywhere in the lower-left
+  zone; the stick centres under it. Eight 45° sectors press the same held keys
+  as W A S D, so walking, riding and flight keep their server-checked speed and
+  collision contracts. The stick never sends analog speeds.
+- **Sprint lock.** Pull straight up (within about 23°) past 1.45× the ring and
+  the stick locks sprint (Shift); a gold **Sprint** tag shows it. Easing back or
+  steering keeps the lock; pulling backward, returning to the dead zone or
+  lifting the thumb ends it.
+- **Right thumb: look and act.** Dragging anywhere else on the scene looks
+  around. A round button under the right thumb runs the current main action
+  (talk, sit, step inside, step off the bike) and is labelled with it.
+- **Rise and lower.** While flying, or piloting the Ribbonwing, hold ▲ / ▼
+  above the action button (Space / C).
+- The stick and buttons react on the press itself, so a second finger works
+  while the left thumb holds the stick. A conversation or an open chat dock
+  hides the gamepad; it releases every held key when hidden.
+- Hints switch to touch wording: the help line, and the riding, flight and
+  seated hints, name the stick and buttons instead of keys.
+
+The six-button movement pad stays one tap away under **Show movement
+controls** as a fallback; a stored choice still wins.
+
+**Not yet thumb-reachable:** getting into or out of a vehicle, taking flight
+and Ribbonwing maneuvers remain in **Play & rides** → Character.
+
 ## Command → touch path
 
-The movement pad appears under **Show movement controls** in the walking
+The fallback movement pad appears under **Show movement controls** in the walking
 console. On screens up to 900 px wide an open **Town chat** dock hides the
 walking console, and the dock opens by default. Tap **Town chat** to fold it,
 and the console and pad appear. **Play & rides** opens the Play dock; its
@@ -29,16 +59,16 @@ and the console and pad appear. **Play & rides** opens the Play dock; its
 
 | Keys | Command | Touch path | Checked by |
 | --- | --- | --- | --- |
-| W A S D | Walk | Hold ↑ ← ↓ → on the movement pad | `touch-hold` |
-| ← → | Turn | Hold the turn buttons at either end of the pad, or drag on the scene | `touch-hold` (drag) |
-| Mouse drag | Look | Drag on the scene. While a thumb holds a walk button, a second finger looks. | `touch-hold` (Chromium) |
-| Shift | Brisk walk | **None.** The sprint button has been hidden for every form since the beast forms were removed (2b5062b6). | — |
+| W A S D | Walk | The left thumbstick, or hold ↑ ← ↓ → on the fallback pad | `touch-gamepad` unit; `touch-hold` (pad) |
+| ← → | Turn | Drag on the scene, or the turn buttons at either end of the pad | `touch-hold` (drag) |
+| Mouse drag | Look | Drag on the scene. While the left thumb holds the stick, a second finger looks. | `touch-hold` (Chromium) |
+| Shift | Brisk walk | Pull the stick straight up past the ring to lock sprint | `touch-gamepad` unit |
 | E | Talk | **Find a local to talk to** / **Meet someone nearby**, or tap the person | `touch-people` |
 | F, Shift+F | Doors and stairs | **Step inside** / **Go down one level**, shown when close enough | Code path |
 | Z | Sit or water | **Sit down** (the label follows the place) | Code path |
 | Q, G | Call the ride, get in or out | Character → **Call Jev** / **Ride with Jev** / **Step out** | `carriage-mobile` |
 | J | Walk with Jev | Character → **Walk with Jev** | Code path |
-| B, Space, C | Fly, rise, lower (Jevica) | Character → **Take flight**, then hold **Rise** / **Lower** | Code path |
+| B, Space, C | Fly, rise, lower (Jevica) | Character → **Take flight**, then hold ▲ / ▼ on the gamepad | Code path |
 | V | Camera | Character → **Third person** / **First person** | Code path |
 | Y | Voice | **Join voice** in the walking console or the chat dock | Code path |
 | M | Mute, or push to talk | The mic button. In push-to-talk mode, hold it to talk. Lifting or a cancelled touch stops transmitting, and the tap that ends a hold never turns the microphone on. The hold belongs to the finger that started it: a second finger on the same button neither restarts nor ends it. The button keeps a held finger from becoming a pan (`touch-action: none`). M and the mic buttons share one hold, so releasing any of them stops talking. | `voice-ui` unit; `touch-layout` (touch-action) |
