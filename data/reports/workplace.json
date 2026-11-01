@@ -1,10 +1,10 @@
 {
-  "createdAt": "2026-10-11T09:46:40.650Z",
+  "createdAt": "2026-11-01T06:31:46.526Z",
   "results": [
     {
       "name": "workplace",
       "status": "passed",
-      "seconds": 46.122,
+      "seconds": 35.845,
       "result": {
         "checks": [
           "Deferring the offer takes nothing away",
