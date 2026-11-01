@@ -1,0 +1,26 @@
+[
+  {
+    "path": "Info.plist",
+    "sha256": "a8e02acec672e0284da6d4101a2a9b168e448059dc9bbd432ee76412f8e83f31"
+  },
+  {
+    "path": "PkgInfo",
+    "sha256": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0"
+  },
+  {
+    "path": "TypeSafeProbe",
+    "sha256": "8e9613546a32d4cc4081bfb0d7c3484e3efd472cf068052988b41a8588963f8f"
+  },
+  {
+    "path": "decode-queue.js",
+    "sha256": "3eff9c30a75445281d4838dfdaff69d4359441125df5bf028e813eba39a3fc1d"
+  },
+  {
+    "path": "phase-capture.js",
+    "sha256": "f4491dd5a844b3bed05dbb1630d3aa379460b2aa1f3bc040a4dd2fe8f1192ab9"
+  },
+  {
+    "path": "probe.js",
+    "sha256": "7f6f7317903264126d4a054f5e1ca67f5310b72619e940a13b207c027a636936"
+  }
+]
