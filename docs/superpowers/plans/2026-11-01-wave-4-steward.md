@@ -184,18 +184,25 @@ Val answered two decisions in session: Decision 4, adopt the #785 rule and land 
 
 Decisions 1–3, 5–12 and 14 remain Val's.
 
+### Val's answers, round 2 (about 21:00Z)
+
+- **Decision 1 (Dependabot alert 20):** Val will dismiss it as no fix available. The session is not authorized to dismiss alerts.
+- **Decision 3 (commons shard):** split it. #861 moved `hover-coach` into its own experience shard, with the same journeys and the same 20-min timeout. Hosted on `f49a9103`: 33/33 green, `commons` (`east-garden-commons` alone) 15.1 min and `hover-coach` 1.8 min. On `main`'s last six pushes the combined shard took 7.9–17.0 min. The split saves about 2 min; `east-garden-commons` itself is the long pole, and more margin would need that journey split, a test change. Review verdict first (comment 6564256028). Landed through `pnpm run land 861` as `78fe1c16` (21:44:29Z GitHub). Retired: evidence archive `retire-evidence-ci-commons-split-20261101` (restore identical), bundle `retirement-Capwr7`.
+- **Decision 12 (Redis 8-player repeat):** accept "Not met, noise-bound" as the record. The #599 closeout goal chooses any baseline change.
+- **Decisions 2, 5–11 and 14:** left open for Val. They are PR closures, owner assignments and register sweeps the session is not authorized to make. Val will clear the goal.
+
 ## Finish-line status (17:20Z)
 
 | Item | Status | Evidence |
 | --- | --- | --- |
 | 1 Main healthy | Met | Verify green on `main` for the last five pushes (`9d139387`, `5ba4a3f0`, `6a789759`, `d8e2a61d`, `8355e0ca`); `0d7b021d` in progress. Alert 20 diagnosed (Round 1) with the updater's text; no fix exists without an ignore, so a dismissal recommendation is Decision 1. |
 | 2 Open wave dispositioned | Met for my scope | Dispositions table covers every PR. #794 and #819 landed under the landing line; #786 held as superseded. I have no lander in the queue. The six queued PRs belong to live owners' landers, and I am not authorized to stop processes I did not start. The three snapshot rows are retired, with #717 evidence and an archive. `project:check --github`: 107 gaps. |
-| 3 CI headroom | Met | #846 landed as `e56c643a` (shards 10.2 and 6.3 min) after Val's Decision 13. |
+| 3 CI headroom | Met | #846 landed as `e56c643a` (shards 10.2 and 6.3 min) after Val's Decision 13; #861 split `hover-coach` out of commons (`78fe1c16`, about 2 min saved) after Decision 3. |
 | 4a #785 | Met | Draft #844 with failing-then-passing server tests and a journey inventory; `crime-residents` restaged (walk out of the zone, then travel) and all 31 hosted checks green on `fe3e240b`; `crime-encounter` restaged in `f572839c`, passing locally, 31/31 hosted green on that head. Val adopted the rule (Decision 4); landed as `e699f8b4`. |
 | 4b Redis repeat | Met (run once) | Ran at load 6.71 with its own Redis and `caffeinate -s`; recorded as not met on the comparison (Decision 12). |
 | 4c #784 | Met | Verdict: approve the mechanism, held on #785's order and a branch update. |
 | 4d Increment 6 | Met | Scoped in Round 4, not built. |
-| 5 Decisions | Met | 14 numbered decisions above. |
+| 5 Decisions | Met | 14 numbered decisions above; Val answered 1, 3, 4, 12 and 13, and left 2, 5–11 and 14 open. |
 
 ## Next step
 
