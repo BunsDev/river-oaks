@@ -82,10 +82,25 @@ proposed retirements for Val. Data and validation only, nothing renders.
 ## Follow-up taken
 
 At 6d's request: the smallest #827 fix for the side-lane mouth (maxSpan cannot bridge it: the kit
-caps spans at 6 m and the mouth is 8.7 m), as its own task and draft PR on
-`feat/ribbon-route-825-20261031`.
+caps spans at 6 m and the mouth is 8.7 m), as its own task (`ribbon-lane-mouth-825-20261101`) and
+draft PR #853 (`f42c3ae2`) on `feat/ribbon-route-825-20261031`: the spine starts at
+(-2759.588, -1285.5), 11.15 m from the spawn; core verify passed on its second run. When #853 lands
+in #827, this contract's `spine` must be re-carried from it (v2), and the side-lane blockers leave
+its record.
+
+## v2 inputs (requested by consumers, accepted, not yet in the contract)
+
+From #840 Landscape (worker on `feat/five-rooms-landscape-courts-825-20261101`, built on #849
+`49862e17`), 2026-11-01:
+
+1. Per-segment planted edge, `planting: { side: 'left'|'right'|'both'|'none', every }`; the
+   validator refuses a planted side a link uses. Until then: opposite the link side, both if none.
+2. A `size: [along, across]` footprint on `bed` attachments, checked against the interior floor and
+   camera corridors.
+3. Confirmed for v1: paving at the Gardens threshold may cover only `link:studios-overlook`'s reach
+   and the `osm-way-625330795` pieces listed in `links[].crossesLaneEnd`.
 
 ## Next step
 
-Hosted `preview` on the draft PR; hand the decision list to the #825 steward (river-oaks-6d) and
+Draft PR #849 (`49862e17`). Hosted `preview` on it; hand the decision list to the #825 steward (river-oaks-6d) and
 Val; version the contract after the decisions.
