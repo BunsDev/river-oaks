@@ -148,3 +148,7 @@ Recorded on the uncommitted branch at base a13c853b (2026-10-26).
 
 Hosted checks on #691's merged head. Merging awaits Val. `cycling-rack` belongs to a
 separate task on main.
+
+## Delivery record (docs review, 2026-10-31)
+
+#691 merged on 2026-10-28 14:48Z as `f424a492` (reviewed head `350b4935`, tree `943eb5b7`). The local branch had already been archived by a stale cancellation (`~/worktree-backups/river-oaks/cancel-stale-S00Jkp/manifest.json`); register task `rider-pose-20261026` is `retired` with that archive. `cycling-rack` remains a separate task.

@@ -3,7 +3,7 @@
 Status: contract increment #457 is on main, and so are the editor, rendering and
 persistence stack (#461, #462, #464), #441's guided creation (through #496),
 human-only characters, Jevica-only invited office access and the expanded Studio.
-#484 carries the remaining #441 tailoring fixes. Release acceptance remains
+#484 (merged 2026-10-18) added the remaining #441 tailoring fixes. Release acceptance remains
 subject to the verification and device gates below.
 
 ## Decision and evidence
@@ -184,9 +184,8 @@ The contract is the seam the next increments build on. Each must keep
   through `migrateCharacterAppearance`, and must pass in both the memory and Redis rooms.
   Appearance never grants flight, speed, admin or companion privileges.
 
-Codex's drafts #461 (editor), #462 (render) and #464 (persistence) are stacked on
-this PR, branched from its earlier head `b6ef443e`. The base gained a plain merge of
-`main` here, not a rewrite, so each can merge the new head forward.
+Codex's #461 (editor), #462 (render) and #464 (persistence) were stacked on this
+PR, branched from its earlier head `b6ef443e`; all three merged on 2026-10-18.
 
 ## Supported scope and quality gates
 Current direction (2026-10-18): human characters only, with ultra-realistic human

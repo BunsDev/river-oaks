@@ -1,0 +1,83 @@
+{
+  "createdAt": "2026-10-30T12:44:54.850Z",
+  "results": [
+    {
+      "name": "studio-template-journey",
+      "status": "passed",
+      "seconds": 59.963,
+      "result": {
+        "passed": true,
+        "templateId": "office",
+        "checks": [
+          "Garden Office opens with its required routes passing",
+          "valid edit (work-desk-2 finish) is accepted with routes passing",
+          "blocking the meeting room is refused with a finding",
+          "the refused move leaves waiting-sofa where it was",
+          "undo restores the original finish",
+          "redo reapplies the edit",
+          "save keeps the office assessment context",
+          "reload reopens the saved draft and reassesses it",
+          "a stale tab cannot overwrite the newer saved draft",
+          "the other tab's save is kept",
+          "the saved layout assesses as passing",
+          "walked to all 4 required destinations and back to the arrival",
+          "returned to the editor after the walk"
+        ],
+        "tour": [
+          {
+            "target": "office-1",
+            "waypoints": 2,
+            "reached": [
+              0,
+              -4
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 6.027
+          },
+          {
+            "target": "office-2",
+            "waypoints": 4,
+            "reached": [
+              -1.9,
+              1
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 14.555
+          },
+          {
+            "target": "office-3",
+            "waypoints": 4,
+            "reached": [
+              3,
+              1
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 15.804
+          },
+          {
+            "target": "office-4",
+            "waypoints": 2,
+            "reached": [
+              -1,
+              5
+            ],
+            "home": [
+              0,
+              -8.6
+            ],
+            "seconds": 19.208
+          }
+        ]
+      }
+    }
+  ]
+}
