@@ -16,6 +16,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { applyKitFinish, officeKitFinish } from './office-kit-finish.js';
 import { AVATAR_ENVELOPE } from './workplace-room.js';
 
 export const PENTHOUSE_FURNISHINGS_VERSION = 1;
@@ -183,10 +184,12 @@ function surfaceTexture(name, { defer }) {
 /**
  * The office's finishes, one material each. `textures` draws the stone and wood maps (a browser
  * canvas; tests run without). `defer` draws them in idle slots after the first frame. `like` makes
- * a second set sharing another set's maps (the terrace's, lit as outdoors); it owns no maps.
+ * a second set sharing another set's maps (the terrace's, lit as outdoors); it owns no maps, and
+ * takes the first set's kit finish with the clones. `finish` (office-kit-finish.js) recolours a few
+ * materials in place once made; classic, the default, changes nothing.
  */
-export function createPenthouseFinishes({ textures = canDraw(), defer = true, like = null } = {}) {
-  const made = new Map(), maps = [];
+export function createPenthouseFinishes({ textures = canDraw(), defer = true, like = null, finish } = {}) {
+  const made = new Map(), maps = [], kit = officeKitFinish(finish);
   if (like) for (const material of like.materials) made.set(material.name, material.clone());
   else for (const [name, spec] of Object.entries(FINISHES)) {
     const material = new THREE.MeshStandardMaterial({
@@ -196,7 +199,7 @@ export function createPenthouseFinishes({ textures = canDraw(), defer = true, li
     });
     material.name = name;
     if (textures && spec.surface) { material.map = surfaceTexture(spec.surface, { defer }); maps.push(material.map); }
-    made.set(name, material);
+    made.set(name, applyKitFinish(material, kit.materials[name]));
   }
   return {
     get: name => made.get(name),
