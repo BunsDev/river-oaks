@@ -97,3 +97,14 @@ Preserved, with the blocker:
 ## Next step
 
 Val (or an authorized session): land #821 so `preview unit` passes again, then mark #823 and the docs PR ready and land them (docs-only; core verify passed on both). Then run the guarded `project:prune` commands in the candidate table.
+
+## Delivery record (2026-10-31 22:50Z)
+
+Val authorized marking ready and landing in this session ("Allow ready/land here"), so the Next step above was carried out the same evening:
+
+- #821 (`audit-asar-glob-minimatch-20261031`, river-oaks-86's audit fix) landed first at 22:10Z: merge `79395a76`, reviewed head `63d4ca57`, tree `893b0876`; 37 of 39 hosted check runs succeeded and the other two are the standing Windows signing skips. `preview unit` passes on `main` again.
+- #823 (this sweep) landed at 22:27Z: merge `1c37e7fe`, lander-updated head `9b329308` (`0984c80e` merged with `main` after #821), tree `622cacde`, 30/30 hosted check runs succeeded.
+- #824 (docs review text and the nine ledger closeouts) landed at 22:44Z: merge `5b00fd0b`, lander-updated head `77f95bf6` (`fbadc108` merged with `main` after #823), tree `25a3bc76`, 30/30 hosted check runs succeeded.
+- The live register marks `audit-asar-glob-minimatch-20261031`, `docs-plans-review-20261031` and `docs-review-text-20261031` delivered with the evidence above; the remote branches were auto-deleted on merge. `project:check` afterwards shows only "Pending local retirement" for the three rows.
+- Local retirement: `river-oaks-audit-asar`, `river-oaks-register-sweep-20261031` and `river-oaks-docs-review-20261031` are clean at their reviewed heads. Cancel-stale dry runs at 22:50Z report `touched-within-cutoff` (12 h) for each, and `--apply` is still refused by this session's permission policy, so the guarded commands stay in the candidate table and the register rows. The docs-review worktree is reused for the closeout branch that adds this record.
+- The committed snapshot drifts by design (it predates these deliveries); the next register sweep picks them up. This record comes from `docs-plans-review-closeout-20261031`, whose own evidence lives in its register row only.
