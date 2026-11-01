@@ -1,5 +1,5 @@
 // Pink Jet-Age R9 (#747, #738): the fixed cameras, pinned hours and report shape for the
-// matched visual baseline of two routes. pink-jet-age-routes.mjs renders them; the pure parts
+// matched visual baseline of three routes. pink-jet-age-routes.mjs renders them; the pure parts
 // live here so tests/pink-jet-age-routes.test.js can hold them without a browser.
 //   Route A, Gardens: arrival -> T2 facade -> entrance hall -> lift lobby -> Floor 4 skywalk
 //     and gallery -> a seated terrace stop and the social pergola. Campus metres [u, v, z].
@@ -7,8 +7,13 @@
 //     Bayou Lantern water tower -> seated green bench and the pavilion chess table. Derived
 //     from the placed destination (shared/commons-destination.js) by piece id, in source
 //     metres [east, north, altitude], so the cameras follow the layout rather than a copy.
+//   Route C, original District (#740): the walk-in arrival -> the IPIC south lane -> the
+//     generic east face of the Hermès block (Axe & Darts) -> its south face from the Le Colonial
+//     crossing -> an aerial over the blocks. Source metres; these frame the generic facade kit
+//     that a finish recolours beside reference frontages that keep their look.
 import { KIT_FINISHES } from '../../shared/city-kit/catalog.js';
 import { campusToScene } from '../../shared/garden-campus-layout.js';
+import { terrainHeight } from '../src/geometry.js';
 
 // day and dusk match garden-campus-render-common.mjs HOURS. The client's #sun-hour slider stops
 // at 19:00 (preview/index.html), where atmosphereFor's twilight is already 1; it has no later
@@ -73,6 +78,26 @@ export function commonsCameras(layout) {
   ];
 }
 
+const district = (id, stop, subject, position, target, fov) => ({ id: `c${id}`, route: 'district', stop, subject, frame: 'source', source: { position, target }, fov });
+
+/**
+ * Route C in walking order, over the original District (#740). Positions are mapped source
+ * metres [east, north]; each eye and target height stands on the published terrain
+ * (world.terrain), so the cameras follow the ground rather than a copied altitude.
+ */
+export function districtCameras(world) {
+  if (!world?.terrain || !world.walkSpawn) throw new Error('District cameras need the published terrain and walk spawn');
+  const at = ([east, north], up) => [east, north, terrainHeight(world.terrain, east, north) + up];
+  const [spawnE, spawnN] = world.walkSpawn, [lookE, lookN] = world.walkLookAt ?? [spawnE, spawnN + 35];
+  return [
+    district('01-arrival-spawn', 'arrival', 'The walk-in arrival, north up the access lane between the Hermès and Dior blocks', at([spawnE, spawnN], EYE), at([lookE, lookN], 1.6), 66),
+    district('02-ipic-south-lane', 'facade', 'From the arrival, east along the IPIC block\'s south lane and its generic ground floor', at([spawnE + 1.5, -1291], EYE), at([-2728, -1286.5], 4), 66),
+    district('03-axe-darts-lane', 'entrance', 'The Hermès block\'s generic east face from the campus lane, south to the Axe & Darts entrance', at([-2723.4, -1311], EYE), at([-2727.5, -1345], 3), 66),
+    district('04-colonial-crossing', 'crossing', 'From the Le Colonial crossing, east along the Hermès block\'s south face', at([-2772, -1378], EYE), at([-2738, -1369.5], 4.5), 66),
+    district('05-aerial', 'aerial', 'Aerial from the south-east over the Hermès, IPIC and Dior blocks', at([-2690, -1440], 55), at([-2772, -1300], 0), 55),
+  ];
+}
+
 const sourceToScene = ([east, north, altitude]) => [east, altitude, -north];
 /** The Three.js pose __riverRenderAudit.view takes. */
 export function scenePose(camera) {
@@ -80,16 +105,18 @@ export function scenePose(camera) {
   return { position: map(camera.source.position), target: map(camera.source.target), fov: camera.fov };
 }
 
+/** Each route's camera id prefix, in sheet order. */
+export const ROUTE_PREFIX = Object.freeze({ gardens: 'a', commons: 'b', district: 'c' });
 const vector = value => Array.isArray(value) && value.length === 3 && value.every(Number.isFinite);
 /** Throws on a malformed table: ids, routes, frames, finite poses, a real look direction. */
 export function validateCameras(cameras) {
   const ids = new Set();
   for (const camera of cameras) {
     const where = camera?.id ?? JSON.stringify(camera);
-    if (!/^[ab]\d\d-[a-z0-9-]+$/.test(camera?.id ?? '')) throw new Error(`${where}: id must be a<nn>-name or b<nn>-name`);
+    if (!/^[abc]\d\d-[a-z0-9-]+$/.test(camera?.id ?? '')) throw new Error(`${where}: id must be a<nn>-name, b<nn>-name or c<nn>-name`);
     if (ids.has(camera.id)) throw new Error(`${where}: duplicate id`);
     ids.add(camera.id);
-    if (!['gardens', 'commons'].includes(camera.route) || camera.id[0] !== (camera.route === 'gardens' ? 'a' : 'b')) throw new Error(`${where}: route and id prefix disagree`);
+    if (ROUTE_PREFIX[camera.route] === undefined || camera.id[0] !== ROUTE_PREFIX[camera.route]) throw new Error(`${where}: route and id prefix disagree`);
     if (!['campus', 'source'].includes(camera.frame)) throw new Error(`${where}: unknown frame`);
     if (!vector(camera.source?.position) || !vector(camera.source?.target)) throw new Error(`${where}: position and target must be finite [x, y, z]`);
     if (Math.hypot(...camera.source.position.map((value, i) => value - camera.source.target[i])) < 3) throw new Error(`${where}: target closer than 3 m`);

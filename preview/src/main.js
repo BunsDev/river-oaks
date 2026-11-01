@@ -803,7 +803,7 @@ function populateWorld(data) {
   host.dataset.streetProfile=JSON.stringify(sidewalks.userData.streetProfile);
   const supports=[ground.children[0],roads,...sidewalks.children];
   registerGroundSurfaces(data,supports);
-  const furniture=buildStreetFurniture(data,streetSpace);
+  const furniture=buildStreetFurniture(data,streetSpace,{kitFinish:cityKitFinish});
   seatAndWater?.load(data,streetSpace);
   plazaBicycle?.load(data);
   community.setWorld(data, buildingMesh.userData.rooms ?? []);
@@ -813,7 +813,7 @@ function populateWorld(data) {
   generatedInteriors = createGeneratedInteriorStream(buildingMesh.userData.generatedRooms ?? [], interiorsLayer);
   layers = { ground, roads, buildings: buildingMesh, interiors: interiorsLayer, trees: data.vegetation ? buildObservedFoliage(data) : buildFoliage(data) };
   Object.values(layers).forEach((layer) => worldGroup.add(layer));
-  worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data)));
+  worldGroup.add(seeThroughNearCameraIn(buildDistrictDetail(data,{kitFinish:cityKitFinish})));
   worldGroup.add(sidewalks);
   worldGroup.add(furniture);
   const heights = data.eastGardenCommons?.heights ? heightsStreams : null;
@@ -1381,7 +1381,7 @@ if (import.meta.env.DEV) window.__riverSpatialStream = () => {
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
     renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls,
     // The opted-in kit finish and what each attached part was built with (#742).
-    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null } };
+    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null, district: buildingMesh?.userData.kitFinish ?? null } };
 };
 if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
 if (import.meta.env.DEV) window.__riverExteriorCull = () => {
