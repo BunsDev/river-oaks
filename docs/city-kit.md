@@ -81,7 +81,7 @@ Manual artistic edits live in the recipe as intent, never as edited generated ou
 
 Overrides are applied after generation by stable ID. If a different seed no longer produces an overridden ID, the plan reports that ID under `provenance.overrides.orphaned`. The override itself stays in the recipe. Every plan records the kit version, seed, recipe hash, overrides hash and the applied, orphaned and added lists. Plans are canonical JSON with a browser-safe 64-bit hash, identical in Node and the browser.
 
-A plaza derives its trees, benches and lamps by the row: `treeRows`, `benchRows` and `lampRows` each take a line (`y` with `from`/`to` along x, or `x` along y), a `spacing` and, for furniture, a `yaw`, instead of an entry per item. Derived ids are stable (`<plaza>/bench-row-<row>-<n>`), so overrides address them, and a row that leaves the plaza's ground fails the build like any solid off walkable ground. Hand-placed `furniture` still works beside rows for the pieces that matter.
+A plaza derives its trees, benches and lamps by the row: `treeRows`, `benchRows` and `lampRows` each take a line (`y` with `from`/`to` along x, or `x` along y), a `spacing` and, for furniture, a `yaw`, instead of an entry per item. Derived ids are stable (`<plaza>/bench-row-<row>-<n>`), so overrides address them, and a row that leaves the plaza's ground fails the build like any solid off walkable ground. Hand-placed `furniture` still works beside rows for the pieces that matter. On a street, trees and lamps keep independent spacings; a lamp that would stand within a metre of a tree on its kerb moves half a tree spacing along the street, between two trees, so no lamp column stands in a trunk or lights the inside of a canopy. A street's `clear` ranges (metres along it) keep trees and lamps out where something else stands, such as a hedge across its end. Street-tree heights (7.5–14 m) and crowns (2.6–4.8 m) span most of the District's surveyed trees, so a row reads as planted over years.
 
 ## Derive blocks from streets
 
@@ -140,9 +140,9 @@ The compiler's drawing (six roads, sixteen parcels) is deterministic. The refere
 | Shipped world, 2026-10-30 (all 18 recipes migrated to quarters) | |
 | --- | --- |
 | Recipes with blocks, blocks, shells | 18, 32, 354 |
-| Massing numbers typed (streets, blocks and quarters) | 705, about 2 per shell (the terraces' insets add 8) |
+| Massing numbers typed (streets, blocks and quarters) | 707, about 2 per shell (the terraces' insets add 8; the Heights esplanade's tree-free end adds 2) |
 | Frontage words typed (`front`, `sides`, `split`) | 45, down from 64: the migration dropped 21 of the 60 in its first 30 blocks; each terrace states `split: "none"` |
-| All typed values | 2615 numbers and 205 names |
+| All typed values | 2617 numbers and 205 names |
 | Reference example (`garden-blocks-kit`): typed by the author | 4 site numbers, 2 spacings, 1 style, 8 names for 32 shells (0.19 numbers per shell) |
 | Reference example: written by the tools | 80 numbers of streets, furnishing and quarters |
 
