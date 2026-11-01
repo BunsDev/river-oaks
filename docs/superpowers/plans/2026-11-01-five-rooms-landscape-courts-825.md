@@ -102,7 +102,7 @@ not #828.
 ## Checks and results
 
 - `node --test preview/tests/five-rooms-landscape.test.js preview/tests/five-rooms-layout.test.js preview/tests/ribbon-route-district.test.js preview/tests/ribbon-layout.test.js`:
-  32 tests, 32 pass, 0 fail, 0 skipped.
+  33 tests, 33 pass, 0 fail, 0 skipped.
 - Mutations in the test:
   - moving the bed attachment 0.5 m moves the bed 0.5 m;
   - a bed attachment moved to 0.3 m inside the Shade Garden door is dropped as
@@ -116,9 +116,15 @@ not #828.
 - No browser frame, depth journey under pink, or WebKit run. Nothing is wired into the scene until
   Integration (#841).
 - Draw calls with the model batches loaded are not measured.
-- The planted-edge side and the bed size are derived, not contract fields. Both were requested
-  from river-oaks-c2 for v2, along with confirmation that `paving:studios-overlook` may cross
-  `road-625330795-0` (inside the campus entry's lane-end allowance).
+- **Switch to v2 fields when river-oaks-c2 publishes five-rooms-v2.** River-oaks-c2 accepted both
+  requests on 2026-11-01. Until v2, the defaults derived here are the intended behaviour:
+  - Per-segment `planting: { side, every }` replaces the derived side. The derived side is the one
+    opposite the link side, or both sides when a segment has no side link.
+  - `bed` attachments get `size: [along, across]`, which replaces the 1.5 x 0.62 m planter unit.
+- Lane-end crossing, confirmed by river-oaks-c2: only `link:studios-overlook` may cross road pieces,
+  and only the pieces listed in `links[].crossesLaneEnd`. Today that is `road-625330795-0`. The
+  test asserts that every apron crosses only listed pieces, and that `paving:studios-overlook`
+  stays inside its reach plus those pieces.
 - Server movement and support were not exercised. `ground.js` only provides the triangles.
 - `docs/design/five-rooms/landscape.md` (named in #840) was not written in this increment.
 

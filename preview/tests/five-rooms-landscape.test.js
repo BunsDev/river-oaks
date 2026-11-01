@@ -121,6 +121,18 @@ test('the court floor lies within its venue and its bed within the court', () =>
   }
 });
 
+test('aprons cross a road only where the contract lists a lane-end crossing (#838 links[].crossesLaneEnd)', () => {
+  const rect = r => corners(r), within = (p, r) => p[0] >= r[0] - 1e-3 && p[0] <= r[2] + 1e-3 && p[1] >= r[1] - 1e-3 && p[1] <= r[3] + 1e-3;
+  for (const piece of landscape().paving) {
+    const link = expanded.links.find(l => l.id === piece.link), listed = new Set(link.crossesLaneEnd);
+    const roads = expanded.exclusions.filter(zone => zone.id.startsWith('road-') && overlaps(piece.ring, rect(zone.rect)));
+    assert.deepEqual(roads.map(zone => zone.id).filter(id => !listed.has(id)), [], `${piece.id} crosses an unlisted road piece`);
+    // The apron stays inside its reach plus the listed pieces (river-oaks-c2, 2026-11-01).
+    if (listed.size) for (const p of piece.ring) assert.ok(insideConvex(p, link.reach) || roads.some(zone => within(p, zone.rect)), `${piece.id} corner ${p} outside its reach and listed pieces`);
+  }
+  assert.deepEqual(expanded.links.filter(l => l.crossesLaneEnd.length).map(l => [l.id, l.crossesLaneEnd]), [['link:studios-overlook', ['road-625330795-0']]]);
+});
+
 test('ground pieces follow groundSurfaceHeight within 1 cm and face up, ready for registerGroundSurfaces', () => {
   const plan = landscape(ALL), pieces = fiveRoomsGroundPieces(plan, { groundAt });
   assert.deepEqual(pieces.map(p => p.id), [...plan.paving, ...plan.courts].map(p => p.id));
