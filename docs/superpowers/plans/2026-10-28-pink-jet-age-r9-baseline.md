@@ -115,3 +115,205 @@ hour of this baseline, not one hour against another.
   compare `report.json` and the sheets against the baseline folder above, hour for hour.
 - Wire a live finish selector, then extend `LIVE_FINISHES`.
 - Optionally capture a `smooth` baseline as well.
+
+## Amendment 2026-11-01: the redesigned workload, #747 provenance, and the concept-image rule
+
+Val's long-running prompt amendment (2026-11-01): include the redesigned workload and
+#747's source/device provenance in this comparison plan; do not invent a new architecture
+solely to imitate a concept image. This section amends the plan above; nothing above is
+rewritten, and the 2026-10-28 baseline folder and table stay the classic reference.
+
+- **Task id:** `pink-jet-age-r9-plan-amendment` (live register); **owner**
+  `claude:fable-pja-r9-plan-20261101`
+- **Branch:** `docs/pink-jet-age-r9-comparison-plan-20261101` from `origin/main` `decb4e9a`;
+  **worktree** `/Users/buns/Documents/GitHub/BunsDev/river-oaks-pja-r9-plan`
+- **Files:** this ledger; `preview/e2e/garden-campus-render-common.mjs` (`captureProvenance`);
+  `preview/e2e/pink-jet-age-routes-plan.mjs` (`validateProvenance`, `EVIDENCE_CLASSES`,
+  `MATCHED_CONDITIONS`, `comparisonMismatches`; `validateReport` checks a provenance block
+  when one is present); `preview/e2e/pink-jet-age-routes.mjs` (records `report.provenance`);
+  `preview/tests/pink-jet-age-provenance.test.js` (new). No rendering, material, geometry
+  or game-behavior change; the camera table, hours and metrics are untouched.
+
+### The comparison's arms and the redesigned workload
+
+The "Gaps" entry above ("`--finish` accepts only `classic`") is closed. The live finish
+selector exists: `?finish=pink-jet-age` is read once per load (#753, Commons and Heights),
+the Gardens campus materials follow it (#758) and the Gardens jet-age forms draw under it
+(#774, `forms` role, rollback switch `jetAgeForms: false`). Route C over the original District
+joins the runner in #787 (draft; `districtFinish` asserted the same way `campusFinish` is).
+
+A comparison is therefore two runs of the same command on one candidate head, differing
+only in `--finish`:
+
+```sh
+node preview/e2e/pink-jet-age-routes.mjs --graphics=sharp --finish=classic      --out=.runtime/pink-jet-age-r9/<head>-classic
+node preview/e2e/pink-jet-age-routes.mjs --graphics=sharp --finish=pink-jet-age --out=.runtime/pink-jet-age-r9/<head>-pink
+```
+
+Read the two `report.json` files hour for hour (the day-to-dusk-to-night caveat above still
+applies). Two checks precede any per-view reading:
+
+1. `comparisonMismatches(classic, pink)` from `pink-jet-age-routes-plan.mjs` must be empty.
+   It compares the matched conditions (`revision`, `graphics`, `viewport`,
+   `deviceScaleFactor`, `hours`, browser, GPU renderer, machine platform/arch/CPU, player
+   count and evidence class). `head` and `finish` are the arms, not conditions. A non-empty
+   list is a mislabelled comparison, not a finding.
+2. The classic arm is the drift check. A finish never changes a plan, its hash, a lock, a
+   piece ID, geometry, collision or a recipe override (`shared/city-kit/catalog.js`), so any
+   difference between the classic arm and the 2026-10-28 table at the same hour must be
+   explained by named classic changes landed since `21746aac` (new props, residents,
+   streaming), never by the finish. Unexplained classic drift is a regression of the
+   candidate, whatever the pink arm shows. Pink minus classic on the same head is the
+   finish's cost.
+
+**The player workloads #747 names are not this runner's.** This runner's workload is one
+authenticated client, standing still at fixed cameras with the interface hidden while
+residents keep moving; `report.provenance.workload` says exactly that. The one- and
+two-player playable routes stay with their existing owners, and the redesigned arm must be
+measured through them, not through a new harness:
+
+| #747 workload | Existing owner | Finish passthrough today |
+| --- | --- | --- |
+| Warmed frame p95 / CPU-submission p95, one and two players, reconnect median of five, position drift, resource counts | `preview/audit/world-expansion-baseline.js` (three 30 s samples per workload, `desktop` and `phone-viewport`, `--reconnects=5`), decided by `preview/audit/baseline-compare.js`; wording in `docs/world-expansion.md` | None: it opens `/?motion-debug=1&render-audit=1`. The smallest next action is a `--finish` option that appends `&finish=<name>` to that address, the way `districtPath` does, and records it in the report. |
+| Gardens arrival → public campus route → existing bridge (B12 skywalk) → social stop → return | `preview/e2e/garden-campus-traversal.js` (two residents: lift to Floor 4, skywalk, T2 roof garden), `garden-campus-readiness.js` | None: the journeys open the fixture's default address. Same next action: a finish option on the journey page address; no second journey. |
+| Commons two-player Lantern Walk / chess → footbridge → return, with reconnect | `preview/e2e/east-garden-commons.js` through the shared runner (`RIVER_OAKS_SHARED_JOURNEY`), `plaza-chess.js` | None, as above. |
+| Unavailable-chunk escape | No journey exercises it by that name. `preview/tests/spatial-chunk-stream.test.js` covers a renderer that fails to attach; the playable escape under either finish is an open gap for the streaming owners (#587/#512). | Not applicable until a journey exists. |
+
+Budgets are unchanged and are not this ledger's to change: the wording in
+`docs/world-expansion.md` (10% matched warmed frame p95 / CPU-submission p95, 10%
+District-only production cold-transfer growth, reconnect median-of-five no more than 20%
+slower, drift no more than 0.5 m, three warmed 30-second samples per matched workload) is
+the budget for the redesigned arm, with the pending vsync-locked-p95 proposal recorded there
+left for Val's decision. Nothing here substitutes a more favorable metric.
+
+### Provenance every report records (#747's evidence contract)
+
+`report.json` now carries a `provenance` block read from the live page once it is ready, so
+the GPU string is the context that drew, not an assumption. The contract's fields and where
+each one lives:
+
+| #747 field | Where it is recorded |
+| --- | --- |
+| Exact before/after heads | `head`, `dirty` of each arm's report |
+| Data revision | `revision` (served; asserted against the world manifest on load) |
+| Style revision | `finish` asked, `campusFinish` drawn (asserted), `districtFinish` once #787 lands |
+| Device / GPU / browser | `provenance.browser` (Playwright's Chromium build), `provenance.gpu.renderer` (unmasked WebGL renderer) with `gpu.software` true for SwiftShader/llvmpipe/basic-render fallbacks, `provenance.machine` (platform, arch, OS release, CPU model, logical CPUs, memory GiB) |
+| Quality | `graphics` (preset asked) and `provenance.quality` (the client's quality stats: mode, scale, occlusion, fps) |
+| Resolution / DPR | `viewport`, `deviceScaleFactor`, `provenance.gpu.buffer` (the drawing buffer) |
+| Camera | `cameras[]` and each view's `pose` |
+| Lighting | `hours`, each view's `appliedHour` and `glow` |
+| Route | each view's `route`, `camera` and `stop` |
+| Player workload | `provenance.workload` (`players`, `clients`, `movement`, `interface`, `residents`) |
+| Evidence class | `provenance.evidenceClass`, one of `EVIDENCE_CLASSES`: `source-implementation`, `local-fixture`, `hosted`, `packaged-native`, `physical-device`, `human-accessibility`, `visual-approval`. This runner is always `local-fixture`; it never fills the other rungs, and a ledger that cites it must say which rungs stay open. |
+| Original failures and skips | `failure.json` on a failed run (head, error, the views captured so far); per-view `hostLoad`; the run refuses a blank or dark view rather than skipping it |
+
+The 2026-10-28 baseline predates the block, so `comparisonMismatches(baseline, candidate)`
+names every provenance key as `null -> <value>`. That is intended: its device provenance
+exists only as this ledger's prose (this Mac, Playwright Chromium, host load 20-24). A
+provenance-complete comparison recaptures the classic arm on the candidate head on the same
+machine, and uses `baseline-21746aac-sharp` as the classic drift reference, hour for hour.
+
+### Rule: concept images are guidance, never a target architecture
+
+The design sheets (`docs/design/pink-jet-age/`, the galleries on #739-#746, the atlas on
+#747) are design guidance, not acceptance evidence, and not a target to rebuild toward. No
+new architecture is invented solely to imitate a concept image. A shape change reaches this
+comparison only when all three hold:
+
+1. Val has recorded the source-contract decision it needs. Open today: R3 increment 2
+   (tower eyebrows, curved corners, pergola and canopy height; the tower glass massing) and
+   the Route C reference-facade question on #787.
+2. It arrives under the finish's `forms` switch with classic byte-identical (the mesh
+   signature probe in #787 and the `jetAgeForms: false` rollback in #774 are the pattern).
+3. It is compared on these cameras against its classic arm, with the provenance above.
+
+A capture that differs from a concept render is not a failure. A pink arm that regresses
+against its matched classic arm beyond the budgets, or a classic arm that drifts from the
+2026-10-28 table, is. The #747 rule against a regenerated "before" panel stands: the
+classic reference is a captured run on a named head, never a render made to look like one.
+
+### Amended long-running prompt for #747
+
+The issue's "Long-running goal prompt" should read as below. This session did not edit the
+issue; Val owns its text.
+
+```text
+Qualify the Pink Jet-Age redesign under #738 by extending existing acceptance owners and
+harnesses. Start from the actual current-source classic baseline (R9 ledger, head
+21746aac) and compare it, hour for hour and camera for camera, with the redesigned arm:
+the same command on the same candidate head with --finish=pink-jet-age. Record in every
+report the exact heads, served data revision, finish drawn, device, GPU, browser, quality,
+resolution and DPR, cameras, lighting, route and player workload, and name the evidence
+class (source implementation, local fixture, hosted, packaged native, physical device,
+human accessibility, visual approval). Refuse to read views until the matched conditions
+agree. Measure the one- and two-player playable workloads through the existing owners
+(world-expansion-baseline.js, garden-campus-traversal.js, east-garden-commons.js) under
+the redesigned finish, with the current budgets and sample protocol; add a finish option to
+them rather than a new harness. Do not use concept images or a regenerated before panel as
+evidence, and do not invent new architecture solely to imitate a concept image: shape
+changes need Val's recorded contract decision, the finish's forms switch with classic
+byte-identical, and a matched comparison. Challenge new transparency, foliage, skin-lighting
+and depth artifacts rather than hiding them in a permissive baseline. Run applicable
+focused, core, browser, Redis and hosted gates without bypassing prerequisites. Keep
+physical-device, native, human-accessibility and visual approval separate. Verify
+compatible rollback and record every failure, skip and missing device. Deliver a
+per-package evidence matrix and the smallest next action; no silent budget increase,
+production activation, deployment or release claim.
+```
+
+### Checks for this amendment
+
+- `node --test preview/tests/pink-jet-age-provenance.test.js preview/tests/pink-jet-age-routes.test.js`
+- A two-camera day smoke of both arms under the browser lock, then
+  `comparisonMismatches` across the two reports and against the 2026-10-28 baseline report
+- `pnpm run verify` (core)
+
+### Results for this amendment
+
+- Focused: 12/12 (4 new provenance tests, the 8 route tests unchanged).
+- Smoke capture, 2026-11-01 ~06:25-06:30Z, under the browser lock (queued behind another
+  session's core verification), on `decb4e9a` with this amendment uncommitted (`dirty: true`;
+  the runner records it), `--cameras=a01-arrival-e1,b05-tower-base --hours=day`, both arms,
+  outputs `.runtime/pja-r9-plan/smoke-{classic,pink}/` in the worktree (ignored by Git):
+  - Both arms passed (2/2 views each, luma ok). `campusFinish` was `classic` and
+    `pink-jet-age` respectively; I inspected both `a01` PNGs: the pink arm draws pink
+    fascias, canopy edges and window surrounds on the same framing, the classic arm none.
+  - Provenance recorded on both: Chromium `156.0.8078.4`; GPU `ANGLE (Apple, ANGLE Metal
+    Renderer: Apple M5 Max, Unspecified Version)`, `software: false`; darwin arm64 27.2.0,
+    Apple M5 Max, 18 logical CPUs, 128 GiB; quality mode `sharp`, scale 1; workload one
+    still client; evidence class `local-fixture`. Host load 1-min 9.9-10.3.
+  - `comparisonMismatches(classic, pink)`: `[]`, so the arms are comparable.
+  - `comparisonMismatches(baseline-21746aac, classic)`: `hours` (the smoke ran day only) and
+    the seven provenance keys as `null -> <value>`, as designed; the 10-28 report has no block.
+  - Day calls / triangles: `a01` baseline 1791 / 5.66 M, classic now 2016 / 6.17 M, pink
+    1973 / 6.02 M; `b05` baseline 409 / 3.11 M, classic 414 / 3.16 M, pink 415 / 3.17 M.
+    The classic-vs-baseline difference is main's classic content since `21746aac` plus
+    resident movement; pink below classic on `a01` is that movement, not a saving. Frame p50
+    was 33.3 ms on classic `a01` and 16.7 ms elsewhere at this load (vsync-quantised; not a
+    budget reading). A two-view day smoke proves the mechanism, not the redesign.
+- `pnpm run verify` (core) passed on this tree before commit, 2026-11-01 06:53-06:59Z
+  (receipt `.runtime/agent/core.json` in the worktree; host load fell from 13 to about 7
+  before the start and rose to about 10 during the run). Counts: tooling 294/294; preview
+  4781 pass + 1 skip + 35 todo of 4817; server 1110 pass + 285 Redis skips of 1395, as core
+  permits; desktop 127 pass + 5 skip of 132; pytest 215 passed; ruff clean; gitleaks found no leaks.
+  Core excludes Redis, browser, native, live auth and production acceptance; the smoke above
+  is the only browser evidence here.
+
+### Gaps for this amendment
+
+- The world-expansion baseline and the route journeys still have no finish option; the
+  redesigned arm's one-/two-player budgets cannot be measured until that passthrough exists.
+- No journey covers the unavailable-chunk escape under either finish.
+- `provenance.machine` is this host; the physical-device, native, hosted, accessibility and
+  visual-approval rungs stay open, as before.
+- #787 (Route C) is a draft; when it lands, `districtFinish` joins the style-revision row
+  above with no further change here.
+
+### Next step for this amendment
+
+- Draft PR #833 on `7f1f1089`; hosted checks pending. Val reviews the amendment and decides
+  whether to paste the amended prompt into #747. Do not mark ready or land without
+  authorization.
+- Follow-up tasks, each its own branch: a `--finish` passthrough for
+  `world-expansion-baseline.js` and the route journeys; a journey for the unavailable-chunk
+  escape; after #787 lands, rerun both arms over all three routes and all hours on one head.

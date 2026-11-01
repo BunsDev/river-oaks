@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { holdBrowserLock } from '../../scripts/browser-lock.mjs';
 import { loadDistrictData } from '../../server/district-data.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
-import { campusGlow, launch, openDistrict, sample, setHour, startFixture } from './garden-campus-render-common.mjs';
+import { campusGlow, captureProvenance, launch, openDistrict, sample, setHour, startFixture } from './garden-campus-render-common.mjs';
 import { CLIENT_LATEST_HOUR, ROUTE_HOURS, commonsCameras, districtPath, gardensCameras, imageVerdict, routeOptions, scenePose, validateCameras, validateReport, viewName } from './pink-jet-age-routes-plan.mjs';
 
 const options = routeOptions(process.argv.slice(2));
@@ -53,6 +53,9 @@ try {
   fixture = await startFixture('commons', { districtRevision: revision });
   session = await openDistrict(browser, fixture, 'commons', { districtRevision: revision, graphics: options.graphics, hideInterface: true, path: districtPath(options.finish) });
   const { page, errors, firstEntry } = session;
+  // Source, device and workload provenance (#747): the browser build, the GPU this page drew
+  // with, this machine, and the workload: one still client at fixed cameras, residents moving.
+  const provenance = await captureProvenance(browser, page, { players: 1, clients: 1, movement: 'none: fixed cameras', interface: 'hidden', residents: 'moving' });
   // The page must have drawn the requested finish, or the capture is mislabelled.
   const appliedFinish = await page.evaluate(() => globalThis.__gardenCampusRoot?.userData.kitFinish ?? null);
   if (appliedFinish !== options.finish) throw new Error(`asked for ${options.finish}, the campus drew ${appliedFinish}`);
@@ -90,6 +93,7 @@ try {
     nightNote: `The client's #sun-hour stops at ${CLIENT_LATEST_HOUR}:00 (twilight 1); there is no later night, so night is pinned there.`,
     firstEntry, cameras, views, finishedAt: new Date().toISOString(),
     limits: 'Local loopback fixture, interface hidden, 1280x800 at DPR 1; residents move between views; frame times are this host under its recorded load (vsync on), not a device budget. Not a human visual review.' };
+  report.provenance = provenance;
   validateReport(report);
   await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2));
   console.log(`report: ${output}/report.json (${views.length} views)`);

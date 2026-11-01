@@ -4,6 +4,7 @@
 // The page's own code is unchanged except one test exposure: the campus root is published
 // as globalThis.__gardenCampusRoot so a runner can read the glow the time of day set.
 import assert from 'node:assert/strict';
+import { arch, cpus, platform, release, totalmem } from 'node:os';
 import { chromium } from 'playwright';
 import { pathToFileURL } from 'node:url';
 import { GARDEN_CAMPUS_LAYOUT as CAMPUS, campusToScene } from '../../shared/garden-campus-layout.js';
@@ -61,6 +62,23 @@ export async function launch({ vsync = true } = {}) {
   const args = process.platform === 'darwin' ? ['--use-angle=metal', '--ignore-gpu-blocklist'] : [];
   if (!vsync) args.push('--disable-gpu-vsync', '--disable-frame-rate-limit');
   return chromium.launch({ headless: true, args });
+}
+
+// Source, device and workload provenance for a matched capture (#747): the browser build, the
+// GPU the page really drew with (read from the live context, so a software fallback is named),
+// this machine and the player workload the run stands for. Read it once the page is ready.
+// Pure fields only; pink-jet-age-routes-plan.mjs validates them and compares two reports.
+export const SOFTWARE_RENDERER = /SwiftShader|llvmpipe|Software|Microsoft Basic Render/i;
+export async function captureProvenance(browser, page, workload) {
+  const graphics = await page.evaluate(() => window.__riverRenderAudit.graphics());
+  return {
+    browser: browser.version(),
+    gpu: { renderer: graphics.renderer, software: SOFTWARE_RENDERER.test(graphics.renderer), buffer: graphics.buffer },
+    machine: { platform: platform(), arch: arch(), release: release(), cpu: cpus()[0]?.model ?? 'unknown', logicalCpus: cpus().length, memoryGiB: Math.round(totalmem() / 2 ** 30) },
+    quality: graphics.quality,
+    workload,
+    evidenceClass: 'local-fixture',
+  };
 }
 
 // One authenticated page on the district, ready for audit views. Returns { context, page,
