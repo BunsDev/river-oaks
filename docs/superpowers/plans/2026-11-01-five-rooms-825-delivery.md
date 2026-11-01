@@ -94,9 +94,17 @@ each in its own worktree, claiming its register task:
 
 ## Results
 
-- (pending) #836 worker report.
-- (pending) #837 worker report.
-- (pending) #838 worker report.
+- 2026-11-01 ~10:15Z: all three workers stopped on a usage-limit API error before committing.
+  Their claims passed to peer sessions that Val set /goals on:
+  - #836: `claude:river-oaks-48`. The worktree holds the worker's uncommitted fixes, an untracked
+    ledger and `pink-jet-age-depth.test.js`.
+  - #837: `claude:river-oaks-f0`. Main merged, head `2ce693b2`, focused tests 57/57, preview unit
+    0 failures, build ok. Verify and capture wait on load.
+  - #838: released to `river-oaks-c2`. An untracked, unreviewed `five-rooms-layout.js` draft
+    remains in the worktree.
+- #842 is claimed by `river-oaks-qa-842` (draft #845, harness, core verify passed).
+- #826 was marked ready (no longer a draft).
+- #839, #840 and #841 have no owner yet.
 
 ## Gaps
 
