@@ -689,7 +689,6 @@ function startMultiplayer() {
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
       walking?.syncAuthoritativePose(self);
-      if (self) cyclingBoard?.setName(self.name);
       playerAvatar?.setSharedIdentity(self);
       if (self?.canBuild) buildControls?.show(); else buildControls?.hide();
       worldPortal?.refreshCapability();
@@ -1592,7 +1591,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverPlazaSpades = () => plazaSpades ? { ...plazaSpades.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null, deal: seed => plazaSpades.deal(seed) } : null;
   window.__riverPlazaHearts = () => plazaHearts ? { ...plazaHearts.debug(), cafeGame, table: plazaSalon?.userData.cards?.count() ?? null,
     deal: (seed, hand) => plazaHearts.deal(seed, hand) } : null;
-  window.__riverCyclingBoard = () => cyclingBoard ? { ...cyclingBoard.debug(), mine: cyclingBoard.mine(), open: open => { cyclingBoard.panel.open = open; }, refresh: () => cyclingBoard.refresh() } : null;
+  window.__riverCyclingBoard = () => cyclingBoard ? { ...cyclingBoard.debug(), mine: cyclingBoard.mine(), open: open => { cyclingBoard.panel.open = open; }, show: id => cyclingBoard.show(id), refresh: () => cyclingBoard.refresh() } : null;
   window.__riverCycling = () => plazaBicycle ? { riding: plazaBicycle.riding, slotId: plazaBicycle.slotId, rideMeters: plazaBicycle.rideMeters, lastRideMeters: plazaBicycle.lastRideMeters, yaw: plazaBicycle.placement?.yaw ?? null, position: plazaBicycle.placement?.position ?? null, speed: plazaBicycle.placement?.speed ?? null, steering: plazaBicycle.placement?.steering ?? null, prompt: plazaBicycle.prompt()?.kind ?? null,
     taken: multiplayer?.snapshot?.cycling?.taken ?? [], parked: plazaSalon?.userData.rack?.parked() ?? null, cityParked: cityBikeRacks?.userData.rack?.parked() ?? null,
     // Arrive at a slot's approach by the normal travel path.

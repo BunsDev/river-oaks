@@ -78,6 +78,23 @@ async page => {
     await waitOn(page, 'prompt with miles', () => /Take a bike · [\d.]+ mi so far/.test(document.querySelector('#walking-interact')?.textContent ?? ''), null, 15000);
     check(true, 'The rack prompt shows lifetime miles');
     await page.screenshot({ path: 'output/playwright/cycling-leaderboard-rider.png' });
+    // The other boards (2026-11-01): both accounts have been in town and moving, so Hours played
+    // lists them, the rider's own row highlighted; Walking opens with its own label.
+    await page.evaluate(() => window.__riverCyclingBoard().show('played'));
+    for (let attempt = 0; attempt < 15; attempt++) {
+      await page.evaluate(() => window.__riverCyclingBoard().refresh());
+      await page.waitForTimeout(2000);
+      const state = await board(page);
+      if (state.board === 'played' && state.rows.length >= 1 && state.rows.every(row => / h$/.test(row))) break;
+    }
+    const hours = await board(page);
+    check(hours.board === 'played' && hours.rows.length >= 1 && hours.me?.rank >= 1, `Hours played ranks the rider: ${JSON.stringify(hours.rows)}`);
+    check(await page.locator('.cycling-board-row-mine').count() === 1, 'The rider\'s own hours row is highlighted');
+    await page.screenshot({ path: 'output/playwright/leaderboard-hours.png' });
+    await page.evaluate(() => window.__riverCyclingBoard().show('walking'));
+    await waitOn(page, 'walking board', () => window.__riverCyclingBoard().board === 'walking' && /On foot/.test(document.querySelector('.cycling-board-eyebrow')?.textContent ?? ''), null, 15000);
+    check(true, 'The board picker switches to Walking');
+    await page.screenshot({ path: 'output/playwright/leaderboard-walking.png' });
   } finally { for (const key of ['ShiftLeft', 'ArrowRight', 'KeyW']) await page.keyboard.up(key); await other.close(); }
   return { checks };
 }

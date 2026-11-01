@@ -12,10 +12,10 @@ async function contract(store) {
   assert.equal(await store.add('alice', 1200.5, 'Alice'), 1200.5);
   assert.equal(await store.add('bob', 300, 'Bob'), 300);
   assert.equal(await store.add('alice', 99.5, 'Alice A.'), 1300, 'adds accumulate and the name follows the latest flush');
-  assert.deepEqual(await store.top(5), [{ userId: 'alice', name: 'Alice A.', meters: 1300 }, { userId: 'bob', name: 'Bob', meters: 300 }]);
-  assert.deepEqual(await store.top(1), [{ userId: 'alice', name: 'Alice A.', meters: 1300 }]);
-  assert.deepEqual(await store.rank('bob'), { rank: 2, meters: 300 });
-  assert.deepEqual(await store.rank('alice'), { rank: 1, meters: 1300 });
+  assert.deepEqual(await store.top(5), [{ userId: 'alice', name: 'Alice A.', total: 1300 }, { userId: 'bob', name: 'Bob', total: 300 }]);
+  assert.deepEqual(await store.top(1), [{ userId: 'alice', name: 'Alice A.', total: 1300 }]);
+  assert.deepEqual(await store.rank('bob'), { rank: 2, total: 300 });
+  assert.deepEqual(await store.rank('alice'), { rank: 1, total: 1300 });
   assert.equal(await store.add('alice', 0, 'Alice'), 1300, 'zero adds nothing but reads the total');
   for (const bad of [-1, NaN, Infinity, '5', 1e6 + 1]) await assert.rejects(store.add('alice', bad, 'Alice'), /Invalid ride/);
   await assert.rejects(store.add('', 1, 'Nobody'), /Invalid account/);
@@ -43,7 +43,7 @@ test('the memory store caps the number of riders but always credits an existing 
 test('one flush may carry a thousand kilometres but nothing beyond it', async () => {
   const store = createMemoryCyclingMiles();
   assert.equal(await store.add('far', 1e6, 'Far'), 1e6);
-  assert.deepEqual(await store.rank('far'), { rank: 1, meters: 1e6 });
+  assert.deepEqual(await store.rank('far'), { rank: 1, total: 1e6 });
   await assert.rejects(store.add('far', 1e6 + 0.001, 'Far'), /Invalid ride/);
 });
 
@@ -53,10 +53,10 @@ test('the Redis store passes the same contract and survives a new instance', { s
   t.after(async () => { const keys = await redis.keys(`${prefix}:*`); if (keys.length) await redis.del(keys); await redis.quit(); });
   await contract(createRedisCyclingMiles({ redis, prefix }));
   const again = createRedisCyclingMiles({ redis, prefix });
-  assert.deepEqual(await again.rank('alice'), { rank: 1, meters: 1300 });
+  assert.deepEqual(await again.rank('alice'), { rank: 1, total: 1300 });
   assert.equal((await again.top(10)).length, 2);
   await redis.hdel(`${prefix}:cycling-riders:v1`, createHash('sha256').update('bob').digest('hex'));
-  assert.deepEqual(await again.top(10), [{ userId: 'alice', name: 'Alice', meters: 1300 }], 'a rider without a record is skipped, never shown as a hash');
+  assert.deepEqual(await again.top(10), [{ userId: 'alice', name: 'Alice', total: 1300 }], 'a rider without a record is skipped, never shown as a hash');
 });
 
 test('the Redis store caps the number of riders but always credits an existing rider', { skip: !process.env.REDIS_URL, timeout: 15000 }, async t => {
@@ -69,4 +69,22 @@ test('the Redis store caps the number of riders but always credits an existing r
 test('the Redis store refuses an unbraced prefix or a client without eval', () => {
   assert.throws(() => createRedisCyclingMiles({ redis: {}, prefix: '{x}' }), /Invalid cycling storage/);
   assert.throws(() => createRedisCyclingMiles({ redis: { eval() {} }, prefix: 'x' }), /Invalid cycling storage/);
+});
+
+test('the Redis store keeps cycling on its original keys, gives other boards their own, and erases every board', { skip: !process.env.REDIS_URL, timeout: 15000 }, async t => {
+  const redis = new Redis(process.env.REDIS_URL), prefix = `{river-oaks:cycling-test:${randomUUID()}}`;
+  redis.on('error', () => {});
+  t.after(async () => { const keys = await redis.keys(`${prefix}:*`); if (keys.length) await redis.del(keys); await redis.quit(); });
+  const store = createRedisCyclingMiles({ redis, prefix });
+  await store.add('alice', 500, 'Alice');
+  await store.add('alice', 3600, 'Alice', 'played');
+  await store.add('bob', 200, 'Bob', 'walking');
+  assert.equal(Number(await redis.zscore(`${prefix}:cycling-miles:v1`, createHash('sha256').update('alice').digest('hex'))), 500, 'banked cycling metres stay where they were');
+  assert.deepEqual(await store.top(5, 'played'), [{ userId: 'alice', name: 'Alice', total: 3600 }]);
+  assert.deepEqual(await store.rank('bob', 'walking'), { rank: 1, total: 200 });
+  await assert.rejects(store.top(5, 'skydiving'), /Invalid board/);
+  await store.eraseUser('alice');
+  assert.equal(await store.rank('alice'), null);
+  assert.equal(await store.rank('alice', 'played'), null);
+  assert.deepEqual(await store.top(5, 'walking'), [{ userId: 'bob', name: 'Bob', total: 200 }]);
 });

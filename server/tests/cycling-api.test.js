@@ -26,7 +26,7 @@ test('miles round to one decimal and the top is cached for ten seconds per insta
   const store = createMemoryCyclingMiles();
   await store.add('alice', 2500, 'Alice');
   const board = createCyclingLeaderboard({ store, now: () => time });
-  assert.deepEqual((await board.read({ userId: 'alice' })).value.top, [{ rank: 1, name: 'Alice', miles: 1.6 }]);
+  assert.deepEqual((await board.read({ userId: 'alice' })).value.top, [{ rank: 1, name: 'Alice', miles: 1.6, you: true }]);
   await store.add('bob', 5000, 'Bob');
   assert.equal((await board.read({ userId: 'bob' })).value.top.length, 1, 'within the cache window the top is unchanged');
   assert.deepEqual((await board.read({ userId: 'bob' })).value.me, { rank: 1, miles: 3.1 }, 'but the caller row is live');

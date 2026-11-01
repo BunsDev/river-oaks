@@ -16,6 +16,8 @@ const slots = plazaSalonRack(data);
 const OWNER = JEVICA_ADMIN_USER_IDS[0];
 const identity = userId => ({ userId, name: userId, sessionId: `${userId}-s`, expiresAt: Date.now() + 3_600_000 });
 // A tampered checkpoint re-signed so only the validator, not the checksum, refuses it.
+// The bicycle board's entries; walking and hours played bank beside them (leaderboards.test.js).
+const cycled = rides => rides.filter(ride => ride.board === 'cycling');
 const resign = value => { const { checksum, ...envelope } = value; return { ...envelope, checksum: createHash('sha256').update(JSON.stringify(envelope)).digest('hex') }; };
 
 function setup(users = ['alice', 'bob']) {
@@ -92,7 +94,7 @@ test('a curbside rack hands out bikes as the plaza rack does, apart from the pla
   // Rolling off the curb rack (its bikes point south) counts like any ride.
   f.advance(1000);
   assert.equal(f.ride('alice', [curb[0].x, curb[0].north - 1.5]).ok, true);
-  assert.deepEqual(f.world.drainRides().find(ride => ride.userId === 'alice'), { userId: 'alice', name: 'alice', meters: 1.5 });
+  assert.deepEqual(cycled(f.world.drainRides()).find(ride => ride.userId === 'alice'), { userId: 'alice', name: 'alice', board: 'cycling', amount: 1.5 });
   assert.equal(f.act('alice', { type: 'uncycle' }).ok, true);
   assert.deepEqual(f.world.snapshot().cycling.taken, ['plaza-salon-rack:0']);
   assert.equal(f.act('carol', { type: 'cycle', rackId: 'cartier-rack', slot: 0 }).ok, true, 'the bike is back on the rack');
@@ -112,14 +114,14 @@ test('a bicycle pose needs a slot, obeys the 18 mph budget, and only accepted di
   assert.equal(f.ride('alice', [start[0] - 16, start[1]]).error, 'movement_too_fast');
   f.advance(1000);
   assert.equal(f.ride('alice', [start[0] - 12, start[1]]).ok, true);
-  const rides = f.world.drainRides();
-  assert.deepEqual(rides, [{ userId: 'alice', name: 'alice', meters: 12 }]);
+  const rides = cycled(f.world.drainRides());
+  assert.deepEqual(rides, [{ userId: 'alice', name: 'alice', board: 'cycling', amount: 12 }]);
   assert.deepEqual(f.world.drainRides(), [], 'draining resets the counters');
   // Walking poses add nothing, and a pose without the bike releases the slot.
   f.advance(1000);
   assert.equal(f.act('alice', { type: 'pose', position: [start[0] - 13, start[1], environment.groundAt(start[0] - 13, -start[1])], yaw: 0, altitude: 0 }).ok, true);
   assert.deepEqual(f.world.snapshot().cycling, { taken: [] });
-  assert.deepEqual(f.world.drainRides(), []);
+  assert.deepEqual(cycled(f.world.drainRides()), []);
   f.advance(1000);
   assert.equal(f.ride('alice', [start[0] - 14, start[1]]).error, 'bike_required', 'the slot was released');
 });
@@ -152,7 +154,7 @@ test('leaving the town releases the slot and keeps the metres for the flush; a c
   assert.deepEqual(restored.snapshot(), before, 'a refused restore changes nothing');
   assert.equal(f.world.leave('alice'), true);
   assert.deepEqual(f.world.snapshot().cycling, { taken: [] });
-  assert.deepEqual(f.world.drainRides(), [{ userId: 'alice', name: 'alice', meters: 3 }]);
+  assert.deepEqual(cycled(f.world.drainRides()), [{ userId: 'alice', name: 'alice', board: 'cycling', amount: 3 }]);
 });
 
 test('the car stays exclusive to the owner while anyone may ride the motorcycle or cycle', () => {
@@ -191,7 +193,7 @@ test('travelling while cycling releases the slot and banks the metres', () => {
   assert.equal(f.act('alice', { type: 'travel', position: [slots[2].x - 10, slots[2].north] }).ok, true);
   assert.equal(f.me('alice').vehicle, null);
   assert.deepEqual(f.world.snapshot().cycling, { taken: [] });
-  assert.deepEqual(f.world.drainRides(), [{ userId: 'alice', name: 'alice', meters: 3 }]);
+  assert.deepEqual(cycled(f.world.drainRides()), [{ userId: 'alice', name: 'alice', board: 'cycling', amount: 3 }]);
   f.advance(1000);
   assert.equal(f.ride('alice', [slots[2].x - 11, slots[2].north]).error, 'bike_required', 'the slot was released');
 });

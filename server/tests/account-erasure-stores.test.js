@@ -100,7 +100,7 @@ const simple = [
   }, async store => { assert.equal(await store.get(erin.userId), null);assert.notEqual(await store.get(pat.userId), null); }],
   ['cycling miles', () => createMemoryCyclingMiles(), r => createRedisCyclingMiles(r), async store => {
     await store.add(erin.userId, 900, erin.name);await store.add(pat.userId, 300, pat.name);
-  }, async store => { assert.equal(await store.rank(erin.userId), null);assert.deepEqual(await store.top(5), [{ userId: pat.userId, name: 'Pat', meters: 300 }]); }],
+  }, async store => { assert.equal(await store.rank(erin.userId), null);assert.deepEqual(await store.top(5), [{ userId: pat.userId, name: 'Pat', total: 300 }]); }],
   ['landmarks', () => createMemoryLandmarks(), r => createRedisLandmarks(r), async store => {
     for (const person of [erin, pat]) await store.add(person.userId, { name: `${person.name} corner`, position: [1, 2] });
   }, async store => { assert.deepEqual(await store.list(erin.userId), []);assert.equal((await store.list(pat.userId)).length, 1); }],

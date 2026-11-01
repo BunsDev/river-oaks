@@ -284,7 +284,13 @@ adds its ground distance to the rider's metres, which the transport drains into
 the cross-world `cycling-miles` account store (dev town: every 30 s and on
 `uncycle`; hosted room: on every tick, after the commit, through a pending map
 that retries on a store failure). The snapshot carries `cycling: {taken: [slotId]}`
-so clients hide bikes that are out.
+so clients hide bikes that are out. The same store and drain carry the other
+leaderboards (`preview/src/leaderboard-boards.js`): ground metres from each accepted
+pose on foot (`walking`; flight and travel do not count), metres from each accepted
+pose in a vehicle other than the bicycle (one board per kind: `rolls`, `motorcycle`,
+`hover`; a carried passenger posts no pose and earns nothing), and seconds connected
+(`played`), counted only until ten minutes after the player last moved, turned or
+chatted, so an unattended tab stops earning.
 
 Ribbonwing maneuvers (#777) are server-owned. The pilot sends
 `{type:'maneuver', kind, id, seq}`, where `kind` is `roll`, `loop`, `tuck_dive`
@@ -336,7 +342,11 @@ The Ribbonwing's right-hand seat is also server-owned (#777). Commands are
 `GET /api/cycling/leaderboard` (session required; the gateway limits it to 60
 reads a minute per account) returns the top 20 riders as `{rank, name, miles}`
 plus the caller's own `{rank, miles}`; the top list is cached for ten seconds
-per instance and user ids never leave the server.
+per instance and user ids never leave the server. `GET /api/leaderboards/<board>`
+serves every board the same way (same session rule; it shares that read budget)
+as `{board, label, unit, top: [{rank, name, value}], me: {rank, value}, limit}`,
+with `value` in miles or, for `played`, hours; an unknown board is 404. On both
+routes the caller's own row in `top` carries `you: true`.
 
 Production defaults to Redis namespace `river-oaks:production:v1`. Outside production, `REDIS_NAMESPACE` has no default and must be set. Previews reject any namespace beginning `river-oaks:production:`. `WAITLIST_NAMESPACE` defaults to `river-oaks:production:access:v1` in production and to `<REDIS_NAMESPACE>:access` elsewhere. Share the production namespace across production deployments. District/checkpoint incompatibility fails closed and needs an explicit migration; changing the namespace starts a different town and also separates sessions and bans.
 

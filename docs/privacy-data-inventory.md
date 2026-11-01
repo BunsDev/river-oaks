@@ -69,7 +69,7 @@ other residents' records. "Kept" rows are deliberate and listed under Decisions.
 | Saved designs | `server/design-library.js:52` · `:93` | Until deleted | Erased (`:78`, `:132`) |
 | Office desk tasks | `server/office-desk.js:46` · `:62` | Until deleted | Erased (`:44`) |
 | Look (avatar preferences) | `server/avatar-preferences.js:28` · `:91` | Until deleted | Erased (`:54`, `:107`) |
-| Ride totals and leaderboard name | `server/cycling-miles.js:24` · `:60` | Until deleted | Erased (`:44`, `:93`) |
+| Leaderboard totals (miles cycled, walked and driven per vehicle; hours played) and leaderboard name | `server/cycling-miles.js:32` · `:73` | Until deleted | Erased from every board (`:55`, `:108`) |
 | Personal landmarks, per world | `server/landmarks.js:16` · `:64` | Until deleted | Erased in every world (`:41`, `:89`) |
 | Problem reports (description, diagnostics, reporter) | `server/debug-reports.js:39` · `:59` | 50 newest, 30 days (`:7`) | The account's reports deleted (`:47`, `:76`) |
 | Waitlist request: name, email, username; invites; audit | `server/waitlist.js:62` · `:406` | Until deleted | Erased; others' records keep an `erased-account` marker where the account decided or invited (`:239`, `:497`) |
