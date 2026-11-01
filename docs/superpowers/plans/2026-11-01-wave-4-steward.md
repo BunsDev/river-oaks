@@ -156,11 +156,11 @@ Run once, as the goal asks: a git-archive snapshot of `main` `decb4e9a` with its
 
 **Reading: still not met, and still noise-bound.** The 8-player row is within its comparison only because one noisy baseline window set a 168 ms limit, the same pattern as 10-30's run 3 (182 ms). The 1- and 16-player tiers fall outside theirs. Warm-idle p50 stays 6–8 ms in every arm; the p95s move by tens of milliseconds between arms of the same tier with no crime load at all, which is host scheduling, not the policy. The row stays **Not met** for #599. A clean result needs a host without other sessions or a pinned baseline (Decision 12).
 
-### #844 on `cdf3425f`: still red, a design conflict (11:50Z)
+### #844 on `cdf3425f`: still red, a design conflict (about 11:25Z)
 
 `preview shared (development)` failed `crime-residents` again at the same check, now after 107 s (about 20 s on `main`); the failure artifact has no page error. Both commits on #844 are verified. The likely cause is arithmetic, not the walk helper: a player's fast walk is 3.2 m/s (`preview/src/walking.js` `WALK_SPEED.fast`) and a pursuing officer moves at 3.4 m/s (`server/police.js` `POLICE_RULES.speed`). On `main` the journey hops past the officer; under #844 a wanted visitor in the open cannot outpace one, so the officer grabs or arrests them before they stand within 6 m of a resident. A local run of the one journey, with per-stride logging, is queued behind five browser runs to confirm it. I did not change the journey further: making it pass means turning police off before the startle or slowing officers, and either changes what #785 means. Decision 4 now carries the question.
 
-### Register and queue (11:58Z)
+### Register and queue (about 11:30Z)
 
 `project:check --github` reports 107 gaps (180 at baseline). River-oaks-41 landed #789 and #832; #788 and #850 are in their queue. The land queue holds six PRs (#788, #834, #826, #830, #814, #850), all started by other live owners; I have no lander queued. #844's task is `blocked` on Decision 4. #846's task stays `active` and waits on Decision 13.
 
