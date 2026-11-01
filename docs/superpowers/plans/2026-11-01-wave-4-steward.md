@@ -1,0 +1,209 @@
+# Wave-4 steward (goal 2026-11-01)
+
+Goal: Val, 2026-11-01 (`/goal implement as follows: …/2026-11-01-wave-4-steward-goal.md`). Session `claude:river-oaks-b3 (6f600af1)`, register task `wave-4-steward-20261101`, branch `docs/wave-4-steward-20261101`, worktree `../river-oaks-wave-4-steward-20261101` from `main` `decb4e9a`. This ledger owns only itself.
+
+## Objective
+
+1. `main` green, with the cause of any red named (hosted Verify, Dependabot alert 20).
+2. A disposition for every open PR; land only under the goal's landing line; `project:check --github` below 180.
+3. CI headroom: per-shard timings, the shards within 4 min of the 20-minute cap, one safe change in a draft PR.
+4. #599: a #785 recommendation with a test-first draft, the Redis 8-player quiet repeat under a load <8 gate, a #784 verdict, increment 6 scoped.
+5. A numbered Decisions for Val list.
+
+## Baseline (2026-11-01 08:20Z to 08:35Z, `main` `decb4e9a`)
+
+- Hosted Verify on `decb4e9a` (run 41252631179, #829's docs-only merge): attempt 1 `cancelled`; `preview experience (terraces)`, `(depth)`, `(access)` and `preview shared (required)` were cut at the 20-minute cap at 23:48Z; the 18 other jobs passed; `5b00fd0b` before it passed 30/30.
+- Last 36 push runs on `main` (`preview *` jobs): 4 cancelled jobs, all in that run; 5 failed jobs (`ribbonwing` ×3, `places` ×1, `heights-return` ×1, the known flakes). Shard maxima: `preview checks` 16 min (≥15 min in 25 of 36), `commons` 16 min (≥15 in 6 of 36), `shared (required)` / `terraces` / `access` / `depth` 20 min only in the cancelled run (otherwise ≤14), everything else ≤13 min.
+- Dependabot: the `npm_and_yarn` update for alert 20 (minimatch <11.0.1, medium, transitive, development) fails on every scheduled attempt since 10-31 (runs 41181156423, 41260776016).
+- Open PRs: 44 (3 ready: #786, #794, #819; 41 drafts). Landing queue empty; no `.git/river-oaks-land-queue.lock`.
+- Register: 667 tasks (52 active, 22 blocked, 102 queued, 20 delivered, 471 retired). `project:check --github`: 180 gaps at 08:16Z; 126 at 08:31Z after the 10-27 goal's closing hygiene sweep cleared stale `worktree` paths on 54 owner-null queued rows (recorded on #717). Remaining classes: 34 "no local branch" on other sessions' rows, 22 missing worktree paths on owned or delivered rows, 4 unregistered detached worktrees, 14 local/PR head differences, pending retirements, and the 285 lost pre-10-22 archives as one line.
+- Live sessions (ListAgents, register leases, `ps` for `claude --resume`, transcript mtimes): `river-oaks-48` (10-31 docs review; owns `main`'s rerun), `river-oaks-41` (#832, lease 10:30Z), the R9 plan session (#833, 10:00Z), Codex `host-isolation-286` (08:30Z), cody's coven-cave sessions (#826–#828), `river-oaks-50` (busy, task unknown). Host load 13.8 (1 min) at 08:30Z; the clock is NTP-true (GitHub's `Date` header matched to the second). GitHub's *resource* timestamps (`merged_at`, `run_started_at`, `pushed_at`) read about 52 minutes ahead of that clock and of GitHub's own `Date` header all morning (for example `merged_at` 09:53:35Z for a merge this session observed at 09:00Z); times in this ledger are the local NTP-true clock unless marked "GitHub".
+
+## Round 1: `main` and Dependabot
+
+- **Verify rerun, owned by a live peer.** `river-oaks-48` confirmed by cross-session message that it owns `decb4e9a`'s Verify (its #829 merge) and reran the four cut jobs under its own authorization; GitHub records attempt 2 of run 41252631179 starting at 09:27Z (GitHub stamp; the local clock read 08:31Z while the jobs were already running, the same offset as above). Its diagnosis: the same runner hang #829's PR run showed, stuck in the Playwright apt-cache setup step before any journey ran. Attempt 2 at 08:40Z: `terraces`, `access`, `depth` passed; `shared (required)` in progress. Outcome recorded below when terminal.
+- **Dependabot alert 20 diagnosis** (job 124713407645 log): `security_update_not_possible` — `latest-resolvable-version: 3.1.5`, `lowest-non-vulnerable-version: 11.0.1`, no conflicting dependencies. The only remaining `minimatch@3.1.5` sits under `electron-winstaller@5.4.4 > @electron/asar@^3.2.1`; electron-winstaller's latest release (5.4.4, the one installed) still declares `@electron/asar ^3`, and asar 3 default-imports minimatch, which 11 does not export (#821's reasoning). So no version bump exists today; #821 already pins asar 4's copy to 11.0.1 and ignores the GHSA in `pnpm audit` for the asar-3 path with that justification. The scheduled job will keep failing until the alert is dismissed or electron-winstaller moves to asar 4. Decision 1 below. Nothing to add without weakening a check.
+
+## Round 2: the ready three
+
+| PR | Head | Behind `main` | Merge-tree | Commits verified | Owner liveness | Verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| #794 depth clone shader callbacks | `b976c357` | 163 | clean | 1/1 | `river-oaks-bb (4a824f53)`: last transcript write 2026-10-30 13:37Z, no process, not in ListAgents → not live | **Approve.** Two clone sites copy `onBeforeCompile` and `customProgramCacheKey` from the source material before the polygon-offset assignment; `Material.clone` copies maps but not those callbacks, so the depth-biased masses lost the metric-UV patch (#695 regression). The new assertion in `district-depth.test.js` compiles each opaque depth-biased mass's patch and checks the program key, so the regression is covered. No budget, timeout or threshold changes. |
+| #819 phase-3 tree overlaps (#584) | `03eec146` | 13 | clean | 2/2 | `river-oaks-86 (2421a3)`: no transcript under any project, no process, not in ListAgents → not live | **Approve.** Config-only (15 destination recipes and their `.lock.json` counterparts); no client or server file. The two red checks on the head are `preview unit` → "Audit locked JavaScript dependencies" at 10-31 02:01Z, the minimatch/glob advisory that #821 cleared on `main` at 22:10Z, and the `preview` aggregate that follows it; a head updated from `main` clears both. Route fixtures are not touched, so the pinned police routes (`resident-locations.test.js`) are unaffected unless the lander's merge shows otherwise. |
+| #786 render audit tier convergence (#778) | `a72208da` | 210 | **conflict** in `preview/audit/rendered-multiplayer.js` (5 hunks) | 1/1 | `claude:render-audit-778`: no session id, lease lapsed 10-30 18:30Z, no process → not live | **Hold, superseded in substance.** #778 was closed on 10-30 23:34Z as fixed on `main` by #708 (`b19456ec`): remote figures carry `kind`, and `converge()`, the on-screen count, the per-sample assertion and the final peer check all filter `kind === 'player'`. #786 reaches the same end by a roster-id predicate (`peerRoster` in `metrics.js`, with three new unit tests) and reconciles the report. Every conflict hunk is a choice between the two approaches on the same lines, which is the owner's call, not a steward's merge. Decision 2 below: close as superseded, or rebase as a test-only addition (`peerRoster` + tests) with the audit file left as `main` has it. |
+
+### Round 1 outcome (main green)
+
+Attempt 2 of run 41252631179 completed with every job green (22 success, `dependency-review` skipped by design); the `preview` aggregate on `decb4e9a` now reads `success`. `river-oaks-48` confirmed by message and recorded it on its own register row (`docs-plans-review-closeout-20261031`, `observed.mainVerify`). Finish-line item 1 holds; the Dependabot run stays red by design until Decision 1.
+
+## Round 3: CI headroom
+
+Step timings for the three jobs nearest the cap, from the last 12 push runs on `main` (jobs API, step `started_at`/`completed_at`):
+
+| Job | Step | Mean | Max |
+| --- | --- | --- | --- |
+| `preview checks` | `pnpm run test:server` | 11.4 min | 11.8 min |
+| `preview checks` | email/content-security browser regressions | 1.7 | 2.0 |
+| `preview checks` | IPIC screening journey | 1.4 | 1.5 |
+| `preview experience (commons)` | contextual action, photo and command journeys | 10.5 | 13.4 |
+| `preview shared (required)` | shared town journeys | 8.6 | 9.8 |
+
+`test:server` is 219 files, 1437 tests, serial sum 1133 s against 707 s wall on the 4-core runner (default file concurrency 3); the long tail is single tests of 21–55 s (stack and activation rehearsals, the Redis B12 walker test, the two-coordinator recliner test), so more in-process concurrency would stack them on one runner. Change chosen: run the server suite as two equal file shards with Node's `--test-shard` on a two-way job matrix, and keep the desktop and browser steps on shard 1. Expected: shard 1 ≈ 6 + 4 min, shard 2 ≈ 6 min; the `preview` aggregate needs the job id, so both must pass; no timeout, journey, or threshold changes. Branch `ci/preview-checks-server-shard-20261101` (`scripts/test-server-shard.mjs`, `test:server:shard` with its `pre` pnpm guard, `verify.yml`). Local shard timings and the PR's hosted run are recorded below when they finish. `commons` (13.4 max) is left as a finding: its one step is one journey list, and splitting it is a shard-list edit for the experience matrix, which Decision 3 asks about.
+
+## Round 4: #599
+
+- **#785 recommendation.** Refuse `travel` only while an officer is on the player (`pursue`, `grab`, `arrest` targeting them); leave it open while merely wanted (star cooling, no officer), while the officers are searching (they lost the player: that is the escape), and once they stand down. Reason: the fair-chase gap is a hop out of an active pursuit, and the three other states are the on-foot outcomes the design wants to reward. Refusing on stars alone would also strand a wanted player in a danger zone with no officer near.
+- **Test-first draft** on `feat/wanted-travel-785-20261101`: `server/tests/wanted-travel.test.js` (3 cases through `createSharedWorld` on the real District: wanted-not-pursued travels and keeps the star; pursued is refused `pursued` with nobody moved, through grab and arrest; emergency off reopens it). On unmodified `main` `decb4e9a` (run from the ledger worktree): 1 pass, 2 fail (`undefined` where `pursued` is expected). With the change (`police.pursuing(id)` accessor; one check in `travel()` after the cooldown, before destination resolution; a `docs/crime.md` bullet): 3/3. Contact time, server validation and every budget are untouched; the check is a reject before any geometry.
+- **Journeys that hop while pursued (inventory, not changed here):** `crime-encounter` (#732, hosted in `preview shared (development)`) travels out of the danger zone in its "stars held under observation" row while pursued, to show the star surviving departure; under the rule that hop is refused and the row needs a walk (pose) out of the zone or an evade-then-walk. Its "safe-zone transition inside the windup" travel happens at zero stars with no officer, so it is unaffected. `crime-conceal` on draft #784 reaches the inner bay by one hop while pursued, per its own body; it would need the walk to the bay that #784's "Not claimed" paragraph says officers currently follow. Focused suite results and the draft PR's hosted run follow.
+
+### #784 review (lane service yard, #599 escape by concealment)
+
+Head `f1ed985d`, 28/28 green, behind `main`; owner `river-oaks-3d (c317fd0a)` lease lapsed 10-30 09:57Z, no process, not in ListAgents. Files: `preview/src/lane-cover.js` (three axis-aligned boxes in the south service lane as 0.3 m disc footprints on a 0.4 m pitch, taller than the 1.2 m sight line), `lane-cover-mesh.js`, `walking.js` (the yard joins the prop boxes that block bodies, and is the only prop that also fails `hasSightLine` samples), `main.js` (mesh + a dev-only inspector), `shared-runner.js` (a `crime-conceal` journey, selected by name only, reset like `crime-shared`), `server/tests/lane-cover.test.js`, `docs/crime.md`, its ledger. **Verdict: approve the mechanism; hold the PR.** The walking change is contained (one extra box list, one extra predicate in the 0.15 m sight sweep) and the server test sweeps the lane for sight. Exact remaining blockers: (1) its own body says the tested escape reaches the inner bay by one `travel` hop while pursued, which the #785 rule refuses, so the journey and the claim need the on-foot approach once #785's rule is decided (Decision 4 fixes the order); (2) its head is 11 days of `main` behind and must be updated by its owner or under a release.
+
+### Round 3, local shard timings
+
+`RIVER_OAKS_TEST_SHARD=1/2` and `2/2` through `pnpm run test:server:shard` on this host (no `REDIS_URL`, so the Redis files skip; 1-min load 74–102 from other sessions): shard 1 = 781 tests (605 pass, 176 skipped) in 100 s; shard 2 = 614 tests (505 pass, 109 skipped) in 67 s; 0 failures. The hosted numbers (with Redis, 4 cores) come from the draft PR's run.
+
+### Increment 6 scoping (night sky, peer-visible evade), not built
+
+Owner findings come from the draft-wave-2 ledger on #724 (decisions 4 and 6, 2026-10-28) and the code on `main` `decb4e9a`:
+
+- **Night sky.** `preview/src/main.js` `updateAtmosphere()` (lines 940–957) reads `#sun-hour` and `#weather`, asks `atmosphereFor(hour, weather)` for sun, fog and horizon, and sets `scene.background` to the daytime HDR whenever the weather is not overcast, so the `crime-night` journey's 19:00 setting renders a daylight sky. The work is an authored night horizon and sky tint past the last authored hour, lamps for the south service lane (the lane's warm entrance strips exist in `reference-blocks.js` but no street lighting), and a capture budget check in the `crime-night` journey (`preview/e2e/crime-night.js`, 9 checks, 18.8 s on #732's head). Owner: whoever owns `main.js` lighting (`atmosphereFor`) and the Pink Jet-Age R8/R9 direction decides the palette, since #738 aligned Crime Feel presentation to it on 10-28. Est. one focused PR; the hour control and HDR stay as they are for daytime.
+- **Peer-visible evade.** `server/crime.js` keeps `evades` (direction, `at`, ids) per player (line 76; checkpointed at 322) and the command reply carries `{direction, remainingMs}` to the evader only (line 237); the public snapshot carries no evade state, so `owner.evadeShownAfterVisitorKeyMs` in the increment-5 measurement is null by construction. The work is one public field per participant in the crime snapshot (direction and remaining ms, pruned with the existing `evades` sweep at line 98), the remote-figure pose for it in `preview/src/crime-ui.js` / the remote players' layer, the measurement on the witness page, and a snapshot-size check (the workload table in `docs/crime.md` is the budget). Owner: the Crime Feel lane (`river-oaks-3d` held it last; lease lapsed 10-31 11:00Z). Est. one server PR with a transport test and one client PR, stacked.
+- **Order.** Both wait on Decision 5 below; neither blocks #785 or #784.
+
+### Landing record
+
+- **#794** landed 2026-11-01 ~09:00Z (GitHub `merged_at` 09:53:35Z) through `pnpm run land 794 --owner "claude:river-oaks-b3 (6f600af1)"`: `draft: false` confirmed over REST first; the lander updated the branch (`785dce4d` = `b976c357` merged with `main`), Verify passed on it, merge `9d139387`. Production deployment 7470830548 created for that sha (GitHub stamp 09:54:17Z). Register row `depth-clone-callbacks-20261030` marked delivered with `{pr, reviewedHead, landedHead, merge, tree, checks}`; the owner's worktree waits for the guarded prune.
+- **#819** landed ~09:40Z through `pnpm run land 819`: `draft: false` confirmed first; the lander waited one slot, updated the branch (`7783dcc6`), Verify passed, merge `e3d398ce`. Production deployment 7471233273 exists for that sha. Register row `phase3-tree-overlaps-20261030` marked delivered with evidence.
+
+## Dispositions (sweep 08:50Z, 44 open PRs; checks are on each PR's head, `behind` is commits of `main` not in it)
+
+| PR | Owner (liveness) | Head state | Disposition |
+| --- | --- | --- | --- |
+| #794 | `river-oaks-bb` lapsed | landed | **Landed** `9d139387` |
+| #819 | `river-oaks-86` lapsed | landed | **Landed** `e3d398ce` |
+| #786 | `render-audit-778` lapsed | ready, conflict, 210 behind | **Held**: superseded by #708's `b19456ec`; Decision 2 |
+| #784 | `river-oaks-3d` lapsed | draft, 28/28, 239 behind | **Verdict: approve mechanism, hold** on #785's order (Decision 4) and a branch update by its owner or under a release |
+| #705 | `river-oaks-91` lapsed | draft, 26/26, 510 behind | **Held**: never landed without a line; Decision 6 |
+| #831 | unregistered (ChatGPT branch) | draft, `preview experience (depth)` red | **Review only, held**: 4 files; `render-quality.js` flips the default finish on, with a default-foundation test and the live-kit test adjusted. The depth shard fails on the head, which is the cost of default-on the depth budget was written to catch; a product call. Decision 7 |
+| #697 | `river-oaks-71 (044cb069)` live (process up, lease to 11-02 06:00Z, pushed a `main` merge today, GitHub stamp 08:48Z) | draft, checks running | **Owner's**, left alone |
+| #834 | `garden-circuit-jev-tricks` (lease lapsed 01:00Z, but merged `main` and marked ready today, GitHub stamps 08:54Z and 09:54Z) | ready, checks running | **Owner's by activity**, left alone; not in this goal's table |
+| #843 | `river-oaks-6d` live | draft, checks running | **Owner's** (Five Rooms plan), left alone |
+| #830 | nova (coven-cave; lease lapsed 10-31 23:00Z, marked ready today, GitHub stamp 09:51Z) | ready, 30/30, 5 behind | **Owner's by activity**; a touch-controls feature with its own journey, not reviewed here |
+| #832 #833 | `river-oaks-41`, R9 plan session (live) | drafts, green | **Owners'** |
+| #826 #827 #828 | cody (coven-cave sessions present; leases lapsed 03:00–04:00Z) | drafts, green, 5 behind | **Owner's**; not released in writing |
+| #787 #788 #789 | `river-oaks-01` lapsed | drafts, 28/28, ~200 behind | **Held**: Pink Jet-Age opt-ins whose order is #738's (Decision 8) |
+| #800 #807 #810 | `river-oaks-d0` blocked rows | drafts; #810 red on the pre-#821 audit | **Held**: stacked 800→807→810, owner blocked on #441 |
+| #813 #814 #815 #816 #817 #818 #822 | `river-oaks-ribbonwing (9b98c1a1)` lapsed | drafts; #813 #818 #822 red only on the pre-#821 audit | **Held**: Jevica likeness stack and the autoland fix; Val reviews the captures |
+| #792 | `codex:ribbonwing-flicker` blocked row | draft, 22/22, 181 behind | **Held** with its owner |
+| #790 #796 | `river-oaks-bb` lapsed | drafts, green, 138–163 behind | **Held**: depth burn-downs in bb's lane; #707 (same lane) red on `depth` |
+| #707 | `river-oaks-bb` blocked row | draft, `depth` shard red since 10-30 | **Held** (wave-3 round 4) |
+| #685 #719 #709 | lapsed owners | drafts, 510–728 behind | **Held** since wave 3 (Decision 9) |
+| #755 | — | draft, 351 behind | **Recommend close**: superseded by merged #756 (Decision 10) |
+| #727 #728 | owner null, blocked rows | drafts; #728 red on `preview checks` since 10-28 | **Held** on Val's Safari sound row (wave-3 decision 6) |
+| #668 #687 #697 #724 #748 #795 | lapsed or null | docs drafts, 200–787 behind; #687 red on `campus` since 10-28 | **Held**: land as docs or close (Decision 11) |
+
+Pre-#821 audit reds (`preview unit` → "Audit locked JavaScript dependencies", 10-31 02:00–05:10Z) clear on any head updated from `main`; they are not defects in those PRs.
+
+## Decisions for Val
+
+Each needs one line from you; nothing below is simulated. Wave-3 items 11–20 that are still open are carried at the end.
+
+1. **Dependabot alert 20 (minimatch <11.0.1 under `electron-winstaller > @electron/asar@3`).** The updater reports `security_update_not_possible` (latest resolvable 3.1.5, first fixed 11.0.1) and will fail every scheduled run. No electron-winstaller release depends on asar 4. Dismiss the alert as "no fix available / tolerable" with #821's justification (asar 3 only extracts; the pattern path is never built), or keep the red run as a reminder. The session may not dismiss alerts.
+2. **#786 (render-audit convergence).** #778 is fixed on `main` by #708. Close #786 as superseded, or ask its owner to rebase it as a test-only addition (`peerRoster` + three unit tests) over `main`'s `kind === 'player'` audit.
+3. **`preview experience (commons)` at 13.4 min max.** Its one step is one journey list in the experience matrix. Authorize splitting that list into two shards (same journeys, no budget change) in a follow-up to the CI PR, or accept the margin.
+4. **#785 rule and order.** Recommended: refuse `travel` only while an officer is on the player (`pursue`/`grab`/`arrest`); keep it while merely wanted, while searched for, and after stand-down. Alternatives: refuse on any star, or leave travel as it is and document the hop. If you take the recommendation, land the #785 draft first, then #784 adapts `crime-conceal` to the on-foot approach before it lands; `crime-encounter`'s departure row needs the same adaptation. **New from #844's hosted runs:** under this rule a wanted player in the open cannot escape on foot, since fast walk is 3.2 m/s against an officer's 3.4 m/s, and `crime-residents` (a wanted visitor walking to a resident) fails. Pick one: (a) keep the rule and let escape depend on breaking sight lines, with `crime-residents` turning emergency off before the startle; (b) bring officer pursuit speed under fast walk, which is a tuning change for #640's playtest; or (c) refuse travel only during `grab`/`arrest`. #844 stays draft until you choose.
+5. **Increment 6.** Scope the night sky and the peer-visible evade into one increment with the owners named in the scoping section, or accept both for the first playable (#724 decisions 4 and 6).
+6. **#705.** Owner `river-oaks-91` has been silent since 10-28; the packet is complete via #717/#720. Say: land #705's stack-gate code (after a branch update under a release), park it, or close it. Activation conditions stay yours.
+7. **#831 (default-on Pink Jet-Age presentation, ChatGPT branch).** Register it to an owner who finishes the depth-budget question, or close it; it is a product default, not a steward call.
+8. **Pink Jet-Age R2/R6/R8 opt-ins (#787 #788 #789).** `river-oaks-01` is gone; name who updates and lands them, in #738's order, or park them.
+9. **#685 #719 #709 (held since wave 3).** Still expected from their owners, or close.
+10. **#755.** Close as superseded by #756 (the session may not close PRs).
+11. **Docs drafts #668 #687 #697 #724 #748 #795.** Land as docs (each needs a branch update and a green run) or close. #697 is live with `river-oaks-71`.
+12. **Redis 8-player quiet repeat (#599).** Run at load 6.7 today: 8 and 32 players within their comparisons, 1 and 16 outside, every limit set by noisy baselines. Choose a pinned baseline (fixed limits from one quiet run), a host without other sessions, or accept "Not met, noise-bound" as the record.
+13. **#846 (CI split).** Green, shard 1 10.2 min and shard 2 6.3 min. Mark it ready and land it, or ask for changes. The session's ready mutation is refused here.
+14. **Carried from wave 3 (still open):** 11 coordinator idle-tick A/B; 13 `ops/browser-lock-turns-20261024`; 14 archives lost on 10-22 (285 rows); 15 record-only rows sweep; 16 missing-worktree records (`character-fidelity-517-review`, `integrated-expansion-mvp-20261023`); 17 orphan siblings; 18 `crime-melee-597` dirty worktree; 19 the f1 streaming mirror; 20 local-only ledgers.
+
+### Core verify under host load (09:00Z)
+
+`pnpm run verify` on the #785 branch: `agent-tests` passed (89 s); `preview-tests` was SIGKILLed at the stage's 600 s cap (`ETIMEDOUT`, receipt `.runtime/agent/core.json`, log `scratchpad/785-core-verify.log`, 2018 lines, no failing test before the kill); the later stages did not run. The 1-minute load was 84–105 on 18 cores throughout, from other projects on this host (a Rust build, two browsers, Discord, another repo's vitest). This is the host-load pattern in memory, not a defect in the change, and the stage cap stays as it is. Reruns for the #785, CI-shard and ledger branches are queued one after another behind a 1-minute-load-under-16 gate (three hours); no commit is pushed before its branch's core receipt reads `passed`.
+
+
+### #844 (the #785 draft)
+
+Committed signed as `547d706b` (`G val@opencoven.ai`) after core verify passed on the branch (09:24–09:32Z, load 15–31); pushed and opened as draft #844 over REST; register task `wanted-travel-785-20261101` holds it. Hosted results are recorded when its run completes.
+
+### Core receipts and drafts (10:05Z)
+
+Gated reruns (1-minute load under 16) passed core verify on all three branches: #785 branch 09:24–09:32Z, CI-shard branch 09:50–09:56Z, this ledger branch 09:57–10:03Z (loads 14–35). The CI split is committed signed as `16e04be3` and open as draft **#846** (register `preview-checks-server-shard-20261101`); its hosted shard durations are recorded against the 11.4 min baseline when the run completes. The Redis 8-player repeat gate (pid 45676, load under 8, six hours from 08:53Z) is still waiting.
+
+### Hosted results (10:40Z)
+
+- **#846 (CI split), all 39 checks green on `16e04be3`.** `preview checks (1/2)` took 10.2 min and `(2/2)` 6.3 min, against 15–16 min for the single job on `main`. Finish-line item 3 holds: the hottest job is under 15 min with no timeout, journey or threshold change. Ready for Val (Decision 13).
+- **#844 (#785 rule), red on `preview shared (development)`.** `crime-residents` failed with "A resident startles at a wanted player at arm's length (town state): undefined". The cause is the rule, not a flake: the journey's `approach()` calls `__riverSeatAndWater().goTo()`, which sends `travel`, and both of its approaches to a resident run after the shove, while an officer pursues. My inventory above missed this journey. `cdf3425f` replaces those two approaches with W strides, re-aimed by dragging the view (garden-campus-traversal's pattern); the approach to the rival, before any star, still travels. The runner stops at the first failure, so `crime-night` and `crime-encounter`, which also call `goTo`, had not run on #844; the hosted run on `cdf3425f` shows whether they need the same change.
+
+### #599 Redis 8-player quiet repeat (10:55Z)
+
+Run once, as the goal asks: a git-archive snapshot of `main` `decb4e9a` with its own local commit `4adbdf19` (the harness records `git rev-parse HEAD`; the first attempt at 10:11Z died at startup without one), the Codex harness `crime-redis-audit.js` (sha256 `36cdb751…`, matching the 10-30 run), an isolated Redis on 127.0.0.1:6418, `caffeinate -s`, started when the 1-minute load read 6.71 (gate under 8), finished in 2 min 53 s at load 6.42 (5-minute load fell from 19 to 14 during the run). Report `.runtime/wave4/crime599-redis-decb4e9a.json` in the ledger worktree (sha256 `8278868d…`), status `measured`.
+
+| Players | Active warm-idle p95 | Limit (highest repeated baseline p95 × 1.2 + 5 ms) | Within | Ticks over 200 ms |
+| --- | --- | --- | --- | --- |
+| 1 | 134.8 ms | 106.2 ms | no | 0 |
+| 8 | 90.2 ms | 168.5 ms | yes | 1 |
+| 16 | 82.1 ms | 81.0 ms | no | 0 |
+| 32 | 61.8 ms | 79.5 ms | yes | 0 |
+
+**Reading: still not met, and still noise-bound.** The 8-player row is within its comparison only because one noisy baseline window set a 168 ms limit, the same pattern as 10-30's run 3 (182 ms). The 1- and 16-player tiers fall outside theirs. Warm-idle p50 stays 6–8 ms in every arm; the p95s move by tens of milliseconds between arms of the same tier with no crime load at all, which is host scheduling, not the policy. The row stays **Not met** for #599. A clean result needs a host without other sessions or a pinned baseline (Decision 12).
+
+### #844 on `cdf3425f`: still red, a design conflict (about 11:25Z)
+
+`preview shared (development)` failed `crime-residents` again at the same check, now after 107 s (about 20 s on `main`); the failure artifact has no page error. Both commits on #844 are verified. The likely cause is arithmetic, not the walk helper: a player's fast walk is 3.2 m/s (`preview/src/walking.js` `WALK_SPEED.fast`) and a pursuing officer moves at 3.4 m/s (`server/police.js` `POLICE_RULES.speed`). On `main` the journey hops past the officer; under #844 a wanted visitor in the open cannot outpace one, so the officer grabs or arrests them before they stand within 6 m of a resident. A local run of the one journey, with per-stride logging, is queued behind five browser runs to confirm it. I did not change the journey further: making it pass means turning police off before the startle or slowing officers, and either changes what #785 means. Decision 4 now carries the question.
+
+### Register and queue (about 11:30Z)
+
+`project:check --github` reports 107 gaps (180 at baseline). River-oaks-41 landed #789 and #832; #788 and #850 are in their queue. The land queue holds six PRs (#788, #834, #826, #830, #814, #850), all started by other live owners; I have no lander queued. #844's task is `blocked` on Decision 4. #846's task stays `active` and waits on Decision 13.
+
+### #844 local confirmation (13:00Z)
+
+A local run of `crime-residents` on `cdf3425f`, with temporary per-stride logging (since reverted), got the browser lock at about 12:58Z and failed the same check. The log is `.runtime/wave4/crime-residents-local-cdf3425f.log` in the ledger worktree. The on-foot walk works: toward the first resident (Ima Hogg) the visitor closed 43 m to within reach in about 25 strides, with one officer in `pursue` on them. No startle came within the 8 s wait. On the second candidate (Hugo) the visitor walked 14 m, then froze at one position for the rest of the run. By the third candidate (Owen) the police list was empty, meaning the officer had taken the visitor and stood down. This confirms the cause in Decision 4: under #844 the pursuing officer catches a wanted visitor on foot before the startle can be observed. The walk helper is not at fault.
+
+### #844 green on `fe3e240b` (about 17:20Z)
+
+The journey is restaged inside #844's rule, with no speed, radius, threshold or timeout changed. After the shove the visitor walks about 20 m north on foot, out of `south-service-lane`. The journey then waits (bounded at 15 s) until no officer is pursuing, grabbing or arresting the visitor while the star is still held, travels to 12 m of the resident, and walks the last stretch to 4 m. Two new checks cover the walk out and the stand-down. Local `RIVER_OAKS_SHARED_JOURNEY=crime-residents node preview/e2e/shared-runner.js development` passed at load about 4.4; the single-journey receipt was set aside and `data/reports/shared-experience.json` restored. Core `pnpm run verify` passed. The commit `fe3e240b` is SSH-signed and verified, and all 31 hosted checks completed green on it, `preview shared (development)` included. `crime-encounter` runs only when selected by name, not in the hosted development shard. On `fe3e240b` it failed locally at "A resident startles and runs from the wanted visitor"; a control with the base `server/police.js` and `server/world.js` passed, so the cause is the rule. Restaged in `f572839c` (signed, verified) with no speed, radius, threshold or check changed: travel falls back to a walk on `pursued`, the visitor walks out of the lane and waits for the stand-down before the resident, returns to the rival under emergency off, strikes once more if the grab lands during the raw-command checks, and the cooling clock starts at the stand-down that the instant travel used to mark (that wait bounded at 30 s instead of 10 s, since a walk takes longer). Local runs: passed twice (once with temporary timeline logging, since removed, once without); 11 rows pass and the 3 unconditional not-run rows are unchanged. Core verify passed. All 31 hosted checks completed green on `f572839c` (the hosted shards do not run `crime-encounter`; the local runs above are its evidence). Decision 4 (the rule) is still Val's; #844 stays a draft.
+
+### Val's answers and landings (20:30Z)
+
+Val answered two decisions in session: Decision 4, adopt the #785 rule and land #844; Decision 13, mark #846 ready and land it. Review verdicts were recorded first (#844 comment 6562689690, #846 comment 6562689835), every PR commit was verified, `gh pr ready` waited out a GraphQL limit, and `draft: false` was confirmed over REST before each lander.
+
+- #846 landed through `pnpm run land 846 --owner river-oaks-b3`: branch updated, Verify passed on `f00a392`, merged as `e56c643a` (20:05:34Z GitHub).
+- #844 landed through `pnpm run land 844 --owner river-oaks-b3`: branch updated, Verify passed on `d93c23cb`, merged as `e699f8b4` (20:26:44Z GitHub).
+- Both register rows were marked `delivered` with that evidence; remote branches auto-deleted on merge.
+- Local retirement: the ignored evidence (`.runtime` in both; #844's `output/playwright`, 73 files with `.runtime`) was archived to `~/worktree-backups/river-oaks/retire-evidence-<name>/` with a sha256 manifest and a restore test (identical); caches (`.venv`, `node_modules`, `dist`, `__pycache__`, `.pytest_cache`, `.ruff_cache`, `data/generated`) were treated as regenerable. No process had a CWD in either worktree; this session owned both rows. After `git clean -X`, both tasks were released with a `retirement` attestation naming the local tips (`16e04be3`, `f572839c`, strict ancestors of the lander-updated merged heads), dry-runs were eligible, and `project:prune --apply` retired both: bundles `retirement-YyPdCs` and `retirement-KJf8OY`, tags `archive/worktree-prune/3ec1ba60…` and `…/e561a155…`. Both rows are `retired`.
+- `project:check --github`: 100 gaps (180 at baseline).
+
+Decisions 1–3, 5–12 and 14 remain Val's.
+
+### Val's answers, round 2 (about 21:00Z)
+
+- **Decision 1 (Dependabot alert 20):** Val will dismiss it as no fix available. The session is not authorized to dismiss alerts.
+- **Decision 3 (commons shard):** split it. #861 moved `hover-coach` into its own experience shard, with the same journeys and the same 20-min timeout. Hosted on `f49a9103`: 33/33 green, `commons` (`east-garden-commons` alone) 15.1 min and `hover-coach` 1.8 min. On `main`'s last six pushes the combined shard took 7.9–17.0 min. The split saves about 2 min; `east-garden-commons` itself is the long pole, and more margin would need that journey split, a test change. Review verdict first (comment 6564256028). Landed through `pnpm run land 861` as `78fe1c16` (21:44:29Z GitHub). Retired: evidence archive `retire-evidence-ci-commons-split-20261101` (restore identical), bundle `retirement-Capwr7`.
+- **Decision 12 (Redis 8-player repeat):** accept "Not met, noise-bound" as the record. The #599 closeout goal chooses any baseline change.
+- **Decisions 2, 5–11 and 14:** left open for Val. They are PR closures, owner assignments and register sweeps the session is not authorized to make. Val will clear the goal.
+
+## Finish-line status (17:20Z)
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| 1 Main healthy | Met | Verify green on `main` for the last five pushes (`9d139387`, `5ba4a3f0`, `6a789759`, `d8e2a61d`, `8355e0ca`); `0d7b021d` in progress. Alert 20 diagnosed (Round 1) with the updater's text; no fix exists without an ignore, so a dismissal recommendation is Decision 1. |
+| 2 Open wave dispositioned | Met for my scope | Dispositions table covers every PR. #794 and #819 landed under the landing line; #786 held as superseded. I have no lander in the queue. The six queued PRs belong to live owners' landers, and I am not authorized to stop processes I did not start. The three snapshot rows are retired, with #717 evidence and an archive. `project:check --github`: 107 gaps. |
+| 3 CI headroom | Met | #846 landed as `e56c643a` (shards 10.2 and 6.3 min) after Val's Decision 13; #861 split `hover-coach` out of commons (`78fe1c16`, about 2 min saved) after Decision 3. |
+| 4a #785 | Met | Draft #844 with failing-then-passing server tests and a journey inventory; `crime-residents` restaged (walk out of the zone, then travel) and all 31 hosted checks green on `fe3e240b`; `crime-encounter` restaged in `f572839c`, passing locally, 31/31 hosted green on that head. Val adopted the rule (Decision 4); landed as `e699f8b4`. |
+| 4b Redis repeat | Met (run once) | Ran at load 6.71 with its own Redis and `caffeinate -s`; recorded as not met on the comparison (Decision 12). |
+| 4c #784 | Met | Verdict: approve the mechanism, held on #785's order and a branch update. |
+| 4d Increment 6 | Met | Scoped in Round 4, not built. |
+| 5 Decisions | Met | 14 numbered decisions above; Val answered 1, 3, 4, 12 and 13, and left 2, 5–11 and 14 open. |
+
+## Next step
+
+Hosted results for #846 on a current head; the Redis repeat result or its gate log; Val's answers to the Decisions above. Nothing else in this goal is landable without a line from Val.
