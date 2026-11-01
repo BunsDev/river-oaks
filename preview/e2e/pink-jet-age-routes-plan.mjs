@@ -140,5 +140,35 @@ export function validateReport(report) {
     if (typeof view.png !== 'string' || !view.png.endsWith('.png')) throw new Error(`${view.name}: png path required`);
   }
   if (report.views.length !== report.cameras.length * Object.keys(report.hours).length) throw new Error('views must be exactly cameras x hours');
+  if (report.provenance !== undefined) validateProvenance(report.provenance);
   return report;
+}
+
+// Source, device and workload provenance (#747's evidence contract). Every comparison records
+// the browser, the GPU that drew, the machine and the player workload beside the heads, the
+// served data revision and the style (finish); the ledger names which evidence class a run is.
+export const EVIDENCE_CLASSES = Object.freeze(['source-implementation', 'local-fixture', 'hosted', 'packaged-native', 'physical-device', 'human-accessibility', 'visual-approval']);
+/** Throws unless the provenance names the browser, the GPU, the machine, the workload and its evidence class. */
+export function validateProvenance(provenance) {
+  if (typeof provenance?.browser !== 'string' || !provenance.browser) throw new Error('provenance.browser is required');
+  if (typeof provenance.gpu?.renderer !== 'string' || !provenance.gpu.renderer) throw new Error('provenance.gpu.renderer is required');
+  for (const key of ['platform', 'arch', 'cpu']) if (typeof provenance.machine?.[key] !== 'string' || !provenance.machine[key]) throw new Error(`provenance.machine.${key} is required`);
+  if (!Number.isInteger(provenance.workload?.players) || provenance.workload.players < 1) throw new Error('provenance.workload.players must be a positive integer');
+  if (!EVIDENCE_CLASSES.includes(provenance.evidenceClass)) throw new Error(`provenance.evidenceClass must be one of ${EVIDENCE_CLASSES.join(', ')}`);
+  return provenance;
+}
+
+// What two reports must share before their views are compared hour for hour. The head and the
+// finish are the arms of a comparison, so they are not here; a report without provenance (the
+// 2026-10-28 baseline predates it) mismatches on every provenance key and says so.
+export const MATCHED_CONDITIONS = Object.freeze(['revision', 'graphics', 'viewport', 'deviceScaleFactor', 'hours',
+  'provenance.browser', 'provenance.gpu.renderer', 'provenance.machine.platform', 'provenance.machine.arch', 'provenance.machine.cpu',
+  'provenance.workload.players', 'provenance.evidenceClass']);
+const valueAt = (object, path) => path.split('.').reduce((value, key) => value?.[key], object);
+/** Matched conditions that differ, as `key: baseline -> candidate`; empty when the reports are comparable. */
+export function comparisonMismatches(baseline, candidate) {
+  return MATCHED_CONDITIONS.flatMap(key => {
+    const before = JSON.stringify(valueAt(baseline, key) ?? null), after = JSON.stringify(valueAt(candidate, key) ?? null);
+    return before === after ? [] : [`${key}: ${before} -> ${after}`];
+  });
 }
