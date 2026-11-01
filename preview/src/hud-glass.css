@@ -19,6 +19,8 @@
   --hud-key-edge: rgb(24 36 30 / .2);
   --hud-action: #2c7466;
   --hud-on-action: #f4fbf8;
+  /* The keycap inside an action fill (walking prompt). At .16 white it was 3.79:1 (#746). */
+  --hud-action-key: rgb(255 255 255 / .06);
   --hud-focus: #1f5f53;
   --hud-sheet-radius: 20px;
   --hud-tile-radius: 12px;
@@ -36,8 +38,11 @@
   --hud-muted: #bac3bb;
   --hud-key-bg: rgb(255 255 255 / .1);
   --hud-key-edge: rgb(255 255 255 / .24);
-  --hud-action: #3f8f7f;
-  --hud-on-action: #f4fbf8;
+  /* A lighter fill with dark text, like --liquid-accent below: #f4fbf8 on #3f8f7f was
+     3.67:1 (#746), and the lighter teal also reads better where it is text on dark glass. */
+  --hud-action: #4a9a89;
+  --hud-on-action: #0b2326;
+  --hud-action-key: rgb(255 255 255 / .16);
   --hud-focus: #a8ecd6;
 }
 /* Liquid glass, for surfaces that float over everything (the town gate, the Map
@@ -56,7 +61,8 @@
   --liquid-shadow: 0 1px 1px rgb(16 28 22 / .05), 0 20px 50px rgb(10 34 36 / .22), 0 44px 100px rgb(10 34 36 / .16);
   --liquid-ink: #0f3437;
   --liquid-muted: #2a4541;
-  --liquid-accent: #24695c;
+  /* #24695c gave 4.14:1 at the town-gate button's light gradient stop (#746). */
+  --liquid-accent: #1f5f53;
   --liquid-on-accent: #f6fcf9;
 }
 :root[data-theme=dark] {
@@ -214,7 +220,7 @@
 :root[data-theme] #walking-hud .walking-pad button.held { background: var(--hud-raised); border-color: var(--hud-focus); }
 /* The key reads first, as in games; in the DOM it follows the label. */
 :root[data-theme] #walking-hud .walking-console button kbd { order: -1; }
-:root[data-theme] #walking-hud .walking-primary > button kbd { border-color: rgb(255 255 255 / .35); background: rgb(255 255 255 / .16); box-shadow: inset 0 -1px 0 rgb(0 0 0 / .18); color: var(--hud-on-action); }
+:root[data-theme] #walking-hud .walking-primary > button kbd { border-color: rgb(255 255 255 / .35); background: var(--hud-action-key); box-shadow: inset 0 -1px 0 rgb(0 0 0 / .18); color: var(--hud-on-action); }
 :root[data-theme] #walking-hud .walking-more > summary { color: var(--hud-muted); font-size: 12px; }
 :root[data-theme] #walking-hud #walking-place { color: var(--hud-muted); font-size: 11px; }
 :root[data-theme] #walking-hud #walking-controls-toggle { border: 0; background: transparent; color: var(--hud-muted); font-size: 11px; }
