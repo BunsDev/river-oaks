@@ -941,3 +941,52 @@ test('the hover coach flies for its owner in any appearance, the car never leave
   checkpoint.payload.players.find(player=>player.id===owner).vehicle='rolls';
   assert.equal(restored.restore(resign(checkpoint)).error,'invalid_checkpoint','an airborne car is not a valid checkpoint');
 });
+
+// Five Rooms (#841): the Ribbon posts and shell frontages block movement on the server exactly
+// as walking.js blocks them in the browser, and a town saved before them still restores.
+test('the Five Rooms posts and frontages are solid for server movement, whatever the finish',async()=>{
+  const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  const { districtRibbonPlan }=await import('../../preview/src/ribbon-district.js');
+  const { venueSolids }=await import('../../preview/src/five-rooms/solids.js');
+  const contract=JSON.parse(await readFile(new URL('../../config/ribbon/five-rooms.json',import.meta.url),'utf8'));
+  const environment=createWalkingEnvironment(district);
+  let time=1000;const world=createSharedWorld(district,{now:()=>time});
+  world.join({userId:'a',name:'Alice'});
+  // Stand the player on the walk beside a post, through a re-signed checkpoint.
+  const post=districtRibbonPlan(district).posts.find(item=>item.id==='ribbon:spine:post:010:l');
+  const module=districtRibbonPlan(district).modules.find(item=>item.id==='ribbon:spine:module:010');
+  const centre=[(module.from[0]+module.to[0])/2,(module.from[1]+module.to[1])/2];
+  assert.equal(environment.isFree(centre[0],-centre[1]),true,'the walk centre is free');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  checkpoint.payload.players[0].position=[centre[0],centre[1],environment.groundAt(centre[0],-centre[1])];
+  const restored=createSharedWorld(district,{now:()=>time});
+  assert.deepEqual(restored.restore(resign(checkpoint)),{ok:true});
+  time+=1500;
+  const onPost=[post.position[0],post.position[1],environment.groundAt(post.position[0],-post.position[1])];
+  const blocked=restored.command('a',{type:'pose',position:onPost,yaw:0,altitude:0});
+  assert.equal(blocked.ok,false,'cannot walk into a Ribbon post');
+  assert.deepEqual(blocked.correction.position.slice(0,2),checkpoint.payload.players[0].position.slice(0,2));
+  // A shell frontage disc in front of the Counter blocks too.
+  const counter=contract.venues.find(venue=>venue.id==='venue:counter'),[east,north]=venueSolids(counter,district)[3];
+  assert.equal(environment.isFree(east,-north),false);
+});
+
+test('a town saved before the Five Rooms solids restores a player standing on a post onto free ground nearby',async()=>{
+  const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  const { districtRibbonPlan }=await import('../../preview/src/ribbon-district.js');
+  const environment=createWalkingEnvironment(district),before=createWalkingEnvironment(district,[],null,{fiveRooms:false});
+  const world=createSharedWorld(district);world.join({userId:'a',name:'Alice'});
+  const post=districtRibbonPlan(district).posts.find(item=>before.isFree(item.position[0],-item.position[1]));
+  assert.ok(post,'a post stands on ground that was free before');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  checkpoint.payload.players[0].position=[post.position[0],post.position[1],before.groundAt(post.position[0],-post.position[1])];
+  const restored=createSharedWorld(district);
+  assert.deepEqual(restored.restore(resign(checkpoint)),{ok:true});
+  const [x,n]=restored.snapshot().players[0].position;
+  assert.equal(environment.isFree(x,-n),true,'restored on free ground');
+  assert.ok(Math.hypot(x-post.position[0],n-post.position[1])<=2,'next to where they stood');
+  // Anything else invalid still fails closed: inside a building footprint.
+  const building=district.buildings.find(item=>item.id==='osm-way-625330790');
+  checkpoint.payload.players[0].position=[building.center[0],building.center[1],0];
+  assert.equal(createSharedWorld(district).restore(resign(checkpoint)).ok,false);
+});
