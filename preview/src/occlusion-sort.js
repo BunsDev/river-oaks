@@ -17,10 +17,13 @@ export function occlusionKind(object, geometry) {
 // sort cost more than the program switches it saves. three reuses its render
 // items across frames, so each item keeps its kind with the object and geometry
 // it was read from. A stale kind (instance colors added later) could only group
-// a draw with the wrong kind; it never changes what is drawn.
+// a draw with the wrong kind; it never changes what is drawn. The item keeps the
+// object's and geometry's ids, not the objects: three clears a pooled item's own
+// references when it falls out of use, but not ours, so held references kept
+// removed models (and their vertex arrays) alive.
 function itemKind(item) {
-  if (item.occlusionObject !== item.object || item.occlusionGeometry !== item.geometry) {
-    item.occlusionObject = item.object; item.occlusionGeometry = item.geometry;
+  if (item.occlusionObjectId !== item.object.id || item.occlusionGeometryId !== item.geometry.id) {
+    item.occlusionObjectId = item.object.id; item.occlusionGeometryId = item.geometry.id;
     item.occlusionKind = occlusionKind(item.object, item.geometry);
   }
   return item.occlusionKind;

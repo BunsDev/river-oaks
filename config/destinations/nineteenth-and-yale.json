@@ -62,7 +62,7 @@
       "id": "corner-bench-0",
       "piece": "furniture/bench",
       "at": [
-        44,
+        42.5,
         59.4
       ],
       "yaw": 3.141593
@@ -71,7 +71,7 @@
       "id": "corner-bench-1",
       "piece": "furniture/bench",
       "at": [
-        70,
+        71.5,
         68.6
       ]
     },
@@ -79,7 +79,7 @@
       "id": "court-cafe-0",
       "piece": "furniture/cafe-set",
       "at": [
-        61,
+        63.5,
         25
       ]
     }
@@ -224,7 +224,7 @@
     ],
     "migrated": {
       "blocks": 4,
-      "geometry": "2e05bf8475d0be92"
+      "geometry": "f00d112d4ebfdd7f"
     }
   }
 }

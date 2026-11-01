@@ -284,8 +284,13 @@ jobs:
             journeys: garden-campus-office garden-campus-suite
           - id: campus-traversal
             journeys: garden-campus-traversal
+          # The landowner hover coach: garage, call, board, drive, climb, land and step out (#737).
           - id: commons
-            journeys: east-garden-commons
+            journeys: east-garden-commons hover-coach
+          # The Ribbonwing (#777): the passenger seat with a pilot, passenger and observer, and the
+          # tuck dive, loop and Petal Roll flown in the browser. Commons alone is about 16 min.
+          - id: ribbonwing
+            journeys: ribbonwing-passenger ribbonwing-maneuvers
           # Bayou Heights over the Lantern Footbridge (#586 continuation). One journey used to walk
           # in, play, reconnect and walk home: 14-19.5 min on this runner against the 20-min timeout,
           # and twice cancelled at it (f4dd959a, f3b01149). Outbound and return are separate shards.
@@ -302,10 +307,19 @@ jobs:
           # Woodland Heights east of Studewood, along Twentieth Street (toward 3x).
           - id: woodland
             journeys: woodland-heights
+          # Surfaces that fight for depth in the composed town, and the shared shader patches
+          # on instanced, batched and unmapped meshes (preview/src/depth-layer-audit.js).
+          - id: depth
+            journeys: depth-layers
           # Sign-in settles without flicker: the redirect splash, then every visible
           # state (theme, gate, Character Studio button, character) moves one way only.
           - id: access
             journeys: access-gate login-flicker
+          # The draft-only workplace slice (#221): the fixture room under the classic and opt-in
+          # Pink Jet-Age finishes, and the companion panel's keyboard/privacy journey. The runner
+          # turns both default-off flags on for its own fixture server only; nothing hosted changes.
+          - id: workplace
+            journeys: workplace-room workplace
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

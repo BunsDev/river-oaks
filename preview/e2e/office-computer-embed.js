@@ -269,15 +269,15 @@ async (page, { computerOrigin }) => {
   check(await guest.frameLocator('.desk-computer-frame').locator('#desktop').isHidden()&&await guest.frameLocator('.desk-computer-frame').locator('#gate-name').textContent()==='Cy Fixture','The next Place account gets a fresh Computer gate, not the previous desktop');
   await guest.frameLocator('.desk-computer-frame').locator('#continue').click();await guest.waitForFunction(()=>document.querySelector('#office-desk')?.dataset.computer==='usable');
   await fixture({close:'hang'});
-  // A live Place account change on this page: the connection returns as another account, and
-  // access-entry reloads the page into that account at its next check (every 15 s). Wait for
-  // that reload before going on, so it cannot land in the middle of a later step.
+  // A live Place account change on this page: the connection returns as another account. The
+  // town client tells access-entry, which rechecks at once and reloads the page into that
+  // account (before, it waited for its next 15 s check and could land mid-step later on).
   const reloaded=guest.waitForEvent('domcontentloaded',{timeout:30000});reloaded.catch(()=>{});
   await guestContext.addCookies([{name:'fixture_session',value:'guest',url:page.url()}]);
   const switched=Date.now();check(await guest.evaluate(()=>window.__dropTown())>0,'The page reconnects as another Place account');
   await guest.waitForFunction(()=>!document.querySelector('.desk-computer-frame')&&!document.querySelector('#office-desk').open,null,{timeout:10000});
   check(Date.now()-switched<5000,`The account change removes bob’s unresponsive Computer at once (${Date.now()-switched} ms)`);
-  await reloaded;check(true,'The page then reloads into the new Place account');
+  await reloaded;check(Date.now()-switched<10000,`The page then reloads into the new Place account promptly (${Date.now()-switched} ms)`);
   await guest.waitForFunction(()=>window.__riverMultiplayer?.().connected&&window.__riverMultiplayer().selfId==='guest',null,{timeout:60000});
   await page.locator('#office-management select option',{hasText:'guest'}).waitFor({state:'attached',timeout:15000});
   await page.locator('#office-management select').selectOption({label:'guest'});await page.locator('#office-management button').filter({hasText:'Invite resident'}).click();

@@ -8,6 +8,14 @@ import { WOODLAND_REVISION } from '../../shared/woodland-heights-layout.js';
 import { TYPESAFE_REVISION } from '../../shared/typesafe-place-layout.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
+import { residentFigureBudget, residentFigures } from './resident-figures.js';
+import { fidelityTierForQuality } from './character-fidelity-runtime.js';
+import { combatStateFor } from './combat-motion.js';
+// The resident ids drawn last snapshot (#640): resident-figures.js keeps the set stable at the cut.
+let drawnResidents = new Set();
+// Fewer, nearer neighbours on a low-tier client and on the CPU acceptance renderer (resident-figures.js).
+const residentBudget = () => residentFigureBudget(softwareAcceptance ? 'low' : fidelityTierForQuality(quality?.stats));
+const residents = (locals, at) => { const figures = residentFigures(locals, at, drawnResidents, residentBudget()); drawnResidents = new Set(figures.map(figure => figure.id.slice('resident:'.length))); return figures; };
 import { createCommonsStream } from './commons-stream.js';
 import './spatial-stream.css';
 import { createCharacterStudio } from './character-studio.js';
@@ -30,6 +38,7 @@ import { createPlayerAvatar } from './player-avatar.js';
 import * as THREE from 'three';
 import { createPlayDock } from './play-dock.js';
 import { AO_OUTPUT, createRenderPipeline } from './render-pipeline.js';
+import { DEPTH_MODEL, findDepthFights, measureDepthPrecision } from './depth-layer-audit.js';
 import { warnIfSoftwareRendering } from './hardware-acceleration.js';
 import './hardware-acceleration.css';
 import { bindRenderVisibility } from './render-lifecycle.js';
@@ -100,6 +109,9 @@ import { createPhotoMode } from './photo-mode.js';
 import { createGuideEntry } from './salon-guide.js';
 import { createMultiplayer } from './multiplayer-client.js';
 import { createRemotePlayers } from './remote-players.js';
+import { createRibbonwingSeat } from './ribbonwing-seat.js';
+import { createRibbonwingSounds } from './ribbonwing-sounds.js';
+import { VEHICLES } from './vehicle-config.js';
 import { createSharedBuildLayer } from './shared-build-layer.js';
 import { createSeatAndWater } from './seat-and-water.js';
 import { createSharedSeatingControls } from './shared-seating-ui.js';
@@ -203,7 +215,8 @@ let worldRegionSha256 = null;
 let worldDistrictRevision;
 let landmarkAccountId = null;
 let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
-let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
+let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater, ribbonwingSeat, ribbonwingSounds;
+const craftWorld = new THREE.Vector3();
 let plazaSalon = null, cityBikeRacks = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
@@ -392,6 +405,7 @@ function initializeRenderer() {
       return fetch('/api/chauffeur',{...options,credentials:'same-origin',headers:{...options.headers,'X-CSRF-Token':session.csrfToken??''}});
     },
     requestVehicleExit: position => multiplayer.travel({position:[position[0],-position[2]]}),
+    requestManeuver: async kind => multiplayer?.connected ? multiplayer.maneuver(kind) : {ok:false,message:'Maneuvers are flown with the town: reconnect first.'},
     getPortrait: id => portraits.portrait(id) });
   if(characterStudioShown(import.meta.env)){
     characterStudio = createCharacterStudio({ownerId:document.body.dataset.accountId,
@@ -639,8 +653,10 @@ function gameDiagnostics() {
 function startMultiplayer() {
   if (multiplayer) return;
   // Peers out of view are culled with their shadows, while the sun casts any.
+  // A passenger of this page's landowner rides in her craft as drawn here (#777).
+  const ownCraft = id => id === multiplayer?.identity?.id && playerAvatar?.carriage.kind === 'hover' && playerAvatar.carriage.riding ? playerAvatar.carriage.object : null;
   remotePlayers = createRemotePlayers(scene, host, { shadowDirection: () => renderer.shadowMap.enabled && sun.castShadow && sun.intensity > 0
-    ? sunDirection.copy(sunOffset).negate().normalize() : null });
+    ? sunDirection.copy(sunOffset).negate().normalize() : null, localCraft: ownCraft });
   buildLayer ??= createSharedBuildLayer(scene);
   buildControls?.hide();
   multiplayer = createMultiplayer({
@@ -654,16 +670,21 @@ function startMultiplayer() {
     getRegionSha256: () => worldRegionSha256,
     getDistrictRevision: () => worldDistrictRevision,
     onHomeAccess: () => districtUI?.refreshAccess(),
-    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []);cityBikeRacks?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
-    onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
+    onSnapshot: snapshot => { const self=snapshot.players?.find(player=>player.id===multiplayer?.identity?.id);playerAvatar?.carriage.setTownCeiling?.(snapshot.flightCeiling);playerAvatar?.carriage.resumeRide?.(self);playerAvatar?.carriage.syncManeuver?.(self);ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []);cityBikeRacks?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
+    onCorrection: player => { if (world && player) { walking.applyServerPose(player); playerAvatar?.carriage.resumeRide?.(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
-      // Authored rivals (#597) draw like players, from the town's crime state only.
-      remotePlayers.sync([...players.filter(p=>!p.office),...(players.length?[...rivalFigures(multiplayer?.snapshot?.crime),...policeFigures(multiplayer?.snapshot?.police)]:[])], selfId);
+      const self = players.find(player => player.id === selfId);
+      // Authored rivals (#597), officers (#598) and nearby outdoor residents (#640) draw like players, from the town's state only.
+      const town=multiplayer?.snapshot??{};
+      // #640 increment 4: each figure carries the town's combat state for its renderer; a figure the
+      // combat state (a pose, or just facing an opponent) drops the legacy gesture so the two never
+      // stack and a rival's fading flinch never pops into the old stagger pose.
+      const fighting=figure=>{const combat=combatStateFor(figure.id,town);return combat?{...figure,combat,gesture:null}:figure;};
+      remotePlayers.sync([...players.filter(p=>!p.office).map(fighting),...(players.length?[...rivalFigures(town.crime).map(fighting),...policeFigures(town.police).map(fighting),...residents(town.locals,self?.position)]:[])], selfId);
       officeUI?.sync(players,selfId);
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
-      const self = players.find(player => player.id === selfId);
       walking?.syncAuthoritativePose(self);
       if (self) cyclingBoard?.setName(self.name);
       playerAvatar?.setSharedIdentity(self);
@@ -692,6 +713,9 @@ function startMultiplayer() {
     getPose:()=>walking?.getPose(),getEnvironment:()=>walking?.environment,
     request:message=>multiplayer.command(message),onConfirmed:player=>walking.applyServerPose(player),
     getBenches:()=>[...(seatAndWater?.benches()??[]),...suiteSeatsHere()],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
+  ribbonwingSeat = createRibbonwingSeat({ host, viewport: document.querySelector('#viewport'), walking, selfId: () => multiplayer?.identity?.id ?? null,
+    snapshot: () => multiplayer?.snapshot, command: body => multiplayer?.connected ? multiplayer.ribbonwing(body) : Promise.resolve({ ok: false, message: 'Reconnect first.' }),
+    craftOf: id => remotePlayers?.craftOf(id) ?? null });
   host.dataset.multiplayer = 'connecting';
 }
 
@@ -1010,7 +1034,8 @@ async function loadWorld() {
     enterWalk(data.walkSpawn, data.walkLookAt);
     if (multiplayer?.snapshot) {
       community.applyRemote(multiplayer.snapshot);
-      walking.applyServerPose(multiplayer.snapshot.players.find(player => player.id === multiplayer.identity?.id));
+      const self = multiplayer.snapshot.players.find(player => player.id === multiplayer.identity?.id);
+      walking.applyServerPose(self);playerAvatar?.carriage.resumeRide?.(self);
     }
     const places = placesOf(data);
     placesUI?.setPlaces(places);
@@ -1130,6 +1155,15 @@ function render(now) {
   storeIntros?.update(now);
   renderAudit?.phase('interactions');
   remotePlayers?.update(now, camera);
+  ribbonwingSeat?.update();
+  // Ribbonwing sounds (#777): this page's craft and the remote ones, heard from the camera.
+  if (playerAvatar) {
+    ribbonwingSounds ??= createRibbonwingSounds();
+    const own = playerAvatar.carriage, crafts = [];
+    if (own.kind === 'hover' && own.placement && own.object.visible && own.mechanisms) crafts.push({ id: 'self', object: own.object, mechanisms: own.mechanisms, maneuvering: Boolean(own.maneuver) });
+    for (const craft of remotePlayers?.ribbonwings() ?? []) if (craft.mechanisms) crafts.push(craft);
+    ribbonwingSounds.update(camera.position.toArray(), crafts.map(({ id, object, mechanisms, maneuvering }) => ({ id, position: object.getWorldPosition(craftWorld).toArray(), fanRate: mechanisms.fanRate, canopy: mechanisms.canopy, gear: mechanisms.gear, maneuvering })));
+  }
   buildLayer?.update(camera.position);
   updateBuilder();
   playerAvatar?.update(now, camera, renderer.getSize(viewportSize).y, Boolean(multiplayer?.connected));
@@ -1383,6 +1417,16 @@ try {
 // Explicit diagnostic timing; normal production builds omit this API.
 // The crowd camera remains development-only.
 if (renderAudit) {
+  // Visible meshes only: sprites need a camera to raycast, and hidden layers are not what was seen.
+  const auditMeshes = () => { const meshes = []; scene.traverseVisible(object => { if (object.isMesh) meshes.push(object); }); return meshes; };
+  // A raycast hit as [east, up, north] with the mesh, its named ancestors and material.
+  const auditHit = hit => {
+    const material = [hit.object.material].flat()[hit.face?.materialIndex ?? 0], path = [];
+    for (let node = hit.object.parent; node && path.length < 3; node = node.parent) if (node.name) path.push(node.name);
+    return { object: hit.object.name || hit.object.type, path: path.join(' < '), id: hit.object.id, material: material?.name ?? null,
+      color: material?.color?.getHexString?.() ?? null, offset: material?.polygonOffset ? [material.polygonOffsetFactor, material.polygonOffsetUnits] : null,
+      at: [+hit.point.x.toFixed(2), +hit.point.y.toFixed(4), +(-hit.point.z).toFixed(2)], distance: +hit.distance.toFixed(3) };
+  };
   window.__riverRenderAudit = {
     start: () => renderAudit.start(), stop: () => renderAudit.stop(),
     // Toggles and camera controls stay development-only: the ios-probe
@@ -1425,6 +1469,33 @@ if (renderAudit) {
       // position and target, and optional FOV. release() hands the camera back.
       view({ position, target, fov }) { auditCamera = { position: new THREE.Vector3(...position), target: new THREE.Vector3(...target), fov, restoreFov: auditCamera?.restoreFov ?? camera.fov }; },
       release() { if (auditCamera?.fov) { camera.fov = auditCamera.restoreFov; camera.updateProjectionMatrix(); } auditCamera = null; },
+      // Parallel faces of different materials close enough to fight for depth in the loaded scene,
+      // and this renderer's measured depth reach (depth-layer-audit.js).
+      depthFights({ slack, ...options } = {}) {
+        const found = findDepthFights(scene, { model: slack ? { ...DEPTH_MODEL, slack } : DEPTH_MODEL, groundAt: (east, north) => terrainHeight(world.terrain, east, north), ...options });
+        // Each pair names the two faces of its largest overlap: which object, under which named
+        // groups, and where, so an unnamed mesh can be traced to its builder.
+        const face = ({ object, points }) => { const path = []; for (let node = object.parent; node && path.length < 3; node = node.parent) if (node.name) path.push(node.name);
+          return { id: object.id, path: path.join(' < '), geometry: object.geometry.type, userData: Object.keys(object.userData), points: points.map(point => [+point[0].toFixed(3), +point[1].toFixed(3), +(-point[2]).toFixed(3)]) }; };
+        return { faces: found.faces, truncated: found.truncated, fights: found.map(({ faces, centre2d, ...pair }) => ({ ...pair, faces: faces?.map(face) })) };
+      },
+      depthPrecision: options => measureDepthPrecision(renderer, options),
+      // What the camera sees through a screen pixel (CSS px in the canvas): the first few surfaces.
+      pick(x, y, hits = 4) {
+        const rect = renderer.domElement.getBoundingClientRect(), ray = new THREE.Raycaster();
+        ray.setFromCamera(new THREE.Vector2((x - rect.left) / rect.width * 2 - 1, -((y - rect.top) / rect.height) * 2 + 1), camera);
+        return ray.intersectObjects(auditMeshes(), false).slice(0, hits).map(auditHit);
+      },
+      // What a vertical ray meets at each point of a small grid around [east, north], top down,
+      // to read a spot of ground (a hole, a fight, a seam).
+      groundProbe([east, north], { radius = 1, step = .5, hits = 4 } = {}) {
+        const ray = new THREE.Raycaster(), down = new THREE.Vector3(0, -1, 0), meshes = auditMeshes(), probes = [];
+        for (let de = -radius; de <= radius + 1e-6; de += step) for (let dn = -radius; dn <= radius + 1e-6; dn += step) {
+          ray.set(new THREE.Vector3(east + de, 400, -(north + dn)), down);
+          probes.push({ at: [+(east + de).toFixed(2), +(north + dn).toFixed(2)], hits: ray.intersectObjects(meshes, false).slice(0, hits).map(auditHit) });
+        }
+        return probes;
+      },
     } : {}),
     graphics() {
       const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
@@ -1567,6 +1638,20 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverScreening = () => ipicScreening?.inspect() ?? null;
   // Development-only: send a raw command, as a modified client could, to prove the server refuses it.
   window.__riverMultiplayerCommand = message => multiplayer?.command(message);
+  // The Ribbonwing passenger seat as this page draws it (#777): each hover craft's passenger
+  // seat, where each remote player is drawn, and this page's own seat state.
+  // Ribbonwing effects (#777): the sound bounds in use and each drawn craft's wingtip ribbons.
+  window.__riverRibbonwingEffects = () => ({ sounds: ribbonwingSounds?.stats() ?? null, trails: playerAvatar?.carriage.trails ?? null });
+  window.__riverRibbonwingSeat = () => {
+    const seat = new THREE.Vector3(...VEHICLES.hover.passengerSeat), players = multiplayer?.snapshot?.players ?? [], selfId = multiplayer?.identity?.id;
+    const craft = id => id === selfId ? (playerAvatar?.carriage.kind === 'hover' && playerAvatar.carriage.riding ? playerAvatar.carriage.object : null) : remotePlayers?.craftOf(id);
+    // The seat's point at the craft's base (where a passenger's holder sits) and its cushion.
+    const at = (id, height) => { const object = craft(id);object?.updateWorldMatrix(true, false);return object ? object.localToWorld(seat.clone().setY(height)).toArray() : null; };
+    const hovering = players.filter(player => player.vehicle === 'hover');
+    const seats = Object.fromEntries(hovering.map(player => [player.id, at(player.id, 0)])), cushions = Object.fromEntries(hovering.map(player => [player.id, at(player.id, VEHICLES.hover.passengerSeat[1])]));
+    return { pilotId: ribbonwingSeat?.pilotId ?? null, riding: ribbonwingSeat?.riding ?? false, panel: document.querySelector('.ribbonwing-seat:not([hidden]) [data-seat-status]')?.textContent ?? null,
+      seats, cushions, holders: Object.fromEntries(players.filter(player => player.id !== selfId).map(player => [player.id, remotePlayers?.holderOf(player.id)])) };
+  };
   window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), selfMaterials:playerAvatar?.materials,selfRealism:playerAvatar?.realism??null, voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
@@ -1583,7 +1668,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose,face:station?.face.pose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
   window.__riverCreatorObjects=()=>({resources:buildLayer?.stats(),rendered:(buildLayer?.object.children??[]).filter(entry=>entry.userData.build).map(entry=>({id:entry.userData.build.id,parts:entry.children.filter(child=>child.isMesh).map(child=>({color:child.material.color.getHexString(),transmission:child.material.transmission??0,position:child.position.toArray(),size:child.scale.toArray()}))}))});
-  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray(),verticalFovDegrees:camera.fov,aspect:camera.aspect,near:camera.near,far:camera.far},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray(),verticalFovDegrees:camera.fov,aspect:camera.aspect,near:camera.near,far:camera.far},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,mechanisms:playerAvatar?.carriage.mechanisms,maneuver:playerAvatar?.carriage.maneuver??null,maneuverTrace:playerAvatar?.carriage.maneuverTrace,craftQuaternion:playerAvatar?.carriage.object?.quaternion.toArray(),pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&(community.state?.locals ?? []).some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);
