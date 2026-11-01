@@ -160,6 +160,10 @@ Run once, as the goal asks: a git-archive snapshot of `main` `decb4e9a` with its
 
 `preview shared (development)` failed `crime-residents` again at the same check, now after 107 s (about 20 s on `main`); the failure artifact has no page error. Both commits on #844 are verified. The likely cause is arithmetic, not the walk helper: a player's fast walk is 3.2 m/s (`preview/src/walking.js` `WALK_SPEED.fast`) and a pursuing officer moves at 3.4 m/s (`server/police.js` `POLICE_RULES.speed`). On `main` the journey hops past the officer; under #844 a wanted visitor in the open cannot outpace one, so the officer grabs or arrests them before they stand within 6 m of a resident. A local run of the one journey, with per-stride logging, is queued behind five browser runs to confirm it. I did not change the journey further: making it pass means turning police off before the startle or slowing officers, and either changes what #785 means. Decision 4 now carries the question.
 
+### Register and queue (11:58Z)
+
+`project:check --github` reports 107 gaps (180 at baseline). River-oaks-41 landed #789 and #832; #788 and #850 are in their queue. The land queue holds six PRs (#788, #834, #826, #830, #814, #850), all started by other live owners; I have no lander queued. #844's task is `blocked` on Decision 4. #846's task stays `active` and waits on Decision 13.
+
 ## Next step
 
 Hosted results for #844 and #846; the Redis repeat result or its gate log; Val's answers to the Decisions above. Nothing else in this goal is landable without a line from Val.
