@@ -75,4 +75,7 @@ needs before retirement, then `pnpm run project:prune --branch <branch>
 after resolving blockers. Do not bypass the installed ref guard or remove worktrees
 directly. See the lifecycle workflow for exact-head ownership release, authorized
 cancellation (`project:cancel`), archive verification (`project:archives`) and
-restoration requirements.
+restoration requirements. `pnpm run project:sweep` (scheduled by
+`project:sweep-agent`) writes the current action queue to
+`.runtime/project-sweep/latest.md` in the primary checkout: when a row names your
+session, act on it before handoff.
