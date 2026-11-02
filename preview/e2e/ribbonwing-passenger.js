@@ -115,8 +115,22 @@ async page => {
   const [pilotAfter,aliceAfter]=await Promise.all([me(page),me(alice)]);
   check(aliceAfter.passengerOf===OWNER&&Math.abs(aliceAfter.altitude-pilotAfter.altitude)<.01,'After the roll alice is still aboard at the pilot\'s altitude');
   // Land; alice steps out beside the craft and walks on.
+  // The Ribbon's posts run beside the street this flies up: fly clear of them before landing (#841).
+  await (await import('./hover-landing.js')).clearHoverSpot(page,{focus:()=>host(page).focus(),label:'Jevica lands with alice aboard'});
   await host(page).focus();await page.keyboard.press('KeyG');
-  await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return (m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??1)<=.1;},{},{timeout:30000});
+  // The descent advances at most 0.08 s per drawn frame (carriage-motion.js stepHoverLift), so a
+  // CPU runner at about 1 fps lands in minutes, not seconds: wait while the craft is still coming
+  // down, and fail only when it stops descending for 15 s (or after 150 s).
+  {
+    const altitude=()=>page.evaluate(()=>{const m=window.__riverMultiplayer();return m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??null;});
+    const started=Date.now();let low=Infinity,lowAt=Date.now(),now=await altitude();
+    while(!(now!==null&&now<=.1)){
+      if(now!==null&&now<low-.05){low=now;lowAt=Date.now();}
+      if(!(Date.now()-lowAt<15000&&Date.now()-started<150000))throw new Error(`Jevica's craft stopped short of landing with alice aboard (altitude ${now?.toFixed(2)} m, lowest ${low.toFixed(2)} m, ${((Date.now()-started)/1000).toFixed(0)} s after G)`);
+      await page.waitForTimeout(500);now=await altitude();
+    }
+    check(true,`Jevica's craft lands with alice aboard (${((Date.now()-started)/1000).toFixed(0)} s after G)`);
+  }
   await alice.waitForFunction(()=>!document.querySelector('.ribbonwing-seat [data-seat-action]')?.disabled,{},{timeout:10000});
   await host(alice).focus();await alice.keyboard.press('KeyG');
   await alice.waitForFunction(()=>!window.__riverRibbonwingSeat().riding&&!window.__riverRibbonwingSeat().pilotId,{},{timeout:10000});
