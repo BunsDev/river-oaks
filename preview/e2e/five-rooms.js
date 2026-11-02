@@ -15,7 +15,7 @@ async page => {
   const { pathToFileURL } = await import('node:url');
   const { readFile } = await import('node:fs/promises');
   const { loadavg } = await import('node:os');
-  const { BUDGET_PATH, assertCompact, spawnCamera, judgeBudget, readContract, ribbonTraversal, scenePose, validateBudgetPin } = await import('./five-rooms-plan.mjs');
+  const { BUDGET_PATH, assertCompact, spawnCamera, judgeBudget, readContract, ribbonTraversal, scenePose, validateBudgetPin, inRibbonCorridor } = await import('./five-rooms-plan.mjs');
   const { DEFAULT_FINISH } = await import('../src/render-quality.js');
   const { loadDistrictData } = await import('../../server/district-data.js');
   const { createResidentNavigation } = await import('../src/navigation.js');
@@ -33,9 +33,9 @@ async page => {
   const { contract, reason } = await readContract(root);
   check(contract, `Spatial contract readable (#838): ${reason}`);
   const world = await loadDistrictData({ districtRevision: process.env.RIVER_OAKS_DISTRICT_REVISION || undefined });
-  const nav = createResidentNavigation(world, { allowRoads: true }), clearRoute = clearRouter(createWalkingEnvironment(world), nav);
+  const nav = createResidentNavigation(world, { allowRoads: false }), clearRoute = clearRouter(createWalkingEnvironment(world), nav);
   const ground = (east, north) => groundSurfaceHeight(world, east, -north);
-  const { spine, stops } = ribbonTraversal(contract), arrival = spawnCamera(world, ground);
+  const { spine, stops, segments } = ribbonTraversal(contract), arrival = spawnCamera(world, ground);
 
   const ready = tab => tab.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true' && window.__riverRenderAudit && window.__riverMultiplayer?.().connected
     && window.__riverCarriage?.()?.pose?.position?.every(Number.isFinite), null, { timeout: 180000 });
@@ -118,7 +118,7 @@ async page => {
     const judged = judgeBudget(pin, spawn.pink.calls);
     budget = { pinned: true, pinHead: pin.head, baseline: pin.baseline, ...judged, measured: budget.measured };
     check(judged.within, `Pink spawn frame within the pinned draw-call budget: ${judged.measuredCalls} <= ${judged.budgetCalls} (classic baseline ${pin.baseline.classicCalls}, delta ${judged.delta})`);
-  } else checks.push(`No budget pin at ${BUDGET_PATH} yet; spawn frame measured ${spawn.pink.calls} (pink) / ${spawn.classic.calls} (classic) draw calls for pinning`);
+  } else throw new Error(`No budget pin at ${BUDGET_PATH}; acceptance is incomplete. Measured ${spawn.pink.calls} (pink) / ${spawn.classic.calls} (classic) calls.`);
 
   // 6. Walk the Ribbon end to end and stand at each entrance, on authoritative ground.
   const point = () => page.evaluate(() => window.__riverCarriage().pose);
@@ -150,16 +150,17 @@ async page => {
     const side = attempt % 2 ? 'KeyA' : 'KeyD'; await page.keyboard.down(side); await page.waitForTimeout(400 + 200 * Math.floor(attempt / 2)); await page.keyboard.up(side);
   };
   // Keyboard walking with turn-by-drag; when a target stops getting closer, re-route from where the player is (route-clearance.js), else back away and sidestep.
-  const walk = async (targets, label, depth = 0) => {
+  const walk = async (targets, label, depth = 0, corridor = null) => {
     for (const target of targets) {
       const deadline = Date.now() + 120000;
       let best = Infinity, improvedAt = Date.now(), recoveries = 0;
       for (;;) {
         const pose = await point(), { distance, difference } = headingTo(pose, target);
+        if (corridor && !inRibbonCorridor(corridor, [pose.position[0], -pose.position[2]])) throw new Error(`${label}: left the declared Ribbon width (#841)`);
         if (distance < .2) break;
         if (Date.now() > deadline) throw new Error(`${label} stalled (#841 ground/collision): ${JSON.stringify({ target, position: pose.position.map(v => round(v)) })}`);
         if (distance < best - .25) { best = distance; improvedAt = Date.now(); }
-        else if (depth < 2 && recoveries < 6 && Date.now() - improvedAt > 10000) {
+        else if (!corridor && depth < 2 && recoveries < 6 && Date.now() - improvedAt > 10000) {
           const here = [pose.position[0], -pose.position[2]], detour = clearRoute(here, target);
           detours.push({ label, target: target.map(v => round(v)), from: here.map(v => round(v)), route: detour?.length ?? 0 });
           if (detour?.length) await walk(detour, `${label} detour`, depth + 1); else await unwedge(recoveries);
@@ -176,13 +177,23 @@ async page => {
   };
   const walkStarted = Date.now();
   await travel(spine[0]);
-  await walk(spine, 'Ribbon spine');
+  await walk(spine, 'Ribbon spine', 0, segments.find(item => item.id === 'spine'));
   const spineMetres = spine.slice(1).reduce((sum, p, i) => sum + Math.hypot(p[0] - spine[i][0], p[1] - spine[i][1]), 0);
   check(true, `Walked the Ribbon spine end to end: ${round(spineMetres, 1)} m in ${round((Date.now() - walkStarted) / 1000, 1)} s with ${detours.length} detours`);
+  const segmentResults = [{ id: 'spine', walked: true }];
+  for (const segment of segments.filter(item => item.id !== 'spine')) {
+    const here = await point(), connection = clearRoute([here.position[0], -here.position[2]], segment.points[0]);
+    check(connection?.length, `Ribbon ${segment.id}: continuous connection exists (#841)`);
+    await walk(connection, `Ribbon ${segment.id} connection`);
+    await walk(segment.points, `Ribbon ${segment.id}`, 0, segment);
+    segmentResults.push({ id: segment.id, walked: true, status: segment.status });
+  }
   const venues = [];
   for (const stop of stops) {
     const label = `${stop.label} entrance`;
-    await travel(stop.approach[0]);
+    const here = await point(), connection = clearRoute([here.position[0], -here.position[2]], stop.approach[0]);
+    check(connection?.length, `${label}: continuous walking connection exists (#841)`);
+    await walk(connection, `${label} connection`);
     await walk(stop.approach, label);
     await face(stop.face);
     const me = await self(), pose = await point(), box = await page.locator('#canvas-host').boundingBox();
@@ -217,7 +228,7 @@ async page => {
   return assertCompact({ passed: true, checks, contractVersion: contract.version, defaultFinish: DEFAULT_FINISH,
     finish: { noFlag: compactFinish(noFlag.finish), classic: { preference: classicStream.finish.preference, ribbon: classicRibbon && { id: classicRibbon.id, modules: classicRibbon.stats?.modules ?? null }, fiveRooms: classicFiveRooms }, blocked: blockedStream.finish.preference },
     spawn: { camera: arrival.id, viewport: spawn.pink.buffer, pink: { calls: spawn.pink.calls, triangles: spawn.pink.triangles }, pinkSmooth: { calls: spawn.pinkSmooth.calls, buffer: spawn.pinkSmooth.buffer }, classic: { calls: spawn.classic.calls, triangles: spawn.classic.triangles } },
-    budget, walk: { spineMetres: round(spineMetres, 1), seconds: round((Date.now() - walkStarted) / 1000, 1), detours, groundRange, samples: altitudes.length }, venues,
+    budget, walk: { segments: segmentResults, spineMetres: round(spineMetres, 1), seconds: round((Date.now() - walkStarted) / 1000, 1), detours, groundRange, samples: altitudes.length }, venues,
     teardown: { before: before.renderer, afterReloads: reloads.map(state => state.renderer), foundationGroups: inventoryOf(before) },
     hostLoad: loadavg().map(n => round(n, 1)), seconds: round((Date.now() - started) / 1000, 1),
     scope: 'Local Chromium on the loopback fixture at 1280x800; frame counts are this host, not a device budget. Captures and the night pink-rule review are five-rooms-cameras.mjs. Not a human visual or accessibility review.' });

@@ -32,6 +32,24 @@ const synthetic = () => ({
 const world = { walkSpawn: [-5, -8, 18.18], walkLookAt: [-5, 27, 18.1], stores: [{ name: 'IPIC Theaters', facade: [9, 60, 18.3] }] };
 const ground = (east, north) => 18 + north / 1000;
 
+test('Ribbon corridor rejects a bypass outside its declared walk width', async () => {
+  const { inRibbonCorridor } = await import('../e2e/five-rooms-plan.mjs');
+  assert.equal(typeof inRibbonCorridor, 'function');
+  const segment = { points: [[0, 0], [0, 10], [10, 10]], width: 2 };
+  assert.equal(inRibbonCorridor(segment, [0.9, 5]), true);
+  assert.equal(inRibbonCorridor(segment, [1.1, 5]), false);
+  assert.equal(inRibbonCorridor(segment, [5, 10.9]), true);
+  assert.equal(inRibbonCorridor(segment, [5, 5]), false);
+});
+
+test('the walk plan includes every contract segment even without a venue link', () => {
+  const raw = synthetic();
+  raw.ribbon.segments.push({ id: 'south', points: [[0, 0], [-50, -50]], width: 2, status: 'blocked' });
+  const contract = normalizeContract(raw), plan = ribbonTraversal(contract);
+  assert.deepEqual(plan.segments, contract.segments.map(({ id, points, width, status }) => ({ id, points, width, status })));
+  assert.deepEqual(plan.segments.at(-1).points.at(-1), [-50, -50]);
+});
+
 test('the contract reader accepts the #838 draft shape and orders the five rooms', () => {
   const contract = normalizeContract(synthetic());
   assert.deepEqual(contract.venues.map(venue => venue.id), [...VENUE_IDS]);
@@ -141,11 +159,15 @@ test('the draw-call budget is the headroom over a measured classic baseline, and
   assert.throws(() => drawCallBudget(0), /measured baseline/);
   const pin = { measuredAt: '2026-11-01T00:00:00Z', head: 'abc', camera: 'r01-arrival', graphics: 'sharp', viewport: [1280, 800], headroom: BUDGET_HEADROOM, baseline: { classicCalls: 1200, pinkCalls: 1230 }, budgetCalls: 1380 };
   assert.equal(validateBudgetPin(pin), pin);
+  assert.throws(() => validateBudgetPin({ ...pin, headroom: 10, budgetCalls: 13200 }), /headroom.*15/);
+  assert.throws(() => validateBudgetPin({ ...pin, viewport: [-1280, 800] }), /viewport/);
   assert.throws(() => validateBudgetPin({ ...pin, budgetCalls: 1400 }), /must equal the headroom/);
   assert.throws(() => validateBudgetPin({ ...pin, baseline: { classicCalls: 1200 } }), /pinkCalls/);
   assert.throws(() => validateBudgetPin({ ...pin, viewport: null }), /viewport/);
   assert.deepEqual(judgeBudget(pin, 1300), { within: true, delta: 100, budgetCalls: 1380, measuredCalls: 1300 });
   assert.equal(judgeBudget(pin, 1381).within, false);
+  assert.throws(() => judgeBudget(null, 1300), /budget pin/);
+  assert.throws(() => judgeBudget(pin, NaN), /measured calls/);
 });
 
 test('lit pink is a pink hue well above the night ambient; the picked object decides the rule', () => {
@@ -211,4 +233,12 @@ test('receipts stay compact: a 16-hex plan hash passes, a raw sha256 or a per-fi
   assert.throws(() => assertCompact({ sourceSha256: { 'preview/src/main.js': 'a'.repeat(64) } }), /raw digest/);
   const map = Object.fromEntries(Array.from({ length: 70 }, (_, i) => [`preview/src/file-${i}.js`, `h${i}`]));
   assert.throws(() => assertCompact({ map }), /per-file map/);
+});
+
+test('camera and budget receipts retain exact Git revision provenance', () => {
+  const revision = 'ef6f6942ef5ed799aff9fe441bb76aed07a5ad68';
+  const receipt = { head: revision, pin: { head: revision, integrated: { head: revision } }, budget: { pinHead: revision } };
+  assert.equal(assertCompact(receipt), receipt);
+  assert.throws(() => assertCompact({ token: revision }), /raw digest/);
+  assert.throws(() => assertCompact({ head: 'a'.repeat(64) }), /raw digest/);
 });

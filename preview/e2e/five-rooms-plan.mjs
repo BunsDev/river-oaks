@@ -125,7 +125,15 @@ export function ribbonTraversal(contract, { standOff = 1.2 } = {}) {
     const approach = segment.id === SPINE_ID ? [stand] : [...orientedToward(segment, stand), stand];
     return { venue: venue.id, label: venue.label, entrance: entrance.id, link: entrance.link, segment: segment.id, status: segment.status ?? 'clear', approach, door, stand, face, inward };
   });
-  return { spine, stops };
+  return { spine, stops, segments: contract.segments.map(({ id, points, width, status }) => ({ id, points, width, status: status ?? 'clear' })) };
+}
+
+export function inRibbonCorridor(segment, point) {
+  return segment.points.slice(1).some((b, i) => {
+    const a = segment.points[i], dx = b[0] - a[0], dy = b[1] - a[1], length2 = dx * dx + dy * dy;
+    const t = length2 ? Math.max(0, Math.min(1, ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / length2)) : 0;
+    return Math.hypot(point[0] - a[0] - t * dx, point[1] - a[1] - t * dy) <= segment.width / 2;
+  });
 }
 
 const camera = (id, group, stop, subject, position, target, fov, extra = {}) => ({ id, group, stop, subject, frame: 'source', source: { position, target }, fov, ...extra });
@@ -230,14 +238,19 @@ export const drawCallBudget = (baselineCalls, headroom = BUDGET_HEADROOM) => {
 /** Throws unless the pin records a measured baseline and the budget derived from it. */
 export function validateBudgetPin(pin) {
   for (const key of ['measuredAt', 'head', 'camera', 'graphics']) if (typeof pin?.[key] !== 'string' || !pin[key]) throw new Error(`budget pin: ${key} is required`);
-  if (!Array.isArray(pin.viewport) || pin.viewport.length !== 2) throw new Error('budget pin: viewport [w, h] is required');
+  if (!Array.isArray(pin.viewport) || pin.viewport.length !== 2 || !pin.viewport.every(n => Number.isInteger(n) && n > 0)) throw new Error('budget pin: viewport [w, h] is required');
+  if ((pin.headroom ?? BUDGET_HEADROOM) !== BUDGET_HEADROOM) throw new Error('budget pin: headroom must match the provisional 15 percent rule; approval remains required');
   const baseline = pin.baseline;
   if (!baseline || !Number.isFinite(baseline.classicCalls) || !Number.isFinite(baseline.pinkCalls)) throw new Error('budget pin: baseline.classicCalls and baseline.pinkCalls (measured on main) are required');
   if (pin.budgetCalls !== drawCallBudget(baseline.classicCalls, pin.headroom ?? BUDGET_HEADROOM)) throw new Error('budget pin: budgetCalls must equal the headroom over baseline.classicCalls');
   return pin;
 }
 /** `{ within, delta, budgetCalls }` for a measured spawn frame against the pin. */
-export const judgeBudget = (pin, measuredCalls) => ({ within: measuredCalls <= pin.budgetCalls, delta: measuredCalls - pin.baseline.classicCalls, budgetCalls: pin.budgetCalls, measuredCalls });
+export const judgeBudget = (pin, measuredCalls) => {
+  validateBudgetPin(pin);
+  if (!Number.isFinite(measuredCalls) || measuredCalls <= 0) throw new Error('budget: positive measured calls required');
+  return { within: measuredCalls <= pin.budgetCalls, delta: measuredCalls - pin.baseline.classicCalls, budgetCalls: pin.budgetCalls, measuredCalls };
+};
 
 // The pink rule (#825, Val 2026-10-31): at night, pink light only on usable things (seats, doors
 // that open, display frames, lift controls) and three landmarks (IPIC marquee, clock face, Overlook
@@ -330,7 +343,11 @@ export function validateCameraReport(report) {
 // Receipts stay compact: no raw sha256 maps (they read as generic API keys to gitleaks, and the
 // journey's evidence is counts and positions, not file digests).
 export function assertCompact(value, path = 'receipt') {
-  if (typeof value === 'string') { if (/^[0-9a-f]{40,64}$/i.test(value)) throw new Error(`${path} holds a raw digest; receipts record counts, positions and names only`); return value; }
+  if (typeof value === 'string') {
+    const gitRevision = /\.(?:head|pinHead)$/.test(path) && /^[0-9a-f]{40}$/i.test(value);
+    if (!gitRevision && /^[0-9a-f]{40,64}$/i.test(value)) throw new Error(`${path} holds a raw digest; receipts record counts, positions and names only`);
+    return value;
+  }
   if (Array.isArray(value)) { value.forEach((item, i) => assertCompact(item, `${path}[${i}]`)); return value; }
   if (value && typeof value === 'object') {
     const keys = Object.keys(value);
