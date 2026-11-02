@@ -1696,6 +1696,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean),levelId));
         return recoveredUpperEnvironments.get(levelId);
       };
+      let recoveredBeforeFiveRooms=null;
       const occupiedSeats=new Set(),heldSlots=new Set();
       for(const rider of nextPlayers.values())if(rider.cycling){if(heldSlots.has(rider.cycling))throw new Error('Invalid cycling slot');heldSlots.add(rider.cycling);}
       for (const player of nextPlayers.values()) {
@@ -1712,8 +1713,21 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           const [standEast,standNorth]=campusToSource(stood.position);
           player.position=[standEast,standNorth,interiorLevels.get(site.levelId).level.floorElevation];player.sitting=null;
         }
-        const [east,north,ground]=player.position;
         const playerEnvironment=recoveredEnvironmentFor(player.levelId);
+        // A town saved before the Five Rooms solids (#841) may hold a player standing where a
+        // Ribbon post or a shell frontage now stands: valid then, blocked now. Restore them on
+        // the nearest free ground instead of refusing the town; anything else still fails closed.
+        if(!player.levelId && !player.sitting && !(player.altitude>0.1) && !player.vehicle) {
+          const [px,pn]=player.position;
+          if(!playerEnvironment.isFree(px,-pn)) {
+            recoveredBeforeFiveRooms??=createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean),null,{fiveRooms:false});
+            if(recoveredBeforeFiveRooms.isFree(px,-pn)) {
+              const landed=createWalkingState(playerEnvironment,[px,pn]).position;
+              player.position=[landed[0],-landed[2],playerEnvironment.groundAt(landed[0],landed[2])];
+            }
+          }
+        }
+        const [east,north,ground]=player.position;
         if (!nextLedgers.has(player.id) || (!player.sitting && Math.abs(ground-playerEnvironment.groundAt(east,-north))>0.2)
           || (player.altitude>0.1?!playerEnvironment.canFly(east,ground+player.altitude,-north):!playerEnvironment.isFree(east,-north))
           || player.levelId && (playerEnvironment.roomAt(east,-north)?.planId!==player.levelId

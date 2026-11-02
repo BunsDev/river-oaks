@@ -115,6 +115,8 @@ async page => {
   const [pilotAfter,aliceAfter]=await Promise.all([me(page),me(alice)]);
   check(aliceAfter.passengerOf===OWNER&&Math.abs(aliceAfter.altitude-pilotAfter.altitude)<.01,'After the roll alice is still aboard at the pilot\'s altitude');
   // Land; alice steps out beside the craft and walks on.
+  // The Ribbon's posts run beside the street this flies up: fly clear of them before landing (#841).
+  await (await import('./hover-landing.js')).clearHoverSpot(page,{focus:()=>host(page).focus(),label:'Jevica lands with alice aboard'});
   await host(page).focus();await page.keyboard.press('KeyG');
   await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return (m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??1)<=.1;},{},{timeout:30000});
   await alice.waitForFunction(()=>!document.querySelector('.ribbonwing-seat [data-seat-action]')?.disabled,{},{timeout:10000});

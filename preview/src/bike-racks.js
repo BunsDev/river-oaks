@@ -10,8 +10,11 @@ import { plazaSalonPlan, plazaSalonRack } from './plaza-salon-plan.js';
 // and tree pits in each District revision (bike-racks.test.js).
 const SHAPE = { slots: 4, pitch: 0.9, length: 3.2, setback: 1.1, approach: 0.9 };
 const CITY_RACKS = [
-  // North, by Amorino.
-  { id: 'amorino-rack', x: -2760.0, north: -1210.5, heading: Math.PI / 2 },
+  // North, across the lane from Amorino. It stood at (-2760, -1210.5) parking east, with its
+  // bikes on the Five Rooms Ribbon's post line; the footway between curb and posts is ~1.75 m,
+  // so it moved to the nearest spot that keeps every rule here and 1 m off the Ribbon walk
+  // (#841). The id stays, so saved slots keep their names.
+  { id: 'amorino-rack', x: -2775.5, north: -1203.0, heading: -Math.PI / 2 },
   // East, by Cartier.
   { id: 'cartier-rack', x: -2744.0, north: -1295.5, heading: 0 },
   // South, by Harry Winston.
