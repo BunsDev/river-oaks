@@ -65,6 +65,11 @@ async page => {
       return !(s.police?.units ?? []).some(unit => unit.targetId === m.selfId && ['pursue', 'grab', 'arrest'].includes(unit.state))
         && s.crime.wanted.some(([id, stars]) => id === m.selfId && stars >= 1); }, null, { timeout: 15000 }).then(() => true).catch(() => false);
     check(loose, 'Out of the zone no officer is on the visitor, and the star is still there');
+    // Unobserved, one star cools after 30 s (crime.js starDecayMs): each attempt below records why it
+    // moved on, with the visitor's stars and the seconds since the officers stood down.
+    const looseAt = Date.now(), attempts = [];
+    const note = async (candidate, reason) => { const t = await town(visitor);
+      attempts.push({ id: candidate.id, reason, stars: t.wanted.find(([id]) => id === t.selfId)?.[1] ?? 0, seconds: Math.round((Date.now() - looseAt) / 100) / 10 }); };
     // Toward the nearest outdoor resident who is not already reacting, and stop at arm's length.
     const state = await town(visitor);
     const candidates = state.locals.filter(local => !local.indoor && local.life && local.life.reaction === null && ['walking', 'resting', 'turning'].includes(local.life.status))
@@ -81,20 +86,21 @@ async page => {
       const gap = distance(here, near.position);
       if (gap > 14) {
         const k = 12 / gap, mark = [near.position[0] + (here[0] - near.position[0]) * k, near.position[1] + (here[1] - near.position[1]) * k];
-        if (!await approach(visitor, mark, 3)) continue;
+        if (!await approach(visitor, mark, 3)) { await note(candidate, 'no 12 m stop'); continue; }
       }
       const figure = await visitor.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === `resident:${id}` && item.ready), candidate.id, { timeout: 12000 }).then(() => true).catch(() => false);
-      if (!figure) continue;
+      if (!figure) { await note(candidate, 'figure not drawn in 12 s'); continue; }
       // Where they are now: they may have walked on while the figure loaded (review of 92d7336a).
       const now = (await town(visitor)).locals.find(local => local.id === candidate.id);
-      if (!now || now.life?.reaction !== null) continue;
+      if (!now || now.life?.reaction !== null) { await note(candidate, `already ${now?.life?.reaction ?? 'gone'}`); continue; }
       const where = await approach(visitor, now.position, 4);
-      if (!where) continue;
+      if (!where) { await note(candidate, 'no arm\'s-length stop'); continue; }
       startled = await visitor.waitForFunction(id => { const local = window.__riverMultiplayer().snapshot.locals.find(item => item.id === id);
         return local?.life?.reaction === 'startle' && local.life.status === 'startled' && local; }, candidate.id, { timeout: 8000 }).then(handle => handle.jsonValue()).catch(() => null);
       if (startled) { nearest = candidate; stood = where; break; }
+      await note(candidate, 'no startle in 8 s');
     }
-    check(nearest, `A resident startles at a wanted player at arm's length (town state): ${nearest?.name}`);
+    check(nearest, `A resident startles at a wanted player at arm's length (town state): ${nearest?.name ?? JSON.stringify(attempts)}`);
     // What the visitor's screen draws while the town says startle (review of #708: the earlier check
     // accepted any resting figure).
     const drawnStartle = await visitor.waitForFunction(id => { const figure = window.__riverMultiplayer().remotes.find(item => item.id === `resident:${id}`);
