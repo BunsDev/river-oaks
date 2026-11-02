@@ -1,3 +1,4 @@
+import { levelArrivalNotice, portalActionLabel } from './level-portal-labels.js';
 import { bindPageLifecycle } from './background-lifecycle.js';
 import { personPosition, personEyeHeight, personDistance } from './person-position.js';
 import { createFlightState, beginFlight, stepFlight, recordFlightPose, acknowledgeFlightPose } from './flight.js';
@@ -13,6 +14,7 @@ import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounte
 import { sharedRoomSummary } from './shared-population.js';
 import { isGameplayKey } from './keyboard-input.js';
 import { primaryAction } from './contextual-action.js';
+import { actionCueLabel, createActionCue } from './action-cue.js';
 import { travelRefusal } from './travel-message.js';
 import './walking.css';
 import { createTouchGamepad } from './touch-gamepad.js';
@@ -35,6 +37,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const actionButtons = Object.fromEntries(['talk', 'enter', 'descend', 'play', 'interact', 'meet'].map(action =>
     [action, hud.querySelector(action === 'meet' ? '#walking-meet-nearby' : `#walking-${action}`)]));
   hud.querySelector('#walking-notice').after(primary, more);
+  // The contextual action appears silently; name it politely once it holds still.
+  const cueNode = document.createElement('p'); cueNode.id = 'walking-cue'; cueNode.className = 'sr-only'; cueNode.setAttribute('role', 'status');
+  hud.append(cueNode);
+  const cue = createActionCue({ element: cueNode });
   for (const button of Object.values(actionButtons)) secondary.append(button);
   // Busy actions (a request or animation in flight) use aria-disabled, so they
   // keep focus and their slot; disabled means the action is unavailable here.
@@ -76,6 +82,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       (keyboard && selected ? actionButtons[selected] : host).focus({ preventScroll: true });
     }
     hud.dataset.primaryAction = selected ?? '';
+    const shown = active && selected ? actionButtons[selected] : null;
+    cue.update(...(shown && !shown.hidden && !shown.disabled ? actionCueLabel(shown) : [null]));
   };
   const sprintButton=document.createElement('button');
   sprintButton.id='walking-sprint';sprintButton.dataset.walkKey='ShiftLeft';
@@ -175,9 +183,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       && portal.toLevelId === `${level.buildingId}/l${level.index + (direction === 'down' ? -1 : 1)}`
       && Math.hypot(portal.position[0] - state.position[0], portal.position[1] + state.position[2]) <= 1.3) ?? null;
   };
-  const portalLabel = (portal, up) => portal.kind === 'lift'
-    ? up ? 'Take the lift up' : portal.toLevelId.endsWith('/l0') ? 'Take the lift to the ground floor' : 'Take the lift down'
-    : up ? 'Go up one level' : portal.toLevelId.endsWith('/l0') ? 'Go down to ground floor' : 'Go down one level';
+  const portalLabel = portalActionLabel;
   const doorway = () => {
     let result = null, distance = 6;
     for (const store of stores) {
@@ -199,6 +205,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     clear(); doorwayPending = true;
     try {
       const result = await (stairs ? onLevelChange?.(stairs) : room ? onLeave?.(store) : onEnter?.(store));
+      // A landed stair or lift says which floor this is, for anyone who cannot see the change.
+      if (active && stairs && result?.ok) notify(levelArrivalNotice(stairs.toLevelId));
       if (active && state === actionState && result?.ok === false) {
         notify(travelRefusal(result, { blocked: 'The way through is blocked right now. Try again in a moment.',
           cooldown: 'Wait a moment before stepping through. Try again.', fallback: 'Could not step through. Try again.' }));

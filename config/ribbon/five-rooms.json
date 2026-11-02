@@ -784,26 +784,26 @@
         "id": "spine",
         "points": [
           [
-            -2759.588,
+            -2759.288,
             -1285.5
           ],
           [
-            -2758.824,
+            -2758.524,
             -1241.316
           ],
           [
-            -2757.967,
-            -1197.335
+            -2757.673,
+            -1197.635
           ]
         ],
-        "width": 2,
+        "width": 2.4,
         "clearHeight": 3.6,
         "style": "canopy",
         "maxSpan": 6,
         "status": "blocked",
-        "source": "config/ribbon/district-spine.json (#827), unchanged",
+        "source": "config/ribbon/district-spine.json (#827, widened to 2.4 m by #865), unchanged",
         "blocked": {
-          "reason": "the walk of spine runs over tree-pit-103, tree-pit-76, tree-pit-84, tree-pit-152, bench-5-body, tree-pit-126, tree-pit-27, tree-pit-83",
+          "reason": "the walk of spine runs over tree-pit-103, tree-pit-76, tree-pit-84, tree-pit-152, bench-5-body, tree-pit-126, tree-pit-27, tree-pit-83, tree-pit-171",
           "blockers": [
             "bench-5-body",
             "tree-104",
@@ -816,13 +816,14 @@
             "tree-pit-103",
             "tree-pit-126",
             "tree-pit-152",
+            "tree-pit-171",
             "tree-pit-27",
             "tree-pit-76",
             "tree-pit-83",
             "tree-pit-84"
           ],
           "moves": [
-            "Street-tree pits in the walk (tree-pit-27, -76, -83, -84, -103, -126, -152; -76 and -103 are also under posts): move each pit out of the walk. Landscape (#840) owns tree moves (decision 2).",
+            "Street-tree pits in the walk (tree-pit-27, -76, -83, -84, -103, -126, -152, and -171 since #865 widened the walk to 2.4 m; -76 and -103 are also under posts): move each pit out of the walk. Landscape (#840) owns tree moves (decision 2).",
             "Crowns below the canopy top (3.6 m clear + 0.4 m slab = 4.0 m): tree-104 at 3.19 m, tree-153 3.53, tree-84 3.62, tree-37 3.72, tree-127 3.79, tree-77 3.82, tree-85 3.89. Lift each crown to at least 4.0 m, or lower this segment's clearHeight to 3.0 m (the kit minimum), which clears all but tree-104.",
             "Van Cleef & Arpels bench body (bench-5-body) under modules 018-019: move the bench out of the walk (it stays a seat-access zone the canopy spans), or retire it with the Atelier bay."
           ]

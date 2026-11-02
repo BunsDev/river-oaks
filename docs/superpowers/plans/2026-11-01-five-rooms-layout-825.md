@@ -125,6 +125,18 @@ From #840 Landscape (worker on `feat/five-rooms-landscape-courts-825-20261101`, 
 3. Confirmed for v1: paving at the Gardens threshold may cover only `link:studios-overlook`'s reach
    and the `osm-way-625330795` pieces listed in `links[].crossesLaneEnd`.
 
+## 2026-11-02: re-carry the #865 spine (landing)
+
+The lander (river-oaks-85, goal "Five Rooms on main") updated #849 from main `85908e04` as `9cceb0e8`.
+Hosted `preview unit` then failed twice (once rerun) on *the #827 spine is carried unchanged*: #865
+widened `config/ribbon/district-spine.json` to 2.4 m and moved the centreline 0.3 m east. The contract
+now re-carries that spine (points and `width: 2.4`). The wider walk also covers `tree-pit-171`; the
+validator refused the record until the pit was named, so the blocked record, reason and moves now list
+it. `node docs/design/five-rooms/measure.mjs`: plan hash `06f53958f6f8f2a6`; spine 87.88 m, 30 modules,
+62 posts; crossing still 9.516 m; plan.svg regenerated; layout.md tables updated. The version stays v2:
+only carried data and its confirmed blockers changed. Focused: five-rooms-layout, ribbon-route-district
+and ribbon-graybox, 23/23.
+
 ## Next step
 
 Draft PR #849 (`49862e17`). Hosted `preview` on it; hand the decision list to the #825 steward (river-oaks-6d) and

@@ -13,9 +13,9 @@
 // approved it, under any finish. The finish is a pass over a built Studio scene instead: it
 // recolours each material still showing a listed classic catalog entry (`from`, the
 // space-scene.js FINISHES values) to the finish's entry. Floors, glass, special materials, the
-// arrival marker and the lighting presets (SPACE_LIGHT) are not part of a finish. `classic` is
-// the default and changes nothing. The studio opts in with render-quality.js
-// readFinishPreference (`?finish=pink-jet-age` on studio.html, or the stored choice).
+// arrival marker and the lighting presets (SPACE_LIGHT) are not part of a finish. `classic`
+// changes nothing. The studio reads render-quality.js readFinishPreference: Pink Jet-Age by
+// default (#837), `?finish=classic` on studio.html or the stored choice for the comparison.
 import * as THREE from 'three';
 import { PINK_JET_AGE as P } from '../../../shared/city-kit/pink-jet-age.js';
 
