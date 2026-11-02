@@ -8,7 +8,7 @@ const {officesFor}=await import('../src/office-contract.js');
 const {OFFICE_OCCUPIED_CLEARANCE,officeLayout,officeSeat,officeTransition}=await import('../src/office-layouts.js');
 const data=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url)));
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
-function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=null,renderPhase='office',captureStreet=()=>null,workspaces=null,layout=null,startAt=null,transitionPending=null,seatPending=null}={}){
+function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=null,renderPhase='office',captureStreet=()=>null,workspaces=null,layout=null,startAt=null,transitionPending=null,seatPending=null,guests=[]}={}){
  class Element {
   constructor(tag){this.tagName=tag;this.children=[];this.dataset={};this.events={};this.attributes={};this.textContent='';this.value='';this.hidden=false;this.open=false;this.classList={add(){},remove(){}};}
   append(...items){for(const i of items){i.remove();i.parent=this;this.children.push(i);}}
@@ -32,7 +32,7 @@ function setup(t,{access='owner',sceneError=false,listPending=null,leavePending=
 
  const player={id:'owner',name:'Jevica',position:[...officesFor(data)[0].entrance,0],office:null};
  const calls=[],voiceCalls=[],scenes=[],prepared=[],renders=[],graphics=[];let pending=null,disposed=0;
- const mp={connected:true,identity:{id:'owner'},snapshot:{players:[player]},voice:{state:{available:true,status:'joined',mic:'off',pushToTalk:false},toggleJoin(){voiceCalls.push('join');},toggleMic(){voiceCalls.push('mic');},setTransmit(v){voiceCalls.push(v);}},async command(m){calls.push(m);if(m.action==='list'){if(listPending)await listPending;return {ok:true,offices:[{...officesFor(data)[0],access,requested:false,guests:[],requests:[]}]};}if(m.action==='enter'){if(pending)return pending;player.office=layout?{id:m.officeId,layout,levelId:'jevica-office/l0',elevation:0,position:startAt??officeLayout(layout).spawn.position,yaw:0}:{id:m.officeId,position:[0,1.25],yaw:0};}
+ const mp={connected:true,identity:{id:'owner'},snapshot:{players:[player]},voice:{state:{available:true,status:'joined',mic:'off',pushToTalk:false},toggleJoin(){voiceCalls.push('join');},toggleMic(){voiceCalls.push('mic');},setTransmit(v){voiceCalls.push(v);}},async command(m){calls.push(m);if(m.action==='list'){if(listPending)await listPending;return {ok:true,offices:[{...officesFor(data)[0],access,requested:false,guests,requests:[]}]};}if(m.action==='enter'){if(pending)return pending;player.office=layout?{id:m.officeId,layout,levelId:'jevica-office/l0',elevation:0,position:startAt??officeLayout(layout).spawn.position,yaw:0}:{id:m.officeId,position:[0,1.25],yaw:0};}
  if(m.action==='transition'){if(transitionPending)await transitionPending;const moved=officeTransition(officeLayout(player.office.layout),player.office,m.portalId);if(!moved.ok)return moved;player.office={...player.office,levelId:moved.levelId,position:moved.position,elevation:moved.elevation};return {ok:true,office:player.office};}
  if(m.action==='sit'){if(seatPending)await seatPending;const seat=officeSeat(officeLayout(player.office?.layout),m.seatId);if(!player.office||!seat)return {ok:false,error:'invalid_office_seat'};player.office={...player.office,position:[...seat.position],yaw:seat.facing,seat:{id:seat.id}};return {ok:true,office:player.office};}
  if(m.action==='stand'){const seat=officeSeat(officeLayout(player.office.layout),player.office.seat?.id);if(!seat)return {ok:false,error:'office_not_seated'};const {seat:_,...standing}=player.office;player.office={...standing,position:[...seat.stand]};return {ok:true,office:player.office};}if(m.action==='leave'){if(leavePending)await leavePending;player.office=null;}return {ok:true};}};
@@ -347,4 +347,39 @@ test('backgrounding releases office movement, look drag and push-to-talk without
   assert.equal(f.voiceCalls.at(-1), false, 'a stale repeated key cannot restart transmit');
   dialog.emit('pointermove', { pointerId: 4, clientX: 120 }); f.ui.update(6300, .1);
   assert.deepEqual(f.ui.pose.position, before.position); assert.equal(f.ui.pose.yaw, before.yaw);
+});
+
+// Accessibility (2026-11-01): keyboard focus, named destinations and announcements in the office.
+const walk=(node,found=[])=>{found.push(node);for(const c of node.children??[])walk(c,found);return found;};
+test('the lift names its floor and key, announces itself in reach and keeps keyboard focus in the office while it runs',async t=>{
+ let resolve;const transitionPending=new Promise(r=>{resolve=r;}),f=setup(t,{layout:'office-penthouse-1',startAt:[-12,18],transitionPending});
+ f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
+ const lift=f.find('office-level'),dialog=f.find('office-visit'),cue=f.find('office-cue');
+ assert.equal(lift.hidden,false);assert.match(lift.textContent,/^Use the lift to the mezzanine · Q$/);assert.equal(lift.attributes['aria-keyshortcuts'],'Q');
+ assert.ok(cue,'a polite cue announces what is in reach');assert.equal(cue.attributes.role,'status');assert.match(cue.textContent,/Use the lift to the mezzanine/);
+ lift.focus();lift.emit('click');await tick();f.ui.update(6200,.016);
+ assert.equal(lift.hidden,true,'the lift control hides while the ride is pending');
+ assert.equal(document.activeElement,dialog,'focus returns to the office, so WASD, Q and Escape keep working');
+ resolve();await tick();await tick();f.ui.update(6300,.016);
+ assert.match(lift.textContent,/^Use the lift to the main floor · Q$/);assert.match(cue.textContent,/Use the lift to the main floor/);
+});
+test('skipping the arrival from the keyboard leaves focus in the office once the button goes',async t=>{
+ const f=setup(t,{layout:'office-penthouse-1',renderPhase:'ascending'});f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();
+ f.ui.update(6100,.016);const skip=f.find('office-skip');assert.equal(skip.hidden,false);skip.focus();
+ f.setPhase('office');f.ui.update(6200,.016);assert.equal(skip.hidden,true);assert.equal(document.activeElement,f.find('office-visit'));
+});
+test('office controls declare their keys, and each guest\'s revoke button names the guest',async t=>{
+ const f=setup(t,{guests:[{userId:'sage',name:'Sage'},{userId:'rio',name:'Rio'}]});f.ui.update(6000,.016);await tick();
+ const revokes=walk(f.find('office-management')).filter(n=>n.textContent==='Revoke access');
+ assert.deepEqual(revokes.map(b=>b.attributes['aria-label']),['Revoke access for Sage','Revoke access for Rio']);
+ for(const [id,key] of [['office-enter','F'],['office-nearby','F'],['office-exit','Escape'],['office-desk-open','E'],['office-seat','Z'],['office-level','Q'],['office-voice','Y'],['office-mic','M'],['office-view','V']])
+  assert.equal(f.find(id).attributes['aria-keyshortcuts'],key,id);
+});
+test('focus that the browser drops to the page during a visit comes back to the office',async t=>{
+ const f=setup(t,{layout:'office-penthouse-1'});f.ui.update(6000,.016);await tick();f.find('office-enter').emit('click');await tick();f.ui.update(6100,.016);
+ const dialog=f.find('office-visit'),exit=f.find('office-exit');exit.focus();
+ document.activeElement=document.body;dialog.emit('focusout',{target:exit,relatedTarget:null});await tick();
+ assert.equal(document.activeElement,dialog);
+ // Focus moving to another control or dialog is left alone.
+ const other={};document.activeElement=other;dialog.emit('focusout',{target:exit,relatedTarget:other});await tick();assert.equal(document.activeElement,other);
 });

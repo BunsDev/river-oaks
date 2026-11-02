@@ -16,10 +16,11 @@ const byName = (group, name) => group.children.find(mesh => mesh.name === name);
 test('the finished Ribbon draws the graybox placements in five instanced draw calls', () => {
   const plan = districtRibbonPlan(world), finished = buildRibbon({ world }), grey = buildRibbonGraybox({ world });
   assert.deepEqual(finished.children.map(mesh => [mesh.name, mesh.isInstancedMesh, mesh.count]), [
-    ['Ribbon posts', true, 61], ['Ribbon canopy', true, 30], ['Ribbon edges', true, 60], ['Ribbon fans', true, 30], ['Ribbon lamp heads', true, 16],
+    ['Ribbon posts', true, 58], ['Ribbon canopy', true, 30], ['Ribbon edges', true, 60], ['Ribbon fans', true, 30], ['Ribbon lamp heads', true, 16],
   ]);
-  assert.deepEqual(finished.userData.ribbon, { id: 'district-spine', hash: plan.hash, finish: 'pink-jet-age', stats: plan.stats, skipped: ['ribbon:spine:post:015:l'], drawCalls: 5 });
-  // Same footprint as the graybox: every post, fan and lamp where the graybox puts it.
+  assert.deepEqual(finished.userData.ribbon, { id: 'district-spine', hash: plan.hash, finish: 'pink-jet-age', stats: plan.stats, skipped: ['ribbon:spine:post:014:r', 'ribbon:spine:post:015:l', 'ribbon:spine:post:019:r', 'ribbon:spine:post:024:r'], drawCalls: 5 });
+  // Same footprint as the graybox: every post, fan and lamp where the graybox puts it (58 posts on
+  // the 2.4 m spine of #865, as ribbon-graybox.test.js pins).
   for (const name of ['Ribbon posts', 'Ribbon fans', 'Ribbon lamp heads']) {
     const a = byName(finished, name), b = byName(grey, name);
     assert.equal(a.count, b.count, name);

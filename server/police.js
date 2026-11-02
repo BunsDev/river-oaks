@@ -220,6 +220,9 @@ export function createPolice({ players, starsOf, eligible, navigation, posts, si
   const clear = () => load({ units: [], surrendered: [], subdued: [], cursor: 0 });
   return { step(at, duration) { clock = at; step(at, duration); }, surrender, snapshot, checkpoint, validate, load, clear,
     held: id => surrendered.has(id) || subdued.has(id) || units.some(unit => unit.targetId === id && unit.state === 'arrest'),
+    // An officer is on them: pursuing in sight, grabbing, or arresting. Searching the last-seen point is not
+    // a chase (#785): a player the officers have lost may leave; a returning officer has stood down.
+    pursuing: id => units.some(unit => unit.targetId === id && ['pursue', 'grab', 'arrest'].includes(unit.state)),
     // Police have hold of them (a grab landed or an arrest is under way), as opposed to surrender.
     captured: id => subdued.has(id) || units.some(unit => unit.targetId === id && unit.state === 'arrest') };
 }
