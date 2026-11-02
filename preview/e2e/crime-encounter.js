@@ -46,9 +46,45 @@ async page => {
     return reply;
   };
   const face = (tab, east, north) => tab.evaluate(([x, n]) => window.__riverSeatAndWater().face(x, n), [east, north]);
+  // On foot (#785): while an officer is on the player the town refuses travel ('pursued'), so the
+  // player walks with their own W strides, re-aimed by dragging the view every stride
+  // (walking-ui: yaw -= dx * 0.003; crime-residents.js does the same).
+  const pagePose = tab => tab.evaluate(() => { const n = document.querySelector('#walking-hud'), m = window.__riverMultiplayer();
+    return { position: JSON.parse(n.dataset.position), yaw: m.snapshot?.players.find(p => p.id === m.selfId)?.yaw ?? 0 }; });
+  const turnTo = async (tab, heading) => {
+    const box = await tab.locator('#canvas-host').boundingBox();
+    let delta = Math.atan2(Math.sin(heading + (await pagePose(tab)).yaw), Math.cos(heading + (await pagePose(tab)).yaw));
+    while (Math.abs(delta) > 0.05) {
+      const limit = box.width * 0.4, px = Math.max(-limit, Math.min(limit, delta / 0.003)), x = box.x + box.width / 2, y = box.y + box.height * 0.35;
+      await tab.mouse.move(x, y);await tab.mouse.down();await tab.mouse.move(x + px, y, { steps: 6 });await tab.mouse.up();
+      delta -= px * 0.003;
+    }
+  };
+  const walkNear = async (tab, [east, north], reach) => {
+    for (let stride = 0; stride < 40; stride++) {
+      // Taken by an officer mid-walk: the walk is over (the town moves them once released).
+      if (await tab.evaluate(() => { const m = window.__riverMultiplayer(); return m.snapshot.police.subdued.includes(m.selfId); })) return null;
+      const { position: [x, , z] } = await pagePose(tab), de = east - x, dn = north + z, gap = Math.hypot(de, dn);
+      if (gap <= reach) return (await town(tab)).self.position;
+      await turnTo(tab, Math.atan2(de, dn));
+      await tab.locator('#canvas-host').focus();
+      const fast = gap > 3;if (fast) await tab.keyboard.down('ShiftLeft');
+      await tab.keyboard.down('KeyW');await tab.waitForTimeout(Math.min(450, Math.max(80, (gap - reach * 0.6) * (fast ? 130 : 260))));await tab.keyboard.up('KeyW');
+      if (fast) await tab.keyboard.up('ShiftLeft');
+      await tab.waitForTimeout(100);
+    }
+    return null;
+  };
+  // Travel when the town allows it; on foot when an officer is on the player.
+  const move = async (tab, [east, north], reach) => {
+    const reply = await goTo(tab, east, north);
+    if (reply?.error !== 'pursued') return reply;
+    return await walkNear(tab, [east, north], reach) ? { ok: true, onFoot: true } : { ok: false, error: 'pursued', onFoot: true };
+  };
   const approach = async (tab, [east, north], reach) => {
     for (const [dx, dn] of [[1.2, 0], [0, 1.2], [0, -1.2], [-1.2, 0], [2, 0], [0, 2], [-2, 0], [0, -2]]) {
-      await goTo(tab, east + dx, north + dn);
+      const reply = await goTo(tab, east + dx, north + dn);
+      if (reply?.error === 'pursued') return await walkNear(tab, [east, north], reach);
       await tab.waitForTimeout(400);
       const { self } = await town(tab);
       if (distance(self.position, [east, north]) <= reach) return self.position;
@@ -256,7 +292,7 @@ async page => {
     // Step out of the rival's 3 m so it disengages; the officer, already dispatched by the stars,
     // follows and offers surrender for 4 s, then telegraphs a grab. The first grab is evaded with U;
     // the second is allowed to land: resisted capture.
-    await goTo(visitor, RX + 5, RN + 2);
+    await move(visitor, [RX + 5, RN + 2], 1.5);
     await face(witness, RX + 5, RN + 2);
     const pursued = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.police.units.some(unit => unit.targetId === m.selfId && ['pursue', 'grab'].includes(unit.state)); }, null, { timeout: 15000 }).then(() => true).catch(() => false);
     check(pursued, 'An officer pursues the wanted visitor');
@@ -296,6 +332,13 @@ async page => {
     await hud.getByRole('button', { name: 'Shove Service lane rival T' }).waitFor();
     await visitor.locator('#canvas-host').focus(); await visitor.keyboard.press('KeyT');
     await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.crime.wanted.some(([id, stars]) => id === m.selfId && stars >= 1); });
+    // #785: an officer is on the visitor, so they walk out of the lane (15 m north of the rival is clear
+    // ground outside the zone), the officers stand down, and travel opens again with the star still cooling.
+    check(await walkNear(visitor, [RX, -1420], 1.5), 'The wanted visitor walks out of the danger zone on foot');
+    const loose = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), s = m.snapshot;
+      return !(s.police?.units ?? []).some(unit => unit.targetId === m.selfId && ['pursue', 'grab', 'arrest'].includes(unit.state))
+        && s.crime.wanted.some(([id, stars]) => id === m.selfId && stars >= 1); }, null, { timeout: 15000 }).then(() => true).catch(() => false);
+    check(loose, 'Out of the zone no officer is on the visitor, and the star is still there');
     const state3 = await town(visitor);
     const candidates = state3.locals.filter(local => !local.indoor && local.life && local.life.reaction === null && ['walking', 'resting', 'turning'].includes(local.life.status))
       .sort((a, b) => distance(a.position, state3.self.position) - distance(b.position, state3.self.position)).slice(0, 3);
@@ -337,7 +380,7 @@ async page => {
     check(drawnStartle, `The witness's screen draws the resident startled: ${JSON.stringify(drawnStartle)}`);
     // Emergency off while the officer is on the visitor: back within sight of the lane post first
     // (the resident may stand beyond the 35 m an officer sees from it).
-    await goTo(visitor, RX + 6, RN + 2); await face(witness, RX + 6, RN + 2);
+    await move(visitor, [RX + 6, RN + 2], 1.5); await face(witness, RX + 6, RN + 2);
     const midPursuit = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.police.units.find(unit => unit.targetId === m.selfId && ['pursue', 'grab', 'arrest'].includes(unit.state))?.state ?? null; }, null, { timeout: 15000 }).then(handle => handle.jsonValue()).catch(() => null);
     const starsBeforeOff = stars(await town(visitor));
     await emergencyOff();
@@ -355,8 +398,10 @@ async page => {
     await shoot(visitor, 'after-off-visitor'); await shoot(witness, 'after-off-witness');
 
     // 4. Reconnect and focus loss mid-pursuit, then voluntary surrender.
-    await rulesOn();
+    // #785: back to the rival while emergency off holds every officer, then the rules come back on,
+    // so the strike below starts with the officer's offer, as it did when travel was never refused.
     check(await approach(visitor, [RX, RN], 1.5), 'The visitor walks back to the rival once more');
+    await rulesOn();
     await goTo(witness, RX + 4, RN - 3); await face(witness, RX, RN);
     await hud.getByRole('button', { name: 'Shove Service lane rival T' }).waitFor();
     const starsBefore4 = stars(await town(visitor));
@@ -384,8 +429,24 @@ async page => {
       return { first: { ok: first?.ok, error: first?.error ?? null, remainingMs: first?.evade?.remainingMs ?? null }, again: { ok: again?.ok, replayed: Boolean(again?.replayed), remainingMs: again?.evade?.remainingMs ?? null } }; });
     check(stale.first.ok && stale.again.replayed, `A repeated evade ID replays without a new window (${JSON.stringify(stale)})`);
     row('exactly-once (browser, raw commands)', 'pass', { duplicate, stale });
-    await goTo(visitor, RX + 5, RN + 2);
-    await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.police.units.some(unit => unit.targetId === m.selfId && unit.state === 'pursue'); }, null, { timeout: 15000 });
+    // #785: standing in reach for the raw commands, the visitor cannot travel out of the officer's grab
+    // (travel is refused while an officer is on them), so the grab may land first. If they are taken
+    // and released, they return and strike once more: the rows below need a pursuit still under way.
+    const held4 = await town(visitor);
+    if (!held4.police.subdued.includes(held4.selfId)) await move(visitor, [RX + 5, RN + 2], 1.5);
+    const phase4 = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), s = m.snapshot;
+      if (s.police.units.some(unit => unit.targetId === m.selfId && unit.state === 'pursue')) return 'pursue';
+      return !s.police.subdued.includes(m.selfId) && !s.crime.wanted.some(([id]) => id === m.selfId) && 'released'; }, null, { timeout: 20000 }).then(handle => handle.jsonValue());
+    if (phase4 === 'released') {
+      check(await approach(visitor, [RX, RN], 1.5), 'Taken during the raw commands, the visitor walks back to the rival for the pursuit rows');
+      await face(visitor, RX, RN);
+      await visitor.waitForFunction(id => { const r = window.__riverMultiplayer().snapshot.crime.targets.find(item => item.id === id); return r && r.health > 0 && !r.down; }, RIVAL, { timeout: 30000 });
+      await hud.getByRole('button', { name: 'Shove Service lane rival T' }).waitFor();
+      await visitor.locator('#canvas-host').focus(); await visitor.keyboard.press('KeyT');
+      await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.crime.wanted.some(([id, stars]) => id === m.selfId && stars >= 1); }, null, { timeout: 6000 });
+      await move(visitor, [RX + 5, RN + 2], 1.5);
+      await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.police.units.some(unit => unit.targetId === m.selfId && unit.state === 'pursue'); }, null, { timeout: 15000 });
+    }
     const before = await town(visitor);
     const dropped = await visitor.evaluate(() => { const c = window.__riverConnection; const droppedAt = performance.timeOrigin + performance.now(); return { dropped: c.drop({ code: 1006, reason: 'journey' }), droppedAt }; });
     const reconnected = await visitor.waitForFunction(() => window.__riverConnection.state().connected && window.__riverMultiplayer().connected, null, { timeout: 20000 }).then(() => true).catch(() => false);
@@ -457,7 +518,7 @@ async page => {
     await visitor.locator('#canvas-host').focus(); await visitor.keyboard.press('KeyT');
     await visitor.waitForFunction(before => { const m = window.__riverMultiplayer(); return (m.snapshot.crime.wanted.find(([id]) => id === m.selfId)?.[1] ?? 0) > before; }, starsBeforeWatch, { timeout: 6000 });
     const watchedFrom = Date.now(), starsWatched = stars(await town(visitor));
-    const stepBack = await goTo(visitor, RX + 5, RN + 2); await face(witness, RX + 5, RN + 2);
+    const stepBack = await move(visitor, [RX + 5, RN + 2], 0.8); await face(witness, RX + 5, RN + 2);
     const stepped = await town(visitor);
     check(stepBack?.ok !== false && distance(stepped.self.position, [RX, RN]) > 4, `The visitor steps out of the rival's reach to be watched (${JSON.stringify({ stepBack, distance: Math.round(distance(stepped.self.position, [RX, RN]) * 10) / 10 })})`);
     await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.police.units.some(unit => unit.targetId === m.selfId); }, null, { timeout: 20000 });
@@ -478,10 +539,14 @@ async page => {
     check(watchDetail.starsAfterMs >= 36000 && !watchDetail.subdued && watchDetail.observedBy.length > 0 && watchDetail.starsAfter === starsWatched,
       `Stars do not cool off under observation: ${starsWatched} star after ${Math.round(watchDetail.starsAfterMs / 1000)} s of pursuit and ${watchDetail.grabsEvaded} evaded grabs (${JSON.stringify(watchDetail)})`);
     await shoot(visitor, 'watched-visitor'); await shoot(witness, 'watched-witness');
-    await goTo(visitor, safeSpot[0], safeSpot[1]);
-    const leftAt = Date.now();
-    await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return !m.snapshot.police.units.some(unit => unit.targetId === m.selfId); }, null, { timeout: 10000 });
-    await visitor.waitForTimeout(15000);
+    // #785: an officer is still on the visitor, so travel to the safe spot is refused; they walk north out
+    // of the zone and out of sight instead (the walk outlasts the stand-down). The cooling clock starts
+    // when no officer is on them any more, which is the moment the travel used to mark.
+    const standDown = visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return !m.snapshot.police.units.some(unit => unit.targetId === m.selfId); }, null, { timeout: 30000 }).then(() => Date.now());
+    const left = await goTo(visitor, safeSpot[0], safeSpot[1]);
+    if (left?.error === 'pursued') check(await walkNear(visitor, [-2785, -1385], 2), 'The watched visitor walks out of the zone and out of sight on foot');
+    const leftAt = await standDown;
+    await visitor.waitForTimeout(Math.max(0, 15000 - (Date.now() - leftAt)));
     const midway = stars(await town(visitor));
     const cooled = await visitor.waitForFunction(before => { const m = window.__riverMultiplayer(); return (m.snapshot.crime.wanted.find(([id]) => id === m.selfId)?.[1] ?? 0) < before; }, starsWatched, { timeout: 40000 }).then(() => Date.now() - leftAt).catch(() => null);
     const coolDetail = { starsAt15s: midway, cooledAfterMs: cooled, starsNow: stars(await town(visitor)) };

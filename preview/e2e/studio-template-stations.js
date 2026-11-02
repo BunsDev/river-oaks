@@ -4,14 +4,17 @@ async page => {
   // at that target's role object, and the exit. Stations come from the template's own
   // route profile, so they follow the recipe. STUDIO_TEMPLATE picks house, boutique, cafe
   // or office (default house); STUDIO_CAPTURE_TAG names the set, e.g. before or after.
+  // STUDIO_FINISH opens the studio under a kit finish (space-kit-finish.js), e.g. pink-jet-age;
+  // unset, the studio renders classic exactly as before, and the tag defaults to the finish.
   const origin = 'http://127.0.0.1:5173', errors = [], captures = [];
-  const templateId = process.env.STUDIO_TEMPLATE ?? 'house', tag = process.env.STUDIO_CAPTURE_TAG ?? 'current';
+  const finish = process.env.STUDIO_FINISH ?? 'classic';
+  const templateId = process.env.STUDIO_TEMPLATE ?? 'house', tag = process.env.STUDIO_CAPTURE_TAG ?? (finish === 'classic' ? 'current' : finish);
   page.on('pageerror', error => errors.push(error.message));
   const lightings = ['daylight', 'warm', 'evening'];
   // Positions are (east, north) metres; yaw follows walking.js (0 faces north).
   const yawFor = ([e, n], [le, ln]) => Math.atan2(-(le - e), ln - n);
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto(`${origin}/studio.html`);
+  await page.goto(`${origin}/studio.html${finish === 'classic' ? '' : `?finish=${encodeURIComponent(finish)}`}`);
   await page.waitForSelector('body[data-studio-ready="true"]');
   const plan = await page.evaluate(async id => {
     const { spaceTemplates, spaceAssessmentContext, spaceRouteProfile, createSpace } = await import('/src/studio/space-templates.js');
@@ -71,5 +74,5 @@ async page => {
     }
   }
   if (errors.length) throw Error(`Page errors: ${errors.join('; ')}`);
-  return { passed: true, templateId, tag, eyeHeightM: 1.68, viewport: [1440, 1000], captures };
+  return { passed: true, templateId, tag, finish, eyeHeightM: 1.68, viewport: [1440, 1000], captures };
 }

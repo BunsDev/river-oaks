@@ -234,8 +234,9 @@ body.clear-view :is(.visit-tools, .walking-title, .walking-console, .compass, .a
   :is(.visit-tools, .walking-title, .walking-console, .compass) { transition: opacity 200ms ease, visibility 200ms; }
 }
 
-/* Movement controls read as a legend, not a terminal. */
-:root[data-theme] .walking-help { font-weight: 400; font-size: 10px; line-height: 1.7; font-family: inherit; color: #c9c5d2; margin: 10px 0 6px; letter-spacing: .01em; }
+/* Movement controls read as a legend, not a terminal. The console is light glass in the
+   light theme, where the old raw #c9c5d2 was 1.01:1 (#746); the HUD's muted token reads in both. */
+:root[data-theme] .walking-help { font-weight: 400; font-size: 10px; line-height: 1.7; font-family: inherit; color: var(--hud-muted); margin: 10px 0 6px; letter-spacing: .01em; }
 :root[data-theme] .walking-help kbd, :root[data-theme] .walking-console kbd { font: 500 10px/1 system-ui, sans-serif; display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border: 1px solid #ffffff40; border-radius: 5px; margin-left: 6px; opacity: .8; }
 :root[data-theme] .walking-pad { gap: 6px; margin-top: 4px; }
 :root[data-theme] .walking-pad button { width: 44px; height: 44px; font-size: 18px; border-radius: 12px; background: #ffffff12; border: 1px solid #ffffff22; box-shadow: inset 0 1px 0 #ffffff14; }

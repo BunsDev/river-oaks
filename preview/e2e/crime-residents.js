@@ -29,6 +29,33 @@ async page => {
     }
     return null;
   };
+  // On foot (#785): while an officer is on the visitor, travel is refused, so leaving the danger zone is
+  // the visitor's own W strides, re-aimed by dragging the view every stride
+  // (walking-ui: yaw -= dx * 0.003; garden-campus-traversal.js does the same).
+  const pagePose = tab => tab.evaluate(() => { const n = document.querySelector('#walking-hud'), m = window.__riverMultiplayer();
+    return { position: JSON.parse(n.dataset.position), yaw: m.snapshot?.players.find(p => p.id === m.selfId)?.yaw ?? 0 }; });
+  const turnTo = async (tab, heading) => {
+    const box = await tab.locator('#canvas-host').boundingBox();
+    let delta = Math.atan2(Math.sin(heading + (await pagePose(tab)).yaw), Math.cos(heading + (await pagePose(tab)).yaw));
+    while (Math.abs(delta) > 0.05) {
+      const limit = box.width * 0.4, px = Math.max(-limit, Math.min(limit, delta / 0.003)), x = box.x + box.width / 2, y = box.y + box.height * 0.35;
+      await tab.mouse.move(x, y);await tab.mouse.down();await tab.mouse.move(x + px, y, { steps: 6 });await tab.mouse.up();
+      delta -= px * 0.003;
+    }
+  };
+  const walkNear = async (tab, [east, north], reach) => {
+    for (let stride = 0; stride < 40; stride++) {
+      const { position: [x, , z] } = await pagePose(tab), de = east - x, dn = north + z, gap = Math.hypot(de, dn);
+      if (gap <= reach) return (await town(tab)).self.position;
+      await turnTo(tab, Math.atan2(de, dn));
+      await tab.locator('#canvas-host').focus();
+      const fast = gap > 3;if (fast) await tab.keyboard.down('ShiftLeft');
+      await tab.keyboard.down('KeyW');await tab.waitForTimeout(Math.min(450, Math.max(80, (gap - reach * 0.6) * (fast ? 130 : 260))));await tab.keyboard.up('KeyW');
+      if (fast) await tab.keyboard.up('ShiftLeft');
+      await tab.waitForTimeout(100);
+    }
+    return null;
+  };
   try {
     await join(page);await join(visitor);
     if (await visitor.locator('.visit-tools[open]').count()) await visitor.locator('.visit-tools-toggle').click();
@@ -51,8 +78,15 @@ async page => {
     await visitor.locator('#canvas-host').focus();await visitor.keyboard.press('KeyT');
     await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.crime.wanted.some(([id, stars]) => id === m.selfId && stars === 1); });
     check(true, 'One landed shove: the visitor is wanted');
-    // Step out of the rival's reach at once, toward the nearest outdoor resident who is not already
-    // reacting, and stop at arm's length from them.
+    // #785: an officer is on the visitor, so they walk out of the lane (15 m north of the rival is clear
+    // ground outside the zone), the officers stand down, and travel opens again with the star still cooling.
+    const out = await walkNear(visitor, [RX, -1420], 1.5);
+    check(out, 'The wanted visitor walks out of the danger zone on foot');
+    const loose = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), s = m.snapshot;
+      return !(s.police?.units ?? []).some(unit => unit.targetId === m.selfId && ['pursue', 'grab', 'arrest'].includes(unit.state))
+        && s.crime.wanted.some(([id, stars]) => id === m.selfId && stars >= 1); }, null, { timeout: 15000 }).then(() => true).catch(() => false);
+    check(loose, 'Out of the zone no officer is on the visitor, and the star is still there');
+    // Toward the nearest outdoor resident who is not already reacting, and stop at arm's length.
     const state = await town(visitor);
     const candidates = state.locals.filter(local => !local.indoor && local.life && local.life.reaction === null && ['walking', 'resting', 'turning'].includes(local.life.status))
       .sort((a, b) => distance(a.position, state.self.position) - distance(b.position, state.self.position)).slice(0, 3);

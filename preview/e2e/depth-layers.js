@@ -7,14 +7,18 @@
 // renders each shared shader patch on the meshes it must handle (instanced, batched, unmapped)
 // and fails on any shader that does not compile. Pairs that predate this journey are listed in
 // depth-layers-known.json and burn down; any pair not on that list fails. To rewrite the list
-// after fixing some, run with RIVER_OAKS_DEPTH_LAYERS_RECORD=1.
+// after fixing some, run with RIVER_OAKS_DEPTH_LAYERS_RECORD=1. The town is scanned under the
+// classic city-kit finish unless RIVER_OAKS_FINISH names another (`pink-jet-age`, #836): the
+// name goes to the page as `?finish=` (render-quality.js readFinishPreference), so the same
+// known list and gate apply to every finish.
 async page => {
   const checks = [], errors = [], shaderErrors = [];
   const check = (condition, message, detail) => { if (!condition) throw new Error(`${message}${detail === undefined ? '' : ` ${JSON.stringify(detail).slice(0, 1500)}`}`); checks.push(message); };
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (/Shader Error|Program Info Log|VALIDATE_STATUS/.test(message.text())) shaderErrors.push(message.text().slice(0, 500)); });
+  const finish = /^[a-z][a-z0-9-]{0,31}$/.test(process.env.RIVER_OAKS_FINISH ?? '') ? process.env.RIVER_OAKS_FINISH : 'classic';
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto('http://127.0.0.1:5173/?motion-debug=1&render-audit=1');
+  await page.goto(`http://127.0.0.1:5173/?motion-debug=1&render-audit=1&finish=${finish}`);
   await page.locator('#loading').waitFor({ state: 'hidden', timeout: 180000 });
   await page.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true', null, { timeout: 180000 });
 
@@ -65,7 +69,7 @@ async page => {
   const known = new Set(JSON.parse(await readFile(list, 'utf8')).pairs.map(key)), fresh = found.filter(g => !known.has(key(g))), gone = [...known].filter(k => !groups.has(k));
   if (fresh.length) {
     const error = new Error(`${fresh.length} new pairs of surfaces fight for depth within sight: ${fresh.slice(0, 8).map(g => `${g.a} / ${g.b} ${g.gap * 1000} mm at ${g.at}`).join('; ')}`);
-    error.journeyEvidence = { slack, precision: precision.onsets, fresh, groups: found, scans: scans.map(({ station, seconds, faces }) => ({ station, seconds, faces })) };
+    error.journeyEvidence = { finish, slack, precision: precision.onsets, fresh, groups: found, scans: scans.map(({ station, seconds, faces }) => ({ station, seconds, faces })) };
     throw error;
   }
   checks.push(`no surface pair fights for depth within sight beyond the ${known.size} listed in ${list}`);
@@ -134,5 +138,5 @@ async page => {
   for (const [, message] of judged) checks.push(message);
   check(shaderErrors.length === 0, 'every shader in the town compiled', shaderErrors.slice(0, 3));
   check(errors.length === 0, 'no page errors', errors.slice(0, 3));
-  return { passed: true, checks, precision: precision.onsets, slack, known: known.size, remaining: found.length, fixedSinceListed: gone, scans: scans.map(({ station, seconds, faces, fights }) => ({ station, seconds, faces, fights: fights.length })), patches };
+  return { passed: true, checks, finish, precision: precision.onsets, slack, known: known.size, remaining: found.length, fixedSinceListed: gone, scans: scans.map(({ station, seconds, faces, fights }) => ({ station, seconds, faces, fights: fights.length })), patches };
 }
