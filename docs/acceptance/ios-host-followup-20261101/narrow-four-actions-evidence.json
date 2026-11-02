@@ -1,0 +1,18 @@
+{
+  "scope": "Simulator launch of diagnostic probe, native-only measurement mode; no physical or production-host acceptance",
+  "appMetadata": {
+    "ProbeConfiguration": "Release",
+    "ProbeSourceSHA": "51c28e2a93782b747bb991237025e60018071fe9",
+    "ProbeSourceDirty": "true",
+    "ProbeEntry": "https://typesafe.place/play"
+  },
+  "launchStatus": 0,
+  "aliveAfter10Seconds": true,
+  "sceneFailure": false,
+  "sceneLogStatus": 0,
+  "runtime": "iOS 27.2",
+  "runtimeIdentifier": "com.apple.CoreSimulator.SimRuntime.iOS-27-2",
+  "runtimeBuild": "24B8117",
+  "device": "iPhone SE (3rd generation)",
+  "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation"
+}

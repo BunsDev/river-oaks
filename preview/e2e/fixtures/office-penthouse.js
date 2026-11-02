@@ -12,6 +12,7 @@ import { buildPenthouseOffice } from '../../src/office-penthouse-graybox.js';
 import { buildPenthouseAssetModel, buildPenthouseFurnishings, createPenthouseFinishes, drawPenthouseSurfaces, PENTHOUSE_ASSETS, PENTHOUSE_SURFACES, penthouseSurfaceCanvas } from '../../src/office-penthouse-furnishings.js';
 import { OFFICE_LAYOUT_PENTHOUSE, officeLayout } from '../../src/office-layouts.js';
 import { atmosphereFor } from '../../src/atmosphere.js';
+import { officeKitFinishName } from '../../src/office-kit-finish.js';
 
 const layout = officeLayout(OFFICE_LAYOUT_PENTHOUSE);
 // Review cameras, [x, height, d] in the office frame (docs/design/office-ipic/camera-manifest.json).
@@ -32,7 +33,9 @@ const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(62, innerW
 const pmrem = new THREE.PMREMGenerator(renderer), environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environment = environment;
 // Build time on this page (the arrival pays it once per visit): the shell, every furnishing and the swatches.
-const buildStarted = performance.now(), office = buildPenthouseOffice(THREE, layout), buildMs = performance.now() - buildStarted; scene.add(office.object);
+// ?finish=pink-jet-age renders the kit finish (office-kit-finish.js); anything else is classic.
+const finish = officeKitFinishName(new URLSearchParams(location.search).get('finish'));
+const buildStarted = performance.now(), office = buildPenthouseOffice(THREE, layout, { finish }), buildMs = performance.now() - buildStarted; scene.add(office.object);
 const hemisphere = new THREE.HemisphereLight('#f3efe8', '#8a7c6c', 0.4); scene.add(hemisphere);
 const sun = new THREE.DirectionalLight('#fff4ea', 3); sun.castShadow = true;
 Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 120 }); sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0004;
@@ -57,7 +60,7 @@ function view(name) {
   const v = VIEWS[name]; if (!v) throw new Error(`Unknown view ${name}`);
   camera.fov = v.fov; camera.position.copy(point(v.eye)); controls.target.copy(point(v.target)); controls.update(); camera.updateProjectionMatrix();
   const clock = `${String(Math.floor(hour)).padStart(2, '0')}:${String(Math.round(hour % 1 * 60)).padStart(2, '0')}`;
-  document.querySelector('#status').textContent = `${name} · ${v.label} · ${clock} · asset preview, fixture lighting`;
+  document.querySelector('#status').textContent = `${name} · ${v.label} · ${clock} · ${finish} · asset preview, fixture lighting`;
   renderer.render(scene, camera);
 }
 for (const name of Object.keys(VIEWS)) { const b = document.createElement('button'); b.textContent = name; b.onclick = () => view(name); document.querySelector('#views').append(b); }

@@ -68,6 +68,25 @@ Looked at by the agent, not a human review: the posts stand on the paving betwee
 furniture and the shop fronts. The canopy runs past IPIC, and one span bridges the Van Cleef &
 Arpels bench. The classic frames show no Ribbon.
 
+## 2026-11-01 update: onto the side-lane-fixed #827 (`af40b2e5`)
+
+**Task:** `ribbon-graybox-rebase-825-20261101` (#835, approved by Val there). #827 now starts the
+spine at (-2759.588, -1285.5), 0.37 m north of the side lane `osm-way-625330795`'s north kerb,
+because its old start put posts 002-004 in that lane's carriageway (the #838 spatial contract
+found it). This branch merges `af40b2e5` (no rebase, no force-push). Spine IDs are renumbered from
+the new start.
+
+- The expansion is now 30 modules, 61 posts, 16 lamps, 30 fans, 0 seats, 1 skipped. The
+  skipped post over the Van Cleef & Arpels bench is now `ribbon:spine:post:015:l` (was `019:l`).
+  The graybox draws 61 posts, 30 canopy slabs, 30 fans and 16 lamp heads, still 4 draw calls.
+- The side-lane exclusion that #827 added to its route test's local builder now lives in
+  `districtRibbonExclusions` (`preview/src/ribbon-district.js`, `DISTRICT_RIBBON_SIDE_LANE`), so
+  the renderer also refuses a spine in the lane. The route test keeps #827's assertions and adds
+  one: the old in-lane start is refused with posts left out in `side-lane-N`.
+- The "no valid post" graybox test reads post `000:r` from the plan and passed unchanged.
+- The 2026-10-31 capture and verify rows above record the old spine (`feba870d6c9cebe7`, 69 posts).
+  This update's results are on #828.
+
 ## Gaps
 
 - **Street trees are not exclusions.** The lane's trees are not in `laneFixtures`, and their

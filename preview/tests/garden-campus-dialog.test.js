@@ -147,6 +147,14 @@ test('each suite state reads truthfully, offers only its own actions and says no
   assert.match(t.text(t.mineRow('T2-201')), /Offered · .* No charge/);assert.deepEqual(t.buttons(t.mineRow('T2-201')), ['Accept', 'Decline']);
   assert.match(t.text(t.mineRow('T2-202')), /Active · .* No charge .* take the lift/);assert.deepEqual(t.buttons(t.mineRow('T2-202')), ['Give up this suite']);
   assert.match(t.text(t.mineRow('T3-201')), /Guest of Alice · .* No charge/);assert.deepEqual(t.buttons(t.mineRow('T3-201')), ['Leave as guest']);
+  // Every row repeats these actions, so each accessible name says which suite it acts on.
+  const names = (node, tag) => node.children.filter(child => child.tagName === tag).map(child => child.attributes['aria-label']);
+  assert.deepEqual(names(t.mineRow('T2-201'), 'BUTTON'), ['Accept, Suite T2-201', 'Decline, Suite T2-201']);
+  assert.deepEqual(names(t.mineRow('T1-203'), 'BUTTON'), ['Withdraw, Suite T1-203']);
+  assert.deepEqual(names(t.mineRow('T2-202'), 'BUTTON'), ['Give up this suite T2-202']);
+  assert.deepEqual(names(t.row('T1-201'), 'BUTTON'), ['Ask for this suite T1-201']);
+  const term = t.row('T1-201').children.find(child => child.className === 'campus-term');
+  assert.deepEqual(term.children.map(child => child.attributes['aria-label']), ['Start date, Suite T1-201', 'Length, Suite T1-201']);
   assert.deepEqual(t.endings(), []);
   noPrice(t, 'every live state');
   t.ui.dispose();

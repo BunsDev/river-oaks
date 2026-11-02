@@ -126,3 +126,12 @@ rule).
 
 Rebase onto the #827 side-lane fix when the coordinator moves the stack, and prune stale
 declarations. Then build courts from #838 v1.
+
+## 2026-11-02: main merged, #865 spine (river-oaks-85, goal "Five Rooms on main")
+
+Merged origin/main `85908e04` (the branch was built on the pre-rewrite #827/#828 history; conflicts
+were all in files this PR does not own, resolved to main). #865 widened the spine to 2.4 m and moved
+it 0.3 m east: `tree-172` (stem -2757,-1267, `tree-pit-171`) now has its pit under a post, crown gap
++35 cm (clears the slab). It is declared (`PIT_UNDER_POST`), matching the #838 contract's re-carried
+blocked record on #849 (`1a2007b3`). Declared crown gaps of the other eight trees are unchanged.
+Focused: ribbon-tree-clearance, ribbon-graybox, ribbon-route-district, ribbon-layout, 24/24.

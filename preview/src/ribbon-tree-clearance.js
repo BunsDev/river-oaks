@@ -23,12 +23,15 @@ export const RIBBON_TREE_RULES = Object.freeze({ slab: 0.4, crownBaseShare: 0.55
 // centimetres (negative: below it), `through` and `pit` allow the crown through the canopy and the
 // pit in the walk or under a post. The test fails on a blocking tree without an entry, on a crown
 // gap that drifts by more than 1 cm, and on a tree that blocks in a way its entry does not allow.
-const PIT_AND_CROWN = 'pit in the 2.0 m walk or under a post and crown through the canopy; no crown trim or in-pit offset clears it (decision for Val on #840)';
-const PIT_ONLY = 'pit in the 2.0 m walk; its crown clears the slab top (decision for Val on #840)';
+const PIT_AND_CROWN = 'pit in the 2.4 m walk or under a post and crown through the canopy; no crown trim or in-pit offset clears it (decision for Val on #840)';
+const PIT_ONLY = 'pit in the 2.4 m walk; its crown clears the slab top (decision for Val on #840)';
+// #865 widened the spine to 2.4 m and moved it 0.3 m east, which put a post over tree-pit-171.
+const PIT_UNDER_POST = 'pit under a post of the 2.4 m spine (#865); its crown clears the slab top (decision for Val on #840)';
 export const DISTRICT_RIBBON_TREE_DECLARED = Object.freeze([
   { stem: [-2761, -1279], crownGapCm: -81, through: true, pit: true, reason: PIT_AND_CROWN },
   { stem: [-2761, -1273], crownGapCm: -18, through: true, pit: true, reason: PIT_AND_CROWN },
   { stem: [-2761, -1263], crownGapCm: -28, through: true, pit: true, reason: PIT_AND_CROWN },
+  { stem: [-2757, -1267], crownGapCm: 35, through: false, pit: true, reason: PIT_UNDER_POST },
   { stem: [-2759, -1257], crownGapCm: -11, through: true, pit: true, reason: PIT_AND_CROWN },
   { stem: [-2759, -1251], crownGapCm: -47, through: true, pit: true, reason: PIT_AND_CROWN },
   { stem: [-2759, -1219], crownGapCm: -21, through: true, pit: true, reason: PIT_AND_CROWN },

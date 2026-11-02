@@ -57,9 +57,15 @@ async page => {
   const touch = await touchContext.newPage();
   await touch.goto('http://127.0.0.1:5173/');
   await touch.locator('#loading').waitFor({state:'hidden'});
-  // The pad appears just after the loading screen hides; wait for it rather than racing it.
-  check(await touch.locator('#walking-movement').waitFor({state:'visible',timeout:10000}).then(()=>true,()=>false), 'Touch devices start with movement controls available');
-  // Only rendered targets count; hidden optional controls are excluded.
+  // The thumbstick appears just after the loading screen hides; wait for it rather than racing it.
+  // An open chat dock (the phone default) hides it, so check that it is enabled, not painted.
+  check(await touch.waitForFunction(() => document.querySelector('.touch-gamepad')?.hidden === false, null, {timeout:10000}).then(()=>true,()=>false), 'Touch devices start with the thumbstick available');
+  check(await touch.locator('#walking-movement').isHidden(), 'The button pad starts collapsed behind its toggle on touch');
+  // The button pad stays one tap away as the fallback. Only rendered targets count.
+  if (await touch.locator('.town-chat-dock').evaluate(node => node.open)) await touch.locator('.town-chat-toggle').click();
+  await touch.locator('#walking-controls-toggle').click();
+  const touchHelp = await touch.locator('.walking-help').innerText();
+  check(touchHelp.includes('Left thumb') && !touchHelp.includes('WASD'), 'Touch help names the thumbstick, not keyboard keys');
   const touchTargets = await touch.locator('[data-walk-key]').evaluateAll(nodes => { const shown = nodes.filter(node => node.getClientRects().length); return shown.length === 6 && shown.every(node => { const r = node.getBoundingClientRect(); return r.width >= 44 && r.height >= 44 && r.left >= 0 && r.right <= innerWidth; }); });
   check(touchTargets, 'All six touch movement targets fit the narrow viewport at 44px or larger');
   await touchContext.close();

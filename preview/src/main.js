@@ -141,6 +141,7 @@ import './hud-glass.css';
 import './game-hud.css';
 import './settings-dialog.css';
 import './play-rail-menu.css';
+import './pink-jet-age-hud.css';
 import { createPlazaBicycle } from './plaza-bicycle.js';
 import { createCyclingLeaderboard } from './cycling-leaderboard.js';
 import './cycling-leaderboard.css';
@@ -191,6 +192,8 @@ const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'o
 const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.search).get('office-skyline') === 'off';
 // The Commons and Heights city-kit finish: classic unless opted in (render-quality.js, #742).
 const cityKitFinish = readFinishPreference();
+// The HUD follows the same finish (pink-jet-age-hud.css); an unknown name matches no rule.
+document.documentElement.dataset.finish = cityKitFinish;
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 // East Garden Commons and its assembled destination, when the revision composes them.
