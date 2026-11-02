@@ -49,7 +49,7 @@ async page => {
       const calls = [], triangles = [];
       for (let i = 0; i < 30; i++) { await new Promise(requestAnimationFrame); const render = window.__riverRenderAudit.graphics().render; calls.push(render.calls); triangles.push(render.triangles); }
       const median = values => values.sort((a, b) => a - b)[Math.floor(values.length / 2)];
-      return { calls: median(calls), triangles: median(triangles), quality: JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}').mode ?? null, buffer: window.__riverRenderAudit.graphics().buffer, scale: window.__riverRenderAudit.graphics().pipeline?.renderScale ?? null };
+      return { calls: median(calls), triangles: median(triangles), quality: JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}').mode ?? null, buffer: window.__riverRenderAudit.graphics().buffer, scale: window.__riverRenderAudit.graphics().quality?.scale ?? null, occlusion: window.__riverRenderAudit.graphics().quality?.occlusion ?? null, pipelineScale: window.__riverRenderAudit.graphics().pipeline?.renderScale ?? null };
     });
     await tab.evaluate(() => window.__riverRenderAudit.release());
     return result;
@@ -89,8 +89,10 @@ async page => {
   check(spawn.pink.quality === 'sharp', `Sharp graphics applied for the budget frame: ${spawn.pink.quality}`);
   await pinGraphics(page, 'smooth');
   spawn.pinkSmooth = await spawnFrame(page);
-  // Smooth keeps the canvas buffer and lowers the pipeline's render scale (render-quality.js SMOOTH_RENDER_SCALE).
-  check(spawn.pinkSmooth.quality === 'smooth' && spawn.pinkSmooth.scale < spawn.pink.scale, `Smooth graphics renders fewer pixels than sharp: render scale ${spawn.pinkSmooth.scale} vs ${spawn.pink.scale} (buffer ${spawn.pinkSmooth.buffer})`);
+  // Smooth keeps the canvas buffer and asks for a lower render scale without occlusion
+  // (render-quality.js effective()). Judge the tier's request: a software renderer clamps every
+  // tier to its own floor (0.25 on the CPU runner), so the pipeline's scale cannot tell them apart.
+  check(spawn.pinkSmooth.quality === 'smooth' && spawn.pinkSmooth.scale < spawn.pink.scale && spawn.pinkSmooth.occlusion === false && spawn.pink.occlusion === true, `Smooth graphics asks for fewer pixels than sharp, without occlusion: scale ${spawn.pinkSmooth.scale} vs ${spawn.pink.scale}, occlusion ${spawn.pinkSmooth.occlusion} vs ${spawn.pink.occlusion} (pipeline ${spawn.pinkSmooth.pipelineScale} vs ${spawn.pink.pipelineScale}, buffer ${spawn.pinkSmooth.buffer})`);
   await pinGraphics(page, 'sharp');
 
   // 3. Classic as the comparison override, measured at the same frame for the budget delta.
