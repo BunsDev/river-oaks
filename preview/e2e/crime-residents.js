@@ -18,10 +18,22 @@ async page => {
     return { rival: s.crime.targets.find(item => item.id === 'rival:service-lane'), wanted: s.crime.wanted, self: s.players.find(p => p.id === m.selfId), selfId: m.selfId,
       locals: s.locals.map(local => ({ id: local.id, name: local.name, indoor: local.indoor, position: local.position, life: local.life && { reaction: local.life.reaction, status: local.life.status, speed: local.life.speed, heading: local.life.heading } })) }; });
   const distance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
-  // Travel to within reach of a point, trying the four sides.
+  // Travel, retrying the short travel cooldown (as crime-encounter.js does); `lastTravel` keeps the
+  // town's last reply for a failure message.
+  let lastTravel = null;
+  const goTo = async (tab, east, north) => {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      lastTravel = await tab.evaluate(([x, n]) => window.__riverSeatAndWater().goTo(x, n), [east, north]);
+      if (lastTravel?.error !== 'travel_cooldown') return lastTravel;
+      await tab.waitForTimeout(300);
+    }
+    return lastTravel;
+  };
+  // Travel to within reach of a point, trying the four sides. An officer back on the wanted visitor
+  // refuses travel (#785, 'pursued'): then they walk there.
   const approach = async (tab, [east, north], reach) => {
     for (const [dx, dn] of [[1.2, 0], [0, 1.2], [0, -1.2], [-1.2, 0], [2, 0], [0, 2], [-2, 0], [0, -2]]) {
-      await tab.evaluate(([x, n]) => window.__riverSeatAndWater().goTo(x, n), [east + dx, north + dn]);
+      if ((await goTo(tab, east + dx, north + dn))?.error === 'pursued') return await walkNear(tab, [east, north], reach);
       await tab.waitForTimeout(400);
       const { self } = await town(tab);
       if (distance(self.position, [east, north]) <= reach) return self.position;
@@ -69,7 +81,8 @@ async page => {
     // moved on, with the visitor's stars and the seconds since the officers stood down.
     const looseAt = Date.now(), attempts = [];
     const note = async (candidate, reason) => { const t = await town(visitor);
-      attempts.push({ id: candidate.id, reason, stars: t.wanted.find(([id]) => id === t.selfId)?.[1] ?? 0, seconds: Math.round((Date.now() - looseAt) / 100) / 10 }); };
+      attempts.push({ id: candidate.id, reason, stars: t.wanted.find(([id]) => id === t.selfId)?.[1] ?? 0, seconds: Math.round((Date.now() - looseAt) / 100) / 10,
+        travel: lastTravel && { ok: lastTravel.ok, error: lastTravel.error }, walk: walked && !walked.position ? walked.reason : undefined }); };
     // Toward the nearest outdoor resident who is not already reacting, and stop at arm's length.
     const state = await town(visitor);
     const candidates = state.locals.filter(local => !local.indoor && local.life && local.life.reaction === null && ['walking', 'resting', 'turning'].includes(local.life.status))
