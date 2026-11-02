@@ -1014,6 +1014,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       return reject('private_home','This home is private. Jevica can invite you inside.');
     if (store && mode==='leave' && environment.roomAt(player.position[0],-player.position[1])?.storeId!==store.id) return reject('not_in_store');
     if (time-ledger.travelAt < TRAVEL_COOLDOWN_MS) return reject('travel_cooldown');
+    // #785 (#599 fair chase): a travel is a step out of the world, not a run. While an officer is on the
+    // player (pursuing in sight, grabbing or arresting) the chase is settled on foot, by evading, or by
+    // surrender; once the officers have lost them, or stood down, travel opens again.
+    if (police.pursuing(player.id)) return reject('pursued','An officer is on you. Lose them on foot, or surrender.');
     let destination = null;
     if (peer) {
       // Meeting another player never bypasses a private door. Stand beside an

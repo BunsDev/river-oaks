@@ -78,6 +78,18 @@ async function harness(t, mode) {
 }
 
 const actionIn = (frame, id) => frame.crime.actions?.find(item => item.id === id);
+// Walk a client between two lane points in 0.3 m steps every 110 ms (about 2.7 m/s, under the
+// brisk walk), at the height its own frame reports; the server corrects anything faster.
+async function walk(client, from, to) {
+  const self = client.snapshot.players.find(player => player.id === 'alice');
+  const height = self?.position[2] ?? 0, steps = Math.max(1, Math.ceil(Math.hypot(to[0] - from[0], to[1] - from[1]) / 0.3));
+  for (let i = 1; i <= steps; i++) {
+    await new Promise(resolve => setTimeout(resolve, 110));
+    const t = i / steps, position = [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t, height];
+    const moved = await client.send({ type: 'pose', position, yaw: Math.atan2(to[0] - from[0], from[1] - to[1]), altitude: 0 });
+    assert.equal(moved.ok, true, `walk step ${i}/${steps}: ${JSON.stringify(moved)}`);
+  }
+}
 for (const mode of ['memory', 'redis']) test(`${mode}: one hit is seen by every client once, through retries${mode === 'redis' ? ', reconnects and writer replacement' : ' and reconnects'}`, { skip: mode === 'redis' && !process.env.REDIS_URL, timeout: 120_000 }, async t => {
   const { sessions, gateway, join, sockets, apps } = await harness(t, mode);
   const first = await gateway(), second = await gateway();
@@ -102,9 +114,11 @@ for (const mode of ['memory', 'redis']) test(`${mode}: one hit is seen by every 
     assert.equal(actionIn(frame, landed.action.id)?.outcome, 'hit');
   }
   // Out of the rival's counter range (#640), so its counters cannot interleave with this test.
+  // On foot: an officer is on alice from the step the hit landed, and a pursued player cannot
+  // travel (#785); the walk is the authoritative movement at a lawful pace.
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const away = await alice.send({ type: 'travel', position: [RX, RN + 5] });
-  assert.equal(away.ok, true, JSON.stringify(away));
+  assert.equal((await alice.send({ type: 'travel', position: [RX, RN + 5] })).error, 'pursued', 'no hop out of the chase');
+  await walk(alice, [RX + 1.2, RN], [RX, RN + 5]);
   // Retried on the same socket, then after a reconnect through the other gateway.
   const replay = await alice.send(strike);
   assert.deepEqual([replay.replayed, replay.action.id, replay.action.outcome], [true, landed.action.id, 'hit']);
@@ -123,8 +137,7 @@ for (const mode of ['memory', 'redis']) test(`${mode}: one hit is seen by every 
   assert.deepEqual([rivalIn(ownerAgain.snapshot).health, starsIn(ownerAgain.snapshot, 'alice')], [75, 1], 'health and stars survive writer replacement');
   // Writer replacement in the middle of a windup: the replacement resolves it exactly once.
   const aliceThird = await join(third, 'alice');
-  const back = await aliceThird.send({ type: 'travel', position: [RX + 1.2, RN] });
-  assert.equal(back.ok, true, JSON.stringify(back));
+  await walk(aliceThird, [RX, RN + 5], [RX + 1.2, RN]);
   const pendingStrike = { ...strike, attackId: 'alice-transport-0002' };
   const pending = await aliceThird.send(pendingStrike);
   assert.equal(pending.ok, true, JSON.stringify(pending));
