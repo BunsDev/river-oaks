@@ -43,9 +43,15 @@ async page => {
       delta -= px * 0.003;
     }
   };
+  // Every stride's page pose, town position and the officers on the walker, for the failure message.
+  const strides = [];
   const walkNear = async (tab, [east, north], reach) => {
     for (let stride = 0; stride < 40; stride++) {
-      const { position: [x, , z] } = await pagePose(tab), de = east - x, dn = north + z, gap = Math.hypot(de, dn);
+      const { position: [x, , z], yaw } = await pagePose(tab), de = east - x, dn = north + z, gap = Math.hypot(de, dn);
+      strides.push({ stride, page: [+x.toFixed(2), +(-z).toFixed(2)], yaw: +yaw.toFixed(2), gap: +gap.toFixed(2), ...await tab.evaluate(() => { const m = window.__riverMultiplayer(), s = m.snapshot;
+        const self = s.players.find(p => p.id === m.selfId);
+        return { town: self && [+self.position[0].toFixed(2), +self.position[1].toFixed(2)], subdued: (s.police?.subdued ?? []).includes(m.selfId),
+          police: (s.police?.units ?? []).filter(unit => unit.targetId === m.selfId).map(unit => `${unit.state}@${Math.hypot(unit.position[0] - self.position[0], unit.position[1] - self.position[1]).toFixed(1)}m`) }; }) });
       if (gap <= reach) return (await town(tab)).self.position;
       await turnTo(tab, Math.atan2(de, dn));
       await tab.locator('#canvas-host').focus();
@@ -81,7 +87,7 @@ async page => {
     // #785: an officer is on the visitor, so they walk out of the lane (15 m north of the rival is clear
     // ground outside the zone), the officers stand down, and travel opens again with the star still cooling.
     const out = await walkNear(visitor, [RX, -1420], 1.5);
-    check(out, 'The wanted visitor walks out of the danger zone on foot');
+    check(out, `The wanted visitor walks out of the danger zone on foot (strides: ${JSON.stringify(strides.filter((_, i) => i < 4 || i % 6 === 0 || i >= strides.length - 4))})`);
     const loose = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), s = m.snapshot;
       return !(s.police?.units ?? []).some(unit => unit.targetId === m.selfId && ['pursue', 'grab', 'arrest'].includes(unit.state))
         && s.crime.wanted.some(([id, stars]) => id === m.selfId && stars >= 1); }, null, { timeout: 15000 }).then(() => true).catch(() => false);
