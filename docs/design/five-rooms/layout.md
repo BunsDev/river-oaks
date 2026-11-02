@@ -4,7 +4,7 @@ Contract: [`config/ribbon/five-rooms.json`](../../../config/ribbon/five-rooms.js
 validator: [`shared/city-kit/five-rooms-layout.js`](../../../shared/city-kit/five-rooms-layout.js),
 test: [`preview/tests/five-rooms-layout.test.js`](../../../preview/tests/five-rooms-layout.test.js).
 Every number below comes from `node docs/design/five-rooms/measure.mjs` on the live
-`preview/public/data/district.json` (plan hash `66797e9bb6160aa5`). Units are metres, site-local
+`preview/public/data/district.json` (plan hash `06f53958f6f8f2a6`). Units are metres, site-local
 x east, y north; floors are district-datum altitudes from `groundSurfaceHeight`.
 
 **Status: proposed.** No retirement here is decided. Each venue carries `retire.status: "proposed"`
@@ -77,9 +77,9 @@ Option A retires 4 of 30 tenants: Amorino, Van Cleef & Arpels, IPIC Theaters and
 
 | Venue | Kind | Host | Retires | Footprint (m2) | Floor (m) | Entrance (x, y), width | Link | Station (m) |
 |---|---|---|---|---|---|---|---|---|
-| Counter | bay | osm-way-625330798 | Amorino | 117.3 | 18.54 | -2755.00, -1216.44, 2.4 m | spine (right) | 69.131 |
-| Atelier | bay | osm-way-625330798 | Van Cleef & Arpels | 117.3 | 18.47 | -2755.40, -1245.79, 2.4 m | spine (right) | 39.78 |
-| Starlight Screen | bay | osm-way-625330798 | IPIC Theaters | 443.1 | 18.55 | -2755.16, -1228.17, 2.4 m | spine (right) | 57.401 |
+| Counter | bay | osm-way-625330798 | Amorino | 117.3 | 18.54 | -2755.00, -1216.44, 2.4 m | spine (right) | 69.126 |
+| Atelier | bay | osm-way-625330798 | Van Cleef & Arpels | 117.3 | 18.47 | -2755.40, -1245.79, 2.4 m | spine (right) | 39.775 |
+| Starlight Screen | bay | osm-way-625330798 | IPIC Theaters | 443.1 | 18.55 | -2755.16, -1228.17, 2.4 m | spine (right) | 57.396 |
 | Shade Garden | bay | osm-way-625330792 | Hermès | 115.6 | 18.47 | -2757.50, -1313.21, 2.4 m | south (right) | 58.339 |
 | Studios + Overlook | threshold | osm-way-625330790 | none | 23.8 | 18.29 | -2720.22, -1290.84, 6 m | link-studios (end) | 35.85 |
 
@@ -92,11 +92,11 @@ and one or two role anchors such as counter, display frame, screen, bed or seat 
 
 | Segment | Status | Length (m) | Width (m) | Clear (m) | Modules | Posts | Blockers |
 |---|---|---|---|---|---|---|---|
-| spine | blocked | 88.18 | 2 | 3.6 | 30 | 62 | bench-5-body, tree-104, tree-127, tree-153, tree-37, tree-77, tree-84, tree-85, tree-pit-103, tree-pit-126, tree-pit-152, tree-pit-27, tree-pit-76, tree-pit-83, tree-pit-84 |
+| spine | blocked | 87.88 | 2.4 | 3.6 | 30 | 62 | bench-5-body, tree-104, tree-127, tree-153, tree-37, tree-77, tree-84, tree-85, tree-pit-103, tree-pit-126, tree-pit-152, tree-pit-171, tree-pit-27, tree-pit-76, tree-pit-83, tree-pit-84 |
 | south | blocked | 76.51 | 2 | 3.6 | 26 | 54 | harry-winston-south-bed, tree-108, tree-pit-107, tree-pit-130, tree-pit-16, tree-pit-165, tree-pit-3, tree-pit-96 |
 | link-studios | blocked | 35.85 | 2 | 3.6 | 12 | 26 | tree-118, tree-48 |
 
-The spine is carried from #827 as it stands after #853: it starts just north of the side lane
+The spine is carried from #827 as it stands after #853 and #865 (2.4 m wide, centreline 0.3 m east): it starts just north of the side lane
 `osm-way-625330795`. The south segment ends at that lane's south kerb, and the two meet by a
 **marked crossing** (join kind `crossing`, 9.5 m, no canopy) that may cross only that road.
 `link-studios` tees off the south segment.
@@ -109,7 +109,7 @@ leaves one out. What blocks them:
   `osm-way-625330795` (modules 001-004 crossed it, posts 002-004 stood in it). #853, folded into #827
   with Val's OK, moved the start north of the kerb; v2 carries that spine.
 - **Street trees.** The east pavement is lined with trees at 6-10 m spacing. Pits 27, 76, 83, 84,
-  103, 126 and 152 are in the spine's walk (76 and 103 also under posts); pits 3, 16, 96, 107, 130
+  103, 126, 152 and (since the 2.4 m walk of #865) 171 are in the spine's walk (76 and 103 also under posts); pits 3, 16, 96, 107, 130
   and 165 are in the south walk (3 also under a post).
   Crowns with a lowest branch below the 4.0 m canopy top (3.6 m clear + 0.4 m slab): tree-104 at
   3.19 m, -153 3.53, -84 3.62, -37 3.72, -127 3.79, -77 3.82, -85 3.89, -108 3.78, -118 3.46 and
