@@ -7,10 +7,10 @@
 //
 // The spot under the craft is checked with the rule the page uses (hoverClear on walking.js's
 // environment for the served district) at every height of the descent, there and a metre ahead
-// (climbClear), so the craft does not stop on the edge of a margin. While it is blocked, this picks the nearest clear spot
-// at the craft's current heading and steers toward it in short hops (driving, or aloft): the
-// first hop learns which way KeyA turns. Call it aloft before pressing G; on the ground,
-// reverseClear backs a craft out before Space.
+// (climbClear), so the craft does not stop on the edge of a margin. While it is blocked,
+// clearHoverSpot picks the nearest clear spot, turns the craft in place to face it and drives
+// there, polling the placement throughout (the first turn learns which way KeyA turns). Call it
+// aloft before pressing G; on the ground, reverseClear backs a craft out before Space.
 import { createWalkingEnvironment } from '../src/walking.js';
 import { hoverClear } from '../src/carriage-motion.js';
 
@@ -34,40 +34,44 @@ function nearestClear(state, environment) {
   return null;
 }
 
-export async function clearHoverSpot(page, { focus, hops = 20, label = 'landing' }) {
+const wrap = angle => Math.atan2(Math.sin(angle), Math.cos(angle));
+
+export async function clearHoverSpot(page, { focus, tries = 8, timeout = 10000, label = 'landing' }) {
   const environment = await environmentFor(page);
-  const craft = () => page.evaluate(() => { const p = window.__riverCarriage().placement; return p && { vehicle: 'hover', position: p.position, yaw: p.yaw, altitude: 0 }; });
-  const hop = async (keys, ms) => {
+  const craft = () => page.evaluate(() => { const p = window.__riverCarriage().placement; return p && { vehicle: 'hover', position: p.position, yaw: p.yaw, altitude: 0, speed: p.speed ?? 0 }; });
+  // Hold `keys` until `done(state)` or the timeout, polling the placement: frame rate only changes how long it takes.
+  const holdUntil = async (keys, done) => {
     await focus();
     for (const key of keys) await page.keyboard.down(key);
-    await page.waitForTimeout(ms);
-    for (const key of keys) await page.keyboard.up(key);
-    await page.waitForFunction(() => Math.abs(window.__riverCarriage().placement?.speed ?? 0) < 0.3, null, { timeout: 15000 }).catch(() => {});
+    const started = Date.now();
+    try { for (let state = await craft(); !done(state) && Date.now() - started < timeout; state = await craft()) await page.waitForTimeout(40); }
+    finally { for (const key of keys) await page.keyboard.up(key); }
+    await page.waitForFunction(() => Math.abs(window.__riverCarriage().placement?.speed ?? 0) < 0.1, null, { timeout }).catch(() => {});
   };
   let state = await craft(), target = null, raise = null;
-  for (let n = 0; n < hops && !climbClear(state, environment); n++) {
-    target = nearestClear(state, environment); // at the current heading: each turn moves the hull's samples
+  for (let n = 0; n < tries && !climbClear(state, environment); n++) {
+    target = nearestClear(state, environment);
     if (!target) break;
-    // The craft moves along (-cos yaw, sin yaw) in scene x, z; raising yaw turns it toward
-    // (sin yaw, cos yaw). Turn toward the target, or drive straight once it is ahead.
-    const to = [target[0] - state.position[0], target[2] - state.position[2]], length = Math.hypot(...to) || 1;
-    const ahead = (-Math.cos(state.yaw) * to[0] + Math.sin(state.yaw) * to[1]) / length, side = (Math.sin(state.yaw) * to[0] + Math.cos(state.yaw) * to[1]) / length;
-    const reverse = ahead < -0.3, forward = reverse ? 'KeyS' : 'KeyW';
-    if (Math.abs(side) < 0.25) await hop([forward], 500);
-    else {
-      const wantRaise = (side > 0) !== reverse;
-      const key = raise === null ? 'KeyA' : (wantRaise === raise ? 'KeyA' : 'KeyD');
+    // Aloft the craft turns in place (carriage-motion.js stepCarriage). It moves along
+    // (-cos yaw, sin yaw) in scene x, z, so it faces the target at yaw atan2(dz, -dx).
+    const dx = target[0] - state.position[0], dz = target[2] - state.position[2], facing = Math.atan2(dz, -dx);
+    if (raise === null) {
       const before = state.yaw;
-      await hop([forward, key], 600);
-      const after = await craft();
-      if (raise === null && Math.abs(after.yaw - before) > 0.01) raise = (after.yaw > before) === (key === 'KeyA');
+      await holdUntil(['KeyA'], now => Math.abs(wrap(now.yaw - before)) > 0.05);
+      raise = wrap((await craft()).yaw - before) > 0;
     }
+    const error = wrap(facing - (await craft()).yaw);
+    if (Math.abs(error) > 0.08) {
+      const key = (error > 0) === raise ? 'KeyA' : 'KeyD', sign = Math.sign(error);
+      await holdUntil([key], now => sign * wrap(facing - now.yaw) < 0.06);
+    }
+    // Drive until the target is no longer ahead.
+    await holdUntil(['KeyW'], now => (-Math.cos(now.yaw) * (target[0] - now.position[0]) + Math.sin(now.yaw) * (target[2] - now.position[2])) < 0.15);
     state = await craft();
   }
   if (climbClear(state, environment)) return { east: state.position[0], north: -state.position[2] };
-  throw new Error(`${label}: no clear spot for the craft after ${hops} hops (at ${state?.position[0].toFixed(2)}, ${(-state?.position[2]).toFixed(2)}; target ${target ? `${target[0].toFixed(2)}, ${(-target[2]).toFixed(2)}` : 'none'})`);
+  throw new Error(`${label}: no clear spot for the craft after ${tries} tries (at ${state?.position[0].toFixed(2)}, ${(-state?.position[2]).toFixed(2)}; target ${target ? `${target[0].toFixed(2)}, ${(-target[2]).toFixed(2)}` : 'none'})`);
 }
-
 
 // Back a grounded craft straight up until it may lift, keeping its heading: a drive that ends
 // beside the Ribbon's first posts reverses out of their flight margin (#841). It stops once the

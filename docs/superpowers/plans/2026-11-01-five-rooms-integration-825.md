@@ -60,7 +60,8 @@
     hover-coach's take-off was refused there.
   - New `preview/e2e/hover-landing.js` checks the spot in node, using `hoverClear` on walking.js's
     environment at every height of the climb or descent, there and a metre ahead:
-    - `clearHoverSpot` steers aloft to the nearest clear spot before G;
+    - `clearHoverSpot` turns the craft in place aloft to face the nearest clear spot and drives
+      there before G, polling the placement, so a slow runner only takes longer;
     - `reverseClear` backs a grounded craft straight out before Space, so the roll keeps the
       heading the server admits.
   - Each of the three journeys gains one call; nothing else in them changed.
@@ -96,6 +97,9 @@
 | 2026-11-01 22:23-22:28Z | `pnpm run verify` (core; tree = `115b5752` shells + this main.js) | passed: node 307/307, preview 5153 of 5185, server 1113 of 1398, 127 of 132; 0 failures |
 | 2026-11-01 22:31-22:35Z | hosted Verify on `f04a8289` | failed: ribbonwing shard (passenger, maneuvers) and commons shard (hover-coach), all at the Ribbon posts; #860 `4d21569c` all green |
 | 2026-11-02 ~00:30-02:15Z | `node preview/e2e/experience-runner.js` with the helper | final helper: ribbonwing-passenger + ribbonwing-maneuvers 3/3, hover-coach 8/8. An earlier helper that stopped on the margin's edge failed hover-coach's climb 2 times in about 10 |
+| 2026-11-02 02:30-02:34Z | hosted Verify on `834962d9` | hover-coach and ribbonwing-maneuvers passed; ribbonwing-passenger failed, because the timed hops of the first `clearHoverSpot` never reached a spot 1.3 m west on the slower runner |
+| 2026-11-02 ~02:40-03:00Z | closed-loop `clearHoverSpot`, local runs | hover-coach standalone 4/4; passenger + maneuvers 2/2; all three in one fixture 1 of 2 (hover-coach then starts where maneuvers left Jevica, which is not a CI pairing) |
+| 2026-11-02 03:03-03:08Z | `pnpm run verify` (core) | passed: node 307/307, preview 5153 of 5185, server 1113 of 1398, 127 of 132; 0 failures |
 | 2026-11-02 02:23-02:29Z | `pnpm run verify` (core, with the journey changes) | passed: node 307/307, preview 5153 of 5185, server 1113 of 1398, 127 of 132; 0 failures |
 | 2026-11-01 22:29Z | depth-layers under pink, run 3 (same tree) | **passed**; the receipt is kept in `.runtime/841/experience-depth-pink.json` and `data/reports/experience.json` is restored (the run rewrites it to one journey) |
 | 2026-11-01 ~22:04-22:09Z | `pnpm run verify` (core, `ddf3f6a4` plus these changes, load ~7-10) | passed: node 307/307, preview 5151 of 5183 (32 skipped), server 1113 of 1398 (285 skipped: Redis/browser/live), 127 of 132; build ok; 0 failures |
