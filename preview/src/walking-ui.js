@@ -1,3 +1,4 @@
+import { levelArrivalNotice, portalActionLabel } from './level-portal-labels.js';
 import { bindPageLifecycle } from './background-lifecycle.js';
 import { personPosition, personEyeHeight, personDistance } from './person-position.js';
 import { createFlightState, beginFlight, stepFlight, recordFlightPose, acknowledgeFlightPose } from './flight.js';
@@ -175,9 +176,7 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       && portal.toLevelId === `${level.buildingId}/l${level.index + (direction === 'down' ? -1 : 1)}`
       && Math.hypot(portal.position[0] - state.position[0], portal.position[1] + state.position[2]) <= 1.3) ?? null;
   };
-  const portalLabel = (portal, up) => portal.kind === 'lift'
-    ? up ? 'Take the lift up' : portal.toLevelId.endsWith('/l0') ? 'Take the lift to the ground floor' : 'Take the lift down'
-    : up ? 'Go up one level' : portal.toLevelId.endsWith('/l0') ? 'Go down to ground floor' : 'Go down one level';
+  const portalLabel = portalActionLabel;
   const doorway = () => {
     let result = null, distance = 6;
     for (const store of stores) {
@@ -199,6 +198,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
     clear(); doorwayPending = true;
     try {
       const result = await (stairs ? onLevelChange?.(stairs) : room ? onLeave?.(store) : onEnter?.(store));
+      // A landed stair or lift says which floor this is, for anyone who cannot see the change.
+      if (active && stairs && result?.ok) notify(levelArrivalNotice(stairs.toLevelId));
       if (active && state === actionState && result?.ok === false) {
         notify(travelRefusal(result, { blocked: 'The way through is blocked right now. Try again in a moment.',
           cooldown: 'Wait a moment before stepping through. Try again.', fallback: 'Could not step through. Try again.' }));
