@@ -309,6 +309,11 @@ jobs:
             journeys: east-garden-commons
           - id: hover-coach
             journeys: hover-coach
+          # Five Rooms and a Ribbon (#825, #842): no-flag pink start, ?finish=classic, the whole
+          # Ribbon walked, every venue entrance stood at, the pinned spawn draw-call budget
+          # (preview/e2e/five-rooms-budget.json) and steady teardown over two reloads.
+          - id: five-rooms
+            journeys: five-rooms
           # The Ribbonwing (#777): the passenger seat with a pilot, passenger and observer, and the
           # tuck dive, loop and Petal Roll flown in the browser. Commons alone is about 16 min.
           - id: ribbonwing
