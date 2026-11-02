@@ -14,8 +14,10 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   const panel=el('section',null,'office-panel');panel.hidden=true;
   const title=el('h3','Jevica’s office'),description=el('p','Entry by invitation from Jevica · Level 6'),status=el('p');status.setAttribute('role','status');
   const button=(text,id,fn)=>{const b=el('button',text);if(id)b.id=id;b.type='button';b.addEventListener('click',fn,{signal});return b;};
+  // Keys go in aria-keyshortcuts as well as the visible label, so assistive tech announces them.
+  const keyed=(node,key)=>{node.setAttribute('aria-keyshortcuts',key);return node;};
   const lobby=button('Go to office lobby','office-lobby',async()=>{const m=getMultiplayer(),o=catalog()[0];if(!m?.connected||!o)return;const result=await m.travel({position:o.entrance});say(result.ok?'Office lobby · F takes the elevator.':result.message);});
-  const enter=button('Take elevator · F','office-enter',()=>void enterOffice());enter.disabled=true;
+  const enter=keyed(button('Take elevator · F','office-enter',()=>void enterOffice()),'F');enter.disabled=true;
   const retryCancel=button('Finish cancelling entry','office-cancel-retry',()=>void finishCancellation(cancelledEntry));retryCancel.hidden=true;
   const management=el('div',null,'office-management');management.id='office-management';
   panel.append(title,description,lobby,enter,retryCancel,status,management);panelHost.append(panel);
@@ -28,24 +30,24 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   const cancelEntry=()=>{if(!entryAttempt)return;entryAttempt.cancelled=true;if(entryAttempt.sent){cancelledEntry=entryAttempt;void finishCancellation(cancelledEntry);}busy=false;pendingDialog.close();say('Elevator entry cancelled.');};
   pendingDialog.append(pendingTitle,pendingStatus,button('Cancel entry','office-entry-cancel',cancelEntry));document.body.append(pendingDialog);
   pendingDialog.addEventListener('cancel',e=>{e.preventDefault();cancelEntry();},{signal});pendingDialog.addEventListener('close',()=>host.focus({preventScroll:true}),{signal});
-  const nearby=button('Office elevator · F','office-nearby',()=>void enterOffice());nearby.hidden=true;host.append(nearby);
+  const nearby=keyed(button('Office elevator · F','office-nearby',()=>void enterOffice()),'F');nearby.hidden=true;host.append(nearby);
   const dialog=el('dialog',null,'office-visit');dialog.id='office-visit';dialog.tabIndex=-1;dialog.setAttribute('aria-labelledby','office-title');
   const header=el('header'),heading=el('h2','Jevica’s office');heading.id='office-title';
   const label=el('p');label.setAttribute('role','status');
   const skip=button('Skip arrival','office-skip',()=>view?.skip());
-  const exit=button('Return to street','office-exit',()=>void leaveOffice());
+  const exit=keyed(button('Return to street','office-exit',()=>void leaveOffice()),'Escape');
   const accessButton=button('Office access','office-access',()=>{management.hidden=!management.hidden;accessButton.setAttribute('aria-expanded',String(!management.hidden));});accessButton.setAttribute('aria-expanded','false');
-  const voiceJoin=button('Join voice · Y','office-voice',()=>void mp()?.voice?.toggleJoin()),voiceMic=button('Microphone off · M','office-mic',()=>void mp()?.voice?.toggleMic());
+  const voiceJoin=keyed(button('Join voice · Y','office-voice',()=>void mp()?.voice?.toggleJoin()),'Y'),voiceMic=keyed(button('Microphone off · M','office-mic',()=>void mp()?.voice?.toggleMic()),'M');
   let desk=null,deskAccount=null;
   const openDesk=()=>{if(phase!=='office'||!view)return;if(viewId)setView(null);keys.clear();mp()?.voice?.setTransmit(false);desk??=createOfficeDeskUI({getMultiplayer:mp,onClose:()=>{keys.clear();dialog.focus({preventScroll:true});}});deskAccount=mp()?.identity?.id;void desk.open();};
-  const deskButton=button('Open desk · E','office-desk-open',openDesk);deskButton.hidden=true;
-  const deskNearby=button('Use this desk · E','office-desk-nearby',openDesk);deskNearby.hidden=true;dialog.append(deskNearby);
+  const deskButton=keyed(button('Open desk · E','office-desk-open',openDesk),'E');deskButton.hidden=true;
+  const deskNearby=keyed(button('Use this desk · E','office-desk-nearby',openDesk),'E');deskNearby.hidden=true;dialog.append(deskNearby);
   // Stairs and lift are server transitions from their entry; the button appears only within reach.
-  const levelButton=button('Take the stairs · Q','office-level',()=>void changeLevel());levelButton.hidden=true;dialog.append(levelButton);
+  const levelButton=keyed(button('Take the stairs · Q','office-level',()=>void changeLevel()),'Q');levelButton.hidden=true;dialog.append(levelButton);
   // Chairs are server claims made from their stand point; the server answers with the seated pose.
-  const seatButton=button('Sit down · Z','office-seat',()=>void toggleSeat());seatButton.hidden=true;dialog.append(seatButton);
+  const seatButton=keyed(button('Sit down · Z','office-seat',()=>void toggleSeat()),'Z');seatButton.hidden=true;dialog.append(seatButton);
   // Views (#363) move only this visitor's camera: no command, no position, no collision.
-  const viewSelect=el('select');viewSelect.id='office-view';viewSelect.setAttribute('aria-label','Office view');viewSelect.hidden=true;
+  const viewSelect=el('select');viewSelect.id='office-view';viewSelect.setAttribute('aria-label','Office view');keyed(viewSelect,'V');viewSelect.hidden=true;
   // Choosing with the pointer hands focus back to the office, so V, WASD and Escape keep working.
   viewSelect.addEventListener('change',()=>{setView(viewSelect.value||null);dialog.focus({preventScroll:true});},{signal});
   const identity=el('div',null,'office-identity'),eyebrow=el('span','RIVER OAKS · PRIVATE OFFICES','office-eyebrow');identity.append(eyebrow,heading,label);
@@ -55,7 +57,10 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   const WALKING_HELP='WASD to walk · Drag or ← → to look · Escape returns to street';
   const help=el('p',WALKING_HELP,'office-help');
   const pad=el('nav',null,'office-pad');pad.setAttribute('aria-label','Office movement');
-  dialog.append(header,journey,help,pad);document.body.append(dialog);
+  // The lift, stairs, chairs and desks offer themselves only within reach. A polite cue says which
+  // are in reach, so someone who cannot see the buttons appear knows the lift is here.
+  const cue=el('p',null,'sr-only');cue.id='office-cue';cue.setAttribute('role','status');let lastCue='';
+  dialog.append(header,journey,help,pad,cue);document.body.append(dialog);
   const headerSize=typeof ResizeObserver==='function'?new ResizeObserver(()=>dialog.style.setProperty('--office-header-bottom',`${Math.ceil(header.getBoundingClientRect().bottom)+10}px`)):null;
   headerSize?.observe(header);
   const keys=new Set();let view=null,position=[...OFFICE_SPAWN],yaw=0,layoutId=OFFICE_LAYOUT_LEGACY,levelId=null,levelPending=false,seatId=null,seatPending=false,viewId=null,closing=false,phase='closed',busy=false,entryAttempt=null,cancelledEntry=null,movePending=false,lastMove=0,lastPoll=0,lastPanelCheck=-Infinity,polling=null,failedOffice=null,epoch=0,currentOffice=null,owned=false,lastState='',disposed=false,accountKey='',openedAt=0;
@@ -87,7 +92,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     // With nobody to invite, say so in a line rather than show a picker and a button that both do nothing.
     if(select.options.length){const invite=button('Invite resident',null,()=>void action('invite',{peerId:select.value}));invite.className='office-invite';management.append(h,select,invite);}
     else management.append(h,el('p','Residents you can invite appear here once they are in town.','office-empty'));
-    for(const g of currentOffice.guests??[]){const row=el('div',null,'office-person');row.append(el('span',g.name),button('Revoke access',null,()=>void action('revoke',{peerId:g.userId})));management.append(row);}
+    for(const g of currentOffice.guests??[]){const row=el('div',null,'office-person');const revoke=button('Revoke access',null,()=>void action('revoke',{peerId:g.userId}));revoke.setAttribute('aria-label',`Revoke access for ${g.name}`);row.append(el('span',g.name),revoke);management.append(row);}
   }
   async function action(name,data){if(busy||entryAttempt)return;busy=true;const r=await send(name,data);busy=false;if(disposed)return;if(r.ok){lastState='';await refresh();}else say(messages[r.error]??r.message);}
   function open(player,cinematic,street=captureStreet()){
@@ -137,7 +142,7 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
     if(r.ok&&r.office){levelId=heldLevelId=r.office.levelId;position=[...r.office.position];label.textContent=layout().levels.find(l=>l.id===levelId)?.index?'Mezzanine · Library':'Main floor';}
     else label.textContent=messages[r.error]??r.message??'That way is not available right now.';
   }
-  function close(){desk?.suspend();epoch++;levelPending=false;seatPending=false;seatId=null;viewId=null;viewSelect.value='';help.textContent=WALKING_HELP;mp()?.voice?.setTransmit(false);view?.dispose();view=null;keys.clear();phase='closed';movePending=false;panel.append(management);management.hidden=false;closing=true;dialog.close();closing=false;document.body.classList.remove('visiting-office');walking.halt();host.focus({preventScroll:true});}
+  function close(){desk?.suspend();epoch++;lastCue='';cue.textContent='';levelPending=false;seatPending=false;seatId=null;viewId=null;viewSelect.value='';help.textContent=WALKING_HELP;mp()?.voice?.setTransmit(false);view?.dispose();view=null;keys.clear();phase='closed';movePending=false;panel.append(management);management.hidden=false;closing=true;dialog.close();closing=false;document.body.classList.remove('visiting-office');walking.halt();host.focus({preventScroll:true});}
   const sameAccount=attempt=>mp()===attempt.client&&mp()?.connected&&mp()?.identity?.id===attempt.account;
   async function finishCancellation(attempt){
     if(!attempt||attempt.cleanupPending||!sameAccount(attempt))return;
@@ -179,6 +184,11 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
   // A browser may close the modal on a second Escape without a cancel event. Keep the dialog
   // and the visit consistent: reopen it and leave properly.
   dialog.addEventListener('close',()=>{if(!view||closing)return;dialog.showModal();void leaveOffice();},{signal});
+  // The browser drops focus to the page when a focused control hides (Skip arrival as the doors
+  // open, the lift while it rides). The office hears keys only on itself, so take focus back
+  // when it fell to nothing during a visit. Switching windows keeps the element focused, so
+  // this never steals focus from another app or dialog.
+  dialog.addEventListener('focusout',e=>{if(e.relatedTarget||!view)return;queueMicrotask(()=>{const now=document.activeElement;if(view&&dialog.open&&(!now||now===document.body))dialog.focus({preventScroll:true});});},{signal});
   const typing=e=>e.target.closest('input,select,textarea,button');
   dialog.addEventListener('keydown',e=>{if(desk?.active||typing(e)||e.metaKey||e.ctrlKey||e.altKey||e.repeat)return;if(e.code==='KeyE'&&!e.repeat){e.preventDefault();openDesk();return;}if(e.code==='KeyQ'&&!e.repeat){e.preventDefault();void changeLevel();return;}if(e.code==='KeyZ'&&!e.repeat){e.preventDefault();void toggleSeat();return;}if(e.code==='KeyV'&&!e.repeat){e.preventDefault();cycleView();return;}if(e.code==='KeyY'&&!e.repeat){e.preventDefault();void mp()?.voice?.toggleJoin();}if(e.code==='KeyM'){e.preventDefault();const v=mp()?.voice;if(v?.state.pushToTalk)v.setTransmit(true);else if(!e.repeat)void v?.toggleMic();}if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();if(viewId)setView(null);keys.add(e.code);}},{signal});
   dialog.addEventListener('keyup',e=>{keys.delete(e.code);if(e.code==='KeyM')mp()?.voice?.setTransmit(false);},{signal});
@@ -258,8 +268,14 @@ export function createOfficeUI({host,panelHost,renderer,getWorld,getMultiplayer,
       const taken=Boolean(chair&&!seatId&&occupied().includes(chair));
       viewSelect.hidden=phase!=='office'||!officeViews(layout()).length;
       seatButton.hidden=!chair||seatPending;seatButton.disabled=taken;seatButton.textContent=seatId?'Stand up · Z':taken?'Seat taken':'Sit down · Z';
-      if(portal)levelButton.textContent=portal.kind==='lift'?'Use the lift · Q':layout().levels.find(l=>l.id===portal.toLevelId)?.index?'Take the stairs up · Q':'Take the stairs down · Q';
+      if(portal)levelButton.textContent=portal.kind==='lift'?`Use the lift to the ${layout().levels.find(l=>l.id===portal.toLevelId)?.index?'mezzanine':'main floor'} · Q`:layout().levels.find(l=>l.id===portal.toLevelId)?.index?'Take the stairs up · Q':'Take the stairs down · Q';
       accessButton.hidden=!owned||phase!=='office';skip.hidden=phase==='office';help.hidden=phase!=='office';pad.hidden=phase!=='office';dialog.dataset.position=JSON.stringify(position);
+      // A control that hides or disables under keyboard focus would drop focus to the page, where
+      // the office hears no keys. Hand it back to the office instead.
+      const focused=document.activeElement;
+      if([skip,deskButton,deskNearby,levelButton,seatButton,viewSelect,accessButton,voiceJoin,voiceMic].includes(focused)&&(focused.hidden||focused.disabled))dialog.focus({preventScroll:true});
+      const offer=phase==='office'?[levelButton,seatButton,deskNearby].filter(b=>!b.hidden&&!b.disabled).map(b=>b.textContent).join(' · '):'';
+      if(offer!==lastCue){lastCue=offer;cue.textContent=offer?`In reach: ${offer}`:'';}
       return true;
     },
     inspect(){return view?.inspect?.()??null;},

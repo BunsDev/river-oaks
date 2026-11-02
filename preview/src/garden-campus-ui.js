@@ -25,6 +25,9 @@ const STATES = { available: 'Available', leased: 'Leased', requested: 'You asked
 export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer, notify = () => {}, createDesk = createOfficeDeskUI }) {
   const lifetime = new AbortController(), signal = lifetime.signal, mp = () => getMultiplayer();
   const button = (text, fn, className) => { const b = el('button', text, className);b.type = 'button';b.addEventListener('click', fn, { signal });return b; };
+  // Every suite row repeats the same actions, so each control's accessible name says which suite
+  // it acts on; a screen reader's list of buttons then reads "Accept, Suite T2-201", not "Accept" ×3.
+  const forSuite = (node, number, text = node.textContent) => { node.setAttribute('aria-label', /suite$/i.test(text) ? `${text} ${number}` : `${text}, Suite ${number}`);return node; };
   // Play section.
   const panel = el('section', null, 'office-panel campus-panel');panel.hidden = true;panel.id = 'campus-panel';
   const say = el('p');say.setAttribute('role', 'status');
@@ -112,11 +115,11 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
     if (!mp()?.connected) { say.textContent = 'Join the town to see the suites.';return; }
     dialog.showModal();status.textContent = 'Opening the directory…';await refresh();heading.focus?.();
   }
-  const termPicker = (start = serverClock()) => {
+  const termPicker = (start = serverClock(), number = null) => {
     const wrap = el('span', null, 'campus-term'), from = el('input'), days = el('select');
     from.type = 'date';from.value = new Date(start).toISOString().slice(0, 10);from.setAttribute('aria-label', 'Start date');
     for (const n of [7, 30, 90]) { const option = el('option', `${n} days`);option.value = String(n);days.append(option); }
-    days.value = '30';days.setAttribute('aria-label', 'Length');wrap.append(from, days);
+    days.value = '30';days.setAttribute('aria-label', 'Length');if (number) { forSuite(from, number, 'Start date');forSuite(days, number, 'Length'); }wrap.append(from, days);
     const read = () => {
       // Today means now (a lease may start up to five minutes back); a later day starts at its morning.
       const now = serverClock(), picked = Date.parse(`${from.value}T00:00:00Z`), startsAt = picked <= now ? now : picked;
@@ -140,16 +143,16 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
       for (const lease of live) {
         const row = el('div', null, 'campus-row');
         row.append(el('strong', `Suite ${lease.number}`), el('span', `${lease.status === 'offered' ? 'Offered' : lease.role === 'guest' ? `Guest of ${lease.tenantName}` : 'Active'} · ${lease.term} · ${lease.label}`));
-        if (lease.actions.includes('accept')) row.append(button('Accept', () => act(() => commands.accept(lease), 'Lease accepted', 'accept')), button('Decline', () => act(() => commands.release(lease), 'Offer declined'), 'campus-secondary'));
-        if (lease.actions.includes('release')) row.append(button('Give up this suite', () => act(() => commands.release(lease), 'Lease released'), 'campus-secondary'));
-        if (lease.actions.includes('leave')) row.append(button('Leave as guest', () => act(async () => {
+        if (lease.actions.includes('accept')) row.append(forSuite(button('Accept', () => act(() => commands.accept(lease), 'Lease accepted', 'accept')), lease.number), forSuite(button('Decline', () => act(() => commands.release(lease), 'Offer declined'), 'campus-secondary'), lease.number));
+        if (lease.actions.includes('release')) row.append(forSuite(button('Give up this suite', () => act(() => commands.release(lease), 'Lease released'), 'campus-secondary'), lease.number));
+        if (lease.actions.includes('leave')) row.append(forSuite(button('Leave as guest', () => act(async () => {
           // Leaving on purpose is this action's answer, not lost access to report later.
           const result = await commands.leave(lease, mp()?.identity?.id);if (result.ok) left.add(lease.id);return result;
-        }, 'You left this suite'), 'campus-secondary'));
+        }, 'You left this suite'), 'campus-secondary'), lease.number));
         if (lease.actions.includes('grant')) {
           const { select, empty } = residentPicker('Resident to invite');
-          if (!empty) row.append(select, button('Invite as guest', () => act(() => commands.grant(lease, select.value), 'Guest invited', 'grant')));
-          for (const guest of lease.guests ?? []) row.append(button(`Remove ${guest.name}`, () => act(() => commands.ungrant(lease, guest.userId), 'Guest removed'), 'campus-secondary'));
+          if (!empty) row.append(forSuite(select, lease.number, 'Resident to invite'), forSuite(button('Invite as guest', () => act(() => commands.grant(lease, select.value), 'Guest invited', 'grant')), lease.number));
+          for (const guest of lease.guests ?? []) row.append(forSuite(button(`Remove ${guest.name}`, () => act(() => commands.ungrant(lease, guest.userId), 'Guest removed'), 'campus-secondary'), lease.number));
         }
         const directions = view.towers.flatMap(tower => tower.floors.flatMap(floor => floor.units)).find(unit => unit.unitId === lease.unitId)?.directions;
         if (lease.status === 'active' && directions) row.append(el('p', directions, 'campus-hint'));
@@ -157,7 +160,7 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
       }
       for (const request of waiting) {
         const row = el('div', null, 'campus-row');row.append(el('strong', `Suite ${request.number}`), el('span', `Asked · ${request.term} · waiting for the operator`));
-        row.append(button('Withdraw', () => act(() => commands.cancel(request), 'Request withdrawn'), 'campus-secondary'));mine.append(row);
+        row.append(forSuite(button('Withdraw', () => act(() => commands.cancel(request), 'Request withdrawn'), 'campus-secondary'), request.number));mine.append(row);
       }
       if (view.outcomes.length) {
         const endings = el('ul', null, 'campus-endings');endings.setAttribute('aria-label', 'Ended recently');
@@ -170,14 +173,14 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
       const manage = el('section', null, 'campus-section');manage.append(el('h3', 'Manage the campus'));
       for (const request of view.manage.requests) {
         const row = el('div', null, 'campus-row');row.append(el('strong', `Suite ${request.number}`), el('span', `${request.name} asked · ${request.term}`));
-        row.append(button('Offer these dates', () => act(() => commands.issue({ unitId: request.unitId, tenantId: request.userId, startsAt: Math.max(request.startsAt, serverClock()), endsAt: request.endsAt, requestId: request.id }), 'Offer sent', 'issue')),
-          button('Decline', () => act(() => commands.decline(request), 'Request declined'), 'campus-secondary'));
+        row.append(forSuite(button('Offer these dates', () => act(() => commands.issue({ unitId: request.unitId, tenantId: request.userId, startsAt: Math.max(request.startsAt, serverClock()), endsAt: request.endsAt, requestId: request.id }), 'Offer sent', 'issue')), request.number),
+          forSuite(button('Decline', () => act(() => commands.decline(request), 'Request declined'), 'campus-secondary'), request.number));
         manage.append(row);
       }
       for (const lease of view.manage.leases) {
         const row = el('div', null, 'campus-row');row.append(el('strong', `Suite ${lease.number}`), el('span', `${lease.tenantName} · ${lease.status} · ${lease.term}`));
-        if (lease.actions.includes('renew')) row.append(button('Extend 30 days', () => act(() => commands.renew(lease, lease.endsAt + 30 * DAY), 'Lease extended', 'renew')));
-        row.append(button(lease.status === 'offered' ? 'Withdraw offer' : 'End this lease', () => act(() => commands.revoke(lease), lease.status === 'offered' ? 'Offer withdrawn' : 'Lease ended'), 'campus-secondary'));
+        if (lease.actions.includes('renew')) row.append(forSuite(button('Extend 30 days', () => act(() => commands.renew(lease, lease.endsAt + 30 * DAY), 'Lease extended', 'renew')), lease.number));
+        row.append(forSuite(button(lease.status === 'offered' ? 'Withdraw offer' : 'End this lease', () => act(() => commands.revoke(lease), lease.status === 'offered' ? 'Offer withdrawn' : 'Lease ended'), 'campus-secondary'), lease.number));
         manage.append(row);
       }
       // Offer an available suite to a resident in town.
@@ -201,7 +204,7 @@ export function createGardenCampusUI({ host, panelHost, getWorld, getMultiplayer
           const item = el('li'), chip = el('span', STATES[unit.state], `campus-chip campus-${unit.state}`);
           item.append(el('strong', unit.number), el('span', `Floor ${floor.floor} · ${unit.netArea} m²`), chip);
           if (unit.canRequest) {
-            const term = termPicker();item.append(term.wrap, button('Ask for this suite', () => act(() => commands.request(unit.unitId, term.read()), `Asked for suite ${unit.number}`, 'request')));
+            const term = termPicker(serverClock(), unit.number);item.append(term.wrap, forSuite(button('Ask for this suite', () => act(() => commands.request(unit.unitId, term.read()), `Asked for suite ${unit.number}`, 'request')), unit.number));
           }
           list.append(item);
         }
