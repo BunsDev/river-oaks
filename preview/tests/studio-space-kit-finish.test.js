@@ -112,14 +112,16 @@ test('under pink the Garden Office keeps its one TypeSafe-pink wall art, terraco
   } finally { disposeStudioScene(scene.group); }
 });
 
-test('the studio scene takes the designer preference, classic outside a page, and lighting presets are not a finish', () => {
+// #837 (Val, 2026-11-02): Pink Jet-Age is the default finish everywhere readFinishPreference is read,
+// the Studio included; Classic stays an explicit comparison choice.
+test('the studio scene takes the designer preference, Pink Jet-Age by default, and lighting presets are not a finish', () => {
   const region = createSpace('cafe');
-  const scene = createStudioScene(region), pink = createStudioScene(region, 'light', null, { finish: PINK });
+  const scene = createStudioScene(region), classic = createStudioScene(region, 'light', null, { finish: 'classic' });
   try {
-    assert.equal(scene.group.userData.kitFinish, 'classic');
-    assert.equal(pink.group.userData.kitFinish, PINK);
+    assert.equal(scene.group.userData.kitFinish, PINK);
+    assert.equal(classic.group.userData.kitFinish, 'classic');
     assert.deepEqual(Object.keys(SPACE_LIGHT), ['daylight', 'warm', 'evening']);
-  } finally { disposeStudioScene(scene.group); disposeStudioScene(pink.group); }
+  } finally { disposeStudioScene(scene.group); disposeStudioScene(classic.group); }
 });
 
 test('the classic entries the finish matches are the ones space-scene.js draws, and the approved-space renderer is untouched', () => {
