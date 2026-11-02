@@ -14,6 +14,7 @@ import { ENCOUNTER_FAR, clearConversationLine, encounterPosition, indoorEncounte
 import { sharedRoomSummary } from './shared-population.js';
 import { isGameplayKey } from './keyboard-input.js';
 import { primaryAction } from './contextual-action.js';
+import { actionCueLabel, createActionCue } from './action-cue.js';
 import { travelRefusal } from './travel-message.js';
 import './walking.css';
 import { createTouchGamepad } from './touch-gamepad.js';
@@ -36,6 +37,10 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
   const actionButtons = Object.fromEntries(['talk', 'enter', 'descend', 'play', 'interact', 'meet'].map(action =>
     [action, hud.querySelector(action === 'meet' ? '#walking-meet-nearby' : `#walking-${action}`)]));
   hud.querySelector('#walking-notice').after(primary, more);
+  // The contextual action appears silently; name it politely once it holds still.
+  const cueNode = document.createElement('p'); cueNode.id = 'walking-cue'; cueNode.className = 'sr-only'; cueNode.setAttribute('role', 'status');
+  hud.append(cueNode);
+  const cue = createActionCue({ element: cueNode });
   for (const button of Object.values(actionButtons)) secondary.append(button);
   // Busy actions (a request or animation in flight) use aria-disabled, so they
   // keep focus and their slot; disabled means the action is unavailable here.
@@ -77,6 +82,8 @@ export function createWalkingControls({ camera, host, onMeetNearby, onTalk, getL
       (keyboard && selected ? actionButtons[selected] : host).focus({ preventScroll: true });
     }
     hud.dataset.primaryAction = selected ?? '';
+    const shown = active && selected ? actionButtons[selected] : null;
+    cue.update(...(shown && !shown.hidden && !shown.disabled ? actionCueLabel(shown) : [null]));
   };
   const sprintButton=document.createElement('button');
   sprintButton.id='walking-sprint';sprintButton.dataset.walkKey='ShiftLeft';
