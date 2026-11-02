@@ -106,6 +106,8 @@ async page => {
   check(petal.seen.maxTilt>2.5&&petal.seen.maxTuck>.3,`The Petal Roll rolls over with the wings half-tucked (tilt ${petal.seen.maxTilt.toFixed(2)} rad, tuck ${petal.seen.maxTuck.toFixed(2)})`);
   await step('ribbons fade',()=>page.waitForFunction(()=>window.__riverRibbonwingEffects().trails?.draws===0,{},{timeout:5000}));
   // Land and step out.
+  // The Ribbon's posts run beside the street this flies up: fly clear of them before landing (#841).
+  await (await import('./hover-landing.js')).clearHoverSpot(page,{focus:()=>host().focus()});
   await host().focus();await page.keyboard.press('KeyG');
   await step('landed',()=>page.waitForFunction(()=>(window.__riverCarriage().placement.altitude??0)<=.02,{},{timeout:60000}));
   await host().focus();await page.keyboard.press('KeyG');
