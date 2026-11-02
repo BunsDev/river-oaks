@@ -15,6 +15,9 @@
    old tenant door, and every store room stays as it is.
 2. **Collision is world-level.** The same solids apply for every finish, on client and server (kit
    rule: a finish never changes collision). Classic players meet undrawn posts.
+3. **Solid to flight; the journeys adapt** (asked after hosted run f04a8289). The posts block low
+   flight like any prop, so a Ribbonwing over the Ribbon hovers until it is steered off. The
+   journeys that fly beside the spine land and lift clear of it. No movement rule changed.
 
 ## Changed behaviour
 
@@ -50,6 +53,17 @@
   - `1127046a`: `buildFiveRoomsShells(..., { interiors })`.
   - `115b5752`: the Starlight frontage moves 4 cm proud of the IPIC stone facade, which was 49.7 mm
     behind it.
+- Ribbonwing journeys (decision 3):
+  - Hosted f04a8289 failed `ribbonwing-passenger`, `ribbonwing-maneuvers` and `hover-coach`. The
+    craft parks 6 m north of the spawn, beside the spine's first posts, and flies up the street
+    next to them. Landing stalled at 3.56 m with a wingtip within a post's flight margin, and
+    hover-coach's take-off was refused there.
+  - New `preview/e2e/hover-landing.js` checks the spot in node, using `hoverClear` on walking.js's
+    environment at every height of the climb or descent, there and a metre ahead:
+    - `clearHoverSpot` steers aloft to the nearest clear spot before G;
+    - `reverseClear` backs a grounded craft straight out before Space, so the roll keeps the
+      heading the server admits.
+  - Each of the three journeys gains one call; nothing else in them changed.
 - `preview/tests/fixtures/district-routes-main.json`: six cases recaptured with a `recaptured2` note.
   - Two resident routes now return null: their stop is 0.31 m from a post.
   - Two resident routes and two police routes are each one waypoint shorter.
@@ -80,6 +94,9 @@
 | 2026-11-01 ~22:12Z | `REDIS_URL=<own redis-server :6487> pnpm run test:server` (`8e55a65a` code) | 1440/1440, 0 skipped |
 | 2026-11-01 22:20Z | depth-layers under pink, run 2 (with `interiors: false`) | failed: 1 pair, Starlight ivory against the IPIC grey stone, 49.7 mm |
 | 2026-11-01 22:23-22:28Z | `pnpm run verify` (core; tree = `115b5752` shells + this main.js) | passed: node 307/307, preview 5153 of 5185, server 1113 of 1398, 127 of 132; 0 failures |
+| 2026-11-01 22:31-22:35Z | hosted Verify on `f04a8289` | failed: ribbonwing shard (passenger, maneuvers) and commons shard (hover-coach), all at the Ribbon posts; #860 `4d21569c` all green |
+| 2026-11-02 ~00:30-02:15Z | `node preview/e2e/experience-runner.js` with the helper | final helper: ribbonwing-passenger + ribbonwing-maneuvers 3/3, hover-coach 8/8. An earlier helper that stopped on the margin's edge failed hover-coach's climb 2 times in about 10 |
+| 2026-11-02 02:23-02:29Z | `pnpm run verify` (core, with the journey changes) | passed: node 307/307, preview 5153 of 5185, server 1113 of 1398, 127 of 132; 0 failures |
 | 2026-11-01 22:29Z | depth-layers under pink, run 3 (same tree) | **passed**; the receipt is kept in `.runtime/841/experience-depth-pink.json` and `data/reports/experience.json` is restored (the run rewrites it to one journey) |
 | 2026-11-01 ~22:04-22:09Z | `pnpm run verify` (core, `ddf3f6a4` plus these changes, load ~7-10) | passed: node 307/307, preview 5151 of 5183 (32 skipped), server 1113 of 1398 (285 skipped: Redis/browser/live), 127 of 132; build ok; 0 failures |
 
