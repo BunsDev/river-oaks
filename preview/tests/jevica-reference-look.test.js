@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { loadCharacterRig } from './helpers/character-rig.js';
 import { instantiateAvatar } from '../src/avatars.js';
 import { createJevicaCostume } from '../src/jevica-costume.js';
-import { SUIT, PUMP, MAKEUP, BANGS, upperHull } from '../src/jevica-suit.js';
+import { SUIT, PUMP, MAKEUP, BANGS, FACE, upperHull, shapeJevicaFace } from '../src/jevica-suit.js';
 
 // Val's 2026-10-29 reference look on the real hero rig: a blazer and trousers cut
 // from her own skin, a peplum, a collar with its brooch, lilies, earrings, heels
@@ -321,4 +321,61 @@ test('a rose-gold vine winds unbroken up each lapel, between the piped edges, wi
       assert.ok(compared > 20 && raised > compared * .9, `${lapel.name}: ${raised} of ${compared} gilt points stand proud of the satin beside them`);
     }
   } finally { costume.dispose(); rig.dispose(); }
+});
+
+test('face: a softer V toward the chin and a narrower nose, with the mouth, neck and source asset untouched', async () => {
+  const { rig, costume, body } = await dressed();
+  const plain = instantiateAvatar(await loadCharacterRig('jevica'), { targetHeight: 1.685 });
+  try {
+    const marks = costume.makeup.marks, after = body.geometry.attributes.position, before = plain.model.getObjectByName('Jevica').geometry.attributes.position;
+    assert.notEqual(body.geometry, plain.model.getObjectByName('Jevica').geometry, 'she reshapes her own copy');
+    const width = (p, y, zMin, band = .002) => { let w = 0; for (let i = 0; i < p.count; i++) if (Math.abs(p.getY(i) - y) < band && p.getZ(i) > zMin) w = Math.max(w, Math.abs(p.getX(i))); return 2 * w; };
+    const chin = [width(before, marks.mouth - .03, marks.mouthZ - .05), width(after, marks.mouth - .03, marks.mouthZ - .05)];
+    const cheeks = [width(before, marks.mouth, marks.mouthZ - .06), width(after, marks.mouth, marks.mouthZ - .06)];
+    const nose = [width(before, marks.noseTip, marks.noseZ - .02, .0015), width(after, marks.noseTip, marks.noseZ - .02, .0015)];
+    assert.ok(chin[1] < chin[0] * .97, `lower face ${(chin[0] * 1000).toFixed(1)} -> ${(chin[1] * 1000).toFixed(1)} mm`);
+    assert.ok(cheeks[1] < cheeks[0] * .98, `cheeks beside the mouth ${(cheeks[0] * 1000).toFixed(1)} -> ${(cheeks[1] * 1000).toFixed(1)} mm`);
+    assert.ok(nose[1] < nose[0] * .9 && nose[1] > nose[0] * .75, `nose ${(nose[0] * 1000).toFixed(1)} -> ${(nose[1] * 1000).toFixed(1)} mm`);
+    // Nothing moves at the lips, below the chin, above the brows, or anywhere but sideways.
+    let stray = 0, largest = 0;
+    for (let i = 0; i < after.count; i++) {
+      const dx = Math.abs(after.getX(i) - before.getX(i)), y = before.getY(i);
+      largest = Math.max(largest, dx);
+      if (after.getY(i) !== y || after.getZ(i) !== before.getZ(i)) stray++;
+      else if (dx > 0 && (Math.abs(y - marks.mouth) < .004 && Math.abs(before.getX(i)) < .028 || y < marks.mouth - .07 || y > 1.44)) stray++;
+    }
+    assert.equal(stray, 0, `${stray} vertices moved outside the jaw and nose`);
+    assert.ok(largest < FACE.jaw * .03, `largest shift ${(largest * 1000).toFixed(2)} mm`);
+    assert.ok(costume.face.moved > 1000, `${costume.face.moved} vertices reshaped`);
+  } finally { costume.dispose(); rig.dispose(); plain.dispose(); }
+});
+
+
+test('face normals stay perpendicular to the deformed surface through the cheek and jaw falloffs', () => {
+  // A tiny planar patch with an oblique normal. Its transformed tangent cross-product
+  // is independent of the normal correction; constant-scale correction loses the shear.
+  const centre = new THREE.Vector3(.04, 1.275, .08), epsilon = .00001;
+  const a = new THREE.Vector3(1, 0, -1).normalize(), b = new THREE.Vector3(0, 1, 0);
+  const normal = a.clone().cross(b).normalize();
+  const points = [centre, centre.clone().addScaledVector(a, epsilon), centre.clone().addScaledVector(a, -epsilon),
+    centre.clone().addScaledVector(b, epsilon), centre.clone().addScaledVector(b, -epsilon), centre.clone()];
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(new Float64Array(points.flatMap(p => p.toArray())), 3));
+  geometry.setAttribute('normal', new THREE.BufferAttribute(new Float64Array(points.flatMap(() => normal.toArray())), 3));
+  const body = new THREE.Mesh(geometry); body.name = 'Jevica';
+  const eyes = new THREE.Mesh(new THREE.BoxGeometry(.08, .02, .02)); eyes.name = 'Jevicahigh-poly';
+  eyes.geometry.translate(0, 1.38, .08);
+  const model = new THREE.Group(); model.add(body, eyes); const owned = new Set();
+  try {
+    shapeJevicaFace(model, { mouth: 1.3, mouthZ: .1, noseTip: 1.34, noseZ: .12 }, owned);
+    const p = body.geometry.attributes.position, n = body.geometry.attributes.normal;
+    const point = i => new THREE.Vector3().fromBufferAttribute(p, i);
+    const tangentA = point(1).sub(point(2)), tangentB = point(3).sub(point(4));
+    const expected = tangentA.cross(tangentB).normalize(), actual = new THREE.Vector3().fromBufferAttribute(n, 0);
+    assert.ok(actual.angleTo(expected) < .0001, `normal error ${THREE.MathUtils.radToDeg(actual.angleTo(expected))} degrees`);
+    assert.deepEqual(point(0).toArray(), point(5).toArray(), 'UV seam duplicates move identically');
+    assert.deepEqual(Array.from(n.array.slice(0, 3)), Array.from(n.array.slice(15, 18)), 'duplicate normals stay continuous');
+    assert.deepEqual(Array.from(geometry.attributes.position.array.slice(0, 3)), centre.toArray(), 'source positions are untouched');
+    assert.deepEqual(Array.from(geometry.attributes.normal.array.slice(0, 3)), normal.toArray(), 'source normals are untouched');
+  } finally { for (const resource of owned) resource.dispose(); geometry.dispose(); eyes.geometry.dispose(); body.material.dispose(); eyes.material.dispose(); }
 });
