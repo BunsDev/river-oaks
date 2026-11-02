@@ -143,7 +143,10 @@ second interior or renderer is built.
     A play() or frame callback from an earlier generation changes nothing; a terminal failure invalidates
     pending work and pauses locally. Explicit Retry begins a fresh generation.
   - **Encodings.** Each encoding the browser may decode is tried once per attempt, WebM then MP4. Retry starts a
-    new attempt.
+    new attempt. Where the engine is WebKit (Safari on macOS and every browser on iOS, which report Apple as the
+    vendor) the MP4 goes first: WebKit says it can play the WebM too, but the 2026-10-19 engine check could not
+    measure its Opus sound, while the MP4's AAC was audible (#502). The WebM stays its fallback, and
+    `window.__riverScreening().attempts` records which encoding decoded.
   - **Failure reasons.** The status says why: autoplay (Play film), decode, network, stalled (no progress for 30 s
     while loading or buffering, or while a play request is unanswered), or playback. A connection that drops, or a
     browser that is offline, is network at once and the other encoding is not tried. A file that is missing while
