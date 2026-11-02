@@ -49,7 +49,7 @@ async page => {
       const calls = [], triangles = [];
       for (let i = 0; i < 30; i++) { await new Promise(requestAnimationFrame); const render = window.__riverRenderAudit.graphics().render; calls.push(render.calls); triangles.push(render.triangles); }
       const median = values => values.sort((a, b) => a - b)[Math.floor(values.length / 2)];
-      return { calls: median(calls), triangles: median(triangles), quality: JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}').mode ?? null, buffer: window.__riverRenderAudit.graphics().buffer };
+      return { calls: median(calls), triangles: median(triangles), quality: JSON.parse(document.querySelector('#canvas-host').dataset.quality || '{}').mode ?? null, buffer: window.__riverRenderAudit.graphics().buffer, scale: window.__riverRenderAudit.graphics().pipeline?.renderScale ?? null };
     });
     await tab.evaluate(() => window.__riverRenderAudit.release());
     return result;
@@ -89,7 +89,8 @@ async page => {
   check(spawn.pink.quality === 'sharp', `Sharp graphics applied for the budget frame: ${spawn.pink.quality}`);
   await pinGraphics(page, 'smooth');
   spawn.pinkSmooth = await spawnFrame(page);
-  check(spawn.pinkSmooth.quality === 'smooth' && spawn.pinkSmooth.buffer[0] < spawn.pink.buffer[0], `Smooth graphics renders fewer pixels than sharp: ${spawn.pinkSmooth.buffer} vs ${spawn.pink.buffer}`);
+  // Smooth keeps the canvas buffer and lowers the pipeline's render scale (render-quality.js SMOOTH_RENDER_SCALE).
+  check(spawn.pinkSmooth.quality === 'smooth' && spawn.pinkSmooth.scale < spawn.pink.scale, `Smooth graphics renders fewer pixels than sharp: render scale ${spawn.pinkSmooth.scale} vs ${spawn.pink.scale} (buffer ${spawn.pinkSmooth.buffer})`);
   await pinGraphics(page, 'sharp');
 
   // 3. Classic as the comparison override, measured at the same frame for the budget delta.
@@ -108,6 +109,12 @@ async page => {
   check(blockedStream.finish.preference === 'pink-jet-age', `Blocked storage still starts in pink-jet-age (#837): ${blockedStream.finish.preference}`);
   check(blocked.tabErrors.length === 0, `Blocked storage page has no errors: ${blocked.tabErrors.slice(0, 3).join(' | ')}`);
   await blocked.context.close();
+  // The classic and blocked-storage tabs signed in as the same fixture owner, and the server keeps
+  // one connection per account: the first page lost its seat to them. Reload it to rejoin before
+  // it walks.
+  await page.reload();
+  await ready(page);
+  await page.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.connected && m.snapshot?.players.some(p => p.id === m.selfId); }, null, { timeout: 60000 });
 
   // 5. The pinned budget (#842): compared only against a pin that measured this frame, preset and viewport.
   let budget = { pinned: false, measured: { classic: spawn.classic.calls, pink: spawn.pink.calls }, delta: spawn.pink.calls - spawn.classic.calls };
@@ -188,7 +195,7 @@ async page => {
     await walk(segment.points, `Ribbon ${segment.id}`, 0, segment);
     segmentResults.push({ id: segment.id, walked: true, status: segment.status });
   }
-  const venues = [];
+  const venues = [], notes = [];
   for (const stop of stops) {
     const label = `${stop.label} entrance`;
     const here = await point(), connection = clearRoute([here.position[0], -here.position[2]], stop.approach[0]);
@@ -199,9 +206,15 @@ async page => {
     const me = await self(), pose = await point(), box = await page.locator('#canvas-host').boundingBox();
     const distance = Math.hypot(me.position[0] - stop.stand[0], me.position[1] - stop.stand[1]);
     check(distance < 0.8, `${label}: the server holds the player at the stop (${round(distance)} m off)`);
-    const probe = await page.evaluate(([east, north]) => window.__riverRenderAudit.groundProbe([east, north], { radius: 0, step: 1, hits: 2 })[0].hits.map(hit => ({ object: hit.object, path: hit.path, altitude: hit.at[1] })), stop.stand);
-    const under = probe[0] ?? null, drop = under ? pose.position[1] - under.altitude : null;
-    check(under && drop !== null && drop > -0.3 && drop < 2.2, `${label}: stands on drawn ground (#840/#841): ${JSON.stringify({ under, drop: round(drop) })}`);
+    const probe = await page.evaluate(([east, north]) => window.__riverRenderAudit.groundProbe([east, north], { radius: 0, step: 1, hits: 40 })[0].hits.map(hit => ({ object: hit.object, path: hit.path, altitude: hit.at[1] })), stop.stand);
+    // The ray comes down from 400 m, so a facade over the door (an upper storey, a cornice) is hit
+    // first; the ground is the first surface no higher than the player's head. Street-tree leaves
+    // are not ground and do not block walking (Shade Garden stands 2.3 m from a stem whose leaves
+    // hang to 0.7 m): they are recorded as foliage at body height, not judged as the floor.
+    const foliage = probe.filter(hit => hit.path === 'Mature urban shade trees' && hit.altitude <= pose.position[1] + 1.6);
+    const under = probe.find(hit => hit.path !== 'Mature urban shade trees' && hit.altitude <= pose.position[1] + 1.6) ?? null, drop = under ? pose.position[1] - under.altitude : null;
+    check(under && drop !== null && drop > -0.3 && drop < 2.2, `${label}: stands on drawn ground (#840/#841): ${JSON.stringify({ under, drop: round(drop), feet: round(pose.position[1]), hits: probe })}`);
+    if (foliage.length) notes.push(`${label}: street-tree foliage at body height (${round(Math.min(...foliage.map(hit => hit.altitude)) - pose.position[1])}-${round(Math.max(...foliage.map(hit => hit.altitude)) - pose.position[1])} m above the feet)`);
     const seen = await page.evaluate(([x, y]) => window.__riverRenderAudit.pick(x, y, 2).map(hit => ({ object: hit.object, path: hit.path, distance: hit.distance })), [box.x + box.width / 2, box.y + box.height / 2]);
     check(seen.length > 0 && seen[0].distance < 40, `${label}: looking in meets the shell within 40 m (#839): ${JSON.stringify(seen[0] ?? null)}`);
     venues.push({ venue: stop.venue, entrance: stop.entrance, link: stop.link, segment: stop.segment, segmentStatus: stop.status, stand: stop.stand.map(v => round(v)), offMetres: round(distance), under, drop: round(drop), sees: seen[0] });
@@ -213,8 +226,9 @@ async page => {
   const inventoryOf = state => state.inventory.filter(item => /ribbon|five|venue|counter|atelier|starlight|shade|studio|overlook/i.test(item.name));
   const before = await stream(page), reloads = [];
   for (let i = 0; i < 2; i++) {
-    await page.locator('#reload').click();
-    await page.locator('#loading').waitFor({ state: 'hidden', timeout: 180000 });
+    // #reload lives in a collapsed HUD menu; press it the way the garden-campus lifecycle journeys do.
+    await page.locator('#reload').evaluate(button => button.click());
+    await page.waitForFunction(() => !document.querySelector('#reload').disabled && document.querySelector('#loading').hidden, null, { timeout: 180000 });
     await ready(page);
     await page.waitForTimeout(3000);
     reloads.push(await stream(page));
@@ -228,7 +242,7 @@ async page => {
   return assertCompact({ passed: true, checks, contractVersion: contract.version, defaultFinish: DEFAULT_FINISH,
     finish: { noFlag: compactFinish(noFlag.finish), classic: { preference: classicStream.finish.preference, ribbon: classicRibbon && { id: classicRibbon.id, modules: classicRibbon.stats?.modules ?? null }, fiveRooms: classicFiveRooms }, blocked: blockedStream.finish.preference },
     spawn: { camera: arrival.id, viewport: spawn.pink.buffer, pink: { calls: spawn.pink.calls, triangles: spawn.pink.triangles }, pinkSmooth: { calls: spawn.pinkSmooth.calls, buffer: spawn.pinkSmooth.buffer }, classic: { calls: spawn.classic.calls, triangles: spawn.classic.triangles } },
-    budget, walk: { segments: segmentResults, spineMetres: round(spineMetres, 1), seconds: round((Date.now() - walkStarted) / 1000, 1), detours, groundRange, samples: altitudes.length }, venues,
+    budget, walk: { segments: segmentResults, spineMetres: round(spineMetres, 1), seconds: round((Date.now() - walkStarted) / 1000, 1), detours, groundRange, samples: altitudes.length }, venues, notes,
     teardown: { before: before.renderer, afterReloads: reloads.map(state => state.renderer), foundationGroups: inventoryOf(before) },
     hostLoad: loadavg().map(n => round(n, 1)), seconds: round((Date.now() - started) / 1000, 1),
     scope: 'Local Chromium on the loopback fixture at 1280x800; frame counts are this host, not a device budget. Captures and the night pink-rule review are five-rooms-cameras.mjs. Not a human visual or accessibility review.' });

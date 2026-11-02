@@ -1,0 +1,763 @@
+{
+  "createdAt": "2026-11-02T15:38:55.945Z",
+  "results": [
+    {
+      "name": "five-rooms",
+      "status": "passed",
+      "seconds": 337.248,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Spatial contract readable (#838): null",
+          "render-quality.js DEFAULT_FINISH is pink-jet-age on this head (#837): pink-jet-age",
+          "No-flag startup draws pink-jet-age (#837): pink-jet-age",
+          "The Ribbon is built and not refused (#828/#835): {\"id\":\"district-spine\",\"hash\":\"b37b4445d46d946b\",\"finish\":\"pink-jet-age\",\"stats\":{\"segments\":1,\"modules\":30,\"posts\":58,\"lamps\":16,\"fans\":30,\"seats\":0,\"skipped\":4},\"skipped\":[\"ribbon:spine:post:014:r\",\"ribbon:spine:post:015:l\",\"ribbon:spine:post:019:r\",\"ribbon:spine:post:024:r\"],\"drawCalls\":5}",
+          "finish.fiveRooms is reported by the page (#841): {\"version\":\"five-rooms-v2\",\"finish\":\"pink-jet-age\",\"interiors\":false,\"drawCalls\":8,\"materials\":[\"five-rooms/ivory\",\"five-rooms/glass\",\"five-rooms/chrome\",\"five-rooms/pink\",\"five-rooms/glow-usable\",\"five-rooms/lamp-warm\",\"five-rooms/ink\",\"five-rooms/glow-landmark\"],\"venues\":[{\"id\":\"venue:counter\",\"label\":\"Counter\",\"form\":{\"roof\":\"boomerang canopy\",\"entrance\":\"square lit jambs\",\"glazing\":\"low serving band\"},\"parts\":24,\"bounds\":{\"min\":[-2756.242,18.541,1209.731],\"max\":[-2755.205,22.841,1222.722]},\"floor\":18.541,\"floorDelta\":0.054},{\"id\":\"venue:atelier\",\"label\":\"Atelier\",\"form\":{\"roof\":\"flat rounded cantilever\",\"entrance\":\"lit capsule portal\",\"glazing\":\"full-height fins\"},\"parts\":26,\"bounds\":{\"min\":[-2756.628,18.47,1235.79],\"max\":[-2755.565,22.77,1248.782]},\"floor\":18.47,\"floorDelta\":0.06},{\"id\":\"venue:starlight-screen\",\"label\":\"Starlight Screen\",\"form\":{\"roof\":\"capsule marquee and starburst\",\"entrance\":\"parabolic arch\",\"glazing\":\"closed with poster frames\"},\"parts\":21,\"bounds\":{\"min\":[-2756.397,18.528,1222.756],\"max\":[-2755.386,24.634,1235.752]},\"floor\":18.555,\"floorDelta\":0.091},{\"id\":\"venue:shade-garden\",\"label\":\"Shade Garden\",\"form\":{\"roof\":\"open pergola ribs\",\"entrance\":\"lit hoop gateway\",\"glazing\":\"garden wall and trellis\"},\"parts\":26,\"bounds\":{\"min\":[-2758.436,18.471,1305.681],\"max\":[-2757.694,22.771,1318.491]},\"floor\":18.471,\"floorDelta\":0.058},{\"id\":\"venue:studios-overlook\",\"label\":\"Studios + Overlook\",\"form\":{\"roof\":\"saucer on twin hoops\",\"entrance\":\"open twin hoops\",\"glazing\":\"open threshold\"},\"parts\":14,\"bounds\":{\"min\":[-2720.234,18.294,1221.467],\"max\":[-2703.093,48.599,1302.182]},\"floor\":18.294,\"floorDelta\":-0.034}],\"attachments\":[{\"id\":\"attach:counter:threshold\",\"venue\":\"venue:counter\",\"role\":\"threshold\",\"frame\":\"site\",\"position\":[-2754.997,-1216.445,18.541],\"yaw\":3.128},{\"id\":\"attach:counter:sign\",\"venue\":\"venue:counter\",\"role\":\"sign\",\"frame\":\"site\",\"position\":[-2754.947,-1216.446,21.541],\"yaw\":3.128},{\"id\":\"attach:counter:porch-light\",\"venue\":\"venue:counter\",\"role\":\"porch-light\",\"frame\":\"site\",\"position\":[-2754.925,-1214.846,21.141],\"yaw\":3.128},{\"id\":\"attach:counter:counter\",\"venue\":\"venue:counter\",\"role\":\"counter\",\"frame\":\"site\",\"position\":[-2751.998,-1216.487,18.541],\"yaw\":-0.014},{\"id\":\"attach:counter:seat-cluster\",\"venue\":\"venue:counter\",\"role\":\"seat-cluster\",\"frame\":\"site\",\"position\":[-2748.498,-1216.535,18.541],\"yaw\":-0.014},{\"id\":\"attach:atelier:threshold\",\"venue\":\"venue:atelier\",\"role\":\"threshold\",\"frame\":\"site\",\"position\":[-2755.403,-1245.786,18.47],\"yaw\":3.128},{\"id\":\"attach:atelier:sign\",\"venue\":\"venue:atelier\",\"role\":\"sign\",\"frame\":\"site\",\"position\":[-2755.353,-1245.787,21.47],\"yaw\":3.128},{\"id\":\"attach:atelier:porch-light\",\"venue\":\"venue:atelier\",\"role\":\"porch-light\",\"frame\":\"site\",\"position\":[-2755.331,-1244.187,21.07],\"yaw\":3.128},{\"id\":\"attach:atelier:display-frame\",\"venue\":\"venue:atelier\",\"role\":\"display-frame\",\"frame\":\"site\",\"position\":[-2750.904,-1245.848,19.67],\"yaw\":-0.014},{\"id\":\"attach:atelier:anchor\",\"venue\":\"venue:atelier\",\"role\":\"anchor\",\"frame\":\"site\",\"position\":[-2747.904,-1245.89,18.47],\"yaw\":-0.014},{\"id\":\"attach:starlight-screen:threshold\",\"venue\":\"venue:starlight-screen\",\"role\":\"threshold\",\"frame\":\"site\",\"position\":[-2755.16,-1228.174,18.555],\"yaw\":3.128},{\"id\":\"attach:starlight-screen:sign\",\"venue\":\"venue:starlight-screen\",\"role\":\"sign\",\"frame\":\"site\",\"position\":[-2755.11,-1228.175,21.555],\"yaw\":3.128},{\"id\":\"attach:starlight-screen:porch-light\",\"venue\":\"venue:starlight-screen\",\"role\":\"porch-light\",\"frame\":\"site\",\"position\":[-2755.088,-1226.575,21.155],\"yaw\":3.128},{\"id\":\"attach:starlight-screen:screen\",\"venue\":\"venue:starlight-screen\",\"role\":\"screen\",\"frame\":\"site\",\"position\":[-2722.163,-1228.631,19.755],\"yaw\":-0.014},{\"id\":\"attach:starlight-screen:seat-cluster\",\"venue\":\"venue:starlight-screen\",\"role\":\"seat-cluster\",\"frame\":\"site\",\"position\":[-2738.161,-1228.409,18.555],\"yaw\":-0.014},{\"id\":\"attach:shade-garden:threshold\",\"venue\":\"venue:shade-garden\",\"role\":\"threshold\",\"frame\":\"site\",\"position\":[-2757.498,-1313.213,18.471],\"yaw\":3.127},{\"id\":\"attach:shade-garden:sign\",\"venue\":\"venue:shade-garden\",\"role\":\"sign\",\"frame\":\"site\",\"position\":[-2757.448,-1313.214,21.471],\"yaw\":3.127},{\"id\":\"attach:shade-garden:porch-light\",\"venue\":\"venue:shade-garden\",\"role\":\"porch-light\",\"frame\":\"site\",\"position\":[-2757.425,-1311.614,21.071],\"yaw\":3.127},{\"id\":\"attach:shade-garden:bed\",\"venue\":\"venue:shade-garden\",\"role\":\"bed\",\"frame\":\"site\",\"position\":[-2752.998,-1313.277,18.471],\"yaw\":-0.014},{\"id\":\"attach:shade-garden:seat-cluster\",\"venue\":\"venue:shade-garden\",\"role\":\"seat-cluster\",\"frame\":\"site\",\"position\":[-2750.499,-1313.313,18.471],\"yaw\":-0.014},{\"id\":\"attach:studios-overlook:threshold\",\"venue\":\"venue:studios-overlook\",\"role\":\"threshold\",\"frame\":\"site\",\"position\":[-2719.724,-1290.85,18.294],\"yaw\":3.13},{\"id\":\"attach:studios-overlook:sign\",\"venue\":\"venue:studios-overlook\",\"role\":\"sign\",\"frame\":\"site\",\"position\":[-2719.753,-1293.45,21.294],\"yaw\":3.13},{\"id\":\"attach:overlook:t1-lantern\",\"venue\":\"venue:studios-overlook\",\"role\":\"lantern\",\"frame\":\"campus\",\"position\":[16,66,26],\"yaw\":0},{\"id\":\"attach:overlook:t2-lantern\",\"venue\":\"venue:studios-overlook\",\"role\":\"lantern\",\"frame\":\"campus\",\"position\":[16,110,30],\"yaw\":0},{\"id\":\"attach:overlook:t3-lantern\",\"venue\":\"venue:studios-overlook\",\"role\":\"lantern\",\"frame\":\"campus\",\"position\":[16,146,26],\"yaw\":0}]}",
+          "The five rooms are built and not refused (#839/#841): {\"version\":\"five-rooms-v2\",\"finish\":\"pink-jet-age\",\"interiors\":false,\"drawCalls\":8,\"materials\":[\"five-rooms/ivory\",\"five-rooms/glass\",\"five-rooms/chrome\",\"five-rooms/pink\",\"five-rooms/glow-usable\",\"five-rooms/lamp-warm\",\"five-rooms/ink\",\"five-rooms/glow-landmark\"],\"venues\":[{\"id\":\"venue:counter\",\"label\":\"Counter\",\"form\":{\"roof\":\"boomerang canopy\",\"entrance\":\"square lit jambs\",\"glazing\":\"low serving band\"},\"parts\":24,\"bounds\":{\"min\":[-2756.242,18.541,1209.731],\"max\":[-2755.205,22.841,1222.722]},\"floor\":18.541,\"floorDelta\":0.054},{\"id\":\"venue:atelier\",\"label\":\"Atelier\",\"form\":{\"roof\":\"flat rounded cantilever\",\"entrance\":\"lit capsule portal\",\"glazing\":\"full-height fins\"},\"parts\":26,\"bounds\":{\"min\":[-2756.628,18.47,1235.79],\"max\":[-2755.565,22.77,1248.782]},\"floor\":18.47,\"floorDelta\":0.06},{\"id\":\"venue:starlight-screen\",\"label\":\"Starlight Screen\",\"form\":{\"roof\":\"capsule marquee and starburst\",\"entrance\":\"parabolic arch\",\"glazing\":\"closed with poster frames\"},\"parts\":21,\"bounds\":{\"min\":[-2756.397,18.528,1222.756],\"max\":[-2755.386,24.634,1235.752]},\"floor\":18.555,\"floorDelta\":0.091},{\"id\":\"venue:shade-garden\",\"label\":\"Shade Garden\",\"form\":{\"roof\":\"open pergola ribs\",\"entrance\":\"lit hoop gateway\",\"glazing\":\"garden wall and trellis\"},\"parts\":26,\"bounds\":{\"min\":[-2758.436,18.471,1305.681],\"max\":[-2757.694,22.771,1318.491]},\"floor\":18.471,\"floorDelta\":0.058},{\"id\":\"venue:studios-overlook\",\"label\":\"Studios + Overlook\",\"form\":{\"roof\":\"saucer on twin hoops\",\"entrance\":\"open twin hoops\",\"glazing\":\"open threshold\"},\"parts\":14,\"bounds\":{\"min\":[-2720.234,18.294,1221.467],\"max\":[-2703.093,48.599,1302.182]},\"floor\":18.294,\"floorDelta\":-0.034}],\"attachments\":[{\"id\":\"attach:counter:threshold\",\"venue\":\"venue:counter\",\"role\":\"threshold\",\"frame\":\"site\",\"position\":[-2754.997,-1216.445,18.541],\"yaw\":3.128},{\"id\":\"attach:counter:sign\",\"venue\":\"venue:counter\",\"role\":\"sign\",\"frame\":\"site\",\"position\":[-2754.947,-1216.446,21.541],\"yaw\":3.128},{\"id\":\"attach:counter:porch-light\",\"venue\":\"venue:counter\",\"role\":\"porch-light\",\"frame\":\"site\",\"position\":[-2754.925,-1214.846,21.141],\"yaw\":3.128},{\"id\":\"attach:counter:counter\",\"venue\":\"venue:counter\",\"role\":\"counter\",\"frame\":\"site\",\"position\":[-2751.998,-1216.487,18.541],\"yaw\":-0.014},{\"id\":\"attach:counter:seat-cluster\",\"venue\":\"venue:counter\",\"role\":\"seat-cluster\",\"frame\":\"site\",\"position\":[-2748.498,-1216.535,18.541],\"yaw\":-0.014},{\"id\":\"attach:atelier:threshold\",\"venue\":\"venue:atelier\",\"role\":\"threshold\",\"frame\":\"site\",\"position\":[-2755.403,-1245.786,18.47],\"yaw\":3.128},{\"id\":\"attach:atelier:sign\",\"venue\":\"venue:atelier\",\"role\":\"sign\",\"frame\":\"site\",\"position\":[-2755.353,-1245.787,21.47],\"yaw\":3.128},{\"id\":\"attach:atelier:porch-light\",\"venue\":\"venue:atelier\",\"role\":\"porch-light\",\"frame\":\"site\",\"position\":[-2755.331,-1244.187,21.07],\"yaw\":3.128},{\"id\":\"attach:atelier:display-frame\",\"venue\":\"venue:atelier\",\"role\":\"display-frame\",\"frame\":\"site\",\"position\":[-2750.904,-1245.848,19.67],\"yaw\":-0.014},{\"id\":\"attach:atelier:anchor\",\"venue\":\"venue:atelier\",\"role\":\"anchor\",\"frame\":\"site\",\"position\":[-2747.904,-1245.89,18.47],\"yaw\":-0.014},{\"id\":\"attach:starlight-screen:threshold\",\"venue\":\"venue:starlight-screen\",\"role\":\"threshold\",\"frame\":\"site\",\"position\":[-2755.16,-1228.174,18.555],\"yaw\":3.128},{\"id\":\"attach:starlight-screen:sign\",\"venue\":\"venue:starlight-screen\",\"role\":\"sign\",\"frame\":\"site\",\"position\":[-2755.11,-1228.175,21.555],\"yaw\":3.128},{\"id\":\"attach:starlight-screen:porch-light\",\"venue\":\"venue:starlight-screen\",\"role\":\"porch-light\",\"frame\":\"site\",\"position\":[-2755.088,-1226.575,21.155],\"yaw\":3.128},{\"id\":\"attach:starlight-screen:screen\",\"venue\":\"venue:starlight-screen\",\"role\":\"screen\",\"frame\":\"site\",\"position\":[-2722.163,-1228.631,19.755],\"yaw\":-0.014},{\"id\":\"attach:starlight-screen:seat-cluster\",\"venue\":\"venue:starlight-screen\",\"role\":\"seat-cluster\",\"frame\":\"site\",\"position\":[-2738.161,-1228.409,18.555],\"yaw\":-0.014},{\"id\":\"attach:shade-garden:threshold\",\"venue\":\"venue:shade-garden\",\"role\":\"threshold\",\"frame\":\"site\",\"position\":[-2757.498,-1313.213,18.471],\"yaw\":3.127},{\"id\":\"attach:shade-garden:sign\",\"venue\":\"venue:shade-garden\",\"role\":\"sign\",\"frame\":\"site\",\"position\":[-2757.448,-1313.214,21.471],\"yaw\":3.127},{\"id\":\"attach:shade-garden:porch-light\",\"venue\":\"venue:shade-garden\",\"role\":\"porch-light\",\"frame\":\"site\",\"position\":[-2757.425,-1311.614,21.071],\"yaw\":3.127},{\"id\":\"attach:shade-garden:bed\",\"venue\":\"venue:shade-garden\",\"role\":\"bed\",\"frame\":\"site\",\"position\":[-2752.998,-1313.277,18.471],\"yaw\":-0.014},{\"id\":\"attach:shade-garden:seat-cluster\",\"venue\":\"venue:shade-garden\",\"role\":\"seat-cluster\",\"frame\":\"site\",\"position\":[-2750.499,-1313.313,18.471],\"yaw\":-0.014},{\"id\":\"attach:studios-overlook:threshold\",\"venue\":\"venue:studios-overlook\",\"role\":\"threshold\",\"frame\":\"site\",\"position\":[-2719.724,-1290.85,18.294],\"yaw\":3.13},{\"id\":\"attach:studios-overlook:sign\",\"venue\":\"venue:studios-overlook\",\"role\":\"sign\",\"frame\":\"site\",\"position\":[-2719.753,-1293.45,21.294],\"yaw\":3.13},{\"id\":\"attach:overlook:t1-lantern\",\"venue\":\"venue:studios-overlook\",\"role\":\"lantern\",\"frame\":\"campus\",\"position\":[16,66,26],\"yaw\":0},{\"id\":\"attach:overlook:t2-lantern\",\"venue\":\"venue:studios-overlook\",\"role\":\"lantern\",\"frame\":\"campus\",\"position\":[16,110,30],\"yaw\":0},{\"id\":\"attach:overlook:t3-lantern\",\"venue\":\"venue:studios-overlook\",\"role\":\"lantern\",\"frame\":\"campus\",\"position\":[16,146,26],\"yaw\":0}]}",
+          "Sharp graphics applied for the budget frame: sharp",
+          "Smooth graphics renders fewer pixels than sharp: render scale 0.75 vs 1 (buffer 1280,800)",
+          "?finish=classic overrides the default (#837): classic",
+          "Classic page has no errors: ",
+          "Blocked storage still starts in pink-jet-age (#837): pink-jet-age",
+          "Blocked storage page has no errors: ",
+          "The budget pin measured this frame (r01-arrival, sharp, 1280,800): {\"camera\":\"r01-arrival\",\"graphics\":\"sharp\",\"viewport\":[1280,800]}",
+          "Pink spawn frame within the pinned draw-call budget: 1661 <= 1874 (classic baseline 1629, delta 32)",
+          "Walked the Ribbon spine end to end: 87.9 m in 21.3 s with 0 detours",
+          "Ribbon south: continuous connection exists (#841)",
+          "Ribbon link-studios: continuous connection exists (#841)",
+          "Counter entrance: continuous walking connection exists (#841)",
+          "Counter entrance: the server holds the player at the stop (0.02 m off)",
+          "Counter entrance: stands on drawn ground (#840/#841): {\"under\":{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":18.4634},\"drop\":1.68,\"feet\":20.14,\"hits\":[{\"object\":\"facade:reference-grey-stone\",\"path\":\"\",\"altitude\":28.0212},{\"object\":\"facade:finish:reference-amorino-canopy+reference-veranda-base\",\"path\":\"\",\"altitude\":22.7712},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":18.4634},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":16.3339},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":16.1839}]}",
+          "Counter entrance: looking in meets the shell within 40 m (#839): {\"object\":\"Jevicalong01\",\"path\":\"Jevicarig < Scene < Player character\",\"distance\":0.901}",
+          "Atelier entrance: continuous walking connection exists (#841)",
+          "Atelier entrance: the server holds the player at the stop (0.01 m off)",
+          "Atelier entrance: stands on drawn ground (#840/#841): {\"under\":{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":18.3907},\"drop\":1.68,\"feet\":20.07,\"hits\":[{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":18.3907},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":16.3339},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":16.1839}]}",
+          "Atelier entrance: looking in meets the shell within 40 m (#839): {\"object\":\"facade:facade-glass\",\"path\":\"\",\"distance\":1.38}",
+          "Starlight Screen entrance: continuous walking connection exists (#841)",
+          "Starlight Screen entrance: the server holds the player at the stop (0.01 m off)",
+          "Starlight Screen entrance: stands on drawn ground (#840/#841): {\"under\":{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":18.4407},\"drop\":1.68,\"feet\":20.12,\"hits\":[{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":18.4407},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":16.3339},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":16.1839}]}",
+          "Starlight Screen entrance: looking in meets the shell within 40 m (#839): {\"object\":\"facade:finish:reference-charcoal+reference-metal-band\",\"path\":\"\",\"distance\":1.008}",
+          "Shade Garden entrance: continuous walking connection exists (#841)",
+          "Shade Garden entrance: the server holds the player at the stop (0.04 m off)",
+          "Shade Garden entrance: stands on drawn ground (#840/#841): {\"under\":{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":18.3889},\"drop\":1.73,\"feet\":20.12,\"hits\":[{\"object\":\"Mesh\",\"path\":\"Mature urban shade trees\",\"altitude\":20.9356},{\"object\":\"Mesh\",\"path\":\"Mature urban shade trees\",\"altitude\":20.896},{\"object\":\"Mesh\",\"path\":\"Mature urban shade trees\",\"altitude\":20.8817},{\"object\":\"Mesh\",\"path\":\"Mature urban shade trees\",\"altitude\":20.8575},{\"object\":\"Mesh\",\"path\":\"Mature urban shade trees\",\"altitude\":20.8521},{\"object\":\"Mesh\",\"path\":\"Mature urban shade trees\",\"altitude\":20.8334},{\"object\":\"Mesh\",\"path\":\"Mature urban shade trees\",\"altitude\":20.8264},{\"object\":\"Mesh\",\"path\":\"Mature urban shade trees\",\"altitude\":20.8103},{\"object\":\"Mesh\",\"path\":\"Mature urban shade trees\",\"altitude\":20.6653},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":18.3889},{\"object\":\"facade:finish:facade-velvet+reference-cartier-canvas+reference-winston-navy-canvas\",\"path\":\"\",\"altitude\":18.3816},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":16.3339},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":16.1839}]}",
+          "Shade Garden entrance: looking in meets the shell within 40 m (#839): {\"object\":\"Mesh\",\"path\":\"Boutique interiors < Boutique interiors layer\",\"distance\":6.053}",
+          "Studios + Overlook entrance: continuous walking connection exists (#841)",
+          "Studios + Overlook entrance: the server holds the player at the stop (0.06 m off)",
+          "Studios + Overlook entrance: stands on drawn ground (#840/#841): {\"under\":{\"object\":\"Mesh\",\"path\":\"Roads and walkways\",\"altitude\":18.5036},\"drop\":1.68,\"feet\":20.18,\"hits\":[{\"object\":\"Mesh\",\"path\":\"Roads and walkways\",\"altitude\":18.5036},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":18.3711},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":16.3339},{\"object\":\"Mesh\",\"path\":\"\",\"altitude\":16.1839}]}",
+          "Studios + Overlook entrance: looking in meets the shell within 40 m (#839): {\"object\":\"facade:facade-stone\",\"path\":\"\",\"distance\":0.925}",
+          "Along the walk the player kept to the walking surface (altitude over ground [1.64,1.78] m, 400 samples)",
+          "Two reloads leave renderer counts steady (teardown disposes the foundation, #841): {\"before\":{\"geometries\":985,\"textures\":348},\"first\":{\"geometries\":818,\"textures\":221},\"second\":{\"geometries\":780,\"textures\":215}}",
+          "The Five Rooms and Ribbon groups return after reload: Mature urban shade trees, Ribbon, Five Rooms shells",
+          "No page errors: "
+        ],
+        "contractVersion": "five-rooms-v2",
+        "defaultFinish": "pink-jet-age",
+        "finish": {
+          "noFlag": {
+            "preference": "pink-jet-age",
+            "commons": null,
+            "heights": [],
+            "campus": null,
+            "ribbon": {
+              "id": "district-spine",
+              "hash": "b37b4445d46d946b",
+              "finish": "pink-jet-age",
+              "stats": {
+                "segments": 1,
+                "modules": 30,
+                "posts": 58,
+                "lamps": 16,
+                "fans": 30,
+                "seats": 0,
+                "skipped": 4
+              },
+              "skipped": [
+                "ribbon:spine:post:014:r",
+                "ribbon:spine:post:015:l",
+                "ribbon:spine:post:019:r",
+                "ribbon:spine:post:024:r"
+              ],
+              "drawCalls": 5
+            },
+            "fiveRooms": {
+              "version": "five-rooms-v2",
+              "finish": "pink-jet-age",
+              "interiors": false,
+              "drawCalls": 8,
+              "materials": [
+                "five-rooms/ivory",
+                "five-rooms/glass",
+                "five-rooms/chrome",
+                "five-rooms/pink",
+                "five-rooms/glow-usable",
+                "five-rooms/lamp-warm",
+                "five-rooms/ink",
+                "five-rooms/glow-landmark"
+              ],
+              "venues": [
+                {
+                  "id": "venue:counter",
+                  "label": "Counter",
+                  "form": {
+                    "roof": "boomerang canopy",
+                    "entrance": "square lit jambs",
+                    "glazing": "low serving band"
+                  },
+                  "parts": 24,
+                  "bounds": {
+                    "min": [
+                      -2756.242,
+                      18.541,
+                      1209.731
+                    ],
+                    "max": [
+                      -2755.205,
+                      22.841,
+                      1222.722
+                    ]
+                  },
+                  "floor": 18.541,
+                  "floorDelta": 0.054
+                },
+                {
+                  "id": "venue:atelier",
+                  "label": "Atelier",
+                  "form": {
+                    "roof": "flat rounded cantilever",
+                    "entrance": "lit capsule portal",
+                    "glazing": "full-height fins"
+                  },
+                  "parts": 26,
+                  "bounds": {
+                    "min": [
+                      -2756.628,
+                      18.47,
+                      1235.79
+                    ],
+                    "max": [
+                      -2755.565,
+                      22.77,
+                      1248.782
+                    ]
+                  },
+                  "floor": 18.47,
+                  "floorDelta": 0.06
+                },
+                {
+                  "id": "venue:starlight-screen",
+                  "label": "Starlight Screen",
+                  "form": {
+                    "roof": "capsule marquee and starburst",
+                    "entrance": "parabolic arch",
+                    "glazing": "closed with poster frames"
+                  },
+                  "parts": 21,
+                  "bounds": {
+                    "min": [
+                      -2756.397,
+                      18.528,
+                      1222.756
+                    ],
+                    "max": [
+                      -2755.386,
+                      24.634,
+                      1235.752
+                    ]
+                  },
+                  "floor": 18.555,
+                  "floorDelta": 0.091
+                },
+                {
+                  "id": "venue:shade-garden",
+                  "label": "Shade Garden",
+                  "form": {
+                    "roof": "open pergola ribs",
+                    "entrance": "lit hoop gateway",
+                    "glazing": "garden wall and trellis"
+                  },
+                  "parts": 26,
+                  "bounds": {
+                    "min": [
+                      -2758.436,
+                      18.471,
+                      1305.681
+                    ],
+                    "max": [
+                      -2757.694,
+                      22.771,
+                      1318.491
+                    ]
+                  },
+                  "floor": 18.471,
+                  "floorDelta": 0.058
+                },
+                {
+                  "id": "venue:studios-overlook",
+                  "label": "Studios + Overlook",
+                  "form": {
+                    "roof": "saucer on twin hoops",
+                    "entrance": "open twin hoops",
+                    "glazing": "open threshold"
+                  },
+                  "parts": 14,
+                  "bounds": {
+                    "min": [
+                      -2720.234,
+                      18.294,
+                      1221.467
+                    ],
+                    "max": [
+                      -2703.093,
+                      48.599,
+                      1302.182
+                    ]
+                  },
+                  "floor": 18.294,
+                  "floorDelta": -0.034
+                }
+              ],
+              "attachments": [
+                {
+                  "id": "attach:counter:threshold",
+                  "venue": "venue:counter",
+                  "role": "threshold",
+                  "frame": "site",
+                  "position": [
+                    -2754.997,
+                    -1216.445,
+                    18.541
+                  ],
+                  "yaw": 3.128
+                },
+                {
+                  "id": "attach:counter:sign",
+                  "venue": "venue:counter",
+                  "role": "sign",
+                  "frame": "site",
+                  "position": [
+                    -2754.947,
+                    -1216.446,
+                    21.541
+                  ],
+                  "yaw": 3.128
+                },
+                {
+                  "id": "attach:counter:porch-light",
+                  "venue": "venue:counter",
+                  "role": "porch-light",
+                  "frame": "site",
+                  "position": [
+                    -2754.925,
+                    -1214.846,
+                    21.141
+                  ],
+                  "yaw": 3.128
+                },
+                {
+                  "id": "attach:counter:counter",
+                  "venue": "venue:counter",
+                  "role": "counter",
+                  "frame": "site",
+                  "position": [
+                    -2751.998,
+                    -1216.487,
+                    18.541
+                  ],
+                  "yaw": -0.014
+                },
+                {
+                  "id": "attach:counter:seat-cluster",
+                  "venue": "venue:counter",
+                  "role": "seat-cluster",
+                  "frame": "site",
+                  "position": [
+                    -2748.498,
+                    -1216.535,
+                    18.541
+                  ],
+                  "yaw": -0.014
+                },
+                {
+                  "id": "attach:atelier:threshold",
+                  "venue": "venue:atelier",
+                  "role": "threshold",
+                  "frame": "site",
+                  "position": [
+                    -2755.403,
+                    -1245.786,
+                    18.47
+                  ],
+                  "yaw": 3.128
+                },
+                {
+                  "id": "attach:atelier:sign",
+                  "venue": "venue:atelier",
+                  "role": "sign",
+                  "frame": "site",
+                  "position": [
+                    -2755.353,
+                    -1245.787,
+                    21.47
+                  ],
+                  "yaw": 3.128
+                },
+                {
+                  "id": "attach:atelier:porch-light",
+                  "venue": "venue:atelier",
+                  "role": "porch-light",
+                  "frame": "site",
+                  "position": [
+                    -2755.331,
+                    -1244.187,
+                    21.07
+                  ],
+                  "yaw": 3.128
+                },
+                {
+                  "id": "attach:atelier:display-frame",
+                  "venue": "venue:atelier",
+                  "role": "display-frame",
+                  "frame": "site",
+                  "position": [
+                    -2750.904,
+                    -1245.848,
+                    19.67
+                  ],
+                  "yaw": -0.014
+                },
+                {
+                  "id": "attach:atelier:anchor",
+                  "venue": "venue:atelier",
+                  "role": "anchor",
+                  "frame": "site",
+                  "position": [
+                    -2747.904,
+                    -1245.89,
+                    18.47
+                  ],
+                  "yaw": -0.014
+                },
+                {
+                  "id": "attach:starlight-screen:threshold",
+                  "venue": "venue:starlight-screen",
+                  "role": "threshold",
+                  "frame": "site",
+                  "position": [
+                    -2755.16,
+                    -1228.174,
+                    18.555
+                  ],
+                  "yaw": 3.128
+                },
+                {
+                  "id": "attach:starlight-screen:sign",
+                  "venue": "venue:starlight-screen",
+                  "role": "sign",
+                  "frame": "site",
+                  "position": [
+                    -2755.11,
+                    -1228.175,
+                    21.555
+                  ],
+                  "yaw": 3.128
+                },
+                {
+                  "id": "attach:starlight-screen:porch-light",
+                  "venue": "venue:starlight-screen",
+                  "role": "porch-light",
+                  "frame": "site",
+                  "position": [
+                    -2755.088,
+                    -1226.575,
+                    21.155
+                  ],
+                  "yaw": 3.128
+                },
+                {
+                  "id": "attach:starlight-screen:screen",
+                  "venue": "venue:starlight-screen",
+                  "role": "screen",
+                  "frame": "site",
+                  "position": [
+                    -2722.163,
+                    -1228.631,
+                    19.755
+                  ],
+                  "yaw": -0.014
+                },
+                {
+                  "id": "attach:starlight-screen:seat-cluster",
+                  "venue": "venue:starlight-screen",
+                  "role": "seat-cluster",
+                  "frame": "site",
+                  "position": [
+                    -2738.161,
+                    -1228.409,
+                    18.555
+                  ],
+                  "yaw": -0.014
+                },
+                {
+                  "id": "attach:shade-garden:threshold",
+                  "venue": "venue:shade-garden",
+                  "role": "threshold",
+                  "frame": "site",
+                  "position": [
+                    -2757.498,
+                    -1313.213,
+                    18.471
+                  ],
+                  "yaw": 3.127
+                },
+                {
+                  "id": "attach:shade-garden:sign",
+                  "venue": "venue:shade-garden",
+                  "role": "sign",
+                  "frame": "site",
+                  "position": [
+                    -2757.448,
+                    -1313.214,
+                    21.471
+                  ],
+                  "yaw": 3.127
+                },
+                {
+                  "id": "attach:shade-garden:porch-light",
+                  "venue": "venue:shade-garden",
+                  "role": "porch-light",
+                  "frame": "site",
+                  "position": [
+                    -2757.425,
+                    -1311.614,
+                    21.071
+                  ],
+                  "yaw": 3.127
+                },
+                {
+                  "id": "attach:shade-garden:bed",
+                  "venue": "venue:shade-garden",
+                  "role": "bed",
+                  "frame": "site",
+                  "position": [
+                    -2752.998,
+                    -1313.277,
+                    18.471
+                  ],
+                  "yaw": -0.014
+                },
+                {
+                  "id": "attach:shade-garden:seat-cluster",
+                  "venue": "venue:shade-garden",
+                  "role": "seat-cluster",
+                  "frame": "site",
+                  "position": [
+                    -2750.499,
+                    -1313.313,
+                    18.471
+                  ],
+                  "yaw": -0.014
+                },
+                {
+                  "id": "attach:studios-overlook:threshold",
+                  "venue": "venue:studios-overlook",
+                  "role": "threshold",
+                  "frame": "site",
+                  "position": [
+                    -2719.724,
+                    -1290.85,
+                    18.294
+                  ],
+                  "yaw": 3.13
+                },
+                {
+                  "id": "attach:studios-overlook:sign",
+                  "venue": "venue:studios-overlook",
+                  "role": "sign",
+                  "frame": "site",
+                  "position": [
+                    -2719.753,
+                    -1293.45,
+                    21.294
+                  ],
+                  "yaw": 3.13
+                },
+                {
+                  "id": "attach:overlook:t1-lantern",
+                  "venue": "venue:studios-overlook",
+                  "role": "lantern",
+                  "frame": "campus",
+                  "position": [
+                    16,
+                    66,
+                    26
+                  ],
+                  "yaw": 0
+                },
+                {
+                  "id": "attach:overlook:t2-lantern",
+                  "venue": "venue:studios-overlook",
+                  "role": "lantern",
+                  "frame": "campus",
+                  "position": [
+                    16,
+                    110,
+                    30
+                  ],
+                  "yaw": 0
+                },
+                {
+                  "id": "attach:overlook:t3-lantern",
+                  "venue": "venue:studios-overlook",
+                  "role": "lantern",
+                  "frame": "campus",
+                  "position": [
+                    16,
+                    146,
+                    26
+                  ],
+                  "yaw": 0
+                }
+              ]
+            }
+          },
+          "classic": {
+            "preference": "classic",
+            "ribbon": null,
+            "fiveRooms": null
+          },
+          "blocked": "pink-jet-age"
+        },
+        "spawn": {
+          "camera": "r01-arrival",
+          "viewport": [
+            1280,
+            800
+          ],
+          "pink": {
+            "calls": 1661,
+            "triangles": 5816241
+          },
+          "pinkSmooth": {
+            "calls": 1163,
+            "buffer": [
+              1280,
+              800
+            ]
+          },
+          "classic": {
+            "calls": 1629,
+            "triangles": 5566195
+          }
+        },
+        "budget": {
+          "pinned": true,
+          "pinHead": "main 1562d92d + #845 2899ccf6 + #862 0e0a071a",
+          "baseline": {
+            "classicCalls": 1629,
+            "pinkCalls": 1661
+          },
+          "within": true,
+          "delta": 32,
+          "budgetCalls": 1874,
+          "measuredCalls": 1661,
+          "measured": {
+            "classic": 1629,
+            "pink": 1661
+          }
+        },
+        "walk": {
+          "segments": [
+            {
+              "id": "spine",
+              "walked": true
+            },
+            {
+              "id": "south",
+              "walked": true,
+              "status": "blocked"
+            },
+            {
+              "id": "link-studios",
+              "walked": true,
+              "status": "blocked"
+            }
+          ],
+          "spineMetres": 87.9,
+          "seconds": 308.4,
+          "detours": [],
+          "groundRange": [
+            1.64,
+            1.78
+          ],
+          "samples": 400
+        },
+        "venues": [
+          {
+            "venue": "venue:counter",
+            "entrance": "entrance:counter",
+            "link": "link:counter",
+            "segment": "spine",
+            "segmentStatus": "blocked",
+            "stand": [
+              -2756.2,
+              -1216.43
+            ],
+            "offMetres": 0.02,
+            "under": {
+              "object": "Mesh",
+              "path": "",
+              "altitude": 18.4634
+            },
+            "drop": 1.68,
+            "sees": {
+              "object": "Jevicalong01",
+              "path": "Jevicarig < Scene < Player character",
+              "distance": 0.901
+            }
+          },
+          {
+            "venue": "venue:atelier",
+            "entrance": "entrance:atelier",
+            "link": "link:atelier",
+            "segment": "spine",
+            "segmentStatus": "blocked",
+            "stand": [
+              -2756.6,
+              -1245.77
+            ],
+            "offMetres": 0.01,
+            "under": {
+              "object": "Mesh",
+              "path": "",
+              "altitude": 18.3907
+            },
+            "drop": 1.68,
+            "sees": {
+              "object": "facade:facade-glass",
+              "path": "",
+              "distance": 1.38
+            }
+          },
+          {
+            "venue": "venue:starlight-screen",
+            "entrance": "entrance:starlight-screen",
+            "link": "link:starlight-screen",
+            "segment": "spine",
+            "segmentStatus": "blocked",
+            "stand": [
+              -2756.36,
+              -1228.16
+            ],
+            "offMetres": 0.01,
+            "under": {
+              "object": "Mesh",
+              "path": "",
+              "altitude": 18.4407
+            },
+            "drop": 1.68,
+            "sees": {
+              "object": "facade:finish:reference-charcoal+reference-metal-band",
+              "path": "",
+              "distance": 1.008
+            }
+          },
+          {
+            "venue": "venue:shade-garden",
+            "entrance": "entrance:shade-garden",
+            "link": "link:shade-garden",
+            "segment": "south",
+            "segmentStatus": "blocked",
+            "stand": [
+              -2758.7,
+              -1313.2
+            ],
+            "offMetres": 0.04,
+            "under": {
+              "object": "Mesh",
+              "path": "",
+              "altitude": 18.3889
+            },
+            "drop": 1.73,
+            "sees": {
+              "object": "Mesh",
+              "path": "Boutique interiors < Boutique interiors layer",
+              "distance": 6.053
+            }
+          },
+          {
+            "venue": "venue:studios-overlook",
+            "entrance": "entrance:studios-overlook",
+            "link": "link:studios-overlook",
+            "segment": "link-studios",
+            "segmentStatus": "blocked",
+            "stand": [
+              -2721.42,
+              -1290.83
+            ],
+            "offMetres": 0.06,
+            "under": {
+              "object": "Mesh",
+              "path": "Roads and walkways",
+              "altitude": 18.5036
+            },
+            "drop": 1.68,
+            "sees": {
+              "object": "facade:facade-stone",
+              "path": "",
+              "distance": 0.925
+            }
+          }
+        ],
+        "notes": [
+          "Shade Garden entrance: street-tree foliage at body height (0.55-0.82 m above the feet)"
+        ],
+        "teardown": {
+          "before": {
+            "geometries": 985,
+            "textures": 348
+          },
+          "afterReloads": [
+            {
+              "geometries": 818,
+              "textures": 221
+            },
+            {
+              "geometries": 780,
+              "textures": 215
+            }
+          ],
+          "foundationGroups": [
+            {
+              "name": "Mature urban shade trees",
+              "objects": 1177,
+              "meshes": 1176,
+              "geometries": 6,
+              "textures": 6
+            },
+            {
+              "name": "Ribbon",
+              "objects": 6,
+              "meshes": 5,
+              "geometries": 5,
+              "textures": 0
+            },
+            {
+              "name": "Five Rooms shells",
+              "objects": 9,
+              "meshes": 8,
+              "geometries": 8,
+              "textures": 0
+            }
+          ]
+        },
+        "hostLoad": [
+          5.4,
+          6.4,
+          6.3
+        ],
+        "seconds": 337.2,
+        "scope": "Local Chromium on the loopback fixture at 1280x800; frame counts are this host, not a device budget. Captures and the night pink-rule review are five-rooms-cameras.mjs. Not a human visual or accessibility review."
+      }
+    }
+  ]
+}

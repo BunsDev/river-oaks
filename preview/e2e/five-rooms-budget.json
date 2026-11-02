@@ -1,0 +1,18 @@
+{
+  "measuredAt": "2026-11-02T14:25:47Z",
+  "head": "main 1562d92d + #845 2899ccf6 + #862 0e0a071a",
+  "camera": "r01-arrival",
+  "graphics": "sharp",
+  "viewport": [
+    1280,
+    800
+  ],
+  "headroom": 0.15,
+  "baseline": {
+    "classicCalls": 1629,
+    "pinkCalls": 1661
+  },
+  "budgetCalls": 1874,
+  "host": "Apple M5 Max, ANGLE Metal, local Chromium on the loopback fixture (river-oaks-85); classic is ?finish=classic on the same head, which draws no Five Rooms",
+  "note": "Provisional: the 15 percent headroom is the #842 rule awaiting Val's approval. Measured by the five-rooms journey (median of 30 frames at the arrival spawn)."
+}
