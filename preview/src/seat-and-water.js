@@ -49,7 +49,9 @@ export function createSeatAndWater({ walking, playerAvatar, getLocals = () => []
   async function stand() {
     if (busy || !walking.getPose()?.sitting) return;
     const result = await command({ type: 'stand' });
-    if (result?.player) walking.applyServerPose(result.player);
+    // The snapshot may have shown the stand first; by now the player can be walking away, and
+    // re-applying this reply would snap them back to the stand spot and drop the held keys (#587).
+    if (result?.player && walking.getPose()?.sitting) walking.applyServerPose(result.player);
   }
 
   async function water(planter) {

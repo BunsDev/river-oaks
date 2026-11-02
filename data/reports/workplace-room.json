@@ -1,10 +1,10 @@
 {
-  "createdAt": "2026-10-11T09:46:42.855Z",
+  "createdAt": "2026-11-01T06:34:45.825Z",
   "results": [
     {
       "name": "workplace-room",
       "status": "passed",
-      "seconds": 0.617,
+      "seconds": 6.394,
       "result": {
         "captures": [
           {
@@ -30,7 +30,7 @@
           {
             "camera": "CAM-02",
             "state": "seated-stopped",
-            "label": "Connection lost — work is not progressing"
+            "label": "Connection lost — progress unknown"
           },
           {
             "camera": "CAM-04",
@@ -40,16 +40,110 @@
         ],
         "frames": {
           "count": 180,
-          "p50": 0.10000002384185791,
-          "p95": 0.2999999523162842,
-          "calls": 38,
-          "triangles": 3142
+          "p50": 0.30000000447034836,
+          "p95": 0.5,
+          "calls": 231,
+          "triangles": 46079
         },
         "reentry": {
-          "before": 21,
-          "after": 21
+          "before": 33,
+          "after": 33
         },
-        "route": 35
+        "route": 35,
+        "finishes": {
+          "classic": {
+            "captures": [
+              {
+                "camera": "CAM-01",
+                "state": "arriving",
+                "label": "With you"
+              },
+              {
+                "camera": "CAM-01",
+                "state": "walking",
+                "label": "Waiting to start"
+              },
+              {
+                "camera": "CAM-02",
+                "state": "seated-working",
+                "label": "Working on your plan"
+              },
+              {
+                "camera": "CAM-03",
+                "state": "seated-waiting",
+                "label": "Plan ready for your review"
+              },
+              {
+                "camera": "CAM-02",
+                "state": "seated-stopped",
+                "label": "Connection lost — progress unknown"
+              },
+              {
+                "camera": "CAM-04",
+                "state": "offstage",
+                "label": "Away from the studio"
+              }
+            ],
+            "frames": {
+              "count": 180,
+              "p50": 0.30000000447034836,
+              "p95": 0.5,
+              "calls": 231,
+              "triangles": 46079
+            },
+            "reentry": {
+              "before": 33,
+              "after": 33
+            },
+            "route": 35
+          },
+          "pink-jet-age": {
+            "captures": [
+              {
+                "camera": "CAM-01",
+                "state": "arriving",
+                "label": "With you"
+              },
+              {
+                "camera": "CAM-01",
+                "state": "walking",
+                "label": "Waiting to start"
+              },
+              {
+                "camera": "CAM-02",
+                "state": "seated-working",
+                "label": "Working on your plan"
+              },
+              {
+                "camera": "CAM-03",
+                "state": "seated-waiting",
+                "label": "Plan ready for your review"
+              },
+              {
+                "camera": "CAM-02",
+                "state": "seated-stopped",
+                "label": "Connection lost — progress unknown"
+              },
+              {
+                "camera": "CAM-04",
+                "state": "offstage",
+                "label": "Away from the studio"
+              }
+            ],
+            "frames": {
+              "count": 180,
+              "p50": 0.29999999701976776,
+              "p95": 0.3999999985098839,
+              "calls": 231,
+              "triangles": 46079
+            },
+            "reentry": {
+              "before": 33,
+              "after": 33
+            },
+            "route": 35
+          }
+        }
       }
     }
   ]

@@ -3,14 +3,18 @@ import WebKit
 import AuthenticationServices
 
 @main
-final class AppDelegate: UIResponder, UIApplicationDelegate {
+final class AppDelegate: UIResponder, UIApplicationDelegate {}
+
+// One diagnostic window, connected to the scene supplied by UIKit. Keep the
+// controller and its existing origin/auth/measurement boundaries unchanged.
+final class ProbeSceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        let window = UIWindow(frame: UIScreen.main.bounds)
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options: UIScene.ConnectionOptions) {
+        guard let windowScene = scene as? UIWindowScene else { return }
+        let window = UIWindow(windowScene: windowScene)
         window.rootViewController = ProbeController()
         window.makeKeyAndVisible()
         self.window = window
-        return true
     }
 }
 
@@ -34,6 +38,9 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
     private var policy: ProbePolicy!
     private var isolation: ProbeIsolation!
     private let status = UILabel()
+    private var pagePresentation = ProbePagePresentation()
+    private var activeNavigation: WKNavigation?
+    private var pendingMainDocument: String?
     private var timer: Timer?
     private var deadline: Timer?
     private var finalization: Timer?
@@ -88,12 +95,14 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
             let reload = button("Reload", #selector(reloadPage))
             let browser = button("Browser", #selector(openBrowser))
             let stop = button("Stop", #selector(stopRecording))
-            var controls: [UIView] = [status, reload, browser, stop]
+            var controls: [UIView] = [reload, browser, stop]
             if renderPhasesEnabled {
                 let phases = button("Phases", #selector(capturePhases)); phaseButton = phases; controls.append(phases)
             }
-            let toolbar = UIStackView(arrangedSubviews: controls)
-            toolbar.axis = .horizontal; toolbar.spacing = 8; toolbar.alignment = .center
+            let actions = UIStackView(arrangedSubviews: controls)
+            actions.axis = .horizontal; actions.spacing = 8; actions.distribution = .fillEqually
+            let toolbar = UIStackView(arrangedSubviews: [status, actions])
+            toolbar.axis = .vertical; toolbar.spacing = 4; toolbar.alignment = .fill
             toolbar.translatesAutoresizingMaskIntoConstraints = false
             web.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(toolbar); view.addSubview(web)
@@ -101,7 +110,8 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
                 toolbar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
                 toolbar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 8),
                 toolbar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
-                toolbar.heightAnchor.constraint(equalToConstant: 48),
+                toolbar.heightAnchor.constraint(equalToConstant: 84),
+                actions.heightAnchor.constraint(equalToConstant: 44),
                 web.topAnchor.constraint(equalTo: toolbar.bottomAnchor), web.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
                 web.leadingAnchor.constraint(equalTo: view.leadingAnchor), web.trailingAnchor.constraint(equalTo: view.trailingAnchor)
             ])
@@ -131,7 +141,31 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
         }
     }
     private func button(_ title: String, _ action: Selector) -> UIButton {
-        let result = UIButton(type: .system); result.setTitle(title, for: .normal); result.addTarget(self, action: action, for: .touchUpInside); return result
+        let result = UIButton(type: .system)
+        result.setTitle(title, for: .normal)
+        // Shared treatment for existing host actions: #738 pink and the #746
+        // reference's dark ink, with opaque fill and native control states.
+        let existingFont = result.titleLabel?.font
+        var chrome = UIButton.Configuration.filled()
+        chrome.title = title
+        chrome.cornerStyle = .capsule
+        chrome.contentInsets = .zero // Preserve the legacy helper's available title width.
+        chrome.baseBackgroundColor = UIColor(red: 244.0 / 255, green: 134.0 / 255, blue: 161.0 / 255, alpha: 1)
+        chrome.baseForegroundColor = UIColor(red: 36.0 / 255, green: 36.0 / 255, blue: 42.0 / 255, alpha: 1)
+        chrome.background.strokeColor = chrome.baseForegroundColor
+        chrome.background.strokeWidth = 1
+        if let existingFont {
+            chrome.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var attributes = incoming; attributes.font = existingFont; return attributes
+            }
+        }
+        result.configuration = chrome
+        result.addTarget(self, action: action, for: .touchUpInside)
+        NSLayoutConstraint.activate([
+            result.widthAnchor.constraint(greaterThanOrEqualToConstant: 44),
+            result.heightAnchor.constraint(greaterThanOrEqualToConstant: 44)
+        ])
+        return result
     }
     private func beginRecording() throws {
         let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -174,6 +208,10 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
             status.text = "Evidence write failed; run is incomplete"
         }
     }
+    private func showPageStatus(_ fallback: String) {
+        guard !stopping, output != nil else { return }
+        status.text = pagePresentation.status(fallback)
+    }
     private func sample() {
         if ProcessInfo.processInfo.systemUptime - start >= 1800 { finish(reason: "deadline"); return }
         guard measurementsEnabled, !sampling, !stopping, output != nil, let url = web.url, policy.allows(url) else { return }
@@ -189,7 +227,7 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
                     self.append(["event": "sample", "page": data]); self.recordCount += 1
                     guard self.output != nil else { return }
                     let ready = data["ready"] as? Bool ?? false
-                    if !self.stopping && self.phaseID == nil { self.status.text = (self.isolation.groups.isEmpty ? "" : "DIAGNOSTIC · ") + "\(ready ? "Scene ready" : "Sign-in/loading") · \(self.recordCount) samples\nThermal \(ProcessInfo.processInfo.thermalState.rawValue)" }
+                    if !self.stopping && self.phaseID == nil { self.showPageStatus((self.isolation.groups.isEmpty ? "" : "DIAGNOSTIC · ") + "\(ready ? "Scene ready" : "Sign-in/loading") · \(self.recordCount) samples\nThermal \(ProcessInfo.processInfo.thermalState.rawValue)") }
                 }
             case .failure: self.append(["event": "sample-unavailable"])
             }
@@ -200,7 +238,7 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
               UIApplication.shared.applicationState == .active, let url = web.url, policy.allows(url) else { return }
         let id = UUID().uuidString, navigation = navigationID
         phaseID = id; phaseButton?.isEnabled = false
-        status.text = "Checking full-scene phase capture"
+        showPageStatus("Checking full-scene phase capture")
         phaseReplyStarted = ProcessInfo.processInfo.systemUptime
         phaseReplyDeadline = Timer.scheduledTimer(withTimeInterval: 2, repeats: false) { [weak self] _ in
             guard let self, self.phaseID == id else { return }; self.cancelPhases(reason: "start-timeout")
@@ -213,9 +251,9 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
             self.append(["event": "phase-capture-start", "captureID": id, "page": evidence])
             guard self.output != nil else { return }
             guard evidence["status"] as? String == "started" else {
-                self.retirePhases(); self.status.text = "Phase capture: " + (evidence["status"] as? String ?? "unavailable"); return
+                self.retirePhases(); self.showPageStatus("Phase capture: " + (evidence["status"] as? String ?? "unavailable")); return
             }
-            self.status.text = "Recording 30 seconds of render phases"
+            self.showPageStatus("Recording 30 seconds of render phases")
             self.phaseTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: false) { [weak self] _ in self?.finishPhases(id: id, navigation: navigation) }
         }
     }
@@ -230,10 +268,10 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
             guard ProbePhaseEvidence.replyIsTimely(startedAt: self.phaseReplyStarted, now: ProcessInfo.processInfo.systemUptime) else { self.cancelPhases(reason: "stop-timeout"); return }
             self.retirePhases()
             guard case .success(let value) = result, let evidence = ProbePhaseEvidence.sanitize(value) else {
-                self.append(["event": "phase-capture-unavailable", "captureID": id]); if self.output != nil { self.status.text = "Phase capture unavailable" }; return
+                self.append(["event": "phase-capture-unavailable", "captureID": id]); if self.output != nil { self.showPageStatus("Phase capture unavailable") }; return
             }
             self.append(["event": "phase-capture", "captureID": id, "page": evidence])
-            if self.output != nil { self.status.text = "Phase capture: " + (evidence["status"] as? String ?? "unavailable") }
+            if self.output != nil { self.showPageStatus("Phase capture: " + (evidence["status"] as? String ?? "unavailable")) }
         }
     }
     private func retirePhases() {
@@ -340,16 +378,40 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
             append(["event": "navigation-blocked", "mainFrame": !subframe, "targetClass": kind])
             status.text = "External navigation blocked · auth integration remains open"
         }
+        if allowed && action.targetFrame?.isMainFrame == true { pendingMainDocument = url.absoluteString }
         decisionHandler(allowed ? .allow : .cancel)
     }
     func webView(_ webView: WKWebView, decidePolicyFor response: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
         let allowed = !response.isForMainFrame || response.response.url.map { policy.allows($0) } == true
         if !allowed { append(["event": "response-origin-blocked"]) }
+        if allowed, let http = response.response as? HTTPURLResponse, let url = http.url,
+           pagePresentation.receivedResponse(status: http.statusCode, isMainFrame: response.isForMainFrame, document: url.absoluteString) {
+            cancelPhases(reason: "http-navigation-failed")
+            append(["event": "http-navigation-failed", "status": http.statusCode])
+            showPageStatus("")
+        }
         decisionHandler(allowed ? .allow : .cancel)
     }
-    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) { cancelPhases(reason: "navigation"); documentTerminated = false; navigationID = UUID().uuidString; append(["event": "navigation-start"]) }
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        cancelPhases(reason: "navigation"); documentTerminated = false
+        activeNavigation = navigation; navigationID = UUID().uuidString
+        pagePresentation.started(navigation: navigationID, document: pendingMainDocument ?? webView.url?.absoluteString)
+        pendingMainDocument = nil
+        showPageStatus("")
+        append(["event": "navigation-start"])
+    }
+    func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
+        guard navigation === activeNavigation else { return }
+        pagePresentation.redirected(navigation: navigationID, document: webView.url?.absoluteString)
+    }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        append(["event": "navigation-finish"]); sample()
+        guard navigation === activeNavigation else { append(["event": "stale-navigation-finish-ignored"]); return }
+        pagePresentation.finished(navigation: navigationID)
+        let code = pagePresentation.responseStatus ?? 0
+        append(["event": "navigation-finish"])
+        append(["event": "document-response-status", "status": code, "available": code != 0])
+        showPageStatus(code == 0 ? "Page loaded · response status unavailable" : "Page loaded · awaiting scene")
+        sample()
         guard sceneSnapshotEnabled else { return }
         let sampledNavigation = navigationID
         for delay in (serializedDecodes || htmlImages) ? [2.0, 20.0] : [20.0] {
@@ -365,7 +427,15 @@ final class ProbeController: UIViewController, WKNavigationDelegate, WKUIDelegat
             }
         }
     }
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { append(["event": "navigation-failed", "code": (error as NSError).code]); status.text = "Load failed · retry with Reload" }
-    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { documentTerminated = true; cancelPhases(reason: "renderer-terminated"); append(["event": "web-content-terminated"]); status.text = "Web content terminated · manual Reload required" }
+    private func pageNavigationFailed(_ navigation: WKNavigation?, error: Error, phase: String) {
+        guard navigation === activeNavigation else { append(["event": "stale-navigation-failure-ignored", "code": (error as NSError).code]); return }
+        pagePresentation.failed(navigation: navigationID)
+        cancelPhases(reason: "navigation-failed")
+        append(["event": "navigation-failed", "phase": phase, "code": (error as NSError).code])
+        showPageStatus("")
+    }
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { pageNavigationFailed(navigation, error: error, phase: "provisional") }
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { pageNavigationFailed(navigation, error: error, phase: "committed") }
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { documentTerminated = true; cancelPhases(reason: "renderer-terminated"); append(["event": "web-content-terminated"]); pagePresentation.terminated(); showPageStatus("") }
     func webView(_ webView: WKWebView, requestMediaCapturePermissionFor origin: WKSecurityOrigin, initiatedByFrame frame: WKFrameInfo, type: WKMediaCaptureType, decisionHandler: @escaping (WKPermissionDecision) -> Void) { decisionHandler(.deny) }
 }

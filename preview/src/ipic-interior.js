@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { createIpicMaterials, districtSignLayout } from './ipic-materials.js';
+import { readFinishPreference } from './render-quality.js';
+import { ipicKitFinishName } from './ipic-kit-finish.js';
 
 // Where the upper lounge's carpet meets the Tuck Room's boards, west of the bar stools (a = 3.4).
 const TUCK_ROOM_EDGE = 2.65;
@@ -14,7 +16,11 @@ import { dartboardPixel } from './dartboard-texture.js';
 export function buildIpicInterior(room, options = {}) {
   if (room?.interior !== IPIC_INTERIOR) throw new Error('An IPIC room plan is required');
   const root = new THREE.Group(); root.name = 'IPIC River Oaks'; root.userData.interior = IPIC_INTERIOR;
-  const finishes = createIpicMaterials(options), { m } = finishes;
+  // The kit finish (ipic-kit-finish.js): `options.finish`, else in a page the visitor's
+  // render-quality.js preference, the one the street and HUD follow. Exports stay classic.
+  const finish = options.finish ?? (typeof document !== 'undefined' ? readFinishPreference() : undefined);
+  const finishes = createIpicMaterials({ ...options, finish }), { m } = finishes;
+  root.userData.kitFinish = ipicKitFinishName(finish);
   const geometry = new Set(), batches = new Map();
   const keep = g => { geometry.add(g); return g; };
   const cube = keep(new THREE.BoxGeometry(1, 1, 1));

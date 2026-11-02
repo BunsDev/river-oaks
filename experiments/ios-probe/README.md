@@ -39,8 +39,7 @@ codesign --verify --strict .runtime/ios-probe/device/Build/Products/Release-ipho
 creates no App Store submission. Generated Xcode/Swift build products are ignored.
 Inspect the built Info.plist: bundle ID `ai.typesafe.place.ios-probe`, device family
 `[1]`, ProbeEntry `https://typesafe.place/play`, actual ProbeConfiguration `Release`,
-and correct ProbeSourceSHA/ProbeSourceDirty. AppDelegate uses a single window;
-there is no generated empty scene manifest.
+and correct ProbeSourceSHA/ProbeSourceDirty. ProbeSceneDelegate owns one window connected to the UIWindowScene supplied by UIKit; the Info.plist explicitly registers that scene delegate and disables multiple scenes.
 
 Install/launch using a device identifier obtained from `xcrun devicectl list devices`:
 
@@ -309,3 +308,11 @@ and measuring the phase-enabled native probe. An ordinary deployment removes the
 extra diagnostic entry. Record that cleanup plan; rollback of a previous full
 site deployment can revert concurrent work and requires its own explicit scope.
 Do not describe local fixture tests as hosted authentication or physical evidence.
+
+## Current-SDK launch regression
+
+After the unsigned Release simulator build above, run `node scripts/browser-lock.mjs 'probe launch smoke' -- node scripts/ios-probe-launch-smoke.mjs --app .runtime/ios-probe/simulator/Build/Products/Release-iphonesimulator/TypeSafeProbe.app`. The command creates and removes its own simulator and records the launch request, actual process survival, screenshot and bounded scene-lifecycle log under a fresh `.runtime/probe-launch-*` directory. `--output` must name a new directory so first failures are preserved.
+
+The smoke launches in the existing native-only measurement mode, backgrounds the probe by opening simulator Settings, and foregrounds the same probe process. It requires the same recording to contain both lifecycle events and retains a resumed screenshot. It does not sign in, add a JavaScript-to-native interface or alter the intended origin. This diagnostic launch check does not establish physical-device, production-host, gameplay, keyboard/VoiceOver focus or accessibility acceptance. An unfinalized native recording at simulator teardown is not performance evidence.
+
+For the diagnostic toolbar's visual-label check, run `swift scripts/ios-probe-controls-smoke.swift <screen.png>` against both smoke screenshots. Local Vision OCR reads only the top quarter and reports the expected Reload/Browser/Stop labels. It checks expected words; duplicate status/page text can also match, so inspect the native action row. It does not establish accessibility focus, Dynamic Type behavior or actual hit-target dimensions. The toolbar separates status from the existing equal-width actions; the shared button helper requires at least 44-point width and height. No new action or native bridge method is introduced.
