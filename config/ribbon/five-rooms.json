@@ -1,0 +1,960 @@
+{
+  "id": "five-rooms",
+  "version": "five-rooms-v2",
+  "kit": "ribbon-1",
+  "seed": 825,
+  "world": {
+    "scene": "district",
+    "path": "preview/public/data/district.json"
+  },
+  "units": "metres, site-local x east, y north; heights are district-datum altitudes",
+  "rules": {
+    "doorway": {
+      "width": 2.4,
+      "depth": 2,
+      "basis": "working value from #827 until a door is measured"
+    },
+    "clearance": "FIVE_ROOMS_RULES and RIBBON_RULES in shared/city-kit"
+  },
+  "gardens": {
+    "layout": "3.2",
+    "schema": 1,
+    "entry": "E2"
+  },
+  "venues": [
+    {
+      "id": "venue:counter",
+      "label": "Counter",
+      "kind": "bay",
+      "host": {
+        "buildingId": "osm-way-625330798"
+      },
+      "retire": {
+        "status": "proposed",
+        "tenants": [
+          "osm-node-8172495006"
+        ],
+        "alternatives": [
+          {
+            "tenants": [
+              "osm-node-8172494967"
+            ],
+            "note": "MAD Houston bay at the spine north end (end link)"
+          }
+        ]
+      },
+      "footprint": [
+        [
+          -2754.904,
+          -1209.718
+        ],
+        [
+          -2755.085,
+          -1222.748
+        ],
+        [
+          -2746.085,
+          -1222.872
+        ],
+        [
+          -2745.905,
+          -1209.843
+        ]
+      ],
+      "floor": {
+        "height": 18.541,
+        "source": "groundSurfaceHeight",
+        "at": [
+          -2750.495,
+          -1216.295
+        ]
+      },
+      "entrances": [
+        {
+          "id": "entrance:counter",
+          "centre": [
+            -2754.997,
+            -1216.445
+          ],
+          "width": 2.4,
+          "side": "west",
+          "outward": [
+            -1,
+            0.014
+          ],
+          "link": "link:counter"
+        }
+      ],
+      "interior": {
+        "floor": [
+          [
+            -2754.609,
+            -1210.022
+          ],
+          [
+            -2754.781,
+            -1222.452
+          ],
+          [
+            -2746.381,
+            -1222.568
+          ],
+          [
+            -2746.209,
+            -1210.138
+          ]
+        ],
+        "clearHeight": 3.6
+      },
+      "attachments": [
+        {
+          "id": "attach:counter:threshold",
+          "role": "threshold",
+          "position": [
+            -2754.997,
+            -1216.445,
+            18.541
+          ],
+          "yaw": 3.128
+        },
+        {
+          "id": "attach:counter:sign",
+          "role": "sign",
+          "position": [
+            -2754.947,
+            -1216.446,
+            21.541
+          ],
+          "yaw": 3.128
+        },
+        {
+          "id": "attach:counter:porch-light",
+          "role": "porch-light",
+          "position": [
+            -2754.925,
+            -1214.846,
+            21.141
+          ],
+          "yaw": 3.128
+        },
+        {
+          "id": "attach:counter:counter",
+          "role": "counter",
+          "position": [
+            -2751.998,
+            -1216.487,
+            18.541
+          ],
+          "yaw": -0.014
+        },
+        {
+          "id": "attach:counter:seat-cluster",
+          "role": "seat-cluster",
+          "position": [
+            -2748.498,
+            -1216.535,
+            18.541
+          ],
+          "yaw": -0.014
+        }
+      ],
+      "cameraCorridors": [
+        {
+          "id": "camera:counter:interior",
+          "from": [
+            -2754.398,
+            -1216.454,
+            20.141
+          ],
+          "to": [
+            -2746.798,
+            -1216.559,
+            20.141
+          ],
+          "halfWidth": 0.5
+        }
+      ],
+      "notes": "Proposed: the Amorino gelato bay, on the spine east frontage."
+    },
+    {
+      "id": "venue:atelier",
+      "label": "Atelier",
+      "kind": "bay",
+      "host": {
+        "buildingId": "osm-way-625330798"
+      },
+      "retire": {
+        "status": "proposed",
+        "tenants": [
+          "osm-node-8172494966"
+        ],
+        "alternatives": [
+          {
+            "tenants": [
+              "osm-node-8172494965"
+            ],
+            "note": "Cartier bay; its door faces the side lane north kerb, so a link would cross osm-way-625330795"
+          }
+        ]
+      },
+      "footprint": [
+        [
+          -2755.265,
+          -1235.778
+        ],
+        [
+          -2755.445,
+          -1248.808
+        ],
+        [
+          -2746.446,
+          -1248.932
+        ],
+        [
+          -2746.266,
+          -1235.902
+        ]
+      ],
+      "floor": {
+        "height": 18.47,
+        "source": "groundSurfaceHeight",
+        "at": [
+          -2750.855,
+          -1242.355
+        ]
+      },
+      "entrances": [
+        {
+          "id": "entrance:atelier",
+          "centre": [
+            -2755.403,
+            -1245.786
+          ],
+          "width": 2.4,
+          "side": "west",
+          "outward": [
+            -1,
+            0.014
+          ],
+          "link": "link:atelier"
+        }
+      ],
+      "interior": {
+        "floor": [
+          [
+            -2754.969,
+            -1236.082
+          ],
+          [
+            -2755.141,
+            -1248.512
+          ],
+          [
+            -2746.742,
+            -1248.628
+          ],
+          [
+            -2746.57,
+            -1236.198
+          ]
+        ],
+        "clearHeight": 3.6
+      },
+      "attachments": [
+        {
+          "id": "attach:atelier:threshold",
+          "role": "threshold",
+          "position": [
+            -2755.403,
+            -1245.786,
+            18.47
+          ],
+          "yaw": 3.128
+        },
+        {
+          "id": "attach:atelier:sign",
+          "role": "sign",
+          "position": [
+            -2755.353,
+            -1245.787,
+            21.47
+          ],
+          "yaw": 3.128
+        },
+        {
+          "id": "attach:atelier:porch-light",
+          "role": "porch-light",
+          "position": [
+            -2755.331,
+            -1244.187,
+            21.07
+          ],
+          "yaw": 3.128
+        },
+        {
+          "id": "attach:atelier:display-frame",
+          "role": "display-frame",
+          "position": [
+            -2750.904,
+            -1245.848,
+            19.67
+          ],
+          "yaw": -0.014
+        },
+        {
+          "id": "attach:atelier:anchor",
+          "role": "anchor",
+          "position": [
+            -2747.904,
+            -1245.89,
+            18.47
+          ],
+          "yaw": -0.014
+        }
+      ],
+      "cameraCorridors": [
+        {
+          "id": "camera:atelier:interior",
+          "from": [
+            -2754.803,
+            -1245.794,
+            20.07
+          ],
+          "to": [
+            -2747.204,
+            -1245.899,
+            20.07
+          ],
+          "halfWidth": 0.5
+        }
+      ],
+      "notes": "Proposed: the Van Cleef & Arpels bay; its bench-5 stays and the spine keeps spanning it."
+    },
+    {
+      "id": "venue:starlight-screen",
+      "label": "Starlight Screen",
+      "kind": "bay",
+      "host": {
+        "buildingId": "osm-way-625330798"
+      },
+      "retire": {
+        "status": "proposed",
+        "tenants": [
+          "osm-node-8172494964"
+        ]
+      },
+      "footprint": [
+        [
+          -2755.085,
+          -1222.748
+        ],
+        [
+          -2755.265,
+          -1235.778
+        ],
+        [
+          -2721.268,
+          -1236.248
+        ],
+        [
+          -2721.088,
+          -1223.218
+        ]
+      ],
+      "floor": {
+        "height": 18.555,
+        "source": "groundSurfaceHeight",
+        "at": [
+          -2738.176,
+          -1229.498
+        ]
+      },
+      "entrances": [
+        {
+          "id": "entrance:starlight-screen",
+          "centre": [
+            -2755.16,
+            -1228.174
+          ],
+          "width": 2.4,
+          "side": "west",
+          "outward": [
+            -1,
+            0.014
+          ],
+          "link": "link:starlight-screen"
+        }
+      ],
+      "interior": {
+        "floor": [
+          [
+            -2754.789,
+            -1223.052
+          ],
+          [
+            -2754.961,
+            -1235.482
+          ],
+          [
+            -2721.564,
+            -1235.944
+          ],
+          [
+            -2721.392,
+            -1223.514
+          ]
+        ],
+        "clearHeight": 3.6
+      },
+      "attachments": [
+        {
+          "id": "attach:starlight-screen:threshold",
+          "role": "threshold",
+          "position": [
+            -2755.16,
+            -1228.174,
+            18.555
+          ],
+          "yaw": 3.128
+        },
+        {
+          "id": "attach:starlight-screen:sign",
+          "role": "sign",
+          "position": [
+            -2755.11,
+            -1228.175,
+            21.555
+          ],
+          "yaw": 3.128
+        },
+        {
+          "id": "attach:starlight-screen:porch-light",
+          "role": "porch-light",
+          "position": [
+            -2755.088,
+            -1226.575,
+            21.155
+          ],
+          "yaw": 3.128
+        },
+        {
+          "id": "attach:starlight-screen:screen",
+          "role": "screen",
+          "position": [
+            -2722.163,
+            -1228.631,
+            19.755
+          ],
+          "yaw": -0.014
+        },
+        {
+          "id": "attach:starlight-screen:seat-cluster",
+          "role": "seat-cluster",
+          "position": [
+            -2738.161,
+            -1228.409,
+            18.555
+          ],
+          "yaw": -0.014
+        }
+      ],
+      "cameraCorridors": [
+        {
+          "id": "camera:starlight-screen:interior",
+          "from": [
+            -2754.56,
+            -1228.183,
+            20.155
+          ],
+          "to": [
+            -2721.963,
+            -1228.633,
+            20.155
+          ],
+          "halfWidth": 0.5
+        }
+      ],
+      "notes": "Proposed: the IPIC bay (13 x 34 m), the only deep bay on the Ribbon."
+    },
+    {
+      "id": "venue:shade-garden",
+      "label": "Shade Garden",
+      "kind": "bay",
+      "host": {
+        "buildingId": "osm-way-625330792"
+      },
+      "retire": {
+        "status": "proposed",
+        "tenants": [
+          "osm-node-8172494969"
+        ],
+        "alternatives": [
+          {
+            "tenants": [
+              "osm-node-8172494972"
+            ],
+            "note": "Harry Winston bay beside the REF-HW-01 kerb bed"
+          },
+          {
+            "tenants": [
+              "osm-node-8172494967"
+            ],
+            "note": "MAD Houston bay at the spine north end"
+          }
+        ]
+      },
+      "footprint": [
+        [
+          -2757.391,
+          -1305.667
+        ],
+        [
+          -2757.573,
+          -1318.515
+        ],
+        [
+          -2748.574,
+          -1318.643
+        ],
+        [
+          -2748.392,
+          -1305.795
+        ]
+      ],
+      "floor": {
+        "height": 18.471,
+        "source": "groundSurfaceHeight",
+        "at": [
+          -2752.983,
+          -1312.155
+        ]
+      },
+      "entrances": [
+        {
+          "id": "entrance:shade-garden",
+          "centre": [
+            -2757.498,
+            -1313.213
+          ],
+          "width": 2.4,
+          "side": "west",
+          "outward": [
+            -1,
+            0.014
+          ],
+          "link": "link:shade-garden"
+        }
+      ],
+      "interior": {
+        "floor": [
+          [
+            -2757.095,
+            -1305.971
+          ],
+          [
+            -2757.269,
+            -1318.22
+          ],
+          [
+            -2748.87,
+            -1318.339
+          ],
+          [
+            -2748.696,
+            -1306.09
+          ]
+        ],
+        "clearHeight": 3.6
+      },
+      "attachments": [
+        {
+          "id": "attach:shade-garden:threshold",
+          "role": "threshold",
+          "position": [
+            -2757.498,
+            -1313.213,
+            18.471
+          ],
+          "yaw": 3.127
+        },
+        {
+          "id": "attach:shade-garden:sign",
+          "role": "sign",
+          "position": [
+            -2757.448,
+            -1313.214,
+            21.471
+          ],
+          "yaw": 3.127
+        },
+        {
+          "id": "attach:shade-garden:porch-light",
+          "role": "porch-light",
+          "position": [
+            -2757.425,
+            -1311.614,
+            21.071
+          ],
+          "yaw": 3.127
+        },
+        {
+          "id": "attach:shade-garden:bed",
+          "role": "bed",
+          "position": [
+            -2752.998,
+            -1313.277,
+            18.471
+          ],
+          "yaw": -0.014
+        },
+        {
+          "id": "attach:shade-garden:seat-cluster",
+          "role": "seat-cluster",
+          "position": [
+            -2750.499,
+            -1313.313,
+            18.471
+          ],
+          "yaw": -0.014
+        }
+      ],
+      "cameraCorridors": [
+        {
+          "id": "camera:shade-garden:interior",
+          "from": [
+            -2756.898,
+            -1313.222,
+            20.071
+          ],
+          "to": [
+            -2749.299,
+            -1313.33,
+            20.071
+          ],
+          "halfWidth": 0.5
+        }
+      ],
+      "notes": "Proposed: the Hermès bay as an open court inside its mapped building (decision 6); boundary, ID and frontage stay."
+    },
+    {
+      "id": "venue:studios-overlook",
+      "label": "Studios + Overlook",
+      "kind": "threshold",
+      "host": {
+        "buildingId": "osm-way-625330790"
+      },
+      "retire": {
+        "status": "proposed",
+        "tenants": [],
+        "alternatives": [
+          {
+            "tenants": [
+              "osm-node-8172494965"
+            ],
+            "note": "Cartier bay as the studio front room"
+          }
+        ]
+      },
+      "footprint": [
+        [
+          -2720.238,
+          -1293.834
+        ],
+        [
+          -2716.258,
+          -1293.879
+        ],
+        [
+          -2716.191,
+          -1287.899
+        ],
+        [
+          -2720.171,
+          -1287.855
+        ]
+      ],
+      "floor": {
+        "height": 18.294,
+        "source": "groundSurfaceHeight",
+        "at": [
+          -2718.224,
+          -1290.866
+        ]
+      },
+      "entrances": [
+        {
+          "id": "entrance:studios-overlook",
+          "centre": [
+            -2720.223,
+            -1290.844
+          ],
+          "width": 6,
+          "side": "west",
+          "outward": [
+            -1,
+            0.011
+          ],
+          "link": "link:studios-overlook",
+          "approach": {
+            "kind": "lane-end",
+            "road": "osm-way-625330795-0",
+            "within": 6
+          },
+          "campusEntry": "E2"
+        }
+      ],
+      "interior": null,
+      "attachments": [
+        {
+          "id": "attach:studios-overlook:threshold",
+          "role": "threshold",
+          "position": [
+            -2719.724,
+            -1290.85,
+            18.294
+          ],
+          "yaw": 3.13
+        },
+        {
+          "id": "attach:studios-overlook:sign",
+          "role": "sign",
+          "position": [
+            -2719.753,
+            -1293.45,
+            21.294
+          ],
+          "yaw": 3.13
+        },
+        {
+          "id": "attach:overlook:t1-lantern",
+          "role": "lantern",
+          "position": [
+            16,
+            66,
+            26
+          ],
+          "yaw": 0,
+          "frame": "campus"
+        },
+        {
+          "id": "attach:overlook:t2-lantern",
+          "role": "lantern",
+          "position": [
+            16,
+            110,
+            30
+          ],
+          "yaw": 0,
+          "frame": "campus"
+        },
+        {
+          "id": "attach:overlook:t3-lantern",
+          "role": "lantern",
+          "position": [
+            16,
+            146,
+            26
+          ],
+          "yaw": 0,
+          "frame": "campus"
+        }
+      ],
+      "cameraCorridors": [
+        {
+          "id": "camera:studios-overlook:p2",
+          "from": [
+            -2719.624,
+            -1290.851,
+            19.894
+          ],
+          "to": [
+            -2700.225,
+            -1291.067,
+            19.894
+          ],
+          "halfWidth": 0.5
+        }
+      ],
+      "notes": "No tenant retires: the Studios open from the Gardens E2 entry (P2) and the Overlook is the three public roof decks. Builds no massing in the parcel."
+    }
+  ],
+  "ribbon": {
+    "segments": [
+      {
+        "id": "spine",
+        "points": [
+          [
+            -2759.588,
+            -1285.5
+          ],
+          [
+            -2758.824,
+            -1241.316
+          ],
+          [
+            -2757.967,
+            -1197.335
+          ]
+        ],
+        "width": 2,
+        "clearHeight": 3.6,
+        "style": "canopy",
+        "maxSpan": 6,
+        "status": "blocked",
+        "source": "config/ribbon/district-spine.json (#827), unchanged",
+        "blocked": {
+          "reason": "the walk of spine runs over tree-pit-103, tree-pit-76, tree-pit-84, tree-pit-152, bench-5-body, tree-pit-126, tree-pit-27, tree-pit-83",
+          "blockers": [
+            "bench-5-body",
+            "tree-104",
+            "tree-127",
+            "tree-153",
+            "tree-37",
+            "tree-77",
+            "tree-84",
+            "tree-85",
+            "tree-pit-103",
+            "tree-pit-126",
+            "tree-pit-152",
+            "tree-pit-27",
+            "tree-pit-76",
+            "tree-pit-83",
+            "tree-pit-84"
+          ],
+          "moves": [
+            "Street-tree pits in the walk (tree-pit-27, -76, -83, -84, -103, -126, -152; -76 and -103 are also under posts): move each pit out of the walk. Landscape (#840) owns tree moves (decision 2).",
+            "Crowns below the canopy top (3.6 m clear + 0.4 m slab = 4.0 m): tree-104 at 3.19 m, tree-153 3.53, tree-84 3.62, tree-37 3.72, tree-127 3.79, tree-77 3.82, tree-85 3.89. Lift each crown to at least 4.0 m, or lower this segment's clearHeight to 3.0 m (the kit minimum), which clears all but tree-104.",
+            "Van Cleef & Arpels bench body (bench-5-body) under modules 018-019: move the bench out of the walk (it stays a seat-access zone the canopy spans), or retire it with the Atelier bay."
+          ]
+        }
+      },
+      {
+        "id": "south",
+        "points": [
+          [
+            -2760.933,
+            -1371.5
+          ],
+          [
+            -2759.821,
+            -1308.689
+          ],
+          [
+            -2759.842,
+            -1295
+          ]
+        ],
+        "width": 2,
+        "clearHeight": 3.6,
+        "style": "canopy",
+        "maxSpan": 6,
+        "status": "blocked",
+        "source": "measured 2026-11-01: 6.9 m east of the lane centreline, ends at the side-lane south kerb",
+        "blocked": {
+          "reason": "south left edge spans 8.974 m from ribbon:south:post:001:l to ribbon:south:post:004:l, over its maxSpan 6 m (left out: ribbon:south:post:002:l in no-go harry-winston-south-bed, ribbon:south:post:003:l in no-go harry-winston-south-bed)",
+          "blockers": [
+            "harry-winston-south-bed",
+            "tree-108",
+            "tree-pit-107",
+            "tree-pit-130",
+            "tree-pit-16",
+            "tree-pit-165",
+            "tree-pit-3",
+            "tree-pit-96"
+          ],
+          "moves": [
+            "Street-tree pits in the walk (tree-pit-3, -16, -96, -107, -130, -165): move each pit out of the walk; Landscape (#840) owns tree moves (decision 2).",
+            "REF-HW-01 bed (harry-winston-south-bed) under modules 001-003 and posts 002-003:l: move or trim the bed clear of the walk, or end the segment north of it (Le Colonial is then reached across osm-way-627662384 at a marked crossing).",
+            "Crown tree-108 at 3.78 m below the 4.0 m canopy top: lift it to 4.0 m, or set this segment's clearHeight to 3.0 m, which clears it."
+          ]
+        }
+      },
+      {
+        "id": "link-studios",
+        "points": [
+          [
+            -2758.45,
+            -1299
+          ],
+          [
+            -2722.6,
+            -1299
+          ]
+        ],
+        "width": 2,
+        "clearHeight": 3.6,
+        "style": "canopy",
+        "maxSpan": 6,
+        "status": "blocked",
+        "blocked": {
+          "reason": "crowns through the canopy (tree-118 at -2755, -1297; tree-118 at -2755, -1297; tree-48 at -2747, -1297; tree-118 at -2755, -1297; tree-48 at -2747, -1297; tree-48 at -2747, -1297)",
+          "blockers": [
+            "tree-118",
+            "tree-48"
+          ],
+          "moves": [
+            "Crowns over the side-lane south pavement below the 4.0 m canopy top: tree-118 at 3.46 m and tree-48 at 3.83 m. Lift both crowns to 4.0 m, or set this segment's clearHeight to 3.0 m (the kit minimum), which clears both."
+          ]
+        }
+      }
+    ],
+    "joins": [
+      {
+        "kind": "crossing",
+        "from": "south",
+        "to": "spine",
+        "road": "osm-way-625330795-0"
+      },
+      {
+        "kind": "tee",
+        "from": "link-studios",
+        "to": "south"
+      }
+    ]
+  },
+  "links": [
+    {
+      "id": "link:counter",
+      "venue": "venue:counter",
+      "entrance": "entrance:counter",
+      "segment": "spine",
+      "side": "right"
+    },
+    {
+      "id": "link:atelier",
+      "venue": "venue:atelier",
+      "entrance": "entrance:atelier",
+      "segment": "spine",
+      "side": "right"
+    },
+    {
+      "id": "link:starlight-screen",
+      "venue": "venue:starlight-screen",
+      "entrance": "entrance:starlight-screen",
+      "segment": "spine",
+      "side": "right"
+    },
+    {
+      "id": "link:shade-garden",
+      "venue": "venue:shade-garden",
+      "entrance": "entrance:shade-garden",
+      "segment": "south",
+      "side": "right"
+    },
+    {
+      "id": "link:studios-overlook",
+      "venue": "venue:studios-overlook",
+      "entrance": "entrance:studios-overlook",
+      "segment": "link-studios",
+      "end": true
+    }
+  ],
+  "exclusions": [],
+  "notes": [
+    "v1 (2026-11-01, #838) published the first draft. Every retirement is proposed, not decided: Val chooses from the options in docs/design/five-rooms/layout.md.",
+    "Exclusions are rebuilt from the live District by siteExclusions(); this list holds only authored additions.",
+    "v2 (2026-11-01): the spine is re-carried from #827 after #853 moved its start north of the side lane; the south segment now ends at the side lane south kerb and meets the spine by a marked crossing of osm-way-625330795 (join kind crossing); link-studios tees off the south segment.",
+    "All three segments are blocked by street trees, a bench body and the REF-HW-01 bed. Each blocked record names what must move; the validator confirms every name against the site.",
+    "Entrances sit midway between two edge posts of their segment so no post is left out at a door."
+  ]
+}
