@@ -85,3 +85,11 @@ test('the shared builder refuses a spine that starts in the side-lane mouth', ()
   inLane.segments[0].points = [[-2759.834, -1300.113], [-2759.67, -1290.233], ...route.segments[0].points.slice(1)];
   assert.throws(() => expandRibbon({ ...inLane, exclusions: districtExclusions() }), /over its maxSpan 6 m \(left out: ribbon:spine:post:\d+:[lr] in no-go side-lane-\d+/);
 });
+
+test('the original start in the side-lane mouth is refused (#838, fixed by #853)', () => {
+  // Before #853 the spine began at (-2759.834, -1300.113), inside the carriageway of
+  // osm-way-625330795; with that lane excluded its posts 002-004 stood in it.
+  const original = structuredClone(route);
+  original.segments[0].points = [[-2759.834, -1300.113], [-2759.67, -1290.233], ...route.segments[0].points.slice(1)];
+  assert.throws(() => expandRibbon({ ...original, exclusions: districtExclusions() }), /left out: ribbon:spine:post:002:l in no-go side-lane-8, ribbon:spine:post:003:l in no-go side-lane-8, ribbon:spine:post:004:l in no-go side-lane-8/);
+});

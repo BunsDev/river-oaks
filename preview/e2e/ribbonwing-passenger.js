@@ -115,8 +115,33 @@ async page => {
   const [pilotAfter,aliceAfter]=await Promise.all([me(page),me(alice)]);
   check(aliceAfter.passengerOf===OWNER&&Math.abs(aliceAfter.altitude-pilotAfter.altitude)<.01,'After the roll alice is still aboard at the pilot\'s altitude');
   // Land; alice steps out beside the craft and walks on.
+  // The Ribbon's posts run beside the street this flies up: fly clear of them before landing (#841).
+  // A Ribbonwing that starts landing over a solid hovers there for good (landing cannot be
+  // cancelled), so it must be still and clear when G is pressed. On a CPU runner at about 1 fps the
+  // craft can still be drifting after clearHoverSpot's own wait for it to stop: wait for it to stop
+  // here (up to 60 s), then check the spot again, which returns at once when it is still clear.
+  const {clearHoverSpot}=await import('./hover-landing.js');
+  let landingSpot=await clearHoverSpot(page,{focus:()=>host(page).focus(),label:'Jevica lands with alice aboard'});
+  for(let i=0;i<3;i++){
+    await page.waitForFunction(()=>Math.abs(window.__riverCarriage().placement?.speed??0)<0.02,null,{timeout:60000});
+    const settled=await clearHoverSpot(page,{focus:()=>host(page).focus(),label:'Jevica lands with alice aboard (settled)'});
+    const moved=Math.hypot(settled.east-landingSpot.east,settled.north-landingSpot.north);landingSpot=settled;
+    if(moved<.05)break;
+  }
   await host(page).focus();await page.keyboard.press('KeyG');
-  await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return (m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??1)<=.1;},{},{timeout:30000});
+  // The descent advances at most 0.08 s per drawn frame (carriage-motion.js stepHoverLift), so a
+  // CPU runner at about 1 fps lands in minutes, not seconds: wait while the craft is still coming
+  // down, and fail only when it stops descending for 15 s (or after 150 s).
+  {
+    const altitude=()=>page.evaluate(()=>{const m=window.__riverMultiplayer();return m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??null;});
+    const started=Date.now();let low=Infinity,lowAt=Date.now(),now=await altitude();
+    while(!(now!==null&&now<=.1)){
+      if(now!==null&&now<low-.05){low=now;lowAt=Date.now();}
+      if(!(Date.now()-lowAt<15000&&Date.now()-started<150000))throw new Error(`Jevica's craft stopped short of landing with alice aboard (altitude ${now?.toFixed(2)} m, lowest ${low.toFixed(2)} m, at ${JSON.stringify(await page.evaluate(()=>window.__riverCarriage().placement?.position?.map(v=>+v.toFixed(2))??null))}, G pressed at ${JSON.stringify(landingSpot)}, ${((Date.now()-started)/1000).toFixed(0)} s after G)`);
+      await page.waitForTimeout(500);now=await altitude();
+    }
+    check(true,`Jevica's craft lands with alice aboard (${((Date.now()-started)/1000).toFixed(0)} s after G)`);
+  }
   await alice.waitForFunction(()=>!document.querySelector('.ribbonwing-seat [data-seat-action]')?.disabled,{},{timeout:10000});
   await host(alice).focus();await alice.keyboard.press('KeyG');
   await alice.waitForFunction(()=>!window.__riverRibbonwingSeat().riding&&!window.__riverRibbonwingSeat().pilotId,{},{timeout:10000});

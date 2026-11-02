@@ -52,6 +52,9 @@ async page => {
   check(townDriven.vehicle==='hover'&&Math.hypot(townDriven.position[0]-driven.placement.position[0],-townDriven.position[1]-driven.placement.position[2])<1.5,'The town carries the owner in the Ribbonwing where the Ribbonwing is');
   check(driven.tyreClearances.every(gap=>Math.abs(gap)<.001),'On the road the landing feet follow the rendered street');
   // Climb: Space lifts the Ribbonwing; the town carries its altitude; the hull stays level; above 3 m the feet retract.
+  // The drive ends beside the Ribbon's first posts, inside their flight margin: back out of it,
+  // keeping the heading the roll flies, to lift (#841).
+  await (await import('./hover-landing.js')).reverseClear(page,{focus:()=>host().focus()});
   await host().focus();await page.keyboard.down('Space');
   try {
     await page.waitForFunction(()=>(window.__riverCarriage().placement.altitude??0)>3.3,{},{timeout:20000});
@@ -122,6 +125,8 @@ async page => {
   check(miss<.5,`The roll ends 22 m along the admitted heading (off by ${miss.toFixed(2)} m)`);
   check(Math.hypot(townExit.position[0]-exit.pose.position[0],-townExit.position[1]-exit.pose.position[2])<.5&&Math.abs(townExit.altitude-exit.placement.altitude)<.5,'The town and the pilot agree where the roll ended');
   // G while aloft lands first; a second G steps out once it is down.
+  // The Ribbon's posts run beside the street this flies up: fly clear of them before landing (#841).
+  await (await import('./hover-landing.js')).clearHoverSpot(page,{focus:()=>host().focus()});
   await host().focus();await page.keyboard.press('KeyG');
   check(await host().getAttribute('data-riding')==='true','G while aloft does not drop the rider');
   check((await page.locator('#player-status').textContent()).includes('landing'),'The garage says the Ribbonwing is landing');
