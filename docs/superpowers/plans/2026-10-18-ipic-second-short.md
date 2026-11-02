@@ -110,3 +110,83 @@
 
 A defect found by listening means a recut with a new id (`ipic-two-seats-v2`) and its own approval.
 `ipic-two-seats-v1` keeps its id and duration, so saved timelines that name it still restore.
+
+## Listening packet for Val (2026-10-28)
+
+The one decision left on #501 is a human listening record. Everything else is on main and in production (`v0.2.2`).
+Machine evidence so far: −17.9/−18.0 LUFS, −1.6/−1.5 dBTP, speech 10.4–19.5 dB over the music per line, and
+whisper.cpp heard 44 of 45 words, missing only "Westheimer" (the same with the music removed, so it is the synthetic
+voice, not the mix). None of that is a listening test.
+
+**Production files (the approved bytes, served with 206 ranges and a one-hour public cache):**
+
+- `https://typesafe.place/assets/ipic/screening/ipic-two-seats-v1.webm` (VP9/Opus, 12,940,976 bytes, SHA-256 `24f08a74…`)
+- `https://typesafe.place/assets/ipic/screening/ipic-two-seats-v1.mp4` (H.264/AAC, 16,902,639 bytes, SHA-256 `85b1079e…`)
+- `https://typesafe.place/assets/ipic/screening/ipic-two-seats-v1.en.vtt` (captions, `2a6b54e0…`)
+
+Listen to the MP4 at least once: it is what Safari gets if the WebKit option lands, and what every engine falls back
+to. In the game, Safari currently plays the WebM; Chromium plays the WebM.
+
+**Where the lines are** (from the captions; music under everything from 0.6 s):
+
+| Cue | Time | Speaker | Line |
+| --- | --- | --- | --- |
+| 1 | 0:00.6 | — | [Soft piano music] |
+| 2 | 0:09.0 | Maya | Two seats, front row. Told you we'd make it. |
+| 3 | **0:13.4** | **Theo** | **Barely. Westheimer was all brake lights.** (the one word the recogniser misheard) |
+| 4 | 0:21.8 | Maya | So what's on tonight? |
+| 5 | 0:24.6 | Theo | Whatever the host picks. That's half the fun. |
+| 6 | 0:34.8 | Maya | No spoilers, then. |
+| 7 | 0:37.4 | Theo | None. Just a good seat and good company. |
+| 8 | 0:46.4 | — | [The house lights dim] |
+| 9 | 0:49.0 | Maya | Here it comes. |
+| 10 | 0:51.4 | Theo | Phones down. Sound on. |
+| 11 | 0:56.5 | — | [The piano swells, then fades] |
+
+**The form** (answer once per listening device; two devices are enough):
+
+1. **Device:** headphones (model) or speaker (device model and OS); which file (WebM or MP4); volume setting.
+2. **Clarity over music:** is every line intelligible at a comfortable volume without captions? Name any line that is not.
+3. **Balance:** is the music under the dialogue at the right level, and is the swell at 0:56 pleasant rather than loud?
+4. **Clipping or artefacts:** any crackle, distortion, pumping (the ducking) or hard edits?
+5. **"Westheimer" at 0:13.4:** does Theo say it the way a Houstonian would ("WEST-hy-mer")? Yes, no, or close enough.
+6. **Speaker vs headphones:** anything audible on one and not the other (the low bass under the piano, the room)?
+
+Also, in the game (#500's rows): Sound on inside the auditorium, then **Stand up** and **Step outside**: the film is
+silent in the lounge; and with a second person on voice chat, whether the film and the voice balance (record the
+film's volume slider position, or the device volume on iPhone, and whether the ±8 % rate correction is ever audible).
+
+**Outcome:** a pass closes #501. Any "no" on 2, 4 or 5 means a recut, below.
+
+## v2 recut: dry run (prepared, not run; nothing here is registered)
+
+Only if listening fails. `ipic-two-seats-v1` keeps its id, duration and files, so saved timelines and receipts still
+restore; v2 is a new catalog entry that needs its own approval of the exact bytes.
+
+1. **Pronunciation of "Westheimer" (the only known miss).** `scripts/ipic-short/second-voices.py` renders each cue's
+   `line` through `LocalVoice` (`src/river_oaks/voice.py`, Kokoro-82M, text in, 24 kHz mono out; it takes text, not
+   phonemes). The fix is a spelling the voice reads right, in the private source copy only:
+   - copy `scripts/ipic-short/second-short.json` to `~/Documents/river-oaks-drafts/ipic-two-seats-v2-<date>/second-short.json`
+     and change cue 3's `line` to a phonetic spelling for rendering (candidates: `West-heimer`, `Westhimer`, `West hymer`),
+     while the caption text stays "Westheimer" (the cut script writes captions from the script's `line`, so add a
+     `caption` override there or patch the VTT after the cut: whichever is smaller, with its test);
+   - render only that line (`python3 scripts/ipic-short/second-voices.py <script> <model-dir> <voices-dir>` renders all
+     eight; it is deterministic, so the other seven lines' hashes must equal v1's `voices.json`);
+   - check with the recogniser that produced the 44/45 (whisper.cpp `ggml-base.en`, already on this machine; the probe
+     script is `checks/asr-probe.json`'s neighbour in the private folder) that "Westheimer" is now heard; no download
+     and no paid service.
+2. **Cut:** `MUSIC_WEIGHT=0.38 node scripts/ipic-short/second-cut.mjs <capture> <voices-v2> <score.wav> <out>` with
+   the same 2026-10-18 19:55Z capture and the same score (both in the private `source/`); only the voices directory
+   changes. Expect the same 62.000 s MP4 and 62.008 s WebM, −18 LUFS, −1.5 dBTP, and the same eleven captions.
+3. **Intake:** `node scripts/ipic-short/intake-check.mjs <out>/sources.candidate.json` → `engineering-candidate`,
+   no problems; `node scripts/ipic-short/decode-check.mjs` in Chromium; speech-over-music per line ≥ 10 dB
+   (`source/speech-over-music.mjs`); the ASR probe again.
+4. **Approval:** Val listens to v2 (the form above) and approves the exact bytes (four SHA-256s) as on 2026-10-19.
+5. **Register, as #547 did, with a new id:** files `preview/public/assets/ipic/screening/ipic-two-seats-v2.*`; a new
+   `sources.json` entry with `approval`, `approvedItems`, provenance and the transcript; a new `SCREENING_MEDIA`
+   entry `ipic-two-seats-v2` (62,000 ms, `dialogue and music`, the poster); `preview/tests/screening-contract.test.js`
+   catalog list; `docs/screenings.md`. **v1 stays in `SCREENING_MEDIA`** so checkpoints and receipts naming it restore;
+   to retire it from the chooser later, drop it from `screeningChoices` (a `retired: true` flag the chooser filters),
+   never delete the entry. `node scripts/make-screening-fixture.mjs --check` must report 15 files of 4 films.
+6. **Verify and land:** media and contract suites, `pnpm run test:screening` (the committed journey still names v1; a
+   follow-up switches it to v2 once v2 is the chooser's second film), core verify, `pnpm run land` with Val's go.
