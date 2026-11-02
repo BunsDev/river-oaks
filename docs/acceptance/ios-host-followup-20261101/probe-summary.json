@@ -1,0 +1,98 @@
+{
+  "source": "51c28e2a93782b747bb991237025e60018071fe9",
+  "dirty": true,
+  "inputSHA256": [
+    {
+      "path": ".runtime/probe-owned-native-final.py",
+      "sha256": "c72da6f21aeaa877216cd7112ec6fa5569713890e615390ed04407908a8a16d2"
+    },
+    {
+      "path": "experiments/ios-probe/App/Info.plist",
+      "sha256": "4e6692a34c629832d3a1e9a3491d8831638cf4ca6c8d31deb52ebc28dce4db57"
+    },
+    {
+      "path": "experiments/ios-probe/App/ProbeApp.swift",
+      "sha256": "50b7016f0c1ea4480349117fca862696700c913aacf30a3c9c2a6b43b838b55b"
+    },
+    {
+      "path": "experiments/ios-probe/App/ProbeHTTP.swift",
+      "sha256": "73b240fd5fe931897ef9d67b403130cb80432133ccce1a13099e19feceb2527f"
+    },
+    {
+      "path": "experiments/ios-probe/Sources/ProbeCore/DeviceAuth.swift",
+      "sha256": "3e92afc4e73a6399a439d1fe2b0192dc9279cf767a73edfae615c5e203551b4b"
+    },
+    {
+      "path": "experiments/ios-probe/Sources/ProbeCore/ProbeIsolation.swift",
+      "sha256": "4e12c5f94db75754424280421c891109046285c9ec0baf81be8a7affc4ab78b4"
+    },
+    {
+      "path": "experiments/ios-probe/Sources/ProbeCore/ProbePagePresentation.swift",
+      "sha256": "71b8592d27f9326c7e82785609db17b01854401c21cde161aff0a4ef7e40eb9a"
+    },
+    {
+      "path": "experiments/ios-probe/Sources/ProbeCore/ProbePhaseEvidence.swift",
+      "sha256": "bafdcdb4d04034b74474091cd5dc1b7dc3ef19fef28c371595f28461075a7cce"
+    },
+    {
+      "path": "experiments/ios-probe/Sources/ProbeCore/ProbePolicy.swift",
+      "sha256": "c8fb60536d5c8eb77ca5f5ed35355b46be1a6a3b904db94a26313600c6130eb0"
+    },
+    {
+      "path": "experiments/ios-probe/Web/decode-queue.js",
+      "sha256": "3eff9c30a75445281d4838dfdaff69d4359441125df5bf028e813eba39a3fc1d"
+    },
+    {
+      "path": "experiments/ios-probe/Web/phase-capture.js",
+      "sha256": "f4491dd5a844b3bed05dbb1630d3aa379460b2aa1f3bc040a4dd2fe8f1192ab9"
+    },
+    {
+      "path": "experiments/ios-probe/Web/probe.js",
+      "sha256": "7f6f7317903264126d4a054f5e1ca67f5310b72619e940a13b207c027a636936"
+    },
+    {
+      "path": "experiments/ios-probe/project.yml",
+      "sha256": "351a04232831103bbce061ad999b28e40b0762974b552d4e9272cf432d914dcb"
+    },
+    {
+      "path": "scripts/ios-probe-controls-smoke.swift",
+      "sha256": "7d8676e9fcbfbc399fcd229a47b3d86a33bb0fc319b861e737ab556d2e5d25c7"
+    },
+    {
+      "path": "scripts/ios-probe-launch-smoke.mjs",
+      "sha256": "84b5c3b7cce609636e06d59860743c6ce387346aa0c99e5f6da5b3d17375877b"
+    }
+  ],
+  "packageFiles": [
+    {
+      "path": "Info.plist",
+      "sha256": "a8e02acec672e0284da6d4101a2a9b168e448059dc9bbd432ee76412f8e83f31"
+    },
+    {
+      "path": "PkgInfo",
+      "sha256": "82502191c9484b04d685374f9879a0066069c49b8acae7a04b01d38d07e8eca0"
+    },
+    {
+      "path": "TypeSafeProbe",
+      "sha256": "8e9613546a32d4cc4081bfb0d7c3484e3efd472cf068052988b41a8588963f8f"
+    },
+    {
+      "path": "decode-queue.js",
+      "sha256": "3eff9c30a75445281d4838dfdaff69d4359441125df5bf028e813eba39a3fc1d"
+    },
+    {
+      "path": "phase-capture.js",
+      "sha256": "f4491dd5a844b3bed05dbb1630d3aa379460b2aa1f3bc040a4dd2fe8f1192ab9"
+    },
+    {
+      "path": "probe.js",
+      "sha256": "7f6f7317903264126d4a054f5e1ca67f5310b72619e940a13b207c027a636936"
+    }
+  ],
+  "profiles": [
+    "default",
+    "unavailable",
+    "narrow-four-actions"
+  ],
+  "scope": "Unsigned Release simulator; native-only mode and existing flag enables four actions on installed iPhone SE3. Manual screenshot inspection still required. Not physical-device, keyboard/VoiceOver focus, highlighted/disabled or real-world acceptance."
+}

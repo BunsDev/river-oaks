@@ -8,6 +8,7 @@ import { createWorldMap } from './world-map.js';
 import './world-map.css';
 import { createPlacesGuide } from './places-guide.js';
 import { categorySlug } from './store-categories.js';
+import { writeLive } from './action-cue.js';
 
 const $ = selector => document.querySelector(selector);
 const KIND_LABEL = { arrival: 'arrival', spot: 'meeting spot', shop: 'storefront', landmark: 'landmark', link: 'shared spot' };
@@ -100,11 +101,17 @@ export function setupPlacesUI({ places, landmarks, onGo, getPosition, getYaw, is
     const position = getPosition();
     worldMap?.refresh();
     const near = position ? nearestPlace(current, position, 45) : null;
-    here.replaceChildren();
-    if (!near) { here.textContent = position ? 'Out on the street' : 'Not walking yet'; here.dataset.placeId = ''; return; }
-    const label = document.createElement('strong'); label.textContent = near.place.name;
-    here.append(near.distance < 8 ? 'You’re at ' : 'You’re near ', label, near.distance < 8 ? '' : ` (${Math.round(near.distance)} m)`);
-    here.dataset.placeId = near.place.id;
+    // #places-here is a polite live region refreshed every 500 ms: rewrite it only when the words
+    // change, or a screen reader hears the same place again on every tick.
+    const prefix = near ? (near.distance < 8 ? 'You’re at ' : 'You’re near ') : '', suffix = near && near.distance >= 8 ? ` (${Math.round(near.distance)} m)` : '';
+    const text = near ? `${prefix}${near.place.name}${suffix}` : position ? 'Out on the street' : 'Not walking yet';
+    here.dataset.placeId = near?.place.id ?? '';
+    writeLive(here, text, () => {
+      here.replaceChildren();
+      if (!near) { here.textContent = text; return; }
+      const label = document.createElement('strong'); label.textContent = near.place.name;
+      here.append(prefix, label, suffix);
+    });
   }
   renderPlaces(); renderLandmarks(); refreshHere();
   const timer = setInterval(refreshHere, 500);
