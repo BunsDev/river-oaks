@@ -27,10 +27,10 @@ const plan = expandFiveRooms(contract, site);
 const edit = change => { const copy = structuredClone(contract); change(copy); return copy; };
 const segment = (copy, id) => copy.ribbon.segments.find(item => item.id === id);
 
-test('v1 validates against the live District and rebuilds the full plan', () => {
+test('the contract validates against the live District and rebuilds the full plan', () => {
   assert.equal(contract.version, FIVE_ROOMS_VERSION);
   assert.deepEqual(plan.venues.map(venue => venue.id), VENUE_IDS);
-  assert.deepEqual(plan.stats, { venues: 5, segments: 3, clear: 0, blocked: 3, modules: 70, posts: 146, lamps: 38, fans: 70, seats: 0, skipped: 0, links: 5, cameras: 5, exclusions: 1024, retired: 4 });
+  assert.deepEqual(plan.stats, { venues: 5, segments: 3, clear: 0, blocked: 3, modules: 68, posts: 142, lamps: 37, fans: 68, seats: 0, skipped: 0, links: 5, cameras: 5, exclusions: 1024, retired: 4 });
   assert.equal(site.stores.length, 30);
   assert.equal(site.buildings.length, 9);
   assert.equal(site.tenants.length, 30);
@@ -42,15 +42,24 @@ test('v1 validates against the live District and rebuilds the full plan', () => 
   assert.ok(!rebuilt.some(zone => zone.id.startsWith('door-osm-node-8172495006')), 'a retired tenant has no shop door zone');
 });
 
-test('the #827 spine is carried unchanged and its blocked record matches the site', () => {
+test('the #827 spine is carried unchanged and meets the south segment by a marked crossing', () => {
   const spine = read('../../config/ribbon/district-spine.json').segments[0];
   const { status, blocked, source, ...carried } = segment(contract, 'spine');
   assert.deepEqual(carried, spine);
   assert.equal(status, 'blocked');
-  // The side-lane mouth is the conflict #827's own test did not model.
-  assert.ok(blocked.blockers.includes('road-625330795-7') && blocked.blockers.includes('road-625330795-8'));
-  const findings = plan.segments.find(item => item.id === 'spine').findings;
-  assert.deepEqual(findings.filter(item => item.zone === 'road-625330795-8' && item.what === 'post').map(item => item.element), ['ribbon:spine:post:002:l', 'ribbon:spine:post:003:l', 'ribbon:spine:post:004:l']);
+  // Since #853 the spine starts north of the side lane: no road piece blocks it any more.
+  assert.ok(!blocked.blockers.some(id => id.startsWith('road-')), blocked.blockers.join(', '));
+  const crossing = plan.joins.find(join => join.kind === 'crossing');
+  assert.equal(crossing.road, 'osm-way-625330795-0');
+  assert.ok(crossing.length > 8.4 && crossing.length < 12, `crossing ${crossing.length} m`);
+  assert.ok(crossing.crosses.length && crossing.crosses.every(id => id.startsWith('road-625330795-')));
+});
+
+test('a crossing that is too long, or crosses anything but its road, fails', () => {
+  const far = edit(copy => { segment(copy, 'south').points.at(-1)[1] = -1299; });
+  assert.throws(() => expandFiveRooms(far, site), /join south->spine: the crossing is 13\.\d+ m, over 12 m/);
+  const wrongRoad = edit(copy => { copy.ribbon.joins[0].road = 'osm-way-583333526-0'; });
+  assert.throws(() => expandFiveRooms(wrongRoad, site), /join south->spine: the crossing of osm-way-583333526-0 is blocked by road-625330795-/);
 });
 
 test('every venue entrance is reached from the Ribbon without crossing a road or a kept door', () => {

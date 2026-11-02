@@ -36,14 +36,14 @@ test('the landscape is built from the contract: aprons always, the court and blo
   assert.deepEqual(FIVE_ROOMS_LANDSCAPE_FLAGS, { shadeGardenOpenCourt: false, blockedSegmentPlanting: false });
   const plan = landscape();
   assert.equal(plan.hash, expanded.hash);
-  assert.deepEqual(plan.stats, { paving: 5, courts: 0, beds: 0, dropped: 8, pending: 35 });
+  assert.deepEqual(plan.stats, { paving: 5, courts: 0, beds: 0, dropped: 6, pending: 36 });
   assert.deepEqual(plan.paving.map(item => item.id), ['paving:counter', 'paving:atelier', 'paving:starlight-screen', 'paving:shade-garden', 'paving:studios-overlook']);
   // The Shade Garden court waits on Val's decision 6; every segment is blocked (#838), so its planted edge waits too.
   const court = plan.pending.find(item => item.id === 'court:shade-garden');
   assert.equal(court.flag, 'shadeGardenOpenCourt');
   assert.match(court.decision, /decision 6/);
   assert.ok(plan.pending.filter(item => item.kind === 'edge').every(item => item.flag === 'blockedSegmentPlanting' && item.status === 'blocked'));
-  assert.deepEqual(landscape(ALL).stats, { paving: 5, courts: 1, beds: 34, dropped: 8, pending: 0 });
+  assert.deepEqual(landscape(ALL).stats, { paving: 5, courts: 1, beds: 35, dropped: 6, pending: 0 });
   assert.deepEqual(landscape(ALL), landscape(ALL), 'deterministic');
 });
 
@@ -76,11 +76,11 @@ test('no planting envelope enters a doorway, seat access, step-free route, no-go
     // Planting stays far below the 3.6 m canopy it stands beside.
     assert.ok(bed.top - bed.bottom < RIBBON_RULES.minClearHeight, bed.id);
   }
-  // What the District displaced, by name: side-lane carriageway, tree pits, a bench, a bin and a lamp.
+  // What the District displaced, by name: tree pits, a lamp, a bench and a bin. Since #853 the spine
+  // starts north of the side lane, so no bed meets its carriageway; #865 widened the walk to 2.4 m.
   assert.deepEqual(plan.dropped.map(item => `${item.id} <- ${item.conflicts.join(' | ')}`), [
-    'bed:spine:edge:002:l <- no-go road-625330795-8', 'bed:spine:edge:004:l <- no-go road-625330795-8',
-    'bed:spine:edge:006:l <- no-go tree-pit-103', 'bed:spine:edge:008:l <- no-go tree-pit-76',
-    'bed:spine:edge:018:l <- seat-access bench-5 | no-go bin-3', 'bed:spine:edge:026:l <- no-go tree-pit-126',
+    'bed:spine:edge:002:l <- no-go lamp-13 | no-go tree-pit-103', 'bed:spine:edge:004:l <- no-go tree-pit-76',
+    'bed:spine:edge:014:l <- seat-access bench-5 | no-go bin-3', 'bed:spine:edge:022:l <- no-go tree-pit-126',
     'bed:south:edge:012:l <- no-go tree-pit-3', 'bed:south:edge:016:l <- no-go lamp-11',
   ]);
   // The Shade Garden bed is planted in the court floor, under its interior camera's sight line.
@@ -169,8 +169,9 @@ test('classic builds nothing; pink-jet-age builds the aprons, with bounded draw 
   assert.equal(draws(today), 1, 'today: the five aprons in one mesh');
   const full = buildFiveRoomsLandscape(landscape(ALL), { groundAt, planting });
   const procedural = draws(full) - 3;
-  // buildProceduralPlants batches each plant part per 24 m cell: about seven parts over the ~200 m Ribbon.
-  assert.equal(procedural, 60, `procedural planting draw calls ${procedural}`);
+  // buildProceduralPlants batches each plant part per 24 m cell: about seven parts over the ~200 m Ribbon
+  // (67 since the v2 spine starts north of the side lane and keeps its south beds; behind the flags).
+  assert.equal(procedural, 67, `procedural planting draw calls ${procedural}`);
   assert.deepEqual(full.userData.fiveRoomsLandscape.stats, landscape(ALL).stats);
   t.diagnostic(`five rooms landscape draw calls: default flags ${draws(today)}; all flags ${draws(full)} (paving 1, bed shells 1, mulch 1, procedural planting ${procedural}; buildPlanterPlanting adds its boxwood and grass model batches once loaded)`);
 });

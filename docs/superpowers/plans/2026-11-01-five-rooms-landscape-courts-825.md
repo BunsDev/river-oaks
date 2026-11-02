@@ -141,3 +141,13 @@ not #828.
 Run core verify. Wait for river-oaks-c2's reply on the three contract requests. Then hand to
 Integration (#841): register `buildFiveRoomsGround` with the District supports and add the group
 under pink.
+
+## 2026-11-02: #849 v2 + #865 spine merged (river-oaks-85, goal "Five Rooms on main")
+
+Merged #849 at `1a2007b3` (contract v2 with the #853 start and #865's 2.4 m spine; main `85908e04`), the
+step this ledger was waiting for; no conflicts. Derived pins move with the spine: no bed meets the side
+lane any more, so dropped is 6 (was 8) and the named list is tree pits 103, 76, 126, lamp-13, bench-5 and
+bin-3, plus the unchanged south pair; default stats `{ paving 5, beds 0, dropped 6, pending 36 }`, all
+flags `{ courts 1, beds 35, dropped 6 }`. With all flags on, procedural planting is 67 draw calls (was
+60, one more 24 m cell); the default build is still 1 draw call. Every no-entry check (doorways, seats,
+step-free routes, no-go zones, cameras, walk, posts) passes unchanged. Focused 32/32.

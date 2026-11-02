@@ -8,6 +8,8 @@ import { previewBuildingInteriorPlan } from './interior-plan.js';
 import { createInteriorLevelPreview, showInteriorPreview } from './interior-scene.js';
 import {compileNeighborhoodArchitecture} from '../../../shared/neighborhood/architecture.js';
 import {buildStreetscape} from '../streetscape-kit.js';
+import { readFinishPreference } from '../render-quality.js';
+import { applySpaceKitFinish } from './space-kit-finish.js';
 
 // Viewport backdrop per resolved appearance; matches the --sage panel token.
 const CLEAR_COLORS={light:'#e8eeea',dark:'#111815'};
@@ -31,8 +33,11 @@ export function buildStudioWorld(region) {
     buildings:region.buildings.map(b=>({...b,center:[...b.center,terrainHeight(terrain,...b.center)]})),
     stores:[], walkSpawn:[...region.spawn,terrainHeight(terrain,...region.spawn)] };
 }
-export function createStudioScene(region, theme = 'light', authoring = null) {
-  if(isSpaceDocument(region))return createSpaceScene(region,theme);
+// A furnished space takes the kit finish (space-kit-finish.js) from the designer's render-quality.js
+// preference, the one the town follows; `finish` overrides it. It is applied after the space is
+// built, so space-scene.js and every approved space in town are unchanged. Region scenes have no finish.
+export function createStudioScene(region, theme = 'light', authoring = null, { finish = readFinishPreference() } = {}) {
+  if(isSpaceDocument(region)){const scene=createSpaceScene(region,theme);applySpaceKitFinish(scene.group,finish);return scene;}
   assertStudioBudget(region);
   const group = new THREE.Group(),items = new Map(), interiorViews = new Map(), world = buildStudioWorld(region);
   const architecture = authoring && (authoring.recipe.architecture || authoring.placements.some(p=>p.architecture)) ? compileNeighborhoodArchitecture(authoring,{region}) : null;
