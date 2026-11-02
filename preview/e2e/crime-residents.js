@@ -85,7 +85,13 @@ async page => {
         travel: lastTravel && { ok: lastTravel.ok, error: lastTravel.error }, walk: walked && !walked.position ? walked.reason : undefined }); };
     // Toward the nearest outdoor resident who is not already reacting, and stop at arm's length.
     const state = await town(visitor);
-    const candidates = state.locals.filter(local => !local.indoor && local.life && local.life.reaction === null && ['walking', 'resting', 'turning'].includes(local.life.status))
+    // Only residents 6 m clear of the danger zones (the approach stops within 4 m, up to 2 m to a side):
+    // a visitor back in a zone is pursued again (#785), and the chase's police alarms startle everyone
+    // within 20 m before this check can see the wanted startle.
+    const { zonesFor } = await import('../src/world-policy.js');
+    const zones = zonesFor('river-oaks').filter(zone => zone.kind === 'danger'), clear = 6;
+    const outside = ([east, north]) => zones.every(({ rect: [e0, n0, e1, n1] }) => east < e0 - clear || east > e1 + clear || north < n0 - clear || north > n1 + clear);
+    const candidates = state.locals.filter(local => !local.indoor && local.life && local.life.reaction === null && ['walking', 'resting', 'turning'].includes(local.life.status) && outside(local.position))
       .sort((a, b) => distance(a.position, state.self.position) - distance(b.position, state.self.position)).slice(0, 3);
     check(candidates.length, 'There is an outdoor resident to walk up to');
     // The rule may skip a resident (held by a visitor, or no sight line past a planter): then the next one.
