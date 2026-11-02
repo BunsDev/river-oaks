@@ -46,35 +46,12 @@ async page => {
     return reply;
   };
   const face = (tab, east, north) => tab.evaluate(([x, n]) => window.__riverSeatAndWater().face(x, n), [east, north]);
-  // On foot (#785): while an officer is on the player the town refuses travel ('pursued'), so the
-  // player walks with their own W strides, re-aimed by dragging the view every stride
-  // (walking-ui: yaw -= dx * 0.003; crime-residents.js does the same).
-  const pagePose = tab => tab.evaluate(() => { const n = document.querySelector('#walking-hud'), m = window.__riverMultiplayer();
-    return { position: JSON.parse(n.dataset.position), yaw: m.snapshot?.players.find(p => p.id === m.selfId)?.yaw ?? 0 }; });
-  const turnTo = async (tab, heading) => {
-    const box = await tab.locator('#canvas-host').boundingBox();
-    let delta = Math.atan2(Math.sin(heading + (await pagePose(tab)).yaw), Math.cos(heading + (await pagePose(tab)).yaw));
-    while (Math.abs(delta) > 0.05) {
-      const limit = box.width * 0.4, px = Math.max(-limit, Math.min(limit, delta / 0.003)), x = box.x + box.width / 2, y = box.y + box.height * 0.35;
-      await tab.mouse.move(x, y);await tab.mouse.down();await tab.mouse.move(x + px, y, { steps: 6 });await tab.mouse.up();
-      delta -= px * 0.003;
-    }
-  };
-  const walkNear = async (tab, [east, north], reach) => {
-    for (let stride = 0; stride < 40; stride++) {
-      // Taken by an officer mid-walk: the walk is over (the town moves them once released).
-      if (await tab.evaluate(() => { const m = window.__riverMultiplayer(); return m.snapshot.police.subdued.includes(m.selfId); })) return null;
-      const { position: [x, , z] } = await pagePose(tab), de = east - x, dn = north + z, gap = Math.hypot(de, dn);
-      if (gap <= reach) return (await town(tab)).self.position;
-      await turnTo(tab, Math.atan2(de, dn));
-      await tab.locator('#canvas-host').focus();
-      const fast = gap > 3;if (fast) await tab.keyboard.down('ShiftLeft');
-      await tab.keyboard.down('KeyW');await tab.waitForTimeout(Math.min(450, Math.max(80, (gap - reach * 0.6) * (fast ? 130 : 260))));await tab.keyboard.up('KeyW');
-      if (fast) await tab.keyboard.up('ShiftLeft');
-      await tab.waitForTimeout(100);
-    }
-    return null;
-  };
+  // On foot (#785): while an officer is on the player the town refuses travel ('pursued'); the
+  // player walks with their own keys (on-foot.js). `walked` keeps the last walk's trail for failures.
+  const { walkNear: walkOnFoot } = await import('./on-foot.js');
+  let walked = null;
+  const walkNear = async (tab, point, reach) => (walked = await walkOnFoot(tab, point, reach)).position;
+  const walkTrail = () => walked?.position ? '' : `: ${JSON.stringify({ reason: walked?.reason, trail: walked?.trail })}`;
   // Travel when the town allows it; on foot when an officer is on the player.
   const move = async (tab, [east, north], reach) => {
     const reply = await goTo(tab, east, north);
@@ -334,7 +311,7 @@ async page => {
     await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.crime.wanted.some(([id, stars]) => id === m.selfId && stars >= 1); });
     // #785: an officer is on the visitor, so they walk out of the lane (15 m north of the rival is clear
     // ground outside the zone), the officers stand down, and travel opens again with the star still cooling.
-    check(await walkNear(visitor, [RX, -1420], 1.5), 'The wanted visitor walks out of the danger zone on foot');
+    check(await walkNear(visitor, [RX, -1420], 1.5), `The wanted visitor walks out of the danger zone on foot${walkTrail()}`);
     const loose = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), s = m.snapshot;
       return !(s.police?.units ?? []).some(unit => unit.targetId === m.selfId && ['pursue', 'grab', 'arrest'].includes(unit.state))
         && s.crime.wanted.some(([id, stars]) => id === m.selfId && stars >= 1); }, null, { timeout: 15000 }).then(() => true).catch(() => false);
@@ -544,7 +521,7 @@ async page => {
     // when no officer is on them any more, which is the moment the travel used to mark.
     const standDown = visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return !m.snapshot.police.units.some(unit => unit.targetId === m.selfId); }, null, { timeout: 30000 }).then(() => Date.now());
     const left = await goTo(visitor, safeSpot[0], safeSpot[1]);
-    if (left?.error === 'pursued') check(await walkNear(visitor, [-2785, -1385], 2), 'The watched visitor walks out of the zone and out of sight on foot');
+    if (left?.error === 'pursued') check(await walkNear(visitor, [-2785, -1385], 2), `The watched visitor walks out of the zone and out of sight on foot${walkTrail()}`);
     const leftAt = await standDown;
     await visitor.waitForTimeout(Math.max(0, 15000 - (Date.now() - leftAt)));
     const midway = stars(await town(visitor));
