@@ -13,7 +13,7 @@ const modes = process.argv.slice(2);
 const selectedJourney = process.env.RIVER_OAKS_SHARED_JOURNEY;
 const softwareRendering = process.env.RIVER_OAKS_SHARED_SOFTWARE === '1';
 if (softwareRendering && process.platform !== 'linux') throw new Error('Software shared acceptance requires Linux with Xvfb and Mesa.');
-const supportedModes=['development','development-world','development-publish','required','required-characters','creator'];
+const supportedModes=['development','development-seats','development-world','development-publish','required','required-characters','creator'];
 if (modes.some(mode => !supportedModes.includes(mode))) throw new Error(`Choose ${supportedModes.join(', ')} shared play.`);
 const report = { createdAt: new Date().toISOString(), status: 'running', modes: modes.length ? modes : supportedModes, rendering: softwareRendering ? 'Mesa CPU acceptance: quarter resolution, surface-normal shading, no HDR, MSAA, shadows, AO or reflection captures; not visual-quality acceptance.' : 'Full rendering', scope: 'Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.', results: [] };
 const temporary = await mkdtemp(join(tmpdir(), 'river-oaks-shared-'));
@@ -59,10 +59,10 @@ async function start(mode, ports) {
   env.BLOCKS_FILE = join(temporary, 'blocks.json');
   env.RIVER_OAKS_CHARACTER_STUDIO=process.env.RIVER_OAKS_CHARACTER_STUDIO??'1';
   env.VITE_CHARACTER_STUDIO=process.env.VITE_CHARACTER_STUDIO??'true';
-  env.VITE_CREATION_TOOLS = process.env.VITE_CREATION_TOOLS ?? (['development', 'development-publish', 'creator'].includes(mode) && selectedJourney !== 'creation-tools' ? 'true' : 'false');
+  env.VITE_CREATION_TOOLS = process.env.VITE_CREATION_TOOLS ?? (['development', 'development-seats', 'development-publish', 'creator'].includes(mode) && selectedJourney !== 'creation-tools' ? 'true' : 'false');
   creationToolsEnabled = env.VITE_CREATION_TOOLS === 'true';
   // The creation flag journey keeps world browsing on to check publishing independently.
-  env.VITE_WORLD_MAP = process.env.VITE_WORLD_MAP ?? (['development', 'development-world', 'development-publish'].includes(mode) || selectedJourney === 'creation-tools' ? 'true' : 'false');
+  env.VITE_WORLD_MAP = process.env.VITE_WORLD_MAP ?? (['development', 'development-seats', 'development-world', 'development-publish'].includes(mode) || selectedJourney === 'creation-tools' ? 'true' : 'false');
   // Approved furnished spaces (#420) are a server flag, default off; the publishing mode's Café journey turns it on.
   env.RIVER_OAKS_APPROVED_SPACES = process.env.RIVER_OAKS_APPROVED_SPACES ?? (mode === 'development-publish' ? '1' : '0');
   interruption.signal.throwIfAborted();
@@ -114,7 +114,7 @@ try {
     const town = await freePort(used);
     const ports = { web, town };
     await start(mode, ports);
-    const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:selectedJourney==='locomotion-peer'?['locomotion-peer']:selectedJourney==='crime-residents'?['crime-residents']:selectedJourney==='crime-night'?['crime-night']:selectedJourney==='crime-encounter'?['crime-encounter']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating','world-rules-shared','crime-shared','crime-residents']):mode==='development-world'?['world-boundary','world-map','character-studio-worlds']:mode==='development-publish'?['world-publish','creator-generated-levels','creator-four-levels','creator-street-crossing',...(selectedJourney==='creator-approved-cafe'?['creator-approved-cafe']:[])]:mode==='creator'?['creator-objects']:mode==='required-characters'?['character-studio-shared','character-studio-tiers','default-appearance-tiers']:[...(selectedJourney==='storefront-threshold'?['storefront-threshold']:[]),...(selectedJourney==='generated-gallery-shared'?['generated-gallery-shared']:[]),'access-gate','connection-required','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water','greetings'];
+    const names=mode==='development'?(selectedJourney==='creation-tools'?['creation-tools']:selectedJourney==='locomotion-peer'?['locomotion-peer']:selectedJourney==='crime-residents'?['crime-residents']:selectedJourney==='crime-night'?['crime-night']:selectedJourney==='crime-encounter'?['crime-encounter']:['multiplayer-dev','groups','world-events','rail-shared','shared-seating','world-rules-shared','crime-shared','crime-residents']):mode==='development-seats'?['seat-chat-shared']:mode==='development-world'?['world-boundary','world-map','character-studio-worlds']:mode==='development-publish'?['world-publish','creator-generated-levels','creator-four-levels','creator-street-crossing',...(selectedJourney==='creator-approved-cafe'?['creator-approved-cafe']:[])]:mode==='creator'?['creator-objects']:mode==='required-characters'?['character-studio-shared','character-studio-tiers','default-appearance-tiers']:[...(selectedJourney==='storefront-threshold'?['storefront-threshold']:[]),...(selectedJourney==='generated-gallery-shared'?['generated-gallery-shared']:[]),'access-gate','connection-required','multiplayer','indoor-npcs','multiplayer-exclusivity','vehicle-exit','multiplayer-gate','resident-names','sit-and-water','greetings'];
     if (mode === 'required' || (selectedJourney === 'player-blocking' && mode.startsWith('development'))) names.push('player-blocking');
     if (mode === 'required') names.push('player-blocking-lifecycle');
     if (mode === 'required' || mode === 'development-world' || (selectedJourney === 'player-blocking-interface' && mode.startsWith('development'))) names.push('player-blocking-interface');
@@ -123,7 +123,7 @@ try {
       interruption.signal.throwIfAborted();
       // These journeys require their initial town layout or a fresh development owner.
       // Closing browser contexts does not reset simulation, ledgers or creations.
-      if (['shared-seating', 'world-rules-shared', 'crime-shared', 'crime-residents', 'crime-night', 'crime-encounter', 'vehicle-exit', 'greetings', 'character-studio-shared', 'character-studio-tiers', 'default-appearance-tiers', 'character-studio-worlds', 'creator-generated-levels', 'creator-four-levels','creator-street-crossing', 'creator-approved-cafe'].includes(name) && !selectedJourney) { await stop(); await start(mode, ports); }
+      if (['shared-seating', 'seat-chat-shared', 'world-rules-shared', 'crime-shared', 'crime-residents', 'crime-night', 'crime-encounter', 'vehicle-exit', 'greetings', 'character-studio-shared', 'character-studio-tiers', 'default-appearance-tiers', 'character-studio-worlds', 'creator-generated-levels', 'creator-four-levels','creator-street-crossing', 'creator-approved-cafe'].includes(name) && !selectedJourney) { await stop(); await start(mode, ports); }
       const context = await browser.newContext(), page = await context.newPage(), started = Date.now();
       page.setDefaultTimeout(60000);
       const pageErrors = [];

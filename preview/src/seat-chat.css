@@ -1,0 +1,15 @@
+.seat-chat{display:grid;gap:.45rem;margin:.6rem 0;padding:.65rem;border:1px solid var(--hud-hairline);border-radius:12px;background:var(--hud-glass);color:var(--ink)}
+.seat-chat[hidden]{display:none}
+.seat-chat h3{margin:0;font-size:.9rem}
+.seat-chat p{margin:0;font-size:.8rem}
+.seat-chat button{min-height:44px;font:inherit}
+.seat-chat :focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.seat-chat-invite,.seat-chat-pending,.seat-chat-people{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem}
+.seat-chat-invite p,.seat-chat-pending p{flex:1 1 100%}
+.seat-chat-log{max-height:9rem;overflow-y:auto;padding:.35rem;border:1px solid var(--hud-hairline);border-radius:8px}
+.seat-chat-log[hidden],.seat-chat-form[hidden]{display:none}
+.seat-chat-log p{overflow-wrap:anywhere;margin:.15rem 0}
+.seat-chat-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.4rem}
+.seat-chat-form label,.seat-chat-leave{grid-column:1/-1;font-size:.8rem}
+.seat-chat-form input{min-width:0;min-height:44px;font:inherit;color:inherit;background:transparent;border:1px solid var(--hud-hairline);border-radius:8px;padding:0 .5rem}
+.seat-chat-status:empty{display:none}
