@@ -5,6 +5,7 @@ import { carriageContains } from './carriage-parking.js';
 
 export const CARRIAGE_WHEELS=[[-1.78,.70,-1.16],[-1.78,.70,1.16],[1.66,.82,-1.16],[1.66,.82,1.16]];
 const WHEEL_UP=new Vector3(0,1,0);
+const pilotSeatPosition=new Vector3(),pilotSeatRotation=new Euler();
 const orientation=p=>new Quaternion().setFromEuler(new Euler(p.pitch??0,p.yaw,p.roll??0,'YXZ'));
 
 export function carriageTyreClearances(state,groundAt,wheelTreads) {
@@ -101,6 +102,14 @@ export function stepCarriage(state,environment,input,delta) {
 export function hoverClear(state,environment) {
   const spec=VEHICLES[state.vehicle];if(!spec?.flies)return false;
   const fly=environment.canFly??((x,_height,z)=>environment.isFree(x,z)),c=Math.cos(state.yaw),s=Math.sin(state.yaw),hl=spec.length/2,hw=spec.width/2;
+  if((state.altitude??0)>.1){
+    // The shared pose names the pilot seat at ground + altitude. A hull sample .4 m
+    // above that datum can clear a post while the authority still blocks the pilot.
+    const seat=pilotSeatPosition.fromArray(spec.driverSeat).multiplyScalar(state.scale??1)
+      .applyEuler(pilotSeatRotation.set(state.pitch??0,state.yaw,state.roll??0,'YXZ'));
+    const x=state.position[0]+seat.x,z=state.position[2]+seat.z;
+    if(!fly(x,environment.groundAt(x,z)+state.altitude,z))return false;
+  }
   for(const [a,b] of [[0,0],[-hl,0],[hl,0],[0,-hw],[0,hw],[-hl*.7,-hw],[-hl*.7,hw],[hl*.7,-hw],[hl*.7,hw]]) {
     const x=state.position[0]+a*c+b*s,z=state.position[2]-a*s+b*c,ground=environment.groundAt(x,z);
     for(const height of [.4,spec.bodyHeight])if(!fly(x,ground+state.altitude+height,z))return false;
