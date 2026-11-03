@@ -21,7 +21,7 @@ import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
 import { groupAction } from './groups-api.js';
-import { loadHidden, screenCommand, viewFor } from './blocks.js';
+import { loadHidden, screenCommand, seatChatFor, viewFor } from './blocks.js';
 import { defaultContentFilter, screenText } from './content-filter.js';
 import { blockAction } from './blocks-api.js';
 import { profileAction } from './profile-api.js';
@@ -124,6 +124,8 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
   const staff = staffAccount({ moderators, admins: waitlistAdmins, isAdmin });
   const handleModerationReports = createModerationReportsRoute({ auth, moderators, isBanned: id => security.isBanned(id), isApproved: id => waitlist.isApproved(id),
     allow: id => security.allow('moderation_reports', id, 30, 60_000), reports: except => security.reports(undefined, except), usernameOf: id => waitlist.usernameOf?.(id) ?? null, isStaff: staff, responseHours, now });
+  // A viewer's frame: the shared view without who they have hidden, plus their own seat conversation.
+  const privateFrame = (view, hidden, userId) => { const shared = withVoice(viewFor(view.snapshot, hidden, userId)), seatChat = seatChatFor(view.seatChat?.[userId], hidden); return seatChat ? { ...shared, seatChat } : shared; };
   // Sends the committed view. The snapshot is serialized once per broadcast, not
   // once per connection; `only` limits it to one connection (a command's sender).
   function publish(view, only = null) {
@@ -153,7 +155,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
         continue;
       }
       if (active.connectionId !== connectionId) { ws.close(4009, 'This account joined in another tab.'); continue; }
-      send(ws, connection.hidden.size ? JSON.stringify(withVoice(viewFor(view.snapshot, connection.hidden, identity.userId))) : frame ??= JSON.stringify(withVoice(view.snapshot)), { snapshot: true });
+      send(ws, connection.hidden.size || view.seatChat?.[identity.userId] ? JSON.stringify(privateFrame(view, connection.hidden, identity.userId)) : frame ??= JSON.stringify(withVoice(view.snapshot)), { snapshot: true });
     }
   }
   const server = createServer(async (req, res) => {
@@ -451,7 +453,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             if (onMove && !isAdmin(identity.userId) && previous && previous.worldId !== worldId) Promise.resolve(onMove(identity.userId, previous.worldId)).catch(() => {});
           }
           if (ws.readyState !== WebSocket.OPEN) return false;
-          send(ws, { ...withVoice(viewFor(view.snapshot, connection.hidden, identity.userId)), selfId: identity.userId });
+          send(ws, { ...privateFrame(view, connection.hidden, identity.userId), selfId: identity.userId });
           return true;
         })().catch(error => {
           // Fixed classifications only: storage/provider errors can contain
@@ -508,14 +510,14 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
               const self = view?.connections.find(item => item.userId === identity.userId);
               if (self?.connectionId !== connectionId) { send(ws, { type: 'result', requestId, ok: false, message: 'Report could not be submitted.' }); return; }
               // security.report limits saved reports to three a minute per reporter.
-              const result = await submitReport({ reporterId: identity.userId, message: command, present: id => view.connections.some(item => item.userId === id), chat: view.snapshot?.chat,
+              const result = await submitReport({ reporterId: identity.userId, message: command, present: id => view.connections.some(item => item.userId === id), chat: [...view.snapshot?.chat ?? [], ...view.seatChat?.[identity.userId]?.session?.messages ?? []],
                 usernameOf: id => waitlist.usernameOf?.(id) ?? null, save: entry => security.report({ reporterId: entry.reporterId, targetId: entry.reportedId, reason: entry.reason, id: entry.id, content: entry.content, respondBy: entry.respondBy, at: entry.at }),
                 notifier: moderationNotifier, responseHours, now });
               send(ws, { type: 'result', requestId, ...result });
               return;
             }
             // Town chat is screened by the content filter (#292) at the gateway, where blocks are screened too.
-            if (command.type === 'chat' && typeof command.text === 'string') {
+            if ((command.type === 'chat' || command.type === 'seatChat' && command.action === 'send') && typeof command.text === 'string') {
               const text = screenText(contentFilter, 'chat', command.text);
               if (!text.ok) { send(ws, { type: 'result', requestId, ok: false, error: 'chat_filtered', message: text.message }); return; }
               command.text = text.text;

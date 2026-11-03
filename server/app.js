@@ -32,7 +32,7 @@ import { workplaceAction } from './workplace-api.js';
 import { securityHeaders } from './security-headers.js';
 import { createVoiceRoutes } from './voice-routes.js';
 import { createRideFlush } from './ride-flush.js';
-import { loadHidden, screenCommand, viewFor } from './blocks.js';
+import { loadHidden, screenCommand, seatChatFor, viewFor } from './blocks.js';
 import { defaultContentFilter, screenText } from './content-filter.js';
 import { blockAction } from './blocks-api.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
@@ -61,6 +61,8 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   const flushRides=()=>rides?rides.flush():Promise.resolve();
   const send = (ws,value,options) => sendFrame(ws,value,options);
   // Frames carry the world clock that anchors screenings (screenings.js).
+  // A viewer's frame: the shared view without who they have hidden, plus their own seat conversation.
+  const privateFrame=(view,hidden,userId)=>{const shared=viewFor(view,hidden,userId),seatChat=seatChatFor(world.seatChatView?.(userId),hidden);return seatChat?{...shared,seatChat}:shared;};
   const snapshot=()=>({...world.snapshot(),...(typeof world.serverTime==='function'?{serverTimeMs:world.serverTime()}:{}),...(regionSha256?{regionSha256}:{}),...(world.districtRevision?{districtRevision:world.districtRevision}:{}),...(voice?{voice:{available:voice.status().available}}:{})});
   const approvedIdentity = async (req,res) => {
     const identity = await auth.authenticate(req);
@@ -449,7 +451,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             if(message.type==='report') {
               // Every attempt counts toward the reporter's three a minute, refused ones included.
               if(!moderation || !reports(identity.userId))return send(ws,{type:'result',requestId:message.requestId,ok:false,message:'Report could not be submitted.'});
-              const result=await submitReport({reporterId:identity.userId,message,present:id=>connections.has(id),chat:world.snapshot().chat,usernameOf:id=>waitlist.usernameOf?.(id)??null,
+              const result=await submitReport({reporterId:identity.userId,message,present:id=>connections.has(id),chat:[...world.snapshot().chat,...(world.seatChatLines?.(identity.userId)??[])],usernameOf:id=>waitlist.usernameOf?.(id)??null,
                 save:async entry=>{await moderation.report(entry.reporterId,entry.reportedId,entry.reason,{id:entry.id,content:entry.content,respondBy:entry.respondBy,at:entry.at});return true;},notifier:moderationNotifier,responseHours,now});
               return send(ws,{type:'result',requestId:message.requestId,...result});
             }
@@ -461,7 +463,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             if(characterSelection?.hasPending(identity.userId)){const result={ok:false,error:'character_selection_pending'};equipObservation?.result(result);return send(ws,{type:'result',requestId,...result});}
             if(connections.get(identity.userId)!==connection || ws.readyState!==WebSocket.OPEN){equipObservation?.aborted();return;}
             // Town chat is screened by the content filter (#292) at the gateway, where blocks are screened too.
-            if(command.type==='chat' && typeof command.text==='string'){const text=screenText(contentFilter,'chat',command.text);if(!text.ok)return send(ws,{type:'result',requestId,ok:false,error:'chat_filtered',message:text.message});command.text=text.text;}
+            if((command.type==='chat'||command.type==='seatChat'&&command.action==='send') && typeof command.text==='string'){const text=screenText(contentFilter,'chat',command.text);if(!text.ok)return send(ws,{type:'result',requestId,ok:false,error:'chat_filtered',message:text.message});command.text=text.text;}
             const screened=await screenCommand(blocks,identity.userId,command,isAdmin);
             if(screened.refusal)return send(ws,{type:'result',requestId,...screened.refusal});
             const result=characterSelection&&isCharacterSelection(command)
@@ -477,7 +479,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
             if(result.ok && command.type==='uncycle')await flushRides();
             const earlyAck=result.ok && command.type==='travel' && requestId!==undefined;
             if(earlyAck)send(ws,{type:'result',requestId,...result});
-            if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,viewFor(snapshot(),connection.hidden,identity.userId));
+            if(result.ok && command.type!=='pose' && command.type!=='inventory')send(ws,privateFrame(snapshot(),connection.hidden,identity.userId));
             if(!earlyAck && (requestId!==undefined || !result.ok))send(ws,{type:'result',requestId,...result});
           } catch {equipObservation?.unavailable();send(ws,{type:'result',ok:false,message:'Invalid game command.'});}
           }).catch(()=>ws.close(1013,'Town temporarily unavailable.')).finally(()=>{if(!coalescible)connection.pending--;});
@@ -490,7 +492,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           if(stopped){world.leave(identity.userId);characterSelection?.forget(identity.userId);void flushRides();return;}
           const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);characterSelection?.forget(identity.userId);void flushRides();if(voice)void voice.revokeUser(identity.userId).catch(()=>{});},departureGraceMs);timer.unref();departures.set(identity.userId,timer);
         });
-        send(ws,{...viewFor(snapshot(),connection.hidden,identity.userId),selfId:identity.userId});
+        send(ws,{...privateFrame(snapshot(),connection.hidden,identity.userId),selfId:identity.userId});
         })().catch(()=>{if(joinedHere)world.leave(identity.userId);if(presence)void presence.leave(identity.userId,token).catch(()=>{});ws.close(1013,'Town temporarily unavailable.');});
       });
     }catch{return reject(401);}
@@ -504,7 +506,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
     const view=snapshot(),frame=JSON.stringify(view);
     for(const {ws,identity,hidden} of connections.values()) {
       if(identity.expiresAt<=time)ws.close(4001,'Session expired. Reconnecting securely.');
-      else send(ws,hidden.size?JSON.stringify(viewFor(view,hidden,identity.userId)):frame,{snapshot:true});
+      else {const seatChat=world.seatChatView?.(identity.userId);send(ws,hidden.size||seatChat?JSON.stringify(privateFrame(view,hidden,identity.userId)):frame,{snapshot:true});}
     }
   },50);loop.unref();
   // A busy renderer can delay browser pongs; allow a full 30 seconds before

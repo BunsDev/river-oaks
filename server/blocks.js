@@ -37,6 +37,16 @@ export function viewFor(snapshot, hidden, viewerId = null) {
   return view;
 }
 
+// What one account reads of its private seat conversations (#825). The world ends them on a
+// block; this keeps a stale hidden list or a late frame from showing one in the meantime.
+export function seatChatFor(view, hidden) {
+  if (!view || !hidden?.size) return view ?? null;
+  if (view.session && hidden.has(view.session.peer.id)) view = { ...view, session: null };
+  if (view.outgoing && hidden.has(view.outgoing.to.id)) view = { ...view, outgoing: null };
+  if (view.invites.some(item => hidden.has(item.from.id))) view = { ...view, invites: view.invites.filter(item => !hidden.has(item.from.id)) };
+  return view.session || view.outgoing || view.invites.length ? view : null;
+}
+
 // World commands aimed at a blocked resident get the world's own answer for a
 // resident who is not there, so nothing reveals the block. Greetings, darts and axe
 // invitations and travel go on toward a resident who is never present, and the world
@@ -55,7 +65,8 @@ export async function screenCommand(blocks, userId, command, isAdmin) {
   if (blocks && command?.type === 'ribbonwing' && command.action === 'board' && typeof command.pilotId === 'string')
     return await blocks.between(userId, command.pilotId) ? { command: { ...command, pilotId: ABSENT_RESIDENT } } : { command };
   if (!blocks || typeof command?.peerId !== 'string') return { command };
-  const aimed = command.type === 'travel' || ['interaction', 'darts', 'axes', 'ribbonwing'].includes(command.type) && command.action === 'invite';
+  const aimed = command.type === 'travel' || ['interaction', 'darts', 'axes', 'ribbonwing'].includes(command.type) && command.action === 'invite'
+    || command.type === 'seatChat' && ['invite', 'accept'].includes(command.action);
   const grant = command.type === 'campus' && command.action === 'grant';
   const refusal = invitation(command);
   if (!aimed && !grant && !(refusal && isAdmin(userId))) return { command };
