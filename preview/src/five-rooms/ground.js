@@ -10,6 +10,9 @@ import * as THREE from 'three';
 // each split on a grid no coarser than PAVING_STEP, and every vertex is set on `groundAt` plus a
 // small lift, so the paving neither floats over a slope nor dips under it.
 export const PAVING_STEP = 0.5, PAVING_LIFT = 0.008;
+// An 8 mm lift alone fights the street from a distance. Pull the paving ahead of the street's
+// own layers (-1, -1), and behind the furniture that lies flush on the ground (-3, -3).
+const PAVING_OFFSET = Object.freeze({ polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 
 const area = ring => Math.abs(ring.reduce((sum, p, i) => { const q = ring[(i + 1) % ring.length]; return sum + p[0] * q[2] - q[0] * p[2]; }, 0)) / 2;
 const clip = (ring, side) => {
@@ -93,7 +96,7 @@ export function fiveRoomsGroundPieces(plan, { groundAt, step = PAVING_STEP, lift
 }
 
 // One mesh, one material: every apron and court in a single draw call.
-export function buildFiveRoomsGround(plan, { groundAt, supportTriangles, material = new THREE.MeshStandardMaterial({ color: '#c9c0b1', roughness: 0.9 }) } = {}) {
+export function buildFiveRoomsGround(plan, { groundAt, supportTriangles, material = new THREE.MeshStandardMaterial({ color: '#c9c0b1', roughness: 0.9, ...PAVING_OFFSET }) } = {}) {
   const group = new THREE.Group(); group.name = 'Five Rooms paving';
   const pieces = fiveRoomsGroundPieces(plan, { groundAt, supportTriangles });
   const positions = pieces.flatMap(piece => piece.triangles.flat(2));
