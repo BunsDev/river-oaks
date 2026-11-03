@@ -23,6 +23,11 @@ import { serverNow } from './server-clock.js';
 // of view skip its update and every pass, like a peer beyond the distance gate.
 // Audits and journeys count players apart from the town's own figures (rivals, police, residents).
 export const figureKind=id=>/^(rival|police|resident):/.test(id)?id.slice(0,id.indexOf(':')):'player';
+// Beyond this distance from the camera a resident figure (#640) stays drawn but animates at a
+// quarter rate and casts no sun shadow, as an out-of-view figure already does. Players, rivals
+// and police keep full detail at any distance. Presentation only (v0.3.0 frame budget).
+export const RESIDENT_DETAIL_M=30;
+function setFigureShadow(object,on){object.traverse(mesh=>{if(!mesh.isMesh)return;mesh.userData.figureCastShadow??=mesh.castShadow;mesh.castShadow=on&&mesh.userData.figureCastShadow;});}
 export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=>true,snapInitialHeading=false,shadowDirection=null,localCraft=()=>null,reducedMotion=Boolean(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches)}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
   // Who is talking on shared voice right now: a ring on the nameplate and the
@@ -75,7 +80,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       for(const mesh of culled)mesh.frustumCulled=culling;
       const depth=assignShadowDepth(avatar.object);if(!shadowDepth)setShadowDepth(depth,false);
       entry.placeholder?.dispose();entry.placeholder=null;entry.colors?.dispose();entry.outfit?.dispose();entry.vehicle?.dispose();entry.avatar?.dispose();entry.holder.clear();
-      entry.avatar=avatar;entry.outfit=outfit;entry.vehicle=vehicle;entry.culled=culled;entry.depth=depth;entry.height=height;entry.holder.add(avatar.object,vehicle.object);
+      entry.avatar=avatar;entry.distant=undefined;entry.outfit=outfit;entry.vehicle=vehicle;entry.culled=culled;entry.depth=depth;entry.height=height;entry.holder.add(avatar.object,vehicle.object);
       if(entry.road)entry.holder.add(entry.road.object);
       entry.colors=createCharacterMaterials(avatar.object);entry.definition=selectedCharacterFor(entry.target);entry.definitionKey=JSON.stringify(entry.definition);entry.colors.apply(entry.definition);
       entry.loadedAppearance=appearance;entry.loadedLook=look;entry.pendingLook=null;entry.failures=0;entry.retryAt=0;
@@ -180,7 +185,9 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
           figureHidden=!figureInView(frustum,figureCenter,FIGURE_SPHERE.radius*entry.height,holder.position.y,light);
         }
         holder.visible=!gated&&!figureHidden;
-        entry.hiddenFrames=figureHidden?(entry.hiddenFrames??0)+1:0;
+        const distant=!gated&&figureKind(target.id)==='resident'&&holder.position.distanceTo(camera.position)>=RESIDENT_DETAIL_M;
+        if(avatar&&entry.distant!==distant){setFigureShadow(avatar.object,!distant);entry.distant=distant;}
+        entry.hiddenFrames=figureHidden||distant?(entry.hiddenFrames??0)+1:0;
         entry.riderSeated=false;
         if(avatar&&gated)avatar.suspend();
         if(avatar&&!gated&&entry.hiddenFrames%4===0){
