@@ -15,7 +15,7 @@ import { createRedisLandmarks } from '../landmarks.js';
 import { SEAT_CHAT_RULES, createSeatChat } from '../seat-chat.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
-import { benchSeats } from '../../preview/src/world-interactions.js';
+import { SIT_REACH, benchSeats } from '../../preview/src/world-interactions.js';
 import { seatClusters } from '../../preview/src/seat-clusters.js';
 import { WORLD_PROTOCOL_VERSION } from '../../preview/src/world-contract.js';
 
@@ -91,6 +91,19 @@ test('clusters are real seats on walkable ground inside two Five Rooms venues, f
     assert.ok(reached, `${cluster.id}: walkable from its entrance`);
   }
   assert.deepEqual(seatClusters({ ...data, roads: [] }), [], 'a creator world without the District lane has none');
+});
+
+test("a cluster never adds a seat to a shop's arrival, door or doorstep", () => {
+  // Found by contextual-first-visit: a seat within reach of the Hermès arrival added Sit to the
+  // phone HUD's More, which the touch stick zone covers.
+  for (const cluster of clusters) {
+    const store = data.stores.find(item => item.id === environment.roomAt(cluster.center[0], -cluster.center[1])?.storeId);
+    assert.ok(store, `${cluster.id} is in a mapped shop`);
+    const door = [store.facade[0] - store.outward[0] * 0.8, store.facade[1] - store.outward[1] * 0.8];
+    for (const mark of [store.position, store.facade, store.visit, door]) for (const seat of cluster.seats) {
+      assert.ok(Math.hypot(seat.x - mark[0], seat.north - mark[1]) > SIT_REACH + 1, `${seat.id} is out of reach of ${store.name}'s ${mark}`);
+    }
+  }
 });
 
 test('sitting shares nothing: no view, no field and no flag says anyone is open to talk', () => {
