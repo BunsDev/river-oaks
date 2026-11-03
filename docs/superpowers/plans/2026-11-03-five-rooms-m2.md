@@ -62,7 +62,8 @@ Slice 3 is PR #879 (`feat/seat-chat-825-20261103`). Slice 4 is PR #880 (`feat/se
 | Journey fixes `bde56f83`, `db3f250c`, `35f1bf81` | | Route from the town's position once the walker has caught up. Prefer cells with 0.6 m clearance, so the walk stops grazing the serving counter's corner. Grow a press that moved nothing. On a stall, report the strides, focus, corrections and a backward step. `RIVER_OAKS_FINISH=classic` runs it under `?finish=classic`. |
 | `seat-chat-shared`, Chromium, Pink (default) | #880 `db3f250c` tree | Passed, 23 checks, 137 s. The witness got 614 frames, none with the words or a `seatChat` field. Panel text worst case 10.93:1 over a white or black world. |
 | `seat-chat-shared`, Chromium, `RIVER_OAKS_FINISH=classic` | #880 `db3f250c` tree | Passed, 26 checks (three confirm the page drew Classic), 134 s. |
-| `seat-chat-shared`, WebKit | #880 `db3f250c` tree | **Fails, reproducibly** (8 runs, 09:04Z to 09:54Z). Alice stops at north -1219.17, on the walk round the serving counter's south end, about 3 m from the seats. The town sent no correction, keys still work (a backward step moved 0.8 m), the page has focus and offers Sit, and the static walking map is free there. Chromium walks the same route. The cause is not found, so this is not claimed as an engine difference. Screenshot and logs: `.runtime/seat-chat/stall-alice-route.png`, `i-` to `o-webkit.log` in the slice 4 worktree. |
+| `seat-chat-shared`, WebKit | #880 `db3f250c` tree | Failed 9 of 9 runs (09:04Z to 12:01Z): alice stopped at north -1219.17 on the walk round the serving counter. **Cause found: an engine difference in room planning, not in seat chat.** An in-page probe showed Chromium and WebKit building different walking maps from the same data. `planStoreRooms` chooses between equal-size bay spans by area, and V8's `Math.hypot` (the Node town, Chromium) is one unit in the last place off the correctly rounded value JavaScriptCore returns. So Safari planned Amorino one bay over (`aMin -8.8253` against `-5.5677`), and IPIC's wall crossed the corridor. 6 of 30 shops differ. Fixed separately in #883 (`fb34d690`) with a V8-identical `stableHypot`; the server's plan is unchanged byte for byte. |
+| `seat-chat-shared`, WebKit, with #883 on #880 `9168c019` (snapshot), `development-seats` | | **Passed**, 23 checks, 138 s. Chromium on the same tree passed, 23 checks, 148 s. |
 | `pnpm run verify full` from a git-archive snapshot of `db3f250c` (commit `7f079165`), isolated Redis on port 16731 | #880 `db3f250c` | Passed, 19 stages, 10:07Z to 10:57Z, start load 3.2, receipt not dirty. Tooling 307/307. Node 5265 (5234 pass, 1 skip). Server with Redis 1467/1467. 132 (127 pass, 5 skip). Desktop 2/2. Experience 976 s, commons 243 s, shared 1332 s (includes `seat-chat-shared`, passed), IPIC screening 91 s. The first attempt stopped at `server-redis-tests` because `REDIS_URL` was unset; log kept. |
 | `seat-chat-shared` after `35f1bf81` | #880 `35f1bf81` | Passed on Chromium (Pink). |
 | Hosted Verify | #880 `35f1bf81` | Cancelled at the 20-min cut (run 41623952304). `seat-chat-shared` passed on the hosted runner for the first time but took 10 min 55 s, so the `development` shard ran out during `crime-residents`. |
@@ -71,6 +72,8 @@ Slice 3 is PR #879 (`feat/seat-chat-825-20261103`). Slice 4 is PR #880 (`feat/se
 
 ## Findings for others
 
+- Room planning differed between engines (V8 `Math.hypot`), so Safari had different walls in six shops. Fixed in #883.
+
 - On a phone, a seat within reach adds "More actions" to the walking HUD, and the summary sits under `.touch-stick-zone`, so a tap cannot reach it. This predates seat chat (any seat does it). Not fixed here.
 - `PINK_RULE.usable` does not read a material's `role: 'usable'`, so merged shell glow counts as a violation (already filed by `river-oaks-38`).
 
@@ -78,8 +81,9 @@ Slice 3 is PR #879 (`feat/seat-chat-825-20261103`). Slice 4 is PR #880 (`feat/se
 
 - No human accessibility or device proof. The journey drives real keyboard events and reads roles and names, which is not the same thing.
 - Groups are not built: a conversation is two people.
-- WebKit: the seat chat journey stalls on the walk to the Counter's seats (see Checks). The seat chat itself was never reached in WebKit, so it is unproven there.
+- WebKit passes only with #883 applied. Until #883 lands, Safari players see six shops laid out differently from the server.
+- Since `9168c019` the journey lives in the `development-seats` mode only. `RIVER_OAKS_SHARED_JOURNEY=seat-chat-shared` with mode `development` runs nothing and exits 0.
 
 ## Next step
 
-#879 and #880 are ready for review. Do not land them until Val accepts the packet and says land. The WebKit stall stays open.
+#879, #880 and #883 are ready for review. Do not land #879/#880 until Val accepts the packet and says land; #883 needs a landing decision too.
