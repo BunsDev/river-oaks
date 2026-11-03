@@ -69,6 +69,7 @@ Slice 3 is PR #879 (`feat/seat-chat-825-20261103`). Slice 4 is PR #880 (`feat/se
 | Hosted Verify | #880 `35f1bf81` | Cancelled at the 20-min cut (run 41623952304). `seat-chat-shared` passed on the hosted runner for the first time but took 10 min 55 s, so the `development` shard ran out during `crime-residents`. |
 | Own shard, `9168c019` | #880 | A `development-seats` mode runs `seat-chat-shared` alone with the `development` environment, as a new `preview shared (development-seats)` job. No timeout changed. `verify full` still runs every mode. `node preview/e2e/shared-runner.js development-seats` passed locally (11:25Z), and `pnpm run test:agent` 307/307. |
 | Hosted Verify | #880 `9168c019` | Passed, run 41627394179, all 28 check runs. `preview shared (development-seats)` 6 min 19 s; `development` back to 7 min 8 s. |
+| `five-rooms` inside `pnpm run verify full` (#842) | #884 `f6a5abb0` | New stage `experience-five-rooms`, default 10-min deadline, no timeout changed. `verify full` from a snapshot with isolated Redis passed 20/20 (`experience-five-rooms` 351 s). Hosted 34/34. Landed via `pnpm run land 884` as `f7d22cff` (13:56:40Z); evidence on #842. |
 
 ## Findings for others
 
@@ -86,4 +87,4 @@ Slice 3 is PR #879 (`feat/seat-chat-825-20261103`). Slice 4 is PR #880 (`feat/se
 
 ## Next step
 
-#879, #880 and #883 are ready for review. Do not land #879/#880 until Val accepts the packet and says land; #883 needs a landing decision too.
+#884 is merged (`f7d22cff`). Val's acceptance page for slices 3–4: https://claude.ai/artifact/4hsAQdu6gWAzYMeXpPJvBx (private until shared). #879, #880 and #883 are ready for review. Do not land #879/#880 until Val accepts the packet and says land; #883 needs a landing decision too.
