@@ -125,8 +125,8 @@ async page => {
   for(let i=0;i<3;i++){
     await page.waitForFunction(()=>Math.abs(window.__riverCarriage().placement?.speed??0)<0.02,null,{timeout:60000});
     const settled=await clearHoverSpot(page,{focus:()=>host(page).focus(),label:'Jevica lands with alice aboard (settled)'});
-    const moved=Math.hypot(settled.east-landingSpot.east,settled.north-landingSpot.north);landingSpot=settled;
-    if(moved<.05)break;
+    const moved=Math.hypot(settled.east-landingSpot.east,settled.north-landingSpot.north),turned=Math.abs(Math.atan2(Math.sin(settled.yaw-landingSpot.yaw),Math.cos(settled.yaw-landingSpot.yaw)));landingSpot=settled;
+    if(moved<.05&&turned<.01)break;
   }
   await host(page).focus();await page.keyboard.press('KeyG');
   // The descent advances at most 0.08 s per drawn frame (carriage-motion.js stepHoverLift), so a
@@ -137,7 +137,7 @@ async page => {
     const started=Date.now();let low=Infinity,lowAt=Date.now(),now=await altitude();
     while(!(now!==null&&now<=.1)){
       if(now!==null&&now<low-.05){low=now;lowAt=Date.now();}
-      if(!(Date.now()-lowAt<15000&&Date.now()-started<150000))throw new Error(`Jevica's craft stopped short of landing with alice aboard (altitude ${now?.toFixed(2)} m, lowest ${low.toFixed(2)} m, at ${JSON.stringify(await page.evaluate(()=>window.__riverCarriage().placement?.position?.map(v=>+v.toFixed(2))??null))}, G pressed at ${JSON.stringify(landingSpot)}, ${((Date.now()-started)/1000).toFixed(0)} s after G)`);
+      if(!(Date.now()-lowAt<15000&&Date.now()-started<150000))throw new Error(`Jevica's craft stopped short of landing with alice aboard (altitude ${now?.toFixed(2)} m, lowest ${low.toFixed(2)} m, at ${JSON.stringify(await page.evaluate(()=>window.__riverCarriage().placement?.position?.map(v=>+v.toFixed(2))??null))}, yaw ${await page.evaluate(()=>window.__riverCarriage().placement?.yaw??null)}, G pressed at ${JSON.stringify(landingSpot)}, ${((Date.now()-started)/1000).toFixed(0)} s after G)`);
       await page.waitForTimeout(500);now=await altitude();
     }
     check(true,`Jevica's craft lands with alice aboard (${((Date.now()-started)/1000).toFixed(0)} s after G)`);
