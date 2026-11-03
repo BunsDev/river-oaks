@@ -82,6 +82,7 @@ async page => {
   check(noFlag.finish.fiveRooms && typeof noFlag.finish.fiveRooms === 'object', `finish.fiveRooms is reported by the page (#841): ${JSON.stringify(noFlag.finish.fiveRooms ?? null)}`);
   const fiveRooms = compactFinish(noFlag.finish.fiveRooms);
   check(!fiveRooms.refused, `The five rooms are built and not refused (#839/#841): ${JSON.stringify(fiveRooms)}`);
+  check(noFlag.finish.fiveRoomsLandscape?.version === 'five-rooms-v2' && noFlag.finish.fiveRoomsLandscape.stats?.paving === 5, `The live v2 landscape draws five entrance aprons (#840/#841): ${JSON.stringify(noFlag.finish.fiveRoomsLandscape)}`);
 
   // 2. Graphics tiers and the spawn frame: sharp is the budget frame; smooth must also apply.
   await pinGraphics(page, 'sharp');
@@ -102,6 +103,10 @@ async page => {
   await pinGraphics(classic.tab, 'sharp');
   spawn.classic = await spawnFrame(classic.tab);
   const classicRibbon = classicStream.finish.ribbon ?? null, classicFiveRooms = compactFinish(classicStream.finish.fiveRooms ?? null);
+  check(classicRibbon && !classicRibbon.refused && classicRibbon.finish === 'classic' && classicRibbon.stats?.modules > 0, `Classic draws the admitted Ribbon with Classic materials (#841): ${JSON.stringify(classicRibbon)}`);
+  check(classicFiveRooms && !classicFiveRooms.refused && classicFiveRooms.finish === 'classic', `Classic draws the admitted five shells with Classic materials (#841): ${JSON.stringify(classicFiveRooms)}`);
+  for (const name of ['Ribbon', 'Five Rooms shells', 'Five Rooms landscape']) check(classicStream.inventory.some(group => group.name === name && group.meshes > 0), `Classic scene contains visible ${name} meshes (#841)`);
+  check(classicStream.finish.fiveRoomsLandscape?.stats?.paving === 5, 'Classic keeps all five entrance aprons (#840/#841)');
   check(classic.tabErrors.length === 0, `Classic page has no errors: ${classic.tabErrors.slice(0, 3).join(' | ')}`);
   await classic.context.close();
 
