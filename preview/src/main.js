@@ -120,6 +120,8 @@ import { VEHICLES } from './vehicle-config.js';
 import { createSharedBuildLayer } from './shared-build-layer.js';
 import { createSeatAndWater } from './seat-and-water.js';
 import { createSharedSeatingControls } from './shared-seating-ui.js';
+import { createSeatChatPanel } from './seat-chat-ui.js';
+import { buildSeatFurniture } from './five-rooms/seat-furniture.js';
 import { createSharedBuildControls } from './shared-build-ui.js';
 import { builderTarget, evaluatePlacement, poseFeet } from './builder-mode.js';
 import { buildKind, buildGeometry, buildRoads as buildSiteRoads } from './shared-build.js';
@@ -223,9 +225,9 @@ let worldRegionSha256 = null;
 let worldDistrictRevision;
 let landmarkAccountId = null;
 let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
-let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater, ribbonwingSeat, ribbonwingSounds;
+let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatChatPanel, seatAndWater, ribbonwingSeat, ribbonwingSounds;
 const craftWorld = new THREE.Vector3();
-let ribbonGraybox = null, fiveRoomsShells = null, fiveRoomsLandscape = null; // same admitted geometry for every appearance (#841)
+let ribbonGraybox = null, fiveRoomsShells = null, fiveRoomsLandscape = null, seatFurniture = null; // same admitted geometry for every appearance (#841)
 let plazaSalon = null, cityBikeRacks = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
@@ -722,6 +724,7 @@ function startMultiplayer() {
     getPose:()=>walking?.getPose(),getEnvironment:()=>walking?.environment,
     request:message=>multiplayer.command(message),onConfirmed:player=>walking.applyServerPose(player),
     getBenches:()=>[...(seatAndWater?.benches()??[]),...suiteSeatsHere()],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
+  seatChatPanel=createSeatChatPanel({host:document.querySelector('.walking-console'),getTown:()=>multiplayer,getWorld:()=>world,focusScene:()=>document.querySelector('#canvas-host')?.focus()});
   ribbonwingSeat = createRibbonwingSeat({ host, viewport: document.querySelector('#viewport'), walking, selfId: () => multiplayer?.identity?.id ?? null,
     snapshot: () => multiplayer?.snapshot, command: body => multiplayer?.connected ? multiplayer.ribbonwing(body) : Promise.resolve({ ok: false, message: 'Reconnect first.' }),
     craftOf: id => remotePlayers?.craftOf(id) ?? null });
@@ -774,7 +777,7 @@ function populateWorld(data) {
     worldGroup.remove(interiorsLayer);
     ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     plazaSalon?.userData.rack?.dispose(); cityBikeRacks?.userData.rack?.dispose();
-    ribbonGraybox?.userData.dispose?.(); fiveRoomsShells?.userData.dispose?.(); ribbonGraybox = null; fiveRoomsShells = null; fiveRoomsLandscape = null;
+    seatFurniture?.userData.dispose?.(); seatFurniture = null; ribbonGraybox?.userData.dispose?.(); fiveRoomsShells?.userData.dispose?.(); ribbonGraybox = null; fiveRoomsShells = null; fiveRoomsLandscape = null;
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
@@ -849,6 +852,9 @@ function populateWorld(data) {
   }
   ribbonGraybox = fiveRoomsApply ? buildRibbon({ world: data, groundAt: surfaceAt, finish: cityKitFinish }) : null;
   if (ribbonGraybox) worldGroup.add(ribbonGraybox);
+  // The seat clusters' benches, where the town lets people sit in every finish (#825).
+  seatFurniture = buildSeatFurniture(data, { finish: cityKitFinish, groundAt: (x, north) => surfaceAt(x, -north) });
+  if (seatFurniture) worldGroup.add(seatFurniture);
   // The bays' mapped store rooms stay until decision 5 (Val, 2026-11-01), so the shells keep their
   // frontages and leave the room interiors to them (their floors and walls would fight for depth).
   fiveRoomsShells = fiveRoomsApply ? buildFiveRoomsShells(fiveRoomsContract, { finish: cityKitFinish, groundAt: surfaceAt, interiors: false }) : null;
@@ -967,7 +973,7 @@ function updateAtmosphere() {
   const atmosphere = atmosphereFor(hour, weather);
   currentAtmosphere = atmosphere;
   layers.buildings?.getObjectByName('The Gardens (garden campus)')?.userData.relight?.(atmosphere);
-  ribbonGraybox?.userData.relight?.(atmosphere); fiveRoomsShells?.userData.relight?.(atmosphere);
+  ribbonGraybox?.userData.relight?.(atmosphere); fiveRoomsShells?.userData.relight?.(atmosphere); seatFurniture?.userData.relight?.(atmosphere);
   sunOffset.set(Math.cos(atmosphere.angle) * 4500, Math.max(300, Math.sin(atmosphere.angle) * 5500), 1900);
   sun.position.copy(sun.target.position).add(sunOffset);
   sun.intensity = atmosphere.sunIntensity;
@@ -1165,6 +1171,7 @@ function render(now) {
   multiplayer?.update(now);
   officeUI?.prepare(now);
   seatingControls?.update(now);
+  seatChatPanel?.update(now);
   ipicScreening?.applyCamera(camera);
   if (auditCamera) {
     camera.position.copy(auditCamera.position); camera.lookAt(auditCamera.target);
