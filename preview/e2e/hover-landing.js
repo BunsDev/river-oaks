@@ -6,8 +6,10 @@
 // to flight: the journeys land and lift clear, as a player would.
 //
 // The spot under the craft is checked with the rule the page uses (hoverClear on walking.js's
-// environment for the served district) at every height of the descent, there and a metre ahead
-// (climbClear), so the craft does not stop on the edge of a margin. While it is blocked,
+// environment for the served district) through the whole descent, there and a metre ahead, and
+// across a band of headings (climbClear), so the craft does not stop on the edge of a margin: a
+// long hull beside a wall can be clear at one heading and stopped 3.6 m up a few degrees on, and
+// on a CPU runner it can still be turning when G is pressed. While it is blocked,
 // clearHoverSpot picks the nearest clear spot, turns the craft in place to face it and drives
 // there, polling the placement throughout (the first turn learns which way KeyA turns). Call it
 // aloft before pressing G; on the ground, reverseClear backs a craft out before Space.
@@ -69,7 +71,7 @@ export async function clearHoverSpot(page, { focus, tries = 8, timeout = 10000, 
     await holdUntil(['KeyW'], now => (-Math.cos(now.yaw) * (target[0] - now.position[0]) + Math.sin(now.yaw) * (target[2] - now.position[2])) < 0.15);
     state = await craft();
   }
-  if (climbClear(state, environment)) return { east: state.position[0], north: -state.position[2] };
+  if (climbClear(state, environment)) return { east: state.position[0], north: -state.position[2], yaw: state.yaw };
   throw new Error(`${label}: no clear spot for the craft after ${tries} tries (at ${state?.position[0].toFixed(2)}, ${(-state?.position[2]).toFixed(2)}; target ${target ? `${target[0].toFixed(2)}, ${(-target[2]).toFixed(2)}` : 'none'})`);
 }
 
@@ -78,9 +80,10 @@ export async function clearHoverSpot(page, { focus, tries = 8, timeout = 10000, 
 // whole climb (0-6 m) is clear here and a metre ahead, not on the margin's edge, where the town's
 // own check could still refuse the lift. Closed loop on the clearance, so a slow runner only
 // takes longer.
-function climbClear(state, environment) {
+const CLIMB_ALTITUDES = Array.from({ length: 25 }, (_, i) => i / 4), HEADING_MARGINS = [-0.3, -0.15, 0, 0.15, 0.3];
+export function climbClear(state, environment) {
   const ahead = [-Math.cos(state.yaw), Math.sin(state.yaw)];
-  return [0, 1].every(offset => [0, 1, 2, 3, 4, 5, 6].every(altitude => hoverClear({ ...state, altitude, position: [state.position[0] + ahead[0] * offset, state.position[1], state.position[2] + ahead[1] * offset] }, environment)));
+  return HEADING_MARGINS.every(margin => [0, 1].every(offset => CLIMB_ALTITUDES.every(altitude => hoverClear({ ...state, yaw: state.yaw + margin, altitude, position: [state.position[0] + ahead[0] * offset, state.position[1], state.position[2] + ahead[1] * offset] }, environment))));
 }
 export async function reverseClear(page, { focus, timeout = 15000, label = 'lifting off' }) {
   const environment = await environmentFor(page);
