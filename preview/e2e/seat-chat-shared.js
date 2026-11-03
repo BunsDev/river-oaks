@@ -38,13 +38,33 @@ async page => {
     }
     throw new Error(`could not walk to ${label}: ${JSON.stringify(await me(tab))}`);
   };
-  // Out in the lane at the Counter's door, through it, around the serving counter to the seat.
-  const DOOR = [-2756.6, -1216.4], ROUTE = [[-2755.6, -1215.4], [-2753.5, -1215.4], [-2753.5, -1219.7], [-2749.2, -1219.7]];
+  // Out in the lane at the Counter's door, then a walk the walking rules allow: a search over free
+  // ground, kept only where it turns, so the route follows wherever the cluster stands.
+  const { createWalkingEnvironment } = await import('../src/walking.js');
+  const environment = createWalkingEnvironment(await (await fetch('http://127.0.0.1:5173/data/district.json')).json());
+  const routeTo = (from, to, step = 0.25) => {
+    const key = (a, b) => `${a},${b}`, came = new Map([[key(0, 0), null]]), queue = [[0, 0]];
+    while (queue.length && came.size < 60000) {
+      const [a, b] = queue.shift();
+      if (Math.hypot(from[0] + a * step - to[0], from[1] + b * step - to[1]) < step) {
+        const cells = [];
+        for (let at = key(a, b); at; at = came.get(at)) cells.unshift(at.split(',').map(Number));
+        const turns = cells.filter((cell, i) => i === cells.length - 1 || (i > 0 && (cell[0] - cells[i - 1][0] !== cells[i + 1][0] - cell[0] || cell[1] - cells[i - 1][1] !== cells[i + 1][1] - cell[1])));
+        return [...turns.map(([i, j]) => [from[0] + i * step, from[1] + j * step]), to];
+      }
+      for (const [da, db] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const na = a + da, nb = b + db;
+        if (came.has(key(na, nb)) || !environment.isFree(from[0] + na * step, -(from[1] + nb * step))) continue;
+        came.set(key(na, nb), key(a, b));queue.push([na, nb]);
+      }
+    }
+    throw new Error(`no walk from ${from} to ${to}`);
+  };
+  const DOOR = [-2756.6, -1216.4];
   const sit = async (tab, seat, name) => {
     await tab.evaluate(([x, north]) => window.__riverSeatAndWater().goTo(x, north), DOOR);
     await tab.waitForFunction(([x, north]) => { const m = window.__riverMultiplayer(), p = m.snapshot.players.find(q => q.id === m.selfId);return Math.hypot(p.position[0] - x, p.position[1] - north) < 3; }, DOOR);
-    for (const point of ROUTE) await walkTo(tab, point, `${name} route`);
-    await walkTo(tab, seat.approach, `${name} seat`);
+    for (const point of routeTo(DOOR, seat.approach)) await walkTo(tab, point, `${name} route`);
     await tab.locator('#canvas-host').focus();await tab.keyboard.press('KeyZ');
     await tab.waitForFunction(buildId => { const m = window.__riverMultiplayer();return m.snapshot.players.find(p => p.id === m.selfId)?.sitting?.buildId === buildId; }, seat.buildId, { timeout: 15000 });
   };
