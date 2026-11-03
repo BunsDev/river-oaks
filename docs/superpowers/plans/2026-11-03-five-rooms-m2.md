@@ -55,8 +55,19 @@ Slice 3 is PR #879 (`feat/seat-chat-825-20261103`). Slice 4 is PR #880 (`feat/se
 | `depth-layers`, `RIVER_OAKS_FINISH=pink-jet-age` | #880 `1a1ce34e` | Passed, 0 new pairs. |
 | Bench captures: 2 cameras x 2 clusters x noon/19:00 x 2 finishes | #880 `1a1ce34e` | 16 views, 1158-2494 calls. No pink hit on the benches. Night hits are main's: the merged `Five Rooms glow-usable` door jambs at the Counter door (-2755.3, -1217.7) and Shade Garden (-2758.1, -1311.3), which the audit cannot name, and a pink sign in the Counter's boutique interior (-2746.2, -1217.7). Both classes are already filed by `river-oaks-38` on #839/#835 (#842 comment 6597388170). |
 | `pnpm run verify` | #880 `1a1ce34e` | Passed: tooling 307/307; node 5265 (5234 pass, 1 skip, 30 todo); server 1425 (1139 pass, 286 skip); 132 (127 pass, 5 skip); 0 fail. |
-| Hosted Verify | #880 `1a1ce34e` | Failed `preview shared (development)`: the journey routed from the Counter door while the CI player had stopped up to 3 m short, so a leg was blocked. Fixed by routing from where the player is. |
-| WebKit, `?finish=classic`, `pnpm run verify full` | | Pending. |
+| Hosted Verify | #880 `1a1ce34e` | Failed `preview shared (development)`: the journey routed from the Counter door while the CI player had stopped up to 3 m short, so a leg was blocked. |
+| Hosted Verify | #879 `cb6aed14` | Passed, run 41607704283. |
+| Hosted Verify | #880 `53a17811` | Failed `preview shared (development)`: the route started from the HUD's first value, the spawn 77 m away, before the walker caught up with the town. |
+| Hosted Verify | #880 `db3f250c` | Failed `preview shared (development)` at "The sender reads their own line as You": the walk now works, but the check read alice's log right after bob's copy arrived. Each account's view rides its own frame. Fixed in `35f1bf81` by waiting up to 10 s for the line. |
+| Journey fixes `bde56f83`, `db3f250c`, `35f1bf81` | | Route from the town's position once the walker has caught up. Prefer cells with 0.6 m clearance, so the walk stops grazing the serving counter's corner. Grow a press that moved nothing. On a stall, report the strides, focus, corrections and a backward step. `RIVER_OAKS_FINISH=classic` runs it under `?finish=classic`. |
+| `seat-chat-shared`, Chromium, Pink (default) | #880 `db3f250c` tree | Passed, 23 checks, 137 s. The witness got 614 frames, none with the words or a `seatChat` field. Panel text worst case 10.93:1 over a white or black world. |
+| `seat-chat-shared`, Chromium, `RIVER_OAKS_FINISH=classic` | #880 `db3f250c` tree | Passed, 26 checks (three confirm the page drew Classic), 134 s. |
+| `seat-chat-shared`, WebKit | #880 `db3f250c` tree | **Fails, reproducibly** (8 runs, 09:04Z to 09:54Z). Alice stops at north -1219.17, on the walk round the serving counter's south end, about 3 m from the seats. The town sent no correction, keys still work (a backward step moved 0.8 m), the page has focus and offers Sit, and the static walking map is free there. Chromium walks the same route. The cause is not found, so this is not claimed as an engine difference. Screenshot and logs: `.runtime/seat-chat/stall-alice-route.png`, `i-` to `o-webkit.log` in the slice 4 worktree. |
+| `pnpm run verify full` from a git-archive snapshot of `db3f250c` (commit `7f079165`), isolated Redis on port 16731 | #880 `db3f250c` | Passed, 19 stages, 10:07Z to 10:57Z, start load 3.2, receipt not dirty. Tooling 307/307. Node 5265 (5234 pass, 1 skip). Server with Redis 1467/1467. 132 (127 pass, 5 skip). Desktop 2/2. Experience 976 s, commons 243 s, shared 1332 s (includes `seat-chat-shared`, passed), IPIC screening 91 s. The first attempt stopped at `server-redis-tests` because `REDIS_URL` was unset; log kept. |
+| `seat-chat-shared` after `35f1bf81` | #880 `35f1bf81` | Passed on Chromium (Pink). |
+| Hosted Verify | #880 `35f1bf81` | Cancelled at the 20-min cut (run 41623952304). `seat-chat-shared` passed on the hosted runner for the first time but took 10 min 55 s, so the `development` shard ran out during `crime-residents`. |
+| Own shard, `9168c019` | #880 | A `development-seats` mode runs `seat-chat-shared` alone with the `development` environment, as a new `preview shared (development-seats)` job. No timeout changed. `verify full` still runs every mode. `node preview/e2e/shared-runner.js development-seats` passed locally (11:25Z), and `pnpm run test:agent` 307/307. |
+| Hosted Verify | #880 `9168c019` | Passed, run 41627394179, all 28 check runs. `preview shared (development-seats)` 6 min 19 s; `development` back to 7 min 8 s. |
 
 ## Findings for others
 
@@ -67,7 +78,8 @@ Slice 3 is PR #879 (`feat/seat-chat-825-20261103`). Slice 4 is PR #880 (`feat/se
 
 - No human accessibility or device proof. The journey drives real keyboard events and reads roles and names, which is not the same thing.
 - Groups are not built: a conversation is two people.
+- WebKit: the seat chat journey stalls on the walk to the Counter's seats (see Checks). The seat chat itself was never reached in WebKit, so it is unproven there.
 
 ## Next step
 
-Land the journey fix on #880 and its hosted run, then WebKit, `?finish=classic` and `verify full`. Mark #879 and #880 ready for review. Do not land them until Val accepts the packet and says land.
+#879 and #880 are ready for review. Do not land them until Val accepts the packet and says land. The WebKit stall stays open.
