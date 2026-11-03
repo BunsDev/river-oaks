@@ -204,6 +204,9 @@ jobs:
             modes: required-characters
           - id: development
             modes: development
+          # Seat chat walks three people into the Counter (about 11 min on the CPU runner).
+          - id: development-seats
+            modes: development-seats
           - id: worlds-and-creator
             modes: development-world development-publish creator
     steps:
