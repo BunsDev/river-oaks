@@ -15,6 +15,7 @@
 // short of the Ribbon walk (2.3 m and more from every bay door in five-rooms-v2).
 import * as THREE from 'three';
 import { PINK_JET_AGE as P } from '../../../shared/city-kit/pink-jet-age.js';
+import { KIT_MATERIALS } from '../../../shared/city-kit/catalog.js';
 import { roundedRectOutline, stadiumOutline } from '../../../shared/city-kit/jet-age-forms.js';
 import { mergeJetAgeParts, prismGeometry } from '../jet-age-forms.js';
 
@@ -36,9 +37,22 @@ export const SHELL_MATERIALS = Object.freeze({
   'lamp-warm': Object.freeze({ color: '#f6e7c4', roughness: 0.25, metalness: 0, emissive: '#ffbf66', night: 1.6, role: 'lamp' }),
 });
 
-export function shellMaterials() {
+// Classic changes appearance only; the same merged parts remain visible for shared collision.
+const classic = (key, slot, overrides = {}) => Object.freeze({ ...SHELL_MATERIALS[key], ...KIT_MATERIALS[slot], ...overrides });
+export const SHELL_CLASSIC_MATERIALS = Object.freeze({
+  ivory: classic('ivory', 'trim-ivory'),
+  pink: classic('pink', 'trim-teal'),
+  chrome: classic('chrome', 'metal-brass'),
+  ink: classic('ink', 'steel-black'),
+  glass: classic('glass', 'glass'),
+  'glow-usable': classic('glow-usable', 'trim-teal', { emissive: KIT_MATERIALS['lamp-glow'].emissive }),
+  'glow-landmark': classic('glow-landmark', 'trim-ivory', { emissive: KIT_MATERIALS['lamp-glow'].emissive }),
+  'lamp-warm': SHELL_MATERIALS['lamp-warm'],
+});
+
+export function shellMaterials(finish = 'pink-jet-age') {
   const made = new Map();
-  for (const [key, spec] of Object.entries(SHELL_MATERIALS)) {
+  for (const [key, spec] of Object.entries(finish === 'pink-jet-age' ? SHELL_MATERIALS : SHELL_CLASSIC_MATERIALS)) {
     const material = new THREE.MeshStandardMaterial({ color: spec.color, roughness: spec.roughness, metalness: spec.metalness });
     material.name = `five-rooms/${key}`;
     if (spec.opacity !== undefined) { material.transparent = true; material.opacity = spec.opacity; material.depthWrite = false; }

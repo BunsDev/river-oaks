@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { VENUE_IDS, FIVE_ROOMS_RULES } from '../../shared/city-kit/five-rooms-layout.js';
 import { PINK_JET_AGE } from '../../shared/city-kit/pink-jet-age.js';
+import { KIT_MATERIALS } from '../../shared/city-kit/catalog.js';
 import { buildFiveRoomsShells, VENUE_BUILDERS } from '../src/five-rooms/index.js';
 import { FRONT, SHELL_MATERIALS, createShellKit, shellMaterials, venueFrame } from '../src/five-rooms/shells.js';
 import { buildRibbon } from '../src/ribbon-finish.js';
@@ -26,17 +27,29 @@ function buildVenue(venue) {
 }
 const vertices = geometry => { const p = geometry.attributes.position, out = []; for (let i = 0; i < p.count; i++) out.push([p.getX(i), p.getY(i), p.getZ(i)]); return out; };
 
-test('classic builds nothing; pink-jet-age builds all five rooms', () => {
+test('every appearance builds the same five-room geometry; Classic and unknown finishes use the existing Classic palette', () => {
+  const pink = buildFiveRoomsShells(contract, { finish: PINK });
   for (const finish of ['classic', undefined, 'unknown']) {
     const group = buildFiveRoomsShells(contract, { finish });
-    assert.equal(group.children.length, 0, `${finish}: no meshes`);
-    assert.deepEqual(group.userData, {}, `${finish}: nothing recorded`);
+    assert.equal(group.children.length, pink.children.length, `${finish}: every material group remains visible`);
+    for (const [index, mesh] of group.children.entries()) {
+      const reference = pink.children[index], actual = mesh.geometry.attributes.position.array, expected = reference.geometry.attributes.position.array;
+      assert.equal(mesh.name, reference.name);
+      assert.equal(actual.length, expected.length);
+      assert.ok(actual.every((value, i) => value === expected[i]), `${finish}: ${mesh.name} keeps its admitted geometry`);
+    }
+    assert.equal(group.userData.fiveRooms.finish, 'classic');
+    assert.deepEqual(group.userData.fiveRooms.venues.map(venue => venue.id), [...VENUE_IDS]);
+    const materials = Object.fromEntries(group.children.map(mesh => [mesh.material.name, mesh.material]));
+    assert.equal(`#${materials['five-rooms/pink'].color.getHexString()}`, KIT_MATERIALS['trim-teal'].color);
+    assert.equal(`#${materials['five-rooms/chrome'].color.getHexString()}`, KIT_MATERIALS['metal-brass'].color);
+    group.userData.dispose();
   }
-  const group = buildFiveRoomsShells(contract, { finish: PINK }), { fiveRooms } = group.userData;
+  const { fiveRooms } = pink.userData;
   assert.deepEqual(fiveRooms.venues.map(venue => venue.id), [...VENUE_IDS]);
   assert.equal(fiveRooms.version, contract.version);
   assert.ok(fiveRooms.venues.every(venue => venue.parts > 0));
-  group.userData.dispose();
+  pink.userData.dispose();
 });
 
 test('one mesh per material across all five rooms: a bounded number of draw calls', () => {

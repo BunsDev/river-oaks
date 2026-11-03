@@ -26,8 +26,8 @@ test('the solids are the Ribbon posts and the shell parts in front of the mapped
   assert.deepEqual(fiveRoomsFootprints(null), []);
 });
 
-test('every solid stands on something drawn: posts on the finished Ribbon, shell discs on the shell', () => {
-  const ribbon = buildRibbon({ world, groundAt: () => 0 }), shells = buildFiveRoomsShells(contract, { finish: 'pink-jet-age' });
+for (const finish of ['classic', 'pink-jet-age']) test(`every solid stands on something drawn under ${finish}`, () => {
+  const ribbon = buildRibbon({ world, groundAt: () => 0 }), shells = buildFiveRoomsShells(contract, { finish });
   const postMesh = ribbon.children.find(mesh => mesh.name === 'Ribbon posts'), m = new THREE.Matrix4(), p = new THREE.Vector3();
   const drawnPosts = Array.from({ length: postMesh.count }, (_, i) => { postMesh.getMatrixAt(i, m); p.setFromMatrixPosition(m); return [p.x, -p.z]; });
   for (const [east, north] of districtRibbonPlan(world).posts.map(post => post.position)) assert.ok(drawnPosts.some(([x, y]) => Math.hypot(x - east, y - north) < 0.01), `post at ${east}, ${north}`);
