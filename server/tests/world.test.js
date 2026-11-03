@@ -1113,3 +1113,38 @@ test('a newly covered resident with an unrecoverable height rejects atomically i
   assert.equal(f.restored.restore(resign(f.checkpoint)).ok,false);
   assert.deepEqual(f.restored.checkpoint(),original,'failed recovery leaves the existing world intact');
 });
+
+test('the real authority admits Ribbon post landing recovery poses and restores the same pilot in the craft',async()=>{
+  const {hoverClear,stepHoverLift}=await import('../../preview/src/carriage-motion.js');
+  const {districtRibbonPlan}=await import('../../preview/src/ribbon-district.js');
+  const {VEHICLES}=await import('../../preview/src/vehicle-config.js');
+  // Same fixture entitlement identity as the existing server Ribbonwing suites; local only.
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY',data=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  const env=createWalkingEnvironment(data),before=createWalkingEnvironment(data,[],null,{fiveRooms:false});
+  const at=p=>({vehicle:'hover',position:[p.position[0],env.groundAt(p.position[0],-p.position[1]),-p.position[1]],yaw:0,speed:0,distance:0,altitude:8,liftTarget:0,landing:true});
+  const post=districtRibbonPlan(data).posts.find(p=>hoverClear(at(p),env)&&hoverClear({...at(p),altitude:.12},before)&&!hoverClear({...at(p),altitude:.12},env));
+  assert.ok(post);
+  let time=1000;
+  const world=createSharedWorld(data,{now:()=>time});world.join({userId:owner,name:'Pilot fixture'});
+  const state=at(post),seat=VEHICLES.hover.driverSeat;
+  const position=()=>{const x=state.position[0]+seat[0],north=-state.position[2]-seat[2];return [x,north,env.groundAt(x,-north)];};
+  const saved=world.checkpoint(),player=saved.payload.players.find(p=>p.id===owner);
+  Object.assign(player,{position:position(),altitude:8,vehicle:'hover',yaw:0});
+  const {checksum,...envelope}=saved;
+  const occupied={...envelope,checksum:createHash('sha256').update(JSON.stringify(envelope)).digest('hex')};
+  assert.deepEqual(world.restore(occupied),{ok:true},'an occupied in-flight checkpoint is admitted');
+  let replies=0,held=null;
+  const simulate=(frames,input)=>{
+    for(let i=0;i<frames;i++){
+      stepHoverLift(state,env,input,1/60);time+=1000/60;
+      if(i%12===11){const reply=world.command(owner,{type:'pose',position:position(),altitude:state.altitude,yaw:0,vehicle:'hover'});assert.equal(reply.ok,true,JSON.stringify(reply));assert.equal(reply.player.id,owner);assert.equal(reply.player.vehicle,'hover');replies++;}
+    }
+  };
+  simulate(1200,{});held=state.altitude;
+  assert.ok(held>.1&&held<8);assert.equal(state.landing,false);
+  simulate(180,{lift:1});assert.ok(state.altitude>held+.5);
+  const final=world.snapshot().players.find(p=>p.id===owner),rejoined=createSharedWorld(data,{now:()=>time});
+  assert.deepEqual(rejoined.restore(world.checkpoint()),{ok:true});
+  const restored=rejoined.snapshot().players.find(p=>p.id===owner);
+  for(const key of ['id','appearance','vehicle','position','altitude','yaw'])assert.deepEqual(restored[key],final[key],key);
+});
