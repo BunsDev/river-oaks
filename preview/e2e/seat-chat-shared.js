@@ -12,11 +12,20 @@ async page => {
   const bob = await (await browser.newContext()).newPage(), carol = await (await browser.newContext()).newPage();
   const frames = [];
   carol.on('websocket', socket => socket.on('framereceived', ({ payload }) => frames.push(String(payload))));
+  // Pose corrections the town sends each walker, by reason, to explain a walk that stalls.
+  const corrections = new Map();
+  for (const tab of [page, bob]) tab.on('websocket', socket => socket.on('framereceived', ({ payload }) => {
+    const text = String(payload);if (!text.includes('"correction"')) return;
+    try { const data = JSON.parse(text);if (data.correction) { const counts = corrections.get(tab) ?? {};counts[data.error ?? data.code ?? 'unknown'] = (counts[data.error ?? data.code ?? 'unknown'] ?? 0) + 1;corrections.set(tab, counts); } } catch {}
+  }));
+  // The default finish unless RIVER_OAKS_FINISH names one (`classic` proves `?finish=classic`).
+  const finish = /^[a-z][a-z0-9-]{0,31}$/.test(process.env.RIVER_OAKS_FINISH ?? '') ? process.env.RIVER_OAKS_FINISH : null;
   const join = async tab => {
     tab.setDefaultNavigationTimeout(90000);tab.on('pageerror', error => errors.push(error.message));
     await tab.setViewportSize({ width: 1280, height: 860 });
-    await tab.goto('http://127.0.0.1:5173/?motion-debug=1', { waitUntil: 'commit' });
+    await tab.goto(`http://127.0.0.1:5173/?motion-debug=1${finish ? `&finish=${finish}` : ''}`, { waitUntil: 'commit' });
     await tab.waitForFunction(() => window.__riverMultiplayer?.().connected && document.querySelector('#canvas-host')?.dataset.playerReady === 'true', null, { timeout: 120000 });
+    if (finish) check(await tab.evaluate(() => window.__riverSpatialStream?.().finish?.preference) === finish, `The town draws the ${finish} finish`);
   };
   const me = tab => tab.evaluate(() => { const m = window.__riverMultiplayer();return { id: m.selfId, ...m.snapshot.players.find(p => p.id === m.selfId), seatChat: m.snapshot.seatChat ?? null }; });
   const turnTo = async (tab, heading) => {
@@ -28,24 +37,40 @@ async page => {
     }
     await tab.waitForTimeout(200);
   };
-  const walkTo = async (tab, [east, north], label) => {
+  // A press that moved nothing grows: WebKit can let a short press end before a frame reads the key.
+  const walkTo = async (tab, [east, north], label, near = 0.35) => {
+    const trace = [];let still = 0, last = null;
     for (let stride = 0; stride < 120; stride++) {
       const [x, , z] = await tab.locator('#walking-hud').evaluate(n => JSON.parse(n.dataset.position));
       const de = east - x, dn = north + z, distance = Math.hypot(de, dn);
-      if (distance < 0.35) return;
+      if (distance < near) return;
+      still = last && Math.hypot(x - last[0], z - last[1]) < 0.02 ? still + 1 : 0;last = [x, z];
+      trace.push([+x.toFixed(2), +(-z).toFixed(2), +(await me(tab)).yaw.toFixed(2)]);if (trace.length > 8) trace.shift();
       await turnTo(tab, Math.atan2(de, dn));await tab.locator('#canvas-host').focus();
-      await tab.keyboard.down('KeyW');await tab.waitForTimeout(Math.min(450, Math.max(80, distance * 260)));await tab.keyboard.up('KeyW');await tab.waitForTimeout(100);
+      await tab.keyboard.down('KeyW');await tab.waitForTimeout(Math.min(450, Math.max(80, distance * 260)) * (1 + Math.min(still, 3)));await tab.keyboard.up('KeyW');await tab.waitForTimeout(100);
     }
-    throw new Error(`could not walk to ${label}: ${JSON.stringify(await me(tab))}`);
+    const page = await tab.evaluate(() => { const a = document.activeElement, hud = document.querySelector('#walking-hud');
+      return { active: a ? `${a.tagName}#${a.id}.${a.className}`.slice(0, 80) : null, hidden: document.hidden, focused: document.hasFocus(), interaction: hud?.dataset.interaction ?? null, sitting: hud?.dataset.sitting ?? null,
+        carriage: (({ vehicle, placement, riding, visible }) => ({ vehicle, riding, visible, at: placement?.position?.map(v => +(+v).toFixed(2)), yaw: placement?.yaw }))(window.__riverCarriage?.() ?? {}) }; });
+    const hud = () => tab.locator('#walking-hud').evaluate(n => JSON.parse(n.dataset.position));
+    const before = await hud();await tab.locator('#canvas-host').focus();await tab.keyboard.down('KeyS');await tab.waitForTimeout(500);await tab.keyboard.up('KeyS');await tab.waitForTimeout(150);
+    await tab.screenshot({ path: `.runtime/seat-chat/stall-${label.replace(/\W+/g, '-')}.png` }).catch(() => {});
+    const after = await hud(), back = +Math.hypot(after[0] - before[0], after[2] - before[2]).toFixed(2);
+    throw new Error(`could not walk to ${label} [${east.toFixed(2)}, ${north.toFixed(2)}]; backward 0.5 s moved ${back} m; page ${JSON.stringify(page)}; corrections ${JSON.stringify(corrections.get(tab) ?? {})}; last strides [east, north, yaw] ${JSON.stringify(trace)}: ${JSON.stringify(await me(tab))}`);
   };
   // Out in the lane at the Counter's door, then a walk the walking rules allow: a search over free
-  // ground, kept only where it turns, so the route follows wherever the cluster stands.
+  // ground, kept only where it turns, so the route follows wherever the cluster stands. A route
+  // that grazed the serving counter's corner wedged the player on it in WebKit and on the hosted runner.
   const { createWalkingEnvironment } = await import('../src/walking.js');
   const environment = createWalkingEnvironment(await (await fetch('http://127.0.0.1:5173/data/district.json')).json());
+  const around = (x, north, clear) => [[0, 0], [clear, 0], [-clear, 0], [0, clear], [0, -clear], [clear * 0.7, clear * 0.7], [-clear * 0.7, clear * 0.7], [clear * 0.7, -clear * 0.7], [-clear * 0.7, -clear * 0.7]]
+    .every(([a, b]) => environment.isFree(x + a, -(north + b)));
+  // Cheapest walk over free ground, where a cell within 0.6 m of anything costs more: the route
+  // takes the middle of a corridor and only squeezes where it must (the door).
   const routeTo = (from, to, step = 0.25) => {
-    const key = (a, b) => `${a},${b}`, came = new Map([[key(0, 0), null]]), queue = [[0, 0]];
-    while (queue.length && came.size < 60000) {
-      const [a, b] = queue.shift();
+    const key = (a, b) => `${a},${b}`, cost = new Map([[key(0, 0), 0]]), came = new Map([[key(0, 0), null]]), buckets = [[[0, 0]]];
+    for (let spent = 0; spent < buckets.length && cost.size < 80000; spent++) for (const [a, b] of buckets[spent] ?? []) {
+      if (cost.get(key(a, b)) !== spent) continue;
       if (Math.hypot(from[0] + a * step - to[0], from[1] + b * step - to[1]) < step) {
         const cells = [];
         for (let at = key(a, b); at; at = came.get(at)) cells.unshift(at.split(',').map(Number));
@@ -53,9 +78,11 @@ async page => {
         return [...turns.map(([i, j]) => [from[0] + i * step, from[1] + j * step]), to];
       }
       for (const [da, db] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const na = a + da, nb = b + db;
-        if (came.has(key(na, nb)) || !environment.isFree(from[0] + na * step, -(from[1] + nb * step))) continue;
-        came.set(key(na, nb), key(a, b));queue.push([na, nb]);
+        const na = a + da, nb = b + db, x = from[0] + na * step, north = from[1] + nb * step;
+        if (!environment.isFree(x, -north)) continue;
+        const next = spent + 1 + (around(x, north, 0.6) ? 0 : around(x, north, 0.35) ? 3 : 8);
+        if (next >= (cost.get(key(na, nb)) ?? Infinity)) continue;
+        cost.set(key(na, nb), next);came.set(key(na, nb), key(a, b));(buckets[next] ??= []).push([na, nb]);
       }
     }
     throw new Error(`no walk from ${from} to ${to}`);
@@ -64,9 +91,11 @@ async page => {
   const sit = async (tab, seat, name) => {
     await tab.evaluate(([x, north]) => window.__riverSeatAndWater().goTo(x, north), DOOR);
     await tab.waitForFunction(([x, north]) => { const m = window.__riverMultiplayer(), p = m.snapshot.players.find(q => q.id === m.selfId);return Math.hypot(p.position[0] - x, p.position[1] - north) < 3; }, DOOR);
-    // From wherever the trip to the door stopped (up to 3 m short), not from the door itself.
-    const [x, , z] = await tab.locator('#walking-hud').evaluate(n => JSON.parse(n.dataset.position));
-    for (const point of routeTo([x, -z], seat.approach)) await walkTo(tab, point, `${name} route`);
+    // From wherever the trip to the door stopped (up to 3 m short), not from the door itself, once
+    // the walker has caught up with the town (the HUD can still show the spawn for a moment).
+    const [x, north] = (await me(tab)).position;
+    await tab.waitForFunction(([e, n]) => { const p = JSON.parse(document.querySelector('#walking-hud').dataset.position);return Math.hypot(p[0] - e, -p[2] - n) < 0.5; }, [x, north], { timeout: 15000 });
+    for (const point of routeTo([x, north], seat.approach)) await walkTo(tab, point, `${name} route`);
     await tab.locator('#canvas-host').focus();await tab.keyboard.press('KeyZ');
     await tab.waitForFunction(buildId => { const m = window.__riverMultiplayer();return m.snapshot.players.find(p => p.id === m.selfId)?.sitting?.buildId === buildId; }, seat.buildId, { timeout: 15000 });
   };
