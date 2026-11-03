@@ -9,8 +9,8 @@ Authority: Val's goal of 2026-11-03 lifts "no new gameplay" for slices 3-4 only.
 | Goal step | Owner | State |
 | --- | --- | --- |
 | Main health | `river-oaks-38`, `five-rooms-closeout-20261102` (Val's closeout goal) | Live. `8a51f750` classified in #875: attempt 1 of run 41501249712 stalled the landing at 3.6 m, attempt 2 passed. |
-| #842 evidence and acceptance packet | `river-oaks-38` | Live. Not duplicated here. |
-| Codex's delivery candidate (sha256 `4c4fdd0d`) | Draft #876 from this session; `river-oaks-38` holds a copy on `feat/five-rooms-delivery-fixes-20261103` | Asked which one carries it. Seat chat stacks on #876 for now. |
+| #842 evidence and acceptance packet | `river-oaks-38` | Packet published (#842 comment 6597388170). Not duplicated here. |
+| Codex's delivery candidate (sha256 `4c4fdd0d`) | #876 from this session | Landed as `fe2463e2` and retired. |
 | Slices 3-4 | This session | In progress. |
 
 ## Files owned
@@ -33,31 +33,41 @@ Authority: Val's goal of 2026-11-03 lifts "no new gameplay" for slices 3-4 only.
 
 | Venue | Cluster | Why |
 | --- | --- | --- |
-| Counter | At its `seat-cluster` attachment | Free ground inside the mapped room, reachable from the door around the serving counter. |
-| Shade Garden | Attachment plus [0.5, -2.85] m | The attachment stands between the Hermes room's displays, so two seats could not be approached. The offset reaches open floor. |
+| Counter | Attachment plus [-1, -2] m (east, north) | At the attachment, a seat sat within sitting reach (3.6 m) of the shop's arrival spot, so entering the Counter also offered Sit. Hosted `contextual-first-visit` caught it on both PRs. This is the smallest move that keeps every seat more than 1 m beyond reach of the arrival spot, door, facade and outside visit spot while staying on free floor in the mapped room. |
+| Shade Garden | Attachment plus [-1, 3] m | The attachment stands between the Hermès room's displays, so two seats could not be approached. The same reach rule then sets the offset. |
 | Starlight Screen | None | Its attachment is not free ground (inside the IPIC lounge's furniture). Waits for that venue's interior. |
 | Atelier, Studios + Overlook | None | The contract gives them no `seat-cluster` attachment. |
 
-Each cluster is two short benches facing each other, four places. Benches are drawn in every finish and have no collider, like storefront benches, so resident and police routes do not change. They add two draw calls. Their seats carry no `storeId`, so residents do not choose them.
+Each cluster is two short benches facing each other, four places. Benches are drawn in every finish and have no collider, like storefront benches, so resident and police routes do not change. They add two draw calls. Their seats carry no `storeId`, so residents do not choose them. Authoritative ground and the Ribbon are unchanged: the benches only add bench places, and `seat-chat.test.js` checks each seat stands on free ground in a mapped room and out of reach of every shop mark.
 
 ## Checks
 
-| Check | Result |
-| --- | --- |
-| `node --test server/tests/seat-chat.test.js` | 13 pass, 1 Redis skip, 0 fail. It caught a real leak while being written: my first edit placed the private state in `snapshot()` instead of `checkpoint()`. |
-| Same file, Redis case, isolated server on port 16731 | 1 pass (two gateways, 19 s) |
-| `world-interactions`, `blocks-*`, `seating`, `account-erasure-world`, `world`, `resident-locations`, `resident-life` | 133 pass, 6 skip, 0 fail |
-| `seat-furniture`, `five-rooms-integration`, `five-rooms-shells`, `resident-locations`, `walking`, `seat-chat` | 51 pass, 2 fail, 1 skip. Both failures were one wrong test assertion on emissive intensity, since corrected; `seat-furniture` then passed 3/3. The combined set has not been rerun. |
-| `pnpm run build` | Passed |
-| `seat-chat-shared` journey | Pending (queued behind the browser lock) |
-| `pnpm run verify`, `pnpm run verify full`, hosted checks | Pending |
+Slice 3 is PR #879 (`feat/seat-chat-825-20261103`). Slice 4 is PR #880 (`feat/seat-chat-ui-825-20261103`, based on slice 3).
+
+| Check | Head | Result |
+| --- | --- | --- |
+| `node --test server/tests/seat-chat.test.js` | #879 `6975b816` | 14 pass, 1 Redis skip, 0 fail. The new placement test failed on the old placement before the fix. |
+| Same file with `REDIS_URL` (isolated server, port 16731, db 5) | #879 `6975b816` | 15 pass, 0 fail, 0 skip (40 s). |
+| Hosted Verify | #879 `6975b816` | Passed, run 41594825057. |
+| Hosted Verify, earlier | #879 `3713f4b3`, #880 `f86fce04` | Failed `contextual-first-visit` on both attempts of both runs (41586641658, 41586644078): a real failure, the cluster placement above. `bayou-terraces` failed attempt 1 of 41586641658 ("Execution context was destroyed") and passed attempt 2: a flake. Logs kept. |
+| `seat-chat-shared` (shared runner, three browsers) | #880 `1a1ce34e` | Passed, 22 checks. None of the witness's frames carried the words or a `seatChat` field. |
+| `five-rooms`, `depth-layers`, `contextual-first-visit` (Classic) | #880 `1a1ce34e` | Passed. |
+| `depth-layers`, `RIVER_OAKS_FINISH=pink-jet-age` | #880 `1a1ce34e` | Passed, 0 new pairs. |
+| Bench captures: 2 cameras x 2 clusters x noon/19:00 x 2 finishes | #880 `1a1ce34e` | 16 views, 1158-2494 calls. No pink hit on the benches. Night hits are main's: the merged `Five Rooms glow-usable` door jambs at the Counter door (-2755.3, -1217.7) and Shade Garden (-2758.1, -1311.3), which the audit cannot name, and a pink sign in the Counter's boutique interior (-2746.2, -1217.7). Both classes are already filed by `river-oaks-38` on #839/#835 (#842 comment 6597388170). |
+| `pnpm run verify` | #880 `1a1ce34e` | Passed: tooling 307/307; node 5265 (5234 pass, 1 skip, 30 todo); server 1425 (1139 pass, 286 skip); 132 (127 pass, 5 skip); 0 fail. |
+| Hosted Verify | #880 `1a1ce34e` | Failed `preview shared (development)`: the journey routed from the Counter door while the CI player had stopped up to 3 m short, so a leg was blocked. Fixed by routing from where the player is. |
+| WebKit, `?finish=classic`, `pnpm run verify full` | | Pending. |
+
+## Findings for others
+
+- On a phone, a seat within reach adds "More actions" to the walking HUD, and the summary sits under `.touch-stick-zone`, so a tap cannot reach it. This predates seat chat (any seat does it). Not fixed here.
+- `PINK_RULE.usable` does not read a material's `role: 'usable'`, so merged shell glow counts as a violation (already filed by `river-oaks-38`).
 
 ## Gaps
 
-- No human accessibility or device proof. The journey drives real keyboard events, which is not the same thing.
-- The benches have not been reviewed in rendered night captures against the pink rule.
-- `hud-token-contrast` is not run against the new panel colours yet. The panel uses existing HUD tokens.
+- No human accessibility or device proof. The journey drives real keyboard events and reads roles and names, which is not the same thing.
+- Groups are not built: a conversation is two people.
 
 ## Next step
 
-Read the journey result, fix what it finds, run core verify, then push slices 3 and 4 as stacked PRs marked ready for review, not landed.
+Land the journey fix on #880 and its hosted run, then WebKit, `?finish=classic` and `verify full`. Mark #879 and #880 ready for review. Do not land them until Val accepts the packet and says land.
