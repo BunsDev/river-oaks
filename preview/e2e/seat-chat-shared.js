@@ -64,7 +64,9 @@ async page => {
   const sit = async (tab, seat, name) => {
     await tab.evaluate(([x, north]) => window.__riverSeatAndWater().goTo(x, north), DOOR);
     await tab.waitForFunction(([x, north]) => { const m = window.__riverMultiplayer(), p = m.snapshot.players.find(q => q.id === m.selfId);return Math.hypot(p.position[0] - x, p.position[1] - north) < 3; }, DOOR);
-    for (const point of routeTo(DOOR, seat.approach)) await walkTo(tab, point, `${name} route`);
+    // From wherever the trip to the door stopped (up to 3 m short), not from the door itself.
+    const [x, , z] = await tab.locator('#walking-hud').evaluate(n => JSON.parse(n.dataset.position));
+    for (const point of routeTo([x, -z], seat.approach)) await walkTo(tab, point, `${name} route`);
     await tab.locator('#canvas-host').focus();await tab.keyboard.press('KeyZ');
     await tab.waitForFunction(buildId => { const m = window.__riverMultiplayer();return m.snapshot.players.find(p => p.id === m.selfId)?.sitting?.buildId === buildId; }, seat.buildId, { timeout: 15000 });
   };
