@@ -86,7 +86,12 @@ test('buildings, furniture and edges block walking; sidewalks and the court do n
     assert.ok(free(layout.edge + 22, -1335 + y), `cross-street sample ${y.toFixed(1)}`);
   assert.equal(free(...local([80, 39.5])), false, 'north hedge');
   assert.equal(free(...local([116, 0])), false, 'bayou edge');
-  assert.equal(environment.canFly(...[local([20, 20])].map(([x, y]) => [x, layout.ground + 30, -y])[0]), false, 'no flight over closed blocks');
+  // Jevica flies over the market row's roofs (a 4.6 m rear wing here), never through them,
+  // and never over the empty reserve beyond the modelled blocks.
+  const fly = ([x, y], height) => environment.canFly(x, layout.ground + height, -y);
+  assert.equal(fly(local([20, 20]), 30), true, 'flight over a market-row roof');
+  assert.equal(fly(local([20, 20]), 4.6 + 1), false, 'no flight through a market-row roof');
+  assert.equal(fly(local([9, -120]), 30), false, 'no flight over the empty reserve');
 });
 
 test('the walking controller crosses from the District down Market Street into the court and back', () => {

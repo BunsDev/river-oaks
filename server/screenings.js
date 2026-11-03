@@ -172,5 +172,15 @@ export function createScreenings({ players, inVenue, grants: listed = [], change
     changed();
   }
 
-  return { command, prune, snapshot, checkpoint, validate, blank, load, reset };
+  // Account erasure: a film the account hosted pauses (prune) and forgets its host;
+  // its receipts go, and so does any receipt whose reply names it as a film's host.
+  // Without a receipt, a retry of that operation is answered as a new request.
+  function forget(userId, time) {
+    prune(time);
+    for (const entry of venues.values()) if (entry.hostId === userId && entry.status !== 'playing') entry.hostId = null;
+    const own = item => { try { return JSON.parse(item.key)[0] === userId; } catch { return false; } };
+    receipts = receipts.filter(item => !own(item) && item.reply?.screening?.hostId !== userId);
+    changed();
+  }
+  return { command, prune, forget, snapshot, checkpoint, validate, blank, load, reset };
 }

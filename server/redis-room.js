@@ -1,4 +1,9 @@
 import { recoverDistrictCommonsCheckpoint } from './district-commons-checkpoint-migration.js';
+import { recoverDistrictHeightsCheckpoint } from './district-heights-checkpoint-migration.js';
+import { recoverDistrictStudewoodCheckpoint } from './district-studewood-checkpoint-migration.js';
+import { recoverDistrictTerracesCheckpoint } from './district-terraces-checkpoint-migration.js';
+import { recoverDistrictWoodlandCheckpoint } from './district-woodland-checkpoint-migration.js';
+import { recoverDistrictTypeSafeCheckpoint } from './district-typesafe-checkpoint-migration.js';
 import { characterSelectionOperation } from './character-store.js';
 import { defaultAppearanceFor } from '../preview/src/shared-appearances.js';
 import { randomUUID } from 'node:crypto';
@@ -15,9 +20,9 @@ import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract
 import { placesOf } from '../preview/src/places.js';
 import { createRideFlush } from './ride-flush.js';
 
-const LEASE_MS=5000, REPLY_MS=15000, REQUEST_MS=7000, TICK_MS=200;
+const LEASE_MS=5000, REPLY_MS=15000, REQUEST_MS=7000, LOAD_MS=20000, TICK_MS=200;
 // The lease token's generation (see createRedisRoom): plain rooms write it, selection-aware rooms one more.
-export const WRITER_GENERATION=21;
+export const WRITER_GENERATION=23;
 // A player whose socket left (or whose edge stopped reporting) keeps their place, seat and
 // hosting this long, so a reconnect on a slow network resumes instead of starting over.
 export const LEAVE_GRACE_MS=30_000;
@@ -102,6 +107,8 @@ function validOperation(operation) {
   if(!record(operation))return false;
   if(operation.type==='join')return validIdentity(operation.identity) && id(operation.connectionId);
   if(operation.type==='kick')return id(operation.userId) && (operation.sessionId===undefined || id(operation.sessionId));
+  if(operation.type==='forget')return id(operation.userId) && Object.keys(operation).length===2;
+  if(operation.type==='separate')return id(operation.a) && id(operation.b) && operation.a!==operation.b && Object.keys(operation).length===3;
   if(operation.type==='revise')return id(operation.actorId) && Number.isSafeInteger(operation.expectedDraftVersion)
     && operation.expectedDraftVersion>=1 && operation.expectedDraftVersion<=100001;
   return ['command','heartbeat','leave'].includes(operation.type) && id(operation.userId) && id(operation.connectionId)
@@ -150,7 +157,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   // the generation was the checkpoint version, one more for selection-aware rooms, which
   // additionally require durable envelope v3 intents: so v13 and v14 writers both write v13
   // checkpoints. Checkpoint v14 (world rules, #596) must fence both, so its writers are v15 and
-  // v16; checkpoint v15 (crime, #597) writers are v17 and v18; checkpoint v16 (police, #598) writers are v19 and v20; checkpoint v17 (timed melee, #640) writers are v21 and v22. Raise WRITER_GENERATION by two with every checkpoint version an older writer cannot read.
+  // v16; checkpoint v15 (crime, #597) writers are v17 and v18; checkpoint v16 (police, #598) writers are v19 and v20; checkpoint v17 (timed melee, #640) writers are v21 and v22; checkpoint v18 (resident reactions, #640 increment 3: a v17 writer would keep a flee destination and a stale reaction) writers are v23 and v24. Raise WRITER_GENERATION by two with every checkpoint version an older writer cannot read.
   const token=`v${characters?WRITER_GENERATION+1:WRITER_GENERATION}:${randomUUID()}`;
   // The default district's revision and the operator's switch epoch (#512): a town committed
   // at a newer epoch, or at this epoch under another revision, is never coordinated here.
@@ -164,30 +171,26 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     lastView=buffer?unpack(buffer):null;
     return lastView;
   }
-  async function runTick() {
-    if(closed)return null;
-    if(performance.now()-lastAttempt<TICK_MS)return lastView;
-    lastAttempt=performance.now();
-    const [ownership,stored,batch,otherView]=await redis.evalBuffer(ACQUIRE,4,keys.lease,keys.state,keys.queue,keys.view,token,LEASE_MS,BATCH_SIZE,cached?'0':'1');
-    if(!ownership){cached=null;lastView=otherView?unpack(otherView):null;return lastView;}
-    // A fresh lease always reloads durable state, even for this process's token.
-    // A tentative mutation is reusable only after its fenced commit succeeds.
-    if(ownership===2)cached=null;
-    const time=now();
-    let previous=cached?.previous??null,connections=cached?.connections??new Map();
-    if(!cached && stored) {
-      previous=unpack(stored);
-    }
-    let currentData=cached?.currentData??worldData;
-    let currentHash=cached?.currentHash??previous?.regionSha256??regionSha256;
-    if(!cached && previous?.regionSha256 && previous.regionSha256!==regionSha256) {
+  // Loading a durable checkpoint builds the served world and migrates the checkpoint to this
+  // deployment's revision: synchronous work that a stack rollback stretches past the lease
+  // (walking every occupant home took over ten seconds on a loaded hosted runner, #754). Under
+  // the lease that work can never commit: the fence sees the lease expire first, the next tick
+  // repeats the load, and the room never serves. So a room without a loaded state prepares the
+  // world before taking the lease and uses it afterwards when the stored bytes are unchanged;
+  // the lease then covers only the batch and the commit. Refusals (another region, an invalid
+  // checkpoint, a newer district epoch) surface the same way, only once the lease is held.
+  async function prepare(stored) {
+    const previous=stored?unpack(stored):null,connections=new Map();
+    let currentData=worldData;
+    let currentHash=previous?.regionSha256??regionSha256;
+    if(previous?.regionSha256 && previous.regionSha256!==regionSha256) {
       if(!regionCatalog || (await regionCatalog.get(worldId))?.regionSha256!==previous.regionSha256)
         throw new Error('Invalid durable town region');
       currentData=await regionCatalog.getRegion(worldId);
     }
-    let world=cached?.world??createSharedWorld(currentData,worldOptions);
+    const world=createSharedWorld(currentData,worldOptions);
     let districtMigration = null;
-    if(!cached && previous) {
+    if(previous) {
       let checkpointReason = 'unknown';
       if(!record(previous) || !(previous.version===1 && worldId===DEFAULT_WORLD_ID || [2,...(characters?[3]:[])].includes(previous.version) && previous.worldId===worldId)
         || !Number.isSafeInteger(previous.revision) || previous.revision<0
@@ -207,7 +210,13 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if (!world.restore(previous.checkpoint, { onFailure: reason => { checkpointReason = reason; } }).ok) {
         // The garage/Gardens district revision switch (#512) chains the older garage recoveries itself.
-        const commons = recoverDistrictCommonsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        // TypeSafe Place extends Woodland Heights, which extends the terraces, which extend Studewood, which extends Heights, which extends the Commons layout, so their recoveries run first.
+        const typesafe = recoverDistrictTypeSafeCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const woodland = typesafe.ok ? typesafe : recoverDistrictWoodlandCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const terraces = woodland.ok ? woodland : recoverDistrictTerracesCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const studewood = terraces.ok ? terraces : recoverDistrictStudewoodCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const heights = studewood.ok ? studewood : recoverDistrictHeightsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
+        const commons = heights.ok ? heights : recoverDistrictCommonsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const gardens = commons.ok ? commons : recoverDistrictGardensCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const tower = gardens.ok ? gardens : recoverDistrictTowerCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
         const levels = tower.ok ? tower : recoverDistrictLevelsCheckpoint({ worldData: currentData, checkpoint: previous.checkpoint, ...worldOptions });
@@ -219,7 +228,12 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
           error.checkpointReason = checkpointReason;
           throw error;
         }
-        districtMigration = commons.ok ? { kind: 'commons', from: commons.from, to: commons.to, moved: commons.moved.length }
+        districtMigration = typesafe.ok ? { kind: 'typesafe', from: typesafe.from, to: typesafe.to, moved: typesafe.moved.length }
+          : woodland.ok ? { kind: 'woodland', from: woodland.from, to: woodland.to, moved: woodland.moved.length }
+          : terraces.ok ? { kind: 'terraces', from: terraces.from, to: terraces.to, moved: terraces.moved.length }
+          : studewood.ok ? { kind: 'studewood', from: studewood.from, to: studewood.to, moved: studewood.moved.length }
+          : heights.ok ? { kind: 'heights', from: heights.from, to: heights.to, moved: heights.moved.length, movedResidents: heights.movedResidents.length }
+          : commons.ok ? { kind: 'commons', from: commons.from, to: commons.to, moved: commons.moved.length }
           : gardens.ok ? { kind: 'gardens', from: gardens.from, to: gardens.to, moved: gardens.moved.length }
           : tower.ok ? { kind: 'tower', from: tower.from }
           : levels.ok ? { kind: 'levels', from: levels.from }
@@ -234,6 +248,30 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       }
       if(connections.size!==world.players.size)throw new Error('Invalid durable town roster');
     }
+    return {bytes:stored,previous,connections,currentData,currentHash,world,districtMigration};
+  }
+  const generationOf=owner=>Number(/^v(\d+):/.exec(owner)?.[1]??2);
+  async function runTick() {
+    if(closed)return null;
+    if(performance.now()-lastAttempt<TICK_MS)return lastView;
+    lastAttempt=performance.now();
+    let loaded=null;
+    if(!cached) {
+      // Only when this process would take the lease: a follower keeps reading the view. A
+      // refusal here is retried under the lease below, where it has always been raised.
+      const owner=await redis.get(keys.lease);
+      if(!owner || owner===token || generationOf(owner)<generationOf(token))
+        loaded=await prepare(await redis.getBuffer(keys.state)).catch(()=>null);
+    }
+    const [ownership,stored,batch,otherView]=await redis.evalBuffer(ACQUIRE,4,keys.lease,keys.state,keys.queue,keys.view,token,LEASE_MS,BATCH_SIZE,cached?'0':'1');
+    if(!ownership){cached=null;lastView=otherView?unpack(otherView):null;return lastView;}
+    // A fresh lease always reloads durable state, even for this process's token.
+    // A tentative mutation is reusable only after its fenced commit succeeds.
+    if(ownership===2)cached=null;
+    const time=now();
+    if(!cached && !(loaded && (stored?loaded.bytes!==null&&stored.equals(loaded.bytes):loaded.bytes===null)))loaded=await prepare(stored);
+    const {previous,connections,currentData:loadedData,currentHash:loadedHash,world:loadedWorld,districtMigration}=cached?{...cached,districtMigration:null}:loaded;
+    let currentData=loadedData,currentHash=loadedHash,world=loadedWorld;
     const {pending:pendingSelections,versions:selectionVersions}=restoreSelections(previous,Boolean(characters));
     for(const userId of selectionVersions.keys())if(!world.players.has(userId))throw new Error('Invalid durable character selection');
     // Cache only within this commit: presence and queued commands share current
@@ -368,6 +406,19 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
         if(connection && (!operation.sessionId || operation.sessionId===connection.identity.sessionId))remove(operation.userId);
         return {ok:true};
       }
+      // Account erasure (#292): the connection, any pending selection, then the world's records.
+      // Metres this tick drained, or this owner has yet to bank, go too; the reply waits for a
+      // bank already in progress, so the ride store's erasure comes after it.
+      // Player blocking (#292): a block between Jevica and a resident ends the resident's invitations.
+      if(operation.type==='separate'){world.separate(operation.a,operation.b);return {ok:true};}
+      if(operation.type==='forget') {
+        if(connection)remove(operation.userId);
+        pendingSelections.delete(operation.userId);selectionVersions.delete(operation.userId);
+        world.forgetAccount(operation.userId);
+        for(let index=drained.length-1;index>=0;index--)if(drained[index].userId===operation.userId)drained.splice(index,1);
+        await rides?.forget(operation.userId);
+        return {ok:true};
+      }
       if(!connection || connection.connectionId!==operation.connectionId || connection.leftAt!==null)return rejected('stale_connection');
       if(!await allowed(connection.identity)){remove(operation.userId);return rejected('session_invalid');}
       if(connection.identity.expiresAt<=time)return rejected('session_expired');
@@ -468,7 +519,17 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       visitors,JSON.stringify(revisionUpdate?.sources??[]),
       ...replies.map(reply=>JSON.stringify(reply.result)));
     if(!committed){cached=null;return read();}
-    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'commons'
+    if (districtMigration) console.info(JSON.stringify(districtMigration.kind === 'typesafe'
+      ? { event: 'district_typesafe_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'woodland'
+      ? { event: 'district_woodland_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'terraces'
+      ? { event: 'district_terraces_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'studewood'
+      ? { event: 'district_studewood_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
+      : districtMigration.kind === 'heights'
+      ? { event: 'district_heights_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved, movedResidents: districtMigration.movedResidents }
+      : districtMigration.kind === 'commons'
       ? { event: 'district_commons_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
       : districtMigration.kind === 'gardens'
       ? { event: 'district_gardens_checkpoint_migrated', from: districtMigration.from, to: districtMigration.to, moved: districtMigration.moved }
@@ -485,7 +546,17 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
   }
   function tick() {
     if(closed)return Promise.resolve(null);
-    if(!pendingTick)pendingTick=runTick().catch(error=>{cached=null;throw error;}).finally(()=>{pendingTick=null;});
+    // runTick refuses a durable state this process can't serve (another region; an invalid
+    // checkpoint, presence, roster or character selection; a newer district epoch, or the same
+    // epoch under another revision) after taking the lease and before writing anything. Let the
+    // lease go: a refusing room that kept ticking would renew it indefinitely and lock out the
+    // deployment that can serve the town. RELEASE checks the token, so this is the same as the
+    // lease expiring early.
+    if(!pendingTick)pendingTick=runTick().catch(async error=>{
+      cached=null;
+      if(/^Invalid durable /.test(error?.message))await redis.eval(RELEASE,1,keys.lease,token).catch(()=>{});
+      throw error;
+    }).finally(()=>{pendingTick=null;});
     return pendingTick;
   }
   async function request(operation) {
@@ -495,11 +566,19 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     let serialized;
     try {serialized=JSON.stringify({id:requestId,operation});}catch{return rejected('invalid_operation');}
     if(Buffer.byteLength(serialized)>8192)return rejected('invalid_operation');
-    const deadline=performance.now()+REQUEST_MS;
     const timeoutResult=()=>({...rejected('request_timeout'),message:'Request outcome is pending. Refresh the town before retrying.'});
+    // A room without a loaded state is about to take the lease and load the durable checkpoint,
+    // migrating it to the revision this deployment serves: after a stack rollback that is the
+    // longest tick a room runs (walking every occupant home took 1.6 s locally and past the
+    // response window on a loaded hosted runner, #754). That boot work is paid once per lease,
+    // not from the first request's budget: the deadline starts once the room is loaded, or after
+    // LOAD_MS if it still is not, and the race below allows for the same load.
+    const loading=!cached,budget=REQUEST_MS+(loading?LOAD_MS:0);
     let timer;
     const execute=async()=>{
       if(!await redis.eval(ENQUEUE,1,keys.queue,MAX_QUEUE,serialized))return rejected('queue_full');
+      if(loading)await Promise.race([tick(),delay(LOAD_MS)]);
+      const deadline=performance.now()+REQUEST_MS;
       while(performance.now()<deadline) {
         // A follower drives acquisition as well: if the previous function stopped,
         // its lease expires and accepted durable operations can still complete.
@@ -514,7 +593,7 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     // Also bound a stalled Redis call or authorization/commit; the durable queue
     // remains authoritative when the response deadline expires first.
     try {
-      return await Promise.race([execute(),new Promise(resolve=>{timer=setTimeout(()=>resolve(timeoutResult()),REQUEST_MS);})]);
+      return await Promise.race([execute(),new Promise(resolve=>{timer=setTimeout(()=>resolve(timeoutResult()),budget);})]);
     } finally {clearTimeout(timer);}
   }
 

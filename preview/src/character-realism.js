@@ -11,6 +11,11 @@ export const REALISM_TIERS = Object.freeze({
   standard: Object.freeze({pores: .18, scatter: [.34, .16, .08], sheen: .22, cornea: true, coverage: true, hairColor: true}),
   high: Object.freeze({pores: .32, scatter: [.48, .24, .12], sheen: .3, cornea: true, coverage: true, hairColor: true}),
 });
+// Parts of a tier that a caller can select on their own. The tier still sets
+// each part's strength. An authored identity can leave out parts that would
+// change it; the named defaults keep their own eyes, for example (#517).
+export const REALISM_COMPONENTS = Object.freeze(['roughness', 'pores', 'scatter', 'sheen', 'cornea', 'coverage', 'hairColor']);
+const SKIN_COMPONENTS = ['roughness', 'pores', 'scatter', 'sheen'];
 
 const SKIN = /^(young|middleage|old)_[a-z]+_(male|female)\d*$/i;
 const HAIR = /^(afro|bob|braid|long|ponytail|short)\d+/i;
@@ -102,7 +107,7 @@ function upgradeSkin(material, tier, textures) {
   if (!material.isMeshPhysicalMaterial) return false;
   if (tier.pores > 0) { material.normalMap = poreNormal(); material.normalScale = new THREE.Vector2(tier.pores, tier.pores); }
   if (textures?.roughness) { material.roughnessMap = textures.roughness; material.roughness = 1; }
-  material.sheen = tier.sheen; material.sheenColor = new THREE.Color('#ffd8c6'); material.sheenRoughness = .5;
+  if (tier.sheen !== null) { material.sheen = tier.sheen; material.sheenColor = new THREE.Color('#ffd8c6'); material.sheenRoughness = .5; }
   if (tier.scatter.some(value => value > 0)) {
     const wrap = tier.scatter.join(', ');
     material.onBeforeCompile = shader => {
@@ -232,15 +237,23 @@ function coverageCards(material, original, tier, hair, owned) {
 
 // Applies one tier to one avatar rig (the object instantiateAvatar returns).
 // Pass the resolved loadCharacterRealismTextures() result; without it skin keeps
-// its flat roughness and the report says so. Returns what was upgraded and a
-// dispose that removes per-instance additions.
-export function applyCharacterRealism(rig, {tier: name = 'high', textures = null, alphaAt} = {}) {
-  const tier = REALISM_TIERS[name];
+// its flat roughness and the report says so. `components` selects parts of the
+// tier (all by default). Returns what was upgraded and a dispose that removes
+// per-instance additions.
+export function applyCharacterRealism(rig, {tier: name = 'high', textures = null, alphaAt, components = REALISM_COMPONENTS} = {}) {
+  const selected = new Set(components ?? REALISM_COMPONENTS);
+  for (const component of selected) if (!REALISM_COMPONENTS.includes(component)) throw new TypeError(`Unknown realism component ${component}`);
+  const preset = REALISM_TIERS[name], use = component => selected.has(component);
+  const tier = preset && {pores: use('pores') ? preset.pores : 0, scatter: use('scatter') ? preset.scatter : [0, 0, 0], sheen: use('sheen') ? preset.sheen : null,
+    cornea: preset.cornea && use('cornea'), coverage: preset.coverage && use('coverage'), hairColor: preset.hairColor && use('hairColor')};
+  if (!use('roughness')) textures = null;
   const owned = {geometries: new Set(), materials: new Set(), objects: new Set(), textures: new Set(), originalGeometries: new Map()};
   const savedMaterials = new Map();
   const changedProperties = ['map', 'normalMap', 'normalScale', 'roughnessMap', 'roughness', 'sheen', 'sheenColor', 'sheenRoughness', 'onBeforeCompile', 'customProgramCacheKey', 'alphaToCoverage', 'alphaTest'];
-  const report = {tier: tier ? name : 'off', version: CHARACTER_REALISM_VERSION, skin: 0, cornea: 0, hair: 0, brows: 0, lashes: 0, unsupported: []};
+  const report = {tier: tier ? name : 'off', version: CHARACTER_REALISM_VERSION, components: tier ? REALISM_COMPONENTS.filter(use) : [],
+    skin: 0, cornea: 0, hair: 0, brows: 0, lashes: 0, unsupported: []};
   if (!tier) return {report, dispose() {}};
+  const skinSelected = SKIN_COMPONENTS.some(use);
   const meshes = [];
   rig.model.traverse(object => { if (object.isMesh) meshes.push(object); });
   const reverse = new Map([...rig.materials].map(([original, material]) => [material, original]));
@@ -249,10 +262,12 @@ export function applyCharacterRealism(rig, {tier: name = 'high', textures = null
     if (Array.isArray(material) || !original) continue;
     if (!savedMaterials.has(material)) savedMaterials.set(material, Object.fromEntries(changedProperties.map(key => [key, material[key]])));
     if (SKIN.test(name)) {
-      if (upgradeSkin(material, tier, textures)) { report.skin++; if (!textures?.roughness) report.unsupported.push(`roughness:${name}`); }
+      if (!skinSelected) continue;
+      if (upgradeSkin(material, tier, textures)) { report.skin++; if (use('roughness') && !textures?.roughness) report.unsupported.push(`roughness:${name}`); }
       else report.unsupported.push(`skin:${name}`);
     }
-    else if (EYES.test(mesh.name) && tier.cornea) { if (splitCornea(mesh, owned, alphaAt)) report.cornea++; else report.unsupported.push(`cornea:${mesh.name}`); }
+    else if (EYES.test(mesh.name)) { if (tier.cornea) { if (splitCornea(mesh, owned, alphaAt)) report.cornea++; else report.unsupported.push(`cornea:${mesh.name}`); } }
+    else if (!tier.coverage && !tier.hairColor) continue;
     else if (BROWS.test(mesh.name) || /brows$/i.test(name)) { coverageCards(material, original, tier, false, owned); report.brows++; }
     else if (LASHES.test(mesh.name)) { coverageCards(material, original, tier, false, owned); report.lashes++; }
     else if (HAIR.test(mesh.name) || HAIR.test(name)) { coverageCards(material, original, tier, true, owned); report.hair++; }

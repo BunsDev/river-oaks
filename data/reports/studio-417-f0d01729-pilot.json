@@ -1,0 +1,872 @@
+{
+  "createdAt": "2026-10-30T12:43:50.277Z",
+  "results": [
+    {
+      "name": "studio-pilot-journey",
+      "status": "passed",
+      "seconds": 58.851,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Garden Office opens with its required routes passing",
+          "valid edit (desk finish) is accepted with routes passing",
+          "blocking the meeting room is refused with a finding",
+          "the status region announces the refusal and the furnishings to move (Edit not applied; your draft is unchanged. Clear the route to meeting room at 3, 1 m; move or resize the obstructing furnishing. Nearby: Waiting Sofa, Meeting Chair 1, Meeting Divider South.)",
+          "the refused move leaves the sofa where it was",
+          "moving the sofa clear repairs the layout",
+          "undo restores the sofa",
+          "redo reapplies one edit",
+          "save keeps the office assessment context",
+          "reload reopens the saved draft and reassesses it",
+          "a stale tab cannot overwrite the newer saved draft",
+          "the other tab's save is kept",
+          "the saved layout assesses as passing",
+          "walked to all four required destinations and back to the arrival",
+          "returned to the editor after the walk"
+        ],
+        "tour": [
+          {
+            "target": "office-1",
+            "waypoints": 2,
+            "reached": [
+              0,
+              -4
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 5.98
+          },
+          {
+            "target": "office-2",
+            "waypoints": 4,
+            "reached": [
+              -1.9,
+              1.1
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 14.665
+          },
+          {
+            "target": "office-3",
+            "waypoints": 4,
+            "reached": [
+              3,
+              1
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 15.48
+          },
+          {
+            "target": "office-4",
+            "waypoints": 2,
+            "reached": [
+              -1,
+              5.1
+            ],
+            "home": [
+              0,
+              -8.5
+            ],
+            "seconds": 19.221
+          }
+        ]
+      }
+    },
+    {
+      "name": "studio-pilot-assets",
+      "status": "passed",
+      "seconds": 28.111,
+      "result": {
+        "passed": true,
+        "templateId": "office",
+        "surface": "limestone meeting floor (edited)",
+        "delayMs": 8000,
+        "results": {
+          "normal": {
+            "surface": 186,
+            "requests": {
+              "started": 3,
+              "finished": 3,
+              "failed": 0,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 414,
+              "triangles": 30352,
+              "geometries": 49,
+              "materials": 26,
+              "textures": 7,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 3348
+            }
+          },
+          "missing": {
+            "surface": 200,
+            "requests": {
+              "started": 3,
+              "finished": 0,
+              "failed": 3,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 695,
+              "triangles": 53208,
+              "geometries": 49,
+              "materials": 26,
+              "textures": 7,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 1282
+            }
+          },
+          "loading": {
+            "surface": 200,
+            "requests": {
+              "started": 3,
+              "finished": 0,
+              "failed": 0,
+              "pending": 3
+            },
+            "stats": {
+              "calls": 695,
+              "triangles": 53208,
+              "geometries": 49,
+              "materials": 26,
+              "textures": 7,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 1178
+            },
+            "secondsAfterOpen": 1.9
+          },
+          "loaded": {
+            "surface": 186,
+            "requests": {
+              "started": 3,
+              "finished": 3,
+              "failed": 0,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 414,
+              "triangles": 30352,
+              "geometries": 49,
+              "materials": 26,
+              "textures": 7,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 8278
+            },
+            "settledAfterOpen": 8.491,
+            "readings": [
+              186
+            ]
+          },
+          "replaced": {
+            "surface": 186,
+            "requests": {
+              "started": 6,
+              "finished": 6,
+              "failed": 0,
+              "pending": 0
+            },
+            "stats": {
+              "calls": 414,
+              "triangles": 30352,
+              "geometries": 49,
+              "materials": 26,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 9,
+              "at": 12575
+            },
+            "pendingAtReplacement": 3,
+            "pendingAfterReplacement": 6,
+            "stableReplacement": true,
+            "statsBefore": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 63,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 10,
+              "at": 2409
+            },
+            "statsAfter": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 63,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 10,
+              "at": 11559
+            },
+            "replacementItems": 49
+          }
+        }
+      }
+    },
+    {
+      "name": "studio-pilot-soak",
+      "status": "passed",
+      "seconds": 56.722,
+      "result": {
+        "passed": true,
+        "templateId": "office",
+        "cycles": [
+          {
+            "cycle": 0,
+            "warmUp": true,
+            "seconds": 4.935,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 4,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 172,
+              "nodes": 977,
+              "heapMiB": 16.15,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 0,
+                "finished": 0,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 1,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 543,
+              "gpuMetalMiB": 42.7
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 183,
+              "nodes": 1052,
+              "heapMiB": 15.83,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 2,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 612.4,
+              "gpuMetalMiB": 86.1
+            }
+          },
+          {
+            "cycle": 1,
+            "warmUp": false,
+            "seconds": 5.078,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 172,
+              "nodes": 985,
+              "heapMiB": 16.28,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 3,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 453.7,
+              "gpuMetalMiB": 75.2
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 183,
+              "nodes": 1082,
+              "heapMiB": 15.92,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 4,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 607,
+              "gpuMetalMiB": 90.6
+            }
+          },
+          {
+            "cycle": 2,
+            "warmUp": false,
+            "seconds": 5.341,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 172,
+              "nodes": 985,
+              "heapMiB": 16.49,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 5,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 453,
+              "gpuMetalMiB": 75.4
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 183,
+              "nodes": 1082,
+              "heapMiB": 16.12,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 6,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 616.7,
+              "gpuMetalMiB": 100.9
+            }
+          },
+          {
+            "cycle": 3,
+            "warmUp": false,
+            "seconds": 4.826,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 172,
+              "nodes": 985,
+              "heapMiB": 16.41,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 7,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 584.9,
+              "gpuMetalMiB": 76.3
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 183,
+              "nodes": 1052,
+              "heapMiB": 16.73,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 8,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 597.3,
+              "gpuMetalMiB": 80.4
+            }
+          },
+          {
+            "cycle": 4,
+            "warmUp": false,
+            "seconds": 5.069,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 172,
+              "nodes": 985,
+              "heapMiB": 16.74,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 9,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 453.5,
+              "gpuMetalMiB": 75.5
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 183,
+              "nodes": 1082,
+              "heapMiB": 16.3,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 10,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 594.7,
+              "gpuMetalMiB": 77.3
+            }
+          },
+          {
+            "cycle": 5,
+            "warmUp": false,
+            "seconds": 5.099,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 172,
+              "nodes": 985,
+              "heapMiB": 16.21,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 11,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 445,
+              "gpuMetalMiB": 72.6
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 183,
+              "nodes": 1082,
+              "heapMiB": 16.9,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 12,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 603.5,
+              "gpuMetalMiB": 90.8
+            }
+          },
+          {
+            "cycle": 6,
+            "warmUp": false,
+            "seconds": 5.047,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 172,
+              "nodes": 985,
+              "heapMiB": 16.43,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 13,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 453.2,
+              "gpuMetalMiB": 79.7
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 183,
+              "nodes": 1082,
+              "heapMiB": 16.79,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 14,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 603.3,
+              "gpuMetalMiB": 92.7
+            }
+          },
+          {
+            "cycle": 7,
+            "warmUp": false,
+            "seconds": 5.095,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 172,
+              "nodes": 985,
+              "heapMiB": 16.8,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 15,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 451.2,
+              "gpuMetalMiB": 77.4
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 183,
+              "nodes": 1082,
+              "heapMiB": 16.38,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 16,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 594.5,
+              "gpuMetalMiB": 89.7
+            }
+          },
+          {
+            "cycle": 8,
+            "warmUp": false,
+            "seconds": 5.098,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 172,
+              "nodes": 985,
+              "heapMiB": 16.91,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 17,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 453.5,
+              "gpuMetalMiB": 77.3
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 183,
+              "nodes": 1082,
+              "heapMiB": 16.48,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 18,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 593.2,
+              "gpuMetalMiB": 85.8
+            }
+          },
+          {
+            "cycle": 9,
+            "warmUp": false,
+            "seconds": 5.071,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 172,
+              "nodes": 985,
+              "heapMiB": 17.19,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 19,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 455.6,
+              "gpuMetalMiB": 79.5
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 183,
+              "nodes": 1082,
+              "heapMiB": 18.08,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 20,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 600.3,
+              "gpuMetalMiB": 92.6
+            }
+          },
+          {
+            "cycle": 10,
+            "warmUp": false,
+            "seconds": 5.084,
+            "office": {
+              "calls": 688,
+              "triangles": 53076,
+              "geometries": 35,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 6,
+              "listeners": 172,
+              "nodes": 985,
+              "heapMiB": 16.51,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 21,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 458.5,
+              "gpuMetalMiB": 79.6
+            },
+            "replaced": {
+              "calls": 700,
+              "triangles": 62136,
+              "geometries": 48,
+              "materials": 27,
+              "textures": 10,
+              "renderTargets": 2,
+              "programs": 8,
+              "listeners": 183,
+              "nodes": 1082,
+              "heapMiB": 16.67,
+              "canvases": 1,
+              "materialLoads": {
+                "started": 6,
+                "finished": 6,
+                "failed": 0,
+                "pending": 0
+              },
+              "workers": 22,
+              "liveWorkers": 0,
+              "pendingTimeouts": 0,
+              "gpuFootprintMiB": 599.9,
+              "gpuMetalMiB": 92.6
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "studio-pilot-a11y",
+      "status": "passed",
+      "seconds": 5.808,
+      "result": {
+        "passed": true,
+        "checks": [
+          "320 px: no sideways scroll (overflow 0 px)",
+          "320 px: Walk through is reachable and at least 24 px",
+          "320 px: Undo is reachable and at least 24 px",
+          "320 px: Redo is reachable and at least 24 px",
+          "320 px: Save on device is reachable and at least 24 px",
+          "320 px: Space templates is reachable and at least 24 px",
+          "390 px: no sideways scroll (overflow 0 px)",
+          "390 px: Walk through is reachable and at least 24 px",
+          "390 px: Undo is reachable and at least 24 px",
+          "390 px: Redo is reachable and at least 24 px",
+          "390 px: Save on device is reachable and at least 24 px",
+          "390 px: Space templates is reachable and at least 24 px",
+          "Enter on a scene object selects it",
+          "focus stays on the selected scene object (work-desk-1)",
+          "a typed position commits without dragging",
+          "Tab after an edit reaches the next field (north)",
+          "Enter commits an edit and keeps focus in its field (east)",
+          "the undo shortcut restores it",
+          "focus moves to Undo when Redo runs out (studio-undo)",
+          "and to Redo when Undo runs out (studio-redo)",
+          "every one of 33 Tab stops shows focus",
+          "the keyboard turns the walker (W moved 1.0 E, 0.0 N after →; start 0, -8.5)",
+          "focus stays on a control after leaving walk mode (studio-viewport)",
+          "no running animations with reduced motion (0)",
+          "closing the chooser returns focus to its button"
+        ],
+        "layouts": {
+          "320": {
+            "overflow": 0,
+            "reachable": {
+              "Walk through": true,
+              "Undo": true,
+              "Redo": true,
+              "Save on device": true,
+              "Space templates": true
+            }
+          },
+          "390": {
+            "overflow": 0,
+            "reachable": {
+              "Walk through": true,
+              "Undo": true,
+              "Redo": true,
+              "Save on device": true,
+              "Space templates": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

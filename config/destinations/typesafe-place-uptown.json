@@ -1,0 +1,286 @@
+{
+  "id": "typesafe-place-uptown",
+  "title": "TypeSafe Place: north of Twentieth Street, shop rows under garden-roofed residences",
+  "kit": "city-kit-1",
+  "seed": 2026,
+  "inspiration": "Patterns only, no copied buildings: an elevated residential neighborhood east of Woodland Heights, after the concept art 'TypeSafe Place Residential Heights'. Two 20-storey balconied towers (Luxury Living, and Penthouse Row with its setback crown), garden-roofed mid-rises (Sky Gardens), everyday shop rows with garden roofs, a neighborhood green with a pink ribbon sculpture, and a tree-lined walking avenue. All names and lettering are original.",
+  "anchor": "bayou-heights/market-footbridge",
+  "site": [
+    552.5,
+    117.5,
+    702.5,
+    167.5
+  ],
+  "streets": [
+    {
+      "id": "place-avenue-uptown",
+      "from": [
+        628,
+        117.5
+      ],
+      "to": [
+        628,
+        167.5
+      ],
+      "lane": 8,
+      "sidewalk": 5,
+      "paving": "plaza-stone",
+      "trees": {
+        "offset": 7,
+        "spacing": 12
+      },
+      "lamps": {
+        "offset": 13,
+        "spacing": 24
+      }
+    }
+  ],
+  "plazas": [
+    {
+      "id": "north-walk-west",
+      "rect": [
+        553,
+        129.5,
+        620,
+        134
+      ],
+      "hedges": [
+        [
+          553,
+          129.5,
+          554.2,
+          134
+        ]
+      ]
+    },
+    {
+      "id": "uptown-passage",
+      "rect": [
+        554.2,
+        116.5,
+        559,
+        130.5
+      ]
+    },
+    {
+      "id": "north-walk-east",
+      "rect": [
+        636,
+        129.5,
+        702.5,
+        134
+      ]
+    }
+  ],
+  "landmarks": [],
+  "furniture": [
+    {
+      "id": "north-rack-566",
+      "piece": "furniture/bike-rack",
+      "at": [
+        566,
+        132.5
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "north-rack-650",
+      "piece": "furniture/bike-rack",
+      "at": [
+        650,
+        132.5
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "north-walk-bench-585",
+      "piece": "furniture/bench",
+      "at": [
+        585,
+        132.8
+      ],
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "north-walk-bench-610",
+      "piece": "furniture/bench",
+      "at": [
+        610,
+        132.8
+      ],
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "north-walk-bench-670",
+      "piece": "furniture/bench",
+      "at": [
+        670,
+        132.8
+      ],
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "north-walk-bench-690",
+      "piece": "furniture/bench",
+      "at": [
+        690,
+        132.8
+      ],
+      "yaw": 3.141592653589793
+    }
+  ],
+  "context": [],
+  "overrides": {},
+  "additions": [
+    {
+      "id": "residence-north-west",
+      "piece": "building/shell",
+      "rect": [
+        558,
+        136,
+        592,
+        164
+      ],
+      "storeys": 8,
+      "height": 29.1,
+      "wall": "concrete-warm",
+      "trim": "steel-black",
+      "roof": "garden",
+      "style": "place-residence",
+      "faces": [
+        "south",
+        "east",
+        "west"
+      ],
+      "bays": 1,
+      "sign": null,
+      "variant": "gallery",
+      "awning": "canvas-blush"
+    },
+    {
+      "id": "residence-north-mid",
+      "piece": "building/shell",
+      "rect": [
+        596,
+        136,
+        618,
+        164
+      ],
+      "storeys": 6,
+      "height": 22.1,
+      "wall": "stone-pearl",
+      "trim": "steel-black",
+      "roof": "garden",
+      "style": "place-residence",
+      "faces": [
+        "south",
+        "west"
+      ],
+      "bays": 1,
+      "sign": null,
+      "variant": "gallery",
+      "awning": "canvas-blush"
+    },
+    {
+      "id": "residence-north-east",
+      "piece": "building/shell",
+      "rect": [
+        642,
+        136,
+        700,
+        164
+      ],
+      "storeys": 9,
+      "height": 32.6,
+      "wall": "stone-pearl",
+      "trim": "steel-black",
+      "roof": "garden",
+      "style": "place-residence",
+      "faces": [
+        "south",
+        "west"
+      ],
+      "bays": 1,
+      "sign": null,
+      "variant": "gallery",
+      "awning": "canvas-blush"
+    }
+  ],
+  "layout": {
+    "open": "ground",
+    "quarters": [
+      {
+        "id": "twentieth-north-west",
+        "rect": [
+          559,
+          117.5,
+          619,
+          129.5
+        ],
+        "style": "place-retail",
+        "depth": [
+          10,
+          12
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          6,
+          7.5
+        ],
+        "names": [
+          "Keyof Locksmith",
+          "Declared Deli",
+          "Mapped Travel",
+          "Never Late Laundry",
+          "Spread Operator Yoga",
+          "Partial Pantry",
+          "Pick and Omit Cheese"
+        ],
+        "front": "south",
+        "sides": [
+          "east",
+          "west"
+        ]
+      },
+      {
+        "id": "twentieth-north-east",
+        "rect": [
+          637,
+          117.5,
+          702.5,
+          129.5
+        ],
+        "style": "place-retail",
+        "depth": [
+          10,
+          12
+        ],
+        "storeys": [
+          2,
+          3
+        ],
+        "bays": [
+          6,
+          7.5
+        ],
+        "names": [
+          "Assertion Hair Studio",
+          "Template Literal Print",
+          "Overload Fitness",
+          "Abstract Class Art",
+          "Type Alias Tea",
+          "Strict Null Pharmacy",
+          "Indexed Access Bank"
+        ],
+        "front": "south"
+      }
+    ],
+    "migrated": {
+      "blocks": 2,
+      "geometry": "5a027ef3de7456e9"
+    }
+  }
+}

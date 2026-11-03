@@ -1,11 +1,12 @@
 import test from 'node:test';
 import * as THREE from 'three';
 import assert from 'node:assert/strict';
-import { STREET, streetSection, streetOffset, sidewalkOffset } from '../src/street-profile.js';
+import { STREET, streetSection, streetOffset, sidewalkOffset, streetPoint } from '../src/street-profile.js';
 import { buildRoads } from '../src/street-roads.js';
 import { buildDesignatedSidewalks } from '../src/sidewalks.js';
 import { kerbStrips, laneFixtures } from '../src/street-furniture.js';
 import { createPedestrianNetwork } from '../src/pedestrian-network.js';
+import { streetCorners } from '../src/street-corners.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from '../src/world-surface.js';
 
 const road={id:'street',kind:'service',width_m:6.5,points:[[-40,0,0],[40,0,0]]};
@@ -134,4 +135,27 @@ test('zebra bars span the crossing along the road and warnings retain their dept
   close(Math.max(...offsets)-Math.min(...offsets),STREET.warningDepth);
   // Stone curb and gutter, brick pavers, paint and tactile warnings: one mesh each.
   assert.equal(sidewalks.children.length,4,'street details stay batched');
+});
+
+test('a road bending through a T-junction stays paved on its open side and keeps the curb returns square',t=>{
+  t.mock.method(THREE.TextureLoader.prototype,'load',()=>new THREE.Texture());
+  // Val found a sliver of bare ground where a through road bent 1.7° at a T (2026-10-27): both
+  // segments ended square to their own directions, opening a wedge opposite the side street.
+  const data=world();data.bounds_m=[-50,-20,50,30];
+  data.roads[0].points=[[-30,0,0],[0,0,0],[30,0.9,0]];
+  data.roads.push({...structuredClone(road),id:'side',points:[[0,0,0],[0,20,0]]});
+  const position=buildRoads(data).userData.asphalt.geometry.attributes.position,triangles=[];
+  for(let i=0;i<position.count;i+=3)triangles.push([0,1,2].map(k=>[position.getX(i+k),-position.getZ(i+k)]));
+  const inside=(p,[a,b,c])=>{const s=(p1,p2,p3)=>(p1[0]-p3[0])*(p2[1]-p3[1])-(p2[0]-p3[0])*(p1[1]-p3[1]);const d1=s(p,a,b),d2=s(p,b,c),d3=s(p,c,a);return !((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0));};
+  const half=road.width_m/2,open=[];
+  for(let x=-0.3;x<=0.3;x+=0.01)for(let y=-0.95*half;y<=0.95*half;y+=0.02)if(!triangles.some(triangle=>inside([x,y],triangle)))open.push([+x.toFixed(2),+y.toFixed(2)]);
+  assert.deepEqual(open.slice(0,5),[],`${open.length} points of the junction have no asphalt`);
+  // The side street's curb returns still meet the straight curb that sidewalks.js lays with streetPoint.
+  const network=createPedestrianNetwork(data),corners=streetCorners(network.segments,network.crossings);
+  assert.equal(corners.length,2);
+  for(const corner of corners)corner.arms.forEach((arm,k)=>{
+    const trim=arm.trims.find(item=>item.tangent<=item.length)??arm.trims.at(-1);
+    const curb=streetPoint(trim.segment,trim.end?trim.length-trim.tangent:trim.tangent,trim.side*arm.half);
+    assert.ok(Math.hypot(curb[0]-corner.tangents[k][0],curb[1]-corner.tangents[k][1])<1e-9,'curb return meets its straight curb');
+  });
 });

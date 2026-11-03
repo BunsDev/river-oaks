@@ -1,0 +1,202 @@
+{
+  "createdAt": "2026-10-25T15:39:02.235Z",
+  "status": "passed",
+  "modes": [
+    "required"
+  ],
+  "rendering": "Full rendering",
+  "scope": "Loopback development identities and authenticated fixtures; no live WorkOS or hosted service acceptance.",
+  "results": [
+    {
+      "name": "default-appearance-tiers",
+      "status": "passed",
+      "seconds": 49.272,
+      "result": {
+        "passed": true,
+        "checks": [
+          "The owner account wears its default Jevica",
+          "A resident account wears the default Sable",
+          "Jevica keeps imported materials, own and remote",
+          "Sable has only its trial components, own and remote, with no cornea shell",
+          "Jevica stays off for the owner at high and for alice at standard",
+          "Alice renders her own Sable at standard while the owner renders it at high",
+          "Each viewer holds the other’s canonical definition",
+          "sharp: alice re-tiers to high; Jevica is off with the same definition",
+          "smooth: alice re-tiers to standard; Jevica is off with the same definition",
+          "Re-tiering sends no selection command",
+          "No client message carries graphics quality or realism state",
+          "The owner’s own tier and view of alice are unaffected",
+          "Alice’s own Sable: a missing roughness map is reported and keeps the trial components",
+          "Alice’s view of Jevica: keeps imported materials without the map",
+          "The owner’s own Jevica: keeps imported materials without the map",
+          "The owner’s view of Sable: a missing roughness map is reported and keeps the trial components",
+          "The fallback keeps Sable’s identity",
+          "After reconnect both looks return as before, own and remote, with no fallback",
+          "Alice’s definition is unchanged across reconnect",
+          "No runtime errors: "
+        ],
+        "measurements": {
+          "tiers": {
+            "jevicaSelf": {
+              "tier": "off"
+            },
+            "sableSelf": {
+              "tier": "standard",
+              "version": 1,
+              "components": [
+                "roughness"
+              ],
+              "skin": 1,
+              "cornea": 0,
+              "hair": 0,
+              "brows": 0,
+              "lashes": 0,
+              "unsupported": [],
+              "requestedTier": "standard"
+            },
+            "jevicaOnAlice": {
+              "tier": "off"
+            },
+            "sableOnOwner": {
+              "tier": "high",
+              "version": 1,
+              "components": [
+                "roughness"
+              ],
+              "skin": 1,
+              "cornea": 0,
+              "hair": 0,
+              "brows": 0,
+              "lashes": 0,
+              "unsupported": [],
+              "requestedTier": "high"
+            }
+          },
+          "cycle": [
+            {
+              "mode": "sharp",
+              "remote": {
+                "tier": "off"
+              },
+              "self": {
+                "tier": "high",
+                "version": 1,
+                "components": [
+                  "roughness"
+                ],
+                "skin": 1,
+                "cornea": 0,
+                "hair": 0,
+                "brows": 0,
+                "lashes": 0,
+                "unsupported": [],
+                "requestedTier": "high"
+              }
+            },
+            {
+              "mode": "smooth",
+              "remote": {
+                "tier": "off"
+              },
+              "self": {
+                "tier": "standard",
+                "version": 1,
+                "components": [
+                  "roughness"
+                ],
+                "skin": 1,
+                "cornea": 0,
+                "hair": 0,
+                "brows": 0,
+                "lashes": 0,
+                "unsupported": [],
+                "requestedTier": "standard"
+              }
+            }
+          ],
+          "fallback": {
+            "self": {
+              "tier": "standard",
+              "version": 1,
+              "components": [
+                "roughness"
+              ],
+              "skin": 1,
+              "cornea": 0,
+              "hair": 0,
+              "brows": 0,
+              "lashes": 0,
+              "unsupported": [
+                "roughness:young_asian_female"
+              ],
+              "requestedTier": "standard",
+              "fallback": "roughness_unavailable"
+            },
+            "jevica": {
+              "tier": "off"
+            },
+            "ownerSelf": {
+              "tier": "off"
+            },
+            "sableOnOwner": {
+              "tier": "standard",
+              "version": 1,
+              "components": [
+                "roughness"
+              ],
+              "skin": 1,
+              "cornea": 0,
+              "hair": 0,
+              "brows": 0,
+              "lashes": 0,
+              "unsupported": [
+                "roughness:young_asian_female"
+              ],
+              "requestedTier": "high",
+              "fallback": "roughness_unavailable"
+            }
+          },
+          "reconnect": {
+            "sableSelf": {
+              "tier": "standard",
+              "version": 1,
+              "components": [
+                "roughness"
+              ],
+              "skin": 1,
+              "cornea": 0,
+              "hair": 0,
+              "brows": 0,
+              "lashes": 0,
+              "unsupported": [],
+              "requestedTier": "standard"
+            },
+            "sableOnOwner": {
+              "tier": "high",
+              "version": 1,
+              "components": [
+                "roughness"
+              ],
+              "skin": 1,
+              "cornea": 0,
+              "hair": 0,
+              "brows": 0,
+              "lashes": 0,
+              "unsupported": [],
+              "requestedTier": "high"
+            },
+            "jevicaOnAlice": {
+              "tier": "off"
+            },
+            "jevicaSelf": {
+              "tier": "off"
+            }
+          }
+        },
+        "scope": "Real two-account HTTP/WebSocket/browser flow on desktop Chromium: #517 named-default trial components at high and standard, and a default the policy leaves out stays imported; low is reached only by Auto under sustained load and is covered by unit tests. Physical devices, WebKit and human visual acceptance are not covered."
+      }
+    }
+  ],
+  "browser": "chromium",
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)"
+}

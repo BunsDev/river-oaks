@@ -2,8 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import Redis from 'ioredis';
-import { createMemoryCharacterStore, createRedisCharacterStore, CHARACTER_STORE_LIMITS } from '../character-store.js';
+import { createCharacterStore, createMemoryCharacterStore, createRedisCharacterStore, CHARACTER_STORE_LIMITS } from '../character-store.js';
 import { customizedCharacterDefinition } from '../../preview/src/character-customization.js';
+import { recipeCharacterDefinition, validateCharacterDefinition } from '../../preview/src/character-definition.js';
+import { CUSTOM_APPEARANCE_ID, rollCharacterRecipe } from '../../preview/src/character-recipe.js';
 
 const draft=(owner='alice',palette='rose')=>customizedCharacterDefinition(owner,'sable-human',{palette,hair:'espresso'});
 const code=expected=>error=>error.code===expected;
@@ -139,4 +141,38 @@ test('Redis persisted corruption is rejected rather than repaired or published',
   }
   await f.store.deleteAccount('alice');
   assert.equal((await f.store.get('alice')).deleted,true,'corruption must not prevent deletion of private data');
+});
+
+// The recipe gained a `build` (body type) on 2026-10-29. People published before it are
+// stored without the field: the store reads them as a neutral build, their revisions
+// equip and select exactly, and a tampered build is still corruption, not repaired.
+test('memory: a stored recipe revision from before the build reads, equips and selects as a neutral build',async()=>{
+  const records=new Map();
+  const store=createCharacterStore({async get(id){return records.get(id)??null;},async compareAndSet(id,old,raw){if((records.get(id)??null)!==old)return false;records.set(id,raw);return true;}});
+  const recipe=rollCharacterRecipe({random:()=>.37}),definition=recipeCharacterDefinition('alice',recipe);
+  await store.saveDraft('alice',definition,{expectedVersion:0,requestId:'draft'});
+  await store.publish('alice',{expectedVersion:1,requestId:'publish'});
+  const [id]=records.keys(),stored=JSON.parse(records.get(id));
+  const strip=({build:_build,...parameters})=>parameters;
+  stored.revisions=stored.revisions.map(item=>({...item,parameters:strip(item.parameters)}));
+  if(stored.draft)stored.draft={...stored.draft,parameters:strip(stored.draft.parameters)};
+  records.set(id,JSON.stringify(stored));
+  assert.equal(Object.hasOwn(JSON.parse(records.get(id)).revisions[0].parameters,'build'),false,'the stored record has no build');
+  const read=await store.get('alice');
+  assert.equal(read.published.parameters.build,0);
+  assert.deepEqual(read.published,recipeCharacterDefinition('alice',{...strip(recipe),build:0},{revision:1}));
+  assert.equal((await store.getRevision('alice',1)).parameters.build,0);
+  // A client that loaded the person (so its copy carries build 0) selects the stored revision.
+  const selection=await store.initializeSelection('alice',{appearance:CUSTOM_APPEARANCE_ID,movement:'upright',character:recipeCharacterDefinition('alice',{...strip(recipe),build:0},{revision:1})});
+  assert.equal(selection.character.revision,1);assert.equal(selection.character.parameters.build,0);
+  // So does a client sending the record exactly as stored, without the field.
+  const legacyRecord={...recipeCharacterDefinition('alice',recipe,{revision:1}),parameters:strip(recipe)};
+  await store.changeSelection('alice',{type:'appearance',appearance:'sable-human'},{expectedVersion:1,requestId:'authored'});
+  const equipped=await store.changeSelection('alice',{type:'character',revision:1},{expectedVersion:2,requestId:'equip'});
+  assert.equal(equipped.selection.character.parameters.build,0);
+  assert.equal(JSON.stringify(equipped.selection.character),JSON.stringify(recipeCharacterDefinition('alice',{...strip(recipe),build:0},{revision:1})));
+  assert.equal(validateCharacterDefinition(legacyRecord,{ownerId:'alice'}).ok,true);
+  // A build the catalogue refuses is corruption, not something to repair.
+  const tampered=JSON.parse(records.get(id));tampered.revisions[0].parameters.build=7;records.set(id,JSON.stringify(tampered));
+  await assert.rejects(store.get('alice'),code('invalid_character_record'));
 });

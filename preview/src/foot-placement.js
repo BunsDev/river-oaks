@@ -8,8 +8,35 @@ const smooth = t => t*t*(3-2*t);
 const TRANSFER_START = .25, REACH_KNEE = .01;
 // Pelvis release: critically damped return (1/s) and its speed cap (m/s).
 const RISE_RESPONSE = 20, RISE_CAP = .5;
+// The furthest (m) the body trails its ceiling: a curb's rise is left to the
+// capped release, a stair's accumulating rise is not (#637).
+const RISE_DEFICIT = .2;
 // Decay rate (1/s) of the body height offset after an abrupt navigation step.
 const STEP_TRANSFER = 8;
+// Steepest rise over a frame's horizontal travel that is still a slope.
+const ABRUPT_SLOPE = .6;
+// Running (m/s) from about where people break into a run, at a cadence (steps/s) of
+// about 2.8 at 3.2 m/s and 3.3 at 6.4 m/s, its swing clearance (m: higher lifted the
+// thigh past the 0.75 rad the skirts and coats are fitted to), and how far
+// past RUN_BACK (m) a foot may trail while it waits its turn; slowing to a walk, a
+// running swing lands within RUN_LAND seconds. A running foot leaves the ground
+// RUN_BACK (m) behind the hip: pushing off from a walk's 0.25 m extended the
+// thigh to -0.4 rad and drove the skirts and coat tails into it (#637).
+export const RUN_SPEED = 2.1;
+const RUN_CADENCE = speed => 2.35+.15*speed, RUN_CLEARANCE = .05, RUN_STRETCH = .12;
+export const RUN_LAND = .15;
+// A run starts once the speed has held RUN_SPEED over about RUN_SUSTAIN seconds, so a
+// peer's brief catch-up (up to 1.96 m/s for a 1.65 m/s walker, #645) never lunges,
+// and lasts until the speed falls below RUN_EXIT, so a turn's dip does not break it.
+// A cut turning the travel faster than RUN_CUT (rad/s) breaks a run into quick steps:
+// a planted foot waiting its turn was left 0.3 m off a line swung through 90 degrees.
+const RUN_SUSTAIN = .25, RUN_CUT = 3, RUN_BACK = .1;
+// A foot that leaves out of phase (m of travel against the half cycle, up to
+// RUN_PHASE) swings that much shorter or longer, and a late one may leave up to
+// RUN_EARLY (m) ahead of the hip: joining a run from a walk otherwise limped
+// (alternate steps of 1.23/1.00 m) for about 3 s.
+const RUN_PHASE = .3, RUN_EARLY = .1;
+export const RUN_EXIT = 1.8;
 // A hinge with a C1 onset: zero below -knee, the identity above +knee, and a
 // quadratic blend between, never less than the hard limit it softens.
 const softLimit = (want, knee) => want <= -knee ? 0 : want >= knee ? want : (want+knee)*(want+knee)/(4*knee);
@@ -73,10 +100,13 @@ export function createFootPlacement(model, root) {
     const roll=createFootRoll(foot,model.getObjectByName(`ball_${side}`),sole,toeWeights);
     return {side, index, thigh, calf, foot, forwardAxis, sole, soleSources, roll, bindScale:foot.getWorldScale(new THREE.Vector3()).y, baseUpperLength:hip.distanceTo(knee), baseLowerLength:knee.distanceTo(ankle), upperLength:hip.distanceTo(knee), lowerLength:knee.distanceTo(ankle), rest, target:null, swing:null, lastPhase:0, contact:true};
   }).filter(Boolean);
-  let lastDistance = null, lastPosition = null, hasStepped = false, pelvisLower = 0, bodyHeight = 0, bodyRise = 0, bodyRootHeight = null, lastPlatform = null;
+  let runPace = 0, running = false, lastTravel = null, lastDistance = null, lastPosition = null, hasStepped = false, pelvisLower = 0, bodyHeight = 0, bodyRise = 0, bodyRootHeight = null, lastPlatform = null;
   const swingTravel = 0.38, reach = 0.25;
   return {
     legs,
+    // The body sat, rode or flew while its feet were not placed: the next update
+    // stands them under it (a relocation), however near the old footprints are.
+    reset() { lastDistance = null; },
     update(delta, locomotion, groundAt) {
       if (legs.length !== 2) return;
       root.updateWorldMatrix(true, false);
@@ -104,15 +134,22 @@ export function createFootPlacement(model, root) {
       lastPlatform = platform;
       const reset = lastDistance === null || distance < lastDistance || lastPosition.distanceTo(origin) > 1;
       if(reset)pelvisLower=0;
+      runPace=reset?speed:runPace+(speed-runPace)*(1-Math.exp(-delta/RUN_SUSTAIN));
+      const travelYaw=Math.atan2(travelForward.x,travelForward.z),cut=lastTravel!==null&&delta>0&&Math.abs(Math.atan2(Math.sin(travelYaw-lastTravel),Math.cos(travelYaw-lastTravel)))>RUN_CUT*delta;
+      lastTravel=travelYaw;
+      const broken=running&&cut;
+      running=!reset&&!cut&&(running?speed>=RUN_EXIT:speed>=RUN_SPEED&&runPace>=RUN_SPEED);
       if(speed<=.03&&!legs.some(leg=>leg.swing))hasStepped=false;
       const scale=root.getWorldScale(new THREE.Vector3()).y,epsilon=.12;
       // Navigation must follow the exact collision surface, but the rendered
       // body transfers height over time when crossing a curb. Continuous slopes
-      // follow navigation directly; only height jumps faster than 1.2 m/s add
-      // a decaying offset. Keep the state in world space, clear it on relocation,
-      // and leave shoe targets on the actual terrain below.
+      // follow navigation directly; only height jumps faster than 1.2 m/s and
+      // steeper than ABRUPT_SLOPE over the frame's travel add a decaying offset
+      // (a fast walk up the office stair's 0.45 nosing line is a slope, not a curb
+      // a frame). Keep the state in world space, clear it on relocation, and leave
+      // shoe targets on the actual terrain below.
       const heightStep=reset?0:origin.y-lastPosition.y;
-      const abruptStep=Math.abs(heightStep)>1.2*delta;
+      const abruptStep=Math.abs(heightStep)>Math.max(1.2*delta,ABRUPT_SLOPE*(reset?0:Math.hypot(origin.x-lastPosition.x,origin.z-lastPosition.z)));
       bodyRootHeight=reset?origin.y:origin.y+(bodyRootHeight-lastPosition.y-(abruptStep?heightStep:0))*Math.exp(-STEP_TRANSFER*delta);
       const heightLag=bodyRootHeight-origin.y;
       model.position.y+=heightLag/scale;
@@ -139,6 +176,9 @@ export function createFootPlacement(model, root) {
         point.y=supportHeight(point,leg,orientation,normal);
         return orientation;
       };
+      // Each foot reads the other's running swing as the frame began, so the
+      // order of the legs below cannot favour one side.
+      const runs=legs.map(leg=>!reset&&leg.swing?.running?{progress:leg.swing.progress,travel:leg.swing.travel}:null);
       for (const leg of legs) {
         const base=leg.foot.getWorldQuaternion(new THREE.Quaternion());
         leg.soleScale=leg.foot.getWorldScale(new THREE.Vector3());
@@ -153,17 +193,36 @@ export function createFootPlacement(model, root) {
         const plantedForward=leg.forwardAxis.clone().applyQuaternion(leg.orientation);
         const yawDelta=Math.atan2(plantedForward.x,plantedForward.z)-Math.atan2(forward.x,forward.z);
         const turning=Math.abs(Math.atan2(Math.sin(yawDelta),Math.cos(yawDelta)))>.25;
-        const trailing = leg.target.clone().sub(sample).dot(travelForward) < -strideReach;
-        if (moving && !legs.some(other=>other.swing) && (trailing || !hasStepped && leg.index===1)) {
+        const lead = leg.target.clone().sub(sample).dot(travelForward), trailing = lead < -strideReach;
+        // A run (#637): one foot at a time took 8 steps a second at 3.2 m/s and 16 at
+        // 6.4. Each foot lands strideReach ahead of the hip and leaves RUN_BACK
+        // behind it, then swings for the rest of a step set by RUN_CADENCE, so the
+        // swings overlap. The feet keep half a cycle apart: a foot leaves when the
+        // other's swing passes that point, or (joining a run from a walk or a
+        // standstill) once dragged RUN_STRETCH past RUN_BACK.
+        const opposite = runs[1-leg.index];
+        const alternate = running && !leg.swing && opposite && lead < RUN_EARLY
+          && (opposite.progress >= (opposite.travel+strideReach+RUN_BACK)/(2*opposite.travel) || lead < -RUN_BACK-RUN_STRETCH);
+        // Moving, a foot landing from a run does not hold back the other's step.
+        const free = !leg.swing && !legs.some(other=>other.swing && !other.swing.landing);
+        if (moving && (alternate || free && (trailing || !hasStepped && leg.index===1))) {
           // From standing, the support foot starts under the hip rather than
           // ahead of it. A half-length first swing avoids leaving it far behind.
-          const travel=hasStepped?strideTravel:strideTravel/2;
+          const run=running&&hasStepped,late=run&&alternate?THREE.MathUtils.clamp(opposite.progress*opposite.travel-(opposite.travel+strideReach+RUN_BACK)/2,-RUN_PHASE,RUN_PHASE):0;
+          const travel=!hasStepped?strideTravel/2:run?Math.max(strideTravel,2*speed/RUN_CADENCE(speed)-strideReach-RUN_BACK-late):strideTravel;
           const end = sample.clone().addScaledVector(travelForward, travel+strideReach);
-          leg.swing = makeSwing(end,false,travel);hasStepped=true;
+          leg.swing = makeSwing(end,false,travel);if(run)leg.swing.running={lead};hasStepped=true;
+        }
+        // Slowing out of a run, a long swing lands from where it is within a
+        // walking swing's length and RUN_LAND seconds, even if the body stops: two
+        // feet in the air must not wait on distance or settle together.
+        if (leg.swing?.running && !running) {
+          const travel=Math.min(leg.swing.travel*(1-leg.swing.progress),strideTravel);
+          leg.swing=makeSwing(sample.clone().addScaledVector(travelForward,travel+strideReach),false,travel);leg.swing.landing=true;
         }
         // Finish an interrupted step, then bring the trailing foot under the body.
         // The two feet never enter a settling step at the same time.
-        if (!moving && leg.swing && !leg.swing.settling) {
+        if (!moving && leg.swing && !leg.swing.settling && !leg.swing.landing) {
           leg.swing = makeSwing(sample.clone(),true);
         }
         if (!moving && !leg.swing && !legs.some(other=>other.swing) && (leg.target.distanceTo(sample) > 0.09 || turning)) {
@@ -171,14 +230,15 @@ export function createFootPlacement(model, root) {
         }
         // Rotation needs a time-based corrective step even at walking speeds.
         // Distance alone can leave a slow-moving character twisted for seconds.
-        if(moving && turning && !leg.swing && !legs.some(other=>other.swing)) {
+        // A cut that breaks a run steps the planted foot onto the new line at once.
+        if(moving && (turning || broken) && free) {
           leg.swing=makeSwing(sample.clone(),false,swingTravel,true);
         }
         if (leg.swing) {
           const swing = leg.swing;
           if(turning)swing.turning=true;
           const distanceProgress=Math.max(0,distance-(lastDistance ?? distance))/swing.travel;
-          const progress=swing.settling?delta/.24:swing.turning?Math.max(delta/.24,distanceProgress):distanceProgress;
+          const progress=swing.settling?delta/.24:swing.turning?Math.max(delta/.24,distanceProgress):swing.landing?Math.max(delta/RUN_LAND,distanceProgress):distanceProgress;
           swing.progress=Math.min(1,swing.progress+progress);
           // A turning body's natural stance keeps moving during the step.
           // Follow it only while airborne; the supporting shoe stays planted.
@@ -193,10 +253,14 @@ export function createFootPlacement(model, root) {
             swing.end.copy(sample).addScaledVector(travelForward,swing.travel*(1-swing.progress)+strideReach);
             swing.toRotation.copy(poseAt(swing.end,leg,base));
           }
-          leg.target.copy(swing.start).lerp(swing.end,smooth(swing.progress));
+          // A running swing passes under the body, from where it left to strideReach
+          // ahead of the hip: eased between fixed world points over a long swing, it
+          // reached half a metre past the hip and trailed as far behind it in flight.
+          if(swing.running)leg.target.copy(sample).addScaledVector(travelForward,swing.running.lead+(strideReach-swing.running.lead)*smooth(swing.progress)).setY(swing.start.y+(swing.end.y-swing.start.y)*smooth(swing.progress));
+          else leg.target.copy(swing.start).lerp(swing.end,smooth(swing.progress));
           leg.orientation.slerpQuaternions(swing.fromRotation,swing.toRotation,smooth(swing.progress));
           // Zero vertical arc velocity at lift-off and landing.
-          leg.target.y += Math.sin(Math.PI*swing.progress)**2 * (swing.settling ? 0.035 : 0.075);
+          leg.target.y += Math.sin(Math.PI*swing.progress)**2 * (swing.settling ? 0.035 : swing.running || swing.landing ? RUN_CLEARANCE : 0.075);
           leg.target.y=Math.max(leg.target.y,supportHeight(leg.target,leg,leg.orientation));
           if (swing.progress >= 1) leg.swing = null;
         }
@@ -263,15 +327,19 @@ export function createFootPlacement(model, root) {
       // drops to it at once so no planted foot is left out of reach. Rising
       // back is a motion the body makes, so it eases toward the ceiling as a
       // critically damped return with a speed cap. The state is world height:
-      // continuous terrain carries the body with it, an abrupt step is already
-      // transferred by heightLag, and a ceiling that merely re-expresses that
-      // transfer (the root dropped, the planted foot did not) is not a release.
+      // continuous terrain and the heightLag transfer of an abrupt step carry the
+      // body with them, and a ceiling that merely re-expresses that transfer (the
+      // root dropped, the planted foot did not) is not a release.
       // The old exp(-16 t) release let a 9 cm uphill crouch spring back at
-      // 1.4 m/s the instant the trailing foot lifted.
+      // 1.4 m/s the instant the trailing foot lifted. The capped release alone
+      // could not keep up with a climb, though: risers coming faster than 0.5 m/s
+      // sank the body 1.4 m below a stepped stair's head at 1.65 m/s, so it never
+      // trails the ceiling by more than RISE_DEFICIT (#637).
       const ceiling = origin.y + heightLag - lower;
       if (reset) { bodyHeight = ceiling; bodyRise = 0; }
       else {
         if (!abruptStep) bodyHeight += heightStep;
+        bodyHeight = Math.max(bodyHeight, ceiling-RISE_DEFICIT);
         if (ceiling <= bodyHeight) { bodyHeight = ceiling; bodyRise = 0; }
         else {
           bodyRise += (-2*RISE_RESPONSE*bodyRise + RISE_RESPONSE*RISE_RESPONSE*(ceiling-bodyHeight))*delta;

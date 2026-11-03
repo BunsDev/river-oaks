@@ -75,8 +75,17 @@ export function createRoomGroundClip(rooms,{persistent=[]}={}) {
       Object.assign(shader.uniforms, uniforms);
       shader.vertexShader = shader.vertexShader
         .replace('#include <common>', '#include <common>\nvarying vec3 vRoRoomWorld;')
+        // World position as project_vertex builds it, so instanced and batched outdoor meshes clip
+        // where they are drawn, not at their shared geometry's origin.
         .replace('#include <project_vertex>', `#include <project_vertex>
-          vRoRoomWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;`);
+          vec4 roRoomPosition = vec4(transformed, 1.0);
+          #ifdef USE_BATCHING
+            roRoomPosition = batchingMatrix * roRoomPosition;
+          #endif
+          #ifdef USE_INSTANCING
+            roRoomPosition = instanceMatrix * roRoomPosition;
+          #endif
+          vRoRoomWorld = (modelMatrix * roRoomPosition).xyz;`);
       shader.fragmentShader = shader.fragmentShader
         .replace('#include <common>', `#include <common>
           varying vec3 vRoRoomWorld;

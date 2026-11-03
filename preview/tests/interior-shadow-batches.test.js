@@ -69,7 +69,7 @@ test('switching the batching off restores every batch’s own casting, and back'
 test('the sun shows a proxy only inside its shadow frustum and under shown ancestors', () => {
   const light = new THREE.DirectionalLight(); light.position.set(0, 20, 0);
   light.updateMatrixWorld(); light.target.updateMatrixWorld();
-  const layer = new THREE.Group(), near = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1)), far = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1));
+  const layer = new THREE.Group(), near = Object.assign(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1)), { castShadow: true }), far = Object.assign(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1)), { castShadow: true });
   far.position.set(500, 0, 0); near.visible = far.visible = false;
   layer.add(near, far); layer.updateMatrixWorld(true);
   castShadowsFromProxies(light, () => [near, far]);

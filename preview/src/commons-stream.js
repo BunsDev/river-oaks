@@ -4,6 +4,11 @@ import { locationWorldBounds } from './world-manifest.js';
 import { validateCommonsRegistration } from './east-garden-commons-world.js';
 import { createSpatialChunkStream } from './spatial-chunk-stream.js';
 
+// The composed destination's geometry, rounded up from measurement per kit finish: 2.91 MiB
+// classic and 3.10 MiB with Pink Jet-Age's rounded forms (#742). Classic keeps its estimate.
+export const COMMONS_DESTINATION_BYTES = { classic: 3 * 1024 * 1024, 'pink-jet-age': 3.2 * 1024 * 1024 };
+export const commonsDestinationBytes = (finish = 'classic') => COMMONS_DESTINATION_BYTES[finish] ?? COMMONS_DESTINATION_BYTES.classic;
+
 // Counts owned buffer storage; no shared District resources enter this chunk.
 function geometryBytes(group) {
   const buffers = new Set();
@@ -14,9 +19,12 @@ function geometryBytes(group) {
   return [...buffers].reduce((bytes, buffer) => bytes + buffer.byteLength, 0);
 }
 
-export function createCommonsStream({ world, parent, onStatus = () => {}, onScene = () => {}, now,
-  loadModule = () => import('./east-garden-commons.js') }) {
-  const layout = validateCommonsRegistration(manifest, world.eastGardenCommons);
+// `layout` is the Commons layout to present; Bayou Heights passes the restored Commons
+// with its bayou opened for the footbridge (heights-stream.js). `finish` is the
+// presentation-only kit finish (render-quality.js readFinishPreference).
+export function createCommonsStream({ world, layout: presented = world.eastGardenCommons, parent, onStatus = () => {}, onScene = () => {}, now,
+  finish, loadModule = () => import('./east-garden-commons.js') }) {
+  const layout = validateCommonsRegistration(manifest, presented);
   const location = manifest.locations.find(item => item.id === layout.id);
   const [west, south, east, north] = locationWorldBounds(location);
   const gatewayNorth = location.entries.find(entry => entry.id === 'district-promenade').position_m[1];
@@ -28,14 +36,14 @@ export function createCommonsStream({ world, parent, onStatus = () => {}, onScen
   let status = '';
   const announce = text => { if (text !== status) { status = text; onStatus(text); } };
   const stream = createSpatialChunkStream({
-    chunks: [{ id: location.id, bounds: locationWorldBounds(location), estimatedBytes: layout.destination ? 3 * 1024 * 1024 : 65536 }],
+    chunks: [{ id: location.id, bounds: locationWorldBounds(location), estimatedBytes: layout.destination ? commonsDestinationBytes(finish) : 65536 }],
     maxResident: 1, maxConcurrent: 1, maxBytes: 16 * 1024 * 1024,
     prefetchDistance: 85, unloadDistance: 110, now,
     async load(_chunk, signal) {
       const { buildEastGardenCommons } = await loadModule();
       // Imports cannot be aborted, but a stale import must never allocate a scene.
       if (signal.aborted) throw new Error('Cancelled Commons load');
-      const group = buildEastGardenCommons(layout);
+      const group = buildEastGardenCommons(layout, { finish });
       let disposed = false;
       const dispose = () => { if (!disposed) { disposed = true; group.userData.dispose(); } };
       signal.addEventListener('abort', dispose, { once: true });
@@ -77,7 +85,9 @@ export function createCommonsStream({ world, parent, onStatus = () => {}, onScen
     ready: () => stream.ready(layout.id),
     allowsStep(from, to) {
       if (!to?.slice(0, 2).every(Number.isFinite)) return false;
-      if (stream.ready(layout.id) || to[0] <= layout.edge - .35) return true;
+      // Beyond the Commons (Bayou Heights, bayou-heights-1) that location's own stream gates presentation.
+      // The Bayou Terraces (bayou-terraces-1) beside the Commons are gated by the Heights stream too.
+      if (stream.ready(layout.id) || to[0] <= layout.edge - .35 || to[0] > east + .35 || to[1] < south - .35 || to[1] > north + .35) return true;
       // A restored player may need to move sideways around a planter before
       // retreating west. Existing collision still applies; entry and further
       // eastward progress remain blocked until presentation is available.

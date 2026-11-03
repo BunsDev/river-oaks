@@ -9,6 +9,12 @@ const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const ACTIONS=new Set(['continue','pause','greet','redirect','seek_shelter','slow','stop']);
 const SOURCES=new Set(['jev','local_rules','safety_override']);
 const HELP_WAIT=30;
+const WANDER_OUTINGS=12,WANDER_STEP=60;
+// #640 increment 3: how residents react to trouble on the street. Proposed tuning, to be
+// playtested; the world decides who can see what and when an alarm happens.
+export const REACTION_RULES=Object.freeze({radiusM:20,wantedRadiusM:6,cap:6,cooldownMs:10_000,
+  startleMs:1000,fleeMs:6000,cowerMs:5000,fleeMinM:12,fleeMaxM:18,fleePace:2});
+const REACTION_KINDS=['startle','flee','cower'];
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 // Collision avoidance is physical occupancy, not a projection of every visible
 // person onto the street. Low flight still overlaps a standing pedestrian.
@@ -18,10 +24,67 @@ const streetVisitor=(local,visitor,pose)=>visitor && (!pose ||
   (pose.roomId??null)===(local.storeId??null) && Math.abs(feetHeight(local)-pose.ground-(pose.altitude??0))<1.8) ? visitor : null;
 
 
+// Residents also stroll into composed locations. Three lanterns along the way
+// (nearest, middle and farthest from the District) give them somewhere to go;
+// more would leave the nearest stops all in the Commons, and residents who
+// wandered in would rarely come back.
+// Across the footbridge, Bayou Heights adds its landing, bandstand, icehouse patio
+// and hall. Each stands in open ground, clear all round, nearest the landing: a spot
+// tucked beside the bandstand's stage was clear but took the planner too long to leave.
+// Proving each stop by route search cost seconds the first time a server built Heights,
+// inside the request that switched the district; resident-locations.test.js proves the
+// chosen stops reach the landing and back. A world's stops are placed once.
+const placedStops=new WeakMap();
+function locationStops(world,navigation) {
+  if(!placedStops.has(world)) placedStops.set(world,placeLocationStops(world,navigation));
+  return placedStops.get(world).map(stop=>({...stop,position:[...stop.position]}));
+}
+
+function placeLocationStops(world,navigation) {
+  const layout=world.eastGardenCommons,lanterns=[...layout?.destination?.lanterns ?? []];
+  if(!navigation.locations || lanterns.length<3) return [];
+  lanterns.sort((a,b)=>a.at[0]-b.at[0]);
+  const stops=[];
+  // Landmarks are solids; stand on clear ground beside each one, nearest `toward` first.
+  const beside=(id,name,at,from,to,{toward=null,open=()=>true}={})=>{
+    const ring=[];
+    for(let radius=from;radius<=to;radius+=0.4)for(let i=0;i<16;i++) {
+      const angle=i/16*Math.PI*2,position=[at[0]+Math.cos(angle)*radius,at[1]+Math.sin(angle)*radius];
+      if(navigation.free(position)) ring.push(position);
+    }
+    if(toward) ring.sort((a,b)=>distance(a,toward)-distance(b,toward));
+    const position=ring.slice(0,8).find(open);
+    if(position) stops.push({id,name,position});
+    return position;
+  };
+  for(const lantern of [lanterns[0],lanterns[lanterns.length>>1],lanterns.at(-1)]) beside(lantern.id,lantern.name,lantern.at,0.8,3);
+  const heights=layout.heights,centre=rect=>[(rect[0]+rect[2])/2,(rect[1]+rect[3])/2];
+  const around=rect=>[Math.min(rect[2]-rect[0],rect[3]-rect[1])/2+0.8,Math.hypot(rect[2]-rect[0],rect[3]-rect[1])/2+4];
+  const landing=heights?.footbridge?.landing?.every(Number.isFinite)
+    && beside(`${heights.id}/footbridge`,'Footbridge landing',centre(heights.footbridge.landing),0,3);
+  if(!landing) return stops;
+  // Clear at 0.6 m and 1.2 m all round, so a resident can leave the stop in any direction.
+  const open=([east,north])=>{
+    for(let i=0;i<16;i++)for(const radius of [0.6,1.2]) {
+      const angle=i/16*Math.PI*2;
+      if(!navigation.free([east+Math.cos(angle)*radius,north+Math.sin(angle)*radius])) return false;
+    }
+    return true;
+  };
+  for(const [name,label,rect,at] of [['bandstand','Bandstand',heights.bandstand?.rect],['icehouse','Icehouse patio',null,heights.icehouse?.at],
+    ['hall','Heights Hall',heights.hall?.rect]]) {
+    const id=`${heights.id}/${name}`;
+    if(rect?.every(Number.isFinite)) beside(id,label,centre(rect),...around(rect),{toward:landing,open});
+    else if(at?.every?.(Number.isFinite)) beside(id,label,at,0.8,3,{toward:landing,open});
+  }
+  return stops;
+}
+
 export function createResidentLife(world,state,routeProvider=null) {
-  const navigation=createResidentNavigation(world);
+  const navigation=createResidentNavigation(world,{locations:true});
   if(!navigation) return null;
-  const stops=(world.communityLocations ?? []).map(stop=>({...stop,position:navigation.sidewalkPoint(stop.position)})).filter(stop=>navigation.free(stop.position));
+  const stops=[...(world.communityLocations ?? []).map(stop=>({...stop,position:navigation.sidewalkPoint(stop.position)})),...locationStops(world,navigation)]
+    .filter(stop=>navigation.free(stop.position));
   // These small awnings exist in the interpreted storefront mesh, not a shelter registry.
   const shelters=(world.stores ?? []).map(store=>({id:store.id,name:store.name,position:[store.facade[0]+store.outward[0]*0.9,store.facade[1]+store.outward[1]*0.9]})).filter(stop=>navigation.free(stop.position));
   // Storefront benches by store: a resident resting at that storefront may sit.
@@ -38,14 +101,100 @@ export function createResidentLife(world,state,routeProvider=null) {
   return {state,navigation,routeProvider:routeProvider ?? navigation.route,planning:false,stops,shelters,benches,takenSeats:new Set(),elapsed:0,storm:false,revision:0,packet:null,cursor:0,paused:false,stats:{jev:0,local_rules:0,safety_override:0,latency_ms:null}};
 }
 
+// Trouble on the street (#640): a landed contact, police taking hold of someone, or a wanted
+// player at arm's length. Residents who are outdoors at street level within range, with a clear
+// line to it (sees(from,to), the world's own sight rule), startle: the nearest first, at most
+// REACTION_RULES.cap reacting at once, each at most once per cool-off. A resident held by a
+// conversation, a wish or a visit keeps it. Returns the ids of the residents it reached.
+// The step's awaitingHelp rule without its bookkeeping: a resident who has asked for help and
+// is still inside the wait (or about to start it) is held, so an alarm passes them by.
+const waitingForHelp=(life,local)=>Boolean(local.priority && local.status==='needs_help' && local.needKnown
+  && !['supply','dispatch'].includes(local.lastInteraction) && !local.askedInStorm
+  && (local.life.helpWait?.generation!==life.state.generation || life.elapsed<local.life.helpWait.until));
+export function alarmResidents(life,alarm,{sees=()=>true}={}) {
+  if(!life || !Array.isArray(alarm?.position) || alarm.position.length<2 || !alarm.position.slice(0,2).every(Number.isFinite)) return [];
+  if(life.storm) return [];
+  const {state}=life,from=[alarm.position[0],alarm.position[1]],elevation=Number.isFinite(alarm.position[2])?alarm.position[2]:null;
+  const radius=alarm.kind==='wanted'?REACTION_RULES.wantedRadiusM:REACTION_RULES.radiusM;
+  const reacting=state.locals.filter(local=>local.life?.reaction).length;
+  let room=Math.max(0,REACTION_RULES.cap-reacting);
+  if(!room) return [];
+  const candidates=state.locals.filter(local=>!local.indoor && !local.stationary && local.life && !local.life.reaction
+      && (local.life.reactionCooldownUntil ?? 0)<=life.elapsed
+      && state.selectedId!==local.id && !local.wish && !local.wishDisruption && !local.life.visitId
+      && (local.status!=='aid_en_route') && !local.visitorReaction?.sharedFocus && !waitingForHelp(life,local)
+      && distance(local.position,from)<=radius && (elevation===null || Math.abs(feetHeight(local)-elevation)<1.8))
+    .map(local=>({local,distance:distance(local.position,from)}))
+    .sort((a,b)=>a.distance-b.distance || a.local.id.localeCompare(b.local.id));
+  const reached=[];
+  for(const {local} of candidates) {
+    if(!room) break;
+    if(!sees(local.position,alarm.position)) continue;
+    const motion=local.life;
+    standUp(life,local);
+    motion.routeVersion++;motion.route=[];motion.destination=null;motion.attempt=0;
+    motion.reaction={kind:'startle',from:[...from],until:life.elapsed+REACTION_RULES.startleMs/1000};
+    motion.reactionCooldownUntil=life.elapsed+REACTION_RULES.cooldownMs/1000;
+    motion.action='stop';motion.source='safety_override';motion.reactionUntil=motion.reaction.until;motion.status='startled';
+    reached.push(local.id);room--;
+  }
+  return reached;
+}
+// Where a resident runs: clear ground off the roadway REACTION_RULES.fleeMinM to fleeMaxM metres
+// from the alarm (4 m beyond where they stood when that is farther), away from it first, then
+// sideways, never nearer to it than they were.
+function fleePoint(navigation,position,from) {
+  const away=Math.atan2(position[0]-from[0],position[1]-from[1]),start=distance(position,from);
+  const least=Math.max(REACTION_RULES.fleeMinM-.5,start+2);
+  for(const turn of [0,Math.PI/6,-Math.PI/6,Math.PI/3,-Math.PI/3,Math.PI/2,-Math.PI/2])
+    for(let reach=Math.max(REACTION_RULES.fleeMaxM,Math.ceil(start)+4);reach>=REACTION_RULES.fleeMinM;reach-=2) {
+      const angle=away+turn,point=[from[0]+Math.sin(angle)*reach,from[1]+Math.cos(angle)*reach];
+      if(distance(point,position)<3) continue;
+      for(let radius=0;radius<=3;radius+=1)for(let i=0;i<(radius?8:1);i++) {
+        const spread=i/8*Math.PI*2,candidate=[point[0]+Math.cos(spread)*radius,point[1]+Math.sin(spread)*radius];
+        if(navigation.free(candidate) && navigation.pedestrian.classify(candidate)!=='road' && distance(candidate,from)>=least) return candidate;
+      }
+    }
+  return null;
+}
+// A reaction record the town could have produced (checkpoint validation).
+export function validReaction(reaction) {
+  return reaction===null || reaction===undefined || (reaction && typeof reaction==='object' && !Array.isArray(reaction)
+    && Object.keys(reaction).sort().join()==='from,kind,until' && REACTION_KINDS.includes(reaction.kind)
+    && Number.isFinite(reaction.until) && reaction.until>=0
+    && Array.isArray(reaction.from) && reaction.from.length===2 && reaction.from.every(Number.isFinite));
+}
+
+// Clear ground off the roadway, up to WANDER_STEP metres along the way to a stop.
+function strollToward(navigation,from,target) {
+  const length=distance(from,target.position);
+  if(length<=WANDER_STEP) return length>4 ? target : null;
+  const t=WANDER_STEP/length,ahead=[from[0]+(target.position[0]-from[0])*t,from[1]+(target.position[1]-from[1])*t];
+  for(let radius=0;radius<=8;radius+=0.5)for(let i=0;i<(radius?16:1);i++) {
+    const angle=i/16*Math.PI*2,position=[ahead[0]+Math.cos(angle)*radius,ahead[1]+Math.sin(angle)*radius];
+    if(navigation.free(position) && navigation.pedestrian.classify(position)!=='road')
+      return {id:target.id,name:target.name,position,stroll:true};
+  }
+  return null;
+}
+
 function plan(life,local,index) {
   const motion=local.life,sheltering=life.storm || motion.action==='seek_shelter';
+  if(motion.reaction?.kind==='flee') return planFlight(life,local);
   let candidates=(sheltering?life.shelters:life.stops).filter(stop=>sheltering || distance(local.position,stop.position)>4);
   candidates.sort((a,b)=>distance(a.position,local.position)-distance(b.position,local.position));
   candidates=candidates.slice(0,6);
   if(!sheltering && candidates.length) {
     const offset=(index+motion.visits)%Math.min(3,candidates.length);
     candidates=[...candidates.slice(offset),...candidates.slice(0,offset)];
+    // Residents wander: every other outing is a stroll of up to WANDER_STEP metres
+    // toward a far stop that changes every few outings. Over time they cross the
+    // whole town (the Commons too) while each route search stays short.
+    if((index+motion.visits)%2===1) {
+      const target=life.stops[(index*7+Math.floor(motion.visits/WANDER_OUTINGS)*13)%life.stops.length];
+      const stroll=target && strollToward(life.navigation,local.position,target);
+      if(stroll) candidates=[stroll,...candidates];
+    }
   }
   // One route search per update; failed destinations are retried on later updates.
   const candidate=candidates[motion.attempt ?? 0];
@@ -57,7 +206,26 @@ function plan(life,local,index) {
   const accept=route=>{
     if(life.revision!==revision || life.state.generation!==generation || motion.routeVersion!==routeVersion) return;
     if(!route) {motion.attempt=(motion.attempt ?? 0)+1;motion.waitUntil=life.elapsed+0.2;return;}
-    motion.route=route;motion.destination={id:candidate.id,name:candidate.name,shelter:sheltering,...(seat?{seatId:seat.id}:{})};motion.attempt=0;
+    motion.route=route;motion.destination={id:candidate.id,name:candidate.name,shelter:sheltering,...(seat?{seatId:seat.id}:{}),...(candidate.stroll?{stroll:true}:{})};motion.attempt=0;
+  };
+  const result=life.routeProvider(local.position.slice(0,2),goal.slice(0,2));
+  if(result?.then) {
+    life.planning=true;
+    result.then(accept,()=>accept(null)).finally(()=>{life.planning=false;});
+  } else accept(result);
+}
+
+// A flight uses the same bounded route-search slot as any outing. With no clear ground or no
+// route to it, the resident cowers where they stand instead.
+function planFlight(life,local) {
+  const motion=local.life,reaction=motion.reaction,goal=fleePoint(life.navigation,local.position,reaction.from);
+  const cower=()=>{motion.reaction={kind:'cower',from:[...reaction.from],until:life.elapsed+REACTION_RULES.cowerMs/1000};motion.reactionUntil=motion.reaction.until;motion.action='stop';motion.status='cowering';motion.route=[];motion.destination=null;};
+  if(!goal) {cower();return;}
+  const revision=life.revision,generation=life.state.generation,routeVersion=motion.routeVersion;
+  const accept=route=>{
+    if(life.revision!==revision || life.state.generation!==generation || motion.routeVersion!==routeVersion || motion.reaction?.kind!=='flee') return;
+    if(!route?.length) {cower();return;}
+    motion.route=route;motion.destination={id:'flight',name:'away from trouble',shelter:false,flight:true};motion.attempt=0;
   };
   const result=life.routeProvider(local.position.slice(0,2),goal.slice(0,2));
   if(result?.then) {
@@ -209,6 +377,24 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
     if(paused && !visit) continue;
     if (local.indoor || local.stationary) { motion.status = state.selectedId === local.id ? 'chatting' : 'at work'; continue; }
     motion.blocked=false;
+    // A reaction (#640) runs its phases: startle, then flight (routed in plan) or a cower, then
+    // a short rest. A storm overrides it like everything else; a resident the visitor engages
+    // (held, below) drops it and keeps the cool-off.
+    if(motion.reaction && !storm && held(local)) {motion.reaction=null;motion.reactionUntil=life.elapsed;motion.action='continue';motion.source='local_rules';motion.routeVersion++;motion.route=[];motion.destination=null;motion.attempt=0;}
+    if(motion.reaction && (storm || life.elapsed>=motion.reaction.until)) {
+      if(!storm && motion.reaction.kind==='startle') {
+        motion.reaction={kind:'flee',from:[...motion.reaction.from],until:life.elapsed+REACTION_RULES.fleeMs/1000};
+        motion.reactionUntil=motion.reaction.until;motion.action='continue';motion.waitUntil=life.elapsed;motion.routeVersion++;motion.route=[];motion.destination=null;motion.attempt=0;
+      } else {
+        motion.reaction=null;motion.routeVersion++;motion.route=[];motion.destination=null;motion.attempt=0;
+        motion.waitUntil=life.elapsed+4+index%3;motion.reactionUntil=life.elapsed;motion.action='continue';motion.source='local_rules';motion.status='resting';
+      }
+    }
+    if(motion.reaction && ['startle','cower'].includes(motion.reaction.kind)) {
+      // Stand still and face the trouble.
+      turnResident(motion,Math.atan2(motion.reaction.from[0]-local.position[0],-(motion.reaction.from[1]-local.position[1])),dt,9.75);
+      motion.status=motion.reaction.kind==='startle'?'startled':'cowering';continue;
+    }
     if(storm) {motion.action='seek_shelter';motion.source='safety_override';}
     else if(life.elapsed>=motion.reactionUntil) {
       if(motion.destination?.shelter) {motion.routeVersion++;motion.route=[];motion.destination=null;motion.waitUntil=life.elapsed;}
@@ -236,7 +422,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
         motion.waitUntil=motion.destination.shelter?Infinity:life.elapsed+(motion.destination.returning?1:6+index%5*2);
         const seat=motion.destination.seatId && benchSeat(life,motion.destination.seatId);
         if(seat && !benchHolder(life,seat.id,local)) {sitDown(life,local,seat);motion.waitUntil+=6;}
-        if(!motion.destination.returning && !motion.destination.visit) {local.anchorId=motion.destination.id;local.anchorName=motion.destination.name;local.persona.anchorName=motion.destination.name;}
+        if(!motion.destination.returning && !motion.destination.visit && !motion.destination.stroll && !motion.destination.flight) {local.anchorId=motion.destination.id;local.anchorName=motion.destination.name;local.persona.anchorName=motion.destination.name;}
       }
       continue;
     }
@@ -246,7 +432,8 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
     const desiredHeading=passingHeading(life,local,routeHeading,previous,nearbyVisitor,nearbyObjects);
     turnResident(motion,desiredHeading,dt);
     const turnAllowance=Math.max(0,Math.cos(desiredHeading-motion.heading));
-    const cruise=(1.05+index%4*0.07)*(motion.action==='slow'?0.58:1);
+    const fleeing=motion.reaction?.kind==='flee';
+    const cruise=(1.05+index%4*0.07)*(motion.action==='slow'?0.58:1)*(fleeing?REACTION_RULES.fleePace:1);
     // Brake for a sharp route corner as well as the final arrival. Collinear
     // navigation samples retain cruising speed.
     const remaining=motion.route.reduce((total,point,i)=>total+(i?distance(motion.route[i-1],point):length),0);
@@ -257,7 +444,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
       desired=Math.min(desired,Math.sqrt(cornerSpeed**2+2*1.8*Math.max(0,length-0.1)));
     }
     desired*=turnAllowance**2;
-    const rate=desired>previous?1.4:1.8;
+    const rate=(desired>previous?1.4:1.8)*(fleeing?2:1);
     const speed=previous+clamp(desired-previous,-rate*dt,rate*dt);
     const travel=Math.min(length,(previous+speed)*0.5*dt)*turnAllowance;
     const dx=Math.sin(motion.heading),dy=-Math.cos(motion.heading);
@@ -275,7 +462,7 @@ export function stepResidentLife(life,delta,{paused=false,visitor=null,visitorPo
       continue;
     }
     local.position=[next[0],next[1],life.navigation.ground(next)];motion.distance+=travel;motion.speed=travel/dt;motion.velocity=speed;
-    motion.status=turnAllowance<0.5?'turning':motion.destination?.shelter?'seeking cover':visit?'volunteering':'walking';
+    motion.status=fleeing?'fleeing':turnAllowance<0.5?'turning':motion.destination?.shelter?'seeking cover':visit?'volunteering':'walking';
   }
   observeVolunteerArrivals(life);
 }

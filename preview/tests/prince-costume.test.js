@@ -32,16 +32,27 @@ test('Jev borrows Owen\'s actual head shape and hairstyle while keeping the dedi
   assert.equal(hair,true,'Jev uses Owen\'s short02 hairstyle');
 });
 
-test('Prince Jev retains the dedicated hero geometry and facial rig with isolated dirty-blond, fair and pink materials',async()=>{
+test('Prince Jev retains the dedicated hero geometry and facial rig with isolated caramel, fair and cream-tunic materials',async()=>{
   const source=await loadCharacterRig('prince-jev'),rig=instantiateAvatar(source,{targetHeight:1.805}),object=new THREE.Group();object.add(rig.model);
   const geometry=new Map();rig.model.traverse(mesh=>{if(mesh.isMesh)geometry.set(mesh,mesh.geometry);});
   const donor=new THREE.Texture(),costume=createPrinceCostume({object,rig},{skinTexture:donor});
   try {
     const skin=[...rig.materials].find(([source])=>/^middleage_/.test(source.name))[1],hair=[...rig.materials].find(([source])=>/^short/.test(source.name))[1];
     assert.equal(skin.map,donor,'The young light-skin atlas replaces the older dark baked texture');
-    assert.equal(hair.color.getHexString(),'827052');
-    assert.ok(costume.materials.some(material=>material.name==='Prince Jev rose tunic'&&material.color.getHexString()==='efa1c3'));
-    for(const [mesh,original]of geometry)assert.equal(mesh.geometry,original,'Hero body, facial details and weights remain intact');
+    assert.equal(hair.color.getHexString(),'9a6530','caramel curls (2026-10-29 reference)');
+    assert.ok(costume.materials.some(material=>material.name==='Prince Jev cream tunic'&&material.color.getHexString()==='e9d4ad'));
+    assert.ok(costume.materials.some(material=>material.name==='Prince Jev sandal feet'));
+    // The suit, boots and hair are dressed on private clones (piece labels, a
+    // little hair volume); the body, eyes, brows, lashes and every weight stay.
+    const clones=new Set(costume.garmentClones);
+    for(const [mesh,original]of geometry){
+      if(!clones.has(mesh)){assert.equal(mesh.geometry,original,'Hero body, facial details and weights remain intact');continue;}
+      assert.notEqual(mesh.geometry,original);assert.equal(mesh.geometry.attributes.position.count,original.attributes.position.count);
+      assert.equal(original.attributes.garment,undefined,'the shared template geometry is never labelled');
+      assert.deepEqual(mesh.geometry.attributes.skinWeight.array,original.attributes.skinWeight.array,'the donor skin weights carry over');
+    }
+    const suit=[...geometry.keys()].find(mesh=>/suit/i.test(mesh.material?.name)||mesh.material?.name==='Prince Jev cream tunic'),labels=suit.geometry.attributes.garment.array;
+    assert.ok(labels.some(v=>v===1)&&labels.some(v=>v===0),'the one suit mesh is labelled tunic and trousers');
     assert.ok([...geometry.keys()].some(mesh=>mesh.morphTargetDictionary?.eyeBlinkLeft!==undefined));
     for(const [original]of rig.materials)assert.equal(original.color.getHexString(),'ffffff','Other residents keep their source materials');
   }finally{costume.dispose();rig.dispose();}
@@ -62,29 +73,52 @@ test('the shopping bag follows the animated hero hand at real scale and is relea
   }finally{rig.dispose();}
 });
 
-test('the coronet clears Owen hair and fine facial cards keep soft edges',async()=>{
+test('the belt, bracers and sandal straps are fitted to the garments, the dress uniform is gone, and fine facial cards keep soft edges',async()=>{
   const source=await loadCharacterRig('prince-jev'),rig=instantiateAvatar(source,{targetHeight:1.86}),object=new THREE.Group();object.add(rig.model);
   const costume=createPrinceCostume({object,rig});
   try {
     costume.update();object.updateWorldMatrix(true,true);
-    const crown=object.children.find(group=>group.children.some(mesh=>mesh.material?.name==='Prince Jev gold'));
-    const gold=crown.children.find(mesh=>mesh.material?.name==='Prince Jev gold'),points=[];
-    for(let i=0;i<gold.geometry.attributes.position.count;i++)points.push(new THREE.Vector3().fromBufferAttribute(gold.geometry.attributes.position,i).applyMatrix4(gold.matrixWorld));
-    const bottom=Math.min(...points.map(p=>p.y)),band=points.filter(p=>p.y<bottom+.0065),bounds=new THREE.Box3().setFromPoints(band),center=bounds.getCenter(new THREE.Vector3());
-    const rx=(bounds.max.x-bounds.min.x)/2-.0064,rz=(bounds.max.z-bounds.min.z)/2-.0064;
-    let samples=0,worst=0;
-    rig.model.traverse(mesh=>{
-      if(!mesh.isSkinnedMesh||!/^short02/.test(mesh.material?.name??''))return;
-      mesh.skeleton.update();
-      for(let i=0;i<mesh.geometry.attributes.position.count;i++){
-        const point=new THREE.Vector3().fromBufferAttribute(mesh.geometry.attributes.position,i);
-        mesh.applyBoneTransform(i,point).applyMatrix4(mesh.matrixWorld);
-        if(point.y<bottom||point.y>bottom+.026)continue;
-        samples++;worst=Math.max(worst,Math.hypot((point.x-center.x)/rx,(point.z-center.z)/rz));
+    const fitted=costume.fitted,vertex=new THREE.Vector3();
+    // Clearance of a bone group's rose-gold vertices over the measured garment surface, in mm.
+    const clearance=(limb,slot,low,high)=>{
+      const u=new THREE.Vector3().crossVectors(limb.axis,Math.abs(limb.axis.z)<.9?new THREE.Vector3(0,0,1):new THREE.Vector3(1,0,0)).normalize(),w=new THREE.Vector3().crossVectors(limb.axis,u);
+      let min=Infinity,max=-Infinity,samples=0;
+      for(const mesh of slot.group.children){
+        if(!mesh.isMesh)continue;mesh.updateWorldMatrix(true,false);const {position}=mesh.geometry.attributes;
+        for(let i=0;i<position.count;i++){
+          vertex.fromBufferAttribute(position,i).applyMatrix4(mesh.matrixWorld);object.worldToLocal(vertex).sub(limb.origin);
+          const t=vertex.dot(limb.axis);if(t<low||t>high)continue;
+          const radial=vertex.clone().addScaledVector(limb.axis,-t),gap=(radial.length()-limb.radiusAt(Math.atan2(radial.dot(w),radial.dot(u)),t))*1000;
+          min=Math.min(min,gap);max=Math.max(max,gap);samples++;
+        }
       }
-    });
-    assert.ok(samples>20,'Measure the hair where the gold band sits');
-    assert.ok(worst<=1,`The hair must fit inside the band (${worst.toFixed(3)} normalized radius)`);
+      return {min,max,samples};
+    };
+    assert.equal(fitted.bracers.length,2);assert.equal(fitted.calves.length,2);assert.equal(fitted.feet.length,2);assert.ok(fitted.waist&&fitted.torso);
+    for(const bracer of fitted.bracers){
+      const gap=clearance(bracer.limb,bracer.slot,bracer.low-.01,bracer.high+.01);
+      assert.ok(gap.samples>200&&gap.min>=2&&gap.max<=12,`${bracer.bone} bracer hugs the sleeve: ${JSON.stringify(gap)}`);
+    }
+    for(const calf of fitted.calves){
+      const gap=clearance(calf.limb,calf.slot,calf.knee-.02,calf.ankle+.02);
+      assert.ok(gap.samples>1000&&gap.min>=3&&gap.max<=12,`${calf.bone} straps hug the trouser leg: ${JSON.stringify(gap)}`);
+    }
+    // The belt band (away from the buckle at the front) sits on the tunic.
+    {
+      const {slot,height}=fitted.waist,torso=fitted.torso;let min=Infinity,max=-Infinity,samples=0;
+      for(const mesh of slot.group.children){
+        mesh.updateWorldMatrix(true,false);const {position}=mesh.geometry.attributes;
+        for(let i=0;i<position.count;i++){
+          vertex.fromBufferAttribute(position,i).applyMatrix4(mesh.matrixWorld);object.worldToLocal(vertex);
+          if(Math.abs(vertex.y-height)>.03||Math.abs(Math.atan2(vertex.x,vertex.z))<.5)continue;
+          const seat=torso.project(vertex,0),gap=(Math.hypot(vertex.x-seat.x,vertex.z-seat.z))*1000;min=Math.min(min,gap);max=Math.max(max,gap);samples++;
+        }
+      }
+      assert.ok(samples>300&&min>=6&&max<=20,`the belt band sits on the tunic: ${JSON.stringify({min,max,samples})}`);
+    }
+    const names=costume.materials.map(material=>material.name);
+    for(const retired of ['Prince Jev gold','Prince Jev sapphires','Prince Jev royal sash'])assert.ok(!names.includes(retired),`${retired} is retired by the 2026-10-29 reference`);
+    assert.ok(names.includes('Prince Jev rose gold')&&names.includes('Prince Jev engraved bracer'));
     for(const [original,material]of rig.materials)if(/^eyelashes|^eyebrow/.test(original.name)){
       assert.equal(material.transparent,true);assert.equal(material.depthWrite,false);assert.ok(material.alphaTest<.1);
     }

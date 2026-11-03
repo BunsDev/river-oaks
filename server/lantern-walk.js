@@ -93,5 +93,17 @@ export function createLanternWalk({ lanterns = [], changed = () => {}, now = Dat
   const load = saved => { round = saved.round; best = saved.best; rounds = saved.rounds; };
   const clear = () => { if (round) { round = null; changed(); } };
 
-  return { enabled: lanterns.length > 0, command, prune, snapshot: view, checkpoint, validate, load, clear };
+  // Account erasure: lanterns the account lit in the current round go dark again.
+  // A finished round lit by the account ends instead, since a complete round must
+  // have every lantern lit. The best round keeps names only, with no account to
+  // match (documented gap).
+  function forget(userId) {
+    if (!round) return;
+    const mine = [...round.lit].filter(([, item]) => item.by === userId);
+    if (!mine.length) return;
+    for (const [id] of mine) round.lit.delete(id);
+    if (!round.lit.size || round.completedAt !== null) round = null;
+    changed();
+  }
+  return { enabled: lanterns.length > 0, command, prune, forget, snapshot: view, checkpoint, validate, load, clear };
 }

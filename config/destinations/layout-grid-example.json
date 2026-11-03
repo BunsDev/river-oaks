@@ -1,0 +1,292 @@
+{
+  "id": "layout-grid-example",
+  "title": "Layout example: blocks derived from a main street, a cross street and a back lane, beside a green and a lawn",
+  "kit": "city-kit-1",
+  "seed": 12,
+  "inspiration": "Synthetic example of the layout derivation, not a place: a main street crossed by one cross street with a service lane behind the north row, a green with a water tower in the north-east corner and a lawn in the south-east. Every block comes from the layout; nothing here is composed into a shared world. Three blocks keep the renderer inside its draw-call budget: a larger site is split into several recipes, as the shipped districts are.",
+  "anchor": "none: preview only (city-kit.html?recipe=layout-grid-example)",
+  "site": [
+    0,
+    0,
+    120,
+    107
+  ],
+  "streets": [
+    {
+      "id": "main",
+      "from": [
+        0,
+        50
+      ],
+      "to": [
+        120,
+        50
+      ],
+      "lane": 7,
+      "sidewalk": 4,
+      "trees": {
+        "offset": 5,
+        "spacing": 9
+      },
+      "lamps": {
+        "offset": 9,
+        "spacing": 14
+      }
+    },
+    {
+      "id": "cross",
+      "from": [
+        60,
+        0
+      ],
+      "to": [
+        60,
+        107
+      ],
+      "lane": 6,
+      "sidewalk": 3.5,
+      "trees": {
+        "offset": 6,
+        "spacing": 10
+      },
+      "lamps": {
+        "offset": 11,
+        "spacing": 16
+      }
+    },
+    {
+      "id": "back-lane",
+      "from": [
+        0,
+        102
+      ],
+      "to": [
+        120,
+        102
+      ],
+      "lane": 5,
+      "sidewalk": 2.5,
+      "lamps": {
+        "offset": 7,
+        "spacing": 18
+      }
+    }
+  ],
+  "plazas": [
+    {
+      "id": "green",
+      "rect": [
+        65.5,
+        56.5,
+        120,
+        98
+      ],
+      "lawns": [
+        [
+          71,
+          62,
+          113,
+          72
+        ],
+        [
+          71,
+          82,
+          113,
+          94
+        ]
+      ],
+      "hedges": [
+        [
+          118.8,
+          60,
+          120,
+          94
+        ]
+      ],
+      "treeRows": [
+        {
+          "y": 90,
+          "from": 72,
+          "to": 112,
+          "spacing": 10
+        }
+      ]
+    },
+    {
+      "id": "lawn",
+      "rect": [
+        65.5,
+        0,
+        120,
+        43.5
+      ],
+      "lawns": [
+        [
+          71,
+          6,
+          114,
+          37
+        ]
+      ],
+      "hedges": [
+        [
+          118.8,
+          4,
+          120,
+          39
+        ]
+      ],
+      "treeRows": [
+        {
+          "y": 21.5,
+          "from": 74,
+          "to": 112,
+          "spacing": 9.5
+        }
+      ]
+    }
+  ],
+  "blocks": [],
+  "landmarks": [
+    {
+      "id": "green-water-tower",
+      "piece": "landmark/water-tower",
+      "at": [
+        97,
+        77
+      ],
+      "name": "Example water tower",
+      "lettering": "EXAMPLE"
+    }
+  ],
+  "furniture": [
+    {
+      "id": "green-bench-0",
+      "piece": "furniture/bench",
+      "at": [
+        76,
+        66
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "green-bench-1",
+      "piece": "furniture/bench",
+      "at": [
+        76,
+        88
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "green-bike-rack",
+      "piece": "furniture/bike-rack",
+      "at": [
+        69,
+        60
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "lawn-bench-0",
+      "piece": "furniture/bench",
+      "at": [
+        90,
+        40
+      ],
+      "yaw": 3.141593
+    },
+    {
+      "id": "lawn-bench-1",
+      "piece": "furniture/bench",
+      "at": [
+        100,
+        40
+      ],
+      "yaw": 3.141593
+    }
+  ],
+  "context": [],
+  "layout": {
+    "quarters": [
+      {
+        "id": "north-row",
+        "rect": [
+          0,
+          57.5,
+          120,
+          97
+        ],
+        "style": "market-row",
+        "depth": [
+          12,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          5,
+          7
+        ],
+        "names": [
+          "Pecan & Pearl",
+          "Marsh Lantern Books",
+          "Copper Kettle",
+          "Bluebonnet Bakery",
+          "Saltgrass Tailors",
+          "Juniper Optics",
+          "Lark Street Records",
+          "Tallow & Twine"
+        ]
+      },
+      {
+        "id": "south-row",
+        "rect": [
+          0,
+          0,
+          120,
+          42.5
+        ],
+        "style": "heights-row",
+        "depth": [
+          11,
+          16
+        ],
+        "storeys": [
+          1,
+          2
+        ],
+        "bays": [
+          4.5,
+          6.5
+        ],
+        "names": [
+          "Cypress Supply",
+          "Red Oak Barber",
+          "Mockingbird Diner",
+          "Spoke & Sprocket",
+          "Fig Leaf Florist",
+          "Monday Press",
+          "Okra Deli",
+          "Paper Moon Toys",
+          "Waxwing Vinyl",
+          "Sweetgum Ceramics",
+          "Heron Hardware"
+        ]
+      }
+    ],
+    "reserved": []
+  },
+  "overrides": {
+    "layout-grid-example/south-row/parcel-0": {
+      "set": {
+        "sign": "Corner Pecan",
+        "storeys": 2
+      },
+      "note": "Example: the corner shop on Main is pinned by hand"
+    }
+  },
+  "additions": []
+}

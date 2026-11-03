@@ -68,8 +68,8 @@
       "status": "inferred",
       "label": "IPIC Theaters, photo-guided reconstruction (ipic-photo-v1)",
       "source": "ipic",
-      "bounds": { "width": 13.03, "depth": 34, "height": 10.4, "note": "width is the mapped bay span at sourceRevision (aMin -6.30, aMax 6.73); depth and height are authored estimates inside the mapped footprint of osm-way-625330798. The auditorium wing (IPIC_WING) runs three bay widths along the building behind the bay's back wall",
-        "wing": { "aMin": -19.5, "aMax": 19.5, "d0": 26, "d1": 34 } },
+      "bounds": { "width": 13.03, "depth": 34, "height": 10.4, "note": "width is the mapped bay span at sourceRevision (aMin -6.30, aMax 6.73); depth and height are authored estimates inside the mapped footprint of osm-way-625330798. The auditorium wing (IPIC_WING) runs along the building behind the bay's back wall, from the screen's north end wall to just past the doorway (Val, 2026-10-26; it first ran three bay widths, mostly empty foyer); the rest of the bay behind the cinema wall is back of house",
+        "wing": { "aMin": -19.5, "aMax": -2.9, "d0": 26, "d1": 34 } },
       "levels": [
         { "id": "ground", "elevation": 0, "clearHeight": 10.4, "dRange": [0, 6] },
         { "id": "mural", "elevation": 3, "clearHeight": 7.4, "dRange": [12, 14] },

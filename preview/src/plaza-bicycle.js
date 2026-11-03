@@ -1,19 +1,21 @@
 import { Vector3, Quaternion } from 'three';
 import { createRoadVehicle } from './road-vehicles.js';
 import { drivingInput } from './vehicle-config.js';
+import { bicycleCrankAngle } from './bicycle-crank.js';
 import { fitCarriageToGround, stepCarriage } from './carriage-motion.js';
 import { carriageFootprint, carriageContains } from './carriage-parking.js';
-import { plazaSalonRack } from './plaza-salon-plan.js';
+import { bikeRackSlots } from './bike-racks.js';
 import { SEAT_REACH } from './shared-seating.js';
 import { isGameplayKey } from './keyboard-input.js';
 
-// The plaza bicycle. G beside the rack asks the town for a slot (`cycle`), then
+// The rack bicycle. G beside a rack asks the town for a slot (`cycle`), then
 // mounts the walking controls on a bike exactly as the car does; G while riding
 // asks for a ground spot (`travel`, so the step down is not a walking-speed
 // violation) and then `uncycle` hands the slot back. The bike never exists
-// outside the rack and the rider: a parked bike is drawn by the plaza salon
-// while its slot is free, and this controller draws the one you ride. The town
-// counts the metres; the distance shown here is the ride in progress.
+// outside the racks and the rider: a parked bike is drawn by the plaza salon
+// or the curbside racks (city-bike-racks.js) while its slot is free, and this
+// controller draws the one you ride. The town counts the metres; the distance
+// shown here is the ride in progress.
 
 // A slot (world [east, north], heading 0 = south) as a carriage-motion
 // placement in scene space. The mesh faces local -X and stepCarriage advances
@@ -44,8 +46,8 @@ export function nearestFreeSlot(slots, [x, north], taken) {
   return best?.slot ?? null;
 }
 
-export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLocals = () => [], getMiles = () => null, reducedMotion = false }) {
-  const model = createRoadVehicle('bicycle'); model.object.visible = false; scene.add(model.object);
+export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLocals = () => [], getMiles = () => null, getSaddle = () => 0, reducedMotion = false }) {
+  const model = createRoadVehicle('bicycle', { pedalling: true }); model.object.visible = false; scene.add(model.object);
   let slots = [], placement = null, mounted = false, busy = false, slotId = null, lastRide = 0;
   const env = () => walking.environment ?? null;
   const taken = () => new Set(getMultiplayer()?.snapshot?.cycling?.taken ?? []);
@@ -54,7 +56,7 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
     model.object.position.fromArray(placement.position); model.object.rotation.set(placement.pitch ?? 0, placement.yaw, placement.roll ?? 0, 'YXZ');
     const up = new Vector3(0, 1, 0).applyQuaternion(model.object.quaternion.clone().invert());
     model.wheels.forEach((wheel, i) => { wheel.position.fromArray(model.spec.wheels[i]).addScaledVector(up, placement.wheelOffsets?.[i] ?? 0); wheel.rotation.set(0, i < model.spec.steeredWheels ? placement.steering ?? 0 : 0, placement.distance / model.spec.wheels[i][1], 'YXZ'); });
-    model.updateSteering(placement.steering ?? 0); model.object.updateMatrixWorld(true);
+    model.updateSteering(placement.steering ?? 0); model.setCrank(bicycleCrankAngle(placement.distance)); model.setSaddle(getSaddle()); model.object.updateMatrixWorld(true);
   };
   // The rider's local step guards (e.g. destination presentation readiness) apply to the bike as to walking.
   const canOccupy = next => bicycleCanOccupy(next, env())
@@ -65,7 +67,7 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
       const seat = model.spec.passengerSeat;
       return { kind: 'bicycle', seat: model.object.localToWorld(new Vector3(...seat)).toArray(), cameraTarget: model.object.localToWorld(new Vector3(-.6, 1.1, 0)).toArray(),
         seatToFloor: seat[1] - model.spec.passengerFloor, yaw: placement.yaw - Math.PI / 2,
-        quaternion: model.object.quaternion.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2)).toArray(), speed: placement.speed, distance: placement.distance };
+        quaternion: model.object.quaternion.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2)).toArray(), speed: placement.speed, distance: placement.distance, steering: placement.steering ?? 0 };
     },
     step(input, delta) { const environment = env(); stepCarriage(placement, { groundAt: environment.groundAt, wheelTreads: model.wheelTreads, canOccupy }, drivingInput(input), delta); apply(); },
     brake() { if (placement) placement.speed = 0; },
@@ -80,7 +82,7 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
     if (busy || mounted || !environment || !pose || pose.sitting || pose.riding || pose.flying || pose.roomId) return false;
     if (!multiplayer?.connected) { notify('Reconnect before taking a bike.'); return false; }
     const slot = nearestFreeSlot(slots, me(), taken());
-    if (!slot) { notify(slots.length && taken().size >= slots.length ? 'All bikes are out.' : 'Walk up to the bike rack first.'); return false; }
+    if (!slot) { notify(slots.length && taken().size >= slots.length ? 'All bikes are out.' : 'Walk up to a bike rack first.'); return false; }
     busy = true;
     try {
       const result = await multiplayer.command({ type: 'cycle', rackId: slot.rackId, slot: slot.slot });
@@ -138,7 +140,7 @@ export function createPlazaBicycle({ scene, host, walking, getMultiplayer, getLo
   host.addEventListener('keydown', onKey);
   return {
     load(world) {
-      slots = plazaSalonRack(world);
+      slots = bikeRackSlots(world);
       if (mounted && walking.riding) walking.dismount([placement.position[0], placement.position[1], placement.position[2]]);
       clear();
     },

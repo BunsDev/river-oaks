@@ -113,7 +113,7 @@ function command(actor, message) {
 }
 async function converge(page, count) {
   await page.waitForFunction(count => {
-    const town = window.__riverMultiplayer?.(), remotes = town?.remotes ?? [];
+    const town = window.__riverMultiplayer?.(), remotes = (town?.remotes ?? []).filter(figure => figure.kind === 'player');
     return town?.connected && town.snapshot?.players.length === count && remotes.length === count - 1
       && remotes.every(player => player.ready) && document.querySelector('#canvas-host')?.dataset.playerReady === 'true';
   }, count, { timeout: 90000 });
@@ -242,7 +242,7 @@ try {
       const measuredSeconds = (performance.now() - measurementStart) / 1000;
       const drawCensus = await page.evaluate(() => window.__riverRenderAudit.drawCensus());
       const sample = await page.evaluate(() => ({ timing: window.__riverRenderAudit.stop(), transport: window.__auditTransport.stop(), graphics: window.__riverRenderAudit.graphics(),
-        onScreenPeers: window.__riverMultiplayer().remotes.filter(peer => peer.onScreen).length,
+        onScreenPeers: window.__riverMultiplayer().remotes.filter(peer => peer.kind === 'player' && peer.onScreen).length,
         labelViewport: (()=>{const r=document.querySelector('.remote-player-labels').getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};})(),
         labels: [...document.querySelectorAll('.remote-player-label')].filter(label => !label.hidden).map(label => { const r=label.getBoundingClientRect(); return {id:label.dataset.peerId,left:r.left,right:r.right,top:r.top,bottom:r.bottom}; }),
         peers: window.__riverMultiplayer().remotes, npcs: window.__riverMultiplayer().snapshot.locals.length, visibility: document.visibilityState }));
@@ -257,7 +257,9 @@ try {
         const a=sample.labels[i],b=sample.labels[j];
         assert.ok(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top,'Visible nameplates must not overlap');
       }
-      assert.equal(sample.peers.length, count - 1); assert.ok(sample.peers.every(peer => peer.ready));
+      // Residents are remote figures too since #708; the tier counts other players only.
+      const peerPlayers = sample.peers.filter(peer => peer.kind === 'player');
+      assert.equal(peerPlayers.length, count - 1); assert.ok(peerPlayers.every(peer => peer.ready));
       assert.equal(sample.transport.closes, 0); assert.deepEqual(sample.transport.rejections, []); assert.equal(sample.transport.pending, 0);
       assert.equal(sample.npcs, 98); assert.ok(sample.graphics.render.calls > 0);
       if (count === 32) await page.screenshot({ path: `${root}/output/playwright/render-audit-${profile.name}-32.png` });
@@ -266,7 +268,7 @@ try {
         frame: distribution(sample.timing.frames.map(frame => frame.intervalMs)), cpuSubmission: distribution(sample.timing.frames.map(frame => frame.cpuMs)),
         framesOver33Ms: sample.timing.frames.filter(frame => frame.intervalMs > 33.34).length, framesOver50Ms: sample.timing.frames.filter(frame => frame.intervalMs > 50).length,
         snapshots: sample.transport.snapshots, snapshotGap: distribution(sample.transport.gaps), decodedSnapshotBytesPerSecond: Math.round(sample.transport.bytes / measuredSeconds),
-        gestureAck: distribution(sample.transport.commands), loadedPeers: sample.peers.length, onScreenPeers: sample.onScreenPeers, visibleLabels: sample.labels.length,
+        gestureAck: distribution(sample.transport.commands), loadedPeers: peerPlayers.length, loadedResidents: sample.peers.length - peerPlayers.length, onScreenPeers: sample.onScreenPeers, visibleLabels: sample.labels.length,
         graphicsBefore: before, graphicsAfter: sample.graphics, drawCensus, assets: JSON.parse(assetState), actorCorrections: [...actors.values()].reduce((sum, actor) => sum + actor.corrections, 0) };
       // The same page, peers and view, alternating the feature so drift in
       // machine load falls on both arms (ABBA then BAAB). Each segment is kept,
@@ -321,7 +323,7 @@ try {
     report.results.at(-1).departureConvergenceMs = Math.round(performance.now() - departureStart);
     await pause(3000);
     report.results.at(-1).resourceSettleMs = 3000;
-    report.results.at(-1).afterPeersLeave = await page.evaluate(() => ({ peers: window.__riverMultiplayer().remotes.length, graphics: window.__riverRenderAudit.graphics() }));
+    report.results.at(-1).afterPeersLeave = await page.evaluate(() => ({ peers: window.__riverMultiplayer().remotes.filter(peer => peer.kind === 'player').length, graphics: window.__riverRenderAudit.graphics() }));
     assert.equal(report.results.at(-1).afterPeersLeave.peers, 0);
     await page.screenshot({ path: `${root}/output/playwright/render-audit-${profile.name}-cleanup.png` });
     await context.close(); app.disconnectUser('viewer'); await flush();

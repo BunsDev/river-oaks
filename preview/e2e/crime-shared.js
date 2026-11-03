@@ -58,6 +58,14 @@ async page => {
       const seen = () => window.__crimeTrace.push({ meter: meterNode.getAttribute('aria-valuenow'), town: window.__riverMultiplayer().snapshot.crime.targets.find(item => item.id === 'rival:westcreek').health });
       new MutationObserver(seen).observe(meterNode, { attributes: true, attributeFilter: ['aria-valuenow'] });
       new MutationObserver(() => window.__crimeLines.push(line.textContent)).observe(line, { childList: true, characterData: true, subtree: true });
+      // #640 increment 4: what the HUD publishes for the local figure, and what the figure shows.
+      window.__combatSeen = new Set(); window.__telegraphSeen = new Set();
+      window.__combatPoll = setInterval(() => {
+        const hud = document.querySelector('.crime-hud'), state = hud?.dataset.combatState ? JSON.parse(hud.dataset.combatState) : null;
+        if (state?.kind) window.__combatSeen.add(state.kind);
+        if (hud?.dataset.telegraph) window.__telegraphSeen.add(hud.dataset.telegraph);
+        const body = document.querySelector('#canvas-host').dataset.combat; if (body) window.__combatSeen.add(`body:${body}`);
+      }, 16);
     });
     await visitor.locator('#canvas-host').focus();await visitor.keyboard.press('KeyT');
     await visitor.waitForFunction(() => window.__crimeLines.some(text => text.startsWith('Hit landed.')));
@@ -69,27 +77,55 @@ async page => {
     check(after.rival.health === 75 && after.wanted.some(([id, stars]) => id === after.selfId && stars === 1), 'One hit: 25 damage and one star');
     check(lines.some(text => /Westcreek rival has 75 health left\. Wanted level 1 of 5\./.test(text)), 'The hit is confirmed in plain words');
     check(await hud.locator('.crime-wanted').getAttribute('aria-label') === 'Wanted level: 1 of 5 stars', 'Wanted stars have a spoken label');
+    // #640 increment 4: the HUD published the strike and the local figure took it up (under reduced
+    // motion the state shows; the swing itself does not).
+    await visitor.waitForFunction(() => window.__combatSeen.has('strike') && window.__combatSeen.has('body:strike'), null, { timeout: 3000 }).catch(() => {});
+    const seen = await visitor.evaluate(() => [...window.__combatSeen]);
+    check(seen.includes('strike') && seen.includes('body:strike'), `The visitor's strike was published by the HUD and shown on their figure: ${seen.join(' ')}`);
     await page.waitForFunction(id => { const crime = window.__riverMultiplayer().snapshot.crime;
       return crime.targets.find(item => item.id === 'rival:westcreek').health === 75 && crime.wanted.some(([who, stars]) => who === id && stars === 1); }, after.selfId);
     check(true, 'The owner\'s browser sees the same hit and star');
-    await page.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === id && item.gesture === 'shove'), after.selfId).catch(() => {});
+    // Best effort: the shove shows for 600 ms and the owner's page can miss it, after which it never
+    // appears. Don't wait out the default 60 s for it: the rival counters every 2.5 s meanwhile, five
+    // landed counters put the visitor down, and that ends the rival's engagement before the evade
+    // below (hosted: a 112 s run whose three attempts never saw a counter).
+    await page.waitForFunction(id => window.__riverMultiplayer().remotes.some(item => item.id === id && (item.gesture === 'shove' || item.combat === 'strike')), after.selfId, { timeout: 1000 }).catch(() => {});
 
     // The rival answers with a telegraphed counter (#640). U, timed against the town's own
-    // remaining windup (the evade window is 350 ms), evades it: no damage, said in words. A
-    // counter seen too late to time lands; the rival telegraphs again after its cooldown.
+    // remaining windup, evades it: no damage, said in words. The evade must reach the town in
+    // the 350 ms before contact. Snapshots arrive every 200 ms, so the page notes when contact
+    // falls by its own clock as soon as the counter appears, and U is pressed `lead` ms before
+    // that. Every delay (the snapshot's delivery, polling, the key's round trip) only makes the
+    // evade later, so the lead sits just inside the window's early edge: a press with no delay
+    // still counts, and up to 340 ms of delay is absorbed. A counter that can't be timed lands;
+    // the rival telegraphs again after its cooldown.
     await visitor.waitForFunction(() => window.__crimeLines.some(text => /winding up to strike back/.test(text)));
+    // The telegraph reaches the other screen as the rival figure's state (#640 increment 4).
+    const telegraphed = await page.waitForFunction(() => window.__riverMultiplayer().remotes.find(item => item.id === 'rival:westcreek')?.combat === 'counter', null, { timeout: 8000 }).then(() => true).catch(() => false);
+    check(telegraphed, 'The owner\'s browser shows the rival winding up its counter as a figure state');
+    const lead = 340, attempts = [];
     let evadedCounter = null;
     for (let attempt = 0; attempt < 3 && !evadedCounter; attempt++) {
-      const counter = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), counter = m.snapshot.crime.actions?.find(item => item.kind === 'counter' && item.targetId === m.selfId && item.outcome === null);
-        return counter && counter.remainingMs >= 80 && counter.remainingMs <= 330 && { id: counter.id, health: m.snapshot.players.find(p => p.id === m.selfId).health }; }, null, { polling: 16, timeout: 10000 }).then(handle => handle.jsonValue()).catch(() => null);
-      if (!counter) continue;
-      await visitor.locator('#canvas-host').focus(); await visitor.keyboard.press('KeyU');
-      const outcome = await visitor.waitForFunction(id => window.__riverMultiplayer().snapshot.crime.actions?.find(item => item.id === id && item.outcome !== null)?.outcome, counter.id).then(handle => handle.jsonValue());
+      const counter = await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(), counter = m.snapshot?.crime?.actions?.find(item => item.kind === 'counter' && item.targetId === m.selfId && item.outcome === null && item.phase === 'windup');
+        return counter && { id: counter.id, remainingMs: counter.remainingMs, contactAt: performance.now() + counter.remainingMs, health: m.snapshot.players.find(p => p.id === m.selfId).health }; }, null, { polling: 16, timeout: 10000 }).then(handle => handle.jsonValue()).catch(() => null);
+      if (!counter) { const state = await town(visitor).catch(() => null); attempts.push({ attempt, seen: null, engagedId: state?.rival?.engagedId, health: state?.self?.health }); continue; }
+      if (counter.remainingMs < lead + 30) { // Seen too late to time: let it land, then wait for the next.
+        attempts.push({ attempt, remainingMs: counter.remainingMs, late: true });
+        await visitor.waitForFunction(id => window.__riverMultiplayer().snapshot?.crime?.actions?.find(item => item.id === id && item.outcome !== null), counter.id);
+        continue;
+      }
+      await visitor.locator('#canvas-host').focus();
+      await visitor.waitForFunction(at => performance.now() >= at, counter.contactAt - lead, { polling: 16 });
+      await visitor.keyboard.press('KeyU');
+      const outcome = await visitor.waitForFunction(id => window.__riverMultiplayer().snapshot?.crime?.actions?.find(item => item.id === id && item.outcome !== null)?.outcome, counter.id).then(handle => handle.jsonValue());
+      attempts.push({ attempt, remainingMs: counter.remainingMs, outcome });
       if (outcome === 'evaded') evadedCounter = { ...counter, after: (await town(visitor)).self.health };
     }
-    check(evadedCounter, 'A timed evade (U) beats the rival\'s telegraphed counter');
+    check(evadedCounter, `A timed evade (U) beats the rival's telegraphed counter${evadedCounter ? '' : ` ${JSON.stringify(attempts)}`}`);
     await visitor.waitForFunction(() => window.__crimeLines.some(text => /^You evaded Westcreek rival/.test(text)));
     check(evadedCounter.after === evadedCounter.health, 'An evaded counter does no damage');
+    const cues = await visitor.evaluate(() => ({ telegraph: [...window.__telegraphSeen], combat: [...window.__combatSeen] }));
+    check(cues.telegraph.includes('counter') && cues.combat.includes('evade'), `The HUD cued the telegraph and published the admitted evade: ${JSON.stringify(cues)}`);
 
     // Emergency off: the next shove is not offered, and the town is unchanged.
     await rules.getByRole('button', { name: 'Emergency off: stop all danger now' }).click();
@@ -142,15 +178,27 @@ async page => {
     await page.screenshot({path:'output/playwright/police-officer-desktop.png'});
     await visitor.screenshot({ path: 'output/playwright/police-pursuit-phone.png' });
     const surrender = hud.getByRole('button', { name: 'Surrender', exact: true });
+    // Hold a walk button down (pointer pressed, never released) so the release check below has
+    // something to release (review of #710: the check passed with nothing held).
+    const padToggle = visitor.locator('#walking-controls-toggle');
+    if (await padToggle.getAttribute('aria-expanded') !== 'true') await padToggle.click();
+    const walkButton = visitor.getByRole('button', { name: 'Walk forward', exact: true }), walkBox = await walkButton.boundingBox();
+    await visitor.mouse.move(walkBox.x + walkBox.width / 2, walkBox.y + walkBox.height / 2); await visitor.mouse.down();
+    check(await visitor.evaluate(() => document.querySelectorAll('[data-walk-key].held').length > 0), 'A walk button is held down before surrendering');
     await surrender.focus(); await visitor.keyboard.press('Enter');
     await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return m.snapshot.police.surrendered.includes(m.selfId); });
     check(true, 'Keyboard surrender is accepted by the server with reduced motion enabled');
+    await visitor.waitForFunction(() => document.querySelector('#canvas-host').dataset.combat === 'surrender', null, { timeout: 5000 });
+    check(await visitor.evaluate(() => document.querySelectorAll('[data-walk-key].held').length === 0), 'Surrendering releases the held walk button and holds the figure in its pose');
+    await visitor.mouse.up();
     await page.waitForFunction(id => window.__riverMultiplayer().snapshot.police.units.some(unit => unit.targetId === id && unit.state === 'arrest'), after.selfId);
     check(true, 'The other browser sees the same authoritative arrest');
     await visitor.waitForFunction(() => { const m = window.__riverMultiplayer(); return !m.snapshot.crime.wanted.some(([id]) => id === m.selfId); });
     const safe = await town(visitor);
     check(Math.hypot(safe.self.position[0] - RX, safe.self.position[1] - RN) > 10, 'Arrest returns the player to the existing safe arrival');
     await hud.getByText('You are no longer wanted. You may move again.', { exact:true }).waitFor();
+    await visitor.waitForFunction(() => !document.querySelector('.crime-hud').dataset.combatState && document.querySelector('#canvas-host').dataset.combat === '', null, { timeout: 5000 });
+    check(true, 'Combat framing exits cleanly: nothing published, the figure back to its own pose');
     check(await hud.getByRole('button', { name:'Surrender', exact:true }).count() === 0, 'The HUD removes surrender after the town clears wanted stars');
     await visitor.waitForFunction(() => {
       const m = window.__riverMultiplayer(), self = m.snapshot.players.find(player => player.id === m.selfId);
@@ -162,6 +210,7 @@ async page => {
     check(errors.length === 0, `No page errors: ${errors.join(' | ')}`);
     return { passed: true, checks, cameraStations };
   } finally {
+    await visitor.evaluate(() => clearInterval(window.__combatPoll)).catch(() => {});
     await visitor.context().close();
   }
 }

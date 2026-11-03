@@ -226,6 +226,23 @@ test('a configuration rollback keeps every lease inert, byte for byte, and switc
 });
 
 const testRedis = (name, fn) => test(name, { skip: !process.env.REDIS_URL }, fn);
+testRedis('a room that refuses the durable district lets the town lease go at once', async t => {
+  const redis = new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 1, retryStrategy: null });
+  redis.on('error', () => {});await redis.connect();
+  const prefix = `{river-oaks:test:${randomUUID()}}`, rooms = [];let time = 100000;
+  const create = (worldData, districtEpoch = 0) => { const room = createRedisRoom({ redis, prefix, worldData, districtEpoch, authorize: async () => true, now: () => time, isAdmin: () => false });rooms.push(room);return room; };
+  t.after(async () => { await Promise.all(rooms.map(room => room.close()));const keys = await redis.keys(`${prefix}:*`);if (keys.length) await redis.del(...keys);await redis.quit(); });
+  const join = (room, connectionId) => room.request({ type: 'join', identity: { userId: 'alice', name: 'alice', sessionId: 'alice-session', expiresAt: time + 120000 }, connectionId });
+  const first = create(garage);
+  assert.equal((await join(first, 'one')).ok, true);
+  await first.close();
+  // A deployment that may not serve this town takes the lease to read it, refuses it, and must
+  // not keep the lease: the deployment that can serve the town would wait out LEASE_MS.
+  await assert.rejects(join(create(gardens, 0), 'stale'), /Invalid durable town district/);
+  assert.equal(await redis.get(`${prefix}:lease`), null, 'the refusing room released the town lease');
+  assert.equal((await join(create(gardens, 1), 'two')).ok, true);
+});
+
 testRedis('a Redis coordinator switches district only to a newer epoch; an older deployment never switches it back', async t => {
   const redis = new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 1, retryStrategy: null });
   redis.on('error', () => {});await redis.connect();
@@ -245,6 +262,7 @@ testRedis('a Redis coordinator switches district only to a newer epoch; an older
   assert.equal(Object.hasOwn(await committed(), 'district'), false, 'the default garage leaves the durable record as it was');
   // A switch that forgets to raise the epoch fails closed.
   await assert.rejects(join(create(gardens, 0), 'alice', 'stale'), /Invalid durable town district/);
+  assert.equal(await redis.get(`${prefix}:lease`), null, 'a refusing room lets the lease go');
   // Epoch 1 serves the campus: one migration, the town kept.
   const campus = create(gardens, 1);
   assert.equal((await join(campus, 'alice', 'two')).ok, true);
@@ -257,6 +275,7 @@ testRedis('a Redis coordinator switches district only to a newer epoch; an older
   // An old deployment (garage, epoch 0) still serving sockets refuses the newer town instead of switching it back.
   const before = await redis.getBuffer(`${prefix}:state`);
   await assert.rejects(join(create(garage, 0), 'alice', 'old'), /Invalid durable town district/);
+  assert.equal(await redis.get(`${prefix}:lease`), null, 'a refusing room lets the lease go');
   assert.ok((await redis.getBuffer(`${prefix}:state`)).equals(before), 'the refused coordinator changed nothing');
   // The campus at epoch 1 carries on without a second migration.
   const again = create(gardens, 1);
@@ -274,4 +293,5 @@ testRedis('a Redis coordinator switches district only to a newer epoch; an older
   await rollback.close();
   // And the campus deployment at epoch 1, if still alive, cannot take the town back.
   await assert.rejects(join(create(gardens, 1), 'alice', 'late'), /Invalid durable town district/);
+  assert.equal(await redis.get(`${prefix}:lease`), null, 'a refusing room lets the lease go');
 });

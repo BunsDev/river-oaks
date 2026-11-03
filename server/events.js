@@ -56,6 +56,14 @@ export function createMemoryEvents({now=Date.now,createId=randomUUID}={}) {
       if(!admin&&event.hostId!==userId)return {ok:false,reason:'event_forbidden'};
       records.delete(id);return {ok:true};
     },
+    // Account erasure: events the account hosts are cancelled; its RSVPs go.
+    async eraseUser(userId) {
+      if(!validId(userId))throw new Error('Invalid account');
+      for(const [id,event] of [...records]){
+        if(event.hostId===userId)records.delete(id);
+        else event.attendees=event.attendees.filter(item=>item!==userId);
+      }
+    },
   };
 }
 
@@ -95,6 +103,19 @@ elseif ARGV[5] == 'no' and found then table.remove(event.attendees, found) end
 redis.call('HSET', KEYS[1], ARGV[4], cjson.encode(event))
 return 'ok'
 `;
+const ERASE=`
+local records = redis.call('HGETALL', KEYS[1])
+for i = 1, #records, 2 do
+  local event = cjson.decode(records[i + 1])
+  if event.hostId == ARGV[1] then redis.call('HDEL', KEYS[1], records[i])
+  else
+    local kept, changed = {}, false
+    for _, id in ipairs(event.attendees) do if id == ARGV[1] then changed = true else table.insert(kept, id) end end
+    if changed then event.attendees = kept; redis.call('HSET', KEYS[1], records[i], cjson.encode(event)) end
+  end
+end
+return 1
+`;
 export function createRedisEvents({redis,prefix,now=Date.now,createId=randomUUID}={}) {
   if(!redis?.eval || typeof prefix!=='string' || !/^\{[^{}]+\}$/.test(prefix))throw new Error('Invalid event storage');
   const key=`${prefix}:events:v1`;
@@ -117,6 +138,10 @@ export function createRedisEvents({redis,prefix,now=Date.now,createId=randomUUID
     },
     async cancel(userId,id,admin=false) {
       return validId(userId)&&validId(id)?change('cancel',userId,id,admin?'admin':''):invalid();
+    },
+    async eraseUser(userId) {
+      if(!validId(userId))throw new Error('Invalid account');
+      await redis.eval(ERASE,1,key,userId);
     },
   };
 }

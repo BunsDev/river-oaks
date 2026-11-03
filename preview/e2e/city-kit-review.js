@@ -3,6 +3,8 @@
 // stack, records draw calls and triangles, fails on page errors or missing assets,
 // and writes screenshots plus report.json to .runtime/city-kit/review-<time>/.
 // Run under the shared lock: node scripts/browser-lock.mjs city-kit-review -- node preview/e2e/city-kit-review.js
+// `--finish=classic,pink-jet-age` renders every case under each finish with the same
+// camera, seed and lighting, for matched before/after review (default: classic only).
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -13,29 +15,31 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const output = fileURLToPath(new URL(`../../.runtime/city-kit/review-${new Date().toISOString().replace(/[:.]/g, '-')}/`, import.meta.url));
 await mkdir(output, { recursive: true });
 const vite = await createServer({ configFile: false, root, cacheDir: `${root}../.runtime/city-kit-vite`, logLevel: 'error', server: { host: '127.0.0.1', port: 0 } });
-const cases = [['bayou-market-commons', null], ['nineteenth-and-yale', null], ['nineteenth-and-yale', 78], ['bayou-market-commons', 7]];
+const finishes = (process.argv.find(arg => arg.startsWith('--finish='))?.slice(9) ?? 'classic').split(',').filter(Boolean);
+const cases = [['bayou-market-commons', null], ['nineteenth-and-yale', null], ['nineteenth-and-yale', 78], ['bayou-market-commons', 7]]
+  .flatMap(([recipe, seed]) => finishes.map(finish => [recipe, seed, finish]));
 let browser;
-const report = { startedAt: new Date().toISOString(), cases: [] };
+const report = { startedAt: new Date().toISOString(), finishes, cases: [] };
 try {
   await vite.listen(); browser = await chromium.launch({ headless: true, args: ['--use-angle=metal', '--enable-gpu'] });
-  for (const [recipe, seed] of cases) {
+  for (const [recipe, seed, finish] of cases) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     const errors = [], failed = [];
     page.on('pageerror', error => errors.push(error.message));
     page.on('requestfailed', request => failed.push(request.url()));
     page.on('response', response => { if (response.status() >= 400) failed.push(`${response.status()} ${response.url()}`); });
-    await page.goto(`http://127.0.0.1:${vite.httpServer.address().port}/e2e/fixtures/city-kit.html?recipe=${recipe}${seed === null ? '' : `&seed=${seed}`}`);
+    await page.goto(`http://127.0.0.1:${vite.httpServer.address().port}/e2e/fixtures/city-kit.html?recipe=${recipe}${seed === null ? '' : `&seed=${seed}`}&finish=${finish}`);
     await page.waitForFunction(() => document.body.dataset.ready === 'true', null, { timeout: 120000 });
     await page.waitForTimeout(1500);
     const info = await page.evaluate(() => ({ plan: window.cityKit.plan, views: window.cityKit.views, environment: window.cityKit.environment, scene: window.cityKit.stats() }));
     const views = [];
     for (const view of seed === null ? info.views : ['overview', 'street', 'frontage']) {
       const stats = await page.evaluate(view => window.cityKit.render(view), view);
-      const file = `${recipe}-${info.plan.seed}-${view}.png`;
+      const file = `${recipe}-${info.plan.seed}-${view}${finish === 'classic' ? '' : `-${finish}`}.png`;
       await page.screenshot({ path: `${output}${file}` });
       views.push({ ...stats, file });
     }
-    report.cases.push({ recipe, ...info, views, errors, failed });
+    report.cases.push({ recipe, finish, ...info, views, errors, failed });
     await page.close();
     assert.deepEqual(errors, [], `${recipe}: page errors`);
     assert.deepEqual(failed, [], `${recipe}: failed requests`);

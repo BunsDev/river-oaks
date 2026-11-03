@@ -20,3 +20,16 @@ test('the reusable IPIC asset has finite geometry, all zones, and a disposable l
   await group.userData.ready;
   group.userData.dispose(); assert.equal(group.children.length, 0);
 });
+
+test('the escalator well and landing stone never shares a plane with their plaster, nor the lobby sign its wall', async () => {
+  const [{ buildIpicInterior }, { findDepthFights }] = await Promise.all([import('../src/ipic-interior.js'), import('../src/depth-layer-audit.js')]);
+  const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
+  const room = planStoreRooms(world).find(r => r.interior);
+  const group = buildIpicInterior(room, { textures: false, local: true });
+  group.updateMatrixWorld(true);
+  // Run walls, header and fascias rose into the well's ceiling slab, the bay ceilings ran flush with
+  // their front walls, and the sign hung 2 cm off the timber (2026-10-30, after the well opened).
+  const fights = findDepthFights(group).filter(fight => /taupe-stacked-stone.*warm-plaster|warm-plaster.*taupe-stacked-stone|TUCK ROOM/.test(`${fight.a} ${fight.b}`));
+  assert.deepEqual(fights.map(fight => `${fight.a} × ${fight.b} at ${fight.at.map(v => v.toFixed(2))}`), []);
+  group.userData.dispose?.();
+});

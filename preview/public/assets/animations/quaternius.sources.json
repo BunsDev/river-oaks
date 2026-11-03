@@ -1,0 +1,394 @@
+{
+  "schemaVersion": 1,
+  "author": "Quaternius",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "family": "quaternius-ual-v1",
+  "generator": "Blender 5.2.2 LTS",
+  "fps": 30,
+  "boneHeuristic": "BLENDER",
+  "sources": {
+    "UAL1.glb": {
+      "sha256": "d1cb4537efa4c06a953ca951e5935062f88c2580ac68e45045592d587bddb43d",
+      "bytes": 21378992,
+      "archive": {
+        "file": "Universal Animation Library[Source].zip",
+        "sha256": "28f7528643b945fc8e95362da16ee2218e82b1f4735460e707918047ed868ed5"
+      }
+    },
+    "UAL2.glb": {
+      "sha256": "ad3ae049c7d3d4846133b59dba6218fdabebe05d3aec646caef6665f6c540684",
+      "bytes": 20717364,
+      "archive": {
+        "file": "Universal Animation Library 2[Source].zip",
+        "sha256": "85df4e989b894f2a5bb57e57637028706d674a5b92e818bbcc3b7065cb1b50e8"
+      }
+    }
+  },
+  "licenses": {
+    "License-UAL1.txt": {
+      "sha256": "6d01f55c6e4c49a2c9963e147e561945ae2c83958c8ca667d90a6bffdbfac061",
+      "bytes": 332
+    },
+    "License-UAL2.txt": {
+      "sha256": "6d01f55c6e4c49a2c9963e147e561945ae2c83958c8ca667d90a6bffdbfac061",
+      "bytes": 332
+    }
+  },
+  "pipeline": {
+    "build_quaternius_clips.py": "dd0fda60b984f0e4a157cfc06057bd85c7bffa79d4fad8c55bc81c2c5687c3f6",
+    "quaternius_clip_audit.py": "1ae49f2edddf33f429a674bd5f57f6dfb2c644eedee8d68b1d06152bd3fb3191",
+    "quaternius_clip_publish.py": "4d54c0e5de5e02ebd9703bfe9f59e2f35f16f5d733e462cb8ba50db6f84b6f36"
+  },
+  "processing": [
+    "Select the 39 approved in-place actions from UAL1 and UAL2.",
+    "Export skeleton and animation only at 30 fps; preserve source joint axes.",
+    "Remove root translation curves and exporter-added rest-valued root channels.",
+    "Audit exact clip sets, rest transforms, hierarchy, samples and track validity."
+  ],
+  "groups": {
+    "ambient-idle": {
+      "group": "ambient-idle",
+      "clips": [
+        "Idle_Loop",
+        "Idle_Talking_Loop",
+        "Idle_LookAround_Loop",
+        "Idle_FoldArms_Loop",
+        "Idle_TalkingPhone_Loop",
+        "Idle_Tired_Loop",
+        "Yes",
+        "Idle_No_Loop"
+      ],
+      "bytes": 641772,
+      "sha256": "c84ce4656e36191f48ac213e4a8f7d83ec4e7edf6ba4f42a5346645c4c0c0863",
+      "worstRestDelta": 3.841837497020606e-07,
+      "worstFirstSampleDot": 0.9999999310307104,
+      "sampledChannels": 520,
+      "motion": [
+        {
+          "tracks": 194,
+          "samples": 29294,
+          "worstRotationDot": 0.9999999657714582,
+          "worstVectorDelta": 2.205371856689453e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 34338,
+          "worstRotationDot": 0.9999999310307104,
+          "worstVectorDelta": 2.2649765014648438e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 53738,
+          "worstRotationDot": 0.9999999148224679,
+          "worstVectorDelta": 2.1457672119140625e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 29294,
+          "worstRotationDot": 0.9999999657714582,
+          "worstVectorDelta": 2.205371856689453e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 34338,
+          "worstRotationDot": 0.9999999310307104,
+          "worstVectorDelta": 2.2649765014648438e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 26966,
+          "worstRotationDot": 0.9999999554102936,
+          "worstVectorDelta": 2.3245811462402344e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 29294,
+          "worstRotationDot": 0.9999999602869745,
+          "worstVectorDelta": 2.2649765014648438e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 29294,
+          "worstRotationDot": 0.9999999657714582,
+          "worstVectorDelta": 2.205371856689453e-06
+        }
+      ],
+      "problems": [],
+      "staticRootChannelsRemoved": 8
+    },
+    "seated": {
+      "group": "seated",
+      "clips": [
+        "Sitting_Enter",
+        "Sitting_Idle_Loop",
+        "Sitting_Idle02_Loop",
+        "Sitting_Idle03_Loop",
+        "Sitting_Talking_Loop",
+        "Sitting_Nodding_Loop",
+        "Sitting_Exit",
+        "GroundSit_Enter",
+        "GroundSit_Idle_Loop",
+        "GroundSit_Exit"
+      ],
+      "bytes": 813512,
+      "sha256": "00e9a0dbe8f3c0ec04fa890b8c4d70936bea8c95fc5e176f536b05056c24e4a9",
+      "worstRestDelta": 3.841837497020606e-07,
+      "worstFirstSampleDot": 0.999999933372509,
+      "sampledChannels": 650,
+      "motion": [
+        {
+          "tracks": 194,
+          "samples": 15326,
+          "worstRotationDot": 0.9999999217622295,
+          "worstVectorDelta": 2.4437904357910156e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 19594,
+          "worstRotationDot": 0.9999999369525773,
+          "worstVectorDelta": 2.4437904357910156e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 29294,
+          "worstRotationDot": 0.9999999164407314,
+          "worstVectorDelta": 2.4437904357910156e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 48694,
+          "worstRotationDot": 0.9999999366468187,
+          "worstVectorDelta": 2.4437904357910156e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 34338,
+          "worstRotationDot": 0.999999933372509,
+          "worstVectorDelta": 2.562999725341797e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 34338,
+          "worstRotationDot": 0.9999999363733431,
+          "worstVectorDelta": 2.5033950805664062e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 12222,
+          "worstRotationDot": 0.9999999356503775,
+          "worstVectorDelta": 2.682209014892578e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 29294,
+          "worstRotationDot": 0.9999999139464696,
+          "worstVectorDelta": 2.2649765014648438e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 15714,
+          "worstRotationDot": 0.9999999657714582,
+          "worstVectorDelta": 2.1457672119140625e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 25414,
+          "worstRotationDot": 0.9999999099634529,
+          "worstVectorDelta": 2.205371856689453e-06
+        }
+      ],
+      "problems": [],
+      "staticRootChannelsRemoved": 10
+    },
+    "service": {
+      "group": "service",
+      "clips": [
+        "Counter_Enter",
+        "Counter_Idle_Loop",
+        "Counter_Show",
+        "Counter_Give",
+        "Counter_Angry",
+        "Counter_Exit"
+      ],
+      "bytes": 501716,
+      "sha256": "444f64a9394c150739a1ad49a4e297d3b379d97b9a36e2c6e4744a88b9b3511d",
+      "worstRestDelta": 3.841837497020606e-07,
+      "worstFirstSampleDot": 0.9999999356503775,
+      "sampledChannels": 390,
+      "motion": [
+        {
+          "tracks": 194,
+          "samples": 13774,
+          "worstRotationDot": 0.9999999356503775,
+          "worstVectorDelta": 2.1457672119140625e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 31234,
+          "worstRotationDot": 0.9999999651658197,
+          "worstVectorDelta": 2.3245811462402344e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 54514,
+          "worstRotationDot": 0.9999999479602242,
+          "worstVectorDelta": 2.384185791015625e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 51022,
+          "worstRotationDot": 0.9999999002059266,
+          "worstVectorDelta": 2.3245811462402344e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 23474,
+          "worstRotationDot": 0.9999999215642015,
+          "worstVectorDelta": 2.2649765014648438e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 13774,
+          "worstRotationDot": 0.9999999011173384,
+          "worstVectorDelta": 2.3245811462402344e-06
+        }
+      ],
+      "problems": [],
+      "staticRootChannelsRemoved": 6
+    },
+    "garden": {
+      "group": "garden",
+      "clips": [
+        "Farm_Harvest",
+        "Farm_PlantSeed",
+        "Farm_Watering",
+        "Farm_ScatteringSeeds",
+        "Farm_PickingTree",
+        "Fish_Cast",
+        "Fish_Cast_Idle_Loop",
+        "Fish_Reel",
+        "Fish_Reel_Failed"
+      ],
+      "bytes": 578916,
+      "sha256": "d49635a01ad04cb4ee154818af239106fa2781e9b300b0c11893b30b08f67ab1",
+      "worstRestDelta": 3.841837497020606e-07,
+      "worstFirstSampleDot": 0.9999999634504628,
+      "sampledChannels": 585,
+      "motion": [
+        {
+          "tracks": 194,
+          "samples": 29294,
+          "worstRotationDot": 0.9999999236473204,
+          "worstVectorDelta": 2.2649765014648438e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 32398,
+          "worstRotationDot": 0.9999999376647363,
+          "worstVectorDelta": 2.384185791015625e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 44426,
+          "worstRotationDot": 0.9999999628682521,
+          "worstVectorDelta": 2.2649765014648438e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 18430,
+          "worstRotationDot": 0.9999999127712268,
+          "worstVectorDelta": 2.3245811462402344e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 26190,
+          "worstRotationDot": 0.9999999127629638,
+          "worstVectorDelta": 2.1457672119140625e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 21534,
+          "worstRotationDot": 0.9999999397771644,
+          "worstVectorDelta": 2.4437904357910156e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 27354,
+          "worstRotationDot": 0.9999999645304047,
+          "worstVectorDelta": 2.4437904357910156e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 26966,
+          "worstRotationDot": 0.999999932198152,
+          "worstVectorDelta": 2.562999725341797e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 32398,
+          "worstRotationDot": 0.9999998903623627,
+          "worstVectorDelta": 2.5033950805664062e-06
+        }
+      ],
+      "problems": [],
+      "staticRootChannelsRemoved": 9
+    },
+    "interact": {
+      "group": "interact",
+      "clips": [
+        "Interact",
+        "PickUp_Kneeling",
+        "PickUp_Table",
+        "Chest_Open",
+        "Drink",
+        "Consume"
+      ],
+      "bytes": 402184,
+      "sha256": "15366d56f3ba848db3614dd26371d35234384f7f7b569423b97cf4e807e2891c",
+      "worstRestDelta": 3.841837497020606e-07,
+      "worstFirstSampleDot": 0.9999999349678372,
+      "sampledChannels": 390,
+      "motion": [
+        {
+          "tracks": 194,
+          "samples": 23474,
+          "worstRotationDot": 0.999999959113295,
+          "worstVectorDelta": 2.2649765014648438e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 22698,
+          "worstRotationDot": 0.9999999189503876,
+          "worstVectorDelta": 2.2649765014648438e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 9894,
+          "worstRotationDot": 0.999999929590853,
+          "worstVectorDelta": 2.205371856689453e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 16102,
+          "worstRotationDot": 0.9999999282972615,
+          "worstVectorDelta": 2.2649765014648438e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 35114,
+          "worstRotationDot": 0.9999999184849211,
+          "worstVectorDelta": 2.205371856689453e-06
+        },
+        {
+          "tracks": 194,
+          "samples": 15714,
+          "worstRotationDot": 0.9999999293903299,
+          "worstVectorDelta": 2.2649765014648438e-06
+        }
+      ],
+      "problems": [],
+      "staticRootChannelsRemoved": 6
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "version": "jet-age-forms-v1",
+  "forms": [
+    {
+      "name": "rounded-rect",
+      "role": "rounded-corner volumes, headhouses, kiosks",
+      "points": 28,
+      "digest": "400db00d"
+    },
+    {
+      "name": "stadium",
+      "role": "capsule plans, signs, portals",
+      "points": 36,
+      "digest": "0802a7b5"
+    },
+    {
+      "name": "saucer",
+      "role": "saucer crowns and pavilion roofs (lathe)",
+      "points": 22,
+      "digest": "11ab7fce"
+    },
+    {
+      "name": "boomerang",
+      "role": "upswept entrance canopies (extruded)",
+      "points": 31,
+      "digest": "5e812959"
+    },
+    {
+      "name": "parabolic-arch",
+      "role": "vault ribs, pergolas, portals",
+      "points": 17,
+      "digest": "421396d0"
+    },
+    {
+      "name": "hoop",
+      "role": "jet-bridge hoops over skywalks (tube)",
+      "points": 17,
+      "digest": "ecac0e94"
+    },
+    {
+      "name": "tapered-column",
+      "role": "pilotis and pergola posts (lathe)",
+      "points": 6,
+      "digest": "e087a683"
+    },
+    {
+      "name": "starburst",
+      "role": "sputnik finials on pylons",
+      "points": 14,
+      "digest": "c3ff437e"
+    }
+  ],
+  "generator": "scripts/jet-age-forms.mjs",
+  "source": "shared/city-kit/jet-age-forms.js",
+  "license": "Project-original, generated from source; no third-party assets."
+}

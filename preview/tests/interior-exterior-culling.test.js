@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { readFileSync } from 'node:fs';
 import { IPIC_AUDITORIUM, canCullExterior, canCullIpicAuditorium, renderOnly, renderWithoutExterior } from '../src/interior-exterior-culling.js';
 import { createWalkingEnvironment } from '../src/walking.js';
+import { IPIC_AUDITORIUM_ROWS, IPIC_SCREEN } from '../src/ipic-plan.js';
 
 function cameraAt(position, look) {
   const camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.5, 100);
@@ -81,12 +82,15 @@ test('the IPIC auditorium partition in the plan is the plane the culling test ke
 });
 
 test('inside the IPIC auditorium, facing away from its partition, the district is not drawn', () => {
-  // A front-row recliner's eye on the screen, and the #364 auditorium review pose.
-  assert.equal(canCullIpicAuditorium(ipicCamera([-.6, 7.22, 31], [.3, 8.5, 33.79]), ipic), true);
-  assert.equal(canCullIpicAuditorium(ipicCamera([-4.7, 7.65, 27.3], [.5, 8.2, 33.7]), ipic), true);
+  // A front-row recliner's eye on the screen, and a look along the cross aisle behind the back row.
+  const front = IPIC_AUDITORIUM_ROWS.at(-1), screen = [IPIC_SCREEN.a, 6 + IPIC_SCREEN.y, IPIC_SCREEN.d];
+  assert.equal(canCullIpicAuditorium(ipicCamera([front.a, 6 + front.floor + 1.22, 30], screen), ipic), true);
+  assert.equal(canCullIpicAuditorium(ipicCamera([-4.7, 7.65, 27.3], [-3.2, 8.2, 33.7]), ipic), true);
   // Any view that can reach the partition plane keeps the district: back to the doorway,
   // or sideways from the back of the room.
   assert.equal(canCullIpicAuditorium(ipicCamera([-4.7, 7.65, 27.3], [-4.7, 7.5, 20]), ipic), false);
+  assert.equal(canCullIpicAuditorium(ipicCamera([-3.3, 7.6, 30], [-6, 7.6, 27.5]), ipic), false);
+  // Past the wing's end wall is back of house, not the auditorium.
   assert.equal(canCullIpicAuditorium(ipicCamera([0, 7.6, 30], [-6, 7.6, 30]), ipic), false);
   // Outside the auditorium: the lounge, the reception, above its top.
   assert.equal(canCullIpicAuditorium(ipicCamera([-2, 7.6, 24], [.3, 8.5, 33.79]), ipic), false);

@@ -9,16 +9,30 @@ function canvas(t,{failAt=Infinity}={}){
  globalThis.document={createElement(){created++;return {getContext:()=>created===failAt?null:{fillRect(){},fillText(){}}};}};
  t.after(()=>{globalThis.document=previous;});
 }
-test('both lift portals open only for their landing and clear the office wall trim',t=>{
+test('both tube doorways open only for their landing and their leaves clear the office wall trim',t=>{
  canvas(t);const lift=buildOfficeArrival();t.after(()=>lift.dispose());
- assert.ok(lift.frontDoors.every(d=>d.position.z-d.scale.z/2>.18));
+ lift.object.updateMatrixWorld(true);
+ for(const door of lift.frontDoors)assert.ok(new THREE.Box3().setFromObject(door).min.z>.18,'a front leaf stays behind the office wall');
  for(const [time,rear,front]of [[0,true,false],[6,false,false],[ARRIVAL.openingEnd,false,true]]){
   lift.update(arrivalFrame(time));
   for(const[doors,open]of [[lift.rearDoors,rear],[lift.frontDoors,front]]){
-   const inner=doors[1].position.x-doors[1].scale.x/2;
-   assert.equal(inner>ARRIVAL.doorWidth/2,open);
+   const width=lift.doorOpening(doors);
+   assert.equal(width>=ARRIVAL.doorWidth-.01,open,`${time}s: ${width} m clear`);
+   if(!open)assert.ok(width<1e-9,`${time}s: shut`);
   }
  }
+});
+test('the phase light sweeps up the tube and back while the visitor is absent at its top',t=>{
+ canvas(t);const lift=buildOfficeArrival();t.after(()=>lift.dispose());
+ const mid=(ARRIVAL.closingEnd+ARRIVAL.ascentEnd)/2;
+ lift.update(arrivalFrame(ARRIVAL.closingEnd-.01));assert.equal(lift.phaseLight().lit,false,'dark while the doors close');
+ const rising=arrivalFrame(ARRIVAL.closingEnd+.5),top=arrivalFrame(mid),falling=arrivalFrame(ARRIVAL.ascentEnd-.5);
+ assert.ok(rising.ring>0&&rising.ring<top.ring&&falling.ring<top.ring&&top.ring>.99,'the ring rises to the top and comes back');
+ assert.deepEqual([rising.presence,top.presence,falling.presence],[1,0,1],'the body is drawn except at the top of the sweep');
+ lift.update(rising);const low=lift.phaseLight();lift.update(top);const high=lift.phaseLight();
+ assert.ok(low.lit&&high.lit&&high.ringHeight>low.ringHeight&&high.columnHeight>low.columnHeight,'ring and column follow the sweep');
+ lift.update(arrivalFrame(ARRIVAL.ascentEnd+.1));assert.equal(lift.phaseLight().lit,false,'dark again as the doors open');
+ lift.update({phase:'idle',doors:0,floor:1});assert.equal(lift.phaseLight().lit,false,'and in the idle street lobby');
 });
 test('arrival teardown releases instance buffers, shared geometry and label textures once',t=>{
  canvas(t);const lift=buildOfficeArrival(),resources=new Set(),counts=new Map();

@@ -37,7 +37,7 @@ async page => {
     await bob.evaluate(() => window.__riverCyclingBoard().open(true));
     await waitOn(bob, 'empty board', () => { const b = window.__riverCyclingBoard(); return b.open && b.rows.length === 0 && b.status === null; }, null, 15000);
     await bob.locator('#play-tab-cycling').click();
-    check(await bob.locator('.cycling-board-empty').isVisible(), 'An empty board says to take a bike at the plaza rack');
+    check(await bob.locator('.cycling-board-empty').isVisible(), 'An empty board says to take a bike from any rack');
     // The rider takes a bike, rides west past the bench, and steps off.
     check((await page.evaluate(id => window.__riverCycling().goNear(id), 'plaza-salon-rack:2')).ok, 'The rider arrived at the rack');
     await waitOn(page, 'rack prompt', () => window.__riverCycling().prompt === 'take-bike', null, 30000);

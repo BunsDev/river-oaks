@@ -75,3 +75,26 @@ test('retired office workspace actions have no hosted route',()=>{
   }
   assert.equal(normalizeVercelRoute('/api/office-desk/workspace/admin'),'/not-found');
 });
+
+test('player blocking routes reach the server through hosted rewrites, with their world', () => {
+  const config = JSON.parse(readFileSync(new URL('../../vercel.json', import.meta.url)));
+  for (const path of ['/api/blocks/list', '/api/blocks/add', '/api/blocks/remove']) {
+    const rewrite = config.rewrites.find(item => item.source === path);assert.ok(rewrite, `missing rewrite for ${path}`);
+    assert.equal(normalizeVercelRoute(`${rewrite.destination}&world=moon-garden`), `${path}?world=moon-garden`);
+  }
+  assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/blocks/everyone'), '/not-found');
+});
+
+test('in-app account deletion reaches the server through a hosted rewrite', () => {
+  const config = JSON.parse(readFileSync(new URL('../../vercel.json', import.meta.url)));
+  const rewrite = config.rewrites.find(item => item.source === '/api/account/delete');assert.ok(rewrite, 'missing rewrite');
+  assert.equal(normalizeVercelRoute(rewrite.destination), '/api/account/delete');
+  assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/account/export'), '/not-found');
+});
+
+test('moderators reach saved player reports through a hosted rewrite (#292)', () => {
+  const config = JSON.parse(readFileSync(new URL('../../vercel.json', import.meta.url)));
+  const rewrite = config.rewrites.find(item => item.source === '/api/moderation/reports');assert.ok(rewrite, 'missing rewrite');
+  assert.equal(normalizeVercelRoute(rewrite.destination), '/api/moderation/reports');
+  assert.equal(normalizeVercelRoute('/api/server?_river_path=/api/moderation/everything'), '/not-found');
+});

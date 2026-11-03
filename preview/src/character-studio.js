@@ -4,7 +4,8 @@ import { createCharacterPreview } from './character-studio-preview.js';
 import { CHARACTER_PALETTES, CHARACTER_HAIR } from './character-customization.js';
 import { validateCharacterDefinition, migrateStoredCharacterDefinition } from './character-definition.js';
 import { describeLook, studioChoices, studioRoster } from './character-studio-guide.js';
-import { appearanceFor, sharedAppearance, sharedCharacter } from './shared-appearances.js';
+import { RECIPE_CATEGORY_LABELS, buildText, recipeEdit, recipeMarkup, renderRecipe, unlockedCategories } from './character-studio-recipe.js';
+import { CUSTOM_CHARACTER, appearanceFor, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './character-studio.css';
 
 export function createCharacterStudio({ownerId,getDefinition,accountTransport=null,canOpen=()=>true,canStayOpen=canOpen,onOpen=()=>{},reducedMotion=false}){
@@ -16,12 +17,13 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     <div class="cs-workspace"><section class="cs-stage" aria-label="Character preview"><div class="cs-preview"></div><div class="cs-caption"><span data-look></span><span data-comparing hidden>Original</span></div>
       <div class="cs-view-tools"><label>View<select name="framing"><option value="full">Full look</option><option value="portrait">Portrait</option></select></label><label>Light<select name="lighting"><option value="day">Garden daylight</option><option value="warm">Golden hour</option></select></label><label>Pose<select name="pose"><option value="idle">Idle</option><option value="walk">Walk</option><option value="wave">Wave</option></select></label></div>
       <div class="cs-rotation"><label for="cs-yaw">Rotate</label><input id="cs-yaw" type="range" min="-180" max="180" value="0" step="1"><button type="button" data-turntable aria-pressed="false">Turntable</button></div></section>
-    <section class="cs-controls" aria-label="Customize character"><p class="cs-intro">Start with someone you love. Make the look yours.</p>
-      <fieldset class="cs-step"><legend><span class="cs-step-mark" aria-hidden="true">1</span>Choose a character</legend><div class="cs-roster">${studioRoster(ownerId).map(person=>`<label class="cs-chip" data-character="${person.id}" title="${person.name} · ${person.title}" style="--cs-accent:${person.accent}"><input type="radio" name="cs-character" value="${person.id}"><span class="cs-mark" aria-hidden="true">${person.name[0]}</span><span>${person.name}</span></label>`).join('')}</div>
+    <section class="cs-controls" aria-label="Customize character"><p class="cs-intro"></p>
+      <fieldset class="cs-step"><legend><span class="cs-step-mark" aria-hidden="true">1</span>Choose a character</legend><div class="cs-roster"><label class="cs-chip" data-character="${CUSTOM_CHARACTER.id}" title="${CUSTOM_CHARACTER.name} · make someone new" style="--cs-accent:${CUSTOM_CHARACTER.accent}"><input type="radio" name="cs-character" value="${CUSTOM_CHARACTER.id}"><span class="cs-mark" aria-hidden="true">+</span><span>${CUSTOM_CHARACTER.name}</span></label>${studioRoster(ownerId).map(person=>`<label class="cs-chip" data-character="${person.id}" title="${person.name} · ${person.title}" style="--cs-accent:${person.accent}"><input type="radio" name="cs-character" value="${person.id}"><span class="cs-mark" aria-hidden="true">${person.name[0]}</span><span>${person.name}</span></label>`).join('')}</div>
         <div class="cs-summary"><p><strong data-cs-summary-name></strong><span data-cs-summary-title></span></p><p class="cs-summary-description" data-cs-summary-description></p><p class="cs-summary-edit" data-cs-summary-edit hidden></p><p class="cs-summary-options" data-cs-summary-options></p></div></fieldset>
-      <fieldset class="cs-step" data-cs-wardrobe-step><legend><span class="cs-step-mark" aria-hidden="true">2</span>Choose a wardrobe</legend>
+      ${recipeMarkup()}
+      <fieldset class="cs-step" data-cs-authored data-cs-wardrobe-step><legend><span class="cs-step-mark" aria-hidden="true">2</span>Choose a wardrobe</legend>
         <fieldset class="cs-wardrobe" data-cs-wardrobe hidden><legend>Wardrobe</legend><div class="cs-segments" data-cs-variants></div></fieldset></fieldset>
-      <fieldset class="cs-step"><legend><span class="cs-step-mark" data-cs-color-step aria-hidden="true">3</span>Add color</legend><div class="cs-colors" data-cs-colors>
+      <fieldset class="cs-step" data-cs-authored><legend><span class="cs-step-mark" data-cs-color-step aria-hidden="true">3</span>Add color</legend><div class="cs-colors" data-cs-colors>
         <fieldset data-palette><legend>Dress color</legend><div class="cs-swatches">${Object.entries(CHARACTER_PALETTES).map(([id,item])=>`<label class="cs-swatch" data-palette="${id}" title="${item.label}" style="--cs-swatch:${item.color}"><input type="radio" name="cs-palette" value="${id}" aria-label="${item.label}"></label>`).join('')}</div><p data-palette-name></p></fieldset>
         <fieldset data-hair><legend>Hair color</legend><div class="cs-swatches">${Object.entries(CHARACTER_HAIR).map(([id,item])=>`<label class="cs-swatch" data-hair="${id}" title="${item.label}" style="--cs-swatch:${item.color}"><input type="radio" name="cs-hair" value="${id}" aria-label="${item.label}"></label>`).join('')}</div><p data-hair-name></p></fieldset></div>
         <p class="cs-help" data-compatibility></p></fieldset>
@@ -34,6 +36,11 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
   document.body.append(dialog);
   const $=selector=>dialog.querySelector(selector),status=$('.cs-status'),stage=$('.cs-preview');
   let draft=null,preview=null,retained=null,baseline=null,comparing=false,spinning=false,returnFocus=null,closed=false;
+  // Categories kept by Surprise me, and whether this visit has had its random start.
+  // A visit (this tab's session) starts from someone new once. Reloads and world travel keep the worn look, so
+  // reopening after a reconnect or a trip shows the saved customization.
+  const RANDOM_START='river-oaks-studio-random-start';
+  const locked=new Set();let randomStarted=false;try{randomStarted=sessionStorage.getItem(RANDOM_START)==='1';}catch{/* Storage may be disabled. */}
   let portraitGeneration=0,portraitPending=false,portraitURL=null,portraitKey='';
   const releasePortrait=()=>{portraitGeneration++;if(portraitURL)URL.revokeObjectURL(portraitURL);portraitURL=null;$('[data-download]').hidden=true;$('[data-download]').removeAttribute('href');$('[data-portrait]').disabled=portraitPending||stage.dataset.ready!=='true';};
   let favorites=[],storageUnavailable=false;const storageKey=`river-oaks-character-favorites-v2:${encodeURIComponent(ownerId)}`;
@@ -57,6 +64,12 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     // Radios mirror the staged definition, so a rejected or undone choice snaps back.
     const selected={'cs-character':person.id,'cs-variant':choices.variant,'cs-palette':value.palette??'authored','cs-hair':value.hair??'authored'};
     for(const input of dialog.querySelectorAll('.cs-controls input[type=radio]'))input.checked=input.value===selected[input.name];
+    // Your own and the authored characters are two views of one draft.
+    const custom=draft.custom;dialog.dataset.mode=custom?'create':'characters';
+    $('.cs-intro').textContent=custom?'Start from someone new. Roll anything, keep what you love.':'Start with someone you love. Make the look yours.';
+    $('[data-cs-create]').hidden=!custom;$('[data-remix]').hidden=custom;
+    for(const node of dialog.querySelectorAll('[data-cs-authored]'))if(custom)node.hidden=true;else if(!node.matches('[data-cs-wardrobe-step]'))node.hidden=false;
+    if(custom){renderRecipe($('[data-cs-create]'),value.parameters,locked);dialog.dataset.recipe=JSON.stringify(value.parameters);}else delete dialog.dataset.recipe;
     $('[data-remix]').textContent=`Remix ${person.name}`;
     $('[data-cs-summary-name]').textContent=person.name;$('[data-cs-summary-title]').textContent=person.title;
     $('[data-cs-summary-description]').textContent=choices.description;
@@ -126,6 +139,8 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
     const confirmedDraft=editable(confirmed);
     if(retained&&sameLook(retained,baseline))retained=null;baseline=confirmedDraft;
     draft=createCharacterDraft({ownerId,definition:retained??confirmedDraft});comparing=false;spinning=false;
+    // A visit's first open starts from someone new; the worn look stays the original.
+    if(!retained&&!randomStarted&&!draft.custom)draft.create();randomStarted=true;try{sessionStorage.setItem(RANDOM_START,'1');}catch{/* Storage may be disabled. */}
     // Safari does not focus buttons on pointer/touch activation. Return to the
     // actual entry control rather than the previously focused page element.
     returnFocus=event?.currentTarget===trigger?trigger:document.activeElement;
@@ -145,7 +160,10 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
   dialog.addEventListener('cancel',event=>{event.preventDefault();close(true);});
   dialog.addEventListener('close',()=>{releasePortrait();preview?.dispose();preview=null;stage.replaceChildren();returnFocus?.focus({preventScroll:true});});
   $('.cs-controls').addEventListener('change',event=>{
-    const input=event.target;if(input.type!=='radio'||!draft)return;
+    const input=event.target;if(!draft)return;
+    if(input.name==='cs-character'&&input.value===CUSTOM_CHARACTER.id){step(()=>draft.create(),CUSTOM_CHARACTER.name);return;}
+    if(input.closest('[data-cs-create]')){const edit=recipeEdit(input,draft.value.parameters);if(edit)change({recipe:edit});return;}
+    if(input.type!=='radio')return;
     const look=sharedAppearance(draft.value.appearanceId),key=input.name.slice(3);
     if(key==='character')change({appearanceId:appearanceFor(input.value,{form:look.form})?.id});
     else if(key==='form'||key==='variant')change({appearanceId:appearanceFor(look.character,{form:look.form,variant:look.variant,[key]:input.value})?.id});
@@ -164,7 +182,25 @@ export function createCharacterStudio({ownerId,getDefinition,accountTransport=nu
   });
   $('[data-undo]').addEventListener('click',()=>step(()=>draft.undo(),'Undone'));$('[data-redo]').addEventListener('click',()=>step(()=>draft.redo(),'Redone'));
   $('[data-compare]').addEventListener('click',()=>{comparing=!comparing;render();announce(comparing?`Showing the original: ${describeLook(draft.original)}.`:`Showing your edit: ${describeLook(draft.value)}.`);});
-  $('[data-remix]').addEventListener('click',()=>step(()=>draft.remix(),'Remix'));$('[data-random]').addEventListener('click',()=>step(()=>draft.randomize(),'Surprise'));
+  $('[data-remix]').addEventListener('click',()=>step(()=>draft.remix(),'Remix'));$('[data-random]').addEventListener('click',()=>{
+    if(!draft.custom){step(()=>draft.randomize(),'Surprise');return;}
+    const categories=unlockedCategories(locked);
+    if(!categories.length){status.textContent='Everything is kept. Unlock something to be surprised.';return;}
+    step(()=>draft.roll(categories),'Surprise');
+  });
+  // Dice roll one category; locks keep a category through Surprise me.
+  $('[data-cs-create]').addEventListener('click',event=>{
+    const roll=event.target.closest('[data-roll]'),lock=event.target.closest('[data-lock]');
+    if(roll&&draft)step(()=>draft.roll([roll.dataset.roll]),`New ${RECIPE_CATEGORY_LABELS[roll.dataset.roll].toLowerCase()}`);
+    else if(lock){const id=lock.dataset.lock;if(locked.has(id))locked.delete(id);else locked.add(id);render();announce(`${RECIPE_CATEGORY_LABELS[id]} ${locked.has(id)?'kept':'free'} when surprising.`);}
+  });
+  // Sliders show their value while dragging; the draft changes when they settle.
+  $('[data-cs-create]').addEventListener('input',event=>{
+    const input=event.target;if(input.type!=='range')return;
+    if(input.name==='cs-height')$('[data-height-value]').textContent=`${input.value} cm`;
+    else if(input.name==='cs-build')$('[data-build-value]').textContent=buildText(Number(input.value));
+    else $(`[data-face-value=${input.name.slice(8)}]`).textContent=input.value;
+  });
   $('[data-favorite]').addEventListener('click',()=>{const value=draft.value;if(favorites.some(item=>JSON.stringify(item)===JSON.stringify(value))){status.textContent='This look is already a favorite.';return;}if(favorites.length>=8){status.textContent='Your eight favorites are full. Remove one to make room.';return;}favorites.push(value);if(saveFavorites())status.textContent='Favorite saved on this device.';showFavorites();});
   $('#cs-favorites').addEventListener('change',event=>{const index=event.target.value;if(index==='')return;try{step(()=>draft.restore(editable(favorites[Number(index)])),'Favorite');$('[data-remove-favorite]').disabled=false;}catch{status.textContent='That favorite is no longer compatible.';}});
   $('[data-remove-favorite]').addEventListener('click',()=>{const index=$('#cs-favorites').value;if(index==='')return;favorites.splice(Number(index),1);saveFavorites();showFavorites();});

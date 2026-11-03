@@ -28,7 +28,7 @@ async page=>{
           const info=f.render('full',frame*1000/60,speed,{distance,yaw,position:[x,0,z],action:frame>=120&&frame<180?'force':'continue'});
           if(frame>=30)timings.push(info.costumeUpdateMs);
           if(frame%30===29) {
-            const skirt=f.avatar.object.getObjectByName('Jevica draped silk gown');
+            const skirt=f.avatar.object.getObjectByName('Jevica satin peplum');
             const gl=f.renderer.getContext(),pixels=new Uint8Array(gl.drawingBufferWidth*gl.drawingBufferHeight*4);
             gl.readPixels(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
             let hash=2166136261;for(const pixel of pixels)hash=Math.imul(hash^pixel,16777619)>>>0;

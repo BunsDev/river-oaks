@@ -104,6 +104,12 @@ export function createMemorySocial({ now = Date.now, createId = randomUUID } = {
       record.names[record.ids.indexOf(actor.userId)]=message.authorName;
       return {ok:true,message};
     },
+    // Account erasure: every friendship and request, with its messages, for both sides.
+    async eraseUser(userId) {
+      if (!validId(userId)) throw new Error('Invalid account');
+      for (const peer of [...peers(userId)]) { records.delete(pairKey(userId, peer)); peers(peer).delete(userId); }
+      indexes.delete(userId);
+    },
   };
 }
 
@@ -189,6 +195,17 @@ export function createRedisSocial({ redis, prefix, now = Date.now, createId = ra
       if(!message)return invalid;
       const result=await change('invite-place',actor.userId,peerId,JSON.stringify(message));
       return result.ok?{ok:true,message}:result;
+    },
+    // A request made meanwhile joins the index; repeat until it is empty.
+    async eraseUser(userId) {
+      if (!validId(userId)) throw new Error('Invalid account');
+      for (let round = 0; round < 8; round++) {
+        const ids = await redis.smembers(index(userId));
+        if (!ids.length) return;
+        for (const peer of ids) { await change('remove', userId, peer); await redis.srem(index(peer), userId); }
+        await redis.srem(index(userId), ...ids);
+      }
+      throw new Error('Social erasure did not settle');
     },
   };
 }

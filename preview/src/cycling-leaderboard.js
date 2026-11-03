@@ -12,9 +12,9 @@ export function createCyclingLeaderboard({ fetcher = (path, options) => fetch(pa
   const panel = document.createElement('details'); panel.className = 'cycling-board'; panel.id = 'cycling-board';
   panel.innerHTML = `<summary><span>Cycling</span><small class="cycling-board-mine" hidden></small></summary>
     <div class="cycling-board-sheet">
-      <p class="cycling-board-eyebrow">Plaza bike rack · lifetime miles</p>
+      <p class="cycling-board-eyebrow">Bike racks · lifetime miles</p>
       <ol class="cycling-board-list" aria-label="Cycling leaderboard"></ol>
-      <p class="cycling-board-empty" hidden>No miles yet. Take a bike at the plaza rack.</p>
+      <p class="cycling-board-empty" hidden>No miles yet. Take a bike from any bike rack.</p>
       <p class="cycling-board-status" role="status" aria-live="polite" hidden></p>
       <p class="cycling-board-footer" hidden></p>
     </div>`;

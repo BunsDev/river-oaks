@@ -25,8 +25,8 @@ function readBody(req){
 }
 // WorkOS signs timestamp + '.' + the original UTF-8 body, not parsed JSON.
 // https://workos.com/docs/events/data-syncing/webhooks
-// The callback must complete idempotent erasure, session revocation and disconnect
-// before resolving. Failed deliveries receive 503 so the provider can retry.
+// The callback, given the account and the event id, must complete idempotent erasure,
+// session revocation and disconnect before resolving. Failed deliveries receive 503 so the provider can retry.
 export function createWorkOSDeletionHandler({secret=null,onDelete,now=Date.now}={}){
  if(secret!==null&&(typeof secret!=='string'||!secret.length||secret.length>4096))throw new TypeError('Invalid webhook configuration');
  if(secret!==null&&typeof onDelete!=='function')throw new TypeError('Deletion callback is required');
@@ -52,7 +52,7 @@ export function createWorkOSDeletionHandler({secret=null,onDelete,now=Date.now}=
    if(event.event!=='user.deleted'){json(res,200,{ok:true});return true;}
    const id=event.data?.id;
    if(event.data?.object!=='user'||typeof id!=='string'||!/^user_[A-Za-z0-9]{1,123}$/.test(id)){json(res,400,{error:'invalid_webhook_event'});return true;}
-   try{await onDelete(id);}catch{json(res,503,{error:'webhook_unavailable'});return true;}
+   try{await onDelete(id,event.id);}catch{json(res,503,{error:'webhook_unavailable'});return true;}
    json(res,200,{ok:true});return true;
   }finally{pending--;}
  };

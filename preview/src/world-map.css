@@ -5,12 +5,14 @@
 :is(#control-panel,.places-guide) .world-map-surface{--map-ground:#e8dcc5;--map-grid:#cdbd9c;--map-building:#fffcf5;--map-building-edge:#d6c4a2;--map-building-side:#b9a17a;
   --map-road:#ffffff;--map-road-casing:#c4b08b;--map-road-centre:#d9a654;--map-path:#947d56;--map-label:#5f523f;--map-label-halo:#fbf7ee;
   --map-ring:#fffaf0;--map-self:#1f6f63;--map-self-glow:rgb(44 116 102 / .32);--map-target:#c0577f;--map-landmark:#8a64c0;--map-peer:#2c7466;
+  --map-court:#f3e9d6;--map-water:#b7d3dc;--map-district:#8a64c0;
   --map-chip:rgb(255 252 245 / .9);--map-chip-ink:#3c4a45;--map-rim:rgb(255 255 255 / .85);--map-bezel:rgb(255 255 255 / .38);--map-shade:rgb(76 60 32 / .2);
   position:relative;display:block;aspect-ratio:1;width:100%;overflow:hidden;border:0;border-radius:22px;background:var(--map-ground);cursor:crosshair;touch-action:manipulation;
   box-shadow:0 0 0 1px var(--map-rim),0 0 0 5px var(--map-bezel),0 0 0 6px rgb(0 0 0 / .06),0 14px 34px var(--map-shade)}
 :root[data-theme=dark] :is(#control-panel,.places-guide) .world-map-surface{--map-ground:#0f2327;--map-grid:#1d3b40;--map-building:#27474e;--map-building-edge:#36606a;--map-building-side:#081619;
   --map-road:#6f9692;--map-road-casing:#09181b;--map-road-centre:rgb(236 200 132 / .55);--map-path:#5c837f;--map-label:#d3e3de;--map-label-halo:#0f2327;
   --map-ring:#0f2327;--map-self:#b5eee6;--map-self-glow:rgb(181 238 230 / .3);--map-target:#ffd88f;--map-landmark:#d6b6f2;--map-peer:#b5eee6;
+  --map-court:#183236;--map-water:#1f4652;--map-district:#d6b6f2;
   --map-chip:rgb(13 29 32 / .88);--map-chip-ink:#e3efeb;--map-rim:rgb(255 255 255 / .22);--map-bezel:rgb(255 255 255 / .07);--map-shade:rgb(0 0 0 / .4)}
 /* Glass lip: a bright inner edge and a soft vignette over the drawing. */
 :is(#control-panel,.places-guide) .world-map-surface::after{content:"";position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;
@@ -92,6 +94,14 @@
 :is(#control-panel,.places-guide) .world-map-status{min-height:1em;margin:5px 0 0;font-size:11px;line-height:1.4;color:var(--muted)}
 
 /* Footways as a line of footsteps. */
+/* The composed expansion: kit lanes as filled road slabs with a kerb edge, paved courts and
+   bayou water under them, and each district outlined and named. */
+:is(#control-panel,.places-guide) .world-map-lane{fill:var(--map-road);stroke:var(--map-road-casing);stroke-width:2.5;stroke-linejoin:round;paint-order:stroke}
+:is(#control-panel,.places-guide) .world-map-court{fill:var(--map-court);stroke:var(--map-road-casing);stroke-width:1.2;stroke-opacity:.6}
+:is(#control-panel,.places-guide) .world-map-water{fill:var(--map-water)}
+:is(#control-panel,.places-guide) .world-map-district{fill:none;stroke:var(--map-district);stroke-width:3;stroke-dasharray:14 8;stroke-opacity:.7;stroke-linejoin:round}
+:is(#control-panel,.places-guide) .world-map-district-label{position:absolute;transform:translate(-50%,-50%);max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 11px/1.2 var(--font-sans,system-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--map-district);text-shadow:0 0 3px var(--map-label-halo),0 0 2px var(--map-label-halo),0 0 1px var(--map-label-halo);pointer-events:none}
+:is(#control-panel,.places-guide) .world-map-key-district path{fill:none;stroke:var(--map-landmark);stroke-opacity:1;stroke-width:2;stroke-dasharray:4 2}
 :is(#control-panel,.places-guide) .world-map-path{stroke:var(--map-path);stroke-dasharray:0 9;stroke-linecap:round}
 :is(#control-panel,.places-guide) .world-map-road-labels{position:absolute;inset:0;z-index:1;pointer-events:none}
 :is(#control-panel,.places-guide) .world-map-road-label{position:absolute;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:italic 600 10px/1.2 var(--font-sans,system-ui);letter-spacing:.06em;color:var(--map-label);text-shadow:0 0 3px var(--map-label-halo),0 0 2px var(--map-label-halo),0 0 1px var(--map-label-halo);pointer-events:none}

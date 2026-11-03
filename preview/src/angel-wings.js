@@ -54,6 +54,10 @@ function vaneTexture() {
 // About 5.8 m tip to tip, 23% smaller than the first 7.6 m version, and shaped
 // like a bird's wing rather than a fan.
 export const WING_SCALE=.8;
+// At rest (standing, walking) the wings stay out, folded back behind the
+// shoulders at this extension, as in the 2026-10-29 reference; they only
+// vanish while Jev sits in the car. Flight opens them fully.
+export const WING_REST=.45;
 
 // Feathers are instanced per articulated section. Wingbeats never rebuild geometry.
 export function createAngelWings({reducedMotion=globalThis.window?.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false}={}) {
@@ -99,12 +103,14 @@ export function createAngelWings({reducedMotion=globalThis.window?.matchMedia?.(
   const glints=new THREE.Points(geometry,magic);glints.frustumCulled=false;object.add(glints);
   let extension=0,phase=0,amplitude=0,frequency=1.5;
   return {object,
-    update(now,delta,{amount=0,speed=0,climbing=0,bank=0}={}) {
-      const dt=Math.min(.08,Math.max(0,delta)),ease=1-Math.exp(-5*dt);
-      extension+=(amount-extension)*ease;object.visible=extension>.005;
+    // amount is the flight blend (wingbeats); rest keeps the wings out and
+    // nearly still (a slow breathing fold) when there is no flight.
+    update(now,delta,{amount=0,rest=0,speed=0,climbing=0,bank=0}={}) {
+      const dt=Math.min(.08,Math.max(0,delta)),ease=1-Math.exp(-5*dt),flying=amount>.01;
+      extension+=(Math.max(amount,rest)-extension)*ease;object.visible=extension>.005;
       const lifting=THREE.MathUtils.clamp(climbing/2,0,1),gliding=THREE.MathUtils.clamp(speed/5,0,1);
-      frequency+=((1.65+lifting*1.7)-frequency)*ease;
-      amplitude+=((.22+lifting*.27-gliding*.15)-amplitude)*ease;
+      frequency+=((flying?1.65+lifting*1.7:.25)-frequency)*ease;
+      amplitude+=((flying?.22+lifting*.27-gliding*.15:.02)-amplitude)*ease;
       phase+=frequency*dt;
       const flap=reducedMotion?0:Math.sin(phase)*amplitude;
       for(const {hinge,tip,side}of hinges) {

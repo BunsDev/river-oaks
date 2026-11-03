@@ -78,6 +78,27 @@ test('placed-obstacle checks use one fresh ground height per position query',()=
   assert.equal(environment.isFree(2,3),false);assert.equal(reads,1);
 });
 
+test('bucketed obstacle and flight lookups give exact answers across bucket edges and signs', () => {
+  // Squares straddle multiples of the 16 m buckets on both sides of the origin; one spans several.
+  const squares = [[-17, -17, -15, -15], [15.8, -0.4, 16.3, 0.6], [-32.2, 31.7, -31.9, 48.2], [-0.1, -0.1, 0.1, 0.1], [40, -60, 70, -20]];
+  const ring = ([w, s, e, n]) => [[w, s], [e, s], [e, n], [w, n]];
+  const away = ([w, s, e, n], x, y) => Math.hypot(Math.max(w - x, 0, x - e), Math.max(s - y, 0, y - n));
+  const walls = createWalkingEnvironment({ bounds_m: [-100, -100, 100, 100], buildings: [], collisionPolygons: squares.map(ring) });
+  const solids = squares.map((rect, i) => ({ rect, height: 2 + i }));
+  const flight = createWalkingEnvironment({ bounds_m: [-100, -100, 100, 100], buildings: [],
+    eastGardenCommons: { districtBounds: [-100, -100, 100, 100], surfaces: [], solids, ground: 0, pavilion: { rect: [90, 90, 91, 91], clearHeight: 3, roofThickness: .5 } } });
+  let checked = 0;
+  for (let x = -40.011; x < 75; x += .13) for (let y = -65.007; y < 52; y += .13) {
+    assert.equal(walls.isFree(x, -y), !squares.some(square => away(square, x, y) < .35), `walking at ${x}, ${y}`);
+    for (const altitude of [1, 5, 9]) {
+      const blocked = solids.some(({ rect: [w, s, e, n], height }) => x >= w - 1.3 && x <= e + 1.3 && y >= s - 1.3 && y <= n + 1.3 && altitude <= height + 3.1);
+      assert.equal(flight.canFly(x, altitude, -y), !blocked, `flying at ${x}, ${y}, ${altitude} m`);
+    }
+    checked++;
+  }
+  assert.ok(checked > 700000);
+});
+
 test('acceleration builds over several frames instead of peaking on the first one', () => {
   const environment = createWalkingEnvironment({ bounds_m: [-50, -50, 50, 50], buildings: [], collisionPolygons: [] });
   const profile = fps => {

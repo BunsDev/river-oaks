@@ -74,6 +74,11 @@ export function createMemoryDesignLibrary({ now = Date.now } = {}) {
       records.set(userId, { version: current.version + 1, items });
       return { ok: true, items: clone(items) };
     },
+    // Account erasure: the whole library.
+    async eraseUser(userId) {
+      if (!accountId(userId)) throw new Error('Invalid account');
+      records.delete(userId);
+    },
   };
 }
 
@@ -123,6 +128,10 @@ export function createRedisDesignLibrary({ redis, prefix, now = Date.now } = {})
         if (result !== 'conflict') throw new Error('Invalid design library response');
       }
       return rejected('library_busy');
+    },
+    async eraseUser(userId) {
+      if (!accountId(userId)) throw new Error('Invalid account');
+      await redis.hdel(key, field(userId));
     },
   };
 }

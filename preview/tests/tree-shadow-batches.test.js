@@ -32,7 +32,7 @@ function shadowInstances(proxies) {
 
 // #289: the sun-shadow silhouettes batch on a coarser grid than the crown detail tiles.
 test('tree shadow proxies draw the same instances in fewer, larger batches', async () => {
-  const trees = buildMatureTrees(world);
+  const trees = buildMatureTrees(world, matureTreePlacements(world), { shadowTile: TREE_SHADOW_TILE_M });
   await trees.userData.ready;
   const proxies = trees.userData.shadowProxies, casting = () => trees.children.filter(mesh => mesh.castShadow);
   assert.ok(proxies.length && proxies.every(proxy => proxy.isInstancedMesh && proxy.castShadow && !proxy.visible), 'hidden instanced casters');
@@ -46,4 +46,12 @@ test('tree shadow proxies draw the same instances in fewer, larger batches', asy
   assert.deepEqual(shadowInstances(proxies), coarse, 'the same silhouettes at the same transforms');
   const detailTiles = new Set(matureTreePlacements(world).map(({ position: [x, , z] }) => `${Math.floor(x / 12)}:${Math.floor(z / 12)}`));
   assert.equal(trees.children.filter(mesh => !mesh.castShadow).length, detailTiles.size * 3 * 2, 'crowns keep three levels of both parts per 12 m tile');
+});
+
+// A streamed kit attaches and evicts sites by batch, so a wider shadow batch would straddle two sites.
+test('tree shadow proxies keep the crown tile unless the caller is the fixed District', async () => {
+  const placements = matureTreePlacements(world), streamed = buildMatureTrees(world, placements), fixed = buildMatureTrees(world, placements, { shadowTile: TREE_SHADOW_TILE_M });
+  await Promise.all([streamed.userData.ready, fixed.userData.ready]);
+  assert.ok(streamed.userData.shadowProxies.length > fixed.userData.shadowProxies.length);
+  assert.equal(streamed.userData.shadowProxies.length, streamed.userData.shadowTile(TREE_DETAIL_TILE_M), 'the default is the detail tile');
 });

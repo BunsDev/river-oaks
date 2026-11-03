@@ -10,7 +10,7 @@ and private work when you do.
 
 | Setting | Values | Default | Effect |
 | --- | --- | --- | --- |
-| `RIVER_OAKS_DISTRICT_REVISION` | `river-oaks-garage-1`, `river-oaks-gardens-3`, `east-garden-commons-market-1` (Gardens plus the East Garden Commons; see [world expansion](world-expansion.md)) | garage | The district the server and every page draw. An unknown value keeps the garage and logs `district_revision_ignored`. |
+| `RIVER_OAKS_DISTRICT_REVISION` | `river-oaks-garage-1`, `river-oaks-gardens-3`, `east-garden-commons-market-1` (Gardens plus the East Garden Commons; see [world expansion](world-expansion.md)) | garage (`pnpm run dev`: `woodland-heights-1`) | The district the server and every page draw. An unknown value keeps the garage and logs `district_revision_ignored`. `pnpm run dev` serves the experimental land expansion unless a revision is set; acceptance fixtures keep the garage. |
 | `RIVER_OAKS_DISTRICT_EPOCH` | whole number | `0` | Raised with every switch (Redis towns). Anything else stops the process at startup. |
 | `RIVER_OAKS_CAMPUS_OPERATOR_IDS` | comma-separated account ids | none | Who may offer, extend and end leases (#509). With none, leasing is closed and the directory says so. |
 

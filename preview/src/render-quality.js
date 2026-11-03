@@ -16,6 +16,26 @@ export function normalizeQuality(value) {
   return Object.hasOwn(QUALITY_MODES, value) ? value : DEFAULT_QUALITY;
 }
 
+// The city-kit finish (shared/city-kit/catalog.js KIT_FINISHES) for the live Commons and
+// Heights (#742). Pink Jet-Age is the default presentation; no URL flag is required.
+// Read once per page load: an explicit `?finish=classic` or saved Classic preference
+// remains a comparison override. Query choices take precedence over saved choices.
+// The lazily loaded scene builders validate names (catalog.js knownFinish), so an
+// unknown well-formed name still renders classic; keep the catalog out of this bundle.
+export const DEFAULT_FINISH = 'pink-jet-age';
+const finishStorageKey = 'river-oaks-finish';
+const finishName = value => typeof value === 'string' && /^[a-z][a-z0-9-]{0,31}$/.test(value) ? value : DEFAULT_FINISH;
+export function readFinishPreference({ search, storage: given } = {}) {
+  try {
+    const query = new URLSearchParams(search ?? globalThis.location?.search ?? '').get('finish');
+    if (query !== null) return finishName(query);
+  } catch { /* An unreadable address keeps the stored or default finish. */ }
+  try {
+    const storage = given === undefined ? globalThis.localStorage : given;
+    return finishName(storage?.getItem(finishStorageKey));
+  } catch { return DEFAULT_FINISH; }
+}
+
 // A 60 Hz display delivers 16.7 ms frames. A window median at or above 26 ms
 // means the GPU is missing every other refresh, so Auto steps resolution down.
 // Repeated missed refreshes can also hide behind a fast median while moving.

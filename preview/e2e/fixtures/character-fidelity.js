@@ -1,8 +1,9 @@
 import {releaseTransmissionTargets} from '../../src/transmission-targets.js';
 import {createQualityControl} from '../../src/render-quality.js';
 import {characterFidelityContract} from '../../src/character-fidelity-contract.js';
-import {applyCharacterRealism, loadCharacterRealismTextures, REALISM_TIERS} from '../../src/character-realism.js';
+import {applyCharacterRealism, loadCharacterRealismTextures, REALISM_COMPONENTS, REALISM_TIERS} from '../../src/character-realism.js';
 import * as THREE from 'three';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {createCharacterHero, CHARACTER_HERO_PRESET} from '../../src/character-hero.js';
 import {characterPortraitPNG, portraitPixels, CHARACTER_PORTRAIT_SIZE} from '../../src/character-portrait.js';
 import {customizedCharacterDefinition} from '../../src/character-customization.js';
@@ -10,6 +11,7 @@ import {AVATAR_PROFILES, loadResidentAvatar} from '../../src/avatars.js';
 import {createPlayerCostume} from '../../src/player-costume.js';
 import {createCharacterMaterials} from '../../src/character-studio-materials.js';
 import {sharedAppearance} from '../../src/shared-appearances.js';
+import {defaultAppearanceRealism} from '../../src/default-appearance-realism.js';
 import {JEVICA_ACCOUNT_IDS} from '../../src/jevica-accounts.js';
 import {compareCharacterImages} from '../../audit/character-image-comparison.js';
 import {distributionOf, sceneCensus, rendererMemory, memoryDelta} from '../../src/character-fidelity-metrics.js';
@@ -61,16 +63,79 @@ export function closeUpCamera(scene) {
 
 // The same rig, look and costume steps as createCharacterHero, without its
 // single-figure stage, so a crowd can share one scene and animate.
-async function loadFigure(appearanceId, index, realism = 'off') {
+// Without `components`, named defaults take their trial parts as in the world.
+async function loadFigure(appearanceId, index, realism = 'off', components) {
   const definition = definitionFor(appearanceId), look = sharedAppearance(definition.appearanceId);
+  components ??= defaultAppearanceRealism(definition.appearanceId) ?? undefined;
   const avatar = await loadResidentAvatar(Math.max(0, AVATAR_PROFILES.indexOf(definition.rig)), `remote-fidelity-${index}`, definition.rig,
     {folk: false, appearanceId: definition.appearanceId, faceRecipe: {}, realism: 'off'});
   const costume = look.costume === 'jevica' ? createPlayerCostume(avatar, 'jevica') : null;
   const colors = createCharacterMaterials(avatar.object); colors.apply(definition);
   let effect;
-  try { if (realism !== 'off') effect = applyCharacterRealism(avatar.rig, {tier: realism, textures: await loadCharacterRealismTextures()}); }
+  try { if (realism !== 'off') effect = applyCharacterRealism(avatar.rig, {tier: realism, textures: await loadCharacterRealismTextures(), components}); }
   catch (error) { colors.dispose(); costume?.dispose(); avatar.dispose(); throw error; }
   return {avatar, costume, dispose() { effect?.dispose(); colors.dispose(); costume?.dispose(); avatar.object.removeFromParent(); avatar.dispose(); }};
+}
+
+// Fixed alternatives to the hero's garden-front-v1 daylight stage (#517 trial):
+// the same figure, camera and pose under low warm dusk light, and under a warm
+// interior with a room environment standing in for the town's reflections.
+const LIGHTING = {
+  daylight: null,
+  dusk: {background: '#2d3245', key: ['#ffad78', 1.5, [3.6, 1.3, 2.4]], fill: ['#55649a', '#2a221f', .85], rim: ['#9db3ff', 1.9], environment: 0},
+  interior: {background: '#4b4139', key: ['#ffe0bb', 2.1, [.8, 3.2, 2.2]], fill: ['#fff0dc', '#5b4a3b', 1.25], rim: ['#ffd7ad', .55], environment: .35},
+};
+function applyLighting(scene, name) {
+  if (!Object.hasOwn(LIGHTING, name)) throw new TypeError(`Unknown lighting ${name}`);
+  const preset = LIGHTING[name];
+  if (!preset) return () => {};
+  const lights = scene.children.filter(child => child.isLight), key = lights.find(light => light.castShadow);
+  const rim = lights.find(light => light.isDirectionalLight && light !== key), fill = lights.find(light => light.isHemisphereLight);
+  key.color.set(preset.key[0]); key.intensity = preset.key[1]; key.position.set(...preset.key[2]);
+  fill.color.set(preset.fill[0]); fill.groundColor.set(preset.fill[1]); fill.intensity = preset.fill[2];
+  rim.color.set(preset.rim[0]); rim.intensity = preset.rim[1]; scene.background = new THREE.Color(preset.background);
+  let target = null;
+  if (preset.environment) {
+    const pmrem = new THREE.PMREMGenerator(renderer), room = new RoomEnvironment();
+    target = pmrem.fromScene(room, .04); room.dispose(); pmrem.dispose();
+    scene.environment = target.texture; scene.environmentIntensity = preset.environment;
+  }
+  return () => { scene.environment = null; target?.dispose(); };
+}
+
+// Which pixels a part of the figure covers, found by rendering again without
+// it: hair, brows/lashes and skin use the realism layer's own selectors. The
+// mask is bit-packed per 8x8 cell (set when most of the cell is covered).
+const materialNamed = (mesh, pattern) => [mesh.material].flat().some(material => pattern.test(material.name ?? ''));
+const REGIONS = {
+  hair: mesh => /^(afro|bob|braid|long|ponytail|short)\d+/i.test(mesh.name) || materialNamed(mesh, /^(afro|bob|braid|long|ponytail|short)\d+/i),
+  brows: mesh => /(eyebrow|eyelashes)\d+(?:_\d+)?$/i.test(mesh.name) || materialNamed(mesh, /brows$/i),
+  skin: mesh => [mesh.material].flat().some(material => /^(young|middleage|old)_[a-z]+_(male|female)\d*$/i.test(material.name ?? '')),
+};
+const CELL = 8;
+function regionStats(scene, camera, samples) {
+  const full = portraitPixels({renderer, scene, camera, samples}), {width, height} = full, result = {};
+  for (const [region, matches] of Object.entries(REGIONS)) {
+    const hidden = [];
+    scene.traverse(object => { if (object.isMesh && object.visible && matches(object)) { object.visible = false; hidden.push(object); } });
+    if (!hidden.length) { result[region] = null; continue; }
+    let without;
+    try { without = portraitPixels({renderer, scene, camera, samples}).pixels; } finally { for (const object of hidden) object.visible = true; }
+    const columns = Math.ceil(width / CELL), rows = Math.ceil(height / CELL), cells = new Uint16Array(columns * rows), sum = [0, 0, 0];
+    let pixels = 0;
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      if (Math.max(Math.abs(full.pixels[i] - without[i]), Math.abs(full.pixels[i + 1] - without[i + 1]), Math.abs(full.pixels[i + 2] - without[i + 2])) <= 6) continue;
+      pixels++; sum[0] += full.pixels[i]; sum[1] += full.pixels[i + 1]; sum[2] += full.pixels[i + 2];
+      cells[Math.floor(y / CELL) * columns + Math.floor(x / CELL)]++;
+    }
+    const bits = new Uint8Array(Math.ceil(cells.length / 8));
+    cells.forEach((count, cell) => { if (count * 2 >= CELL * CELL) bits[cell >> 3] |= 1 << (cell & 7); });
+    let binary = ''; for (const byte of bits) binary += String.fromCharCode(byte);
+    result[region] = {meshes: hidden.map(object => object.name), pixels, meanSRGB: pixels ? sum.map(value => +(value / pixels).toFixed(3)) : null,
+      mask: {cell: CELL, columns, rows, bits: btoa(binary)}};
+  }
+  return result;
 }
 
 function crowdStage(count) {
@@ -91,7 +156,8 @@ const slot = (index, count) => {
   return [(column - (columns - 1) / 2) * .95, -row * 1.3];
 };
 
-async function sample({scene, camera, figures, warmup, samples}) {
+// `seconds`, when set, records for that long after warmup instead of `samples` frames.
+async function sample({scene, camera, figures, warmup, samples, seconds}) {
   const intervals = [], cpu = [], queries = [];
   let previous = null, recorded = 0;
   const step = now => {
@@ -107,7 +173,8 @@ async function sample({scene, camera, figures, warmup, samples}) {
     return performance.now() - start;
   };
   for (let i = 0; i < warmup; i++) step(await frame());
-  while (recorded < samples) {
+  const until = seconds ? performance.now() + seconds * 1000 : Infinity;
+  while (seconds ? performance.now() < until : recorded < samples) {
     const now = await frame(), elapsed = step(now);
     if (previous !== null) { intervals.push(now - previous); cpu.push(elapsed); recorded++; }
     previous = now;
@@ -127,7 +194,8 @@ window.fidelityFixture = {
     gpuVendor: debug ? gl.getParameter(debug.UNMASKED_VENDOR_WEBGL) : null, webglVersion: gl.getParameter(gl.VERSION),
     gpuTimer: Boolean(timer), threeRevision: THREE.REVISION, pixelRatio: renderer.getPixelRatio(), colorSpace: renderer.outputColorSpace,
     toneMapping: renderer.toneMapping, exposure: renderer.toneMappingExposure, viewport: VIEWPORT,
-    presets: {full: CHARACTER_HERO_PRESET, closeUp: CLOSE_UP_PRESET}, capture: {...CHARACTER_PORTRAIT_SIZE, samples: 4}},
+    presets: {full: CHARACTER_HERO_PRESET, closeUp: CLOSE_UP_PRESET}, capture: {...CHARACTER_PORTRAIT_SIZE, samples: 4},
+    components: REALISM_COMPONENTS, lighting: Object.keys(LIGHTING), regions: Object.keys(REGIONS)},
 
   // Cold load through the shipped loader, then the first render (shader compile).
   async load(appearanceId, {realism = 'off'} = {}) {
@@ -142,36 +210,38 @@ window.fidelityFixture = {
     } finally { releaseTransmissionTargets(renderer, scene); figure.dispose(); dispose(); }
   },
 
-  async capture(appearanceId, {realism = 'off', expressions = false} = {}) {
+  async capture(appearanceId, {realism = 'off', expressions = false, components, lighting = 'daylight', regions = false, samples = 4} = {}) {
     const definition = definitionFor(appearanceId);
-    const hero = await createCharacterHero({definition, ownerId: definition.ownerId, realism});
+    const hero = await createCharacterHero({definition, ownerId: definition.ownerId, realism, components});
+    const restoreLighting = applyLighting(hero.scene, lighting);
     try {
       const census = sceneCensus(figureRoot(hero.scene));
       const views = {};
       for (const [view, camera] of [['full', hero.camera], ['closeUp', closeUpCamera(hero.scene)]]) {
-        const {blob} = await characterPortraitPNG({renderer, scene: hero.scene, camera});
+        const {blob} = await characterPortraitPNG({renderer, scene: hero.scene, camera, samples});
         views[view] = {png: await dataURL(blob), camera: {position: camera.position.toArray(), fov: camera.fov,
           direction: camera.getWorldDirection(new THREE.Vector3()).toArray()}};
+        if (regions) views[view].regions = regionStats(hero.scene, camera, samples);
       }
       if (expressions) for (const name of hero.supportedExpressions.filter(name => name !== 'neutral')) {
         hero.setExpression(name, .65);
         const camera = closeUpCamera(hero.scene), {blob} = await characterPortraitPNG({renderer, scene:hero.scene, camera});
         views[`expression-${name}`] = {png:await dataURL(blob), camera:{position:camera.position.toArray(), fov:camera.fov, direction:camera.getWorldDirection(new THREE.Vector3()).toArray()}};
       }
-      return {definition, census, views, supportedExpressions:hero.supportedExpressions, realism: hero.realismReport};
-    } finally { hero.dispose(renderer); }
+      return {definition, census, views, supportedExpressions:hero.supportedExpressions, realism: hero.realismReport, lighting, samples};
+    } finally { restoreLighting(); hero.dispose(renderer); }
   },
 
-  async frames(appearanceId, {count = 1, warmup = 60, samples = 240, realism = 'off'} = {}) {
+  async frames(appearanceId, {count = 1, warmup = 60, samples = 240, seconds, realism = 'off', components} = {}) {
     const stage = crowdStage(count), figures = [];
     try {
       for (let index = 0; index < count; index++) {
-        const figure = await loadFigure(appearanceId, index, realism), [x, z] = slot(index, count);
+        const figure = await loadFigure(appearanceId, index, realism, components), [x, z] = slot(index, count);
         figure.avatar.object.position.set(x, 0, z); stage.scene.add(figure.avatar.object); figures.push(figure);
       }
       const census = sceneCensus(stage.scene);
       return {count, census: {drawCalls: census.drawCalls, triangles: census.triangles, skeletons: census.skeletons, textureBytes: census.textureBytes},
-        ...await sample({scene: stage.scene, camera: stage.camera, figures, warmup, samples})};
+        ...await sample({scene: stage.scene, camera: stage.camera, figures, warmup, samples, seconds})};
     } finally { releaseTransmissionTargets(renderer, stage.scene); for (const figure of figures) figure.dispose(); stage.dispose(); }
   },
 
@@ -189,9 +259,9 @@ window.fidelityFixture = {
 
   // Load, show and dispose repeatedly; GPU resources must return to the level
   // after the first (warm) cycle. The cached template is shared and expected.
-  async cycles(appearanceId, count = 10, {portrait = false, realism = 'off'} = {}) {
+  async cycles(appearanceId, count = 10, {portrait = false, realism = 'off', components} = {}) {
     const once = async () => {
-      const definition = definitionFor(appearanceId), hero = await createCharacterHero({definition, ownerId: definition.ownerId, realism});
+      const definition = definitionFor(appearanceId), hero = await createCharacterHero({definition, ownerId: definition.ownerId, realism, components});
       try {
         if (portrait) {
           for (const camera of [hero.camera, closeUpCamera(hero.scene)]) portraitPixels({renderer, scene: hero.scene, camera});
@@ -208,7 +278,7 @@ window.fidelityFixture = {
 
   async qualityCycles(appearanceId, count = 5) {
     const definition = definitionFor(appearanceId), contract = characterFidelityContract(definition.rig);
-    if (!contract) throw new Error('Quality fixture requires a realistic human rig');
+    if (!contract && !defaultAppearanceRealism(definition.appearanceId)) throw new Error('Quality fixture requires a realistic human rig or a named default in the trial');
     const control = createQualityControl({apply() {}, storage:{getItem:()=>'sharp'}});
     const avatar = await loadResidentAvatar(0, 'remote-quality-fixture', definition.rig, {folk:false, appearanceId, faceRecipe:{}});
     const stage = crowdStage(1); stage.scene.add(avatar.object);

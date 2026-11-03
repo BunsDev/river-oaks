@@ -14,11 +14,16 @@ import { CLIENT_ADDRESS, createClientAddress, rateLimitKey } from './client-addr
 import { ADMITTED } from './world-router.js';
 import { createWaitlistRoutes } from './waitlist-routes.js';
 import { createDebugReportRoutes } from './debug-report-routes.js';
+import { REPORT_UNAVAILABLE, STAFF_BAN_REFUSED, closeRequest, createModerationReportsRoute, staffAccount, submitReport } from './moderation-reports.js';
+import { RESPONSE_HOURS } from './moderation-notify.js';
 import { DEFAULT_WORLD_ID, WORLD_PROTOCOL_VERSION, acceptsWorldProtocol, validateWorldId } from '../preview/src/world-contract.js';
 import { isJevicaAdmin } from './admin.js';
 import { MAX_REGION_REQUEST_BYTES } from './region-package.js';
 import { socialAction } from './social-api.js';
 import { groupAction } from './groups-api.js';
+import { loadHidden, screenCommand, viewFor } from './blocks.js';
+import { defaultContentFilter, screenText } from './content-filter.js';
+import { blockAction } from './blocks-api.js';
 import { profileAction } from './profile-api.js';
 import { createCyclingLeaderboard } from './cycling-api.js';
 import { eventAction } from './events-api.js';
@@ -42,11 +47,11 @@ const json = (res, status, value) => {
 };
 
 /** HTTP/WS edge for a durable room. No instance owns canonical game or auth state. */
-export function createDistributedServer({ auth, room, protocolVersion: worldProtocol = WORLD_PROTOCOL_VERSION, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, groups = null, profiles = null, characters = null, characterStudioEnabled = true, characterMetrics = null, events = null, workplace = null, officeDesk = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
-  trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now,
+export function createDistributedServer({ auth, room, protocolVersion: worldProtocol = WORLD_PROTOCOL_VERSION, worldTitle, security, waitlist, waitlistAdmins = [], debugReports = null, landmarks, social = null, blocks = null, onBlocked = null, blockSyncMs = 5000, groups = null, profiles = null, characters = null, characterStudioEnabled = true, characterMetrics = null, events = null, workplace = null, officeDesk = null, workplaceCronSecret = null, presence = null, designLibrary = null, worldCatalog = null, worldDirectory = () => worldCatalog.list(), isAdmin = isJevicaAdmin, onApplyRegion, onBan, origin, moderators = [],
+  trustedProxyIPs = [], address = createClientAddress(trustedProxyIPs), now = Date.now, moderationNotifier = null, responseHours = RESPONSE_HOURS,
   connectionLifetime = 270_000, rotateNoticeMs = ROTATE_NOTICE_MS, assetGateSecret = null, heartbeatMs = 5000, onMove = null, voice = null, voiceCronSecret = null,
   // cyclingMiles: accepted for the leaderboard route (PR 2); the room owner flushes rides.
-  cyclingMiles = null } = {}) {
+  cyclingMiles = null, contentFilter = defaultContentFilter() } = {}) {
   if (!waitlist) throw new Error('Waitlist is required');
   const worldId = validateWorldId(room.worldId ?? DEFAULT_WORLD_ID);
   const matchesWorld = url => (url.searchParams.get('world') ?? (worldId === DEFAULT_WORLD_ID ? DEFAULT_WORLD_ID : null)) === worldId;
@@ -115,6 +120,10 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
     onRevoke: async userId => { await disconnectUser(userId); await workplace?.suspend(userId); await onBan?.(userId); } });
   const handleDebugReports = createDebugReportRoutes({ auth, store: debugReports, admins: waitlistAdmins, origin, isBanned: id => security.isBanned(id),
     allow: id => security.allow('debug-report', id, 3, 600_000) });
+  // Moderators read saved player reports (#292).
+  const staff = staffAccount({ moderators, admins: waitlistAdmins, isAdmin });
+  const handleModerationReports = createModerationReportsRoute({ auth, moderators, isBanned: id => security.isBanned(id), isApproved: id => waitlist.isApproved(id),
+    allow: id => security.allow('moderation_reports', id, 30, 60_000), reports: except => security.reports(undefined, except), usernameOf: id => waitlist.usernameOf?.(id) ?? null, isStaff: staff, responseHours, now });
   // Sends the committed view. The snapshot is serialized once per broadcast, not
   // once per connection; `only` limits it to one connection (a command's sender).
   function publish(view, only = null) {
@@ -122,7 +131,11 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
     const present = new Map(view.connections.map(connection => [connection.userId, connection]));
     let frame = null;
     for (const connection of only ? [only] : connections.values()) {
-      if (!connection.joined) continue;
+      // A tick that began before this connection was admitted carries a roster without it
+      // (or with the account's previous socket) and says nothing about it: skip it rather
+      // than close the new socket as removed or as another tab. Admission sends the first view.
+      if (!connection.joined || connection.admittedRevision === undefined
+        || (Number.isFinite(view.revision) && Number.isFinite(connection.admittedRevision) && view.revision < connection.admittedRevision)) continue;
       const { ws, identity, connectionId } = connection, active = present.get(identity.userId);
       if (identity.expiresAt <= now()) { ws.close(4001, 'Session expired. Reconnecting securely.'); continue; }
       if (connection.regionSha256 && view.snapshot.regionSha256 && connection.regionSha256 !== view.snapshot.regionSha256) {
@@ -140,7 +153,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
         continue;
       }
       if (active.connectionId !== connectionId) { ws.close(4009, 'This account joined in another tab.'); continue; }
-      send(ws, frame ??= JSON.stringify(withVoice(view.snapshot)), { snapshot: true });
+      send(ws, connection.hidden.size ? JSON.stringify(withVoice(viewFor(view.snapshot, connection.hidden, identity.userId))) : frame ??= JSON.stringify(withVoice(view.snapshot)), { snapshot: true });
     }
   }
   const server = createServer(async (req, res) => {
@@ -153,10 +166,12 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
       if (await auth.handle(req, res)) return;
       if (await handleWaitlist(req, res, path)) return;
       if (await handleDebugReports(req, res, path)) return;
+      if (path === '/api/moderation/reports') { await handleModerationReports(req, res); return; }
       if (handleCharacters && await handleCharacters(req,res,path)) return;
       if (handleVoice && await handleVoice(req, res, path, url)) return;
-      // The default district answers with its served revision (#507) even without a catalog.
-      if (path === '/api/world-data' && req.method === 'GET' && (worldCatalog || room.districtRevision)) {
+      // The default district answers with its served revision (#507) even without a catalog,
+      // and the garage default (no revision) still answers for the world it serves.
+      if (path === '/api/world-data' && req.method === 'GET') {
         if (!await approvedIdentity(req, res)) return;
         const ids=url.searchParams.getAll('world');
         if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
@@ -263,20 +278,32 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             const place=await room.resolvePlace(placeId);
             return place?{world:{id:worldId,title:worldTitle},place}:null;
           },
-          allowWrite: id => security.allow('social', id, 12, 60_000) });
+          allowWrite: id => security.allow('social', id, 12, 60_000), blocks, contentFilter });
+        return json(res, result.status, result.value);
+      }
+      if (path.startsWith('/api/blocks/') && req.method === 'POST') {
+        const identity = await authorized(req, res); if (!identity) return;
+        if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });
+        const result = await blockAction({ action: path.slice('/api/blocks/'.length), identity, blocks, social, readBody: () => body(req),
+          visiblePlayer: async (user, peerId) => {
+            const view = await room.read();
+            return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
+              ? view.snapshot.players.find(player => player.id === peerId) : null;
+          },
+          allowWrite: id => security.allow('blocks', id, 12, 60_000), separated: (a, b, blocked) => (onBlocked ?? separateAccounts)(a, b, blocked) });
         return json(res, result.status, result.value);
       }
       if (path.startsWith('/api/groups/') && req.method === 'POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
         const result=await groupAction({action:path.slice('/api/groups/'.length),identity,groups,social,
-          readBody:()=>body(req),allowWrite:id=>security.allow('groups',id,24,60_000)});
+          readBody:()=>body(req),allowWrite:id=>security.allow('groups',id,24,60_000),blocks,contentFilter});
         return json(res,result.status,result.value);
       }
       if (path.startsWith('/api/events/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(url))return json(res,404,{error:'World not found.'});
-        const result=await eventAction({action:path.slice('/api/events/'.length),identity,events,isAdmin,readBody:()=>body(req),
+        const result=await eventAction({action:path.slice('/api/events/'.length),identity,events,isAdmin,contentFilter,readBody:()=>body(req),
           resolveVenue:async placeId=>{
             const place=await room.resolvePlace(placeId);
             return place?{worldId,worldTitle,placeId:place.id,placeName:place.name}:null;
@@ -322,7 +349,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             return view?.connections.some(item => item.userId === user.userId && item.sessionId === user.sessionId)
               ? view.snapshot.players.find(player => player.id === peerId) : null;
           },
-          allowWrite: id => security.allow('profile', id, 6, 60_000) });
+          allowWrite: id => security.allow('profile', id, 6, 60_000), blocks, contentFilter });
         return json(res, result.status, result.value);
       }
       if (path === '/api/moderation/ban' && req.method === 'POST') {
@@ -332,6 +359,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
         try { data = await body(req); } catch { return json(res, 400, { error: 'Invalid moderation action.' }); }
         if (!data || typeof data.userId !== 'string' || !data.userId.length || data.userId.length > 100
           || data.userId === identity.userId || typeof data.banned !== 'boolean') return json(res, 400, { error: 'Invalid moderation action.' });
+        if (data.banned && staff(data.userId)) return json(res, 403, { error: STAFF_BAN_REFUSED });
         if (data.banned) await waitlist.revokeInvites?.({ userId: data.userId, actorId: identity.userId });
         const ok = data.banned
           ? await security.ban({ userId: data.userId, actorId: identity.userId, reason: 'Moderator action' })
@@ -342,6 +370,19 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
           await workplace?.suspend(data.userId);
           await onBan?.(data.userId);
         }
+        return json(res, 200, { ok: true });
+      }
+      // A moderator closes a report they have dealt with (#292).
+      if (path === '/api/moderation/reports/close' && req.method === 'POST') {
+        const identity = await authorized(req, res); if (!identity) return;
+        if (!moderatorIds.has(identity.userId)) return json(res, 403, { error: 'Moderator access required.' });
+        let data;
+        try { data = await body(req); } catch { return json(res, 400, { error: 'Invalid report.' }); }
+        const id = closeRequest(data);
+        if (!id) return json(res, 400, { error: 'Invalid report.' });
+        let closed = false;
+        try { closed = await security.closeReport({ id, actorId: identity.userId }); } catch { return json(res, 503, { error: REPORT_UNAVAILABLE }); }
+        if (!closed) return json(res, 404, { error: 'That report isn’t here.' });
         return json(res, 200, { ok: true });
       }
       json(res, 404, { error: 'Not found' });
@@ -375,7 +416,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
         ws.on('error', () => {});
         if (stopped) { ws.close(UPDATE_CLOSE.code, UPDATE_CLOSE.reason); return; }
         const connectionId = randomUUID();
-        const connection = { ws, identity, connectionId, joined: false, alive: true, pending: 0 };
+        const connection = { ws, identity, connectionId, joined: false, alive: true, pending: 0, hidden: new Set() };
         connections.set(connectionId, connection);
         // The host ends each request after a few minutes, so the town retires the socket first,
         // after a notice that lets the page move to a fresh one without dropping anything.
@@ -387,6 +428,8 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
           // it joins; the page offers Refresh instead of drawing a world it cannot render.
           const required = await roomProtocol();
           if (!acceptsWorldProtocol(protocol, required)) { ws.close(4000, 'World version changed'); return false; }
+          // Residents blocked either way (#292), known before the first snapshot; a store outage fails the join.
+          if (blocks) await loadHidden(blocks, connection, identity.userId);
           const result = await room.request({ type: 'join', identity, connectionId });
           if (!result.ok) { ws.close(1013, 'The town cannot accept this connection.'); return false; }
           connection.joined = true;
@@ -395,6 +438,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
           admissionStage = 'snapshot';
           const view = await room.read();
           if (!view) throw new Error('No committed town');
+          connection.admittedRevision = view.revision ?? null;
           connection.regionSha256 = view.snapshot.regionSha256 ?? null;
           admissionStage = 'presence';
           if (presence) {
@@ -407,7 +451,7 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             if (onMove && !isAdmin(identity.userId) && previous && previous.worldId !== worldId) Promise.resolve(onMove(identity.userId, previous.worldId)).catch(() => {});
           }
           if (ws.readyState !== WebSocket.OPEN) return false;
-          send(ws, { ...withVoice(view.snapshot), selfId: identity.userId });
+          send(ws, { ...withVoice(viewFor(view.snapshot, connection.hidden, identity.userId)), selfId: identity.userId });
           return true;
         })().catch(error => {
           // Fixed classifications only: storage/provider errors can contain
@@ -462,18 +506,43 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
             if (command.type === 'report') {
               const view = await room.read();
               const self = view?.connections.find(item => item.userId === identity.userId);
-              const target = view?.connections.some(item => item.userId === command.playerId);
-              const ok = self?.connectionId === connectionId && target && command.playerId !== identity.userId
-                && ['disruption', 'harassment', 'cheating'].includes(command.reason)
-                && await security.report({ reporterId: identity.userId, targetId: command.playerId, reason: command.reason });
-              send(ws, { type: 'result', requestId, ok: Boolean(ok), message: ok ? 'Report sent to the town moderators.' : 'Report could not be submitted.' });
+              if (self?.connectionId !== connectionId) { send(ws, { type: 'result', requestId, ok: false, message: 'Report could not be submitted.' }); return; }
+              // security.report limits saved reports to three a minute per reporter.
+              const result = await submitReport({ reporterId: identity.userId, message: command, present: id => view.connections.some(item => item.userId === id), chat: view.snapshot?.chat,
+                usernameOf: id => waitlist.usernameOf?.(id) ?? null, save: entry => security.report({ reporterId: entry.reporterId, targetId: entry.reportedId, reason: entry.reason, id: entry.id, content: entry.content, respondBy: entry.respondBy, at: entry.at }),
+                notifier: moderationNotifier, responseHours, now });
+              send(ws, { type: 'result', requestId, ...result });
               return;
             }
-            const resolved = await accountDesignCommand({ command, userId: identity.userId, connectionId, worldId,
+            // Town chat is screened by the content filter (#292) at the gateway, where blocks are screened too.
+            if (command.type === 'chat' && typeof command.text === 'string') {
+              const text = screenText(contentFilter, 'chat', command.text);
+              if (!text.ok) { send(ws, { type: 'result', requestId, ok: false, error: 'chat_filtered', message: text.message }); return; }
+              command.text = text.text;
+            }
+            const screened = await screenCommand(blocks, identity.userId, command, isAdmin);
+            if (screened.refusal) { send(ws, { type: 'result', requestId, ...screened.refusal }); return; }
+            const resolved = await accountDesignCommand({ command: screened.command, userId: identity.userId, connectionId, worldId,
               room, library: designLibrary, security, isAdmin });
-            const result = resolved.result ?? await room.request({ type: 'command', userId: identity.userId, connectionId, message: resolved.command, ...(selection!==undefined?{selection}:{}) });
+            // A grant checked just before a block was stored is ended once it lands. The room's
+            // queue is durable, so a timed-out answer, a failed request, or a conflict for a
+            // retry the screen also passed can still mean it landed; the separation is queued
+            // after it. Only a grant the screen checked and found unblocked is checked again,
+            // so the answer takes no longer toward a blocker. Without a known block nothing is
+            // separated; a failed check is logged.
+            const endLateGrant = async () => {
+              if (!await blocks.between(identity.userId, command.peerId)
+                .catch(() => { console.warn(JSON.stringify({ event: 'block_recheck_failed', worldId }));return false; })) return;
+              const ended = await room.request({ type: 'separate', a: identity.userId, b: command.peerId }).catch(() => null);
+              if (!ended?.ok) console.warn(JSON.stringify({ event: 'block_separation_incomplete', worldId }));
+            };
+            let result;
+            try {
+              result = resolved.result ?? await room.request({ type: 'command', userId: identity.userId, connectionId, message: resolved.command, ...(selection!==undefined?{selection}:{}) });
+            } catch (error) { if (screened.recheck) await endLateGrant(); throw error; }
             equipObservation?.result(result);
             if (result.error === 'stale_connection') { ws.close(4009, 'This account joined in another tab.'); return; }
+            if (screened.recheck && (result.ok || ['request_timeout', 'campus_operation_conflict'].includes(result.error))) await endLateGrant();
             const earlyAck = result.ok && command.type === 'travel' && requestId !== undefined;
             if (earlyAck) send(ws, { type: 'result', requestId, ...result });
             // The sender sees its result at once; everyone else gets it on the next
@@ -530,8 +599,29 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
     } finally { heartbeatBusy = false; }
   }, heartbeatMs);
   heartbeat.unref();
-  return { server, disconnectUser, async close() {
-    stopped = true; clearInterval(loop); clearInterval(heartbeat);
+  // Account erasure (#292): this world forgets the account, through the room's one writer.
+  // Player blocking (#292): a change reaches both residents' sockets here at once, and every
+  // socket within five seconds, so a block made through another gateway reaches it too. A
+  // store outage keeps the last known set. The room ends office and home invitations.
+  async function refreshHidden(list = [...connections.values()]) {
+    // A connection still joining is refreshed too, so a block made meanwhile reaches its first frame.
+    for (const connection of list) await loadHidden(blocks, connection, connection.identity.userId).catch(() => {});
+  }
+  // Sockets here are refreshed even when the room cannot end invitations right now.
+  async function separateAccounts(a, b, blocked) {
+    try { if (blocked) { const result = await room.request({ type: 'separate', a, b }); if (!result?.ok) throw new Error('Block separation did not complete'); } }
+    finally { if (blocks) await refreshHidden([...connections.values()].filter(connection => [a, b].includes(connection.identity.userId))); }
+  }
+  let syncing = null;
+  const blockSync = blocks ? setInterval(() => { if (!stopped && connections.size && !syncing) syncing = refreshHidden().finally(() => { syncing = null; }); }, blockSyncMs) : null;
+  blockSync?.unref();
+  async function forgetAccount(userId) {
+    const result = await room.request({ type: 'forget', userId });
+    if (!result?.ok) throw new Error('World erasure did not complete');
+    if (voice) await voice.revokeUser(userId).catch(() => false);
+  }
+  return { server, disconnectUser, forgetAccount, separateAccounts, async close() {
+    stopped = true; clearInterval(loop); clearInterval(heartbeat); clearInterval(blockSync);
     if (presence) await Promise.allSettled([...connections.values()].map(connection => presence.leave(connection.identity.userId, connection.connectionId)));
     await closeForUpdate([...connections.values()].map(({ ws }) => ws));
     wss.close(); auth.close?.();

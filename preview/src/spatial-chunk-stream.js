@@ -2,26 +2,31 @@
 // never changes collision, player state, world identity or server permissions.
 const distance = ([x, y], [w, s, e, n]) => Math.hypot(Math.max(w - x, 0, x - e), Math.max(s - y, 0, y - n));
 export function createSpatialChunkStream({ chunks, load, attach, detach,
-  maxResident = 2, maxConcurrent = 1, maxBytes = 16 * 1024 * 1024,
+  maxResident = 2, maxConcurrent = 1, maxBytes = 16 * 1024 * 1024, maxTextureBytes = Infinity,
   prefetchDistance = 80, unloadDistance = 120, retryDelayMs = 1000, loadTimeoutMs = 15000,
   now = () => performance.now() }) {
+  // A second ceiling over the textures a chunk owns (`resource.textureBytes`, estimated by
+  // `chunk.estimatedTextureBytes` before it loads), admitted and refused like the geometry
+  // bytes. Callers without owned textures leave it unbounded.
   if (![maxResident, maxConcurrent].every(value => Number.isInteger(value) && value > 0)
     || ![maxBytes, retryDelayMs, loadTimeoutMs].every(value => Number.isFinite(value) && value > 0)
+    || !(maxTextureBytes === Infinity || Number.isFinite(maxTextureBytes) && maxTextureBytes > 0)
     || !Number.isFinite(prefetchDistance) || prefetchDistance < 0
     || !Number.isFinite(unloadDistance) || unloadDistance < prefetchDistance) throw new Error('Invalid stream limits');
   const entries = new Map();
   for (const chunk of chunks) {
     if (!chunk?.id || entries.has(chunk.id) || !Array.isArray(chunk.bounds) || chunk.bounds.length !== 4
       || !chunk.bounds.every(Number.isFinite) || chunk.bounds[0] >= chunk.bounds[2] || chunk.bounds[1] >= chunk.bounds[3]
-      || !Number.isFinite(chunk.estimatedBytes) || chunk.estimatedBytes <= 0) throw new Error('Invalid chunk definition');
+      || !Number.isFinite(chunk.estimatedBytes) || chunk.estimatedBytes <= 0
+      || chunk.estimatedTextureBytes !== undefined && !(Number.isFinite(chunk.estimatedTextureBytes) && chunk.estimatedTextureBytes >= 0)) throw new Error('Invalid chunk definition');
     entries.set(chunk.id, { chunk, state: 'absent', resource: null, token: null, failures: 0, retryAt: 0, distance: Infinity, wanted: false });
   }
-  let disposed = false, residentBytes = 0, loads = 0, unloads = 0, failures = 0, lastLoadMs = 0;
+  let disposed = false, residentBytes = 0, residentTextureBytes = 0, loads = 0, unloads = 0, failures = 0, lastLoadMs = 0;
   const pending = new Set();
   function release(entry) {
     if (!entry.resource) return;
     const resource = entry.resource; entry.resource = null;
-    residentBytes -= resource.bytes;
+    residentBytes -= resource.bytes; residentTextureBytes -= resource.textureBytes ?? 0;
     try { detach(entry.chunk, resource); } finally { resource.dispose(); }
     unloads++; entry.state = 'absent';
   }
@@ -44,11 +49,15 @@ export function createSpatialChunkStream({ chunks, load, attach, detach,
       if (!Number.isFinite(resource.bytes) || resource.bytes < 0 || residentBytes + resource.bytes > maxBytes) {
         resource.dispose(); throw new Error('Chunk exceeds memory ceiling');
       }
+      const textureBytes = resource.textureBytes ?? 0;
+      if (!Number.isFinite(textureBytes) || textureBytes < 0 || residentTextureBytes + textureBytes > maxTextureBytes) {
+        resource.dispose(); throw new Error('Chunk exceeds texture ceiling');
+      }
       try { attach(entry.chunk, resource); } catch (error) {
         try { detach(entry.chunk, resource); } finally { resource.dispose(); }
         throw error;
       }
-      entry.resource = resource; residentBytes += resource.bytes;
+      entry.resource = resource; residentBytes += resource.bytes; residentTextureBytes += textureBytes;
       entry.state = 'ready'; entry.failures = 0; lastLoadMs = now() - token.started;
     }).catch(() => {
       if (!disposed && !token.cancelled) fail(entry);
@@ -68,12 +77,13 @@ export function createSpatialChunkStream({ chunks, load, attach, detach,
       for (const entry of entries.values()) entry.distance = Math.min(...valid.map(point => distance(point, entry.chunk.bounds)));
       const candidates = [...entries.values()].filter(entry => entry.distance <= (entry.resource || entry.token ? unloadDistance : prefetchDistance))
         .sort((a, b) => a.distance - b.distance || a.chunk.id.localeCompare(b.chunk.id));
-      let bytes = 0, count = 0;
+      let bytes = 0, textureBytes = 0, count = 0;
       const wanted = new Set();
       for (const entry of candidates) {
         const size = entry.resource?.bytes ?? entry.chunk.estimatedBytes;
-        if (count >= maxResident || bytes + size > maxBytes) continue;
-        wanted.add(entry); bytes += size; count++;
+        const textures = entry.resource ? entry.resource.textureBytes ?? 0 : entry.chunk.estimatedTextureBytes ?? 0;
+        if (count >= maxResident || bytes + size > maxBytes || textureBytes + textures > maxTextureBytes) continue;
+        wanted.add(entry); bytes += size; textureBytes += textures; count++;
       }
       for (const entry of entries.values()) {
         entry.wanted = wanted.has(entry);
@@ -86,9 +96,11 @@ export function createSpatialChunkStream({ chunks, load, attach, detach,
       }
     },
     ready(id) { return !disposed && entries.get(id)?.state === 'ready'; },
+    // The lifecycle state of one chunk, for callers that ask every frame; debug() builds the whole picture.
+    state(id) { return disposed ? 'absent' : entries.get(id)?.state ?? null; },
     retry(id) { const entry = entries.get(id); if (entry?.state === 'failed') entry.retryAt = 0; },
     debug() {
-      return { disposed, residentBytes, pending: pending.size, loads, unloads, failures, lastLoadMs,
+      return { disposed, residentBytes, residentTextureBytes, pending: pending.size, loads, unloads, failures, lastLoadMs,
         chunks: [...entries.values()].map(({ chunk, state, distance, failures, retryAt }) => ({ id: chunk.id, state, distance, failures, retryAt })) };
     },
     dispose() {

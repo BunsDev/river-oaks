@@ -5,6 +5,7 @@ import { WebSocket } from 'ws';
 import { createGameServer } from '../app.js';
 import { createSharedWorld } from '../world.js';
 import { createMemoryCyclingMiles } from '../cycling-miles.js';
+import { createAccountErasure } from '../account-erasure.js';
 import { createWalkingEnvironment } from '../../preview/src/walking.js';
 import { plazaSalonRack } from '../../preview/src/plaza-salon-plan.js';
 import { approvedWaitlist } from './waitlist-fixture.js';
@@ -51,7 +52,7 @@ async function fixture(t, options = {}) {
   });
   const joined = () => new Promise(resolve => { const poll = () => world.players.has('alice') ? resolve() : setTimeout(poll, 10); poll(); });
   const put = ([x, north]) => Object.assign(world.players.get('alice'), { position: [x, north, environment.groundAt(x, -north)], moveBudget: 1, liftBudget: 1 });
-  return { world, cyclingMiles, command, put, ws, joined, origin, advance: ms => { time += ms; } };
+  return { app, world, cyclingMiles, command, put, ws, joined, origin, advance: ms => { time += ms; } };
 }
 
 test('uncycle flushes the ride, and a rider still out is flushed by the tick', async t => {
@@ -98,4 +99,33 @@ test('the leaderboard route ranks the rider after a flushed ride', async t => {
   assert.deepEqual(await response.json(), { top: [{ rank: 1, name: 'Alice', miles: 0 }], me: { rank: 1, miles: 0 }, limit: 20 });
   assert.equal((await fetch(f.origin + '/api/cycling/leaderboard')).status, 401, 'a session is required');
   f.ws.close();
+});
+
+test('an account erased while its ride is being banked keeps no total, banked or handed back', async t => {
+  for (const outcome of ['banked', 'store down']) {
+    // The store holds the ride's add until the erasure has started.
+    const totals = createMemoryCyclingMiles();let hold = null, asked = null;
+    const store = { ...totals, async add(...args) {
+      if (hold) { const current = hold;hold = null;asked();await current;if (outcome === 'store down') throw new Error('store down'); }
+      return totals.add(...args);
+    } };
+    const f = await fixture(t, { cyclingMiles: store, cyclingFlushMs: 50 });
+    await f.joined();
+    f.put(slot.approach);
+    assert.equal((await f.command({ type: 'cycle', rackId: 'plaza-salon-rack', slot: 1 })).ok, true);
+    f.advance(1000);
+    let open;const gate = new Promise(resolve => { open = resolve; });
+    const adding = new Promise(resolve => { asked = resolve; });hold = gate;
+    assert.equal((await f.command({ type: 'pose', position: west(5), yaw: 0, altitude: 0, vehicle: 'bicycle' })).ok, true);
+    await adding;
+    const eraseAccount = createAccountErasure({ tombstone: async () => {}, revoke: async () => {},
+      steps: { world: id => f.app.forgetAccount(id) }, after: { cyclingMiles: id => totals.eraseUser(id) } });
+    const erasing = eraseAccount('alice');
+    await new Promise(resolve => setTimeout(resolve, 30));
+    open();
+    await erasing;
+    // Later flushes find nothing of the account to bank.
+    await new Promise(resolve => setTimeout(resolve, 200));
+    assert.equal(await totals.rank('alice'), null, outcome);
+  }
 });

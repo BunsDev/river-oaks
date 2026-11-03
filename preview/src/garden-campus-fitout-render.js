@@ -9,11 +9,12 @@
 import * as THREE from 'three';
 import { GARDEN_CAMPUS_LAYOUT as CAMPUS, campusLevels, campusToScene } from '../../shared/garden-campus-layout.js';
 import { campusFitout } from '../../shared/garden-campus-fitout.js';
+import { applyKitFields, campusKitFinish, campusKitFinishName } from './garden-campus-kit-finish.js';
 
 const LEG = 0.05, TOP = 0.04, SCREEN = { w: 0.55, h: 0.34, d: 0.03 };
 
-/** The fit-out as a Three.js group with dispose(); null without the campus. */
-export function buildGardenCampusFitout(world) {
+/** The fit-out as a Three.js group with dispose(); null without the campus. `kitFinish` recolours only. */
+export function buildGardenCampusFitout(world, { kitFinish } = {}) {
   if (!world?.gardenCampus) return null;
   const root = new THREE.Group();root.name = 'The Gardens fit-out';
   const [x0, y0, z0] = campusToScene([0, 0, 0]), east = CAMPUS.frame.east;
@@ -27,6 +28,7 @@ export function buildGardenCampusFitout(world) {
     stone: new THREE.MeshStandardMaterial({ name: 'campus-fitout:stone', color: '#fff5df', roughness: 0.85 }),
     screen: new THREE.MeshStandardMaterial({ name: 'campus-fitout:screen', color: '#111416', metalness: 0.2, roughness: 0.35 }),
   };
+  for (const [key, fields] of Object.entries(campusKitFinish(kitFinish).fitout)) applyKitFields(materials[key], fields);
   const batches = new Map(Object.keys(materials).map(key => [key, []]));
   const box = (finish, u0, v0, u1, v1, za, zb) => { if (u1 - u0 > 1e-6 && v1 - v0 > 1e-6 && zb - za > 1e-6) batches.get(finish).push([u0, v0, u1, v1, za, zb]); };
   const legs = (rect, z, top) => { const [u0, v0, u1, v1] = rect;for (const [u, v] of [[u0, v0], [u1 - LEG, v0], [u0, v1 - LEG], [u1 - LEG, v1 - LEG]]) box('frame', u, v, u + LEG, v + LEG, z, z + top - TOP); };
@@ -71,6 +73,7 @@ export function buildGardenCampusFitout(world) {
     });
     mesh.castShadow = finish !== 'screen';mesh.receiveShadow = true;root.add(mesh);meshes.push(mesh);
   }
+  root.userData.kitFinish = campusKitFinishName(kitFinish);
   root.userData.counts = Object.fromEntries([...batches].map(([finish, parts]) => [finish, parts.length]));
   root.userData.dispose = () => { for (const mesh of meshes) mesh.dispose();unit.dispose();Object.values(materials).forEach(material => material.dispose()); };
   return root;

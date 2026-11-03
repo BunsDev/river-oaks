@@ -17,6 +17,7 @@ export const CHARACTER_HAIR=Object.freeze({
 export const supportsCharacterColors=id=>characterCompatibility(id)?.colors===true;
 export function customizedCharacterDefinition(ownerId,appearanceId,{palette='authored',hair='authored',revision=0}={}){
   const value=characterDefinitionFor(ownerId,appearanceId,{revision});
+  if(value.schemaVersion!==1)throw new TypeError('Unsupported character colors');
   if(!Object.hasOwn(CHARACTER_PALETTES,palette)||!Object.hasOwn(CHARACTER_HAIR,hair)
     ||(!supportsCharacterColors(value.appearanceId)&&(palette!=='authored'||hair!=='authored')))throw new TypeError('Unsupported character colors');
   return {...value,schemaVersion:2,palette,hair,provenance:{kind:'authored',catalog:'river-oaks-looks-v2'}};

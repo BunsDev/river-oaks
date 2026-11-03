@@ -12,7 +12,9 @@ let shared = null;
 // The sound being built collects its voices here, so play() can hand back a stop.
 let voices = null;
 
-export function createThrowSounds({ storage = globalThis.localStorage, AudioContextClass = globalThis.AudioContext ?? globalThis.webkitAudioContext, volume = 0.3 } = {}) {
+// Reading `localStorage` itself throws when site data is blocked, so the default is guarded too.
+const deviceStorage = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
+export function createThrowSounds({ storage = deviceStorage(), AudioContextClass = globalThis.AudioContext ?? globalThis.webkitAudioContext, volume = 0.3 } = {}) {
   let context = null, noise = null, on = true;
   try { on = storage?.getItem(KEY) !== 'off'; } catch { /* storage may be unavailable */ }
   const listeners = new Set();
@@ -118,4 +120,16 @@ export function soundToggle(sounds = throwSounds()) {
   sounds.subscribe(sync);
   button.addEventListener('click', () => sounds.setEnabled(!sounds.enabled()));
   return button;
+}
+
+// The same switch as a Settings row (Audio), always reachable: the games' sounds and the
+// Ribbonwing's fans, canopy, gear and maneuver sounds all follow it.
+export function soundSetting(sounds = throwSounds()) {
+  const label = document.createElement('label'), text = document.createElement('span'), input = document.createElement('input');
+  label.className = 'layer-row'; text.textContent = 'Game and vehicle sounds';
+  input.type = 'checkbox'; input.dataset.gameSoundSetting = ''; input.checked = sounds.enabled();
+  sounds.subscribe(on => { input.checked = on; });
+  input.addEventListener('change', () => sounds.setEnabled(input.checked));
+  label.append(text, input);
+  return label;
 }

@@ -1,0 +1,17 @@
+{
+  "scope": "Development Electron with loopback acceptance identity; save destination supplied by test. No live auth, packaged build, or native dialog interaction.",
+  "checks": [
+    "native World Studio menu opens the ready editor on the game origin",
+    "actual Studio export passes native policy, uses a JSON save filter and writes region-v1",
+    "oversized JSON remains blocked in the real Electron download handler",
+    "Keep editing preserves unsaved work without a load-error prompt",
+    "Discard changes explicitly permits native navigation",
+    "Return to world and World Studio native menu round trip preserves only the saved draft",
+    "native Studio save/reopen retains the template assessment sidecar",
+    "native space export/import stays bare v1 and does not fabricate an assessment",
+    "studio preserves renderer isolation and blocks external navigation",
+    "Keep editing cancels closing the native window",
+    "crash after canceled clean-URL navigation and window close recovers Studio and its saved draft"
+  ],
+  "status": "passed"
+}

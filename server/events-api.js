@@ -1,5 +1,7 @@
+import { screenText } from './content-filter.js';
+
 /** Identity, venue and cancellation authority come from the authenticated edge. */
-export async function eventAction({action,identity,events,readBody,resolveVenue,allowWrite,isAdmin}) {
+export async function eventAction({action,identity,events,readBody,resolveVenue,allowWrite,isAdmin,contentFilter=null}) {
   if(!events)return {status:503,value:{error:'Events are unavailable.'}};
   if(!['list','create','rsvp','cancel'].includes(action))return {status:404,value:{error:'Not found.'}};
   const admin=isAdmin(identity.userId);
@@ -9,7 +11,11 @@ export async function eventAction({action,identity,events,readBody,resolveVenue,
   if(!data || typeof data!=='object' || Array.isArray(data))return {status:400,value:{error:'Invalid event request.'}};
   if(!await allowWrite(identity.userId))return {status:429,value:{error:'Please wait before changing events.'}};
   let result;
-  if(action==='create')result=await events.create(identity,data,await resolveVenue(data.placeId));
+  if(action==='create') {
+    // The content filter (#292) screens the title and description everyone will read.
+    for(const key of ['title','description']){const screened=screenText(contentFilter,'event',data[key]);if(!screened.ok)return {status:400,value:{error:screened.message,reason:screened.reason}};data={...data,[key]:screened.text};}
+    result=await events.create(identity,data,await resolveVenue(data.placeId));
+  }
   else {
     if(Object.keys(data).some(key=>!['id',...(action==='rsvp'?['going']:[])].includes(key)))
       return {status:400,value:{error:'Invalid event request.'}};

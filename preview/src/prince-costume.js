@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { batchCostumeAttachments } from './costume-batching.js';
-import { measureHead, measureCrownBand } from './head-fit.js';
 import { loadAvatarTemplate } from './avatars.js';
 import { createPrinceShoppingBag } from './prince-shopping-bag.js';
 
@@ -15,7 +14,7 @@ const ANGLES = 48, BAND = 0.01;
 
 // Radial profile of the tunic around the torso at rest, in the avatar root's
 // frame (y up, z forward). Accessories are fitted to it instead of guessed, so
-// the sash, buttons and belt sit on the cloth for any rig proportions.
+// the belt and buckle sit on the cloth for any rig proportions.
 export function measureTorso(avatar, root) {
   const { model } = avatar;
   model.updateMatrixWorld(true); root.updateMatrixWorld(true);
@@ -55,25 +54,7 @@ export function measureTorso(avatar, root) {
     const a = ((Math.round((Math.atan2(x - cx, z - cz) / (Math.PI * 2)) * ANGLES) % ANGLES) + ANGLES) % ANGLES;
     radii[b][a] = Math.max(radii[b][a], Math.hypot(x - cx, z - cz));
   }
-  // Fill sparse samples from angular neighbours, then from the band below.
-  for (let b = 0; b < bands; b++) for (let pass = 0; pass < 6; pass++) for (let a = 0; a < ANGLES; a++) {
-    if (radii[b][a]) continue;
-    radii[b][a] = Math.max(radii[b][(a + 1) % ANGLES], radii[b][(a + ANGLES - 1) % ANGLES]) || (b ? radii[b - 1][a] : 0);
-  }
-  // Lapels and pockets make raw maxima jagged; a light blur gives the smooth
-  // outer envelope a sewn sash or belt actually follows.
-  for (let pass = 0; pass < 10; pass++) {
-    const next = radii.map(row => new Float32Array(row));
-    for (let b = 0; b < bands; b++) for (let a = 0; a < ANGLES; a++) {
-      let sum = 0, weight = 0;
-      for (let db = -1; db <= 1; db++) for (let da = -1; da <= 1; da++) {
-        const row = radii[b + db]; if (!row) continue;
-        const w = (db ? 0.5 : 1) * (da ? 0.5 : 1); sum += row[(a + da + ANGLES) % ANGLES] * w; weight += w;
-      }
-      next[b][a] = Math.max(sum / weight, radii[b][a] * 0.97);
-    }
-    radii.splice(0, bands, ...next);
-  }
+  fillAndSmooth(radii, bands);
   // Bilinear lookup keeps sewn edges straight between angular samples.
   const surface = (angle, height, offset = 0.012) => {
     const fb = THREE.MathUtils.clamp((height - bottom) / BAND - 0.5, 0, bands - 1), b0 = Math.floor(fb), b1 = Math.min(bands - 1, b0 + 1), tb = fb - b0;
@@ -90,56 +71,270 @@ export function measureTorso(avatar, root) {
   return { bottom, top, surface, project };
 }
 
-function starShape(outer, inner, points) {
-  const shape = new THREE.Shape();
-  for (let i = 0; i <= points * 2; i++) {
-    const r = i % 2 ? inner : outer, a = i / (points * 2) * Math.PI * 2;
-    shape[i ? 'lineTo' : 'moveTo'](Math.sin(a) * r, Math.cos(a) * r);
+// Fill sparse samples from angular neighbours, then from the band below, and
+// blur: lapels, pockets and seams make raw maxima jagged, and a sewn strap
+// follows the smooth outer envelope.
+function fillAndSmooth(radii, bands) {
+  for (let b = 0; b < bands; b++) for (let pass = 0; pass < 6; pass++) for (let a = 0; a < ANGLES; a++) {
+    if (radii[b][a]) continue;
+    radii[b][a] = Math.max(radii[b][(a + 1) % ANGLES], radii[b][(a + ANGLES - 1) % ANGLES]) || (b ? radii[b - 1][a] : 0);
   }
-  return shape;
+  for (let pass = 0; pass < 10; pass++) {
+    const next = radii.map(row => new Float32Array(row));
+    for (let b = 0; b < bands; b++) for (let a = 0; a < ANGLES; a++) {
+      let sum = 0, weight = 0;
+      for (let db = -1; db <= 1; db++) for (let da = -1; da <= 1; da++) {
+        const row = radii[b + db]; if (!row) continue;
+        const w = (db ? 0.5 : 1) * (da ? 0.5 : 1); sum += row[(a + da + ANGLES) % ANGLES] * w; weight += w;
+      }
+      next[b][a] = Math.max(sum / weight, radii[b][a] * 0.97);
+    }
+    radii.splice(0, bands, ...next);
+  }
 }
 
-// Prince Jev's dress uniform. Shared resident templates are never mutated: the
-// avatar already owns cloned materials, and every added resource is disposed.
+// Radial profile of the garment around one limb bone (forearm, calf), in the
+// avatar root's frame: t runs along the bone from its joint toward its child,
+// angle around that axis. Bracers and sandal straps are fitted to it.
+export function measureLimb(avatar, root, boneName, pattern = /suit|tunic/i) {
+  const { model } = avatar;
+  model.updateMatrixWorld(true); root.updateMatrixWorld(true);
+  const bone = model.getObjectByName(boneName), child = bone?.children.find(item => item.isBone) ?? bone?.children[0];
+  if (!bone || !child) return null;
+  const origin = root.worldToLocal(bone.getWorldPosition(new THREE.Vector3())), axis = root.worldToLocal(child.getWorldPosition(new THREE.Vector3())).sub(origin);
+  const length = axis.length(); axis.normalize();
+  const u = new THREE.Vector3().crossVectors(axis, Math.abs(axis.z) < 0.9 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(1, 0, 0)).normalize();
+  const w = new THREE.Vector3().crossVectors(axis, u).normalize();
+  const vertex = new THREE.Vector3(), radial = new THREE.Vector3(), samples = [];
+  model.traverse(item => {
+    if (!item.isSkinnedMesh || !pattern.test(item.material?.name ?? '')) return;
+    const index = item.skeleton.bones.findIndex(entry => entry.name === boneName);
+    if (index < 0) return;
+    item.skeleton.update();
+    const { position, skinIndex, skinWeight } = item.geometry.attributes;
+    for (let i = 0; i < position.count; i++) {
+      let weight = 0;
+      for (let k = 0; k < 4; k++) if (skinIndex.getComponent(i, k) === index) weight += skinWeight.getComponent(i, k);
+      if (weight < 0.5) continue;
+      vertex.fromBufferAttribute(position, i);
+      item.applyBoneTransform(i, vertex).applyMatrix4(item.matrixWorld);
+      root.worldToLocal(vertex).sub(origin);
+      const t = vertex.dot(axis); radial.copy(vertex).addScaledVector(axis, -t);
+      samples.push([Math.atan2(radial.dot(w), radial.dot(u)), t, radial.length()]);
+    }
+  });
+  if (samples.length < 40) return null;
+  const bottom = Math.min(...samples.map(s => s[1])), top = Math.max(...samples.map(s => s[1]));
+  const bands = Math.ceil((top - bottom) / BAND) + 1, radii = Array.from({ length: bands }, () => new Float32Array(ANGLES));
+  for (const [angle, t, r] of samples) {
+    const b = Math.floor((t - bottom) / BAND), a = ((Math.round(angle / (Math.PI * 2) * ANGLES) % ANGLES) + ANGLES) % ANGLES;
+    radii[b][a] = Math.max(radii[b][a], r);
+  }
+  fillAndSmooth(radii, bands);
+  const radiusAt = (angle, t) => {
+    const fb = THREE.MathUtils.clamp((t - bottom) / BAND - 0.5, 0, bands - 1), b0 = Math.floor(fb), b1 = Math.min(bands - 1, b0 + 1), tb = fb - b0;
+    const fa = ((angle / (Math.PI * 2)) * ANGLES % ANGLES + ANGLES) % ANGLES, a0 = Math.floor(fa) % ANGLES, a1 = (a0 + 1) % ANGLES, ta = fa - Math.floor(fa);
+    const at = b => (radii[b][a0] || 0.05) * (1 - ta) + (radii[b][a1] || 0.05) * ta;
+    return at(b0) * (1 - tb) + at(b1) * tb;
+  };
+  const surface = (angle, t, offset = 0.006) => {
+    const r = radiusAt(angle, t) + offset;
+    return new THREE.Vector3().copy(origin).addScaledVector(axis, t).addScaledVector(u, Math.cos(angle) * r).addScaledVector(w, Math.sin(angle) * r);
+  };
+  const project = (point, offset = 0.006) => {
+    const v = point.clone().sub(origin), t = v.dot(axis); radial.copy(v).addScaledVector(axis, -t);
+    return surface(Math.atan2(radial.dot(w), radial.dot(u)), t, offset);
+  };
+  return { origin, axis, length, bottom, top, radiusAt, surface, project };
+}
+
+// A flat strap: a centre line of points on a surface, each with an across
+// direction, re-seated on the surface at both edges so the band hugs the cloth.
+function strap(centres, width, project, offset, closed = false) {
+  const positions = [], uvs = [], indices = [], count = centres.length;
+  for (let i = 0; i < count; i++) {
+    const { point, across } = centres[i];
+    for (const edge of [-width / 2, width / 2]) { positions.push(...project(point.clone().addScaledVector(across, edge), offset).toArray()); uvs.push(i / (count - 1) * 8, edge > 0 ? 1 : 0); }
+    if (i < count - 1 || closed) { const a = i * 2, b = closed ? ((i + 1) % count) * 2 : a + 2; indices.push(a, a + 1, b, a + 1, b + 1, b); }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); geometry.setIndex(indices); geometry.computeVertexNormals();
+  return geometry;
+}
+
+// Label a garment mesh's connected pieces (the suit is one mesh for jacket and
+// trousers; the boots are bodies, shafts and laces) with a per-vertex attribute
+// on a private geometry clone, so one shader can dress each piece differently.
+export function labelGarmentPieces(mesh, classify) {
+  const geometry = mesh.geometry.clone(), { position } = geometry.attributes, index = geometry.index?.array ?? Array.from({ length: position.count }, (_, i) => i);
+  const parent = Int32Array.from({ length: position.count }, (_, i) => i);
+  const find = i => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
+  for (let i = 0; i < index.length; i += 3) { const a = find(index[i]); parent[find(index[i + 1])] = a; parent[find(index[i + 2])] = a; }
+  const seams = new Map();
+  for (let i = 0; i < position.count; i++) {
+    const key = `${position.getX(i).toFixed(4)},${position.getY(i).toFixed(4)},${position.getZ(i).toFixed(4)}`;
+    if (seams.has(key)) parent[find(i)] = find(seams.get(key)); else seams.set(key, i);
+  }
+  const pieces = new Map();
+  for (let i = 0; i < position.count; i++) {
+    const root = find(i); let piece = pieces.get(root);
+    if (!piece) { piece = { count: 0, box: new THREE.Box3() }; pieces.set(root, piece); }
+    piece.count++; piece.box.expandByPoint(new THREE.Vector3(position.getX(i), position.getY(i), position.getZ(i)));
+  }
+  const labels = new Map([...pieces].map(([root, piece]) => [root, classify(piece)]));
+  const attribute = new Float32Array(position.count);
+  for (let i = 0; i < position.count; i++) attribute[i] = labels.get(find(i));
+  geometry.setAttribute('garment', new THREE.BufferAttribute(attribute, 1));
+  return { geometry, pieces: [...pieces.values()].map(piece => ({ ...piece, label: classify(piece) })) };
+}
+
+// Mint scrollwork for the placket and hem corners: tileable sine stems with
+// paired leaves, drawn into a data texture so it works without a DOM.
+function scrollTexture() {
+  const size = 128, data = new Uint8Array(size * size * 4);
+  const mark = (u, v, radius) => {
+    const x = u * size, y = v * size;
+    for (let py = Math.floor(y - radius); py <= Math.ceil(y + radius); py++) for (let px = Math.floor(x - radius); px <= Math.ceil(x + radius); px++) {
+      const coverage = THREE.MathUtils.clamp(radius + 0.5 - Math.hypot(px - x, py - y), 0, 1), i = (((py % size) + size) % size * size + ((px % size) + size) % size) * 4;
+      data[i] = Math.max(data[i], Math.round(coverage * 255));
+    }
+  };
+  for (let i = 0; i <= 400; i++) {
+    const t = i / 400;
+    mark(0.5 + 0.18 * Math.sin(t * Math.PI * 4), t, 1.6);
+    for (const side of [-1, 1]) for (let leaf = 0; leaf < 4; leaf++) {
+      const start = leaf / 4 + 0.08, local = (t - start) / 0.14;
+      if (local < 0 || local > 1) continue;
+      mark(0.5 + 0.18 * Math.sin(start * Math.PI * 4) + side * 0.22 * Math.sin(local * Math.PI), start + local * 0.09 + 0.02 * Math.sin(local * Math.PI * 2), 1.3);
+    }
+  }
+  for (let i = 0; i < size * size; i++) { data[i * 4 + 1] = data[i * 4 + 2] = data[i * 4]; data[i * 4 + 3] = 255; }
+  const texture = new THREE.DataTexture(data, size, size);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping; texture.magFilter = THREE.LinearFilter; texture.minFilter = THREE.LinearMipmapLinearFilter; texture.generateMipmaps = true; texture.needsUpdate = true;
+  return texture;
+}
+
+// Rose gold with engraved mint lines, for the bracers.
+function engravingTexture() {
+  const width = 128, height = 32, data = new Uint8Array(width * height * 4), rose = [201, 134, 90], mint = [159, 212, 196];
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const u = x / width, v = y / height;
+    const band = Math.abs(v - 0.5) < 0.2 && (Math.abs(Math.sin(u * Math.PI * 8) * 0.14 + 0.5 - v) < 0.035 || Math.abs(Math.sin(u * Math.PI * 8 + Math.PI) * 0.14 + 0.5 - v) < 0.035);
+    const edge = Math.abs(v - 0.1) < 0.03 || Math.abs(v - 0.9) < 0.03;
+    const colour = band ? mint : edge ? [168, 108, 72] : rose;
+    data.set([...colour, 255], (y * width + x) * 4);
+  }
+  const texture = new THREE.DataTexture(data, width, height);
+  texture.colorSpace = THREE.SRGBColorSpace; texture.wrapS = texture.wrapT = THREE.RepeatWrapping; texture.magFilter = THREE.LinearFilter; texture.needsUpdate = true;
+  return texture;
+}
+
+const lozenge = (x, y) => { const shape = new THREE.Shape(); shape.moveTo(0, y); shape.lineTo(x, 0); shape.lineTo(0, -y); shape.lineTo(-x, 0); shape.closePath(); return shape; };
+
+// The art direction is the 2026-10-29 reference (preview/public/assets/
+// characters/references/jev-angel-tunic-20261029.png, supplied by Val): a
+// cream tunic with a pink placket in rose-gold trim and mint scrollwork, a
+// rose-gold belt with a lozenge buckle, rose-gold bracers, pink trousers,
+// rose-gold gladiator sandals over bare feet, caramel curls and blue eyes.
+// Shared resident templates are never mutated: the avatar already owns cloned
+// materials, garment geometry is cloned here, and every added resource is disposed.
+export const PRINCE_PALETTE = Object.freeze({ cream: '#e9d4ad', pink: '#d4557a', roseGold: '#b86f45', mint: '#8cc7b4', hair: '#9a6530', hairLight: '#d0a060', skin: '#e2b08e', iris: '#4f86c6' });
+const TUNIC_HEM = 0.943, NECKLINE = 1.535;
+
 export function createPrinceCostume(avatar,{skinTexture=null}={}) {
   const { model, materials } = avatar.rig, root = avatar.object;
   const owned = new Set(), attachments = [];
   const surface = parameters => { const material = new THREE.MeshPhysicalMaterial(parameters); owned.add(material); return material; };
-  const gold = surface({ color: '#d4a84f', metalness: 1, roughness: 0.24, clearcoat: 0.4, clearcoatRoughness: 0.2 });
-  gold.name = 'Prince Jev gold';
-  // Refraction starts at zero and is restored by updateOptics when the gems are
-  // large on screen: any transmissive material makes Three redraw the whole
-  // opaque district into a texture every frame, even for three 17 mm sapphires.
-  const sapphire = surface({ color: '#1b3fae', roughness: 0.05, metalness: 0.05, clearcoat: 1, ior: 1.77, transmission: 0, thickness: 0.01 });
-  sapphire.name = 'Prince Jev sapphires';
-  const ruby = surface({ color: '#a3122e', roughness: 0.06, metalness: 0.05, clearcoat: 1, ior: 1.77 });
-  const sashCloth = surface({ color: '#8a1430', roughness: 0.62, sheen: 0.7, sheenColor: new THREE.Color('#ff8fa6'), sheenRoughness: 0.45, side: THREE.DoubleSide });
-  sashCloth.name = 'Prince Jev royal sash';
-  const enamel = surface({ color: '#1d3f9e', roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05 });
+  // Straps and the belt are thin bands whose winding follows the surface they are
+  // seated on; both faces draw so no band is culled from the outside.
+  const roseGold = surface({ color: PRINCE_PALETTE.roseGold, metalness: 0.6, roughness: 0.38, clearcoat: 0.3, clearcoatRoughness: 0.25, side: THREE.DoubleSide });
+  roseGold.name = 'Prince Jev rose gold';
+  const engraving = engravingTexture(); owned.add(engraving);
+  const bracerMetal = surface({ color: '#e8d6c8', map: engraving, metalness: 0.6, roughness: 0.38, clearcoat: 0.3, clearcoatRoughness: 0.25, side: THREE.DoubleSide });
+  bracerMetal.name = 'Prince Jev engraved bracer';
+  const scroll = scrollTexture(); owned.add(scroll);
+  const bind = new THREE.Vector3(), handL = new THREE.Vector3(), handR = new THREE.Vector3();
+  model.updateMatrixWorld(true);
+  // Cuffs sit where the sleeves meet the hands in bind space.
+  for (const [name, target] of [['hand_l', handL], ['hand_r', handR]]) model.getObjectByName(name)?.getWorldPosition(target);
+  const inverse = model.matrixWorld.clone().invert(); handL.applyMatrix4(inverse); handR.applyMatrix4(inverse);
+  const pieceClones = [];
 
   for (const [original, material] of materials) {
     const name = original.name ?? '';
     if (/suit/i.test(name)) {
-      // Rose velvet dress tunic; the shirt and collar retain ivory silk.
-      const velvet = surface({ map: material.map, normalMap: material.normalMap, color: '#efa1c3', roughness: 0.82, metalness: 0,
-        sheen: 0.35, sheenColor: new THREE.Color('#34467e'), sheenRoughness: 0.6 });
-      velvet.name = 'Prince Jev rose tunic';
-      velvet.onBeforeCompile = shader => {
-        shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-#ifdef USE_MAP
-float clothLuma=dot(sampledDiffuseColor.rgb,vec3(.2126,.7152,.0722));
-float silk=smoothstep(.42,.62,clothLuma);
-vec3 rose=diffuse*mix(.55,1.0,pow(clamp(clothLuma,0.,1.),.35));
-diffuseColor.rgb=mix(rose,vec3(.93,.9,.84)*mix(.85,1.,clothLuma),silk);
-#endif`);
+      // One suit mesh is the tunic (its jacket piece) and the trousers (its
+      // trouser piece): the piece label and the bind-space position choose the
+      // cloth, placket, trim and scrollwork per fragment.
+      const tunic = surface({ map: material.map, normalMap: material.normalMap, normalScale: new THREE.Vector2(0.55, 0.55), color: PRINCE_PALETTE.cream, roughness: 0.78, metalness: 0,
+        sheen: 0.18, sheenColor: new THREE.Color('#fff2dc'), sheenRoughness: 0.7 });
+      tunic.name = 'Prince Jev cream tunic';
+      tunic.onBeforeCompile = shader => {
+        shader.uniforms.princeScroll = { value: scroll }; shader.uniforms.princeHem = { value: TUNIC_HEM }; shader.uniforms.princeNeck = { value: NECKLINE };
+        shader.uniforms.princeHandL = { value: handL }; shader.uniforms.princeHandR = { value: handR };
+        shader.vertexShader = shader.vertexShader.replace('#include <common>', `#include <common>
+attribute float garment;varying float vGarment;varying vec3 vBind;varying vec3 vBindNormal;`)
+          .replace('#include <begin_vertex>', `#include <begin_vertex>
+vGarment=garment;vBind=position;vBindNormal=normal;`);
+        shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `#include <common>
+uniform sampler2D princeScroll;uniform float princeHem;uniform float princeNeck;uniform vec3 princeHandL;uniform vec3 princeHandR;
+varying float vGarment;varying vec3 vBind;varying vec3 vBindNormal;`)
+          .replace('#include <map_fragment>', `#include <map_fragment>
+float princeLuma=clamp(dot(diffuseColor.rgb,vec3(.2126,.7152,.0722))/.86,0.,1.);
+float princeWeave=mix(.84,1.0,princeLuma);
+vec3 princeCream=vec3(.914,.831,.678),princePink=vec3(.831,.333,.478),princeRose=vec3(.722,.435,.271),princeMint=vec3(.549,.78,.706);
+float princeTunic=step(.5,vGarment),princeFront=smoothstep(0.,.3,vBindNormal.z),princeAx=abs(vBind.x);
+// The placket widens into a V toward the neckline; its trim follows the edge.
+float princeHalf=.022+max(0.,vBind.y-1.4)*.42;
+float princeCentre=princeTunic*princeFront*step(princeHem+.05,vBind.y)*step(vBind.y,princeNeck+.03);
+float princePlacket=princeCentre*step(princeAx,princeHalf);
+float princeTrim=clamp(princeCentre*step(princeHalf,princeAx)*step(princeAx,princeHalf+.012)+princeTunic*princeFront*step(princeNeck,vBind.y)*step(princeAx,princeHalf+.012)+princeTunic*step(vBind.y,princeHem+.028)
+  +princeTunic*(step(distance(vBind,princeHandL),.075)+step(distance(vBind,princeHandR),.075)),0.,1.);
+float princeMotif=texture2D(princeScroll,vec2(vBind.x*5.+.5,vBind.y*3.5)).r*clamp(princePlacket+princeTunic*princeFront*step(vBind.y,princeHem+.11)*step(.05,princeAx)*step(princeAx,.17),0.,1.);
+vec3 princeCloth=mix(princePink,princeCream,princeTunic)*princeWeave;
+princeCloth=mix(princeCloth,princePink*princeWeave,princePlacket);
+princeCloth=mix(princeCloth,princeMint,princeMotif*.85);
+princeCloth=mix(princeCloth,princeRose,princeTrim);
+diffuseColor.rgb=princeCloth;`)
+          .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+roughnessFactor=mix(roughnessFactor,.38,princeTrim);`)
+          .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
+metalnessFactor=mix(metalnessFactor,.6,princeTrim);`);
       };
-      velvet.customProgramCacheKey = () => 'river-oaks-prince-rose-v2';
-      model.traverse(item => { if (item.isMesh && item.material === material) item.material = velvet; });
+      tunic.customProgramCacheKey = () => 'river-oaks-prince-cream-tunic-v1';
+      model.traverse(item => {
+        if (!item.isMesh || item.material !== material) return;
+        const { geometry } = labelGarmentPieces(item, piece => piece.box.max.y > 1.5 ? 1 : 0);
+        owned.add(geometry); item.geometry = geometry; item.material = tunic; pieceClones.push(item);
+      });
     } else if (/shoes/i.test(name)) {
-      material.color.set('#0b0b0f'); material.roughness = 0.16; material.metalness = 0.05;
+      // The boots become bare feet under rose-gold sandal straps: the boot body
+      // takes the skin tone, the shaft continues the pink trousers, the laces
+      // read as the straps' sole bands. No boot texture remains.
+      const sandal = surface({ color: '#ffffff', roughness: 0.55, metalness: 0 });
+      sandal.name = 'Prince Jev sandal feet';
+      sandal.onBeforeCompile = shader => {
+        shader.vertexShader = shader.vertexShader.replace('#include <common>', `#include <common>
+attribute float garment;varying float vGarment;`).replace('#include <begin_vertex>', `#include <begin_vertex>
+vGarment=garment;`);
+        shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `#include <common>
+varying float vGarment;`).replace('#include <map_fragment>', `#include <map_fragment>
+float princeStrap=step(1.5,vGarment),princeShaft=step(.5,vGarment)*(1.-princeStrap);
+diffuseColor.rgb=mix(mix(vec3(.886,.69,.557),vec3(.831,.333,.478),princeShaft),vec3(.722,.435,.271),princeStrap);`)
+          .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+roughnessFactor=mix(roughnessFactor,.38,princeStrap);`)
+          .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
+metalnessFactor=mix(metalnessFactor,.6,princeStrap);`);
+      };
+      sandal.customProgramCacheKey = () => 'river-oaks-prince-sandal-v1';
+      model.traverse(item => {
+        if (!item.isMesh || item.material !== material) return;
+        const { geometry } = labelGarmentPieces(item, piece => piece.count <= 60 ? 2 : piece.box.max.y > 0.15 ? 1 : 0);
+        owned.add(geometry); item.geometry = geometry; item.material = sandal; pieceClones.push(item);
+      });
     } else if (/^(young|middleage|old)_/.test(name)) {
       if(skinTexture)material.map=skinTexture;
-      material.color.set(skinTexture?'#fff3ec':'#efc9b0');
+      material.color.set(skinTexture?'#fff3ec':PRINCE_PALETTE.skin);
       material.roughness = 0.6; material.envMapIntensity = 0.5;
     } else if (/^eyelashes|^eyebrow/.test(name)) {
       // These fine alpha cards need soft edges at portrait distance. The
@@ -147,16 +342,37 @@ diffuseColor.rgb=mix(rose,vec3(.93,.9,.84)*mix(.85,1.,clothLuma),silk);
       material.transparent=true;material.depthWrite=false;material.alphaTest=.02;
       model.traverse(item=>{if(item.isMesh&&item.material===material)item.castShadow=false;});
     } else if (/^short/.test(name)) {
-      material.color.set('#827052');
-      material.roughness = 0.62; material.alphaTest = 0.35;
+      // Caramel curls: the strand map keeps its light and dark strands, remapped
+      // between a deep caramel and a golden highlight. The hairstyle mesh gains a
+      // little volume about the skull on a private clone (no curl mesh exists).
+      material.color.set(PRINCE_PALETTE.hair);
+      material.roughness = 0.58; material.alphaTest = 0.35;
       material.onBeforeCompile = shader => {
         shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
 #ifdef USE_MAP
 float strand=clamp(dot(sampledDiffuseColor.rgb,vec3(.2126,.7152,.0722))*3.2,0.,1.);
-diffuseColor.rgb=diffuse*mix(.38,1.08,pow(strand,.62));
+diffuseColor.rgb=mix(diffuse*.4,vec3(.816,.627,.376),pow(strand,.62));
 #endif`);
       };
-      material.customProgramCacheKey = () => 'river-oaks-prince-dirty-blond-v3';
+      material.customProgramCacheKey = () => 'river-oaks-prince-caramel-v1';
+      model.traverse(item => {
+        if (!item.isMesh || item.material !== material) return;
+        const geometry = item.geometry.clone(), { position } = geometry.attributes, box = new THREE.Box3().setFromBufferAttribute(position), centre = box.getCenter(new THREE.Vector3());
+        centre.y = box.min.y + (box.max.y - box.min.y) * 0.45;
+        for (let i = 0; i < position.count; i++) position.setXYZ(i, centre.x + (position.getX(i) - centre.x) * 1.06, centre.y + (position.getY(i) - centre.y) * 1.06, centre.z + (position.getZ(i) - centre.z) * 1.06);
+        position.needsUpdate = true; geometry.computeBoundingSphere(); owned.add(geometry); item.geometry = geometry; pieceClones.push(item);
+      });
+    } else if (name === 'brown') {
+      // Blue eyes: the iris (saturated, mid-dark) shifts toward blue; the
+      // sclera (bright, unsaturated) and the pupil (dark) keep the atlas.
+      material.onBeforeCompile = shader => {
+        shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+float irisLuma=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));
+float irisSaturation=max(diffuseColor.r,max(diffuseColor.g,diffuseColor.b))-min(diffuseColor.r,min(diffuseColor.g,diffuseColor.b));
+float iris=smoothstep(.05,.18,irisSaturation)*(1.-smoothstep(.55,.8,irisLuma))*smoothstep(.04,.12,irisLuma);
+diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.31,.525,.776)*mix(.55,1.25,irisLuma),iris);`);
+      };
+      material.customProgramCacheKey = () => 'river-oaks-prince-blue-eyes-v1';
     }
     material.needsUpdate = true;
   }
@@ -175,101 +391,91 @@ diffuseColor.rgb=diffuse*mix(.38,1.08,pow(strand,.62));
     object.rotation.set(...rotation, 'YXZ'); object.scale.fromArray(scale);
     object.castShadow = object.receiveShadow = true; slot.group.add(object); return object;
   };
+  // Accessories are batched per bone and material, so the fit records keep the
+  // bone's attachment group and the limb profile rather than individual meshes.
+  const fitted = { torso: null, waist: null, bracers: [], calves: [], feet: [] };
 
-  // Coronet: a gold band with alternating fleur points and a front sapphire.
-  const head = attach('head'), fit = measureHead(avatar.rig);
-  // Fit around the actual hairstyle; Owen's taller fringe extends beyond the
-  // skull and must not slice through the gold band.
-  const crown=measureCrownBand(avatar.rig,fit.hair.top-.060);
-  const headOrigin = head.origin, radius = crown.rz, oval = crown.rx/crown.rz;
-  const [hx, hz] = crown.centre, band = crown.y;
-  const at = (angle, r, y) => [headOrigin.x + hx + Math.sin(angle) * r * oval, headOrigin.y + y, headOrigin.z + hz + Math.cos(angle) * r];
-  for (const [y, tube] of [[band, 0.0032], [band + 0.02, 0.0024]]) mesh(head, new THREE.TorusGeometry(radius, tube, 8, 72), gold, at(0, 0, y), [Math.PI / 2, 0, 0], [oval, 1, 1]);
-  mesh(head, new THREE.CylinderGeometry(radius, radius, 0.02, 72, 1, true), gold, at(0, 0, band + 0.01), [0, 0, 0], [oval, 1, 1]);
-  for (let i = 0; i < 10; i++) {
-    const angle = i / 10 * Math.PI * 2, fleur = i % 2 === 0, height = (fleur ? 0.018 : 0.012) * (1 + 0.25 * Math.max(0, Math.cos(angle)));
-    mesh(head, new THREE.ConeGeometry(fleur ? 0.0075 : 0.005, height, 10), gold, at(angle, radius, band + 0.02 + height / 2), [0, angle, 0]);
-    mesh(head, new THREE.SphereGeometry(fleur ? 0.0052 : 0.0034, 12, 8), fleur ? gold : ruby, at(angle, radius, band + 0.02 + height));
-    mesh(head, new THREE.SphereGeometry(0.0034, 10, 8), ruby, at(angle + Math.PI / 10, radius + 0.002, band + 0.01));
-  }
-  mesh(head, new THREE.OctahedronGeometry(0.0085, 1), sapphire, at(0, radius + 0.004, band + 0.012), [0, 0, 0], [0.8, 1.15, 0.55]);
-
-  // Tunic fittings: sash, belt, double-breasted buttons and a star of order.
+  // Belt: a flat rose-gold band seated on the tunic at the waist, with an
+  // ornamental lozenge buckle at the front.
   const torso = measureTorso(avatar.rig, root);
   if (torso) {
-    const chest = attach('spine_03'), waist = attach('spine_01');
-    // A shoulder-to-hip sash on a tilted loop. Edges are offset across the
-    // band (not merely vertically) and re-seated on the cloth at their height.
-    const high = torso.top - 0.1, low = torso.bottom + 0.17, mid = (high + low) / 2, amp = (high - low) / 2;
-    const count = 144, width = 0.068, positions = [], uvs = [], indices = [];
-    const loop = t => { const angle = t * Math.PI * 2; return torso.surface(angle, mid - amp * Math.sin(angle), 0.014); };
-    for (let i = 0; i <= count; i++) {
-      const centre = loop(i / count), tangent = loop((i + 1) / count).sub(loop((i - 1) / count)).normalize();
-      const outward = new THREE.Vector3(Math.sin(i / count * Math.PI * 2), 0, Math.cos(i / count * Math.PI * 2));
-      const across = new THREE.Vector3().crossVectors(outward, tangent).normalize();
-      for (const edge of [-width / 2, width / 2]) { positions.push(...torso.project(centre.clone().addScaledVector(across, edge), 0.014).toArray()); uvs.push(i / count * 12, edge > 0 ? 1 : 0); }
-      if (i < count) { const a = i * 2; indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
-    }
-    const ribbon = new THREE.BufferGeometry();
-    ribbon.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); ribbon.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); ribbon.setIndex(indices); ribbon.computeVertexNormals();
-    mesh(chest, ribbon, sashCloth, [0, 0, 0]);
-    // A gathered knot where the sash meets at the hip.
-    const knot = loop(0.25).toArray();
-    mesh(chest, new THREE.SphereGeometry(0.03, 20, 14), sashCloth, knot, [0, Math.PI / 2, 0], [1, 1.2, 0.45]);
-    mesh(chest, new THREE.OctahedronGeometry(0.009, 1), sapphire, [knot[0] + 0.014, knot[1], knot[2]]);
-    const belt = waist.origin.y + 0.02, beltPoints = Array.from({ length: 97 }, (_, i) => torso.surface(i / 96 * Math.PI * 2, belt, 0.008));
-    mesh(waist, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(beltPoints, true), 96, 0.006, 6, true), gold, [0, 0, 0]);
-    const buckle = torso.surface(0, belt, 0.012).toArray();
-    mesh(waist, new THREE.BoxGeometry(0.05, 0.036, 0.008), gold, buckle);
-    mesh(waist, new THREE.OctahedronGeometry(0.008, 1), sapphire, [buckle[0], buckle[1], buckle[2] + 0.006]);
-    for (const side of [-1, 1]) for (let i = 0; i < 5; i++) {
-      const angle = side * 0.3, y = belt + 0.07 + i * (high - 0.12 - belt - 0.07) / 4;
-      mesh(chest, new THREE.SphereGeometry(0.0085, 14, 10), gold, torso.surface(angle, y, 0.006).toArray(), [0, angle, 0], [1, 1, 0.45]);
-    }
-    const starAngle = 0.62, star = torso.surface(starAngle, high - 0.14, 0.012).toArray();
-    const starGeometry = new THREE.ExtrudeGeometry(starShape(0.034, 0.014, 8), { depth: 0.004, bevelEnabled: true, bevelSize: 0.0015, bevelThickness: 0.0015, bevelSegments: 1 });
-    mesh(chest, starGeometry, gold, star, [0, starAngle, 0]);
-    mesh(chest, new THREE.CylinderGeometry(0.011, 0.011, 0.004, 24), enamel, [star[0] + Math.sin(starAngle) * 0.006, star[1], star[2] + Math.cos(starAngle) * 0.006], [Math.PI / 2, starAngle, 0]);
+    const waist = attach('spine_01'), belt = waist.origin.y + 0.02, count = 96;
+    fitted.torso = torso; fitted.waist = { slot: waist, height: belt };
+    const centres = Array.from({ length: count }, (_, i) => ({ point: torso.surface(i / count * Math.PI * 2, belt, 0.012), across: new THREE.Vector3(0, 1, 0) }));
+    mesh(waist, strap(centres, 0.046, torso.project, 0.012, true), roseGold, [0, 0, 0]).name = 'Prince Jev belt';
+    const front = torso.surface(0, belt, 0.018).toArray();
+    const frame = new THREE.ExtrudeGeometry(lozenge(0.05, 0.034), { depth: 0.006, bevelEnabled: true, bevelSize: 0.0015, bevelThickness: 0.0015, bevelSegments: 1 });
+    mesh(waist, frame, roseGold, front).name = 'Prince Jev buckle';
+    const inner = surface({ color: '#8f5636', metalness: 0.6, roughness: 0.42, side: THREE.DoubleSide }); inner.name = 'Prince Jev buckle relief';
+    mesh(waist, new THREE.ExtrudeGeometry(lozenge(0.034, 0.021), { depth: 0.004, bevelEnabled: false }), inner, [front[0], front[1], front[2] + 0.006]);
+    mesh(waist, new THREE.ExtrudeGeometry(lozenge(0.016, 0.01), { depth: 0.004, bevelEnabled: false }), roseGold, [front[0], front[1], front[2] + 0.01]);
   }
 
-  // Epaulettes rest on the shoulder caps and follow each upper arm.
-  for (const [side, name] of [[1, 'upperarm_l'], [-1, 'upperarm_r']]) {
-    const slot = attach(name), o = slot.origin, top = [o.x - side * 0.018, o.y + 0.074, o.z - 0.004];
-    mesh(slot, new THREE.CylinderGeometry(0.05, 0.054, 0.012, 32), gold, top, [0, 0, side * 0.22], [1, 1, 0.78]);
-    mesh(slot, new THREE.CylinderGeometry(0.036, 0.036, 0.014, 28), enamel, [top[0], top[1] + 0.004, top[2]], [0, 0, side * 0.22], [1, 1, 0.78]);
-    for (let i = 0; i < 16; i++) {
-      const a = (i / 15 - 0.5) * Math.PI * 0.95, x = top[0] + side * (0.046 * Math.cos(a) + 0.004), z = top[2] + 0.046 * Math.sin(a) * 0.78;
-      mesh(slot, new THREE.CylinderGeometry(0.0028, 0.0022, 0.046, 6), gold, [x, top[1] - 0.026 - 0.004 * Math.cos(a), z], [0, 0, side * 0.1]);
+  // Bracers: open rose-gold cuffs fitted to each sleeve from the wrist up the
+  // forearm, engraved with mint lines; the opening faces the inner arm.
+  for (const name of ['lowerarm_l', 'lowerarm_r']) {
+    const limb = measureLimb(avatar.rig, root, name); if (!limb) continue;
+    const slot = attach(name), rings = 7, segments = 40, low = limb.length * 0.56, high = limb.length * 0.98;
+    const positions = [], uvs = [], indices = [];
+    for (let r = 0; r <= rings; r++) {
+      const t = low + (high - low) * r / rings, flare = r === 0 || r === rings ? 0.004 : 0.0045;
+      for (let s = 0; s <= segments; s++) {
+        const angle = Math.PI * 0.12 + s / segments * Math.PI * 1.76, point = limb.surface(angle, t, flare);
+        positions.push(...point.toArray()); uvs.push(s / segments * 3, r / rings);
+        if (r < rings && s < segments) { const a = r * (segments + 1) + s; indices.push(a, a + 1, a + segments + 1, a + 1, a + segments + 2, a + segments + 1); }
+      }
     }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); geometry.setIndex(indices); geometry.computeVertexNormals();
+    const bracer = mesh(slot, geometry, bracerMetal, [0, 0, 0]); bracer.name = `Prince Jev bracer ${name.endsWith('_l') ? 'left' : 'right'}`;
+    fitted.bracers.push({ bone: name, limb, slot, low, high });
+  }
+
+  // Sandals: rose-gold straps criss-crossing up each shin over the trousers,
+  // with an ankle band and a top cuff below the knee; a toe strap and heel
+  // band over the bare foot.
+  for (const [calfName, footName] of [['calf_l', 'foot_l'], ['calf_r', 'foot_r']]) {
+    const limb = measureLimb(avatar.rig, root, calfName); if (!limb) continue;
+    const slot = attach(calfName), ankle = limb.length * 0.9, knee = limb.length * 0.26, width = 0.016;
+    const helix = (sign, turns) => Array.from({ length: 73 }, (_, i) => {
+      const f = i / 72, t = ankle + (knee - ankle) * f, angle = sign * (Math.PI * 2 * turns * f) + Math.PI / 2;
+      const point = limb.surface(angle, t, 0.007), next = limb.surface(sign * (Math.PI * 2 * turns * (f + 0.01)) + Math.PI / 2, t + (knee - ankle) * 0.01, 0.007);
+      const tangent = next.sub(point).normalize(), outward = point.clone().sub(limb.origin.clone().addScaledVector(limb.axis, t)).normalize();
+      return { point, across: new THREE.Vector3().crossVectors(outward, tangent).normalize() };
+    });
+    fitted.calves.push({ bone: calfName, limb, slot, ankle, knee });
+    for (const sign of [1, -1]) mesh(slot, strap(helix(sign, 2.25), width, limb.project, 0.007), roseGold, [0, 0, 0]).name = `Prince Jev sandal strap ${calfName}`;
+    for (const [t, cuff] of [[ankle, 0.022], [knee, 0.026]]) {
+      const ring = Array.from({ length: 64 }, (_, i) => ({ point: limb.surface(i / 64 * Math.PI * 2, t, 0.007), across: limb.axis.clone() }));
+      mesh(slot, strap(ring, cuff, limb.project, 0.007, true), roseGold, [0, 0, 0]).name = `Prince Jev sandal cuff ${calfName}`;
+    }
+    const foot = attach(footName), o = foot.origin, side = footName.endsWith('_l') ? 1 : -1;
+    fitted.feet.push({ bone: footName, slot: foot });
+    const toe = new THREE.TorusGeometry(0.052, 0.004, 6, 32, Math.PI * 1.15);
+    mesh(foot, toe, roseGold, [o.x, 0.022, o.z + 0.12], [0, 0, -Math.PI * 0.075], [1.15, 1, 1]).name = `Prince Jev toe strap ${footName}`;
+    mesh(foot, new THREE.TorusGeometry(0.058, 0.004, 6, 32), roseGold, [o.x + side * 0.002, 0.068, o.z + 0.008], [Math.PI / 2, 0, 0], [1.05, 1, 0.78]).name = `Prince Jev heel band ${footName}`;
   }
 
   batchCostumeAttachments(attachments, owned);
   const shoppingBag=createPrinceShoppingBag(avatar);
-  const position = new THREE.Vector3(), orientation = new THREE.Quaternion(), inverse = new THREE.Quaternion();
-  const opticalPosition = new THREE.Vector3(), opticalScale = new THREE.Vector3();
+  const position = new THREE.Vector3(), orientation = new THREE.Quaternion(), inverseOrientation = new THREE.Quaternion();
   return {
     get materials() { return [...owned].filter(item => item.isMaterial); },
     get bag() { return shoppingBag.object; },
+    // The fitted accessories and their limb measurements, for tests and fixtures.
+    get fitted() { return fitted; },
+    get garmentClones() { return pieceClones; },
     update({carrying=false}={}) {
       root.updateWorldMatrix(true, true);
-      inverse.copy(root.getWorldQuaternion(orientation)).invert();
+      inverseOrientation.copy(root.getWorldQuaternion(orientation)).invert();
       for (const item of attachments) {
         item.bone.getWorldPosition(position); item.group.position.copy(root.worldToLocal(position));
-        item.bone.getWorldQuaternion(orientation); item.group.quaternion.copy(inverse).multiply(orientation).multiply(item.rest);
+        item.bone.getWorldQuaternion(orientation); item.group.quaternion.copy(inverseOrientation).multiply(orientation).multiply(item.rest);
       }
       shoppingBag.update(carrying);
     },
-    // Same rule as Jevica's jewels: keep the facets and clearcoat at every
-    // distance, and restore refraction as a sapphire spans 8–16 CSS pixels.
-    updateOptics(camera, viewportHeight) {
-      if (!camera || !Number.isFinite(viewportHeight) || viewportHeight <= 0 || !root.visible) { sapphire.transmission = 0; return; }
-      camera.updateWorldMatrix(true, false);
-      head.bone.getWorldPosition(opticalPosition).applyMatrix4(camera.matrixWorldInverse);
-      root.getWorldScale(opticalScale);
-      const diameter = 0.017 * Math.max(opticalScale.x, opticalScale.y, opticalScale.z);
-      const pixels = -opticalPosition.z > 0.01 ? diameter * viewportHeight * 0.5 * camera.projectionMatrix.elements[5] / -opticalPosition.z : 0;
-      sapphire.transmission = 0.2 * THREE.MathUtils.smoothstep(pixels, 8, 16);
-    },
+    // No refractive gems remain on this costume; the hook stays for the driver.
+    updateOptics() {},
     dispose() { shoppingBag.dispose();attachments.forEach(({ group }) => group.removeFromParent()); owned.forEach(item => item.dispose()); },
   };
 }

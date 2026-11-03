@@ -1,6 +1,7 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { TICKET_TTL_MS, TICKETS_PER_USER } from './ticket-policy.js';
 import { DEFAULT_WORLD_ID, validateWorldId } from '../preview/src/world-contract.js';
+import { REPORT_LIST_LIMIT, closedRecord, normalizeReport } from './moderation-reports.js';
 
 // One counter per client and window, so a flood of distinct clients cannot fill
 // a shared table and lock out everyone else. Each counter expires after its
@@ -66,6 +67,7 @@ redis.call('LPUSH', KEYS[2], ARGV[2]); redis.call('LTRIM', KEYS[2], 0, 9999)
 return 1`;
 
 const AUDIT = `redis.call('LPUSH', KEYS[1], ARGV[1]); redis.call('LTRIM', KEYS[1], 0, 9999); return 1`;
+const READ_AUDIT = `return redis.call('LRANGE', KEYS[1], ARGV[1], ARGV[2])`;
 const text = (value, max = 100) => typeof value === 'string' && value.length > 0 && value.length <= max && !/[\u0000-\u001f\u007f]/.test(value);
 const identity = user => user && text(user.userId) && text(user.sessionId);
 
@@ -81,15 +83,15 @@ export function createRedisSecurity({ redis, prefix, now = Date.now }) {
     const bucket = createHash('sha256').update(id).digest('base64url');
     return await execute(LIMIT, [`limit:${scope}:${bucket}:${Math.floor(now() / windowMs)}`], [limit, windowMs]) === 1;
   };
-  const event = (kind, record) => {
+  const event = (kind, record, at = new Date(now()).toISOString()) => {
     if (!text(kind, 32) || !/^[a-z][a-z0-9_-]*$/.test(kind) || !record || typeof record !== 'object' || Array.isArray(record)) throw new Error('Invalid audit event');
-    const serialized = JSON.stringify({ ...record, kind, at: new Date(now()).toISOString() });
+    const serialized = JSON.stringify({ ...record, kind, at });
     if (Buffer.byteLength(serialized) > 2048) throw new Error('Audit event too large');
     return serialized;
   };
-  return {
+  const security = {
     async allow(scope, id, limit, windowMs) {
-      if (!['chauffeur', 'access', 'login', 'frames', 'social', 'groups', 'events', 'workplace', 'workplace_read', 'office_desk', 'profile', 'inventory', 'debug-report', 'chauffeur_daily', 'invites', 'voice', 'voice_daily', 'character-read', 'character-write'].includes(scope)) return false;
+      if (!['chauffeur', 'account_deletion', 'access', 'login', 'frames', 'social', 'groups', 'events', 'workplace', 'workplace_read', 'office_desk', 'profile', 'inventory', 'debug-report', 'chauffeur_daily', 'invites', 'voice', 'voice_daily', 'character-read', 'character-write', 'blocks', 'moderation_reports'].includes(scope)) return false;
       return limited(scope, id, limit, windowMs);
     },
     async issueTicket(user, worldId = DEFAULT_WORLD_ID) {
@@ -117,13 +119,48 @@ export function createRedisSecurity({ redis, prefix, now = Date.now }) {
       if (!text(userId) || !text(actorId)) return false;
       return await execute(UNBAN, ['bans', 'audit'], [userId, event('unban', { userId, actorId })]) === 1;
     },
-    async report({ reporterId, targetId, reason } = {}) {
-      if (!text(reporterId) || !text(targetId) || reporterId === targetId || !['disruption', 'harassment', 'cheating'].includes(reason)) return false;
+    // A report (#292): its id, the content it carries ({quoted, chat}, already bounded by
+    // moderation-reports.js) and the time it should be answered by are saved with it.
+    // `at` is the intake's time, so the audit entry and the inbox notice agree.
+    async report({ reporterId, targetId, reason, id = randomUUID(), content = null, respondBy = null, at = null } = {}) {
+      if (!text(reporterId) || !text(targetId) || reporterId === targetId || !['disruption', 'harassment', 'cheating'].includes(reason) || !/^[A-Za-z0-9_-]{8,64}$/.test(id)) return false;
+      if (at !== null && (typeof at !== 'string' || Number.isNaN(Date.parse(at)))) return false;
       if (!await limited('reports', reporterId, 3, 60000)) return false;
-      await execute(AUDIT, ['audit'], [event('report', { reporterId, targetId, reason })]);
+      await execute(AUDIT, ['audit'], [event('report', { id, reporterId, targetId, reason, ...(content ? { content } : {}), ...(respondBy ? { respondBy } : {}) }, at ?? undefined)]);
+      return true;
+    },
+    // Closes a saved report. Answers false when no report in the audit list has that id.
+    async closeReport({ id, actorId } = {}) {
+      if (!text(id, 64) || !text(actorId)) return false;
+      if (await redis.hexists(key('reports:closed'), id) === 1) return true;
+      if (!(await security.reports(10_000)).some(entry => entry.id === id)) return false;
+      await redis.hset(key('reports:closed'), id, JSON.stringify(closedRecord(new Date(now()).toISOString(), actorId)));
+      await execute(AUDIT, ['audit'], [event('report_closed', { id, actorId })]);
       return true;
     },
     async audit(kind, record) { await execute(AUDIT, ['audit'], [event(kind, record)]); },
+    // Saved reports, newest first (moderation-reports.js). The list is newest first
+    // already; it's read 500 entries at a time, and only as far as `limit` needs.
+    // Reports about `except` don't count.
+    async reports(limit = REPORT_LIST_LIMIT, except = null) {
+      const found = [];
+      for (let start = 0; start < 10_000 && found.length < limit; start += 500) {
+        const lines = await execute(READ_AUDIT, ['audit'], [start, start + 499]);
+        for (const line of lines) {
+          let entry = null;
+          try { entry = normalizeReport(JSON.parse(line)); } catch { /* not a report */ }
+          if (entry && entry.reportedId !== except) found.push(entry);
+          if (found.length >= limit) break;
+        }
+        if (lines.length < 500) break;
+      }
+      if (found.length) {
+        const closed = await redis.hmget(key('reports:closed'), ...found.map(entry => entry.id));
+        for (const [index, entry] of found.entries()) { let record = null; try { record = closed[index] ? JSON.parse(closed[index]) : null; } catch { /* damaged */ } entry.closed = record && typeof record === 'object' ? record : null; }
+      }
+      return found;
+    },
     close() { /* No owned connection or ephemeral process resources. */ },
   };
+  return security;
 }

@@ -75,6 +75,35 @@ for (const look of SHARED_APPEARANCES) test(`${look.id}: the figure sphere conta
   } finally { outfit?.dispose(); avatar.dispose(); }
 });
 
+// A player-made recipe scales its body and may wear another body's hairstyle, so
+// both height limits, the longest donor hair on every body and the strongest face
+// must still sit inside the figure sphere.
+test('player-made recipes: the figure sphere contains every skinned vertex at both height limits, with any hairstyle', async t => {
+  const { DEFAULT_RECIPE, FACE_CONTROLS, RECIPE_BODIES, RECIPE_HEIGHT } = await import('../src/character-recipe.js');
+  const rigs = new Map(), previousLoad = GLTFLoader.prototype.loadAsync, previousWindow = globalThis.window, previousDocument = globalThis.document;
+  GLTFLoader.prototype.loadAsync = async url => {
+    const rig = url.split('/').at(-1).replace('.glb', '');
+    if (!rigs.has(rig)) rigs.set(rig, await loadCharacterRig(rig));
+    return { scene: rigs.get(rig).scene };
+  };
+  globalThis.window = { matchMedia: () => ({ matches: false }) };
+  globalThis.document = { createElement: () => ({ getContext: () => new Proxy({}, { get: () => () => {} }) }) };
+  t.after(() => { GLTFLoader.prototype.loadAsync = previousLoad; globalThis.window = previousWindow; globalThis.document = previousDocument; });
+  const face = Object.fromEntries(FACE_CONTROLS.map(control => [control.id, 100]));
+  for (const body of Object.keys(RECIPE_BODIES)) for (const [height, hairStyle] of [[RECIPE_HEIGHT.min, 'ponytail01'], [RECIPE_HEIGHT.max, 'bob02']]) {
+    const label = `${body} ${height} cm ${hairStyle}`, avatar = await loadResidentAvatar(0, 'remote-cull-recipe', body, { folk: false, recipe: { ...DEFAULT_RECIPE, body, height, hairStyle, face } });
+    try {
+      const measured = figureHeight(avatar), meshes = cullAvatarMeshes(avatar.object, measured);
+      assert.ok(Math.abs(measured - height / 100) < 1e-9, `${label}: standing height ${measured}`);
+      assert.ok(meshes.length >= 4 && meshes.every(mesh => mesh.frustumCulled && mesh.boundingSphere.radius > 0), `${label}: ${meshes.length} culled skins`);
+      let worst = { reach: reach(avatar.object, meshes), pose: 'rest' };
+      for (const pose of poses(avatar)) { const value = reach(avatar.object, meshes); if (value > worst.reach) worst = { reach: value, pose }; }
+      t.diagnostic(`${label}: ${meshes.length} meshes, worst reach ${worst.reach.toFixed(3)} (${worst.pose})`);
+      assert.ok(worst.reach <= .97, `${label}: ${worst.pose} reaches ${worst.reach.toFixed(3)} of the figure sphere`);
+    } finally { avatar.dispose(); }
+  }
+});
+
 function viewFrom(position, target, fov = 60, aspect = 1.6) {
   const camera = new THREE.PerspectiveCamera(fov, aspect, .1, 300);
   camera.position.set(...position); camera.lookAt(...target); camera.updateMatrixWorld();

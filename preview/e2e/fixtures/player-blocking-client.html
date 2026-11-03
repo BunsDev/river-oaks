@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Player blocking client lifecycle fixture</title>
+<body>
+  <main class="app-shell">
+    <div id="viewport"><div id="canvas-host" tabindex="0"></div></div>
+    <div id="community-more"></div>
+  </main>
+  <script type="module">
+    // Real client, HTTP/WS transport and controls, without the 3D scene. Only the
+    // acceptance runner's approved fixture identities can join its town.
+    import { createMultiplayer } from '/src/multiplayer-client.js';
+    import { sharedBlockList } from '/src/player-blocks.js';
+    window.blockingFixture = {
+      blocks: sharedBlockList(),
+      create: () => createMultiplayer({ getPose: () => null, onSnapshot() {}, onCorrection() {}, onPlayers() {} }),
+    };
+    window.blockingFixture.client = window.blockingFixture.create();
+  </script>
+</body>
+</html>

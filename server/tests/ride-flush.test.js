@@ -78,3 +78,21 @@ test('settle waits for the running flush and then sends what it left behind', as
   assert.deepEqual(calls,[['alice',4],['carol',6]]);
   assert.deepEqual(flush.pending(),[]);
 });
+
+test('forgetting an account drops its queued metres and waits out a bank already running', async () => {
+  let rides=[{userId:'erin',name:'Erin',meters:5},{userId:'pat',name:'Pat',meters:7}],release,failErin=true;
+  const banked=[],gate=new Promise(resolve=>{release=resolve;});
+  const store={async add(userId,meters){await gate;if(userId==='erin'&&failErin)throw new Error('down');banked.push([userId,meters]);return meters;}};
+  const flush=createRideFlush({world:()=>({drainRides(){const drained=rides;rides=[];return drained;}}),store});
+  const running=flush.flush();
+  let forgotten=false;const forgetting=flush.forget('erin').then(()=>{forgotten=true;});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(forgotten,false,'the erasure waits for the bank in progress');
+  release();await running;await forgetting;
+  // Erin's failed ride came back to the queue, and the erasure dropped it again.
+  assert.deepEqual(flush.pending(),[]);
+  assert.deepEqual(banked,[['pat',7]]);
+  rides=[{userId:'erin',name:'Erin',meters:3}];flush.drain();await flush.forget('erin');
+  failErin=false;await flush.send();
+  assert.deepEqual(banked,[['pat',7]]);
+});

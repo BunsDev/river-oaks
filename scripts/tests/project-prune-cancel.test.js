@@ -67,6 +67,16 @@ test('authorized stale cancellation restores Git and local files before guarded 
   assert.ok(saved.tasks[0].archive.feature);
 });
 
+test('cancelling one branch of an active task with others left queues it instead of leaving it ownerless and active',t=>{
+  const f=fixture(t);f.task.branches.push('feature-sibling');f.git('branch','feature-sibling','main');
+  writeFileSync(f.tasksPath,JSON.stringify(f.register));
+  const result=cancelStale({...f.options,tasksPath:f.tasksPath,archiveRoot:join(f.base,'archives'),loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});
+  assert.equal(result.status,'cancelled-local');
+  const saved=JSON.parse(readFileSync(f.tasksPath)).tasks[0];
+  assert.deepEqual(saved.branches,['feature-sibling']);assert.equal(saved.owner,null);assert.equal(saved.leaseUntil,undefined);
+  assert.equal(saved.status,'queued');
+});
+
 test('cancellation bundles only the commits the default branch lacks',t=>{
   const f=fixture(t),base=f.git('rev-parse','main');f.git('update-ref','refs/remotes/origin/main',base);
   const result=cancelStale({...f.options,tasksPath:f.tasksPath,archiveRoot:join(f.base,'archives'),loadEvidence:()=>({register:f.register,pulls:f.pulls,activity:f.activity})});

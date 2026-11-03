@@ -201,3 +201,12 @@ test('a chess-table sender still reaches the chess module, and the café refuses
   f.act('alice', { action: 'invite', kind: 'dominoes' }); f.act('bob', { action: 'accept' });
   assert.deepEqual(f.world.snapshot().tables.map(t => t.id).sort(), ['chess-west', 'round']);
 });
+
+test('a block ends an open dominoes invitation between the two', () => {
+  const { act, round, world } = setup();
+  assert.equal(act('alice', { action: 'invite', kind: 'dominoes' }).error, undefined);
+  assert.equal(world.separate('alice', 'nobody-here'), false);
+  assert.ok(round().invite);
+  assert.equal(world.separate('bob', 'alice'), true);
+  assert.equal(round(), null);
+});

@@ -50,7 +50,8 @@ test('local reversals, strafes and restarts land steps along travel at 30, 60 an
           if (before[i].contact && leg.contact && before[i].target) assert.ok(leg.target.distanceTo(before[i].target) < 1e-9, `${profile} ${name}: a planted foot slides`);
           if (before[i].contact && !leg.contact) steps++;
         });
-        assert.ok(placement.legs.some(leg => leg.contact), `${profile} ${name}: a supporting foot remains`);
+        // Only a run (and its landing as it slows or cuts) has both feet in the air.
+        assert.ok(placement.legs.some(leg => leg.contact) || placement.legs.some(leg => leg.swing.running || leg.swing.landing), `${profile} ${name}: a supporting foot remains while walking`);
       }
       avatar.dispose();
       // Measured at e17fd94d without the heading: 0.21-0.32 m. With it: 0.10-0.18 m

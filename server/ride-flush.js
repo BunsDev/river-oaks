@@ -41,5 +41,8 @@ export function createRideFlush({world,store,warn=()=>{}}) {
   const flush=()=>{drain();return send();};
   // Shutdown: let the running flush finish, then send whatever it left behind.
   const settle=async()=>{await inFlight;await send();};
-  return {merge,drain,send,flush,settle,pending:()=>[...pending.values()].map(ride=>({...ride})),get inFlight(){return inFlight;}};
+  // Account erasure: the account's metres leave the queue. A running flush may still
+  // bank them, so this waits for it and drops whatever it handed back.
+  const forget=async userId=>{pending.delete(userId);await inFlight;pending.delete(userId);};
+  return {merge,drain,send,flush,settle,forget,pending:()=>[...pending.values()].map(ride=>({...ride})),get inFlight(){return inFlight;}};
 }

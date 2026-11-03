@@ -334,3 +334,16 @@ test('a checkpoint whose timeline and receipts name both films restores, stopped
   const stopped = fixture({ restore: f.town.checkpoint(), at: f.clock.time + 60_000 });
   assert.deepEqual([stopped.view().status, stopped.view().mediaId], ['stopped', null]);
 });
+
+test('erasing a host also erases them from another host’s receipt for their film (#292)', () => {
+  const f = fixture({ hosts: [{ venueId: 'ipic', userId: 'host' }, { venueId: 'ipic', userId: 'viewer' }] });
+  assert.equal(start(f).ok, true);
+  const paused = f.send('viewer', 'pause');
+  assert.deepEqual([paused.ok, paused.screening.hostId], [true, 'host'], 'the reply the viewer keeps for a retry names the host');
+  // The host's own receipts go too, the one for stopping the film included.
+  assert.equal(f.send('host', 'play').ok, true);assert.equal(f.send('host', 'stop').ok, true);
+  f.town.forgetAccount('host');
+  const saved = f.town.checkpoint().payload.screenings;
+  assert.equal(JSON.stringify(saved.receipts).includes('host'), false, JSON.stringify(saved.receipts));
+  assert.deepEqual([f.view().status, f.view().hostId], ['stopped', null]);
+});

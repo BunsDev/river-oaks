@@ -139,3 +139,26 @@ test('a checkpoint keeps a game in progress, and a game that does not replay is 
   world.reset();
   assert.deepEqual(world.snapshot().tables, [], 'a reset clears the tables');
 });
+
+test('erasing a player clears their table, even while the opponent stays seated, and the world restores', () => {
+  const { act, table, world } = setup();
+  assert.equal(act('alice', { action: 'invite', kind: 'chess' }).ok, true);assert.equal(act('bob', { action: 'accept' }).ok, true);
+  assert.equal(act('alice', { action: 'move', move: 'e2e4' }).ok, true);
+  world.forgetAccount('alice');
+  assert.equal(table(), null);
+  assert.equal(JSON.stringify(world.checkpoint()).includes('"alice"'), false);
+  const restored = createSharedWorld(data, { now: () => 2_000_000 });
+  assert.deepEqual(restored.restore(JSON.parse(JSON.stringify(world.checkpoint()))), { ok: true });
+});
+
+test('a block ends an open table invitation between the two, and leaves a game in progress', () => {
+  const { act, table, world } = setup();
+  assert.equal(act('alice', { action: 'invite', kind: 'chess' }).ok, true);
+  assert.equal(world.separate('alice', 'carol'), false, 'carol is not part of it');
+  assert.ok(table().invite);
+  assert.equal(world.separate('bob', 'alice'), true);
+  assert.equal(table(), null, 'the invitation was all there was');
+  assert.equal(act('alice', { action: 'invite', kind: 'chess' }).ok, true);act('bob', { action: 'accept' });
+  world.separate('alice', 'bob');
+  assert.equal(table().kind, 'chess', 'standing up ends a game; a block does not');
+});

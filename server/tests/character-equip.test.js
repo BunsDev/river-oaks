@@ -10,6 +10,8 @@ import {createRedisSecurity} from '../redis-security.js';
 import {createMemoryCharacterStore} from '../character-store.js';
 import {createMemoryAvatarPreferences} from '../avatar-preferences.js';
 import {customizedCharacterDefinition} from '../../preview/src/character-customization.js';
+import {recipeCharacterDefinition} from '../../preview/src/character-definition.js';
+import {CUSTOM_APPEARANCE_ID,rollCharacterRecipe} from '../../preview/src/character-recipe.js';
 import {approvedWaitlist} from './waitlist-fixture.js';
 const data={scene:'district',bounds_m:[-30,-30,30,30],walkSpawn:[-12,0,0],collisionPolygons:[],stores:[],buildings:[],communityLocations:[]};
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -88,6 +90,19 @@ test('memory transport recovers a selection write finishing after shutdown witho
  assert.equal((await next.command({type:'character',revision:1},{expectedVersion:1,requestId:'late'})).error,'character_selection_conflict');
  const latest=next.frames.filter(frame=>frame.type==='snapshot').at(-1).players.find(p=>p.id==='alice');
  assert.equal(latest.appearance,'sable-human');assert.equal(latest.character,undefined);
+});
+
+test('memory: a recipe drafts, publishes and equips through the routes, and peers receive it as the custom look',{timeout:30000},async t=>{
+ const f=await fixture('memory',t),recipe=rollCharacterRecipe({random:()=>.73}),definition=recipeCharacterDefinition('alice',recipe);
+ assert.equal((await f.request('alice','/api/character/draft',{definition:{...definition,parameters:{...recipe,height:120}},expectedVersion:0,requestId:'bad'})).status,400);
+ for(const build of [7,150,-105,'20'])assert.equal((await f.request('alice','/api/character/draft',{definition:{...definition,parameters:{...recipe,build}},expectedVersion:0,requestId:`bad-build-${build}`})).status,400,`build ${build}`);
+ assert.equal((await f.request('alice','/api/character/draft',{definition,expectedVersion:0,requestId:'draft'})).status,200);
+ assert.equal((await f.request('alice','/api/character/publish',{expectedVersion:1,requestId:'publish'})).status,200);
+ const a=await f.open('alice'),b=await f.open('bob');
+ const selected=await a.command({type:'character',revision:1},{expectedVersion:1,requestId:'equip'});assert.equal(selected.ok,true);
+ const peer=await b.until(frame=>frame.type==='snapshot'&&frame.players.some(p=>p.id==='alice'&&p.appearance===CUSTOM_APPEARANCE_ID));
+ assert.deepEqual(peer.players.find(p=>p.id==='alice').character,{...definition,revision:1});
+ assert.deepEqual((await f.state('alice')).selection.character.parameters,recipe);
 });
 
 test('publication rejects forged owner fields, stale versions, invalid rollback and unauthorized origins',{timeout:10000},async t=>{

@@ -82,6 +82,27 @@ test('the same WorkOS account has Jevica and vehicle access under its Production
   assert.equal(world.command(owner,{type:'pose',position:joined.player.position,yaw:0,altitude:0,vehicle:'rolls'}).ok,true);
 });
 
+test('any account may ride the shared motorcycle; the pink car stays the owner\'s',()=>{
+  let time=1000;
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
+  const world=createSharedWorld(data,{now:()=>time});
+  world.join({userId:owner,name:'Owner'});
+  const guestPosition=world.join({userId:'guest',name:'Guest'}).player.position;
+  time+=1000;
+  const pose=vehicle=>({type:'pose',position:[guestPosition[0],guestPosition[1]+5.5,guestPosition[2]],yaw:0,altitude:0,vehicle});
+  assert.equal(world.command('guest',pose('rolls')).error,'exclusive_vehicle');
+  assert.equal(world.command('guest',pose('motorcycle')).ok,true,'the motorcycle is open to every account');
+  assert.equal(world.snapshot().players.find(player=>player.id==='guest').vehicle,'motorcycle');
+  assert.equal(world.command('guest',{...pose('motorcycle'),altitude:1}).error,'invalid_pose','no vehicle flies');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  const restored=createSharedWorld(data,{now:()=>time});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  assert.equal(restored.snapshot().players.find(player=>player.id==='guest').vehicle,'motorcycle','a guest\'s motorcycle survives a checkpoint');
+  const forged=JSON.parse(JSON.stringify(checkpoint));
+  forged.payload.players.find(player=>player.id==='guest').vehicle='rolls';
+  assert.equal(createSharedWorld(data,{now:()=>time}).restore(forged).ok,false,'a guest in the car is not a valid checkpoint');
+});
+
 test('only the Jevica owner can submit a vehicle pose in shared play',()=>{
   let time=1000;
   const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
@@ -874,4 +895,98 @@ test('a flying bubble may cover its 21 m/s fast speed (1.5x the old 14), and no 
   time += 1000; assert.equal(pose(north + 21, 3).ok, true, 'a second at the bubble\'s fast speed');
   time += 1000; assert.equal(pose(north - .7, 3).error, 'movement_too_fast', 'faster than the bubble flies');
   assert.equal(pose(north + 14, 3).ok, true, 'the refused pose moved nothing');
+});
+
+test('the landowner hover coach is owner-only, budgeted by its own speed and restored from a checkpoint',()=>{
+  let time=1000;
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
+  const world=createSharedWorld(data,{now:()=>time});
+  const ownerPosition=world.join({userId:owner,name:'Owner'}).player.position;
+  const guestPosition=world.join({userId:'guest',name:'Guest'}).player.position;
+  time+=1000;
+  const pose=(position,vehicle,north)=>({type:'pose',position:[position[0],position[1]+north,position[2]],yaw:0,altitude:0,vehicle});
+  assert.equal(world.command('guest',pose(guestPosition,'hover',5.5)).error,'exclusive_vehicle');
+  // 7.5 m in one second is beyond the car's 7 m/s budget and within the coach's 9 m/s.
+  assert.equal(world.command(owner,pose(ownerPosition,'rolls',7.5)).error,'movement_too_fast');
+  assert.equal(world.command(owner,pose(ownerPosition,'hover',7.5)).ok,true);
+  assert.equal(world.snapshot().players.find(player=>player.id===owner).vehicle,'hover');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  const restored=createSharedWorld(data,{now:()=>time});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  assert.equal(restored.snapshot().players.find(player=>player.id===owner).vehicle,'hover');
+});
+
+test('the hover coach flies for its owner in any appearance, the car never leaves the ground, and a checkpoint keeps the coach aloft',()=>{
+  let time=1000;
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
+  const world=createSharedWorld(data,{now:()=>time});
+  const position=world.join({userId:owner,name:'Owner'}).player.position;
+  world.join({userId:'guest',name:'Guest'});
+  time+=1000;
+  // Kai cannot fly on foot (canFlyAs), but the coach's flight is the coach's.
+  assert.equal(world.command(owner,{type:'appearance',appearance:'kai-noir'}).ok,true);
+  time+=1000;
+  assert.equal(world.command(owner,{type:'pose',position,yaw:0,altitude:2}).error,'flight_not_allowed');
+  assert.equal(world.command(owner,{type:'pose',position,yaw:0,altitude:2,vehicle:'rolls'}).error,'invalid_pose');
+  assert.equal(world.command(owner,{type:'pose',position,yaw:0,altitude:2,vehicle:'hover'}).ok,true);
+  const aloft=world.snapshot().players.find(player=>player.id===owner);
+  assert.deepEqual([aloft.vehicle,aloft.altitude],['hover',2]);
+  time+=1000;
+  assert.equal(world.command(owner,{type:'pose',position,yaw:0,altitude:world.environment?.flightCeiling??32+1,vehicle:'hover'}).ok,false,'the world ceiling still binds');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  const restored=createSharedWorld(data,{now:()=>time});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  const kept=restored.snapshot().players.find(player=>player.id===owner);
+  assert.deepEqual([kept.vehicle,kept.altitude],['hover',2],'restored still flying the coach');
+  checkpoint.payload.players.find(player=>player.id===owner).vehicle='rolls';
+  assert.equal(restored.restore(resign(checkpoint)).error,'invalid_checkpoint','an airborne car is not a valid checkpoint');
+});
+
+// Five Rooms (#841): the Ribbon posts and shell frontages block movement on the server exactly
+// as walking.js blocks them in the browser, and a town saved before them still restores.
+test('the Five Rooms posts and frontages are solid for server movement, whatever the finish',async()=>{
+  const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  const { districtRibbonPlan }=await import('../../preview/src/ribbon-district.js');
+  const { venueSolids }=await import('../../preview/src/five-rooms/solids.js');
+  const contract=JSON.parse(await readFile(new URL('../../config/ribbon/five-rooms.json',import.meta.url),'utf8'));
+  const environment=createWalkingEnvironment(district);
+  let time=1000;const world=createSharedWorld(district,{now:()=>time});
+  world.join({userId:'a',name:'Alice'});
+  // Stand the player on the walk beside a post, through a re-signed checkpoint.
+  const post=districtRibbonPlan(district).posts.find(item=>item.id==='ribbon:spine:post:010:l');
+  const module=districtRibbonPlan(district).modules.find(item=>item.id==='ribbon:spine:module:010');
+  const centre=[(module.from[0]+module.to[0])/2,(module.from[1]+module.to[1])/2];
+  assert.equal(environment.isFree(centre[0],-centre[1]),true,'the walk centre is free');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  checkpoint.payload.players[0].position=[centre[0],centre[1],environment.groundAt(centre[0],-centre[1])];
+  const restored=createSharedWorld(district,{now:()=>time});
+  assert.deepEqual(restored.restore(resign(checkpoint)),{ok:true});
+  time+=1500;
+  const onPost=[post.position[0],post.position[1],environment.groundAt(post.position[0],-post.position[1])];
+  const blocked=restored.command('a',{type:'pose',position:onPost,yaw:0,altitude:0});
+  assert.equal(blocked.ok,false,'cannot walk into a Ribbon post');
+  assert.deepEqual(blocked.correction.position.slice(0,2),checkpoint.payload.players[0].position.slice(0,2));
+  // A shell frontage disc in front of the Counter blocks too.
+  const counter=contract.venues.find(venue=>venue.id==='venue:counter'),[east,north]=venueSolids(counter,district)[3];
+  assert.equal(environment.isFree(east,-north),false);
+});
+
+test('a town saved before the Five Rooms solids restores a player standing on a post onto free ground nearby',async()=>{
+  const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  const { districtRibbonPlan }=await import('../../preview/src/ribbon-district.js');
+  const environment=createWalkingEnvironment(district),before=createWalkingEnvironment(district,[],null,{fiveRooms:false});
+  const world=createSharedWorld(district);world.join({userId:'a',name:'Alice'});
+  const post=districtRibbonPlan(district).posts.find(item=>before.isFree(item.position[0],-item.position[1]));
+  assert.ok(post,'a post stands on ground that was free before');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  checkpoint.payload.players[0].position=[post.position[0],post.position[1],before.groundAt(post.position[0],-post.position[1])];
+  const restored=createSharedWorld(district);
+  assert.deepEqual(restored.restore(resign(checkpoint)),{ok:true});
+  const [x,n]=restored.snapshot().players[0].position;
+  assert.equal(environment.isFree(x,-n),true,'restored on free ground');
+  assert.ok(Math.hypot(x-post.position[0],n-post.position[1])<=2,'next to where they stood');
+  // Anything else invalid still fails closed: inside a building footprint.
+  const building=district.buildings.find(item=>item.id==='osm-way-625330790');
+  checkpoint.payload.players[0].position=[building.center[0],building.center[1],0];
+  assert.equal(createSharedWorld(district).restore(resign(checkpoint)).ok,false);
 });

@@ -328,7 +328,9 @@ export function createLuxeFinishes({ standard, physical, track }) {
   for (const [name, material] of Object.entries(floors)) material.name = `floor-${name}`;
   const fluting = flutes();
   const fluted = tintEmissiveByColor(standard({ color: '#ffffff', vertexColors: true, map: track.t(fluting.cavity), normalMap: track.t(fluting.normal), normalScale: new THREE.Vector2(1.1, 1.1), roughness: 0.62, emissive: '#ffffff', emissiveIntensity: 0.2, envMapIntensity: 0.55 }));
-  fluted.name = 'interior-fluted';
+  // The panels stand 4 mm off the back wall: pulled forward a couple of depth steps, like the
+  // district's trim finishes, they stay in front of it seen through the shop window from afar.
+  fluted.name = 'interior-fluted'; Object.assign(fluted, { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
   const reveal = standard({ color: '#151a1b', roughness: 0.6 }); reveal.name = 'interior-reveal';
   const wash = washTexture(); wash.wrapS = wash.wrapT = THREE.ClampToEdgeWrapping; track.t(wash);
   const halo = standard({ color: '#fff5e4', emissive: '#ffe2b8', emissiveIntensity: 2.6, roughness: 0.3 }); halo.name = 'interior-halo';

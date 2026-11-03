@@ -161,7 +161,7 @@ function parkedBikeShadow(bikes) {
   if (!bikes.length) return null;
   const [first] = bikes, casters = bikes.flatMap(bike => rigidCasters(bike));
   const proxy = shadowProxyMesh(shadowProxyGeometry(rigidCasters(first), first), bikes.length);
-  proxy.name = 'Parked bikes shadow';
+  proxy.name = 'Plaza bikes shadow';
   // Instance matrices are float32: keep them relative to the rack, not district coordinates.
   proxy.position.copy(first.position);
   const fromRack = new THREE.Matrix4().makeTranslation(first.position.clone().negate());

@@ -45,7 +45,16 @@ async page => {
   }
   throw new Error(`could not walk to ${label}: ${JSON.stringify(await self(tab))}`);
  };
- const walk = async (tab, points, label) => { const started = Date.now();for (const point of points) await walkTo(tab, point, label);console.log(`  walked ${label} in ${((Date.now() - started) / 1000).toFixed(1)} s`); };
+ // walkTo stops on the page's own pose; the checks read the server's snapshot. A hosted run compared
+ // two residents before the last stride reached the server ("One resident on B12 stands over the
+ // other" failed with both on the spot). A walk ends when the server holds where the page stopped.
+ const settled = (tab, label) => tab.waitForFunction(() => {
+  const m = window.__riverMultiplayer(), me = m.snapshot?.players.find(p => p.id === m.selfId), hud = document.querySelector('#walking-hud')?.dataset.position;
+  if (!me || !hud || window.__riverCarriage().pose.speed > 0.01) return false;
+  const [x, , z] = JSON.parse(hud);
+  return Math.hypot(me.position[0] - x, me.position[1] + z) < 0.05;
+ }, null, { timeout: 15000 }).catch(async () => { throw new Error(`${label}: the server never held the walk's end ${JSON.stringify({ page: (await hud(tab)).position, server: (await self(tab))?.position })}`); });
+ const walk = async (tab, points, label) => { const started = Date.now();for (const point of points) await walkTo(tab, point, label);await settled(tab, label);console.log(`  walked ${label} in ${((Date.now() - started) / 1000).toFixed(1)} s`); };
  // A lift or stair portal through the HUD: F (or Shift+F down) on the keyboard, a tap on a phone.
  // Down uses the second prompt where a core goes both ways, the main one where it only goes down (a roof).
  const take = async (tab, { down = false, touch = false, label, to }) => {

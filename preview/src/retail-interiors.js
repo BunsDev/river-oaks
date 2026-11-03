@@ -5,7 +5,10 @@ export function createRetailInteriors() {
   const textures = [];
   let disposed = false;
   const quadrants = [[0,0.5], [0.5,0.5], [0,0], [0.5,0]];
-  const materials = quadrants.map(() => new THREE.MeshStandardMaterial({ color: '#c5b8aa', roughness: 0.9, emissive: '#fff0e1', emissiveIntensity: 0.3 }));
+  // The artwork is always the face of a wall: an alcove's back wall, or a feature panel 5 mm in
+  // front of its brass surround. Pulled forward a couple of depth steps, like the district's trim
+  // finishes, it wins over what lies just behind it from afar (depth-layer-audit.js).
+  const materials = quadrants.map(() => new THREE.MeshStandardMaterial({ color: '#c5b8aa', roughness: 0.9, emissive: '#fff0e1', emissiveIntensity: 0.3, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2, name: 'retail-artwork' }));
   const atlas = new THREE.TextureLoader().load('/assets/interiors/retail-atlas.png', loaded => {
     if (disposed) { loaded.dispose(); return; }
     loaded.colorSpace = THREE.SRGBColorSpace;

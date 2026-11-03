@@ -16,15 +16,25 @@ export const STALE_SNAPSHOT_MS = 8_000;
 // for a while (a long frame, sleep, a hidden tab) has had no chance to read its socket, and
 // one late check is no verdict; a page whose every check runs late still gets one.
 export const QUIET_CHECKS = 5;
+// When the browser reports that the network dropped under a socket it was hearing, the
+// silence needs no further proof: a socket that has missed several snapshots is gone. The
+// report alone is not trusted. A browser that says offline from the start, or while the
+// socket keeps delivering (a local server the loss did not reach), keeps the online rule.
+export const OFFLINE_STALE_MS = 750;
 
-export function createStalenessWatch({ staleMs = STALE_SNAPSHOT_MS, checks = QUIET_CHECKS } = {}) {
-  let last = 0, quiet = 0;
+export function createStalenessWatch({ staleMs = STALE_SNAPSHOT_MS, checks = QUIET_CHECKS, offlineMs = OFFLINE_STALE_MS, online = () => globalThis.navigator?.onLine !== false } = {}) {
+  let last = 0, quiet = 0, heardOnline = -Infinity;
   return {
-    heard(now) { last = now; quiet = 0; },
+    heard(now) { last = now; quiet = 0; if (online()) heardOnline = now; },
     // Back in view or online: count the checks afresh.
     resume() { quiet = 0; },
-    // True when the socket should be treated as dead at this check.
-    stale(now) { quiet++; return now - last > staleMs && quiet >= checks; },
+    // True when the socket should be treated as dead at this check. A snapshot that
+    // arrives just after the browser reports the loss still belongs to the drop.
+    stale(now) {
+      quiet++;
+      const dropped = !online() && last - heardOnline < offlineMs;
+      return dropped ? now - last > offlineMs : now - last > staleMs && quiet >= checks;
+    },
   };
 }
 
@@ -36,13 +46,17 @@ export const IMPROVED = Object.freeze({ kind: 'improved', title: 'River Oaks has
 
 // Close codes the town and the page use (server/app.js, server/distributed-app.js):
 // 1012 the server is being replaced by an update; 4010 a planned move to a fresh socket;
-// 4000 the world or client version changed; 4003 the account may not join; 4009 the
-// account joined from another tab or world. 426 is the ticket's "newer client" answer.
+// 4000 the world or client version changed; 4001 with the "Session expired" reason the sign-in
+// the socket carried ran out (the page re-admits itself); 4003 the account may not join; 4009
+// the account joined from another tab or world. 426 is the ticket's "newer client" answer.
 export function closeNotice(code, reason = '') {
   if (code === 1012) return UPDATING;
   if (code === 4000 || code === 426) return IMPROVED;
   if (code === 4003) return Object.freeze({ kind: 'denied', ...WELCOME, status: 'This account cannot join the town.', terminal: true });
   if (code === 4009) return Object.freeze({ kind: 'elsewhere', ...WELCOME, status: 'Your account joined from another tab.', terminal: true });
   if (code === 4010) return Object.freeze({ kind: 'moving', ...WELCOME, status: 'Reconnecting to the town…', terminal: false });
+  // The sign-in the socket carried ran out and the page is re-admitted with a fresh one: a
+  // planned refresh, not a lost connection. A sign-in that is really gone ends at the ticket.
+  if (code === 4001 && reason === 'Session expired. Reconnecting securely.') return Object.freeze({ kind: 'refreshing', ...WELCOME, status: 'Refreshing your sign-in…', terminal: false });
   return Object.freeze({ kind: 'lost', ...WELCOME, status: reason === 'No town updates.' ? 'The town went quiet. Rejoining…' : 'Connection lost. Rejoining the town…', terminal: false });
 }

@@ -217,11 +217,12 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
     for (const h of transom ? [lo, lo + (hi - lo) * 0.7, hi] : [lo, hi]) box(f, frame, a, b, Math.max(lo, h - 0.045), Math.min(hi, h + 0.045), d, d + 0.08);
     box(f, frame, a - 0.04, b + 0.04, lo - 0.06, lo, d, face + 0.05);
   }
-  // A recessed balcony: sliding doors at the back, a louvred railing at the face.
+  // A recessed balcony: sliding doors at the back, a louvred railing at the face. The doors stand
+  // 8 cm off the mass wall behind them, past the 5.7 cm the depth buffer needs at 120 m.
   function loggia(f, a, b, lo, hi, face, frame = n.frame) {
-    sheet(f, m.shopGlass, a, b, lo, hi, 0.04);
-    for (const s of [a + 0.04, (a + b) / 2, b - 0.04]) box(f, frame, s - 0.04, s + 0.04, lo, hi, 0.04, 0.12);
-    box(f, frame, a, b, hi - 0.06, hi, 0.04, 0.12);
+    sheet(f, m.shopGlass, a, b, lo, hi, 0.08);
+    for (const s of [a + 0.04, (a + b) / 2, b - 0.04]) box(f, frame, s - 0.04, s + 0.04, lo, hi, 0.08, 0.16);
+    box(f, frame, a, b, hi - 0.06, hi, 0.08, 0.16);
     for (let j = 0; j < 4; j++) box(f, n.slats, a, b, lo + 0.14 + j * 0.25, lo + 0.25 + j * 0.25, face - 0.14, face - 0.05);
     for (const s of [a + 0.05, b - 0.05]) box(f, n.slats, s - 0.03, s + 0.03, lo, lo + 1.1, face - 0.16, face - 0.04);
   }
@@ -244,7 +245,9 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
           balconies.push([middle - w / 2, middle + w / 2, h0 + 0.2, h0 + 3.05]);
         }
       }
-      holes.push(...windows.map(([a, b, lo, hi]) => [a, b, lo, hi]), ...balconies);
+      // The wall under a window stops at its sill's underside: the sill's top is the only face at
+      // the opening's foot, where the two shared a plane (depth-layer-audit.js).
+      holes.push(...windows.map(([a, b, lo, hi]) => [a, b, lo - 0.06, hi]), ...balconies);
       wall(f, material, s0 - (s0 === 0 ? ends[0] : 0), s1 + (s1 === W ? ends[1] : 0), h0, h1, -0.05, depth, holes);
       // A slim projecting floor line reads each storey.
       box(f, material, s0 - (s0 === 0 ? ends[0] : 0), s1 + (s1 === W ? ends[1] : 0), h0 - 0.05, h0 + 0.07, depth, depth + 0.05);
@@ -252,9 +255,12 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
       for (const [a, b, lo, hi] of balconies) loggia(f, a, b, lo, hi, depth);
     });
   }
-  function eaves(f, W, { depth = 0.9, over = 1.3, material = n.white, ends = [depth, depth] } = {}) {
-    box(f, material, -ends[0] - over, W + ends[1] + over, EAVES, EAVES + 0.55, -0.05, depth + over);
-    box(f, n.soffit, -ends[0] - over + 0.02, W + ends[1] + over - 0.02, EAVES - 0.02, EAVES, depth, depth + over - 0.02);
+  // `grow` enlarges the whole cornice past a neighbour's flush one, burying that one's faces where they meet.
+  function eaves(f, W, { depth = 0.9, over = 1.3, material = n.white, ends = [depth, depth], grow = 0 } = {}) {
+    const reach = over + grow, base = EAVES - grow;
+    box(f, material, -ends[0] - reach, W + ends[1] + reach, base, EAVES + 0.55 + grow, -0.05, depth + reach);
+    // The soffit board is 6 cm deep, so its face stays clear of the eaves' underside from afar.
+    box(f, n.soffit, -ends[0] - reach + 0.02, W + ends[1] + reach - 0.02, base - 0.06, base, depth, depth + reach - 0.02);
   }
   // A store sign box standing proud of the wall, lettered on its face.
   function signBox(f, a, b, lo, hi, d0, d1, material, text, style) {
@@ -597,13 +603,14 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
       box(f, m.granite, p0, p1, 0, 0.5, -0.05, 0.49);
     });
     bays.forEach(([b0, b1]) => {
-      storefront(f, b0, b1, 5.0, { doors: doorS, mullion: m.bronze, pitch: 1.9, transom: 3.6, upper: m.shopGlass, d: 0.04, depth: 0.14 });
-      sheet(f, m.charcoal, b0, b1, 5.0, 6.5, 0.02);
+      // Glass and spandrel stand 8 cm off the mass behind them (see loggia).
+      storefront(f, b0, b1, 5.0, { doors: doorS, mullion: m.bronze, pitch: 1.9, transom: 3.6, upper: m.shopGlass, d: 0.08, depth: 0.14 });
+      sheet(f, m.charcoal, b0, b1, 5.0, 6.5, 0.08);
       for (let i = 0; i < 4; i++) box(f, m.teak, b0, b1, 5.55 + i * 0.23, 5.69 + i * 0.23, 0.14, 0.3);
-      sheet(f, m.shopGlass, b0, b1, 6.5, glassTop, 0.06);
+      sheet(f, m.shopGlass, b0, b1, 6.5, glassTop, 0.08);
       const columns = Math.max(2, Math.round((b1 - b0) / 2.4));
-      for (let i = 0; i <= columns; i++) { const s = b0 + (b1 - b0) * i / columns; box(f, m.bronze, Math.max(b0, s - 0.045), Math.min(b1, s + 0.045), 6.5, glassTop, 0.06, 0.2); }
-      for (const h of [6.5, (6.5 + glassTop) / 2, glassTop]) box(f, m.bronze, b0, b1, h - 0.045, h + 0.045, 0.06, 0.2);
+      for (let i = 0; i <= columns; i++) { const s = b0 + (b1 - b0) * i / columns; box(f, m.bronze, Math.max(b0, s - 0.045), Math.min(b1, s + 0.045), 6.5, glassTop, 0.08, 0.22); }
+      for (const h of [6.5, (6.5 + glassTop) / 2, glassTop]) box(f, m.bronze, b0, b1, h - 0.045, h + 0.045, 0.08, 0.22);
       box(f, n.equinoxStone, b0, b1, 6.4, 6.52, 0.0, 0.5);
       box(f, n.equinoxStone, b0, b1, glassTop, top, -0.05, 0.45);
     });
@@ -815,9 +822,9 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
     box(f, n.white, t0, t1, 4.85, 5.25, -0.05, 1.6);
     sheet(f, m.railGlass, t0, t1, 5.25, 6.3, 1.52);
     box(f, n.canopy, t0, t1, 6.28, 6.34, 1.46, 1.58);
-    sheet(f, m.shopGlass, a, b, 5.25, 9.3, 0.04);
-    for (let s = a; s <= b + 0.01; s += (b - a) / Math.max(1, Math.round((b - a) / 1.6))) box(f, n.canopy, s - 0.04, s + 0.04, 5.25, 9.3, 0.04, 0.14);
-    box(f, n.canopy, a, b, 7.25, 7.3, 0.04, 0.12);
+    sheet(f, m.shopGlass, a, b, 5.25, 9.3, 0.08);
+    for (let s = a; s <= b + 0.01; s += (b - a) / Math.max(1, Math.round((b - a) / 1.6))) box(f, n.canopy, s - 0.04, s + 0.04, 5.25, 9.3, 0.08, 0.18);
+    box(f, n.canopy, a, b, 7.25, 7.3, 0.08, 0.16);
     box(f, n.white, r0, r1, 9.3, DIOR_PODIUM + 0.4, -0.05, 3.6);
     box(f, n.soffit, r0, r1, 9.28, 9.3, 0.1, 3.58);
   }
@@ -1004,10 +1011,13 @@ export function blockFacades({ world, m, keep, surface, glazing, sign, box, shee
     for (let s = box0 + 3.1; s < W; s += 3.1) box(f, n.frame, s - 0.015, s + 0.015, 4.75, 8.6, 0.85, 0.87);
     box(f, n.sand, box0, W + 0.9, 4.55, 4.75, -0.05, 1.05);
     letter('DOLCE & GABBANA', { family: 'Didot, "Bodoni 72", Georgia, serif', weight: 400, color: '#dcdcd8', spacing: 0.05, metalness: 0.8, roughness: 0.3 }, f, (box0 + W) / 2, 6.8, 0.875, Math.min(8.4, W - box0 - 1), 0.72);
-    storeys(f, W, { material: n.sand, s0: 0, s1: box0, from: FLOORS[0], ends: [0.9, 0], patterns: ['pair', 'wide'], bay: 6.6 });
-    storeys(f, W, { material: n.sand, s0: box0, s1: W, from: FLOORS[1], ends: [0, 0.9], patterns: ['pair', 'wide'], bay: 6.6 });
-    box(f, n.sand, box0, W + 0.9, 8.6, FLOORS[1], -0.05, 0.9);
-    eaves(f, W, { material: n.sand, ends: [0.9, 0.9] });
+    // Stone storeys 6 cm deeper and longer than the tile ones they meet at each corner, so the
+    // tile walls' faces there are buried in the stone instead of lying flush with it.
+    storeys(f, W, { material: n.sand, s0: 0, s1: box0, from: FLOORS[0], depth: 0.96, ends: [0.96, 0], patterns: ['pair', 'wide'], bay: 6.6 });
+    storeys(f, W, { material: n.sand, s0: box0, s1: W, from: FLOORS[1], depth: 0.96, ends: [0, 0.96], patterns: ['pair', 'wide'], bay: 6.6 });
+    box(f, n.sand, box0, W + 0.96, 8.6, FLOORS[1], -0.05, 0.96);
+    // Its stone cornice is 6 cm larger all round than the white eaves its neighbours run into it at each corner.
+    eaves(f, W, { material: n.sand, ends: [0.9, 0.9], grow: 0.06 });
   }
   // The Westheimer face of the southern residences: Steak 48's dark box on
   // square columns at the west end, its planters spilling ivy over a timber

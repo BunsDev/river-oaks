@@ -40,6 +40,7 @@
       "security-browser",
       "reflections",
       "experience",
+      "experience-commons",
       "shared",
       "ipic-screening"
     ],
@@ -60,6 +61,7 @@
       "security-browser",
       "reflections",
       "experience",
+      "experience-commons",
       "shared",
       "ipic-screening"
     ],
@@ -283,11 +285,23 @@
         "office-computer-embed",
         "garden-campus-office",
         "garden-campus-traversal",
-        "garden-campus-suite",
-        "east-garden-commons"
+        "garden-campus-suite"
       ],
       "browser": true,
       "timeoutMs": 1200000
+    },
+    {
+      "id": "experience-commons",
+      "command": [
+        "pnpm",
+        "run",
+        "test:experience",
+        "east-garden-commons"
+      ],
+      "env": {
+        "RIVER_OAKS_E2E_REPORT": "experience-commons.json"
+      },
+      "browser": true
     },
     {
       "id": "desktop-package",

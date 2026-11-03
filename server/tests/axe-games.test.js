@@ -130,3 +130,13 @@ test('a match replays from its checkpoint, and a tampered checkpoint is refused'
     [saved[0], saved[0]],
   ]) assert.throws(() => g.games.validate(bad), JSON.stringify(bad).slice(0, 90));
 });
+
+test('a block ends an open invitation between the two in the lane, and only theirs', () => {
+  const f = fixture();
+  f.join('alice');f.join('bob');
+  assert.equal(f.send('alice', { action: 'invite', peerId: 'bob' }).ok, true);
+  assert.equal(f.games.separate('alice', 'carol'), false);
+  assert.deepEqual(f.lane().invite, { from: 'alice', to: 'bob' });
+  assert.equal(f.games.separate('bob', 'alice'), true);
+  assert.equal(f.lane(), null);
+});

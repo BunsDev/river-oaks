@@ -43,6 +43,8 @@ export function createMemoryDebugReports({ now = Date.now, createId = randomUUID
     async add(report, reporter) { const record = recordFor(report, reporter, now(), createId); records.unshift(record); prune(); return { ok: true, id: record.id }; },
     async list() { prune(); return records.map(debugReportSummary); },
     async get(id) { prune(); return records.find(record => record.id === id) ?? null; },
+    // Account erasure: every report the account sent.
+    async eraseUser(userId) { records = records.filter(record => record.reporter?.userId !== userId); },
   };
 }
 
@@ -70,5 +72,12 @@ export function createRedisDebugReports({ redis, prefix, now = Date.now, createI
     },
     async list() { return (await all()).map(debugReportSummary); },
     async get(id) { return (await all()).find(record => record.id === id) ?? null; },
+    // LREM by exact value: a report pushed meanwhile is untouched, and a repeat is a no-op.
+    async eraseUser(userId) {
+      for (const raw of await redis.eval(LIST, 1, key)) {
+        let record = null;try { record = JSON.parse(raw); } catch {}
+        if (record?.reporter?.userId === userId) await redis.lrem(key, 0, raw);
+      }
+    },
   };
 }

@@ -74,7 +74,8 @@ export async function runProfile(profile, tasks, { root = repository, receipt, e
       if (!quiet) console.log(`\n[${task.id}] ${task.command.join(' ')}`);
       result.status = task.browser ? 'queued' : 'running';
       save(receipt, report);
-      const childEnv = { ...env }, queuedAt = Date.now();
+      // A task's own settings (for example its report file) apply to its command only.
+      const childEnv = { ...env, ...task.env }, queuedAt = Date.now();
       let start, child, release = () => {};
       try {
         if (task.browser) {

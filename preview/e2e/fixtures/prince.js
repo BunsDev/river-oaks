@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { avatarProfile, loadResidentAvatar } from '../../src/avatars.js';
 import { createPrinceCostume, loadPrinceSkinTexture } from '../../src/prince-costume.js';
-import { createAngelWings } from '../../src/angel-wings.js';
+import { createAngelWings, WING_REST } from '../../src/angel-wings.js';
 import { createFlightHands } from '../../src/flight-hands.js';
 import { glideAmount } from '../../src/prince-flight.js';
 
@@ -49,5 +49,36 @@ function flight({pitch=.18,speed=0,time=1000,view='three-quarter',frames=45}={})
   camera.position.set(view==='side'?4.6:1.4,2.1,view==='side'?.6:5.6);camera.lookAt(0,1.9,0);
   renderer.render(scene,camera);
 }
-window.princeFixture = {render,flight,avatar,costume};
-render(); document.body.dataset.ready = 'true';
+// ?view=reference: the 2026-10-29 reference framing for the likeness journey
+// (jev-reference-likeness.js): front, full body, wings at rest, white background,
+// the figure spanning 94% of the frame height as in the reference image.
+function reference({time=1000,frames=30}={}) {
+  wings??=createAngelWings({reducedMotion:true});if(!wings.object.parent)avatar.object.add(wings.object);
+  scene.background=new THREE.Color('#ffffff');floor.visible=false;
+  avatar.object.rotation.set(0,0,0);avatar.object.position.set(0,0,0);
+  for(let i=0;i<frames;i++){avatar.update(time+i*16,'continue',false,{speed:0,distance:0},()=>0);costume?.update();wings.update(time+i*16,1/60,{amount:0,rest:WING_REST});}
+  // The illustration is evenly lit; the studio sun blows the cream and pink out.
+  const exposure=renderer.toneMappingExposure;renderer.toneMappingExposure=.8;
+  // Frame from the rendered pixels (the rig's bounding box includes folded
+  // instanced feathers below the floor): start wide, then fit the figure's
+  // pixel extent to 94% of the frame height, centred, as in the reference.
+  const tan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),box=new THREE.Box3().setFromObject(avatar.object),centre=box.getCenter(new THREE.Vector3());
+  let distance=((box.max.y-box.min.y)*1.6/2)/tan,eye=centre.y;
+  const extent=()=>{
+    const canvas=document.createElement('canvas');canvas.width=renderer.domElement.width;canvas.height=renderer.domElement.height;const context=canvas.getContext('2d');
+    context.drawImage(renderer.domElement,0,0);const data=context.getImageData(0,0,canvas.width,canvas.height).data;let y0=canvas.height,y1=-1;
+    for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){const i=(y*canvas.width+x)*4;if(data[i]<=247||data[i+1]<=247||data[i+2]<=247){y0=Math.min(y0,y);y1=Math.max(y1,y);}}
+    return {y0,y1,rows:canvas.height};
+  };
+  let pixels=null;
+  for(let pass=0;pass<3;pass++){
+    camera.position.set(centre.x,eye,centre.z+distance);camera.lookAt(centre.x,eye,centre.z);renderer.render(scene,camera);
+    pixels=extent();if(pixels.y1<0)break;
+    const view=2*distance*tan,height=(pixels.y1-pixels.y0+1)/pixels.rows*view;
+    eye+=(pixels.rows/2-(pixels.y0+pixels.y1)/2)/pixels.rows*view;distance=(height/0.94/2)/tan;
+  }
+  renderer.toneMappingExposure=exposure;
+  return {box:[box.min.toArray(),box.max.toArray()],pixels,eye,distance,wingsVisible:wings.object.visible};
+}
+window.princeFixture = {render,flight,reference,avatar,costume,renderer,scene,camera};
+if(params.get('view')==='reference')reference();else render();document.body.dataset.ready = 'true';

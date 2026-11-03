@@ -46,6 +46,15 @@ test('missing required environment blocks execution and never serializes values'
   await runProfile('fixture', [task('redis', 'process.exit(0)', { requiresEnv: ['TEST_REDIS_URL'] })], { ...options, env: { TEST_REDIS_URL: secret } });
   assert.ok(!readFileSync(options.receipt, 'utf8').includes(secret));
 });
+test('a task env applies to its own command only', async t => {
+  const options = fixture(t), env = { ...process.env, RIVER_OAKS_AGENT_TEST_SETTING: '' };
+  const result = await runProfile('fixture', [
+    task('own', 'process.exit(process.env.RIVER_OAKS_AGENT_TEST_SETTING === "own" ? 0 : 3)', { env: { RIVER_OAKS_AGENT_TEST_SETTING: 'own' } }),
+    task('later', 'process.exit(process.env.RIVER_OAKS_AGENT_TEST_SETTING === "" ? 0 : 4)'),
+  ], { ...options, env });
+  assert.deepEqual(result.results.map(r => r.status), ['passed', 'passed']);
+  assert.equal(env.RIVER_OAKS_AGENT_TEST_SETTING, '');
+});
 test('a timed out process fails rather than hanging verification', async t => {
   const result = await runProfile('fixture', [task('hang', 'setInterval(() => {}, 1000)', { timeoutMs: 100 })], fixture(t));
   assert.equal(result.status, 'failed');
@@ -65,15 +74,17 @@ test('browser queue admission does not consume the command execution timeout', a
   const release = await holdBrowserLock('other session', { env: { ...options.env }, log: () => {} });
   t.after(release);
   const wrapper = fileURLToPath(new URL('../browser-lock.mjs', import.meta.url));
-  const pending = runProfile('fixture', [{ id: 'browser', browser: true, timeoutMs: 300,
+  // The command waits longer in the queue (2.5 s) than its whole timeout (2 s), so it
+  // passes only if queueing is not counted; the 2 s lets two Node processes start under load.
+  const pending = runProfile('fixture', [{ id: 'browser', browser: true, timeoutMs: 2000,
     command: [process.execPath, wrapper, 'nested browser', '--', process.execPath, '-e', 'require("fs").writeFileSync(process.argv[1], "started")', marker] }], options);
-  await new Promise(resolve => setTimeout(resolve, 600));
+  await new Promise(resolve => setTimeout(resolve, 2500));
   assert.equal(existsSync(marker), false, 'the queued command must not launch before admission');
   release();
   const result = await pending;
   assert.equal(result.status, 'passed');
   assert.equal(existsSync(marker), true);
-  assert.ok(result.results[0].queueDurationMs >= 500);
+  assert.ok(result.results[0].queueDurationMs >= 2400);
   assert.equal(options.env.RIVER_OAKS_BROWSER_LOCK_HELD, '', 'a released task must not leak a nesting token into later tasks');
   assert.deepEqual(options.queue.list(), []);
 });
@@ -116,6 +127,22 @@ test('catalog profiles resolve and pnpm commands refer to real scripts', () => {
     }
   }
   assert.ok(selectTasks(config, 'full').some(t => t.requiresEnv?.includes('REDIS_URL')));
+});
+
+// The Commons journey ran last in the 17-journey experience stage and was the one its
+// 20-minute deadline killed under load (D12, docs/acceptance/mvp-release-readiness-20261024.md).
+test('the Commons journey runs in its own stage with its own report', () => {
+  const config = JSON.parse(readFileSync(new URL('../../config/agent-workflow.json', import.meta.url)));
+  for (const profile of ['browser', 'full']) {
+    const stages = selectTasks(config, profile).filter(t => t.command.join(' ').startsWith('pnpm run test:experience '));
+    const journeys = stages.flatMap(t => t.command.slice(3));
+    assert.equal(new Set(journeys).size, journeys.length, `${profile} runs a journey twice`);
+    assert.deepEqual(stages.filter(t => t.command.includes('east-garden-commons')).map(t => t.command.slice(3)), [['east-garden-commons']]);
+    const reports = stages.map(t => t.env?.RIVER_OAKS_E2E_REPORT ?? 'experience.json');
+    assert.equal(new Set(reports).size, stages.length, `${profile} stages overwrite each other's report`);
+    assert.ok(stages.every(t => t.browser));
+  }
+  assert.equal(config.tasks.find(t => t.id === 'experience').timeoutMs, 1200000);
 });
 
 test('empty verification cannot produce a passing receipt', async t => {

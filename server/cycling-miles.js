@@ -40,6 +40,11 @@ export function createMemoryCyclingMiles({now=Date.now,maxRiders=MAX_RIDERS}={})
       const index=ordered().findIndex(rider=>rider.userId===userId);
       return index<0?null:{rank:index+1,meters:riders.get(userId).meters};
     },
+    // Account erasure: the total and the board name.
+    async eraseUser(userId) {
+      if(!validId(userId))throw new Error('Invalid account');
+      riders.delete(userId);
+    },
   };
 }
 
@@ -51,6 +56,7 @@ const ADD=`
   redis.call('HSET',KEYS[2],ARGV[1],ARGV[3])
   return next
 `;
+const ERASE=`redis.call('ZREM',KEYS[1],ARGV[1]) redis.call('HDEL',KEYS[2],ARGV[1]) return 1`;
 export function createRedisCyclingMiles({redis,prefix,now=Date.now,maxRiders=MAX_RIDERS}={}) {
   if(!redis?.eval || typeof prefix!=='string' || !/^\{[^{}]+\}$/.test(prefix))throw new Error('Invalid cycling storage');
   const totals=`${prefix}:cycling-miles:v1`,riders=`${prefix}:cycling-riders:v1`;
@@ -83,6 +89,10 @@ export function createRedisCyclingMiles({redis,prefix,now=Date.now,maxRiders=MAX
       if(!validId(userId))throw new Error('Invalid account');
       const [index,score]=await Promise.all([redis.zrevrank(totals,id(userId)),redis.zscore(totals,id(userId))]);
       return index===null||score===null?null:{rank:index+1,meters:round(Number(score))};
+    },
+    async eraseUser(userId) {
+      if(!validId(userId))throw new Error('Invalid account');
+      await redis.eval(ERASE,2,totals,riders,id(userId));
     },
   };
 }

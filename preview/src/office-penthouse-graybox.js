@@ -6,6 +6,7 @@
 import { OFFICE_LAYOUT_LEGACY, officeLayout } from './office-layouts.js';
 import { thinStorefrontGlass } from './storefront-materials.js';
 import { buildPenthouseFurnishings, createPenthouseFinishes, metricBoxUVs } from './office-penthouse-furnishings.js';
+import { applyKitFinish, officeKitFinish, officeKitFinishName } from './office-kit-finish.js';
 
 const COLORS = {
   travertine: '#e9dfd0', terrace: '#cbbfae', wall: '#efe7dc', ceiling: '#f6f1ea', bronze: '#b08d57', glass: '#cfe3ea', stone: '#d9c7b4',
@@ -26,9 +27,10 @@ const GLASS = 0.025, CORE = 3, TRANSOM = 3, MULLION = { width: 0.07, depth: 0.1 
 const PENDANTS = [[-3, 4.5, 8, 40], [5, 4.5, 7, 40], [5, 4.5, 12, 35], [-9, 4.5, 4, 35]], READING_LAMP = [-6, 1.7, 17.4, 20];
 const DAYLIT_LEVEL = 0.6, SKY_SHARE = 0.45, DAY_WHITE = '#fff4ea', DUSK_WARM = '#ffd2a3';
 
-export function buildPenthouseOffice(THREE, layout) {
-  const object = new THREE.Group(), geometries = [], materials = new Map(), finishes = createPenthouseFinishes();
-  object.name = `office:${layout.id}`;
+// `finish` (office-kit-finish.js) recolours the shell's and the furnishings' materials; classic by default.
+export function buildPenthouseOffice(THREE, layout, { finish } = {}) {
+  const kit = officeKitFinish(finish), object = new THREE.Group(), geometries = [], materials = new Map(), finishes = createPenthouseFinishes({ finish });
+  object.name = `office:${layout.id}`; object.userData.kitFinish = officeKitFinishName(finish);
   const stone = finishes.get('travertine').map ?? null;
   const material = name => {
     if (!materials.has(name)) {
@@ -36,7 +38,7 @@ export function buildPenthouseOffice(THREE, layout) {
         color: stone && TRAVERTINE[name] ? TRAVERTINE[name] : COLORS[name], roughness: name === 'glass' ? 0.1 : name === 'bronze' ? 0.4 : TRAVERTINE[name] ? 0.6 : 0.8, metalness: name === 'bronze' ? 0.6 : 0,
         ...(name === 'glass' ? { transparent: true, opacity: 0.35 } : {}), ...(stone && TRAVERTINE[name] ? { map: stone } : {}),
       });
-      materials.set(name, name === 'glass' ? withoutLightGlints(finish) : finish);
+      materials.set(name, applyKitFinish(name === 'glass' ? withoutLightGlints(finish) : finish, kit.shell[name]));
     }
     return materials.get(name);
   };
@@ -203,9 +205,9 @@ export function withoutLightGlints(material) {
 
 // The geometry for a visit's admitted layout. An unknown layout fails rather than falling
 // back to another plan's geometry, which would disagree with the server's collision.
-export function buildOfficeGeometry(THREE, layoutId, { buildLegacy }) {
+export function buildOfficeGeometry(THREE, layoutId, { buildLegacy, finish }) {
   if (layoutId === OFFICE_LAYOUT_LEGACY) return buildLegacy();
   const layout = officeLayout(layoutId);
   if (!layout) throw new Error(`Unknown office layout ${layoutId}`);
-  return buildPenthouseOffice(THREE, layout);
+  return buildPenthouseOffice(THREE, layout, { finish });
 }

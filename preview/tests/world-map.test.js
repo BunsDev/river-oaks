@@ -106,3 +106,41 @@ test('the map key names the symbols this map can show',()=>{
   for(const key of worldMap.mapLegend([{kind:'arrival'},{kind:'shop',category:'Jewelry & accessories'}],true))
     assert.match(worldMap.legendPath(key.shape),/^M /,`${key.label} has a drawn key`);
 });
+
+test('the composed expansion gives the map its lanes, shells, water and six named districts inside the world bounds',async()=>{
+  const { loadDistrictData } = await import('../../server/district-data.js');
+  const world=await loadDistrictData({districtRevision:'typesafe-place-1'});
+  const features=worldMap.expansionMapFeatures(world);
+  const [west,south,east,north]=world.bounds_m;
+  const inside=([x,y])=>x>=west-1e-6&&x<=east+1e-6&&y>=south-1e-6&&y<=north+1e-6;
+  for(const key of ['lanes','courts','water','buildings']){
+    assert.ok(features[key].length>0,`${key} are drawn`);
+    for(const ring of features[key]){
+      assert.equal(ring.length,4);
+      assert.ok(ring.every(point=>point.length===2&&point.every(Number.isFinite)&&inside(point)),`${key} ring ${JSON.stringify(ring)} is finite and inside the world`);
+    }
+  }
+  assert.ok(features.routes.length>0&&features.routes.every(route=>route.points.length>=2&&route.width>0&&route.points.every(inside)),'the Commons arrival loop is a route');
+  assert.deepEqual(features.districts.map(district=>district.name),
+    ['East Garden Commons','Bayou Heights','Studewood','Bayou Terraces','Woodland Heights','TypeSafe Place']);
+  assert.ok(features.districts.length<=7,'the atlas stays uncluttered');
+  for(const district of features.districts){
+    assert.ok(district.rings.length>=1&&district.rings.every(ring=>ring.length===4&&ring.every(inside)),`${district.name} outline lies inside the world`);
+    assert.ok(inside(district.label),`${district.name} label lies inside the world`);
+    // Every district's outline sits east of the District's edge, over the composed envelope.
+    assert.ok(district.rings.every(ring=>ring.every(([x])=>x>=world.eastGardenCommons.edge-1e-6)),`${district.name} is east of the District edge`);
+  }
+  assert.equal(features.districts.find(district=>district.name==='Bayou Terraces').rings.length,2,'the terraces are two banks');
+  // The map's key names the district outlines only when they are drawn.
+  assert.ok(worldMap.mapLegend([],false,true).some(key=>key.label==='District'));
+  assert.ok(!worldMap.mapLegend([],false).some(key=>key.label==='District'));
+  assert.match(worldMap.legendPath('district'),/^M /);
+});
+
+test('a world without the composed layout draws as before: no expansion features',async()=>{
+  const { loadDistrictData } = await import('../../server/district-data.js');
+  for(const world of [await loadDistrictData({}),null,{bounds_m:[0,0,10,10]},{eastGardenCommons:{bounds:[0,0,1,1]}}]){
+    const features=worldMap.expansionMapFeatures(world);
+    assert.deepEqual(features,{lanes:[],courts:[],water:[],buildings:[],routes:[],districts:[]});
+  }
+});

@@ -27,7 +27,7 @@ export function shadowProxyGeometry(meshes, root) {
 // their finish, so a proxy of their triangles reproduces them exactly.
 export function plainDepthMaterial(material) {
   return Boolean(material) && !Array.isArray(material) && material.visible && !material.wireframe
-    && material.side === THREE.FrontSide && material.shadowSide == null && !(material.alphaTest > 0) && !material.alphaToCoverage
+    && material.side === THREE.FrontSide && material.shadowSide == null && !(material.alphaTest > 0) && !material.alphaHash && !material.alphaToCoverage
     && !(material.displacementMap && material.displacementScale !== 0) && !(material.clipShadows && material.clippingPlanes?.length);
 }
 

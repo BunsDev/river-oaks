@@ -4,7 +4,7 @@ import { loadDistrictData } from '../../server/district-data.js';
 import { DISTRICT_REVISION_GARDENS } from '../src/garden-campus-district.js';
 import { attachEastGardenCommons } from '../src/east-garden-commons.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from '../src/walking.js';
-import { MARKET_NAME, DISTRICT_NAME, connectedLocationAt, locationCrossing } from '../src/world-location-label.js';
+import { HEIGHTS_NAME, MARKET_NAME, DISTRICT_NAME, connectedLocationAt, locationCrossing } from '../src/world-location-label.js';
 const district=await loadDistrictData({districtRevision:DISTRICT_REVISION_GARDENS});
 const world=attachEastGardenCommons(district), layout=world.eastGardenCommons;
 
@@ -39,4 +39,21 @@ test('the composed destination is named Bayou Market Commons on arrival', async 
   const name = connectedLocationAt(market,market.eastGardenCommons.edge+20,-1335);
   assert.equal(name,'Bayou Market Commons');
   assert.equal(locationCrossing(DISTRICT_NAME,name),'Entering Bayou Market Commons');
+});
+
+test('crossing the Lantern Footbridge names Bayou Heights, and the Commons on the way back', async () => {
+  const heightsWorld = await loadDistrictData({districtRevision:'bayou-heights-1'}), heights = heightsWorld.eastGardenCommons, west = heights.heights.bounds[0];
+  const environment=createWalkingEnvironment(heightsWorld),walker=createWalkingState(environment,[west-15,-1333.5,0],-Math.PI/2);
+  const announcements=[];let location=null;
+  const paint=()=>{const next=connectedLocationAt(heightsWorld,walker.position[0],-walker.position[2]),crossing=locationCrossing(location,next);location=next;if(crossing)announcements.push(crossing);};
+  paint();
+  assert.equal(location,MARKET_NAME);
+  for(let i=0;i<300;i++){stepWalking(walker,environment,{forward:1,fast:true},.04);paint();}
+  assert.ok(walker.position[0]>west+20); assert.equal(location,HEIGHTS_NAME);
+  walker.yaw=Math.PI/2;walker.velocity=[0,0];walker.acceleration=[0,0];
+  for(let i=0;i<300;i++){stepWalking(walker,environment,{forward:1,fast:true},.04);paint();}
+  assert.equal(location,MARKET_NAME);
+  assert.deepEqual(announcements,[`Entering ${HEIGHTS_NAME}`,`Entering ${MARKET_NAME}`]);
+  assert.equal(connectedLocationAt(heightsWorld,west,-1335),MARKET_NAME,'the footbridge west end belongs to the Commons');
+  assert.equal(connectedLocationAt(heightsWorld,heights.edge-5,-1335),DISTRICT_NAME);
 });

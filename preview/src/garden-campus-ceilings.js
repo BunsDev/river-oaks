@@ -5,6 +5,7 @@
 // root's own frame (x = u, y = z, -z = v), as a child of buildGardenCampus's group.
 import * as THREE from 'three';
 import { GARDEN_CAMPUS_LAYOUT as CAMPUS } from '../../shared/garden-campus-layout.js';
+import { applyKitFields, campusKitFinish } from './garden-campus-kit-finish.js';
 
 export const CEILING_INSET = 0.1, CEILING_THICKNESS = 0.02;
 
@@ -17,10 +18,11 @@ export function campusCeilings(layout = CAMPUS) {
   }));
 }
 
-/** The ceilings as a group to add to the campus root; it releases what it owns. */
-export function buildCampusCeilings(layout = CAMPUS) {
+/** The ceilings as a group to add to the campus root; it releases what it owns. `kitFinish` recolours only. */
+export function buildCampusCeilings(layout = CAMPUS, { kitFinish } = {}) {
   const ceilings = campusCeilings(layout), group = new THREE.Group();group.name = 'campus:ceilings';
   const material = new THREE.MeshStandardMaterial({ name: 'campus:ceiling', color: '#f2eee6', emissive: '#f2eee6', emissiveIntensity: 0.22, roughness: 0.9 });
+  applyKitFields(material, campusKitFinish(kitFinish).ceiling);
   const unit = new THREE.BoxGeometry(1, 1, 1), mesh = new THREE.InstancedMesh(unit, material, ceilings.length), dummy = new THREE.Object3D();
   ceilings.forEach(({ rect: [u0, v0, u1, v1], z0, z1 }, index) => {
     dummy.position.set((u0 + u1) / 2, (z0 + z1) / 2, -(v0 + v1) / 2);dummy.scale.set(u1 - u0, z1 - z0, v1 - v0);dummy.updateMatrix();mesh.setMatrixAt(index, dummy.matrix);

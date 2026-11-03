@@ -109,7 +109,9 @@ export function cancelStale(options){
     task.branches=task.branches.filter(b=>b!==branch);task.cancelledBranches=[...new Set([...(task.cancelledBranches??[]),branch])];
     task.archive={...(task.archive??{}),[branch]:{manifest,bundle,sha256:receipt.sha256,tag,head:expectedHead,localFiles:receipt.localFiles}};
     if(task.status==='delivered'&&task.branches.length===0)task.status='retired';
-    else if(task.branches.length===0)task.status='queued';
+    // Cancellation releases the owner, so a task that keeps other branches cannot stay active:
+    // the register requires an owner and lease for active work, and an invalid register blocks every session.
+    else if(task.branches.length===0||task.status==='active')task.status='queued';
     task.owner=null;delete task.leaseUntil;task.updatedAt=new Date().toISOString();
     task.nextAction=`Local ${branch} archived under ${manifest}; restore it before resuming this task. Remote PR and branch, if any, remain unchanged.`;
     const temp=`${tasksPath}.${randomUUID()}.tmp`;writeFileSync(temp,JSON.stringify(register,null,2)+'\n');
@@ -159,7 +161,9 @@ export function resumeCancellation({root,branch,expectedHead,tasksPath,manifestP
     entry.cancelledBranches=[...new Set([...(entry.cancelledBranches??[]),branch])];
     entry.archive={...(entry.archive??{}),[branch]:{manifest,bundle:receipt.bundle,sha256:receipt.sha256,tag:receipt.tag,head:expectedHead,localFiles:receipt.localFiles}};
     if(entry.status==='delivered'&&entry.branches.length===0)entry.status='retired';
-    else if(entry.branches.length===0)entry.status='queued';
+    // Cancellation releases the owner, so a task that keeps other branches cannot stay active:
+    // the register requires an owner and lease for active work, and an invalid register blocks every session.
+    else if(entry.branches.length===0||entry.status==='active')entry.status='queued';
     entry.owner=null;delete entry.leaseUntil;entry.updatedAt=new Date().toISOString();
     entry.nextAction=`Local ${branch} archived under ${manifest}; restore it before resuming this task. Remote PR and branch, if any, remain unchanged.`;
     const temp=`${tasksPath}.${randomUUID()}.tmp`;writeFileSync(temp,JSON.stringify(live,null,2)+'\n');

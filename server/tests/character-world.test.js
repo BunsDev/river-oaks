@@ -6,6 +6,8 @@ import { createMemoryCharacterStore } from '../character-store.js';
 import { characterDefinitionFor } from '../../preview/src/character-definition.js';
 import { customizedCharacterDefinition } from '../../preview/src/character-customization.js';
 import { JEVICA_OWNER_USER_IDS } from '../../preview/src/shared-appearances.js';
+import { recipeCharacterDefinition } from '../../preview/src/character-definition.js';
+import { CUSTOM_APPEARANCE_ID, rollCharacterRecipe } from '../../preview/src/character-recipe.js';
 
 const data={scene:'district',bounds_m:[-30,-30,30,30],walkSpawn:[-12,0,0],collisionPolygons:[],stores:[],buildings:[],
   communityLocations:[{id:'garden',name:'Garden',position:[-12,0,0]}]};
@@ -66,9 +68,23 @@ test('custom selection retains Jevica and flight authority and rejects retired m
   assert.equal(f.world.snapshot().players.find(p=>p.id==='alice').movement,'upright');
 });
 
+test('a published recipe selects the custom look for its owner and survives checkpoint recovery; a forged one cannot',()=>{
+  const f=fixture(),recipe=rollCharacterRecipe({random:()=>.42}),look=recipeCharacterDefinition('alice',recipe,{revision:1});
+  for(const value of [{...look,parameters:{...recipe,height:260}},{...look,rig:'jevica'},recipeCharacterDefinition('bob',recipe,{revision:1}),{...look,schemaVersion:2}]){
+    assert.equal(f.equip(value).error,'invalid_character',JSON.stringify(value).slice(0,80));
+  }
+  const result=f.equip(look);assert.equal(result.ok,true);
+  assert.equal(result.player.appearance,CUSTOM_APPEARANCE_ID);assert.deepEqual(result.player.character,look);
+  const seen=f.world.snapshot().players.find(p=>p.id==='alice');assert.deepEqual(seen.character.parameters,recipe);
+  const recovered=createSharedWorld(data,{now:f.now});assert.deepEqual(recovered.restore(f.world.checkpoint()),{ok:true});
+  assert.deepEqual(recovered.snapshot().players[0].character,look);assert.equal(recovered.snapshot().players[0].appearance,CUSTOM_APPEARANCE_ID);
+  f.advance();assert.equal(f.world.command('alice',{type:'appearance',appearance:'sable-human'}).ok,true);
+  assert.equal(f.world.snapshot().players.find(p=>p.id==='alice').character,undefined,'an authored look clears the recipe');
+});
+
 test('selected canonical revisions and their cooldown survive departure, checkpoint recovery and geography migration',()=>{
   const f=fixture(),look=definition();assert.equal(f.equip(look).ok,true);
-  const saved=f.world.checkpoint();assert.equal(saved.version,17);
+  const saved=f.world.checkpoint();assert.equal(saved.version,18);
   const recovered=createSharedWorld(data,{now:f.now});assert.deepEqual(recovered.restore(saved),{ok:true});
   assert.deepEqual(recovered.snapshot().players[0].character,look);
   assert.equal(recovered.command('alice',{type:'character',revision:2},{characterDefinition:definition('alice',2)}).error,'appearance_cooldown');

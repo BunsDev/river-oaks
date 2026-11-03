@@ -64,9 +64,9 @@ export function castShadowsFromProxies(light, proxies) {
   const updateMatrices = light.shadow.updateMatrices.bind(light.shadow);
   light.shadow.updateMatrices = (...args) => {
     const result = updateMatrices(...args), frustum = light.shadow.getFrustum();
-    // Only proxies three will actually draw, so each one hides itself again: inside the
-    // frustum and under shown ancestors (a hidden layer's proxy would otherwise stay shown).
-    for (const proxy of proxies()) proxy.visible = frustum.intersectsObject(proxy) && shownAncestors(proxy);
+    // Only proxies three will actually draw, so each one hides itself again: casting, inside
+    // the frustum and under shown ancestors (any other proxy would stay shown after the pass).
+    for (const proxy of proxies()) proxy.visible = proxy.castShadow && frustum.intersectsObject(proxy) && shownAncestors(proxy);
     return result;
   };
   return { hide() { for (const proxy of proxies()) proxy.visible = false; } };
@@ -80,7 +80,9 @@ function shownAncestors(object) {
 // Baked EZ Tree models replace only the visual crowns at existing stems.
 // Terrain, navigation, source vegetation records and all street fixtures stay put.
 // Authored neighborhoods (city-kit/render.js) pass their own placements.
-export function buildMatureTrees(world, placements=matureTreePlacements(world)) {
+// shadowTile: the District's fixed trees batch coarsely. A streamed kit keeps the crowns' tile,
+// because its sites attach and evict by batch and a wider one would straddle them.
+export function buildMatureTrees(world, placements=matureTreePlacements(world), { shadowTile=TREE_DETAIL_TILE_M }={}) {
   const group=new THREE.Group();group.name='Mature urban shade trees';
   const levels=[],shadowProxies=[];
   group.userData.shadowProxies=shadowProxies;
@@ -131,7 +133,7 @@ export function buildMatureTrees(world, placements=matureTreePlacements(world)) 
       for(const trees of treeTiles(placements,size).values())instance(trees,parts[2],2,true);
       return shadowProxies.length;
     };
-    group.userData.shadowTile(TREE_SHADOW_TILE_M);
+    group.userData.shadowTile(shadowTile);
     const host=document.querySelector('#canvas-host');if(host)host.dataset.matureTrees=String(placements.length);
   }).catch(()=>{if(!disposed)document.dispatchEvent(new CustomEvent('visualasseterror',{detail:{count:1}}));});
   group.userData.update=position=>{for(const tile of levels){const selected=treeDetailLevel(position.distanceTo(tile.center));tile.batches.forEach((meshes,index)=>meshes.forEach(mesh=>{mesh.visible=index===selected;}));}};

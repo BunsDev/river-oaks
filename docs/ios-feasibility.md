@@ -66,7 +66,7 @@ build/automation, not iOS build or current web feature parity.
 | Touch, walking, picking, interiors | `preview/src/walking-ui.js`, `main.js`, existing touch journeys | Retain; prove simultaneous touch, keyboard and recovery on devices |
 | Chat, profile, moderation | server social/profile/moderation modules and player UI | Retain; audit personal blocking, reports and full account deletion in #292 |
 | Settings and graphics | `sidebar.js`, `render-quality.js`, `render-pipeline.js` | Adapt reachable safe-area UI; preserve characters and world view |
-| Shared voice | `server/voice.js`, `preview/src/shared-voice-client.js` | Newer than original issue baseline. Explicit retention decision required; no live voice call in probe |
+| Shared voice | `server/voice.js`, `preview/src/voice-chat.js` | Newer than original issue baseline. Explicit retention decision required; no live voice call in probe |
 | Local decision/speech | `preview/vite-bridge.js`, Python bridge | No mobile loopback dependency; defer unsupported services or provide an approved hosted route |
 | Photo sharing | `preview/src/photo-mode.js` | Candidate retained optional feature; verify actual Web Share support |
 | Studio/creator CLI, desktop process APIs | `desktop/studio-*`, `preview/studio.html` | Defer from initial ordinary-player mobile slice |

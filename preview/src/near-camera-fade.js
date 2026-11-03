@@ -18,6 +18,9 @@ export function seeThroughNearCamera(material) {
       .replace('#include <common>', '#include <common>\nvarying vec3 vRoWorld;')
       .replace('#include <project_vertex>', `#include <project_vertex>
         vec4 roWorld = vec4(transformed, 1.0);
+        #ifdef USE_BATCHING
+          roWorld = batchingMatrix * roWorld;
+        #endif
         #ifdef USE_INSTANCING
           roWorld = instanceMatrix * roWorld;
         #endif

@@ -3,7 +3,8 @@ async page => {
   const check = (condition, message) => { if (!condition) throw new Error(message); };
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
-  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('console', message => { if (message.type() === 'error') errors.push(`${message.text()} ${message.location().url}`); });
+  for (const provider of ['jev', 'elevenlabs']) await page.route(`**/v1/settings/${provider}`, route => route.fulfill({ json: { source: 'none', configured: false } }));
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto('http://127.0.0.1:5173/');
   await page.locator('#loading').waitFor({ state: 'hidden' });
@@ -11,7 +12,7 @@ async page => {
   await page.waitForFunction(() => JSON.parse(document.querySelector('#canvas-host').dataset.reflections ?? 'null')?.captures >= 1);
   const toggle = page.locator('#panel-toggle');
   // The rail sidebar shows one section at a time; select the tab a control lives in first.
-  const rail = section => openHudSpace(page, section);
+  const rail = section => openHudSpace(page, section, 'World');
   const voices = async () => { await rail('settings-section'); await page.locator('details.rail-disclosure', { hasText: 'Voices' }).evaluate(details => { details.open = true; }); };
   if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
   await rail('explore-section');
@@ -30,6 +31,9 @@ async page => {
   check(!overcast.failed, 'Weather must refresh the local reflection');
   await page.screenshot({ path: 'output/playwright/storefront-lighting-overcast.png' });
   await page.locator('#weather').selectOption('clear');
+  // Settings is a modal dialog: close it before driving the world and the Map button.
+  await page.locator('#settings-dialog [aria-label="Close settings"]').click();
+  await page.locator('#settings-dialog').waitFor({ state: 'hidden' });
 
   // Exercise the actual GLSL and source-derived door openings, not shader strings.
   const optics = await page.evaluate(async () => {

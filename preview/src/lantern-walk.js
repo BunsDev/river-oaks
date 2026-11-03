@@ -1,4 +1,5 @@
 import { LANTERN_REACH } from '../../shared/commons-destination.js';
+import { inBayouHeights } from '../../shared/bayou-heights-layout.js';
 import './lantern-walk.css';
 
 // The Lantern Walk in Bayou Market Commons (server/lantern-walk.js). Standing by
@@ -69,7 +70,8 @@ export function createLanternWalkClient({ getLayout, getPose, getSnapshot, send,
       else if (wasInside) notice('Back in River Oaks District');
       wasInside = inside;
     }
-    element.hidden = !inside;
+    // The chip belongs to the Commons; across the footbridge Bayou Heights hides it.
+    element.hidden = !inside || inBayouHeights(getLayout(), pose.position[0]);
     if (element.hidden) return;
     const count = lit.size, total = state.lanterns.length, elapsed = state.round && !complete ? (now() - state.round.startedAt) / 1000 : null;
     const best = state.best ? ` · Best ${clock(state.best.seconds)} (${names(state.best.lamplighters)})` : '';

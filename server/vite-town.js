@@ -1,5 +1,6 @@
 import { loadEnv } from 'vite';
 import { fileURLToPath } from 'node:url';
+import { WOODLAND_REVISION } from '../shared/woodland-heights-layout.js';
 
 // `pnpm run dev` runs the WorkOS auth server and shared town. The Vite proxy sends
 // /auth, /api and /multiplayer to port 8787. If a town is already listening
@@ -8,7 +9,14 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 // The development town always takes Studio saves; an explicit value (0 pauses) still wins.
-export const devTownEnv = env => ({ ...env, RIVER_OAKS_CHARACTER_STUDIO: env.RIVER_OAKS_CHARACTER_STUDIO || '1' });
+// It also always serves the experimental land expansion (every authored location through
+// Woodland Heights) so developers see it without configuration; an explicit revision still
+// wins, and acceptance fixtures keep the garage default so journeys stay pinned.
+export const devTownEnv = env => ({
+  ...env,
+  RIVER_OAKS_CHARACTER_STUDIO: env.RIVER_OAKS_CHARACTER_STUDIO || '1',
+  ...(env.RIVER_OAKS_ACCEPTANCE_FIXTURE === '1' ? {} : { RIVER_OAKS_DISTRICT_REVISION: env.RIVER_OAKS_DISTRICT_REVISION || WOODLAND_REVISION }),
+});
 
 export function sharedTownDevServer({ port = 8787 } = {}) {
   let town = null;

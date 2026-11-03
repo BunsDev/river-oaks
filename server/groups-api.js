@@ -1,4 +1,5 @@
 import { guardGroup, guardResult } from './name-guard.js';
+import { screenText } from './content-filter.js';
 /** Authenticated group actions shared by the local and Redis world gateways. */
 const keys=(value,allowed)=>value && typeof value==='object' && !Array.isArray(value)
   && Object.keys(value).every(key=>allowed.includes(key));
@@ -6,9 +7,15 @@ const groupId=value=>typeof value==='string' && /^[a-zA-Z0-9_-]{1,80}$/.test(val
 const userId=value=>typeof value==='string' && value.length>0 && value.length<=160 && !/[\u0000-\u001f\u007f]/u.test(value);
 const failure=(status,error)=>({status,value:{error}});
 
-export async function groupAction({action,identity,groups,social,readBody,allowWrite}) {
+// A group shared with a blocked resident stays, without their messages (#292).
+const unblocked=(group,hidden)=>!hidden?.size||!group?group:{...group,
+  ...(group.latest&&hidden.has(group.latest.authorId)?{latest:null}:{}),
+  ...(Array.isArray(group.messages)?{messages:group.messages.filter(item=>!hidden.has(item.authorId))}:{})};
+
+export async function groupAction({action,identity,groups,social,readBody,allowWrite,blocks=null,contentFilter=null}) {
   if(!groups)return failure(503,'Groups are unavailable.');
-  if(action==='list')return {status:200,value:{groups:(await groups.list(identity.userId)).map(guardGroup)}};
+  const hidden=blocks&&['list','read'].includes(action)?await blocks.hidden(identity.userId):null;
+  if(action==='list')return {status:200,value:{groups:(await groups.list(identity.userId)).map(group=>guardGroup(unblocked(group,hidden)))}};
   if(!['read','create','invite','accept','decline','leave','remove','send'].includes(action))return failure(404,'Not found.');
   let data;
   try{data=await readBody();}catch{return failure(400,'Invalid group request.');}
@@ -19,14 +26,18 @@ export async function groupAction({action,identity,groups,social,readBody,allowW
     return failure(400,'Invalid group request.');
   if(action==='read') {
     const group=await groups.read(identity.userId,data.groupId);
-    return group?{status:200,value:{group:guardGroup(group)}}:failure(404,'Group not found.');
+    return group?{status:200,value:{group:guardGroup(unblocked(group,hidden))}}:failure(404,'Group not found.');
   }
   if(!await allowWrite(identity.userId))return failure(429,'Please wait before changing groups.');
+  // The content filter (#292) screens a group's name, description and messages before the store sees them.
+  const texts=action==='create'?{name:data.name,description:data.description}:action==='send'?{text:data.text}:{};
+  for(const [key,value] of Object.entries(texts)){const screened=screenText(contentFilter,'group',value);if(!screened.ok)return {status:400,value:{error:screened.message,reason:screened.reason}};data={...data,[key]:screened.text};}
   let result;
   if(action==='create')result=await groups.create(identity,data);
   else if(action==='invite') {
+    // A contact a block could not end yet is not one.
     const contact=(await social?.list(identity.userId))?.find(item=>item.status==='accepted' && item.peer.id===data.peerId);
-    if(!contact)return failure(409,'Add this resident as a contact before inviting them.');
+    if(!contact||await blocks?.between(identity.userId,data.peerId))return failure(409,'Add this resident as a contact before inviting them.');
     result=await groups.invite(identity,data.groupId,{userId:contact.peer.id,name:contact.peer.name});
   }
   else if(action==='accept')result=await groups.accept(identity.userId,data.groupId);

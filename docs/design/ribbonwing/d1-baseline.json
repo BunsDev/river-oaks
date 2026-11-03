@@ -1,0 +1,471 @@
+{
+ "schemaVersion": 1,
+ "version": "d1-blockout-2",
+ "revision": "1cd96019ca4134ad1cf496a51bd05efb79874a7f",
+ "dirtyAtCapture": [
+  "M preview/src/driving-hands.js",
+  " M preview/src/parked-carriage.js",
+  " M preview/src/player-avatar.js",
+  " M preview/src/remote-players.js",
+  " M preview/src/road-vehicles.js",
+  " M preview/src/vehicle-config.js",
+  " M preview/src/vehicle-glints.js",
+  " M preview/src/walking-ui.js",
+  "?? docs/design/ribbonwing/",
+  "?? preview/e2e/fixtures/ribbonwing.html",
+  "?? preview/e2e/fixtures/ribbonwing.js",
+  "?? preview/e2e/ribbonwing-views.js",
+  "?? preview/src/ribbonwing-design.js",
+  "?? preview/src/ribbonwing-rig.js",
+  "?? preview/src/ribbonwing.js"
+ ],
+ "note": "D1 baseline measured before detail work. floor = iou - 0.03 is the regression tolerance (brief.md). Renders include both occupants; silhouettes use the empty craft on a transparent background. render.* counts are the whole frame (craft plus both avatars).",
+ "command": "node scripts/browser-lock.mjs 'ribbonwing views' -- node preview/e2e/ribbonwing-views.js <out>; node scripts/ribbonwing/compose-sheet.mjs <out> docs/design/ribbonwing/evidence",
+ "references": {
+  "exterior": {
+   "file": "docs/design/ribbonwing/references/exterior.png",
+   "sha256": "1ad22827e962a6543f10545fc549484f89a7bbda1831bb30d1cbace499c752cb"
+  },
+  "interiorMotion": {
+   "file": "docs/design/ribbonwing/references/interior-motion.png",
+   "sha256": "e0489437f601a7416caf842dec434866bb406788c2932c3289e157b4a94b49b8"
+  }
+ },
+ "renderer": {
+  "width": 1200,
+  "height": 800,
+  "pixelRatio": 1,
+  "toneMapping": "ACESFilmic",
+  "exposure": 1,
+  "background": "#fbf8f2",
+  "environment": "RoomEnvironment PMREM x0.55",
+  "lights": "hemisphere #ffffff/#9a948c 0.7; key #fff8ef 2.2 at (-4,9,6) with 2048 soft shadow; fill #eef3ff 0.6 at (6,3,-5)",
+  "ground": "ShadowMaterial 0.18 (hidden aloft)"
+ },
+ "craft": {
+  "meshes": 169,
+  "triangles": 290998,
+  "geometries": 162,
+  "materials": 48,
+  "textures": 1,
+  "owned": 135,
+  "perLevel": {
+   "near": {
+    "draws": 57,
+    "triangles": 69975
+   },
+   "medium": {
+    "draws": 41,
+    "triangles": 26081
+   },
+   "far": {
+    "draws": 15,
+    "triangles": 1872
+   }
+  }
+ },
+ "fit": {
+  "parked": {
+   "pilot": {
+    "min": [
+     -2.054,
+     0.48,
+     0.006
+    ],
+    "max": [
+     -1.151,
+     1.775,
+     0.684
+    ],
+    "headroom": 0.202,
+    "lowest": 0.48,
+    "aboveBelly": 0.06,
+    "floor": 0.56
+   },
+   "passenger": {
+    "min": [
+     -2.002,
+     0.56,
+     -0.636
+    ],
+    "max": [
+     -1.211,
+     1.734,
+     0.186
+    ],
+    "headroom": 0.233,
+    "lowest": 0.56,
+    "aboveBelly": 0.146,
+    "floor": 0.56
+   },
+   "sharedVoxels": 7
+  }
+ },
+ "views": {
+  "front": {
+   "iou": 0.6448,
+   "referenceAspect": 1.6782,
+   "captureAspect": 1.3514,
+   "referenceZones": {
+    "pink": 0.2595,
+    "glass": 0.1077,
+    "dark": 0.1378,
+    "light": 0.3197,
+    "other": 0.1752
+   },
+   "captureZones": {
+    "pink": 0.1862,
+    "glass": 0.0578,
+    "dark": 0.0421,
+    "light": 0.5873,
+    "other": 0.1266
+   },
+   "floor": 0.6148,
+   "captureSha256": "5ded7079af335f9f1ba2f3b359a0ad2d4b6a0b02962f4b02e814e05689e80e03",
+   "render": {
+    "draws": 259,
+    "triangles": 770925,
+    "textures": 34,
+    "geometries": 90,
+    "programs": 50
+   }
+  },
+  "left": {
+   "iou": 0.6569,
+   "referenceAspect": 1.8645,
+   "captureAspect": 1.6378,
+   "referenceZones": {
+    "pink": 0.2557,
+    "glass": 0.1013,
+    "dark": 0.0959,
+    "light": 0.3509,
+    "other": 0.1962
+   },
+   "captureZones": {
+    "pink": 0.2583,
+    "glass": 0.0613,
+    "dark": 0.0072,
+    "light": 0.6319,
+    "other": 0.0413
+   },
+   "floor": 0.6269,
+   "captureSha256": "c2e79277595ca3e9463c0cfe0525c06af04343f0de136c916645da1620ada9ac",
+   "render": {
+    "draws": 259,
+    "triangles": 770925,
+    "textures": 35,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "rear": {
+   "iou": 0.4586,
+   "referenceAspect": 1.7085,
+   "captureAspect": 3.0227,
+   "referenceZones": {
+    "pink": 0.2559,
+    "glass": 0.0218,
+    "dark": 0.1274,
+    "light": 0.3807,
+    "other": 0.2142
+   },
+   "captureZones": {
+    "pink": 0.3228,
+    "glass": 0.0434,
+    "dark": 0.0425,
+    "light": 0.542,
+    "other": 0.0492
+   },
+   "floor": 0.4286,
+   "captureSha256": "0bae118bf20284a938e1a0b78eaf27076ac316f97c9d04808b91a7b8f0dc3cf1",
+   "render": {
+    "draws": 259,
+    "triangles": 770925,
+    "textures": 36,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "top": {
+   "iou": 0.8731,
+   "referenceAspect": 0.9859,
+   "captureAspect": 1.0259,
+   "referenceZones": {
+    "pink": 0.379,
+    "glass": 0.0824,
+    "dark": 0.1396,
+    "light": 0.2613,
+    "other": 0.1376
+   },
+   "captureZones": {
+    "pink": 0.1924,
+    "glass": 0.1085,
+    "dark": 0.0168,
+    "light": 0.6528,
+    "other": 0.0294
+   },
+   "floor": 0.8431,
+   "captureSha256": "0f4c02d113e39a822074f325d5cef32012351f04d1818e884bb63e24181f2e46",
+   "render": {
+    "draws": 259,
+    "triangles": 770925,
+    "textures": 37,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "underside": {
+   "iou": 0.8035,
+   "referenceAspect": 1.0041,
+   "captureAspect": 1.0181,
+   "referenceZones": {
+    "pink": 0.2443,
+    "glass": 0.01,
+    "dark": 0.1357,
+    "light": 0.3927,
+    "other": 0.2172
+   },
+   "captureZones": {
+    "pink": 0.1025,
+    "glass": 0.0106,
+    "dark": 0.09,
+    "light": 0.1861,
+    "other": 0.6108
+   },
+   "floor": 0.7735,
+   "captureSha256": "18705aba0fd0224a6d5d6f6e37168cf0eb5c6e96f62483acab5e3eaed279d4fc",
+   "render": {
+    "draws": 259,
+    "triangles": 770925,
+    "textures": 38,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "threeQuarter": {
+   "iou": 0.4476,
+   "referenceAspect": 1.1134,
+   "captureAspect": 1.4272,
+   "referenceZones": {
+    "pink": 0.2685,
+    "glass": 0.0974,
+    "dark": 0.1211,
+    "light": 0.2784,
+    "other": 0.2345
+   },
+   "captureZones": {
+    "pink": 0.2033,
+    "glass": 0.0593,
+    "dark": 0.0169,
+    "light": 0.6581,
+    "other": 0.0625
+   },
+   "floor": 0.4176,
+   "captureSha256": "8437346e86e4a0f8617dcd3f30b2075396c4179c7c03a9210c7e7e5b18f0191b",
+   "render": {
+    "draws": 259,
+    "triangles": 770925,
+    "textures": 39,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "rightProfile": {
+   "iou": 0.647,
+   "referenceAspect": 1.8819,
+   "captureAspect": 1.6489,
+   "referenceZones": {
+    "pink": 0.2885,
+    "glass": 0.1166,
+    "dark": 0.1295,
+    "light": 0.2721,
+    "other": 0.1932
+   },
+   "captureZones": {
+    "pink": 0.198,
+    "glass": 0.0446,
+    "dark": 0.0055,
+    "light": 0.6462,
+    "other": 0.1057
+   },
+   "floor": 0.617,
+   "captureSha256": "6d73da72758f113bafec4b1bb8649508606f10fbe08bff78e71db0025a98220d",
+   "render": {
+    "draws": 259,
+    "triangles": 770925,
+    "textures": 40,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "boarding": {
+   "iou": 0.3822,
+   "referenceAspect": 1.4582,
+   "captureAspect": 1.4517,
+   "referenceZones": {
+    "pink": 0.1895,
+    "glass": 0.1407,
+    "dark": 0.1765,
+    "light": 0.2581,
+    "other": 0.2351
+   },
+   "captureZones": {
+    "pink": 0.1975,
+    "glass": 0.0341,
+    "dark": 0.0302,
+    "light": 0.6638,
+    "other": 0.0744
+   },
+   "floor": 0.3522,
+   "captureSha256": "9f2d265acaf633a759f549824a37038f09bb9328f28733f754d3e2ee16635863",
+   "render": {
+    "draws": 109,
+    "triangles": 135312,
+    "textures": 40,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "hover": {
+   "iou": 0.6536,
+   "referenceAspect": 1.6821,
+   "captureAspect": 1.2876,
+   "referenceZones": {
+    "pink": 0.3079,
+    "glass": 0.1257,
+    "dark": 0.1508,
+    "light": 0.2442,
+    "other": 0.1714
+   },
+   "captureZones": {
+    "pink": 0.1813,
+    "glass": 0.0568,
+    "dark": 0.0223,
+    "light": 0.6144,
+    "other": 0.1253
+   },
+   "floor": 0.6236,
+   "captureSha256": "91f850976ebd3d98bfc87ff42b741d8e26d471a49a659974608d00ea4b007c08",
+   "render": {
+    "draws": 258,
+    "triangles": 770923,
+    "textures": 41,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "stuntTuck": {
+   "iou": 0.5759,
+   "referenceAspect": 1.4559,
+   "captureAspect": 1.0208,
+   "referenceZones": {
+    "pink": 0.3153,
+    "glass": 0.1165,
+    "dark": 0.1365,
+    "light": 0.2547,
+    "other": 0.177
+   },
+   "captureZones": {
+    "pink": 0.1849,
+    "glass": 0.0628,
+    "dark": 0.0341,
+    "light": 0.6235,
+    "other": 0.0947
+   },
+   "floor": 0.5459,
+   "captureSha256": "cb84fc29ec5d12ab73dc097aaf55035ace06030001448d0e59c27b9ec6fa6eb8",
+   "render": {
+    "draws": 258,
+    "triangles": 770923,
+    "textures": 42,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "cockpit": {
+   "captureSha256": "4661663df8ce1afdd4364d6223565d95e70c2cdd921f2c264876f48e40854f72",
+   "render": {
+    "draws": 205,
+    "triangles": 717309,
+    "textures": 43,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "pilotEye": {
+   "captureSha256": "2f2df321c0b50b233e6846c69191057172d3303ec2bc6d9077a484e34b28792c",
+   "render": {
+    "draws": 115,
+    "triangles": 457697,
+    "textures": 43,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "passengerEye": {
+   "captureSha256": "f36b4f662bb96561db9b9895497c77785444fd231e97a5b3bdad8cbdbcbb0e53",
+   "render": {
+    "draws": 115,
+    "triangles": 457697,
+    "textures": 43,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "gear": {
+   "captureSha256": "55ab481ba6bee688227e8a198bf6ce29e4651fc2301bc7ab6f5a4ca04f3fd268",
+   "render": {
+    "draws": 259,
+    "triangles": 770925,
+    "textures": 44,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "thruster": {
+   "captureSha256": "f83a795b0eb4ea0972c2efa1ad25614a5e1086e526307bfc64687801b2b9db5d",
+   "render": {
+    "draws": 257,
+    "triangles": 770253,
+    "textures": 45,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "lod-near": {
+   "captureSha256": "8437346e86e4a0f8617dcd3f30b2075396c4179c7c03a9210c7e7e5b18f0191b",
+   "render": {
+    "draws": 259,
+    "triangles": 770925,
+    "textures": 46,
+    "geometries": 90,
+    "programs": 56
+   }
+  },
+  "lod-medium": {
+   "captureSha256": "0cb3c30e56f0e8c626f8741a9cb910d9f1eac4e7e1919dd2720d70995bb83390",
+   "render": {
+    "draws": 215,
+    "triangles": 648235,
+    "textures": 47,
+    "geometries": 131,
+    "programs": 56
+   }
+  },
+  "lod-far": {
+   "captureSha256": "76901257b3d68fb30b3174f794c7862b9949a7384f9e6692b916acdd23c70f52",
+   "render": {
+    "draws": 139,
+    "triangles": 575656,
+    "textures": 48,
+    "geometries": 146,
+    "programs": 56
+   }
+  }
+ },
+ "sheets": {
+  "comparison": "0699cce2e387962f51077e090d109e244588d70350c531ba8f4946ba2cf247ff",
+  "canonical": "999848495ac4c6db84a5827001b3022154b3372bd9f4e133905d4a0080cb8983"
+ },
+ "errors": []
+}

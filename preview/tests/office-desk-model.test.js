@@ -71,3 +71,35 @@ test('reopening a shared draft revalidates access while preserving failed-save t
  assert.equal(model.state.task.notes,'Keep through disconnect');assert.equal(model.state.dirty,true);
  failSave=false;await model.retry();assert.equal(model.state.status,'saved');
 });
+
+test('a save whose answer was lost is unconfirmed, not refused, until its retry settles it (#290)',async()=>{
+ const store=createMemoryOfficeDesk();let answer='lost';
+ const model=createDeskModel({account:()=> 'alice',id:()=> 'task',request:async(action,data)=>{
+  if(action==='save'&&answer==='refused')throw Error('desk_rate_limited');
+  if(action==='read'&&answer==='away')throw Error('office_visit_required');
+  const r=action==='read'?{ok:true,desk:await store.read('alice')}:await store[action]('alice',data);
+  if(!r.ok)throw Error(r.reason);
+  if(action==='save'&&answer==='lost'){answer='ok';throw Object.assign(Error('Failed to fetch'),{unconfirmed:true});}
+  return r;
+ }});
+ await model.load();await model.create();model.edit({title:'Offline draft'});
+ assert.equal(await model.save(),false);
+ assert.equal(model.state.unconfirmed,true,'the server may hold the save, so the page cannot call it lost');
+ assert.equal(model.state.retrying,true);
+ assert.equal((await store.read('alice')).version,1,'and it does');
+ assert.equal(await model.retry(),true);
+ assert.equal(model.state.unconfirmed,false);assert.equal(model.state.error,null);
+ assert.equal((await store.read('alice')).version,1,'the retry was recognised, not applied twice');
+ // A refusal the server answered is not unknown.
+ answer='refused';model.edit({notes:'Too fast'});
+ assert.equal(await model.save(),false);
+ assert.equal(model.state.error,'desk_rate_limited');assert.equal(model.state.unconfirmed,false);
+ // Reopening the desk after a lost answer: a read the server refuses is that refusal, not
+ // the earlier unknown save.
+ answer='lost';model.edit({notes:'Lost again'});
+ assert.equal(await model.save(),false);assert.equal(model.state.unconfirmed,true);
+ answer='away';
+ assert.equal(await model.load({preserveDraft:true}),false);
+ assert.equal(model.state.error,'office_visit_required');
+ assert.equal(model.state.unconfirmed,false,'the page says why the desk would not open');
+});
