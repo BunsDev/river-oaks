@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { PINK_JET_AGE } from '../../shared/city-kit/pink-jet-age.js';
+import { KIT_MATERIALS } from '../../shared/city-kit/catalog.js';
 import { districtRibbonPlan } from '../src/ribbon-district.js';
 import { buildRibbonGraybox } from '../src/ribbon-graybox.js';
 import { buildRibbon, ribbonAppliesTo, RIBBON_FINISH } from '../src/ribbon-finish.js';
@@ -12,6 +13,20 @@ const world = JSON.parse(readFileSync(new URL('../public/data/district.json', im
 const instance = (mesh, i) => { const m = new THREE.Matrix4(), p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3(); mesh.getMatrixAt(i, m); m.decompose(p, q, s); return { m, p, q, s }; };
 const near = (a, b, label) => assert.ok(Math.abs(a - b) < 1e-3, `${label}: ${a} vs ${b}`);
 const byName = (group, name) => group.children.find(mesh => mesh.name === name);
+
+test('Classic keeps every finished Ribbon instance visible at the same placement with Classic materials', () => {
+  const pink = buildRibbon({ world, finish: 'pink-jet-age' }), classic = buildRibbon({ world, finish: 'classic' });
+  assert.equal(classic.userData.ribbon.finish, 'classic');
+  for (const mesh of pink.children) {
+    const other = byName(classic, mesh.name);
+    assert.equal(other.count, mesh.count);
+    assert.deepEqual(other.geometry.attributes.position.array, mesh.geometry.attributes.position.array);
+    assert.deepEqual(other.instanceMatrix.array, mesh.instanceMatrix.array);
+  }
+  assert.equal(`#${byName(classic, 'Ribbon edges').material.color.getHexString()}`, KIT_MATERIALS['trim-teal'].color);
+  assert.equal(`#${byName(classic, 'Ribbon fans').material.color.getHexString()}`, KIT_MATERIALS['metal-brass'].color);
+  pink.userData.dispose(); classic.userData.dispose();
+});
 
 test('the finished Ribbon draws the graybox placements in five instanced draw calls', () => {
   const plan = districtRibbonPlan(world), finished = buildRibbon({ world }), grey = buildRibbonGraybox({ world });

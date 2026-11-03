@@ -1,6 +1,6 @@
 // Five Rooms shells (#825 M1, #839): five blank venue shells built from the spatial contract
-// (config/ribbon/five-rooms.json) under the `pink-jet-age` finish. Classic builds nothing: the
-// group comes back empty and untouched, so a classic scene is byte-identical.
+// (config/ribbon/five-rooms.json). Classic and Pink draw the same admitted geometry with their
+// own material roles, so no appearance preference hides an authoritative solid.
 //
 // Every part is merged into one mesh per material across all five venues, so the shells cost
 // at most one draw call per material in SHELL_MATERIALS (eight) however many parts they hold.
@@ -28,7 +28,7 @@ const round = value => Math.round(value * 1000) / 1000;
 const box = bounds => ({ min: bounds.min.toArray().map(round), max: bounds.max.toArray().map(round) });
 
 /**
- * The shells for a contract. `finish` other than pink-jet-age returns an empty group. `groundAt`
+ * The shells for a contract. Unknown finishes use Classic material roles. `groundAt`
  * (scene x, z -> height) is optional: when given, each venue records how far its contract floor
  * stands from the ground there (`floorDelta`), for the Integration slice to reconcile.
  */
@@ -38,10 +38,10 @@ const box = bounds => ({ min: bounds.min.toArray().map(round), max: bounds.max.t
 // and walls lie on the envelope's and fight for depth.
 export function buildFiveRoomsShells(contract, { finish = 'classic', groundAt = null, interiors = true } = {}) {
   const group = new THREE.Group(); group.name = 'Five Rooms shells';
-  if (finish !== FIVE_ROOMS_SHELL_FINISH) return group;
+  finish = finish === FIVE_ROOMS_SHELL_FINISH ? finish : 'classic';
   validateFiveRooms(contract);
   if (contract.version !== FIVE_ROOMS_VERSION) throw new Error(`five rooms: shells read ${FIVE_ROOMS_VERSION}, not ${contract.version}`);
-  const materials = shellMaterials(), kit = createShellKit(materials);
+  const materials = shellMaterials(finish), kit = createShellKit(materials);
   for (const id of VENUE_IDS) {
     const venue = contract.venues.find(item => item.id === id);
     if (!venue) throw new Error(`five rooms: the contract has no ${id}`);

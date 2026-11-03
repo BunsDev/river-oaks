@@ -156,9 +156,9 @@ test('ground pieces follow groundSurfaceHeight within 1 cm and face up, ready fo
   assert.equal(meshes[0].geometry.attributes.position.count, pieces.reduce((n, p) => n + p.triangles.length * 3, 0));
 });
 
-test('classic builds nothing; pink-jet-age builds the aprons, with bounded draw calls', t => {
-  assert.equal(fiveRoomsLandscapeAppliesTo(world, 'classic', expanded), false);
-  assert.equal(fiveRoomsLandscapeAppliesTo(world, undefined, expanded), false);
+test('every appearance builds the same aprons, with bounded draw calls', t => {
+  assert.equal(fiveRoomsLandscapeAppliesTo(world, 'classic', expanded), true);
+  assert.equal(fiveRoomsLandscapeAppliesTo(world, undefined, expanded), true);
   assert.equal(fiveRoomsLandscapeAppliesTo(world, 'pink-jet-age', expanded), true);
   assert.equal(fiveRoomsLandscapeAppliesTo({ ...world, scene: 'creator' }, 'pink-jet-age', expanded), false, 'a creator world');
   assert.equal(fiveRoomsLandscapeAppliesTo({ ...world, buildings: world.buildings.filter(b => b.id !== 'osm-way-625330792') }, 'pink-jet-age', expanded), false, 'a District without the host buildings');

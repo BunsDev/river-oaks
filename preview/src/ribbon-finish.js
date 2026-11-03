@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { PINK_JET_AGE as P } from '../../shared/city-kit/pink-jet-age.js';
+import { KIT_MATERIALS } from '../../shared/city-kit/catalog.js';
 import { roundedRectOutline, saucerProfile, taperedColumnProfile } from '../../shared/city-kit/jet-age-forms.js';
 import { districtRibbonPlan } from './ribbon-district.js';
 import { DISTRICT_RIBBON_LANE, ribbonAppliesTo } from './ribbon-graybox.js';
@@ -31,6 +32,14 @@ export const RIBBON_FINISH_MATERIALS = Object.freeze({
   lamp: Object.freeze({ color: '#f6e7c4', roughness: 0.25, metalness: 0, emissive: '#ffbf66', night: 1.6 }),
 });
 
+export const RIBBON_CLASSIC_MATERIALS = Object.freeze({
+  canopy: Object.freeze({ ...RIBBON_FINISH_MATERIALS.canopy, ...KIT_MATERIALS['trim-ivory'] }),
+  edge: Object.freeze({ ...RIBBON_FINISH_MATERIALS.edge, ...KIT_MATERIALS['trim-teal'] }),
+  post: Object.freeze({ ...RIBBON_FINISH_MATERIALS.post, ...KIT_MATERIALS['trim-ivory'] }),
+  fan: Object.freeze({ ...RIBBON_FINISH_MATERIALS.fan, ...KIT_MATERIALS['metal-brass'] }),
+  lamp: RIBBON_FINISH_MATERIALS.lamp,
+});
+
 const scene = ([east, north]) => [east, -north];
 const v2 = points => points.map(([x, y]) => new THREE.Vector2(x, y));
 
@@ -43,13 +52,15 @@ function canopyGeometry() {
   return geometry;
 }
 
-export function buildRibbon({ world, plan, groundAt = () => 0 } = {}) {
+export function buildRibbon({ world, plan, groundAt = () => 0, finish = 'pink-jet-age' } = {}) {
   const group = new THREE.Group(); group.name = 'Ribbon';
+  finish = finish === 'pink-jet-age' ? finish : 'classic';
   if (!plan) {
     try { plan = districtRibbonPlan(world); }
-    catch (error) { group.userData.ribbon = { id: 'district-spine', finish: 'pink-jet-age', refused: error.message, drawCalls: 0 }; return group; }
+    catch (error) { group.userData.ribbon = { id: 'district-spine', finish, refused: error.message, drawCalls: 0 }; return group; }
   }
-  const F = RIBBON_FINISH, materials = new Map(Object.entries(RIBBON_FINISH_MATERIALS).map(([key, spec]) => {
+  const F = RIBBON_FINISH, specs = finish === 'pink-jet-age' ? RIBBON_FINISH_MATERIALS : RIBBON_CLASSIC_MATERIALS;
+  const materials = new Map(Object.entries(specs).map(([key, spec]) => {
     const material = new THREE.MeshStandardMaterial({ color: spec.color, roughness: spec.roughness, metalness: spec.metalness });
     material.name = `ribbon/${key}`;
     if (spec.emissive) { material.emissive.set(spec.emissive); material.emissiveIntensity = 0; }
@@ -110,7 +121,7 @@ export function buildRibbon({ world, plan, groundAt = () => 0 } = {}) {
     position.set(x, groundAt(x, z) + lamp.height, z); rotation.identity(); scale.setScalar(F.lampRadius);
     matrix.compose(position, rotation, scale);
   });
-  group.userData.ribbon = { id: plan.id, hash: plan.hash, finish: 'pink-jet-age', stats: { ...plan.stats }, skipped: plan.skipped.map(item => item.id), drawCalls: group.children.length };
+  group.userData.ribbon = { id: plan.id, hash: plan.hash, finish, stats: { ...plan.stats }, skipped: plan.skipped.map(item => item.id), drawCalls: group.children.length };
   group.userData.relight = ({ twilight = 0 } = {}) => {
     const level = Math.max(0, Math.min(1, Number(twilight) || 0));
     for (const material of materials.values()) if (material.userData.night) material.emissiveIntensity = material.userData.night * level;

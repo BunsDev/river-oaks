@@ -3,13 +3,24 @@ import { buildPlanterPlanting } from '../landscape-models.js';
 import { PLANTER_HALF, PLANTER_OVERHANG, PLANT_SPECIES } from '../planting-palette.js';
 import { RIBBON_RULES } from '../../../shared/city-kit/ribbon-layout.js';
 import { buildFiveRoomsGround } from './ground.js';
+import contract from '../../../config/ribbon/five-rooms.json' with { type: 'json' };
+import { expandFiveRooms, siteFromDistrict } from '../../../shared/city-kit/five-rooms-layout.js';
+import { DISTRICT_RIBBON_LANE } from '../ribbon-district.js';
+import { laneFixtures, storefrontBenchSpots } from '../street-fixtures.js';
+import { treePits } from '../street-furniture.js';
+import { matureTreePlacements } from '../landscape-models.js';
+import { winstonBed } from '../reference-planting.js';
+import { storeRoomsFor } from '../store-rooms.js';
+import { groundSurfaceHeight, groundSurfaceTriangles } from '../world-surface.js';
+import { detachGardenCampus, campusParcelRing } from '../garden-campus-district.js';
+import { GARDEN_CAMPUS_LAYOUT } from '../../../shared/garden-campus-layout.js';
 
 // Five Rooms landscape (#840): the paved entrance aprons, the Shade Garden court, planting beds
 // and the Ribbon's planted edge, placed only from the expanded Five Rooms contract
 // (shared/city-kit/five-rooms-layout.js expandFiveRooms over config/ribbon/five-rooms.json), so a
-// contract change moves them and nothing here is a hand-placed coordinate. Built only under the
-// `pink-jet-age` finish; classic builds nothing. Integration (#841) adds the group to the scene
-// and registers ground.js's paving with registerGroundSurfaces.
+// contract change moves them and nothing here is a hand-placed coordinate. Every appearance
+// draws the same neutral paving. Integration (#841) adds the group to the scene and registers
+// ground.js's paving with registerGroundSurfaces.
 //
 // Every bed is a lane-planter unit (planting-palette.js: 1.5 x 0.62 m, foliage spilling at most
 // 0.1 m past it) planted with the existing composition. Edge beds are raised planters (the 0.62 m
@@ -140,14 +151,40 @@ export function fiveRoomsLandscapePlan(expanded, { groundAt, flags = FIVE_ROOMS_
   return { id: 'five-rooms-landscape', contract: expanded.version, hash: expanded.hash, flags: { ...flags }, paving, courts, beds, dropped, pending, stats: { paving: paving.length, courts: courts.length, beds: beds.length, dropped: dropped.length, pending: pending.length } };
 }
 
-// Under `pink-jet-age` only, and only in the District the contract was drawn on.
-export const fiveRoomsLandscapeAppliesTo = (world, finish, expanded) => finish === 'pink-jet-age' && world?.scene === 'district'
-  && Boolean(expanded?.venues?.every(venue => (world.buildings ?? []).some(building => building.id === venue.host.buildingId)));
+// Appearance cannot change the ground supporting the admitted layout.
+export const fiveRoomsLandscapeAppliesTo = (world, _finish, expanded) => world?.scene === 'district'
+  && Boolean(world.roads?.some(road => road.id === DISTRICT_RIBBON_LANE))
+  && expanded?.venues?.length === 5 && expanded.venues.every(venue => [...world.buildings ?? [], world.gardenCampus?.replaced?.building].some(building => building?.id === venue.host.buildingId));
+
+// Validate the contract on the authoritative datum, before any rendered surface is registered.
+// The separate draw callback follows the actual street triangles. Feeding those triangles back
+// into validation changes the pinned venue floors; rebuilding from old aprons also adds lift.
+export function buildFiveRoomsLandscapeForWorld(world, { groundAt, finish } = {}) {
+  if (!fiveRoomsLandscapeAppliesTo(world, finish, contract)) return null;
+  // The contract names the pinned source parcel; Gardens retains it for exact restoration.
+  // Detach only this validation view, leaving the admitted campus and collision world intact.
+  const datum = { ...(world.gardenCampus ? detachGardenCampus(world) : world) }, datumAt = (x, north) => groundSurfaceHeight(datum, x, -north);
+  const site = siteFromDistrict(datum, { fixtures: laneFixtures(datum), benches: storefrontBenchSpots(datum), treePits: treePits(datum),
+    trees: matureTreePlacements(datum), beds: [winstonBed(datum)], tenants: storeRoomsFor(datum).filter(room => datum.stores.some(store => store.id === room.storeId)), groundAt: datumAt });
+  const expanded = expandFiveRooms(contract, site), plan = fiveRoomsLandscapePlan(expanded, { groundAt: datumAt });
+  // Like groundSurfaceHeight, the admitted Gardens platform takes precedence over terrain,
+  // even where the old terrain is higher. Do not turn it into a different floor per finish.
+  const parcel = world.gardenCampus ? campusParcelRing() : [], contour = parcel.map(([x, north]) => new THREE.Vector2(x, -north));
+  const campus = contour.length ? THREE.ShapeUtils.triangulateShape(contour, []).map(indices => ({ priority: 1,
+    triangle: indices.map(i => [contour[i].x, GARDEN_CAMPUS_LAYOUT.frame.baseAltitude, contour[i].y]) })) : [];
+  const supportTriangles = piece => {
+    const xs = piece.ring.map(p => p[0]), zs = piece.ring.map(p => -p[1]), x = (Math.min(...xs) + Math.max(...xs)) / 2, z = (Math.min(...zs) + Math.max(...zs)) / 2;
+    return [...groundSurfaceTriangles(world, x, z, Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs)) / 2 + 0.01), ...campus];
+  };
+  const group = buildFiveRoomsLandscape(plan, { groundAt, supportTriangles });
+  group.userData.fiveRoomsLandscape.version = expanded.version;
+  return group;
+}
 
 // Scene frame: [east, height, -north] (geometry.js localToScene).
-export function buildFiveRoomsLandscape(plan, { groundAt, planting = buildPlanterPlanting } = {}) {
+export function buildFiveRoomsLandscape(plan, { groundAt, supportTriangles, planting = buildPlanterPlanting } = {}) {
   const group = new THREE.Group(); group.name = 'Five Rooms landscape';
-  const ground = buildFiveRoomsGround(plan, { groundAt });
+  const ground = buildFiveRoomsGround(plan, { groundAt, supportTriangles });
   group.add(ground);
   if (plan.beds.length) {
     // buildPlanterPlanting stands plants on a 0.62 m shell; an in-ground court bed is lowered by it.

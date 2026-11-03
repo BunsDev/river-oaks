@@ -110,7 +110,7 @@ export function hoverClear(state,environment) {
 
 // Lift (Space up, C down, as in flight.js) moves a flying vehicle's altitude target at 4 m/s;
 // the hull follows at up to 3 m/s, under the server's lift budget, never into a blocked sky
-// and never above the flight ceiling. A landing vehicle ignores lift until it is down.
+// and never above the flight ceiling. Landing ignores lift until touchdown or an obstruction.
 export function stepHoverLift(state,environment,input,delta) {
   const spec=VEHICLES[state.vehicle];if(!spec?.flies||!Number.isFinite(delta)||delta<=0)return state;
   const duration=Math.min(.08,delta),steps=Math.ceil(duration*120),dt=duration/steps,limit=environment.flightCeiling??32;
@@ -122,7 +122,13 @@ export function stepHoverLift(state,environment,input,delta) {
     state.verticalSpeed+=Math.max(-3*dt,Math.min(3*dt,desired-state.verticalSpeed));
     let next=Math.max(0,Math.min(limit,state.altitude+state.verticalSpeed*dt));
     if((state.liftTarget-state.altitude)*(state.liftTarget-next)<=0){next=state.liftTarget;state.verticalSpeed=0;}
-    if(next!==state.altitude&&!hoverClear({...state,altitude:next},environment)){state.verticalSpeed=0;state.liftTarget=state.altitude;break;}
+    if(next!==state.altitude&&!hoverClear({...state,altitude:next},environment)){
+      state.verticalSpeed=0;state.liftTarget=state.altitude;
+      // Hold the last clear altitude and return control to the pilot. Keeping landing set
+      // would force the target back to zero forever and ignore every attempt to climb clear.
+      if(state.landing)state.landing=false;
+      break;
+    }
     state.altitude=next;
     if(state.altitude<=.02&&state.liftTarget<=0){state.altitude=0;state.verticalSpeed=0;state.landing=false;break;}
   }
