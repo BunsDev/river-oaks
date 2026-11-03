@@ -152,7 +152,9 @@ async page => {
     const input = panel(page).getByRole('textbox', { name: `Message to ${bobSelf.name}` });
     await input.fill(secret);await input.press('Enter');
     await panel(bob).locator('.seat-chat-log').getByText(secret).waitFor();
-    check((await panel(page).locator('.seat-chat-log').textContent()).includes(`You ${secret}`), 'The sender reads their own line as You');
+    // Each account's view rides its own frame, so the sender's copy can land a moment after the reader's.
+    const ownLine = await page.waitForFunction(line => document.querySelector('section.seat-chat .seat-chat-log')?.textContent.includes(line), `You ${secret}`, { timeout: 10000 }).then(() => true, () => false);
+    check(ownLine, 'The sender reads their own line as You');
     check((await panel(bob).locator('.seat-chat-log').getAttribute('role')) === 'log', 'The conversation is a log for assistive technology');
     // Typing must not walk anyone: W in the message field stays in the field.
     const before = await me(page);await input.focus();await page.keyboard.type('www');await page.waitForTimeout(300);
