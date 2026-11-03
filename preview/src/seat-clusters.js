@@ -9,9 +9,12 @@ import { DISTRICT_RIBBON_LANE } from './ribbon-district.js';
 // so its cluster waits for that venue's interior.
 export const SEAT_CLUSTER_VENUES = Object.freeze(['venue:counter', 'venue:shade-garden']);
 export const SEAT_CLUSTER_RULES = Object.freeze({ across: 0.95, along: 0.45, height: 0.46, depth: 0.42, length: 1.4 });
-// The Shade Garden's attachment stands between the mapped Hermès room's displays, so its benches
-// sit clear of them, on open floor just south of the attachment (east, north metres).
-const SHIFT = Object.freeze({ 'venue:shade-garden': Object.freeze([0.5, -2.85]) });
+// Each cluster sits on open floor in its mapped room, the smallest move from its attachment that
+// keeps every seat more than a metre beyond sitting reach of the room's arrival spot, door, facade
+// and outside visit spot: entering a shop or talking at its door never also offers a seat (east,
+// north metres). The Shade Garden's attachment also stands between the Hermès room's displays.
+export const SEAT_CLUSTER_SHIFT = Object.freeze({ 'venue:counter': Object.freeze([-1, -2]), 'venue:shade-garden': Object.freeze([-1, 3]) });
+const SHIFT = SEAT_CLUSTER_SHIFT;
 const buildIdOf = venueId => `bench:seat-cluster-${venueId.slice('venue:'.length)}`;
 
 export function seatClusters(world, source = contract) {
