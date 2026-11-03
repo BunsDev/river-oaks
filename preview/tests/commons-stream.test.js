@@ -52,6 +52,7 @@ test('failed imports announce recovery and retry, while world teardown fences la
     loadModule: async () => { if (++attempts === 1) throw new Error('offline'); return import('../src/east-garden-commons.js'); } });
   stream.update([[edge - 1, -1335]]); await flush(); stream.update([[edge - 1, -1335]]);
   assert.match(notices.at(-1), /retry/i); assert.equal(parent.children.length, 0);
+  assert.match(notices.at(-1), /^Bayou Market Commons/, 'notices name the composed destination as the HUD does');
   time = 1001; stream.update([[edge - 1, -1335]]); await flush(); stream.update([[edge - 1, -1335]]);
   assert.equal(stream.ready(), true); assert.match(notices.at(-1), /Commons/); stream.dispose();
   let release; const late = createCommonsStream({ world, parent, loadModule: () => new Promise(resolve => { release = resolve; }) });
@@ -64,13 +65,40 @@ test('a restored player deep in Commons receives recovery status and a distant c
   const failed = createCommonsStream({ world, parent, loadModule: async () => { throw new Error('offline'); }, onStatus: text => notices.push(text) });
   failed.update([[edge + 80, -1335]]); await flush(); failed.update([[edge + 80, -1335]]);
   assert.match(notices.at(-1), /retry/i, 'restored player must not be silently blocked'); failed.dispose();
-  const stream = createCommonsStream({ world, parent });
+  let time = 0;
+  const stream = createCommonsStream({ world, parent, now: () => time });
   const camera = new THREE.PerspectiveCamera(55, 1.5, .1, 6000);
   camera.position.set(edge - 200, 30, 1335); camera.lookAt(edge + 80, 20, 1335); camera.updateMatrixWorld();
   stream.update([[edge - 200, -1335]], camera); await flush();
   assert.equal(stream.ready(), true, 'looking back keeps the destination visible beyond distance hysteresis');
   camera.lookAt(edge - 500, 20, 1335); camera.updateMatrixWorld();
-  stream.update([[edge - 200, -1335]], camera); assert.equal(stream.ready(), false); stream.dispose();
+  time = 14999; stream.update([[edge - 200, -1335]], camera);
+  assert.equal(stream.ready(), true, 'a destination just out of view lingers instead of unloading at once');
+  time = 15000; stream.update([[edge - 200, -1335]], camera);
+  assert.equal(stream.ready(), false, 'after the linger, looking away beyond the retention radius unloads it');
+  stream.dispose();
+});
+
+test('slow camera orbits beyond the retention radius build the destination once, not on every turn', async () => {
+  // Before the linger, four 3.6 s orbits at 150 m rebuilt the whole Market five times
+  // (and nine times at 250 m): a frame stall and GPU upload each time the camera swept east.
+  let time = 0, builds = 0;
+  const stream = createCommonsStream({ world, parent: new THREE.Group(), now: () => time, loadModule: async () => ({
+    buildEastGardenCommons: () => { builds++; const group = new THREE.Group(); group.userData.dispose = () => {}; group.userData.ready = Promise.resolve(); return group; } }) });
+  const camera = new THREE.PerspectiveCamera(55, 1.5, .1, 6000);
+  for (const distance of [150, 250]) {
+    camera.position.set(edge - distance, 2, 1335);
+    for (let turn = 0; turn < 4; turn++) for (let step = 0; step < 36; step++) {
+      const angle = step * Math.PI / 18;
+      camera.lookAt(camera.position.x + Math.cos(angle) * 10, 2, camera.position.z + Math.sin(angle) * 10); camera.updateMatrixWorld();
+      time += 100; stream.update([[edge - distance, -1335]], camera); await flush();
+    }
+  }
+  assert.equal(builds, 1); assert.equal(stream.debug().unloads, 0);
+  camera.lookAt(camera.position.x - 10, 2, camera.position.z); camera.updateMatrixWorld();
+  time += 15000; stream.update([[edge - 250, -1335]], camera);
+  assert.equal(stream.ready(), false, 'sustained looking away still releases the destination');
+  stream.dispose();
 });
 
 test('noncooperative import timeout explains a stall instead of promising a retry that cannot start', async () => {

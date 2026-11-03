@@ -165,8 +165,9 @@ async page => {
         else if (depth < 2 && recoveries < 8 && (Date.now() - improvedAt > 12000 || pose.roomId)) {
           const here = (await self(tab)).position.slice(0, 2);
           const detour = clearRoute(here, target) ?? (target[0] > edge ? clearRoute(here, [edge - 2, target[1]]) : null);
-          detours.push({ label, target, from: here, roomId: pose.roomId ?? null, bestMetres: best, route: detour?.length ?? 0, recoveries });
-          console.log(`${label}: no progress for ${((Date.now() - improvedAt) / 1000).toFixed(0)} s at ${here.map(v => v.toFixed(1))}${pose.roomId ? ` in room ${pose.roomId}` : ''}; ${detour ? `detour of ${detour.length} waypoints` : 'no route from here, backing away'}`);
+          const closes = await tab.evaluate(() => window.__streamProbe.closes.slice(-2));
+          detours.push({ label, target, from: here, roomId: pose.roomId ?? null, bestMetres: best, route: detour?.length ?? 0, recoveries, closes });
+          console.log(`${label}: no progress for ${((Date.now() - improvedAt) / 1000).toFixed(0)} s at ${here.map(v => v.toFixed(1))}${pose.roomId ? ` in room ${pose.roomId}` : ''}; ${detour ? `detour of ${detour.length} waypoints` : 'no route; backing out'}; closes ${JSON.stringify(closes)}`);
           if (detour?.length) await walk(tab, detour, `${label} detour`, depth + 1);
           // Wedged against something with no route from here: back away and sidestep before re-aiming.
           else await unwedge(tab, recoveries);
@@ -208,14 +209,22 @@ async page => {
       const probe = window.__streamProbe, stream = window.__riverSpatialStream(), frames = [...probe.frames].sort((a, b) => a - b);
       return { ...stream, time: performance.now(), heapBytes: performance.memory?.usedJSHeapSize ?? null,
         frameSamples: frames.length, frameMaxMs: frames.at(-1), frameP50: frames[Math.floor(frames.length * .5)], frameP95: frames[Math.floor(frames.length * .95)],
-        receivedBytes: probe.received, sentBytes: probe.sent, socketCount: probe.sockets.length, rotations: probe.rotations, closes: [...probe.closes],
+        receivedBytes: probe.received, sentBytes: probe.sent, socketCount: probe.sockets.length,
+        // The client counts the planned rotations it completed (dev-only debug surface); the probe's
+        // notice count is the fallback outside the dev server.
+        rotations: window.__riverConnection?.state().rotations ?? probe.rotations, closes: [...probe.closes], connection: window.__riverConnection?.state() ?? null,
         viewport: [innerWidth, innerHeight, devicePixelRatio],
         quality: document.querySelector('#canvas-host')?.dataset.quality,
         pipeline: document.querySelector('#canvas-host')?.dataset.pipeline,
         notices: [...probe.notices],
+        // Remote avatar readiness and realism tier, to attribute lazily loaded GPU resources.
+        remotes: window.__riverMultiplayer().remotes.map(r => ({ id: r.id, ready: r.ready, fallback: r.fallback, appearance: r.appearance, realism: r.realism })),
+        selfRealism: window.__riverMultiplayer().selfRealism,
         moduleLoads: performance.getEntriesByType('resource').filter(item => new URL(item.name).pathname.endsWith('/east-garden-commons.js'))
           .map(item => ({ startMs: item.startTime, durationMs: item.duration, transferBytes: item.transferSize, encodedBytes: item.encodedBodySize, decodedBytes: item.decodedBodySize })),
         resourceCount: performance.getEntriesByType('resource').length,
+        // The most recent fetches, so a step in GPU counts between samples can be tied to what was loaded.
+        recentResources: performance.getEntriesByType('resource').slice(-80).map(item => ({ path: new URL(item.name).pathname, bytes: item.transferSize, decoded: item.decodedBodySize })),
         transferBytes: performance.getEntriesByType('resource').reduce((sum, item) => sum + item.transferSize, 0),
         documentStable: probe.timeOrigin === performance.timeOrigin };
     })));
@@ -406,15 +415,16 @@ async page => {
     check(true, 'World map lists a peer on the Commons while the observer has it unloaded');
     await walk(peer, [[edge - 8, -1336]], 'Peer returns to the District');
     const final = await measure('Final return');
-    // A seventy-minute journey crosses the server's connection lifetime: the server sends a rotate
-    // notice and closes with 4010, and the client opens the replacement itself (connection-close.js).
-    // Sockets beyond the one forced reconnect must each be explained by a rotation or by a planned
-    // server close the page recovered from (1000 moved, 1012 update, 4001 session expiry, 4010 rotation).
+    // Sockets beyond the one forced reconnect must each be explained by a planned rotation or by a
+    // planned server close the page recovered from (1000 moved, 1012 update, 4001 session expiry,
+    // 4010 rotation; server/connection-close.js and server/app.js); the closes are in the receipt either way.
     const planned = new Set([1000, 1012, 4001, 4010]);
     const unexplained = final.map((state, i) => state.socketCount - baseline[i].socketCount - (i === 0 ? 1 : 0) - (state.rotations - baseline[i].rotations));
+    if (unexplained.some(n => n !== 0)) console.log(`Extra sockets: ${JSON.stringify(final.map((state, i) => ({ client: i, extra: unexplained[i], closes: state.closes, connection: state.connection })))}`);
+    // An extra socket is explained by the close of the socket it replaced: every close after the
+    // forced one (socket 0 on client 0) must be planned, and there must be one per extra socket.
     const explained = final.map((state, i) => state.closes.filter(close => close.socket >= (i === 0 ? 1 : 0)));
-    if (unexplained.some(n => n !== 0)) console.log(`Extra sockets: ${JSON.stringify(final.map((state, i) => ({ client: i, extra: unexplained[i], rotations: state.rotations, closes: state.closes })))}`);
-    check(final.every((state, i) => unexplained[i] === 0 || explained[i].length >= unexplained[i] && explained[i].every(close => planned.has(close.code))), `Repeated travel creates no extra multiplayer connections beyond the forced reconnect and planned rotations (sockets ${final.map(state => state.socketCount)}, rotations ${final.map(state => state.rotations)})`);
+    check(final.every((state, i) => unexplained[i] === 0 || explained[i].length >= unexplained[i] && explained[i].every(close => planned.has(close.code))), 'Repeated travel creates no extra multiplayer connections beyond the one forced reconnect, planned rotations and planned server closes the page recovered from');
     await page.screenshot({ path: 'output/playwright/world-streaming-return.png' });
     const continuity = await Promise.all(tabs.map(tab => tab.evaluate(() => window.__streamProbe.crossings)));
     const smooth = row => row.directionDot > .9 && row.cameraStep < row.playerStep + 1.5;
