@@ -191,6 +191,32 @@ Decisions 1–3, 5–12 and 14 remain Val's.
 - **Decision 12 (Redis 8-player repeat):** accept "Not met, noise-bound" as the record. The #599 closeout goal chooses any baseline change.
 - **Decisions 2, 5–11 and 14:** left open for Val. They are PR closures, owner assignments and register sweeps the session is not authorized to make. Val will clear the goal.
 
+### Open decisions re-read against live state (2026-11-03, about 23:45Z)
+
+Val resumed the goal two days after the last entry; `main` is `f7d22cff`, 209 commits past this branch. Other sessions and Val settled several items in that time, so this re-reads each open decision over REST. Nothing here was acted on by this session.
+
+| Decision | Live state | Still needed from Val |
+| --- | --- | --- |
+| 1 Alert 20 | Still `open`, not dismissed | The dismissal Val said they would make |
+| 2 #786 | Open, not a draft | Close as superseded, or a test-only rebase |
+| 5 Increment 6 | #599 open. #724, whose decisions 4 and 6 this cites, closed unmerged 11-02 | Scope or defer; the 11-02 goal's blank B asks the same |
+| 6 #705 | Open draft | Land, park or close |
+| 7 #831 | **Settled:** merged 11-02 09:34Z GitHub | Nothing |
+| 8 #787 #788 #789 | **Mostly settled:** #788 and #789 merged 11-01; #787 open draft | #787 only |
+| 9 #685 #719 #709 | All open drafts; #685 updated 11-03 05:02Z GitHub, so it has live work | #719 and #709 only |
+| 10 #755 | Open draft | Close as superseded by #756 |
+| 11 Docs drafts | **Mostly settled:** #668 #687 #724 #795 closed unmerged 11-02; #697 and #748 open drafts | #697 and #748 only |
+| 14 Wave-3 carried | Not re-measured item by item. `project:check --github` still reports 285 rows pointing at missing archives (item 14) | As listed |
+
+The Dispositions table holds #727 and #728 on the Safari sound row; both merged 11-02, so that row is out of date.
+
+Other re-measurements:
+
+- **Main.** Verify is green on `f7d22cff`, `fe2463e2` and `0c040286`. Of the last six pushes, `51ffe701` failed, on `preview experience (ribbonwing)` and the `preview` aggregate; the three pushes since are green. I did not diagnose that failure in this session.
+- **Gaps.** `project:check --github` reports 140, up from 100 on 11-01 and still below the 180 baseline. I did not attribute the 40 new gaps row by row; the ones printed last are rows from other sessions' 11-03 work.
+- **#844 follow-through.** #864 (merged) changed `crime-residents` again after #844 landed, and the v0.3.0 ledger names it as the fix that turned `main` green. This ledger's "#844 green" evidence covers #844's own heads, not later `main`.
+- **11-02 goal.** The scratchpad was wiped on restart. The goal text was recovered from the session transcript. Its baseline predates #844's landing, and blanks A and C were partly answered by Decision 4 (the rule adopted, #844 landed). Blanks stay Val's.
+
 ## Finish-line status (17:20Z)
 
 | Item | Status | Evidence |
