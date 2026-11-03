@@ -16,7 +16,7 @@ The run used a `git archive` snapshot (commit `8ed13661`), with isolated Redis, 
 | Command | Result |
 | --- | --- |
 | `pnpm run verify full` | Passed, 19 stages in 51 min at load 8-15. Tooling 307/0; preview 5262 tests, 5231 pass, 1 skip, 30 todo; Redis server 1452/0; desktop 132 tests, 127 pass, 5 skip. |
-| `node preview/e2e/experience-runner.js five-rooms` | Passed in 342 s. Not part of the `verify full` suite. |
+| `node preview/e2e/experience-runner.js five-rooms` | Passed in 342 s. Not yet part of the `verify full` suite at this SHA; #884 added it. |
 | Same, `RIVER_OAKS_EXPERIENCE_BROWSER=webkit` | Passed in 421 s. |
 | `RIVER_OAKS_FINISH=classic` and `pink-jet-age`, `depth-layers` | Passed, 0 new pairs. |
 | `node preview/e2e/five-rooms-cameras.mjs` | 120 views, none blank, 102 pink violations and 1 unresolved. Arrival frame: Classic 1635, Pink 1617 calls against the provisional 1874. |
@@ -29,7 +29,7 @@ The first `verify full`, on `0c040286`, was stopped in its shared stage: #876 su
 - `tree-17` at the Shade Garden entrance, filed on #840. The journey's foliage note measures from the eye, not the feet.
 - Landscape: 5 aprons, 0 courts, 0 beds, 6 dropped, 36 pending Val's rulings.
 - Cameras v13 and v14 look at ground under the IPIC escalators; v16 stands 58 m from its entrance; v21 stands too far back.
-- `five-rooms` doesn't fit in the experience stage: 1055 s used of 1200 s, and the journey takes 342 s.
+- `five-rooms` didn't fit in the experience stage (1055 s used of 1200 s, journey 342 s), so #884 gave it its own stage.
 
 ## Limits
 
@@ -41,4 +41,4 @@ River-oaks-0e landed #876 as `fe2463e2` under its own goal, as it reported. Its 
 
 ## Next
 
-Val's decisions, in the acceptance packet. #842 stays open until the `five-rooms` journey has a place in `verify full`.
+River-oaks-0e added the `experience-five-rooms` stage in #884 (`f7d22cff`, same tree as `f6a5abb0`); `verify full` passed all 20 stages on `f6a5abb0`, as it reported. #842 closes on that. Val's remaining decisions are in the acceptance packet.

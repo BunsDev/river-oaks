@@ -35,7 +35,7 @@ The goal (2026-11-02) asks for ten consecutive first-attempt `Verify` passes on 
 
 | `ribbonwing-passenger`: `Jevica's craft stopped short of landing with alice aboard (altitude 3.57 m, lowest 3.60 m …)` | preview experience (ribbonwing) | 2 (41501249712 attempt 1, `8a51f750`, an Actions version bump, attempt 2 passed; 41568969184, `51ffe701`, docs-only #875) | The journey's spot check passed a hull parked beside a wall. At that spot some headings land and others stop about 3.6 m up (reproduced with `stepHoverLift`), and the check tested one heading at whole-metre altitudes. Both runs pressed G at exactly the same point, so the spot itself is the problem. The hosted heading was not recorded, so a turn after the check is the likely trigger, not an observed one. | Fix on `fix/hover-spot-margin-20261102`: the check now covers a band of headings and quarter-metre altitudes, and the failure message carries the heading. Landed in #877 (`0c040286`). Stays open until more main runs clear it. |
 
-First-attempt streak on 2026-11-03: 2 (`0c040286`, 41574443319; `fe2463e2`, 41580941255).
+First-attempt streak on 2026-11-03: 3 (`0c040286`, 41574443319; `fe2463e2`, 41580941255; `f7d22cff`, 41648900950).
 
 ## How to add a row
 
