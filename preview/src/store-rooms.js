@@ -1,4 +1,5 @@
 import { terrainHeight } from './geometry.js';
+import { stableHypot } from './stable-math.js';
 import { clearStandingStations } from './store-clearance.js';
 import { approvedGroundRoom, approvedLevelRoom, approvedSpaceRoom } from './approved-interior-room.js';
 import { isIpicStore, configureIpicRoom } from './ipic-plan.js';
@@ -26,7 +27,7 @@ function inside(point, ring) {
 // Separating-axis test for two convex quadrilaterals (rooms may meet at any angle).
 export function rectanglesOverlap(a, b, margin = 0) {
   for (const polygon of [a, b]) for (let i = 0; i < polygon.length; i++) {
-    const p = polygon[i], q = polygon[(i + 1) % polygon.length], nx = -(q[1] - p[1]), ny = q[0] - p[0], length = Math.hypot(nx, ny) || 1;
+    const p = polygon[i], q = polygon[(i + 1) % polygon.length], nx = -(q[1] - p[1]), ny = q[0] - p[0], length = stableHypot(nx, ny) || 1;
     const project = points => points.reduce(([lo, hi], point) => { const v = (point[0] * nx + point[1] * ny) / length; return [Math.min(lo, v), Math.max(hi, v)]; }, [Infinity, -Infinity]);
     const [aLo, aHi] = project(a), [bLo, bHi] = project(b);
     if (aHi <= bLo + margin || bHi <= aLo + margin) return false;
@@ -160,7 +161,7 @@ export function planStoreRooms(world) {
 function facadeBayGrid(building, store) {
   const ring = building.ring, [fx, fn] = store.facade, right = [-store.outward[1], store.outward[0]];
   for (let i = 1; i < ring.length; i++) {
-    const a = ring[i - 1], b = ring[i], dx = b[0] - a[0], dy = b[1] - a[1], length = Math.hypot(dx, dy);
+    const a = ring[i - 1], b = ring[i], dx = b[0] - a[0], dy = b[1] - a[1], length = stableHypot(dx, dy);
     if (length < 1) continue;
     const sx = fx - a[0], sy = fn - a[1], along = (sx * dx + sy * dy) / length, distance = Math.abs(sx * dy - sy * dx) / length;
     if (distance >= 0.2 || along < 0 || along > length) continue;
