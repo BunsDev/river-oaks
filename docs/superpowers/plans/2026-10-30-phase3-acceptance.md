@@ -104,15 +104,44 @@ New test in `preview/tests/city-kit.test.js` fails on main and passes here.
 | server suites for Heights, Studewood, Terraces, Woodland, TypeSafe, residents and checkpoint migrations (isolated Redis) | 72/72, 0 skipped |
 | `pnpm run verify` (core, load 22–31) | passed: tooling 294/294; preview 4767 pass + 35 todo + 1 skip of 4803; server 1110 pass + 285 skip of 1395; 127 pass + 5 skip of 132 |
 
+### Fix: no furniture or hedge overlaps a street tree; street-tree rows vary like the District's
+
+On `56e03eec` (after #812), 14 overlapping solid pairs remained. This change clears every
+one except hedge planters that continue one another:
+
+- Heights Boulevard North: the esplanade's last tree pair stood inside the end hedge;
+  the street now has `clear: [[158, 163]]`, so its trees stop before the hedge.
+- Nineteenth and Yale: both corner benches move 1.5 m and the court café set 2.5 m
+  along their frontage, off the street trees.
+- Bayou Greenway (4 benches) and Yale Icehouse (1): the benches touched a tree's
+  collision square by 1 cm; each moves 0.5 m along the greenway.
+
+The Nineteenth and Yale rows read as one repeated tree because the kit drew street trees
+8.5–11.5 m tall with 3.1–3.9 m crowns, while the District's 199 surveyed street trees run
+7.5–16 m and 2.1–5.2 m (spacing is similar: the District's are mostly 6 m apart). Street
+trees now draw 7.5–14 m tall with 2.6–4.8 m crowns. Only tree `height` and `radius`
+change; tree positions and collision squares do not.
+
+| Check (this change) | Result |
+| --- | --- |
+| Overlap probe, all 21 recipes | 4 pairs left, all hedge-to-hedge joins (intended) |
+| New test `no two solids overlap in any committed recipe, except hedge planters that continue one another` | fails on main's recipes (`bayou-greenway/greenway/tree-s-2 overlaps …greenway-bench-22`), passes here |
+| `destination check` | all 21 locks reproduce after `build --lock`; the 18 migrated recipes' recorded authored-ground hashes and the test table move with a note |
+| `destination effort --write` | massing 707 (+2: the esplanade's `clear`), typed 2617 |
+| Composed Commons world vs main | differs only in seven street trees' `height`/`radius` and three hashes; the resident-route fixture's digest line is updated with a `digestRecaptured2` note, and all 60 route cases still match |
+| `city-kit-review.js`, main vs this change (local Chromium, 4 cases, 18 views each) | 0 page errors and 0 missing assets in both; draw calls 122–359 per view in both. In `nineteenth-and-yale-77-street` the rows now vary in height and crown from tree to tree |
+| Full preview suite | 4775 pass + 35 todo + 1 skip of 4811 |
+| Server suites for Commons, Heights, Studewood, Terraces, Woodland, TypeSafe, residents and checkpoint migrations (isolated Redis) | 89/89, 0 skipped |
+| `pnpm run verify` (core, load 7–13) | passed: tooling 294/294; preview 4775 pass + 35 todo + 1 skip of 4811; server 1110 pass + 285 skip of 1395; 127 pass + 5 skip of 132 |
+
 ## Gaps
 
 - Human visual approval of the destination and parity captures is Val's; the measured
-  checks above do not replace it.
-- Remaining small overlaps (corner benches, café set, end hedge) are authored placements;
-  recorded for the human review.
+  checks and the before/after review above do not replace it. Issues #584–#586 stay open
+  for that review, by Val's decision (evidence comments posted 2026-10-30).
 - The two 10-22 lanes were cancelled to restore-tested archives on 2026-10-30 with Val's
   authorization (`cancel-stale-nRFn91`, `cancel-stale-rxIZxX`).
 
 ## Next step
 
-Core verify and a draft PR for the lamp fix; landing needs Val's authorization.
+Open the PR for the overlap and tree change; landing needs Val's authorization.

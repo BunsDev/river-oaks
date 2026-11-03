@@ -1,0 +1,59 @@
+{
+  "scope": "Unsigned iOS simulator; synthetic HTTPS/custom-scheme documents and existing fixture identities. Not actual Capacitor, real game package, production authentication or physical-device/focus acceptance.",
+  "source": "51c28e2a93782b747bb991237025e60018071fe9",
+  "dirty": true,
+  "sourceFiles": [
+    {
+      "path": "experiments/ios-bundled-origin/App/BundledOriginApp.swift",
+      "sha256": "621bd8b99c05406dcbdfc1e298db671b57a58f52d7091d9a5dccbf80b5838cba"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/App/FixtureCookieBootstrap.swift",
+      "sha256": "95845f241d46ce467b959617e164943092073c119ca8bf3e710fe337b5c8f13a"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/App/Info.plist",
+      "sha256": "2fb1649637b890810e2069ff418f9eafaebe71596ec6783ddf0a5abca7b67564"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/Sources/ExperimentPolicy/ExperimentPolicy.swift",
+      "sha256": "83bbb37574d85b7a454d8a3c843a74070bca0855b293c9f172b42168769393ce"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/Web/harness.js",
+      "sha256": "627c460019aff18641f518ca4af99847515282caaae4f81acfb5dac723e3ac59"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/project.yml",
+      "sha256": "ac0558654e9e43443714b68510394c15907002fa5e13009b40f0d80bcf45fabc"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/https-fixture.mjs",
+      "sha256": "d56aeb56480878d3f1f7c5277a1d5a347e2f357e767e53180f19071543bee48f"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/https-origin.mjs",
+      "sha256": "4e5d66bdf8a661149187021d9c608e436057a5b8c4914b42e67dee97d28ba466"
+    },
+    {
+      "path": "experiments/ios-bundled-origin/witness.mjs",
+      "sha256": "4cf2df155eb7bc010c884141124da07528c2b231d8be7c32063a5628c0eb89be"
+    },
+    {
+      "path": "server/tests/browser-fixture.js",
+      "sha256": "5d47d52d7f0bca79a70253b71c1b0e69a10500109a35c5c826f3e873a24b6eb1"
+    },
+    {
+      "path": "server/tests/browser-fixture-origin.js",
+      "sha256": "23d2f3f38fc030f8e99d698dd8259d550472c436b94fc758b9e001239bbc0a45"
+    },
+    {
+      "path": "server/app.js",
+      "sha256": "57f44c1b045d8f2e7cf9edf594aa56a2ce2021f05357e509f919314964506036"
+    }
+  ],
+  "trials": {},
+  "failure": "Cannot read properties of null (reading 'trim')",
+  "privateKeyRemoved": true,
+  "cleanupErrors": []
+}

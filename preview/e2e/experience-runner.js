@@ -54,6 +54,8 @@ try {
       // The composed town (District, Gardens campus, Commons) for the depth-layer and shader audit.
       'depth-layers':{RIVER_OAKS_DISTRICT_REVISION:'east-garden-commons-market-1'},
       'garden-campus-suite':{RIVER_OAKS_DISTRICT_REVISION:'river-oaks-gardens-3',RIVER_OAKS_CAMPUS_OPERATOR_IDS:'bob'},
+      // The draft-only workplace slice (#221): both default-off flags on for this fixture server only.
+      'workplace':{RIVER_OAKS_WORKPLACE:'1',VITE_WORKPLACE:'true'},
     }[name]??{};
     // The Computer embed journey frames a separate-origin child fixture (#486); other journeys get no Computer origin.
     // office-computer-real frames a real Computer checkout instead (RIVER_OAKS_COMPUTER_CHECKOUT, #487).

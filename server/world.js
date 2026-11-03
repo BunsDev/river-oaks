@@ -1014,6 +1014,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       return reject('private_home','This home is private. Jevica can invite you inside.');
     if (store && mode==='leave' && environment.roomAt(player.position[0],-player.position[1])?.storeId!==store.id) return reject('not_in_store');
     if (time-ledger.travelAt < TRAVEL_COOLDOWN_MS) return reject('travel_cooldown');
+    // #785 (#599 fair chase): a travel is a step out of the world, not a run. While an officer is on the
+    // player (pursuing in sight, grabbing or arresting) the chase is settled on foot, by evading, or by
+    // surrender; once the officers have lost them, or stood down, travel opens again.
+    if (police.pursuing(player.id)) return reject('pursued','An officer is on you. Lose them on foot, or surrender.');
     let destination = null;
     if (peer) {
       // Meeting another player never bypasses a private door. Stand beside an
@@ -1696,6 +1700,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean),levelId));
         return recoveredUpperEnvironments.get(levelId);
       };
+      let recoveredBeforeFiveRooms=null;
       const occupiedSeats=new Set(),heldSlots=new Set();
       for(const rider of nextPlayers.values())if(rider.cycling){if(heldSlots.has(rider.cycling))throw new Error('Invalid cycling slot');heldSlots.add(rider.cycling);}
       for (const player of nextPlayers.values()) {
@@ -1712,8 +1717,21 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           const [standEast,standNorth]=campusToSource(stood.position);
           player.position=[standEast,standNorth,interiorLevels.get(site.levelId).level.floorElevation];player.sitting=null;
         }
-        const [east,north,ground]=player.position;
         const playerEnvironment=recoveredEnvironmentFor(player.levelId);
+        // A town saved before the Five Rooms solids (#841) may hold a player standing where a
+        // Ribbon post or a shell frontage now stands: valid then, blocked now. Restore them on
+        // the nearest free ground instead of refusing the town; anything else still fails closed.
+        if(!player.levelId && !player.sitting && !(player.altitude>0.1) && !player.vehicle) {
+          const [px,pn]=player.position;
+          if(!playerEnvironment.isFree(px,-pn)) {
+            recoveredBeforeFiveRooms??=createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean),null,{fiveRooms:false});
+            if(recoveredBeforeFiveRooms.isFree(px,-pn)) {
+              const landed=createWalkingState(playerEnvironment,[px,pn]).position;
+              player.position=[landed[0],-landed[2],playerEnvironment.groundAt(landed[0],landed[2])];
+            }
+          }
+        }
+        const [east,north,ground]=player.position;
         if (!nextLedgers.has(player.id) || (!player.sitting && Math.abs(ground-playerEnvironment.groundAt(east,-north))>0.2)
           || (player.altitude>0.1?!playerEnvironment.canFly(east,ground+player.altitude,-north):!playerEnvironment.isFree(east,-north))
           || player.levelId && (playerEnvironment.roomAt(east,-north)?.planId!==player.levelId
@@ -1782,13 +1800,32 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       // Older v4 writers let residents walk/land inside assemblies. Repair
       // only those occupied starts before committing recovery. Normal walking
       // never teleports. Search nearby free ground in the same room, leaving
-      // players/other residents clear and preserving the original destination.
+      // players/other residents clear and preserving destinations that remain valid.
       const nextColliders=[...nextBuilds.values()].map(objectCollider).filter(Boolean);
       const nextLife=createResidentLife(worldData,createCommunity(worldData,environment.rooms,{carriage:false,sharedPopulation}));
       nextLife?.navigation.setPlacedObjects(nextColliders);
       const repairedResidents=new Set();
       for(const local of nextState.locals){
-        if(!nextColliders.some(collider=>residentBlocked(collider,local)))continue;
+        // An occupied start can remain valid while the saved destination is now a post.
+        // Sanitize that route independently of relocation, preserving every still-valid one.
+        const end=local.life?.route.at(-1);
+        if(!local.indoor && end && !recoveredEnvironment.isFree(end[0],-end[1])) {
+          recoveredBeforeFiveRooms??=createWalkingEnvironment(worldData,nextColliders,null,{fiveRooms:false});
+          if(recoveredBeforeFiveRooms.isFree(end[0],-end[1])) {
+            Object.assign(local.life,{route:[],destination:null,routeVersion:local.life.routeVersion+1,
+              attempt:0,waitUntil:restoredElapsed,speed:0,velocity:0,blocked:false,replanAt:0});
+            repairedResidents.add(local.id);
+          }
+        }
+        // New Five Rooms solids may cover a resident's previously valid public-ground start.
+        // Only migrate ground that was free before those solids; other invalid data is not a
+        // reason to broaden the existing placed-object recovery or change world authority.
+        let coveredByFiveRooms=false;
+        if(!local.indoor && !recoveredEnvironment.isFree(local.position[0],-local.position[1])) {
+          recoveredBeforeFiveRooms??=createWalkingEnvironment(worldData,nextColliders,null,{fiveRooms:false});
+          coveredByFiveRooms=recoveredBeforeFiveRooms.isFree(local.position[0],-local.position[1]);
+        }
+        if(!coveredByFiveRooms && !nextColliders.some(collider=>residentBlocked(collider,local)))continue;
         const original=[...local.position],roomId=recoveredEnvironment.roomAt(original[0],-original[1])?.storeId??null;
         let repaired=false;
         for(let radius=.25;radius<=4&&!repaired;radius+=.25)for(let i=0;i<32;i++){
@@ -1802,7 +1839,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
             || [...nextPlayers.values()].some(player=>Math.hypot(player.position[0]-x,player.position[1]-north)<.7)
             || nextState.locals.some(other=>other!==local&&Math.abs(other.position[2]-ground)<1.8&&Math.hypot(other.position[0]-x,other.position[1]-north)<.7))continue;
           local.position=candidate.position;
-          if(local.life){local.life.speed=0;local.life.velocity=0;local.life.blocked=false;local.life.replanAt=0;local.life.seat=null;}
+          if(local.life){
+            local.life.speed=0;local.life.velocity=0;local.life.blocked=false;local.life.replanAt=0;local.life.seat=null;
+          }
           repairedResidents.add(local.id);repaired=true;break;
         }
         if(!repaired)throw new Error('Cannot recover enclosed resident');

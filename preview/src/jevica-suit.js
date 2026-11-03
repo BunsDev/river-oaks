@@ -102,6 +102,51 @@ function smoothFront({ geometry, covered }, body, eligible, minimum, iterations 
   p.needsUpdate = true; geometry.computeVertexNormals(); geometry.computeBoundingSphere();
 }
 
+// Tailoring: a blazer front does not follow the body into its hollows. Across each half of
+// the front (the V splits it) the cloth spans the upper convex hull of the body's horizontal
+// profile, and down each column it hangs on the hull of the vertical one, so it falls
+// straight from the bust to the button instead of tucking under it. Only depth (z) changes,
+// only outward, approaching `reach` softly and scaled by `weight` (1 inside the panel, fading
+// to 0 at its sides) so it meets the untailored cloth without a ledge. Returns the deepest
+// lift, in metres.
+export function upperHull(points) {
+  const sorted = [...points].sort((a, b) => a[0] - b[0]), hull = [];
+  for (const point of sorted) {
+    while (hull.length >= 2) {
+      const [a, b] = [hull.at(-2), hull.at(-1)];
+      if ((b[0] - a[0]) * (point[1] - a[1]) - (b[1] - a[1]) * (point[0] - a[0]) >= 0) hull.pop(); else break;
+    }
+    hull.push(point);
+  }
+  return u => {
+    if (u <= hull[0][0]) return hull[0][1];
+    for (let k = 1; k < hull.length; k++) if (u <= hull[k][0]) { const [a, b] = [hull[k - 1], hull[k]]; return a[1] + (b[1] - a[1]) * (u - a[0]) / (b[0] - a[0] || 1); }
+    return hull.at(-1)[1];
+  };
+}
+export function tailorFront(geometry, front, { bin = .01, reach = .03, weight = () => 1 } = {}) {
+  const p = geometry.attributes.position, ids = [...front];
+  if (!ids.length) return 0;
+  const groupBy = keyOf => { const groups = new Map(); for (const i of ids) { const k = keyOf(i); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(i); } return groups; };
+  const target = new Map(ids.map(i => [i, p.getZ(i)]));
+  // Horizontal: per 1 cm row and per side of the V.
+  for (const group of groupBy(i => `${Math.round(p.getY(i) / bin)}${p.getX(i) > 0 ? 'l' : 'r'}`).values()) {
+    if (group.length < 3) continue;
+    const hull = upperHull(group.map(i => [p.getX(i), p.getZ(i)]));
+    for (const i of group) target.set(i, Math.max(target.get(i), hull(p.getX(i))));
+  }
+  // Vertical: per 1 cm column, from the collar down to the button.
+  for (const group of groupBy(i => Math.round(p.getX(i) / bin)).values()) {
+    if (group.length < 3) continue;
+    const hull = upperHull(group.map(i => [p.getY(i), p.getZ(i)]));
+    for (const i of group) target.set(i, Math.max(target.get(i), hull(p.getY(i))));
+  }
+  let deepest = 0;
+  for (const i of ids) { const lift = reach * Math.tanh((target.get(i) - p.getZ(i)) / reach) * weight(i); deepest = Math.max(deepest, lift); p.setZ(i, p.getZ(i) + lift); }
+  p.needsUpdate = true;
+  return deepest;
+}
+
 // Satin that turns rose-gold where a `piping` vertex attribute says so, without
 // a second material or draw call. Iridescence gives the pink its pearl shift.
 export function satinMaterial({ piping = false, iridescence = .75, color = SUIT.satin, roughness = .36 } = {}) {
@@ -191,7 +236,16 @@ export function createJevicaSuit(avatar, { surface, owned, attach, mesh }) {
     pieces.blazer = createSkinShell(body, { name: 'Jevica satin blazer', keep: blazerKeep, material: satin, attributes: { piping },
       offset: i => arms[i] > .5 ? BLAZER.arm : BLAZER.torso });
     owned.add(pieces.blazer.geometry);
-    smoothFront(pieces.blazer, body, i => torso[i] > .5 && rest[i * 3 + 2] > 0 && rest[i * 3 + 1] > hemY + .05 && rest[i * 3 + 1] < collarY - .02, i => arms[i] > .5 ? BLAZER.arm : BLAZER.torso);
+    const frontPanel = i => torso[i] > .5 && rest[i * 3 + 2] > 0 && rest[i * 3 + 1] > hemY + .05 && rest[i * 3 + 1] < collarY - .02;
+    smoothFront(pieces.blazer, body, frontPanel, i => arms[i] > .5 ? BLAZER.arm : BLAZER.torso);
+    {
+      // From the collar to the button the front hangs on its hulls, then the seams are blended.
+      const tailored = new Set([...pieces.blazer.covered].filter(i => frontPanel(i) && arms[i] < .3 && rest[i * 3 + 1] > buttonY - .02));
+      const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
+      const weight = i => smooth(.5, .9, torso[i]) * (1 - smooth(0, .3, arms[i])) * smooth(buttonY - .02, buttonY, rest[i * 3 + 1]);
+      pieces.blazer.tailoredDepth = tailorFront(pieces.blazer.geometry, tailored, { weight });
+      smoothFront(pieces.blazer, body, frontPanel, i => arms[i] > .5 ? BLAZER.arm : BLAZER.torso, 8);
+    }
     // The trousers: the lower body below the waist, with a front crease pressed down each leg.
     const crease = new Float32Array(count);
     for (let i = 0; i < count; i++) {
@@ -297,6 +351,10 @@ if(!(vBind.y>${(collarY - .03).toFixed(4)}&&abs(vBind.x)<.07)&&!(vBind.z>.0&&vBi
     const drop = createFlower(.011, { petalMaterial: petal, stamenMaterial: stamen, owned }); drop.position.y = -.026; drop.rotation.x = Math.PI; earring.add(drop);
     head.add(earring); pieces.earrings.push({ group: earring, side, angle: new THREE.Vector2(), velocity: new THREE.Vector2() });
   }
+  // Bangs: a straight fringe across the forehead, a sheet fitted to her skin a few millimetres
+  // out, pinned to the head, ending just above the brows and a little longer at the sides.
+  // Strands are a texture: dark roots, ragged tips cut by alpha.
+  if (body) pieces.bangs = createJevicaBangs({ body, model, toRoot, boneRest, head, owned, surface });
   const headPosition = new THREE.Vector3(), lastHead = new THREE.Vector3(), lastVelocity = new THREE.Vector3(), velocity = new THREE.Vector3(), drive = new THREE.Vector3(), inverse = new THREE.Quaternion();
   let previous = null;
   return {
@@ -328,6 +386,187 @@ if(!(vBind.y>${(collarY - .03).toFixed(4)}&&abs(vBind.x)<.07)&&!(vBind.z>.0&&vBi
 // the crown, 1 at the longest strand) on the hair's own cloned geometry. The
 // blend runs from 16% to 36% of the hair's length (about the ear to the
 // shoulder on her 69 cm of hair), where the reference turns pink.
+// Pumps from the rig's ankle shoes (Jevica's feet end inside them at 16.5 cm, so the upper
+// cannot be cut away): in bind space each shoe is slimmed and its toe tapered to a point
+// below the ankle, the toe box lowered, and the upper above a pump's topline painted in the
+// trouser satin with a rose-gold edge, so the hem seems to fall onto a low-cut pointed pump on
+// the rose-gold heel column. The edge follows a signed distance, so it stays a clean line at
+// the shoe's coarse mesh density. The top, where the shoe meets the leg, is left as it was.
+export const PUMP = Object.freeze({ taperFrom: .55, point: .018, back: .072, front: .046, vampFrom: .6 });
+export function shapeJevicaPumps(model, material, owned) {
+  let shoe = null; model.traverse(item => { if (item.isMesh && item.material === material) shoe = item; });
+  if (!shoe) return null;
+  const geometry = shoe.geometry.clone(); owned.add(geometry); shoe.geometry = geometry;
+  const p = geometry.attributes.position, vamp = new Float32Array(p.count), sides = {};
+  for (let i = 0; i < p.count; i++) {
+    const side = p.getX(i) < 0 ? 'r' : 'l', box = sides[side] ??= { x0: Infinity, x1: -Infinity, z0: Infinity, z1: -Infinity };
+    box.x0 = Math.min(box.x0, p.getX(i)); box.x1 = Math.max(box.x1, p.getX(i)); box.z0 = Math.min(box.z0, p.getZ(i)); box.z1 = Math.max(box.z1, p.getZ(i));
+  }
+  const smooth = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+  for (let i = 0; i < p.count; i++) {
+    const box = sides[p.getX(i) < 0 ? 'r' : 'l'], cx = (box.x0 + box.x1) / 2, half = (box.x1 - box.x0) / 2;
+    let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const t = (z - box.z0) / (box.z1 - box.z0), low = 1 - smooth(.11, .17, y), toe = smooth(PUMP.taperFrom, 1, t);
+    const across = Math.min(1, Math.abs(x - cx) / half);
+    x = cx + (x - cx) * (1 - low * (.12 + .5 * toe));
+    z += low * PUMP.point * smooth(.75, 1, t) * (1 - across);
+    y *= 1 - .3 * toe * smooth(.03, .09, y) * low;
+    p.setXYZ(i, x, y, z);
+    // Metres above the topline (heel counter to toe box); the toe box stays below it.
+    const top = t < PUMP.vampFrom ? PUMP.back + (PUMP.front - PUMP.back) * t / PUMP.vampFrom : PUMP.back * 4;
+    vamp[i] = y - top;
+  }
+  p.needsUpdate = true; geometry.computeVertexNormals(); geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+  geometry.setAttribute('vamp', new THREE.BufferAttribute(vamp, 1));
+  const hem = new THREE.Color(SUIT.satin), edge = new THREE.Color(SUIT.roseGold);
+  material.onBeforeCompile = shader => {
+    shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nattribute float vamp;varying float vVamp;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvVamp=vamp;');
+    shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vVamp;')
+      .replace('#include <map_fragment>', `#include <map_fragment>
+float above = smoothstep(0.0015, 0.004, vVamp), rim = 1.0 - smoothstep(0.0012, 0.0024, abs(vVamp));
+diffuseColor.rgb = mix(mix(diffuseColor.rgb, vec3(${hem.r.toFixed(4)}, ${hem.g.toFixed(4)}, ${hem.b.toFixed(4)}), above), vec3(${edge.r.toFixed(4)}, ${edge.g.toFixed(4)}, ${edge.b.toFixed(4)}), rim * 0.9);`);
+  };
+  material.customProgramCacheKey = () => 'jevica-pumps-v2';
+  return { sides, vamp };
+}
+
+// The ombré begins at the shoulders (fraction of the hair's height from its crown) and the
+// strands below the ears stand out by up to `flare` for volume.
+export const HAIR = Object.freeze({ pinkFrom: .2, pinkTo: .34, flare: .22, axisZ: .01 });
+// Makeup from the reference: rose lips and a soft blush, painted as vertex colours on the
+// costume's own copy of her skin (realism tiers leave vertex colours alone). Landmarks come
+// from her midline profile: the nose tip is the profile's peak below the eyes, then the
+// profile dips under the nose, peaks at the upper lip, dips at the mouth line and peaks at
+// the lower lip. The lips are an ellipse about the mouth line, its half-width a fraction of
+// half the pupils' spacing; the blush sits on each cheek, just outside the pupil line.
+export const MAKEUP = Object.freeze({ lips: [1, .56, .68], blush: [1, .78, .81], mouthWidth: .78, blushRadius: .022 });
+export function faceLandmarks(geometry, eyes) {
+  const p = geometry.attributes.position, profile = new Map(), bin = .003;
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i);
+    if (Math.abs(p.getX(i)) > .004 || y > eyes.y || y < eyes.y - .14) continue;
+    const k = Math.round(y / bin); profile.set(k, Math.max(profile.get(k) ?? -Infinity, p.getZ(i)));
+  }
+  const rows = [...profile].sort((a, b) => b[0] - a[0]).map(([k, z]) => [k * bin, z]);
+  const peakBelow = (from, rising) => { for (let j = from + 1; j < rows.length - 1; j++) if (rising ? rows[j][1] >= rows[j - 1][1] && rows[j][1] >= rows[j + 1][1] : rows[j][1] <= rows[j - 1][1] && rows[j][1] <= rows[j + 1][1]) return j; return -1; };
+  let nose = -1; for (let j = 0; j < rows.length; j++) if (rows[j][0] < eyes.y - .02 && rows[j][0] > eyes.y - .06 && (nose < 0 || rows[j][1] > rows[nose][1])) nose = j;
+  const under = nose < 0 ? -1 : peakBelow(nose, false), upper = under < 0 ? -1 : peakBelow(under, true);
+  const line = upper < 0 ? -1 : peakBelow(upper, false), lower = line < 0 ? -1 : peakBelow(line, true);
+  if (lower < 0) return null;
+  const at = j => rows[j][0];
+  return { noseTip: at(nose), noseZ: rows[nose][1], underNose: at(under), upperLip: at(upper), mouth: at(line), lowerLip: at(lower), mouthZ: rows[line][1] };
+}
+export function applyJevicaMakeup(model, owned) {
+  const body = model.getObjectByName('Jevica'), eyes = model.getObjectByName('Jevicahigh-poly');
+  if (!body || !eyes) return null;
+  eyes.geometry.computeBoundingBox();
+  // The eyes' box spans both eyeballs; less one eyeball's diameter it is the pupils' spacing.
+  const box = eyes.geometry.boundingBox, centre = { y: (box.min.y + box.max.y) / 2 }, spacing = (box.max.x - box.min.x) - (box.max.y - box.min.y);
+  const marks = faceLandmarks(body.geometry, centre);
+  if (!marks) return null;
+  const geometry = body.geometry.clone(); owned.add(geometry); body.geometry = geometry;
+  const p = geometry.attributes.position, colour = new Float32Array(p.count * 3).fill(1);
+  const halfWidth = spacing / 2 * MAKEUP.mouthWidth, top = marks.upperLip + (marks.upperLip - marks.mouth) * .9, bottom = marks.lowerLip - (marks.mouth - marks.lowerLip) * 1.1;
+  const cheekY = marks.noseTip + .006, cheekX = spacing / 2 * 1.15;
+  let lips = 0, blush = 0;
+  for (let i = 0; i < p.count; i++) {
+    const [x, y, z] = [p.getX(i), p.getY(i), p.getZ(i)];
+    let r = 1, g = 1, b = 1;
+    // Lips: front surface only (the inside of the mouth sits behind the mouth line).
+    const reach = y >= marks.mouth ? top - marks.mouth : marks.mouth - bottom, e = (x / halfWidth) ** 2 + ((y - marks.mouth) / reach) ** 2;
+    if (e < 1 && z > marks.mouthZ - .012) {
+      const k = THREE.MathUtils.smoothstep(1 - e, 0, .45); lips++;
+      r *= 1 + (MAKEUP.lips[0] - 1) * k; g *= 1 + (MAKEUP.lips[1] - 1) * k; b *= 1 + (MAKEUP.lips[2] - 1) * k;
+    }
+    // Blush: a soft disc on each cheek, front-facing.
+    const d = Math.hypot(Math.abs(x) - cheekX, y - cheekY) / MAKEUP.blushRadius;
+    if (d < 2.5 && z > marks.noseZ - .06) {
+      const k = Math.exp(-d * d); if (k > .05) blush++;
+      r *= 1 + (MAKEUP.blush[0] - 1) * k; g *= 1 + (MAKEUP.blush[1] - 1) * k; b *= 1 + (MAKEUP.blush[2] - 1) * k;
+    }
+    colour[i * 3] = r; colour[i * 3 + 1] = g; colour[i * 3 + 2] = b;
+  }
+  geometry.setAttribute('color', new THREE.BufferAttribute(colour, 3));
+  body.material.vertexColors = true; body.material.needsUpdate = true;
+  return { marks, lips, blush, halfWidth };
+}
+
+export const BANGS = Object.freeze({ halfWidth: .058, above: .05, gap: .006, sides: .014, offset: .005, columns: 40, rows: 14 });
+export function bangsStrands(size = 128, seed = 7) {
+  const pixels = new Uint8Array(size * size * 4);
+  let r = seed; const random = () => (r = (Math.imul(r, 1664525) + 1013904223) >>> 0) / 2 ** 32;
+  const tips = Array.from({ length: 48 }, () => .82 + random() * .18), roots = Array.from({ length: 48 }, () => random() * .14);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const u = x / size, v = y / size, strand = Math.floor(u * tips.length), k = (y * size + x) * 4;
+    // Each strand has its own tone, lighter along its middle, like the hair cards' strands.
+    // The roots darken toward the hair cap, so the fringe's top shows no light edge.
+    const across = Math.abs((u * tips.length) % 1 - .5) * 2, root = .55 + .45 * Math.min(1, v / .3);
+    const shade = (175 + 50 * ((strand * 37 % 11) / 10) + 30 * (1 - across)) * root;
+    pixels[k] = pixels[k + 1] = pixels[k + 2] = Math.min(255, shade);
+    // v runs from the roots (0) to the tips (1); each strand ends at its own length, tapered.
+    const tip = tips[strand], edge = Math.abs((u * tips.length) % 1 - .5) * 2;
+    // Each strand starts at its own height under the cap, so the top is no straight line.
+    pixels[k + 3] = v >= roots[strand] && v < tip - .06 * edge ? 255 : 0;
+  }
+  const texture = new THREE.DataTexture(pixels, size, size); texture.needsUpdate = true;
+  texture.wrapS = THREE.RepeatWrapping; texture.repeat.set(2, 1);
+  return texture;
+}
+export function createJevicaBangs({ body, model, toRoot, boneRest, head, owned, surface }) {
+  const brows = model.getObjectByName('Jevicaeyebrow001');
+  if (!brows) return null;
+  brows.geometry.computeBoundingBox();
+  const browTop = brows.geometry.boundingBox.max.y, top = browTop + BANGS.above;
+  // The forehead's depth on a 4 mm grid (front skin only).
+  const p = body.geometry.attributes.position, cell = .004, depth = new Map();
+  for (let i = 0; i < p.count; i++) {
+    const [x, y, z] = [p.getX(i), p.getY(i), p.getZ(i)];
+    if (z < .02 || y < browTop - .01 || y > top + .02 || Math.abs(x) > BANGS.halfWidth + .02) continue;
+    const k = `${Math.round(x / cell)},${Math.round(y / cell)}`; depth.set(k, Math.max(depth.get(k) ?? -Infinity, z));
+  }
+  const surfaceAt = (x, y) => {
+    for (let r = 0; r < 4; r++) { let best = -Infinity; for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) best = Math.max(best, depth.get(`${Math.round(x / cell) + dx},${Math.round(y / cell) + dy}`) ?? -Infinity); if (best > -Infinity) return best; }
+    return null;
+  };
+  const { columns, rows } = BANGS, positions = [], uvs = [], index = [], origin = boneRest('head');
+  // Cloth does not follow the forehead's small bumps: the sampled depth is blurred across the
+  // grid, and never below the skin plus the offset.
+  const grid = [];
+  for (let j = 0; j <= rows; j++) for (let i = 0; i <= columns; i++) {
+    const u = i / columns * 2 - 1, v = j / rows, x = u * BANGS.halfWidth, bottom = browTop + BANGS.gap - BANGS.sides * u * u, y = top + (bottom - top) * v;
+    grid.push(surfaceAt(x, y) ?? surfaceAt(x * .9, y) ?? 0);
+  }
+  const skinDepth = [...grid];
+  for (let pass = 0; pass < 6; pass++) {
+    const next = [...grid];
+    for (let j = 0; j <= rows; j++) for (let i = 0; i <= columns; i++) {
+      let sum = 0, n = 0;
+      for (const [di, dj] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) { const a = i + di, b = j + dj; if (a < 0 || b < 0 || a > columns || b > rows) continue; sum += grid[b * (columns + 1) + a]; n++; }
+      next[j * (columns + 1) + i] = Math.max(sum / n, skinDepth[j * (columns + 1) + i]);
+    }
+    grid.splice(0, grid.length, ...next);
+  }
+  for (let j = 0; j <= rows; j++) for (let i = 0; i <= columns; i++) {
+    const u = i / columns * 2 - 1, v = j / rows, x = u * BANGS.halfWidth;
+    const bottom = browTop + BANGS.gap - BANGS.sides * u * u, y = top + (bottom - top) * v;
+    // The top rows tuck in under the hair cap; lower down the fringe stands a little off the brow.
+    const z = grid[j * (columns + 1) + i] + BANGS.offset * THREE.MathUtils.smoothstep(v, 0, .35) - .002 * (1 - THREE.MathUtils.smoothstep(v, 0, .35));
+    const at = toRoot(new THREE.Vector3(x, y, z)).sub(origin);
+    positions.push(at.x, at.y, at.z); uvs.push(i / columns, v);
+    if (i < columns && j < rows) { const a = j * (columns + 1) + i; index.push(a, a + columns + 1, a + 1, a + 1, a + columns + 1, a + columns + 2); }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(index); geometry.computeVertexNormals(); owned.add(geometry);
+  const strands = bangsStrands(); owned.add(strands);
+  // Her hair's espresso roots as the ombré shader draws them (warm, not black).
+  const material = surface({ color: '#4a2a20', map: strands, alphaTest: .5, roughness: .52, side: THREE.DoubleSide });
+  material.name = 'Jevica bangs';
+  const mesh = new THREE.Mesh(geometry, material); mesh.name = 'Jevica bangs'; mesh.castShadow = true; head.add(mesh);
+  return { mesh, browTop, top };
+}
+
 export function applyHairOmbre(model, material, owned) {
   let hair = null; model.traverse(item => { if (item.isMesh && item.material === material) hair = item; });
   if (!hair) return null;
@@ -335,6 +574,16 @@ export function applyHairOmbre(model, material, owned) {
   const p = geometry.attributes.position, ombre = new Float32Array(p.count);
   let top = -Infinity, bottom = Infinity; for (let i = 0; i < p.count; i++) { top = Math.max(top, p.getY(i)); bottom = Math.min(bottom, p.getY(i)); }
   for (let i = 0; i < p.count; i++) ombre[i] = (top - p.getY(i)) / (top - bottom);
+  // Volume (the reference's long waves): below the ears the strands stand out from the head's
+  // axis, most at the ends, so the hair falls fuller over the shoulders.
+  const ears = top - (top - bottom) * .17, flare = HAIR.flare;
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i), k = Math.max(0, Math.min(1, (ears - y) / (ears - bottom)));
+    if (k <= 0) continue;
+    const grow = 1 + flare * Math.sqrt(k), dz = p.getZ(i) - HAIR.axisZ;
+    p.setXYZ(i, p.getX(i) * grow, y, HAIR.axisZ + dz * grow);
+  }
+  p.needsUpdate = true; geometry.computeBoundingBox(); geometry.computeBoundingSphere();
   geometry.setAttribute('ombre', new THREE.BufferAttribute(ombre, 1));
   material.color.set('#ffffff'); material.roughness = .46; material.alphaTest = .35;
   material.onBeforeCompile = shader => {
@@ -343,9 +592,11 @@ export function applyHairOmbre(model, material, owned) {
     shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vOmbre;')
       .replace('#include <map_fragment>', `#include <map_fragment>
 float strand = clamp(dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722)) * 3.5, 0.0, 1.0);
-vec3 shade = mix(vec3(0.102, 0.051, 0.039), vec3(0.910, 0.627, 0.749), smoothstep(0.16, 0.36, vOmbre));
-diffuseColor.rgb = shade * mix(0.45, 1.12, pow(strand, 0.65));`);
+float pinkness = smoothstep(${HAIR.pinkFrom.toFixed(3)}, ${HAIR.pinkTo.toFixed(3)}, vOmbre);
+vec3 shade = mix(vec3(0.102, 0.051, 0.039), vec3(0.929, 0.596, 0.757), pinkness);
+// Dark strands keep their contrast; the pink ends stay bright enough to read as pink, not mauve.
+diffuseColor.rgb = shade * mix(mix(0.45, 0.78, pinkness), 1.12, pow(strand, 0.65));`);
   };
-  material.customProgramCacheKey = () => 'jevica-ombre-hair-v1';
+  material.customProgramCacheKey = () => 'jevica-ombre-hair-v2';
   return { top, bottom, ombre };
 }

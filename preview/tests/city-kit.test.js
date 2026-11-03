@@ -347,3 +347,20 @@ test('no street lamp stands in a tree pit: where the spacings coincide the lamp 
   const placed = piecesOf(plan, 'lamp-probe/probe/lamp-');
   assert.deepEqual(placed.map(lamp => lamp.at[0]), [8, 32, 56, 80], 'each lamp moves half a tree spacing, between trees');
 });
+
+test('no two solids overlap in any committed recipe, except hedge planters that continue one another', () => {
+  const { readdirSync } = process.getBuiltinModule('node:fs');
+  const names = readdirSync(new URL('../../config/destinations/', import.meta.url)).filter(f => f.endsWith('.json') && !f.endsWith('.lock.json')).map(f => f.slice(0, -5));
+  const overlap = (a, b) => Math.min(a[2], b[2]) - Math.max(a[0], b[0]) > .01 && Math.min(a[3], b[3]) - Math.max(a[1], b[1]) > .01;
+  let checked = 0;
+  for (const name of names) {
+    const { solids } = assembleNeighborhood(read(name));
+    checked += solids.length;
+    for (let i = 0; i < solids.length; i++) for (let j = i + 1; j < solids.length; j++) {
+      const a = solids[i], b = solids[j];
+      if (a.id.split('/leg-')[0] === b.id.split('/leg-')[0] || (a.kind === 'hedge' && b.kind === 'hedge')) continue;
+      assert.ok(!overlap(a.rect, b.rect), `${name}: ${a.id} overlaps ${b.id}`);
+    }
+  }
+  assert.ok(checked > 1000, `${checked} solids checked`);
+});

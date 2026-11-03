@@ -1,0 +1,11 @@
+{
+  "scope": "SIGTERM of owned diagnostic runner after simulator creation; not forced-kill cleanup",
+  "interrupted": "SIGTERM",
+  "simulatorRemoved": true,
+  "childExit": {
+    "code": 1,
+    "signal": null
+  },
+  "report": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-host-audit-286/.runtime/context-parity-1793528126243/report.json",
+  "log": "/Users/buns/Documents/GitHub/BunsDev/river-oaks-host-audit-286/.runtime/context-cancellation-1793528126177.log"
+}
