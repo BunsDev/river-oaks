@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { bakeRigidParts } from './costume-batching.js';
 
 // Jevica's tailored look from Val's 2026-10-29 reference
 // (public/assets/characters/references/jevica-pink-suit-20261029.png): an
@@ -195,7 +196,7 @@ export function createJevicaSuit(avatar, { surface, owned, attach, mesh }) {
   const roseGold = surface({ color: SUIT.roseGold, metalness: .9, roughness: .26, clearcoat: .3 }); roseGold.name = 'Jevica rose gold';
   const petal = surface({ color: '#ffffff', vertexColors: true, roughness: .55, sheen: .5, sheenColor: new THREE.Color('#ffd7e3'), side: THREE.DoubleSide }); petal.name = 'Jevica lily petals';
   const stamen = surface({ color: SUIT.stamen, metalness: .6, roughness: .4 });
-  const pieces = { blazer: null, trousers: null, peplum: null, collar: null, lapels: [], flowers: [], earrings: [], heels: [], waist: null };
+  const pieces = { blazer: null, trousers: null, peplum: null, collar: null, lapels: [], brooch: null, flowers: [], earrings: [], heels: [], waist: null };
   model.updateMatrixWorld(true); root.updateMatrixWorld(true);
   const toRoot = point => root.worldToLocal(body ? body.localToWorld(point.clone()) : point.clone());
   const boneRest = name => root.worldToLocal(model.getObjectByName(name).getWorldPosition(new THREE.Vector3()));
@@ -317,6 +318,7 @@ export function createJevicaSuit(avatar, { surface, owned, attach, mesh }) {
     pieces.collar = mesh(neckGroup, collar, collarSatin, [0, 0, 0]); pieces.collar.name = 'Jevica mandarin collar';
     const brooch = createFlower(.016, { petalMaterial: petal, stamenMaterial: stamen, owned });
     brooch.name = 'Jevica collar brooch'; brooch.position.set(0, .03 * unit, (neckProfile.at(0) + .012) * unit); brooch.rotation.x = Math.PI / 2 - .2; neckGroup.add(brooch);
+    bakeRigidParts(brooch, owned); pieces.brooch = brooch;
     // Pumps: the shoes turn glossy pink and gain a slim rose-gold heel that stays flush with the floor.
     for (const side of ['l', 'r']) {
       // The root's origin is the floor; the column runs from it to just under the ankle, behind the shoe's heel.
@@ -343,13 +345,13 @@ if(!(vBind.y>${(collarY - .03).toFixed(4)}&&abs(vBind.x)<.07)&&!(vBind.z>.0&&vBi
       const flower = createFlower(r, { petalMaterial: petal, stamenMaterial: stamen, owned });
       flower.position.set(dx, dy, dz); flower.rotation.set(0, 0, side * (-Math.PI / 2 + .35), 'YXZ'); flower.rotation.y = k * .7; cluster.add(flower);
     }
-    cluster.position.set(side * .112, .062, -.006); head.add(cluster); pieces.flowers.push(cluster);
+    cluster.position.set(side * .112, .062, -.006); head.add(cluster); bakeRigidParts(cluster, owned); pieces.flowers.push(cluster);
     // Flower-drop earrings on a short chain; swing() moves them with the head.
     const earring = new THREE.Group(); earring.name = `Jevica earring ${side > 0 ? 'left' : 'right'}`; earring.position.set(side * .086, -.004, .018);
     const stud = new THREE.Mesh(new THREE.SphereGeometry(.004, 8, 6), roseGold); owned.add(stud.geometry); earring.add(stud);
     const chain = new THREE.Mesh(new THREE.CylinderGeometry(.0012, .0012, .02, 6), roseGold); owned.add(chain.geometry); chain.position.y = -.011; earring.add(chain);
     const drop = createFlower(.011, { petalMaterial: petal, stamenMaterial: stamen, owned }); drop.position.y = -.026; drop.rotation.x = Math.PI; earring.add(drop);
-    head.add(earring); pieces.earrings.push({ group: earring, side, angle: new THREE.Vector2(), velocity: new THREE.Vector2() });
+    head.add(earring); bakeRigidParts(earring, owned); pieces.earrings.push({ group: earring, side, angle: new THREE.Vector2(), velocity: new THREE.Vector2() });
   }
   // Bangs: a straight fringe across the forehead, a sheet fitted to her skin a few millimetres
   // out, pinned to the head, ending just above the brows and a little longer at the sides.
