@@ -15,18 +15,12 @@ configureMaterials(renderer);
 document.body.append(renderer.domElement);
 const scene = new THREE.Scene(); scene.background = new THREE.Color('#05060a');
 const camera = new THREE.PerspectiveCamera(62, 1.6, 0.05, 200);
-// The interior now carries its own ten named ambient lights (userData.lights),
-// so the harness keeps only a faint wash plus a few real pools near the hot spots
-// (the live world draws the same from its shared light pool).
-const ambient = new THREE.AmbientLight('#8a7fb8', 0.15);
+// The interior now carries its own ten named ambient lights AND the thirteen
+// named ceiling spotlights (userData.lights + userData.spotlights), so the
+// harness keeps only a faint wash (matching how the live world adds its pool).
+const wash = new THREE.AmbientLight('#8a7fb8', 0.15);
 const key = new THREE.DirectionalLight('#ffd9b8', 0.3); key.position.set(-6, 8, 2);
-const pools = room.lights.slice(0, 8).map(light => {
-  const point = new THREE.PointLight('#ffb26b', 0.55, 15, 1.7);
-  point.position.set(light.a, room.floor + light.y, -light.d);
-  scene.add(point);
-  return point;
-});
-scene.add(ambient, key);
+scene.add(wash, key);
 const club = buildCtClubInterior(room, { local: true, reducedMotion });
 scene.add(club);
 
@@ -79,8 +73,7 @@ window.clubFixture = {
   dispose() {
     running = false;
     club.userData.dispose();
-    pools.forEach(point => point.dispose());
-    ambient.dispose(); key.dispose();
+    key.dispose();
     renderer.dispose(); renderer.forceContextLoss();
   },
 };

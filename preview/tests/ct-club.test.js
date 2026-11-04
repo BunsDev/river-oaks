@@ -213,6 +213,28 @@ test('each wall uses its own brightened tint and the lounge seating glows', () =
   root.userData.dispose();
 });
 
+test('the dancefloor is a colour matrix, pillars are their own section, and 13 spotlights exist', () => {
+  const root = buildCtClubInterior(room, { local: true });
+  const tiles = root.userData.tiles;
+  assert.equal(tiles.rows, 13, '13 rows of 1 m tiles');
+  assert.equal(tiles.cols, 17, '17 columns of 1 m tiles');
+  assert.equal(tiles.matrix.length, 13);
+  tiles.set(0, 0, '#ff0011');
+  assert.equal(tiles.matrix[0][0], '#ff0011', 'per-tile colour sticks in the matrix');
+  assert.doesNotThrow(() => tiles.setAll('#123456'));
+  assert.equal(tiles.matrix[12][16], '#123456');
+  const spots = root.userData.spotlights.list;
+  assert.equal(spots.length, 13, 'the ceiling pool becomes 13 named spotlights');
+  assert.ok(spots.every(spot => spot.isPointLight), 'the spots are real point lights');
+  assert.ok(spots.some(spot => spot.name === 'light.spot.stage'), 'stage spotlight is named');
+  assert.equal(root.userData.spotlights.byName['light.spot.entry'].userData.accent, true);
+  const mats = materials(root).map(mat => mat.name);
+  assert.ok(mats.includes('club-concrete-pillar'), 'pillars keep their own material section');
+  assert.ok(spots[0].intensity > 1, `spotlights carry a visible intensity (${spots[0].intensity})`);
+  root.userData.dispose();
+  assert.equal(root.children.length, 0);
+});
+
 function materials(root) {
   const out = [];
   root.traverse(item => { if (item.material) out.push(...[item.material].flat()); });

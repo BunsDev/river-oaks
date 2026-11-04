@@ -23,6 +23,7 @@ export function buildCtClubInterior(room, options = {}) {
     // left, green-teal right, amber front; the floor keeps neutral concrete and
     // the ceiling a brighter neutral.
     concrete: material('club-concrete', { color: '#41454b', roughness: .96 }),
+    concretePillar: material('club-concrete-pillar', { color: '#3c4046', roughness: .95 }),
     concreteBack: material('club-concrete-back', { color: '#5c4a41', roughness: .94 }),
     concreteLeft: material('club-concrete-left', { color: '#484a67', roughness: .94 }),
     concreteRight: material('club-concrete-right', { color: '#465950', roughness: .94 }),
@@ -172,7 +173,7 @@ export function buildCtClubInterior(room, options = {}) {
   // reads as weight above, not a room.
   for (const d of [8, 16, 24, 32]) {
     for (const a of [-7.3, 7.3]) {
-      instance(box, m.concrete, a, 3, d, 0.7, H, 0.7);
+      instance(box, m.concretePillar, a, 3, d, 0.7, H, 0.7);       // pillars: own colour section
       instance(box, m.dark, a, 0.06, d, 1.05, 0.12, 1.05);
       addOutline(box, OUTLINE.yellow, a, 0.06, d, 1.05, 0.12, 1.05);          // dark base strip: yellow cage
     }
@@ -375,7 +376,7 @@ export function buildCtClubInterior(room, options = {}) {
   const strobeMats = [], spotMats = [];
   for (const strobe of room.fixtures.filter(f => f.kind === 'club-strobe')) {
     instance(box, m.steel, strobe.a, strobe.y, strobe.d, 0.3, 0.18, 0.3);         // housing
-    const lens = basic('club-strobe-lens', { color: '#ffffff', transparent: true, opacity: 0.06, toneMapped: false, depthWrite: false });
+    const lens = basic('club-strobe-lens', { color: '#ffffff', transparent: true, opacity: 0.16, toneMapped: false, depthWrite: false });
     strobeMats.push(lens);
     const quad = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.26), lens);
     owned.geometries.add(quad.geometry);
@@ -396,6 +397,68 @@ export function buildCtClubInterior(room, options = {}) {
   }
   flush();
   createOutlines();
+
+  // ---- the dancefloor as a colour matrix (Val, 2026-11-04) --------------------
+  // 13 rows × 17 columns of 1 m tiles. Each tile's four glow strips (two per
+  // InstancedMesh) share one per-instance colour, so the floor can be colour-coded
+  // tile by tile: `root.userData.tiles.set(row, col, 'hex')`, `matrix[row][col]`
+  // for the current palette. Hosts and the design panel drive this.
+  const tiles = { rows: 13, cols: 17, matrix: [], edgeMeshes: [] };
+  root.traverse(node => { if (node.isInstancedMesh && node.material.name === 'club-tile-edge') tiles.edgeMeshes.push(node); });
+  const readTile = (row, col) => {
+    const k = row * tiles.cols + col;
+    for (const mesh of tiles.edgeMeshes) {
+      const colors = mesh.instanceColor;
+      if (!colors) continue;
+      color.setRGB(colors.getX(k * 2), colors.getY(k * 2), colors.getZ(k * 2), THREE.SRGBColorSpace);
+      return '#' + color.getHexString();
+    }
+    return '#7a4dff';
+  };
+  tiles.set = (row, col, hex) => {
+    const k = row >= 0 && row < tiles.rows && col >= 0 && col < tiles.cols ? row * tiles.cols + col : -1;
+    if (k < 0) return;
+    color.set(hex);
+    for (const mesh of tiles.edgeMeshes) {
+      const colors = mesh.instanceColor;
+      if (!colors) continue;
+      colors.setXYZ(k * 2, color.r, color.g, color.b);
+      colors.setXYZ(k * 2 + 1, color.r, color.g, color.b);
+      colors.needsUpdate = true;
+    }
+    tiles.matrix[row][col] = '#' + color.getHexString();
+  };
+  tiles.setAll = (hex, { skip = () => false } = {}) => {
+    for (let r = 0; r < tiles.rows; r++) for (let c = 0; c < tiles.cols; c++) if (!skip(r, c)) tiles.set(r, c, hex);
+  };
+  tiles.snapshot = () => tiles.matrix.map(row => [...row]);
+  for (let r = 0; r < tiles.rows; r++) { tiles.matrix.push([]); for (let c = 0; c < tiles.cols; c++) tiles.matrix[r].push(readTile(r, c)); }
+  root.userData.tiles = tiles;
+
+  // ---- the thirteen named spotlights from the plan's ceiling pool -------------
+  // The plan's `room.lights` positions become real named PointLights with a tiny
+  // unlit marker, so the club visibly carries its own ceiling spots (entry, bar
+  // ×4, dancefloor ×4, lounge ×3, stage) and hosts need not re-create them. The
+  // world's `lightPositions`/shared pool stays untouched.
+  const SPOT_NAMES = ['entry', 'bar.1', 'bar.2', 'bar.3', 'bar.4', 'dancefloor.nw', 'dancefloor.center', 'dancefloor.ne', 'dancefloor.south', 'lounge.1', 'lounge.2', 'lounge.3', 'stage'];
+  const spotGroup = new THREE.Group(); spotGroup.name = 'CT Club spotlights';
+  const spotList = [], spotByName = {}, spotMat = basic('club-spot-marker', { color: '#fff3c2', toneMapped: false });
+  const spotMarker = new THREE.CircleGeometry(0.14, 18); owned.geometries.add(spotMarker);
+  room.lights.forEach((light, index) => {
+    const spot = new THREE.PointLight('#ffd9a8', light.accent ? 2.2 : 1.5, 15, 1.7);
+    spot.name = `light.spot.${SPOT_NAMES[index] ?? index}`;
+    spot.userData = { kind: 'spot', index, accent: Boolean(light.accent), baseColor: '#ffd9a8', baseIntensity: light.accent ? 2.2 : 1.5 };
+    spot.position.set(light.a, light.y, -light.d);
+    const marker = new THREE.Mesh(spotMarker, spotMat);
+    marker.position.copy(spot.position);
+    marker.rotation.x = -Math.PI / 2;
+    spotGroup.add(spot, marker);
+    spotList.push(spot);
+    spotByName[spot.name] = spot;
+  });
+  root.add(spotGroup);
+  root.userData.spotlights = { group: spotGroup, list: spotList, byName: spotByName };
+
   // ---- the ten named ambient lights -----------------------------------------
   // The room carries its own base lighting so the buried hall is never pitch
   // black: ten AmbientLights spread down the 40 m axis (entry, bar ×2, lounge ×2,
@@ -430,7 +493,9 @@ export function buildCtClubInterior(room, options = {}) {
     if (reducedMotion) return;
     ball.rotation.y = t * 0.55;
     ball.rotation.x = Math.sin(t * 0.21) * 0.4;
-    for (let i = 0; i < spotMats.length; i++) spotMats[i].color.setHSL((t * 0.045 + i * 0.25) % 1, 0.75, 0.5);
+    for (let i = 0; i < spotMats.length; i++) {
+      if (!spotMats[i].userData.manual) spotMats[i].color.setHSL((t * 0.045 + i * 0.25) % 1, 0.75, 0.5);
+    }
     ringMat.color.setHSL((t * 0.05) % 1, 0.9, 0.55);
     const cycle = t % 9, burst = cycle < 2;
     if (burst) {
@@ -464,7 +529,9 @@ export function buildCtClubInterior(room, options = {}) {
     owned.materials.forEach(mat => mat.dispose());
     owned.textures.forEach(texture => texture.dispose());
     for (const light of lightList) light.dispose();
+    for (const spot of spotList) spot.dispose();
     lightsGroup.clear();
+    spotGroup.clear();
     root.clear();
   };
   return root;

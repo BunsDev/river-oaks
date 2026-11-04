@@ -43,6 +43,18 @@ position is still to be decided, so the whole room is built to move.
   tables. Furniture is framed by a thin 3D edge cage drawn 2% outside its body
   (never z-fights); flat floor items get a 1 px top rectangle lifted just above
   their glow strips. Named `club-outlines:{color}` for hosts.
+- **The thirteen ceiling spots from the plan's pool are real named spotlights**
+  (`light.spot.entry`, `light.spot.bar.1…4`, `light.spot.dancefloor.nw/center/ne/
+  south`, `light.spot.lounge.1…3`, `light.spot.stage`) with a tiny ceiling marker
+  each, on `root.userData.spotlights = { group, list, byName }`. Hosts no longer
+  re-create the pool lights; the shared `lightPositions` list is unchanged.
+- **The dancefloor is a colour-coded matrix**: 13 rows × 17 columns of 1 m tiles
+  (`root.userData.tiles.set(row, col, hex)`, `.matrix`, `.setAll`, `.snapshot`),
+  so a design or an automation can address any single tile. The design panel
+  paints tiles from a picker and locks individual tiles from randomize.
+- **Floor, walls and pillars are separate colour sections**: pillars now use
+  `club-concrete-pillar`, the floor keeps `club-concrete`, and each wall keeps
+  its own tint — the panel can colour them independently.
 - **The shell walls are individually brightened and colour-lifted** so a viewer
   can tell every wall apart even in a near-dark room: warm amber back,
   violet-blue left, green-teal right, amber front, brighter neutral ceiling

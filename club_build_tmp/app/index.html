@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>CT Club — walk-around build</title>
+<style>
+  body{margin:0;background:#05060a;font:14px ui-monospace,Menlo,Consolas,monospace;color:#cfd2da;overflow:hidden}
+  canvas{display:block}
+  #hud{position:fixed;top:12px;left:16px;padding:10px 14px;background:#10121acc;border:1px solid #2a2e3a;color:#e8eaf0;border-radius:6px;letter-spacing:.03em;z-index:5}
+  #hud b{color:#7ee0ff}
+  #hint{position:fixed;bottom:12px;left:16px;color:#70758a;font-size:12px;z-index:5}
+  #info{position:fixed;top:12px;right:16px;max-width:560px;max-height:calc(100vh - 110px);overflow:auto;background:#6b6b6b;color:#ffffff;font:9px ui-monospace,Menlo,Consolas,monospace;padding:10px 12px;border:1px solid #8f8f8f;border-radius:4px;display:none;z-index:6}
+  #info h1{font-size:10px;margin:0 0 6px;letter-spacing:.08em}
+  #info h2{font-size:9px;margin:8px 0 2px;color:#ffe9b0;letter-spacing:.06em}
+  #info b{color:#ffd75e}
+  #info ul{margin:0;padding-left:12px}
+  .dp-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
+  .dp-actions button{font:9px ui-monospace;padding:3px 6px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:3px;cursor:pointer}
+  .dp-bulk{display:flex;gap:6px;margin-bottom:4px}
+  .dp-bulk button{font:9px ui-monospace;padding:2px 6px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:3px;cursor:pointer}
+  .dp-toggle{display:inline-flex;gap:4px;align-items:center;white-space:nowrap}
+  .dp-row{display:flex;gap:5px;align-items:center;margin:1px 0;white-space:nowrap}
+  .dp-main,.dp-slot{width:20px;height:14px;padding:0;border:1px solid #333;border-radius:2px;background:transparent;cursor:pointer}
+  .dp-slot.dp-void{opacity:.22}
+  .dp-sw{width:12px;height:12px;border:1px solid rgba(255,255,255,.35);border-radius:2px;flex:0 0 auto}
+  .dp-name{min-width:150px;max-width:220px;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto}
+  .dp-t{width:38px;font:9px ui-monospace;background:#3a3d44;color:#fff;border:1px solid #7d8490;border-radius:2px}
+  .dp-cyc{display:inline-flex;gap:3px;align-items:center;white-space:nowrap}
+  .dp-int{width:44px;font:9px ui-monospace;background:#3a3d44;color:#fff;border:1px solid #7d8490;border-radius:2px}
+  .dp-light .dp-name{color:#bfe9ff}
+  .dp-sec-rnd,.dp-sec-lock{font:9px ui-monospace;padding:1px 4px;margin-right:3px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:3px;cursor:pointer}
+  .dp-sec-count{color:#ffd75e;font-weight:normal}
+  .dp-lock{width:16px;font:9px ui-monospace;padding:0;border:0;background:none;cursor:pointer}
+  .dp-row.dp-locked .dp-name{color:#ff9d8a;text-decoration:line-through}
+  .dp-tiles{margin:2px 0 6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .dp-tilepick{width:26px;height:16px;border:1px solid #333;border-radius:2px;background:transparent;cursor:pointer}
+  .dp-tiles-note{color:#cfd6ff}
+  .dp-tilegrid{display:grid;grid-template-columns:repeat(17,10px);gap:1px;padding:3px;background:#3a3d44;border:1px solid #7d8490;border-radius:2px}
+  .dp-tile{width:10px;height:10px;border:1px solid rgba(0,0,0,.4);cursor:pointer;box-sizing:border-box}
+  .dp-tile.dp-locked{outline:2px solid #ffffff;border:0}
+</style>
+<div id="hud">CT CLUB — <b>WASD</b> walk · <b>click</b> to look · <b>scroll/arrows</b> no jump · <b>N</b> next tour view · <b>i</b> info · <b>Space</b> to entry</div>
+<div id="hint">look: click once (Esc to release the mouse) · walk: W A S D · next tour view: N · reset to entry: Space · info overlay: i</div>
+<div id="info"></div>
+<script type="module" src="./viewer.js"></script>
+</html>
