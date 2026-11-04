@@ -100,3 +100,17 @@ test('inside the IPIC auditorium, facing away from its partition, the district i
   assert.equal(canCullIpicAuditorium(ipicCamera([-.6, 7.22, 31], [.3, 8.5, 33.79]), { ...ipic, interior: null }), false);
   assert.equal(canCullExterior(ipicCamera([-.6, 7.22, 31], [.3, 8.5, 33.79]), ipic), false);
 });
+
+test('renderOnly silences another building\'s shadow proxy and keeps the one casting for a kept batch', () => {
+  const world = new THREE.Group(), interiors = new THREE.Group(), ipic = new THREE.Mesh(), other = new THREE.Mesh();
+  const proxy = members => Object.assign(new THREE.Mesh(), { visible: false, castShadow: true, userData: { members } });
+  const ipicProxy = proxy([ipic]), otherProxy = proxy([other]);
+  interiors.add(ipic, other, ipicProxy, otherProxy); world.add(interiors);
+  renderOnly(world, [ipic], () => {
+    assert.equal(other.visible, false);
+    assert.equal(ipicProxy.castShadow, true, 'a kept batch still casts through its proxy');
+    assert.equal(otherProxy.castShadow, false, 'the sun must not show another building\'s proxy');
+  });
+  assert.equal(otherProxy.castShadow, true, 'restored after the render');
+  assert.equal(otherProxy.visible, false);
+});
