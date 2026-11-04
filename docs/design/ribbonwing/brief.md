@@ -1,7 +1,7 @@
 # Ribbonwing design brief (#777)
 
-Status: **D2 paint pass** (`RIBBONWING_VERSION = 'd2-paint-1'`) on the D1 metric
-blockout. This is a procedural, game-ready model matched to the two final references. It is
+Status: **D3 detail pass** (`RIBBONWING_VERSION = 'd3-detail-1'`) on the D2 paint
+pass. This is a procedural, game-ready model matched to the two final references. It is
 not finished detail art, not a pixel match and not Val's visual acceptance.
 
 ## Sources
@@ -84,6 +84,40 @@ Frame: metres, front −X, up +Y, left +Z, origin on the ground under the planfo
     draw a thicker wing section that rises steadily from the root, which is
     detail-art geometry. The D2 values are the floor from here (D2 − 0.03). The
     near level grows from 71k to 92k triangles, within the 130k budget.
+
+## D3: detail pass
+
+13. **Shut lines, rocker trim and specular tuning — near level only.** An
+    external review proposed a long list of changes. Five were already in the
+    model (clearcoat, sheen, the scene's PMREM environment, chrome
+    `metalness: 1`, the pink nose badge) and several would have broken the
+    measured contract, so only the detail pass was kept:
+
+    - two centreline shut lines (nose deck behind the badge, rear deck between
+      the thrusters), the canopy gasket line 45 mrad outboard of the glass
+      opening, fan-panel rings, and two nacelle rings at the pink band edges;
+    - a 4 mm chrome rocker tube along the lower edge of the flank swoosh;
+    - `envMapIntensity` 1.35 on lacquer, 1.5 on chrome, 1.4 on the blue edge,
+      1.1 on ivory. These multiply the existing atmosphere-driven
+      `environmentIntensity`, so the finish moves without a new light.
+
+    Every seam is a thin tube on the unmodified loft, offset at most 12 mm from
+    the authored surface, so no silhouette changes and the D2 IoU floors carry
+    over unchanged. The near level moves from 57 draws / 92,055 triangles to
+    62 / 106,223, inside the 65-draw and 130k-triangle budgets; medium and far
+    are untouched. Evidence: `d3-detail.json`, `evidence/d3-comparison.png`,
+    `evidence/d3-canonical.png`.
+
+    Rejected, with reasons: a Mark II rewrite (breaks the #777 contract and the
+    pinned export); a studio environment map (the scene already supplies a
+    PMREM HDR environment); `ior: 1.5` on lacquer (moves every view's
+    reflection, no reference support); duller chrome (the references draw it
+    bright); a quilt normal map at 128 px with a roughness map (the export test
+    pins the 64×64 quilt, and the texture is shared with the seats);
+    headlights and taillights (neither reference shows any lamp); blue
+    underglow and a turntable mode (outside the brief's palette and camera
+    contract). The transcript's repeated claim that `ribbonwing.js` does not
+    exist was wrong, so its file-level advice was not used as evidence.
 
 ## D1: camera calibration and tolerances
 
