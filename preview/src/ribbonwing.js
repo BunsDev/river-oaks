@@ -46,10 +46,10 @@ export function createRibbonwing({ rubberName = 'Road tyre rubber' } = {}) {
   const physical = (name, color, options = {}) => { const m = own(new THREE.MeshPhysicalMaterial({ color, roughness: .4, ...options }));m.name = name;return m; };
   const quilt = own(quiltNormalMap());
   const M = {
-    lacquer: physical('Ribbonwing pink lacquer', P.lacquer, { roughness: .3, clearcoat: 1, clearcoatRoughness: .06, envMapIntensity: 1.35 }),
-    ivory: physical('Ribbonwing ivory composite', P.ivory, { roughness: .36, clearcoat: .55, clearcoatRoughness: .16, envMapIntensity: 1.1 }),
-    chrome: physical('Ribbonwing chrome', P.chrome, { metalness: 1, roughness: .13, envMapIntensity: 1.5 }),
-    edge: physical('Ribbonwing blue chrome edge', P.edgeBlue, { metalness: 1, roughness: .2, envMapIntensity: 1.4 }),
+    lacquer: physical('Ribbonwing pink lacquer', P.lacquer, { roughness: .3, clearcoat: 1, clearcoatRoughness: .06 }),
+    ivory: physical('Ribbonwing ivory composite', P.ivory, { roughness: .36, clearcoat: .55, clearcoatRoughness: .16 }),
+    chrome: physical('Ribbonwing chrome', P.chrome, { metalness: 1, roughness: .13 }),
+    edge: physical('Ribbonwing blue chrome edge', P.edgeBlue, { metalness: 1, roughness: .2 }),
     glass: physical('Ribbonwing mint canopy glass', P.mint, { transparent: true, opacity: .3, roughness: .05, metalness: .1, depthWrite: false }),
     glassFar: physical('Ribbonwing tinted canopy (distance)', '#6E9C92', { roughness: .12, metalness: .35, clearcoat: 1 }),
     seat: physical('Ribbonwing ivory upholstery', P.upholsteryIvory, { roughness: .8, sheen: .4, sheenColor: '#fbf4ea', normalMap: quilt, normalScale: new THREE.Vector2(.35, .35) }),

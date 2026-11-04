@@ -87,7 +87,7 @@ Frame: metres, front −X, up +Y, left +Z, origin on the ground under the planfo
 
 ## D3: detail pass
 
-13. **Shut lines, rocker trim and specular tuning — near level only.** An
+13. **Shut lines and rocker trim — near level only.** An
     external review proposed a long list of changes. Five were already in the
     model (clearcoat, sheen, the scene's PMREM environment, chrome
     `metalness: 1`, the pink nose badge) and several would have broken the
@@ -96,10 +96,7 @@ Frame: metres, front −X, up +Y, left +Z, origin on the ground under the planfo
     - two centreline shut lines (nose deck behind the badge, rear deck between
       the thrusters), the canopy gasket line 45 mrad outboard of the glass
       opening, fan-panel rings, and two nacelle rings at the pink band edges;
-    - a 4 mm chrome rocker tube along the lower edge of the flank swoosh;
-    - `envMapIntensity` 1.35 on lacquer, 1.5 on chrome, 1.4 on the blue edge,
-      1.1 on ivory. These multiply the existing atmosphere-driven
-      `environmentIntensity`, so the finish moves without a new light.
+    - a 4 mm chrome rocker tube along the lower edge of the flank swoosh.
 
     Every seam is a thin tube on the unmodified loft, offset at most 12 mm from
     the authored surface, so no silhouette changes and the D2 IoU floors carry
@@ -110,14 +107,20 @@ Frame: metres, front −X, up +Y, left +Z, origin on the ground under the planfo
 
     Rejected, with reasons: a Mark II rewrite (breaks the #777 contract and the
     pinned export); a studio environment map (the scene already supplies a
-    PMREM HDR environment); `ior: 1.5` on lacquer (moves every view's
+    PMREM HDR environment); per-material `envMapIntensity` (three r186 replaces
+    it with `scene.environmentIntensity` whenever the light comes from
+    `scene.environment`, so it changes no pixel); `ior: 1.5` on lacquer (moves every view's
     reflection, no reference support); duller chrome (the references draw it
     bright); a quilt normal map at 128 px with a roughness map (the export test
     pins the 64×64 quilt, and the texture is shared with the seats);
     headlights and taillights (neither reference shows any lamp); blue
     underglow and a turntable mode (outside the brief's palette and camera
-    contract). The transcript's repeated claim that `ribbonwing.js` does not
+    contract). The review's repeated claim that `ribbonwing.js` does not
     exist was wrong, so its file-level advice was not used as evidence.
+
+    To look around the craft by hand, serve `preview/` with Vite and open
+    `/e2e/fixtures/ribbonwing-viewer.html`: the acceptance fixture's scene, lights
+    and paint with orbit controls.
 
 ## D1: camera calibration and tolerances
 
