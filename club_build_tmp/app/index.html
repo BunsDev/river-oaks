@@ -37,6 +37,11 @@
   .dp-tilegrid{display:grid;grid-template-columns:repeat(17,10px);gap:1px;padding:3px;background:#3a3d44;border:1px solid #7d8490;border-radius:2px}
   .dp-tile{width:10px;height:10px;border:1px solid rgba(0,0,0,.4);cursor:pointer;box-sizing:border-box}
   .dp-tile.dp-locked{outline:2px solid #ffffff;border:0}
+  .dp-tools{display:flex;flex-wrap:wrap;gap:6px 10px;margin:6px 0;padding:5px 6px;background:#3a3d44;border:1px solid #7d8490;border-radius:4px}
+  .dp-tool{display:flex;gap:3px;align-items:center;white-space:nowrap}
+  .dp-tool b{color:#ffe9b0;margin-right:2px}
+  .dp-tool-btn{font:9px ui-monospace;padding:2px 5px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:3px;cursor:pointer}
+  .dp-num{width:46px;font:9px ui-monospace;background:#2c2f34;color:#fff;border:1px solid #7d8490;border-radius:2px}
 </style>
 <div id="hud">CT CLUB — <b>WASD</b> walk · <b>click</b> to look · <b>scroll/arrows</b> no jump · <b>N</b> next tour view · <b>i</b> info · <b>Space</b> to entry</div>
 <div id="hint">look: click once (Esc to release the mouse) · walk: W A S D · next tour view: N · reset to entry: Space · info overlay: i</div>

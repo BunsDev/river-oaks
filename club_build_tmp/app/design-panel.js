@@ -133,6 +133,8 @@ export function attachDesignPanel({ root }) {
     schemaVersion: 2, room: 'ct-club', generatedAt: new Date().toISOString(),
     autoExport: localStorage.getItem('ct-club-design.auto') === 'on',
     sections: [...sectionFrozen].map(([id, frozen]) => ({ id, frozen })),
+    colorLock: [...colorLock].map(([id, on]) => ({ id, on })),
+    intensityLocked,
     tiles: tiles ? { matrix: tiles.matrix.map(r => [...r]), locks: tileLocks ? tileLocks.map(r => [...r]) : null } : null,
     items: items.map(it => ({
       id: it.id, label: it.label,
@@ -162,6 +164,8 @@ export function attachDesignPanel({ root }) {
       if (it.kind === 'tiles' && tiles && Array.isArray(saved.colors)) tiles.setAll(saved.colors[0] ?? '#41e0ff');
     }
     if (Array.isArray(restored.sections)) for (const s of restored.sections) sectionFrozen.set(s.id, Boolean(s.frozen));
+    if (Array.isArray(restored.colorLock)) for (const c of restored.colorLock) colorLock.set(c.id, Boolean(c.on));
+    if (typeof restored.intensityLocked === 'boolean') intensityLocked = restored.intensityLocked;
     if (restored.tiles?.matrix && tiles) {
       for (let r = 0; r < tiles.rows; r++) for (let c = 0; c < tiles.cols; c++) {
         if (restored.tiles.matrix[r]?.[c]) tiles.matrix[r][c] = restored.tiles.matrix[r][c];
@@ -207,7 +211,76 @@ export function attachDesignPanel({ root }) {
   const randomizeSection = name => { for (const it of items) if (it.group === name) randomizeItem(it); applyAll(); changed(); };
   const randomizeAll = () => { for (const it of items) randomizeItem(it); applyAll(); changed(); };
 
-  return { items, byId, applyAll, saveNow, cycle, changed, serialise, sectionFrozen, tileLocks, tiles, randomizeSection, randomizeAll, tilesItem };
+  // ---- v3 tools: cycling, colour counts, locks, intensity -----------------------
+  const colorLock = new Map();        // section -> its colours are frozen from randomize
+  let intensityLocked = false;        // light intensities are frozen from randomize/±
+  const randomizable = it => !it.locked && !sectionFrozen.get(it.group);
+  const colorRandomizable = it => randomizable(it) && !colorLock.get(it.group);
+
+  const cycleAll = on => { for (const it of items) if (it.kind !== 'tiles') it.cycle = Boolean(on); applyAll(); changed(); };
+  const randomizeColorCount = () => {
+    for (const it of items) {
+      if (!colorRandomizable(it) || !it.cycle) continue;
+      const count = 2 + Math.floor(Math.random() * 7);            // 2..8 colours
+      const palette = PALETTES[it.group] ?? PALETTES.LIGHTS;
+      it.colors.fill(null);
+      for (let i = 0; i < count; i++) it.colors[i] = pick(palette);
+    }
+    applyAll(); changed();
+  };
+  const setColorCount = n => {
+    const count = Math.max(1, Math.min(8, Math.round(Number(n) || 8)));
+    for (const it of items) {
+      if (!colorRandomizable(it)) continue;
+      const palette = PALETTES[it.group] ?? PALETTES.LIGHTS;
+      const next = it.colors.filter(Boolean);
+      while (next.length < count) next.push(pick(palette));
+      next.length = count;
+      it.colors.fill(null);
+      next.forEach((c, i) => { it.colors[i] = c; });
+      it.cycle = count > 1;
+    }
+    applyAll(); changed();
+  };
+  const randomizeCycleColors = () => {
+    for (const it of items) {
+      if (!colorRandomizable(it)) continue;
+      const hexes = it.colors.filter(Boolean);
+      if (it.cycle && hexes.length > 1) {
+        const palette = PALETTES[it.group] ?? PALETTES.LIGHTS;
+        hexes.forEach((_, i) => { it.colors[i] = pick(palette); });
+      }
+    }
+    applyAll(); changed();
+  };
+  const randomizeLocks = () => {
+    for (const it of items) it.locked = Math.random() < 0.3;
+    sectionFrozen.clear();
+    for (const name of new Set(items.map(it => it.group))) if (Math.random() < 0.25) sectionFrozen.set(name, true);
+    colorLock.clear();
+    for (const name of new Set(items.map(it => it.group))) if (Math.random() < 0.2) colorLock.set(name, true);
+    intensityLocked = Math.random() < 0.3;
+    applyAll(); changed();
+  };
+  const unlockAll = () => { for (const it of items) it.locked = false; sectionFrozen.clear(); colorLock.clear(); intensityLocked = false; applyAll(); changed(); };
+  const lightItems = () => items.filter(it => it.kind === 'light' || it.kind === 'spotlight');
+  const setIntensity = (it, v, overrideLock = false) => {
+    if (!overrideLock && (it.locked || sectionFrozen.get(it.group) || intensityLocked)) return;
+    it.intensity = Math.max(0, Number(v) || 0);
+    it.ref.intensity = it.intensity;
+  };
+  const randomizeIntensity = () => { for (const it of lightItems()) setIntensity(it, 0.3 + Math.random() * 2.7); applyAll(); changed(); };
+  const bumpIntensity = delta => { for (const it of lightItems()) setIntensity(it, it.ref.intensity + delta); applyAll(); changed(); };
+  const setIntensityAll = v => { for (const it of lightItems()) setIntensity(it, v); applyAll(); changed(); };
+  const toggleIntensityLock = on => { intensityLocked = Boolean(on); changed(); };
+  const isIntensityLocked = () => intensityLocked;
+
+  return {
+    items, byId, applyAll, saveNow, cycle, changed, serialise, sectionFrozen, colorLock, tileLocks, tiles,
+    randomizeSection, randomizeAll, tilesItem,
+    cycleAll, randomizeColorCount, setColorCount, randomizeCycleColors, randomizeLocks, unlockAll,
+    randomizeIntensity, bumpIntensity, setIntensityAll, toggleIntensityLock, intensityLocked: isIntensityLocked,
+  };
 }
 
 export function mountDesignPanel(infoEl, api) {
@@ -229,6 +302,26 @@ export function mountDesignPanel(infoEl, api) {
       <label class="dp-toggle" title="off by default; on writes light_design_01.json, 02… on every change"><input type="checkbox" id="dp-auto"${autoExport ? ' checked' : ''}> auto .json on change</label>
       <label class="dp-toggle"><input type="file" id="dp-file" accept=".json"> load design</label>
     </div>
+    <div class="dp-tools">
+      <div class="dp-tool"><b>CYCLE</b>
+        <button class="dp-tool-btn" id="dp-cyc-on" title="turn cycling ON for every item">on all</button>
+        <button class="dp-tool-btn" id="dp-cyc-off" title="turn cycling OFF (solid) for every item">solid all</button></div>
+      <div class="dp-tool"><b>COLOR COUNT</b>
+        <button class="dp-tool-btn" id="dp-rnd-count" title="randomize how many colours each cycled item uses (2–8)">🎲 amount</button>
+        <input type="number" class="dp-num" id="dp-count" value="8" min="1" max="8" title="amount of cycle colours">
+        <button class="dp-tool-btn" id="dp-set-count" title="set the amount of cycle colours to the value for all items">set</button>
+        <button class="dp-tool-btn" id="dp-rnd-cycl" title="randomize the cycling colours (own palette per section)">🎲 cycle colors</button></div>
+      <div class="dp-tool"><b>LOCKS</b>
+        <button class="dp-tool-btn" id="dp-rnd-locks" title="randomize which sections are frozen and which rows are locked">🎲 lock area</button>
+        <button class="dp-tool-btn" id="dp-unlock" title="unfreeze sections and unlock every row">unlock</button></div>
+      <div class="dp-tool"><b>INTENSITY (all lights)</b>
+        <button class="dp-tool-btn" id="dp-int-lock" title="lock all light intensities">🔒</button>
+        <button class="dp-tool-btn" id="dp-rnd-int" title="randomize all light intensities">🎲</button>
+        <button class="dp-tool-btn" id="dp-int-up" title="raise all light intensities">+0.2</button>
+        <button class="dp-tool-btn" id="dp-int-down" title="lower all light intensities">−0.2</button>
+        <input type="number" class="dp-num" id="dp-int-set" value="1.2" min="0" step="0.1" title="intensity value">
+        <button class="dp-tool-btn" id="dp-int-apply" title="set all light intensities to the value">set</button></div>
+    </div>
     <div id="dp-groups"></div>
     <h2>Randomize & matrix</h2>
     <ul>
@@ -242,7 +335,7 @@ export function mountDesignPanel(infoEl, api) {
     const slots = [...Array(8)].map((_, i) =>
       `<input type="color" class="dp-slot${it.colors[i] == null ? ' dp-void' : ''}" data-id="${esc(it.id)}" data-i="${i}" value="${it.colors[i] ?? '#000000'}" title="${esc(it.label)} — colour ${i + 1}">`).join('');
     const int = it.kind === 'light' || it.kind === 'spotlight'
-      ? `<input type="number" class="dp-int" data-id="${esc(it.id)}" value="${it.ref.intensity.toFixed(2)}" min="0" step="0.05" title="intensity">`
+      ? `<input type="number" class="dp-int" data-id="${esc(it.id)}" value="${it.ref.intensity.toFixed(2)}" min="0" step="0.05" title="intensity"${api.intensityLocked() ? ' disabled' : ''}>`
       : '';
     return `<div class="dp-row${it.locked ? ' dp-locked' : ''}">
       <button class="dp-lock" data-id="${esc(it.id)}" title="${it.locked ? 'unlock this column' : 'lock this column from randomize'}">${it.locked ? '🔒' : '🔓'}</button>
@@ -278,7 +371,8 @@ export function mountDesignPanel(infoEl, api) {
       parts.push(`<h2>
         <button class="dp-sec-rnd" data-sec="${esc(name)}" title="randomize ${name} only">🎲</button>
         <button class="dp-sec-lock" data-sec="${esc(name)}" title="freeze/unfreeze ${name} from randomize">${frozen ? '🔒' : '🔓'}</button>
-        ${name}<span class="dp-sec-count"> — ${groupItems.length - lockedCount}/${groupItems.length}${frozen ? ' · frozen' : ''}</span></h2>`);
+        <button class="dp-sec-col" data-sec="${esc(name)}" title="lock/unlock the cycling colours of ${name}">${api.colorLock.get(name) ? '🎨' : '🖌️'}</button>
+        ${name}<span class="dp-sec-count"> — ${groupItems.length - lockedCount}/${groupItems.length}${frozen ? ' · frozen' : ''}${api.colorLock.get(name) ? ' · colors locked' : ''}</span></h2>`);
       for (const it of groupItems) {
         parts.push(row(it));
         if (it.kind === 'tiles') parts.push(tileGrid());
@@ -286,6 +380,7 @@ export function mountDesignPanel(infoEl, api) {
     }
     groupsEl.innerHTML = parts.join('');
     bind(groupsEl);
+    infoEl.querySelector('#dp-int-lock').textContent = api.intensityLocked() ? '🔒' : '🔓';
   };
 
   const bind = groupsEl => {
@@ -318,6 +413,11 @@ export function mountDesignPanel(infoEl, api) {
     groupsEl.querySelectorAll('.dp-sec-lock').forEach(btn => btn.addEventListener('click', () => {
       const name = btn.dataset.sec;
       api.sectionFrozen.set(name, !api.sectionFrozen.get(name));
+      api.changed(); render();
+    }));
+    groupsEl.querySelectorAll('.dp-sec-col').forEach(btn => btn.addEventListener('click', () => {
+      const name = btn.dataset.sec;
+      api.colorLock.set(name, !api.colorLock.get(name));
       api.changed(); render();
     }));
     groupsEl.querySelectorAll('.dp-tile').forEach(cell => {
@@ -382,6 +482,19 @@ export function mountDesignPanel(infoEl, api) {
   });
 
   render();
+  // Toolbar: cycling, colour count, lock area, intensity (all lights).
+  infoEl.querySelector('#dp-cyc-on').addEventListener('click', () => { api.cycleAll(true); render(); });
+  infoEl.querySelector('#dp-cyc-off').addEventListener('click', () => { api.cycleAll(false); render(); });
+  infoEl.querySelector('#dp-rnd-count').addEventListener('click', () => { api.randomizeColorCount(); render(); });
+  infoEl.querySelector('#dp-set-count').addEventListener('click', () => { api.setColorCount(infoEl.querySelector('#dp-count').value); render(); });
+  infoEl.querySelector('#dp-rnd-cycl').addEventListener('click', () => { api.randomizeCycleColors(); render(); });
+  infoEl.querySelector('#dp-rnd-locks').addEventListener('click', () => { api.randomizeLocks(); render(); });
+  infoEl.querySelector('#dp-unlock').addEventListener('click', () => { api.unlockAll(); render(); });
+  infoEl.querySelector('#dp-int-lock').addEventListener('click', () => { api.toggleIntensityLock(!api.intensityLocked()); render(); });
+  infoEl.querySelector('#dp-rnd-int').addEventListener('click', () => { api.randomizeIntensity(); render(); });
+  infoEl.querySelector('#dp-int-up').addEventListener('click', () => { api.bumpIntensity(0.2); render(); });
+  infoEl.querySelector('#dp-int-down').addEventListener('click', () => { api.bumpIntensity(-0.2); render(); });
+  infoEl.querySelector('#dp-int-apply').addEventListener('click', () => { api.setIntensityAll(infoEl.querySelector('#dp-int-set').value); render(); });
   // Drive the per-item colour cycles (and animated floors) from the frame loop.
   const loop = now => { requestAnimationFrame(loop); api.cycle(now / 1000); };
   requestAnimationFrame(loop);
