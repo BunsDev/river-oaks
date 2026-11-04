@@ -26,7 +26,7 @@ question was needed):
 
 ## 2. Current state (all verified; nothing pending blocks handoff)
 
-**Implemented and green:**
+**Implemented and green (after the continuation session):**
 - `preview/src/ct-club-plan.js` — pure-JS plan (shared with the server
   walker), store-room frame, `planCtClub({ east, north, yaw })`; the
   default `(0,0,0)` is the pending position. Zones: entry (0–4 d), bar (left),
@@ -36,25 +36,27 @@ question was needed):
   instanced (the whole dancefloor = 2 instanced meshes), emissive-only glows,
   `userData.tick(t)` (ball spin, RGB spots, lasers burst 2 s/9 s, strobes <1%
   duty), `reducedMotion` option, `userData.lightPositions` in the shared pool
-  shape, builds under node (no canvas).
-- `preview/tests/ct-club.test.js` — **8/8 passing.**
+  shape, builds under node (no canvas). Includes the **instance-matrix fix**
+  (`matrix.clone()` when batching) — without it every instanced slot held the
+  last composed matrix and the room collapsed to one point (see the ledger).
+- `preview/tests/ct-club.test.js` — **9/9 passing** (incl. the culling
+  regression added by the continuation session).
 - `preview/e2e/fixtures/ct-club.html` + `.js` — browser design harness.
 - Docs: `docs/ct-club.md`, ledger `2026-11-04-ct-club.md`.
 
 **Verification already run (exact commands + results):**
-- `node --test preview/tests/ct-club.test.js` → 8/8 pass.
-- `node --check` on all new modules → pass.
-- `node --test --test-concurrency=4 preview/tests/*.test.js` → 5285 tests,
-  5241 pass, **13 fail — ALL pre-existing on this checkout**, none touch the new
-  files (asset-provenance/receipt pins: `approved-space`, `coat-tails`, Lyra/
-  Vesper/Silvan/seated skin-corrective provenance, `screening-media` films,
-  `fixture-receipt` eyes, published contract/manifest, `studio-garden-office`,
-  `space-scene` finish classic entries, `vegetation` canopy, `vite-env-dir`
-  Windows path separators). Proof they are not ours: `git status --short` shows
-  zero modified tracked files; all 13 read `data/`, `dist/` or generated receipts
-  the new files never touch.
-- `pnpm run build` → **PASSED in this session** (`✓ built in 1.02s`, landing page
-  built, access-entry check passed). Build gate is DONE.
+- `node --test preview/tests/ct-club.test.js` → 9/9 pass.
+- `node --test preview/tests/ribbonwing.test.js` → 9/9 pass (after the sync
+  merge with the origin feature branch).
+- Headless visual/performance pass (browser-lock, ephemeral Vite port): all six
+  tour views render — entry 39 calls/28356 tris, bar 30/27712, dancefloor
+  29/27200, ball 22/25000, lounge 15/17860, dj 22/17136; CPU p95 0.2–0.7 ms; no
+  page/console errors; screenshots in `.runtime/ct-club/*.png` (git-ignored).
+- `pnpm run build` → **PASSED** (`✓ built in 1.78s`, access-entry check
+  `Sign-in page: 7 files, all served before sign-in`). Build gate is DONE.
+- Before the fix, `node --test --test-concurrency=4 preview/tests/*.test.js`
+  was 13 fail, all pre-existing on this checkout (see §6); a re-run on the
+  merged tree is part of the delivery gate, alongside `pnpm run verify` (core).
 
 ## 3. Remaining work (in order)
 
@@ -84,9 +86,11 @@ question was needed):
 ## 4. Worktree / branch / files owned
 
 - Branch: `feat/ribbonwing-viewer-upstream-20261104` (primary checkout,
-  `c:\projects\for vals car\river-oaks`), commit `af24fbbb…` — all new files are
-  UNTRACKED, nothing committed yet.
-- Live register task: `ct-club` (created this session, status `active`).
+  `c:\projects\for vals car\river-oaks`), HEAD `cb774468` — the CT Club files are
+  committed (`9f4de8d7` feature, `24621704` newline fix, `b8a1931c` culling fix)
+  and the branch is synced with `origin` via the merge commit `cb774468`
+  (ribbonwing D3 files resolved to the upstream fix; CT Club files untouched).
+- Live register task: `ct-club` (status `active`, lease renewed).
 - Files owned: the two `src` modules, the test, the two fixture files, this
   handover, the ledger, and `docs/ct-club.md`.
 
@@ -113,8 +117,11 @@ Silvan/seated skin-corrective provenance, `screening-media` films,
 
 ## 7. Next instance checklist
 
-- [x] `pnpm run build` (passed this session)
-- [ ] Visual pass in the fixture; tune if needed (design step)
+- [x] `pnpm run build` (passed after the culling fix and the sync merge)
+- [x] Headless visual/performance pass in the fixture (all six views render, CPU
+      p95 0.2–0.7 ms; screenshots in `.runtime/ct-club/`) — human visual tuning
+      of emissive intensities/colours remains a design step
 - [ ] Await Val's position decision → wire into venue plumbing + stair throat
-- [ ] `pnpm run verify` (core) before any commit; never merge without authorization
+- [ ] `pnpm run verify` (core) + one full preview-suite re-run on the merged
+      tree before any PR; never merge without authorization
 - [ ] Update register `ct-club` status/evidence after delivery
