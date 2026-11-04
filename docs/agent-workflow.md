@@ -66,7 +66,7 @@ RIVER_OAKS_SHARED_SOFTWARE=1 RIVER_OAKS_SECURITY_SOFTWARE=1 RIVER_OAKS_EXPERIENC
 
 The shared runner uses temporary identities and owned servers; CPU rendering
 proves fixture behavior, not visual quality. On macOS, run the browser profile
-directly. The `shared` (30 minutes) and `experience` (20 minutes) tasks have longer deadlines; the others use the 10-minute default. The Commons journey runs in its own `experience-commons` stage (10 minutes, report `data/reports/experience-commons.json`, ignored by Git). It used to run last in `experience`, which took 880–1,177 s when it passed locally and hit its 1,200 s deadline under load, killing the Commons journey; the Commons journey alone took 163–240 s. All browser tasks require functioning WebGL2.
+directly. The `shared` (30 minutes) and `experience` (20 minutes) tasks have longer deadlines; the others use the 10-minute default. The Commons journey runs in its own `experience-commons` stage (10 minutes, report `data/reports/experience-commons.json`, ignored by Git). It used to run last in `experience`, which took 880–1,177 s when it passed locally and hit its 1,200 s deadline under load, killing the Commons journey; the Commons journey alone took 163–240 s. The Five Rooms journey (#842) runs in its own `experience-five-rooms` stage the same way (10 minutes, report `data/reports/experience-five-rooms.json`, ignored by Git): it took 342 s alone, and `experience` had used 1,055 s of its 1,200 s without it. All browser tasks require functioning WebGL2.
 
 For a changed browser interaction, also run its named journey, for example:
 `pnpm run test:experience hud-and-quality`. Local browser runs from different

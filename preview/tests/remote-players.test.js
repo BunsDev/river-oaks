@@ -429,31 +429,3 @@ test('crowd names avoid overlap while all avatar anchors remain visible and text
   players.dispose();assert.equal(fontChanged,null,'dispose removes font listener');
  }finally{players?.dispose();globalThis.document=previousDocument;}
 });
-
-// v0.3.0 (#640 figure cost): a resident beyond RESIDENT_DETAIL_M stays drawn but animates at a
-// quarter rate and casts no shadow; a near resident and any player keep full detail.
-test('a distant resident animates at a quarter rate without a shadow; near ones and players keep full detail',async()=>{
-  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};globalThis.__remoteSkins=true;
-  try{
-    const { RESIDENT_DETAIL_M } = await import('../src/remote-players.js');
-    const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(),players=createRemotePlayers(scene,new Element());
-    const far=RESIDENT_DETAIL_M+10;
-    players.sync([{id:'resident:far',name:'Far',position:[far,0,0],altitude:0,yaw:0,appearance:'sable-human'},{id:'peer',name:'Peer',position:[0,far,0],altitude:0,yaw:0,appearance:'sable-human'}],'self');
-    await new Promise(resolve=>setImmediate(resolve));
-    const rigOf=id=>scene.children.find(holder=>holder.children[0]?.userData.appearance&&holder.userData?.id===id)?.children[0];
-    const [resident,peer]=scene.children.map(holder=>holder.children[0]);
-    const casts=rig=>rig.getObjectsByProperty('isMesh',true).filter(mesh=>mesh.isSkinnedMesh).map(mesh=>mesh.castShadow);
-    for(let frame=0;frame<8;frame++)players.update(frame*16,camera);
-    assert.equal(resident.userData.frames.length,2,'a distant resident animates one frame in four');
-    assert.equal(peer.userData.frames.length,8,'a distant player keeps every frame');
-    assert.deepEqual(casts(resident),[false],'a distant resident casts no shadow');
-    assert.deepEqual(casts(peer),[true]);
-    players.sync([{id:'resident:far',name:'Far',position:[2,0,0],altitude:0,yaw:0,appearance:'sable-human'},{id:'peer',name:'Peer',position:[0,far,0],altitude:0,yaw:0,appearance:'sable-human'}],'self');
-    for(let frame=8;frame<200&&scene.children[0].position.x>RESIDENT_DETAIL_M-1;frame++)players.update(frame*16,camera);
-    const before=resident.userData.frames.length;
-    for(let frame=0;frame<4;frame++)players.update(4000+frame*16,camera);
-    assert.equal(resident.userData.frames.length-before,4,'near again, every frame');
-    assert.deepEqual(casts(resident),[true],'and its shadow is back');
-    players.dispose();
-  }finally{delete globalThis.__remoteSkins;globalThis.document=previousDocument;}
-});

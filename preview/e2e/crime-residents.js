@@ -99,7 +99,7 @@ async page => {
     for (const candidate of candidates) {
       // The figure must already be drawn: the startle lasts one second, a figure can take longer to load.
       // Waits stay short: one star cools after 30 s unobserved (crime.js starDecayMs).
-      // A CPU-drawn client draws residents only within 30 m (resident-figures.js), so first stop about
+      // Every client draws residents only within 30 m (resident-figures.js), so first stop about
       // 12 m off, outside the 6 m a wanted player startles from, then wait for the figure.
       const near = (await town(visitor)).locals.find(local => local.id === candidate.id) ?? candidate, here = (await town(visitor)).self.position;
       const gap = distance(here, near.position);
