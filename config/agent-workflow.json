@@ -41,6 +41,7 @@
       "reflections",
       "experience",
       "experience-commons",
+      "experience-five-rooms",
       "shared",
       "ipic-screening"
     ],
@@ -62,6 +63,7 @@
       "reflections",
       "experience",
       "experience-commons",
+      "experience-five-rooms",
       "shared",
       "ipic-screening"
     ],
@@ -300,6 +302,19 @@
       ],
       "env": {
         "RIVER_OAKS_E2E_REPORT": "experience-commons.json"
+      },
+      "browser": true
+    },
+    {
+      "id": "experience-five-rooms",
+      "command": [
+        "pnpm",
+        "run",
+        "test:experience",
+        "five-rooms"
+      ],
+      "env": {
+        "RIVER_OAKS_E2E_REPORT": "experience-five-rooms.json"
       },
       "browser": true
     },

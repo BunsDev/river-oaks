@@ -321,7 +321,7 @@ async page => {
       .sort((a, b) => distance(a.position, state3.self.position) - distance(b.position, state3.self.position)).slice(0, 3);
     let reacted = null, reactedPeer = null, drawnStartle = null;
     for (const candidate of candidates) {
-      // The witness draws residents only within 30 m on a low-tier or CPU-drawn client
+      // The witness draws residents only within 30 m
       // (resident-figures.js): it waits about 12 m from this one until the figure is drawn,
       // since the startle lasts one second and a figure can take longer to load.
       const near = (await town(visitor)).locals.find(local => local.id === candidate.id) ?? candidate, lane = distance(near.position, [RX, RN]);
