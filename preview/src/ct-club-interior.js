@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { CLUB, CLUB_INTERIOR, CLUB_LASERS, DISCO_BALL } from './ct-club-plan.js';
+import { CLUB, CLUB_INTERIOR, CLUB_LASERS, CLUB_AMBIENTS, DISCO_BALL } from './ct-club-plan.js';
 
 // The CT Club interior (Val, 2026-11-04): the underground techno club
 // built whole, like the IPIC and axe rooms. Local +X = a across the door, +Y up,
@@ -18,7 +18,7 @@ export function buildCtClubInterior(room, options = {}) {
   const material = (name, props) => { const m = new THREE.MeshStandardMaterial({ name, ...props }); owned.materials.add(m); return m; };
   const basic = (name, props) => { const m = new THREE.MeshBasicMaterial({ name, ...props }); owned.materials.add(m); return m; };
   const m = {
-    concrete: material('club-concrete', { color: '#1d1e21', roughness: .96 }),
+    concrete: material('club-concrete', { color: '#41454b', roughness: .96 }),
     dark: material('club-black', { color: '#0e0f11', roughness: .92 }),
     steel: material('club-steel', { color: '#565b62', metalness: .65, roughness: .45 }),
     brass: material('club-brass', { color: '#8a6a2e', metalness: .8, roughness: .35 }),
@@ -305,6 +305,26 @@ export function buildCtClubInterior(room, options = {}) {
     root.add(quad);
   }
   flush();
+  // ---- the ten named ambient lights -----------------------------------------
+  // The room carries its own base lighting so the buried hall is never pitch
+  // black: ten AmbientLights spread down the 40 m axis (entry, bar ×2, lounge ×2,
+  // dancefloor ×3, stage, speakers), each anchored at its zone so a later swap to
+  // a point/rect light keeps the same spot. Hosts and automations find them on
+  // `userData.lights` ({ group, list, byName }); the world's shared pool
+  // positions stay on the plan (room.lights / lightPositions) as before.
+  const lightsGroup = new THREE.Group(); lightsGroup.name = 'CT Club lights';
+  const lightList = [], lightByName = {};
+  for (const spec of CLUB_AMBIENTS) {
+    const light = new THREE.AmbientLight(spec.color, spec.intensity);
+    light.name = `light.ambient.${spec.key}`;
+    light.userData = { kind: 'ambient', zone: spec.zone, role: spec.key, baseColor: spec.color, baseIntensity: spec.intensity };
+    light.position.set(spec.a, spec.y, -spec.d);
+    lightsGroup.add(light);
+    lightList.push(light);
+    lightByName[light.name] = light;
+  }
+  root.add(lightsGroup);
+  root.userData.lights = { group: lightsGroup, list: lightList, byName: lightByName };
   if (!options.local) {
     root.position.set(room.facade[0], room.floor, -room.facade[1]);
     root.rotation.y = Math.atan2(room.outward[0], -room.outward[1]);
@@ -352,6 +372,8 @@ export function buildCtClubInterior(room, options = {}) {
     owned.geometries.forEach(g => g.dispose());
     owned.materials.forEach(mat => mat.dispose());
     owned.textures.forEach(texture => texture.dispose());
+    for (const light of lightList) light.dispose();
+    lightsGroup.clear();
     root.clear();
   };
   return root;

@@ -15,12 +15,13 @@ configureMaterials(renderer);
 document.body.append(renderer.domElement);
 const scene = new THREE.Scene(); scene.background = new THREE.Color('#05060a');
 const camera = new THREE.PerspectiveCamera(62, 1.6, 0.05, 200);
-// The dark room needs a low wash plus a few real pools near the hot spots (the
-// live world draws the same from its shared light pool).
-const ambient = new THREE.AmbientLight('#8a7fb8', 0.55);
-const key = new THREE.DirectionalLight('#ffd9b8', 0.5); key.position.set(-6, 8, 2);
+// The interior now carries its own ten named ambient lights (userData.lights),
+// so the harness keeps only a faint wash plus a few real pools near the hot spots
+// (the live world draws the same from its shared light pool).
+const ambient = new THREE.AmbientLight('#8a7fb8', 0.15);
+const key = new THREE.DirectionalLight('#ffd9b8', 0.3); key.position.set(-6, 8, 2);
 const pools = room.lights.slice(0, 8).map(light => {
-  const point = new THREE.PointLight('#ffb26b', 0, 15, 1.7);
+  const point = new THREE.PointLight('#ffb26b', 0.55, 15, 1.7);
   point.position.set(light.a, room.floor + light.y, -light.d);
   scene.add(point);
   return point;
@@ -83,6 +84,69 @@ window.clubFixture = {
     renderer.dispose(); renderer.forceContextLoss();
   },
 };
+// ---- the I info overlay --------------------------------------------------------
+// Press `i` for a readable inventory of everything this room is supposed to
+// show: shell, furnishings, fixtures, the ten named ambient lights, and room
+// facts. Counts for instanced assets are read from the actual built meshes.
+{
+  const counts = new Map();
+  club.traverse(node => { if (node.isInstancedMesh) counts.set(node.material.name, (counts.get(node.material.name) ?? 0) + node.count); });
+  const count = name => counts.get(name) ?? 0;
+  const INFO = [
+    { zone: 'Shell · the room', items: [
+      ['floor slab (16 × 40 m)', 1], ['ceiling slab (6.0 m clearance)', 1], ['back wall', 1],
+      ['side walls', 2], ['front wall with 2.3 m door gap', 1], ['door lintel', 1], ['brass door jambs', 2],
+      ['entry mat with edge-glow border', 1], ['concrete columns', 8], ['steel truss rails', 4],
+    ] },
+    { zone: 'Edge-glow bar (left, d 4–24)', items: [
+      ['timber counter with serving overhang', 1], ['edge glow along serving edge', 1], ['under-lip glow', 1],
+      ['back bar case', 1], ['back-glow trough', 1], ['base kick glow', 1], ['glass shelves', 3],
+      ['bottles (instanced)', count('club-bottle-glass')], ['copper chai urn (amber glow)', 1],
+      ['stools (leather + brass rings)', 7],
+    ] },
+    { zone: 'Lounge (right, d 8–26)', items: [
+      ['edge-glow couches', 2], ['armchairs', 2], ['glow coffee tables', 2],
+    ] },
+    { zone: 'Dancefloor (13 × 17 m, d 16–33)', items: [
+      ['1 m LED tiles', 221], ['unlit edge rings (instanced strips)', count('club-tile-edge')], ['glass apron', 1],
+    ] },
+    { zone: 'Stage & speaker wall (d 33–39.4)', items: [
+      ['DJ booth + glowing desk edge', 1], ['mixer deck + channel LEDs', 3],
+      ['subwoofer bank behind the DJ', 1], ['subwoofer driver cones', 10],
+      ['corner speaker stacks', 2], ['stack driver cones', 12], ['bass port rings', 3],
+      ['pendant spot bar over the DJ', 3],
+    ] },
+    { zone: 'Disco ball & lasers (d 24)', items: [
+      ['mount pipe + mirror ring', 1], ['mirrored ball (r 0.55 m)', 1], ['light haze beam', 1],
+      ['RGB lasers (burst 2 s / 9 s)', 3],
+    ] },
+    { zone: 'Corner fixtures', items: [
+      ['entry mat', 1], ['strobes (rare, <1% duty)', 4], ['RGB corner spots', 4],
+    ] },
+  ];
+  window.clubFixture.info = () => {
+    const sections = INFO.map(({ zone, items }) => {
+      const rows = items.map(([label, n]) => `<li><b>${label}</b>${n != null && n !== 1 ? ` ×${n}` : ''}</li>`).join('');
+      return `<h2>${zone}</h2><ul>${rows}</ul>`;
+    }).join('');
+    const lights = club.userData.lights.list.map(light =>
+      `<li><b>${light.name}</b> · ${light.userData.zone} · #${light.color.getHexString()} · ${light.intensity.toFixed(2)}</li>`).join('');
+    document.querySelector('#info').innerHTML =
+      `<h1>CT CLUB — everything visible in this room</h1>${sections}` +
+      `<h2>Named ambient lights (automation-ready)</h2><ul>${lights}</ul>` +
+      `<h2>Room facts</h2><ul><li><b>Size</b> 40 m × 16 m × 6 m</li>` +
+      `<li><b>Position</b> pending — planCtClub({ east, north, yaw })</li>` +
+      `<li><b>People</b> none — no staff/guests alter resident counts</li></ul>`;
+    return document.querySelector('#info').innerHTML;
+  };
+}
+const toggleInfo = () => {
+  const box = document.querySelector('#info');
+  const showing = box.style.display === 'block';
+  if (!showing) window.clubFixture.info();
+  box.style.display = showing ? 'none' : 'block';
+};
+
 function loop(now) {
   if (running) {
     clock += Math.min(1 / 20, (now - last) / 1000); last = now;
@@ -101,4 +165,5 @@ window.addEventListener('keydown', event => {
   else if (event.key === 'ArrowLeft' || event.key === 'k' || event.key === 'K') {
     current = (current - 1 + names.length) % names.length; window.clubFixture.show(names[current]);
   } else if (event.key === 'n' || event.key === 'N') { window.clubFixture.next(); }
+  else if (event.key === 'i' || event.key === 'I') { toggleInfo(); }
 });

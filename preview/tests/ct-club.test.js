@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {
-  CLUB, CLUB_INTERIOR, CLUB_SPOTS, CLUB_STROBES, DISCO_BALL, CLUB_LASERS,
+  CLUB, CLUB_INTERIOR, CLUB_SPOTS, CLUB_STROBES, DISCO_BALL, CLUB_LASERS, CLUB_AMBIENTS,
   planCtClub, configureCtClub, atClubBar, atClubDancefloor, atClubLounge,
 } from '../src/ct-club-plan.js';
 import { buildCtClubInterior } from '../src/ct-club-interior.js';
@@ -147,6 +147,31 @@ test('instances are placed individually, not collapsed onto the last matrix (cul
   const ysAt = concrete.boundingSphere.center.y;
   assert.ok(Math.abs(ysAt - 3) < 1.5, `culling sphere sits inside the hall (y=${ysAt.toFixed(1)})`);
   root.userData.dispose();
+});
+
+test('the interior carries ten named ambient lights across the zones, automation-ready', () => {
+  const root = buildCtClubInterior(room, { local: true });
+  assert.equal(room.ambients.length, 10);
+  const { group, list, byName } = root.userData.lights;
+  assert.ok(group, 'a lights group is exposed');
+  assert.equal(group.name, 'CT Club lights');
+  assert.equal(list.length, 10, 'exactly ten ambient lights');
+  assert.equal(group.children.length, 10);
+  for (const light of list) {
+    assert.ok(light.isAmbientLight, `${light.name} is an AmbientLight`);
+    assert.ok(byName[light.name] === light, `${light.name} is reachable by name`);
+    assert.ok(light.userData.zone && light.userData.role, `${light.name} carries zone/role metadata`);
+    // Anchored inside the hall, one per CLUB_AMBIENTS spec, for a later swap.
+    const spec = CLUB_AMBIENTS.find(s => `light.ambient.${s.key}` === light.name);
+    assert.ok(spec, `spec exists for ${light.name}`);
+    assert.deepEqual([light.position.x, light.position.y, light.position.z], [spec.a, spec.y, -spec.d]);
+    assert.ok(spec.a > -8 && spec.a < 8 && spec.d > 0 && spec.d < 40 && spec.y > 0 && spec.y <= 6, `${spec.key} sits inside the hall`);
+    light.intensity = spec.intensity + 1;   // an automation can drive it by name
+  }
+  const boosted = byName['light.ambient.dancefloor.center'].intensity;
+  assert.ok(Math.abs(boosted - (0.14 + 1)) < 1e-9, `automation by name reaches the light (${boosted})`);
+  root.userData.dispose();
+  assert.equal(root.children.length, 0, 'dispose clears the interior (lights group included)');
 });
 
 function materials(root) {

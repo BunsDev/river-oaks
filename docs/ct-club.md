@@ -27,6 +27,15 @@ position is still to be decided, so the whole room is built to move.
 
 ## Lighting (all cheap)
 
+- **The room carries ten named ambient lights** (so it is never pitch black and
+  hosts can automate each zone): `light.ambient.entry`, `light.ambient.bar.north`,
+  `light.ambient.bar.south`, `light.ambient.lounge.north`,
+  `light.ambient.lounge.south`, `light.ambient.dancefloor.north`,
+  `light.ambient.dancefloor.center`, `light.ambient.dancefloor.south`,
+  `light.ambient.stage`, `light.ambient.speakers`. Each is an `AmbientLight` whose
+  `userData` carries `{ kind, zone, role, baseColor, baseIntensity }` and whose
+  anchor sits at its zone, so a swap to a point/rect light keeps the same spot.
+  Find them on `root.userData.lights = { group, list, byName }`.
 - **Every glow is an emitter** — emissive `MeshStandardMaterial` or unlit
   `MeshBasicMaterial` with instance colors. No real lights are animated.
 - **The dancefloor** is 13 × 17 one-metre tiles, each ringed by a thin unlit
@@ -53,7 +62,8 @@ position is still to be decided, so the whole room is built to move.
   animation gating and reduced-motion regressions.
 - `preview/e2e/fixtures/ct-club.html` / `.js` — a design harness to
   inspect the room at `/e2e/fixtures/ct-club.html` (`← →/J K` tour,
-  `N` next view, `window.clubFixture.sample()` for a CPU sample).
+  `N` next view, `i` toggles the info overlay listing every visible item and the
+  ten light names, `window.clubFixture.sample()` for a CPU sample).
 
 ## Design notes
 

@@ -52,6 +52,24 @@ export const CLUB_LASERS = Object.freeze([
   Object.freeze({ yaw: 0.55, pitch: 0.1, length: 13 }),
 ]);
 
+// The room's ten named ambient lights (Val, 2026-11-04): one per zone spread down
+// the 40 m axis, so the buried hall is never pitch black and hosts can address
+// each zone's colour/intensity by name later (automations, or swapping one to a
+// point/rect light at the same spot). Local frame as the rest of the plan:
+// a across the door, d inward, y up.
+export const CLUB_AMBIENTS = Object.freeze([
+  Object.freeze({ key: 'entry', zone: 'entry', a: 0, d: 2, y: 3.0, color: '#ffe3bd', intensity: 0.14 }),
+  Object.freeze({ key: 'bar.north', zone: 'bar', a: -5.2, d: 6, y: 3.0, color: '#ffb26b', intensity: 0.12 }),
+  Object.freeze({ key: 'bar.south', zone: 'bar', a: -5.2, d: 15, y: 3.0, color: '#ffb26b', intensity: 0.12 }),
+  Object.freeze({ key: 'lounge.north', zone: 'lounge', a: 4.5, d: 10, y: 3.0, color: '#9a6bff', intensity: 0.12 }),
+  Object.freeze({ key: 'lounge.south', zone: 'lounge', a: 4.5, d: 18, y: 3.0, color: '#9a6bff', intensity: 0.12 }),
+  Object.freeze({ key: 'dancefloor.north', zone: 'dancefloor', a: -2.5, d: 18, y: 3.0, color: '#6bd4ff', intensity: 0.1 }),
+  Object.freeze({ key: 'dancefloor.center', zone: 'dancefloor', a: 0, d: 24.5, y: 3.0, color: '#e8e8f2', intensity: 0.14 }),
+  Object.freeze({ key: 'dancefloor.south', zone: 'dancefloor', a: 2.5, d: 30, y: 3.0, color: '#ff6bd4', intensity: 0.1 }),
+  Object.freeze({ key: 'stage', zone: 'stage', a: 0, d: 33.6, y: 3.2, color: '#41c8ff', intensity: 0.12 }),
+  Object.freeze({ key: 'speakers', zone: 'speakers', a: 0, d: 37, y: 3.2, color: '#b44dff', intensity: 0.12 }),
+]);
+
 export const atZone = (zone, a, d) => {
   const za = zone.a ?? [-Infinity, Infinity], zd = zone.d ?? [-Infinity, Infinity];
   return a >= za[0] && a <= za[1] && d >= zd[0] && d <= zd[1];
@@ -111,6 +129,8 @@ export function configureCtClub(room) {
     { a: 5, d: 12, y: 5.3 }, { a: 5, d: 17, y: 5.3 }, { a: 5, d: 22, y: 5.3 },
     { a: 0, d: 33.6, y: 4.4 },
   ];
+  // The ten named ambient lights the interior renders (see CLUB_AMBIENTS).
+  room.ambients = CLUB_AMBIENTS;
   // No staff: a room's people become shared residents, and a new resident changes
   // the resident count every durable checkpoint is restored against.
   room.people = [];
