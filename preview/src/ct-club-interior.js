@@ -18,7 +18,16 @@ export function buildCtClubInterior(room, options = {}) {
   const material = (name, props) => { const m = new THREE.MeshStandardMaterial({ name, ...props }); owned.materials.add(m); return m; };
   const basic = (name, props) => { const m = new THREE.MeshBasicMaterial({ name, ...props }); owned.materials.add(m); return m; };
   const m = {
+    // The shell walls are individually brightened and colour-lifted so a human
+    // eye can tell every wall apart (Val, 2026-11-04): warm back, violet-blue
+    // left, green-teal right, amber front; the floor keeps neutral concrete and
+    // the ceiling a brighter neutral.
     concrete: material('club-concrete', { color: '#41454b', roughness: .96 }),
+    concreteBack: material('club-concrete-back', { color: '#5c4a41', roughness: .94 }),
+    concreteLeft: material('club-concrete-left', { color: '#484a67', roughness: .94 }),
+    concreteRight: material('club-concrete-right', { color: '#465950', roughness: .94 }),
+    concreteFront: material('club-concrete-front', { color: '#5a523b', roughness: .94 }),
+    concreteCeil: material('club-concrete-ceil', { color: '#4a4d55', roughness: .94 }),
     dark: material('club-black', { color: '#0e0f11', roughness: .92 }),
     steel: material('club-steel', { color: '#565b62', metalness: .65, roughness: .45 }),
     brass: material('club-brass', { color: '#8a6a2e', metalness: .8, roughness: .35 }),
@@ -34,8 +43,10 @@ export function buildCtClubInterior(room, options = {}) {
     // Emissive glows: warm for the bar, cool for the seating, white for details.
     edgeGlow: material('club-bar-edge-glow', { color: '#ffffff', emissive: '#ff8b4d', emissiveIntensity: 2.4, roughness: .4 }),
     backGlow: material('club-bar-back-glow', { color: '#ffffff', emissive: '#ff9b58', emissiveIntensity: 2.0, roughness: .5 }),
-    seatGlow: material('club-seat-edge-glow', { color: '#ffffff', emissive: '#7a4dff', emissiveIntensity: 1.9, roughness: .5 }),
-    edgeCool: material('club-modern-edge-glow', { color: '#ffffff', emissive: '#7a4dff', emissiveIntensity: 1.7, roughness: .5 }),
+    seatGlow: material('club-seat-edge-glow', { color: '#ffffff', emissive: '#7a4dff', emissiveIntensity: 3.2, roughness: .5 }),
+    edgeCool: material('club-modern-edge-glow', { color: '#ffffff', emissive: '#7a4dff', emissiveIntensity: 2.8, roughness: .5 }),
+    // Soft violet light-spill under the lounge seating (unlit, additive).
+    spill: basic('club-seat-spill', { color: '#a06bff', transparent: true, opacity: .5, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
     djGlow: material('club-dj-glow', { color: '#ffffff', emissive: '#41c8ff', emissiveIntensity: 2.2, roughness: .4 }),
     bassRing: material('club-bass-port-glow', { color: '#ffffff', emissive: '#7020c9', emissiveIntensity: 2, roughness: .6 }),
     doorGlow: material('club-door-glow', { color: '#ffffff', emissive: '#c92a4f', emissiveIntensity: 2.1, roughness: .4 }),
@@ -79,23 +90,79 @@ export function buildCtClubInterior(room, options = {}) {
     batches.clear();
   };
 
+  // ---- thin bright edge outlines for near-black fixtures (Val, 2026-11-04) ---
+  // Anything dark enough to vanish against the floor gets a 1 px wire frame so an
+  // onlooker always sees it: yellow (bar, entry, dancefloor), bright green
+  // (stage, speakers), purple (lounge seating). Furniture gets a full 3D edge
+  // cage drawn just outside its body (×1.02, so it can never z-fight); flat
+  // floor items get a 1 px top rectangle lifted just above their glow strips.
+  const OUTLINE = { yellow: '#ffe142', green: '#3dff85', purple: '#b26bff' };
+  const edgeCache = new Map();
+  const outlineSegments = new Map();  // color -> { seg: [x,y,z, ...] }
+  const addOutline = (geometry, color, a, y, d, sx = 1, sy = 1, sz = 1, rotate = null) => {
+    let edges = edgeCache.get(geometry);
+    if (!edges) {
+      edges = new THREE.EdgesGeometry(geometry, 0.7);
+      edgeCache.set(geometry, edges);
+      owned.geometries.add(edges);
+    }
+    pos.set(a, y, -d);
+    euler.set(rotate?.x ?? 0, rotate?.y ?? 0, rotate?.z ?? 0);
+    quat.setFromEuler(euler);
+    scale.set(sx * 1.02, sy * 1.02, sz * 1.02);
+    matrix.compose(pos, quat, scale);
+    let list = outlineSegments.get(color);
+    if (!list) { list = { seg: [] }; outlineSegments.set(color, list); }
+    const attribute = edges.attributes.position;
+    const world = new THREE.Vector3();
+    for (let i = 0; i < attribute.count; i++) {
+      world.fromBufferAttribute(attribute, i).applyMatrix4(matrix);
+      list.seg.push(world.x, world.y, world.z);
+    }
+  };
+  const addOutlineRect = (w, l, color, a, y, d) => {
+    let list = outlineSegments.get(color);
+    if (!list) { list = { seg: [] }; outlineSegments.set(color, list); }
+    const cw = w / 2, cl = l / 2;
+    const corners = [[-cw, -cl], [cw, -cl], [cw, cl], [-cw, cl]].map(([ca, cd]) => [a + ca, y, -(d + cd)]);
+    for (let i = 0; i < 4; i++) {
+      const p = corners[i], q = corners[(i + 1) % 4];
+      list.seg.push(p[0], p[1], p[2], q[0], q[1], q[2]);
+    }
+  };
+  const createOutlines = () => {
+    for (const [color, list] of outlineSegments) {
+      if (list.seg.length === 0) continue;
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(list.seg, 3));
+      owned.geometries.add(geometry);
+      const lines = new THREE.LineSegments(geometry, basic(`club-outline-${color}`, { color, toneMapped: false }));
+      lines.name = `club-outlines:${color}`;
+      root.add(lines);
+    }
+    outlineSegments.clear();
+  };
+
   const W = CLUB.width, D = CLUB.depth, H = CLUB.height;
 
   // ---- shell ----------------------------------------------------------------
   // A buried concrete box: no windows, a heavy slab overhead, and a door gap in
   // the front wall where the future stair throat meets the club.
-  instance(box, m.concrete, 0, -0.25, D / 2, W, 0.5, D);                              // floor slab
-  instance(box, m.concrete, 0, H + 0.16, D / 2, W + 0.4, 0.32, D + 0.4);               // ceiling slab
-  instance(box, m.concrete, 0, H / 2, D - 0.1, W, H, 0.2);                             // back wall
-  for (const a of [-W / 2 + 0.1, W / 2 - 0.1]) instance(box, m.concrete, a, H / 2, D / 2, 0.2, H, D); // side walls
+  instance(box, m.concrete, 0, -0.25, D / 2, W, 0.5, D);                              // floor slab (neutral concrete)
+  instance(box, m.concreteCeil, 0, H + 0.16, D / 2, W + 0.4, 0.32, D + 0.4);           // ceiling slab (brighter)
+  instance(box, m.concreteBack, 0, H / 2, D - 0.1, W, H, 0.2);                         // back wall (warm)
+  instance(box, m.concreteLeft, -W / 2 + 0.1, H / 2, D / 2, 0.2, H, D);                // left wall (violet-blue)
+  instance(box, m.concreteRight, W / 2 - 0.1, H / 2, D / 2, 0.2, H, D);                // right wall (green-teal)
   // Front wall with the 2.3 m door gap, and its red entry glow above the door.
-  for (const [c, w] of [[-4.575, 6.85], [4.575, 6.85]]) instance(box, m.concrete, c, H / 2, -0.1, w, H, 0.2);
-  instance(box, m.concrete, 0, 4.15, -0.1, 2.3, 3.7, 0.2);                             // lintel over the door
+  for (const [c, w] of [[-4.575, 6.85], [4.575, 6.85]]) instance(box, m.concreteFront, c, H / 2, -0.1, w, H, 0.2); // front wall (amber)
+  instance(box, m.concreteFront, 0, 4.15, -0.1, 2.3, 3.7, 0.2);                       // lintel over the door
   instance(box, m.doorGlow, 0, 2.34, -0.06, 2.1, 0.05, 0.06);                        // door glow strip
   instance(box, m.brass, -1.12, 1.15, -0.08, 0.08, 2.3, 0.14);                         // door jambs
   instance(box, m.brass, 1.12, 1.15, -0.08, 0.08, 2.3, 0.14);
-  // Entry threshold mat (fixture 'entry-mat'): dark plate with a lit border.
+  // Entry threshold mat (fixture 'entry-mat'): dark plate with a lit border and a
+  // 1 px yellow outline so the dark plate reads against the floor.
   instance(box, m.dark, 0, 0.016, 1.4, 1.7, 0.032, 1.3);
+  addOutlineRect(1.74, 1.34, OUTLINE.yellow, 0, 0.045, 1.4);
   for (const a of [-0.83, 0.83]) instance(box, m.edgeCool, a, 0.04, 1.4, 0.06, 0.02, 1.16);
   for (const d of [0.8, 2.0]) instance(box, m.edgeCool, 0, 0.04, d, 1.6, 0.02, 0.06);
 
@@ -106,6 +173,7 @@ export function buildCtClubInterior(room, options = {}) {
     for (const a of [-7.3, 7.3]) {
       instance(box, m.concrete, a, 3, d, 0.7, H, 0.7);
       instance(box, m.dark, a, 0.06, d, 1.05, 0.12, 1.05);
+      addOutline(box, OUTLINE.yellow, a, 0.06, d, 1.05, 0.12, 1.05);          // dark base strip: yellow cage
     }
   }
   for (const a of [-3.15, 3.15]) instance(box, m.steel, a, 5.9, D / 2, 0.12, 0.12, D);
@@ -134,10 +202,13 @@ export function buildCtClubInterior(room, options = {}) {
       instance(stripA, tileEdge, a - 0.5 + gap / 2, y, d, 1, 1, 1, null, tint);
       instance(stripB, tileEdge, a, y, d + 0.5 - gap / 2, 1, 1, 1, null, tint);
       instance(stripB, tileEdge, a, y, d - 0.5 + gap / 2, 1, 1, 1, null, tint);
+      addOutlineRect(tileSize - gap, tileSize - gap, OUTLINE.yellow, a, 0.062, d);   // 1 px yellow tile grid
     }
   }
-  // A dark glass apron around the floor that receives the glow.
+  // A dark glass apron around the floor that receives the glow, with its own
+  // 1 px yellow outline so the whole dancefloor plate reads.
   instance(box, m.dark, 0, 0.01, (floorD1 + floorD0) / 2, W, 0.02, 12.5);
+  addOutlineRect(W, 12.5, OUTLINE.yellow, 0, 0.034, (floorD1 + floorD0) / 2);
 
 // ---- the edge-glow / back-glow bar ------------------------------------------
   // A 20 m counter along the left wall. Edge glow runs along its serving edge and
@@ -145,9 +216,12 @@ export function buildCtClubInterior(room, options = {}) {
   // bottles, so the whole bar reads as a lit strip from the door to the DJ booth.
   instance(box, m.timber, -7.15, 0.56, 14, 1.5, 1.12, 20);                    // counter body
   instance(box, m.timber, -7.0, 1.145, 14, 1.7, 0.06, 20.2);                  // counter top (serving overhang)
+  addOutline(box, OUTLINE.yellow, -7.15, 0.56, 14, 1.5, 1.12, 20);           // dark timber: yellow cage
+  addOutline(box, OUTLINE.yellow, -7.0, 1.145, 14, 1.7, 0.06, 20.2);
   instance(box, m.edgeGlow, -6.3, 1.176, 14, 0.035, 0.02, 19.6);              // edge glow: along the serving edge
   instance(box, m.edgeGlow, -6.1, 0.52, 14, 0.025, 0.018, 19.4);              // edge glow: under the lip
   instance(box, m.dark, -7.82, 1.5, 14, 0.42, 3.0, 20.2);                     // back bar case
+  addOutline(box, OUTLINE.yellow, -7.82, 1.5, 14, 0.42, 3.0, 20.2);          // near-black case: yellow cage
   instance(box, m.backGlow, -7.9, 2.02, 14, 0.05, 2.55, 19.8);                // back glow trough
   instance(box, m.backGlow, -7.66, 0.18, 14, 0.03, 0.05, 19.8);               // base kick glow
   for (const y of [1.35, 1.85, 2.35]) instance(box, m.shelf, -7.7, y, 14, 0.5, 0.02, 19.6); // glass shelves
@@ -188,16 +262,22 @@ export function buildCtClubInterior(room, options = {}) {
     instance(seatGeo, m.leather, -5.6, 0.725, d, 1, 1, 1);
     instance(glowGeo, m.seatGlow, -5.6, 0.66, d, 1, 1, 1);
     instance(stoolRingGeo, m.brass, -5.6, 0.52, d, 1, 1, 1, { x: Math.PI / 2 });
+    addOutline(seatGeo, OUTLINE.yellow, -5.6, 0.725, d, 1, 1, 1);            // near-black seats: yellow rim
   }
 // ---- the lounge: couches, chairs and tables, edge-lit -------------------------
   // Two couches against the right wall face the dancefloor; each carries a violet
   // glow along its seat edge and a low base strip, and glows at the floor.
   const couch = (aCentre, dCentre) => {
     const a1 = aCentre + 1.3, down = dCentre - 1.1, up = dCentre + 1.1;
+    instance(box, m.spill, aCentre, 0.04, dCentre, 2.9, 0.05, 2.5);                       // violet light-spill under the couch
     instance(box, m.upholstery, aCentre, 0.24, dCentre, 2.6, 0.48, 2.2);                       // seat
+    addOutline(box, OUTLINE.purple, aCentre, 0.24, dCentre, 2.6, 0.48, 2.2);                  // near-black upholstery: purple cage
     instance(box, m.upholstery, a1 - 0.06, 0.62, dCentre, 0.14, 0.78, 2.2);                    // back (faces the hall)
+    addOutline(box, OUTLINE.purple, a1 - 0.06, 0.62, dCentre, 0.14, 0.78, 2.2);
     instance(box, m.upholstery, a1 - 0.14, 0.34, down + 0.15, 0.16, 0.46, 0.18);               // arms
     instance(box, m.upholstery, a1 - 0.14, 0.34, up - 0.15, 0.16, 0.46, 0.18);
+    addOutline(box, OUTLINE.purple, a1 - 0.14, 0.34, down + 0.15, 0.16, 0.46, 0.18);
+    addOutline(box, OUTLINE.purple, a1 - 0.14, 0.34, up - 0.15, 0.16, 0.46, 0.18);
     for (const d of [down + 0.35, up - 0.35]) instance(box, m.upholstery, aCentre - 0.1, 0.32, d, 1.5, 0.14, 1.5); // cushions
     instance(box, m.seatGlow, a1 - 0.155, 0.47, dCentre, 0.035, 0.02, 2.1);                    // edge glow along the seat edge
     instance(box, m.seatGlow, a1 - 0.06, 0.06, dCentre, 2.55, 0.025, 2.15);                    // base glow at the floor
@@ -208,8 +288,11 @@ export function buildCtClubInterior(room, options = {}) {
   couch(6.6, 16.5);
   // Armchairs: smaller, a glow under the seat and a lit base ring.
   const chair = (aCentre, dCentre) => {
+    instance(box, m.spill, aCentre, 0.04, dCentre, 1.2, 0.05, 1.2);                         // violet light-spill under the chair
     instance(box, m.upholstery, aCentre, 0.3, dCentre, 0.9, 0.6, 0.9);
+    addOutline(box, OUTLINE.purple, aCentre, 0.3, dCentre, 0.9, 0.6, 0.9);
     instance(box, m.upholstery, aCentre + 0.42, 0.66, dCentre, 0.1, 0.72, 0.9);
+    addOutline(box, OUTLINE.purple, aCentre + 0.42, 0.66, dCentre, 0.1, 0.72, 0.9);
     instance(box, m.seatGlow, aCentre + 0.415, 0.6, dCentre, 0.25, 0.02, 0.85);
     instance(box, m.seatGlow, aCentre + 0.2, 0.06, dCentre, 0.7, 0.025, 0.7);
   };
@@ -217,7 +300,9 @@ export function buildCtClubInterior(room, options = {}) {
   chair(3.55, 19.6);
   // Coffee tables with a recessed glow panel on each top.
   for (const d of [12.4, 18.4]) {
+    instance(box, m.spill, 4.55, 0.04, d, 1.4, 0.05, 1.8);                         // violet light-spill under the table
     instance(box, m.timber, 4.55, 0.21, d, 1.0, 0.42, 1.4);
+    addOutline(box, OUTLINE.purple, 4.55, 0.21, d, 1.0, 0.42, 1.4);                // dark timber: purple cage
     instance(box, m.seatGlow, 4.55, 0.425, d, 0.5, 0.018, 0.8);
   }
 // ---- the DJ booth and the big speaker wall ------------------------------------
