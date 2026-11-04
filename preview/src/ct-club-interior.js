@@ -50,7 +50,10 @@ export function buildCtClubInterior(room, options = {}) {
     const byGeo = batches.get(mat);
     if (!byGeo.has(geometry)) byGeo.set(geometry, { matrices: [], colors: [] });
     const entry = byGeo.get(geometry);
-    entry.matrices.push(matrix);
+    // `matrix` is a shared temp rewritten by every instance() call, so the batch
+    // must own a copy; two instances that share a (geometry, material) otherwise
+    // end up pinned to the last composed matrix (one pile instead of a room).
+    entry.matrices.push(matrix.clone());
     entry.colors.push(tint !== null ? color.set(tint).clone() : new THREE.Color(1, 1, 1));
   };
   const pos = new THREE.Vector3(), euler = new THREE.Euler(), quat = new THREE.Quaternion(), scale = new THREE.Vector3(), matrix = new THREE.Matrix4(), color = new THREE.Color();

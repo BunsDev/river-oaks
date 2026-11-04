@@ -127,6 +127,28 @@ test('reduced motion keeps the room still', () => {
   root.userData.dispose();
 });
 
+test('instances are placed individually, not collapsed onto the last matrix (culling regression)', () => {
+  const root = buildCtClubInterior(room, { local: true });
+  const concrete = root.children.find(item => item.isInstancedMesh && item.count > 10);
+  assert.ok(concrete, 'a large instanced batch exists');
+  const scratch = new THREE.Matrix4();
+  const points = [];
+  for (let i = 0; i < concrete.count; i++) {
+    concrete.getMatrixAt(i, scratch);
+    points.push(new THREE.Vector3().setFromMatrixPosition(scratch));
+  }
+  // Every instance must keep its own position: the shell alone spans all 40 m.
+  const xs = points.map(v => v.x), ys = points.map(v => v.y), zs = points.map(v => v.z);
+  const span = Math.max(...xs) - Math.min(...xs) + Math.max(...ys) - Math.min(...ys) + Math.max(...zs) - Math.min(...zs);
+  assert.ok(span > 45, `instances spread across the hall, not one pile (span ${span.toFixed(1)} m)`);
+  // The culling sphere must cover the whole hall, or far views render nothing.
+  concrete.computeBoundingSphere();
+  assert.ok(concrete.boundingSphere.radius > 18, `culling sphere spans the hall (r=${concrete.boundingSphere.radius.toFixed(1)} m)`);
+  const ysAt = concrete.boundingSphere.center.y;
+  assert.ok(Math.abs(ysAt - 3) < 1.5, `culling sphere sits inside the hall (y=${ysAt.toFixed(1)})`);
+  root.userData.dispose();
+});
+
 function materials(root) {
   const out = [];
   root.traverse(item => { if (item.material) out.push(...[item.material].flat()); });
