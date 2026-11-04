@@ -12,7 +12,7 @@ const { castShadowsFromProxies } = await import('../src/landscape-models.js');
 const { plainDepthMaterial } = await import('../src/shadow-proxy.js');
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
-const interiors = buildStoreInteriors(storeRoomsFor(world).filter(room => !room.generatedPlan));
+const interiors = buildStoreInteriors(storeRoomsFor(world).filter(room => !room.generatedPlan), { shadowBatch: true });
 const proxies = interiors.children.filter(mesh => mesh.name === 'Interior shadow batch');
 const batches = interiors.children.filter(mesh => mesh.isInstancedMesh && !proxies.includes(mesh));
 const members = proxies.flatMap(proxy => proxy.userData.members);
@@ -86,4 +86,14 @@ test('disposing the interiors releases the proxies', () => {
   for (const proxy of proxies) proxy.addEventListener('dispose', () => released++);
   interiors.userData.dispose();
   assert.equal(released, proxies.length);
+});
+
+test('a room built without a proxy owner keeps its own casters (the generated interior stream)', () => {
+  const rooms = storeRoomsFor(world).filter(room => !room.generatedPlan);
+  const alone = buildStoreInteriors(rooms);
+  const silenced = alone.children.filter(mesh => mesh.isInstancedMesh && mesh.name !== 'Interior shadow batch' && !mesh.castShadow);
+  const batched = batches.filter(mesh => !mesh.castShadow);
+  assert.ok(batched.length > silenced.length, 'the district build silences batches the default build does not');
+  assert.deepEqual(alone.userData.shadowProxies, []);
+  assert.equal(alone.children.filter(mesh => mesh.name === 'Interior shadow batch').some(proxy => proxy.visible), false);
 });

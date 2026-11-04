@@ -86,7 +86,7 @@ function garmentGeometry() {
   const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: false }); geometry.translate(0, 0, -0.025); return geometry;
 }
 
-export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [], cartierPilot = true } = {}) {
+export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [], cartierPilot = true, shadowBatch = false } = {}) {
   const group = new THREE.Group(); group.name = 'Boutique interiors';
   const geometries = new Set(), materials = new Set(), textures = new Set();
   const track = { g: g => { geometries.add(g); return g; }, m: m => { materials.add(m); return m; }, t: t => { textures.add(t); return t; } };
@@ -563,7 +563,8 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [], ca
     proxy.name = 'Interior shadow batch'; proxy.userData.members = meshes; proxy.computeBoundingSphere();
     group.add(proxy); shadowProxies.push(proxy); shadowMembers.push(...meshes);
   }
-  // main.js shows the proxies only while the sun draws its map. Development audit: false
+  // main.js shows the proxies only while the sun draws its map, and only the District's, so only
+  // that build opts in: a streamed room keeps its own casters. Development audit: false
   // lets every batch cast for itself again.
   group.userData.shadowBatch = enabled => {
     for (const mesh of shadowMembers) mesh.castShadow = !enabled;
@@ -571,7 +572,7 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [], ca
     group.userData.shadowProxies = enabled ? shadowProxies : [];
     return shadowProxies.length;
   };
-  group.userData.shadowBatch(true);
+  group.userData.shadowBatch(shadowBatch);
   group.userData.lightPositions = lightPositions;
   group.userData.screens = specialtyInteriors.filter(interior => interior.userData.screen).map(interior => ({ material: interior.userData.screen, aspect: interior.userData.screenAspect, frame: interior.userData.screenFrame ?? null, object: interior }));
   group.userData.dartboards = specialtyInteriors.filter(interior => interior.userData.darts).map(interior => interior.userData.darts);

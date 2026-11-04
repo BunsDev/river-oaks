@@ -155,6 +155,8 @@ data/raw/
 data/generated/
 # The local Commons experience stage's report (config/agent-workflow.json, experience-commons).
 data/reports/experience-commons.json
+# The local Five Rooms experience stage's report (config/agent-workflow.json, experience-five-rooms).
+data/reports/experience-five-rooms.json
 data/models/
 unreal/**/Binaries/
 unreal/**/Intermediate/
