@@ -307,8 +307,10 @@ export function buildCtClubInterior(room, options = {}) {
   }
 // ---- the DJ booth and the big speaker wall ------------------------------------
   instance(box, m.timber, 0, 0.55, 33.7, 5.2, 1.1, 1.4);                        // booth body behind the dancefloor
+  addOutline(box, OUTLINE.green, 0, 0.55, 33.7, 5.2, 1.1, 1.4);                // dark timber: green cage
   instance(box, m.djGlow, 0, 1.14, 33.0, 4.4, 0.03, 0.05);                      // glowing desk edge on the house side
   instance(box, m.dark, 0, 1.18, 33.1, 1.2, 0.05, 0.5);                         // mixer deck
+  addOutline(box, OUTLINE.green, 0, 1.18, 33.1, 1.2, 0.05, 0.5);               // near-black deck: green cage
   const djGlow = material('club-mixer-glow', { color: '#ffffff', emissive: '#41c8ff', emissiveIntensity: 2.6, roughness: .3 });
   for (const a of [-0.4, 0, 0.4]) instance(box, djGlow, a, 1.205, 33.1, 0.06, 0.012, 0.02); // channel LEDs
   // Three massive speaker faces: the central subwoofer bank and the two corner
@@ -318,6 +320,7 @@ export function buildCtClubInterior(room, options = {}) {
   const portRing = new THREE.TorusGeometry(0.3, 0.05, 8, 22); owned.geometries.add(portRing);
   const face = (dc, dd, w, h, depth) => {
     instance(box, m.grille, dc, h / 2, dd, w, h, depth);                          // enclosure rests on the floor
+    addOutline(box, OUTLINE.green, dc, h / 2, dd, w, h, depth);                   // near-black grille: green cage
     return { dc, front: dd - depth / 2 + 0.04, h };
   };
   const bank = face(0, 37.0, 6.8, 2.5, 4.6);                                    // the subs behind the DJ
@@ -381,6 +384,7 @@ export function buildCtClubInterior(room, options = {}) {
   }
   for (const spot of room.fixtures.filter(f => f.kind === 'club-spot-rgb')) {
     instance(box, m.dark, spot.a, spot.y, spot.d, 0.24, 0.12, 0.24);
+    addOutline(box, OUTLINE.green, spot.a, spot.y, spot.d, 0.24, 0.12, 0.24);   // near-black housing: green cage
     const mat = basic('club-spot-rgb', { color: '#ff4d6f', toneMapped: false });
     spotMats.push(mat);
     const quad = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), mat);
@@ -390,6 +394,7 @@ export function buildCtClubInterior(room, options = {}) {
     root.add(quad);
   }
   flush();
+  createOutlines();
   // ---- the ten named ambient lights -----------------------------------------
   // The room carries its own base lighting so the buried hall is never pitch
   // black: ten AmbientLights spread down the 40 m axis (entry, bar ×2, lounge ×2,
