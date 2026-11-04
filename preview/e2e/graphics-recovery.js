@@ -125,7 +125,22 @@ async page => {
     // Compare complete rebuilds, not whichever partial cube happened to render
     // before the once-per-second render-stats publication.
     await page.waitForFunction(captures => window.__graphicsProbe().reflections.captures > captures, capturesAtLoss);
-    const result = await probe();
+    // Context loss empties three's disposal listeners (7 remain) and each resource registers again on
+    // its next draw, so a raw count says which objects have been in view since the restore: walking
+    // residents moved it by +14 with no resource added. Draw everything once (main.js, dev only),
+    // as world-streaming does, so a rise between samples means a retained or added listener.
+    await page.evaluate(() => window.__riverRegisterResident());
+    // A resource can still arrive after that draw (the first sample once read 679 of 721 geometries).
+    // Sample once two reads a second apart agree: a leak steps per restore, so waiting cannot hide it.
+    let result = await probe();
+    for (let attempt = 0, last = ''; attempt < 30; attempt++) {
+      const counts = JSON.stringify([result.memory, result.resources, result.listeners]);
+      if (counts === last) break;
+      last = counts;
+      await page.waitForTimeout(1000);
+      await page.evaluate(() => window.__riverRegisterResident());
+      result = await probe();
+    }
     samples.push({ memory: result.memory, listeners: result.listeners, resources: result.resources, frames: result.frames, reflections: result.reflections, capturesBefore: beforeCycle.reflections?.captures, capturesAtLoss, quality: result.quality, domListeners: await domListeners() });
   }
   console.log('Five-cycle samples:', JSON.stringify(samples));

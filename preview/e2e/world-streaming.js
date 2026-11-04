@@ -2,6 +2,7 @@ async page => {
   const { createHash } = await import('node:crypto');
   const { execFileSync } = await import('node:child_process');
   const { readFile } = await import('node:fs/promises');
+  const { withinResourceBounds } = await import('./resource-bounds.js');
   const sourceHashes = async () => {
     const paths = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard', '--',
       'preview/src', 'preview/public/data', 'server', 'shared', 'preview/e2e', 'preview/index.html', 'preview/vite.config.js', 'package.json', 'pnpm-lock.yaml'], { encoding: 'utf8' })
@@ -207,6 +208,8 @@ async page => {
     const rows = await Promise.all(tabs.map(tab => tab.evaluate(() => {
       const probe = window.__streamProbe, stream = window.__riverSpatialStream(), frames = [...probe.frames].sort((a, b) => a - b);
       return { ...stream, time: performance.now(), heapBytes: performance.memory?.usedJSHeapSize ?? null,
+        residentFigures: window.__riverMultiplayer().remotes.filter(figure => String(figure.id).startsWith('resident:')).length,
+        residentResources: window.__riverResidentFigureResources(),
         frameSamples: frames.length, frameMaxMs: frames.at(-1), frameP50: frames[Math.floor(frames.length * .5)], frameP95: frames[Math.floor(frames.length * .95)],
         receivedBytes: probe.received, sentBytes: probe.sent, socketCount: probe.sockets.length, rotations: probe.rotations, closes: [...probe.closes],
         viewport: [innerWidth, innerHeight, devicePixelRatio],
@@ -324,8 +327,6 @@ async page => {
     const warmupTrips = 2, measuredTrips = 20, totalTrips = warmupTrips + measuredTrips;
     let loadedResourceBaseline, evictedResourceBaseline;
     const districtInventory = state => state.inventory.district.filter(item => item.name !== 'East Garden Commons');
-    const withinBounds = (rows, reference) => rows.every((state, i) => state.objects <= reference[i].objects + 20
-      && state.renderer.geometries <= reference[i].renderer.geometries + 20 && state.renderer.textures <= reference[i].renderer.textures + 10);
     // Each lap walks the same eviction and reload legs; settle them before anyone moves.
     for (let i = 0; i < tabs.length; i++) { clearRoute(approach[i], [far[0], far[1] - i]); clearRoute([far[0], far[1] - i], approach[i]); }
     for (let lap = 0; lap < totalTrips; lap++) {
@@ -383,7 +384,10 @@ async page => {
         retainedHeaps.push({ lap: lap + 1, phase: lap === warmupTrips - 1 ? 'warmed' : 'after-twenty', method: 'HeapProfiler.collectGarbage then Runtime.getHeapUsage', clients: await Promise.all(tabs.map(collectRetainedHeap)) });
         await checkpoint();
       }
-      const withinResourceBound = lap < warmupTrips || withinBounds(row, loadedResourceBaseline) && withinBounds(unloaded, evictedResourceBaseline);
+      // Every lap, not only failing ones: resident figures move these counts, so attribute any swing.
+      const lapCounts = rows => rows.map(state => ({ objects: state.objects, ...state.renderer, residentFigures: state.residentFigures, residentResources: state.residentResources }));
+      console.log(`Lap ${lap + 1} counts: ${JSON.stringify({ loaded: lapCounts(row), evicted: lapCounts(unloaded) })}`);
+      const withinResourceBound = lap < warmupTrips || withinResourceBounds(row, loadedResourceBaseline) && withinResourceBounds(unloaded, evictedResourceBaseline);
       if (lap >= warmupTrips && withinResourceBound) check(true, `Measured trip ${lap - warmupTrips + 1}: loaded and evicted scene/GPU counts remain bounded`);
       else if (!withinResourceBound) {
         // Preserve the unchanged acceptance bound, but collect the entire

@@ -9,6 +9,7 @@ import { TYPESAFE_REVISION } from '../../shared/typesafe-place-layout.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
 import { residentFigureBudget, residentFigures } from './resident-figures.js';
+import { exclusiveResources } from './figure-resources.js';
 import { combatStateFor } from './combat-motion.js';
 // The resident ids drawn last snapshot (#640): resident-figures.js keeps the set stable at the cut.
 let drawnResidents = new Set();
@@ -1385,6 +1386,7 @@ if (import.meta.env.DEV) window.__riverRegisterResident = () => new Promise(reso
   scene.traverse(item => { if (item.frustumCulled) { culled.push(item); item.frustumCulled = false; } });
   requestAnimationFrame(() => requestAnimationFrame(() => { for (const item of culled) item.frustumCulled = true; resolve(culled.length); }));
 });
+if (import.meta.env.DEV) window.__riverResidentFigureResources = () => exclusiveResources(scene, remotePlayers?.residentFigureHolders() ?? []);
 if (import.meta.env.DEV) window.__riverSpatialStream = () => {
   let objects = 0; worldGroup?.traverse(() => objects++);
   const inventory = object => {
