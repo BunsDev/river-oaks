@@ -170,7 +170,7 @@ async page => {
       let best = Infinity, improvedAt = Date.now(), recoveries = 0;
       for (;;) {
         const pose = await point(), { distance, difference } = headingTo(pose, target);
-        if (corridor && !inRibbonCorridor(corridor, [pose.position[0], -pose.position[2]])) throw new Error(`${label}: left the declared Ribbon width (#841)`);
+        if (corridor && !inRibbonCorridor(corridor, [pose.position[0], -pose.position[2]], corridor.status === 'clear' ? 0.35 : 0)) throw new Error(`${label}: left the declared Ribbon width (#841${corridor.status === 'clear' ? ', whole body, #740' : ''})`);
         if (distance < .2) break;
         if (Date.now() > deadline) throw new Error(`${label} stalled (#841 ground/collision): ${JSON.stringify({ target, position: pose.position.map(v => round(v)) })}`);
         if (distance < best - .25) { best = distance; improvedAt = Date.now(); }

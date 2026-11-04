@@ -1,3 +1,4 @@
+import { clearCrownsAlongRibbon, reachesRibbonClearance, ribbonCrownClearance } from './ribbon-crown-clearance.js';
 import { treeSupports } from './tree-placements.js';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -36,6 +37,7 @@ export function matureTreePlacements(world) {
     height:Math.max(7.5,Math.min(16,tree.height_m)),
     radius:tree.referencePlacement ? tree.radius_m : Math.max(3.1,Math.min(5.2,(tree.radius_m ?? tree.crown_radius_m)*1.3)),
     yaw:index*2.399963,
+    ...(tree.crownBase===undefined?{}:{crownBase:tree.crownBase}),
   }));
 }
 
@@ -68,6 +70,7 @@ function hideAfterShadow() { this.visible = false; }
 // Terrain, navigation, source vegetation records and all street fixtures stay put.
 // Authored neighborhoods (city-kit/render.js) pass their own placements.
 export function buildMatureTrees(world, placements=matureTreePlacements(world)) {
+  const crownClearance=ribbonCrownClearance(world);
   const group=new THREE.Group();group.name='Mature urban shade trees';
   const levels=[],shadowProxies=[];
   group.userData.shadowProxies=shadowProxies;
@@ -85,7 +88,7 @@ export function buildMatureTrees(world, placements=matureTreePlacements(world)) 
       const out=[];source.traverse(item=>{if(item.isMesh){
         const geometry=item.geometry.clone().applyMatrix4(item.matrixWorld);
         const leafy=/leav/i.test(item.material.name);
-        if(!materials.has(item.material.name)) materials.set(item.material.name,materialFrom(item.material,leafy,true));
+        if(!materials.has(item.material.name)) materials.set(item.material.name,clearCrownsAlongRibbon(materialFrom(item.material,leafy,true),crownClearance));
         out.push({geometry,material:materials.get(item.material.name),leafy});
       }});return out;
     });
@@ -96,6 +99,7 @@ export function buildMatureTrees(world, placements=matureTreePlacements(world)) 
     const dummy=new THREE.Object3D();
     for(const trees of tiles.values()) {
       const center=new THREE.Vector3();trees.forEach(tree=>center.add(new THREE.Vector3(...tree.position)));center.divideScalar(trees.length);
+      const carved=Boolean(crownClearance)&&trees.some(tree=>reachesRibbonClearance(crownClearance,tree.position,tree.radius));
       const instance=(level,index,shadow)=>level.map(part=>{
         const copies=part.leafy?TREE_LEAF_LAYERS[shadow?0:index]:1;
         const mesh=new THREE.InstancedMesh(part.geometry,part.material,trees.length*copies);
@@ -108,7 +112,7 @@ export function buildMatureTrees(world, placements=matureTreePlacements(world)) 
         }});
         if(shadow){mesh.castShadow=true;mesh.receiveShadow=false;mesh.visible=false;mesh.onAfterShadow=hideAfterShadow;shadowProxies.push(mesh);}
         else {mesh.castShadow=false;mesh.receiveShadow=true;mesh.visible=index===0;}
-        if(part.leafy)mesh.userData.aoExclude=true;
+        if(part.leafy||carved)mesh.userData.aoExclude=true;
         mesh.computeBoundingSphere();group.add(mesh);return mesh;
       });
       const batches=parts.map((level,index)=>instance(level,index,false));

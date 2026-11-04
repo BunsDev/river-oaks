@@ -52,21 +52,21 @@ test('every drawn tree is measured, and its crown base is its lowest LiDAR branc
   assert.equal(treePits(world).length, 198, 'one tree sits in the Harry Winston bed and gets no pit');
   const rows = districtRibbonTreeClearance(world, { within: Infinity });
   assert.equal(rows.length, 199);
-  const support = vegetation.branch_supports.find(item => key(item.position) === '-2761,-1279');
-  assert.equal(rows.find(row => key(row.stem) === '-2761,-1279').crownBase, Math.min(...support.endpoints.map(p => p[2])));
+  const support = vegetation.branch_supports.find(item => key(item.position) === '-2757,-1285');
+  assert.equal(rows.find(row => key(row.stem) === '-2757,-1285').crownBase, Math.min(...support.endpoints.map(p => p[2])));
+  // A corrected tree (#740) reports its correction, never a share of its height.
+  const corrected = rows.find(row => key(row.stem) === '-2760.8,-1257');
+  assert.deepEqual([corrected.crownBase, corrected.crownBaseFrom], [4.05, 'correction']);
 });
 
 test('every street tree clears the spine or is declared with its measured crown gap', t => {
   const rows = districtRibbonTreeClearance(runtimeWorld());
   const stale = assertClearOrDeclared(rows);
   if (stale.length) t.diagnostic(`declared but no longer blocking: ${stale.join('; ')}`);
-  // Agreement with #838 (layout.md, 2026-11-01): seven crowns through the spine canopy and seven
-  // pits in its walk (tree-pit-36, under a post, depends on where posts stand and is not pinned).
-  const through = rows.filter(row => row.through), pits = rows.filter(row => row.pit === 'walk');
-  assert.deepEqual(through.map(row => row.tree).sort(), ['tree-104', 'tree-127', 'tree-153', 'tree-37', 'tree-77', 'tree-84', 'tree-85']);
-  assert.deepEqual(pits.map(row => row.pitId).sort(), ['tree-pit-103', 'tree-pit-126', 'tree-pit-152', 'tree-pit-27', 'tree-pit-76', 'tree-pit-83', 'tree-pit-84']);
-  // Crown undersides below the 4.0 m slab top, in centimetres.
-  assert.deepEqual(Object.fromEntries(through.map(row => [row.tree, row.crownGapCm])), { 'tree-104': -81, 'tree-77': -18, 'tree-37': -28, 'tree-85': -11, 'tree-153': -47, 'tree-127': -21, 'tree-84': -38 });
+  // #838 (layout.md, 2026-11-01) found seven crowns through the canopy and eight pits in the walk;
+  // #740 cleared all of them, without removing a tree.
+  assert.deepEqual(rows.filter(row => row.blocks).map(row => row.tree), []);
+  assert.equal(DISTRICT_RIBBON_TREE_DECLARED.length, 0);
 });
 
 test('the District without its LiDAR supports has no tree near the spine', () => {
@@ -82,11 +82,12 @@ test('moving a tree into the spine, or lowering a declared crown, fails the chec
   const dx = at[0] - tree.position[0], dy = at[1] - tree.position[1];
   tree.position = at; tree.endpoints = tree.endpoints.map(([x, y, z]) => [x + dx, y + dy, z]);
   assert.throws(() => assertClearOrDeclared(districtRibbonTreeClearance(runtimeWorld(moved))), error => error.message.includes(`at ${key(at)}`));
-  // A declared tree whose crown clears the slab, lowered below it.
+  // A corrected tree whose crown clears the slab, lowered below it.
   const lowered = structuredClone(vegetation), pitOnly = lowered.branch_supports.find(item => key(item.position) === '-2759,-1205');
   pitOnly.endpoints = pitOnly.endpoints.map(([x, y, z], i) => [x, y, i ? z : 3.5]);
-  assert.throws(() => assertClearOrDeclared(districtRibbonTreeClearance(runtimeWorld(lowered))), /-2759,-1205: (declared crown gap 24 cm, measured -50 cm|crown passes through)/);
+  const rows = districtRibbonTreeClearance(runtimeWorld(lowered));
+  assert.throws(() => assertClearOrDeclared(rows), /tree-28 at -2759\.8,-1205: crown gap -50 cm/);
   // And a declaration whose gap has drifted.
-  const drifted = DISTRICT_RIBBON_TREE_DECLARED.map(entry => key(entry.stem) === '-2761,-1279' ? { ...entry, crownGapCm: -76 } : entry);
-  assert.throws(() => assertClearOrDeclared(districtRibbonTreeClearance(runtimeWorld()), drifted), /declared crown gap -76 cm, measured -81 cm/);
+  const drifted = [{ stem: [-2759.8, -1205], crownGapCm: -45, through: true, pit: false, reason: 'a declaration for the mutation check' }];
+  assert.throws(() => assertClearOrDeclared(rows, drifted), /declared crown gap -45 cm, measured -50 cm/);
 });

@@ -1,0 +1,42 @@
+{
+  "id": "district-spine-boundary",
+  "version": "district-spine-boundary-v1",
+  "basis": "five-rooms-v3",
+  "units": "metres, site-local x east, y north",
+  "spine": {
+    "segment": "spine",
+    "status": "clear",
+    "start": [-2759.288, -1285.5],
+    "bend": [-2758.524, -1241.316],
+    "end": [-2757.673, -1197.635],
+    "width": 2.4,
+    "clearHeight": 3.6,
+    "canopyTop": 4,
+    "canopyEdgeBeyondWalk": 0.24,
+    "modules": 30
+  },
+  "crossing": { "road": "osm-way-625330795-0", "between": ["south", "spine"], "canopy": false, "spineLanding": [-2759.288, -1285.5], "southLanding": [-2759.842, -1295] },
+  "connections": [
+    { "id": "link:counter", "kind": "venue", "from": "spine", "side": "right", "entrance": "entrance:counter", "at": [-2754.997, -1216.445] },
+    { "id": "link:starlight-screen", "kind": "venue", "from": "spine", "side": "right", "entrance": "entrance:starlight-screen", "at": [-2755.16, -1228.174] },
+    { "id": "link:atelier", "kind": "venue", "from": "spine", "side": "right", "entrance": "entrance:atelier", "at": [-2755.403, -1245.786] }
+  ],
+  "notBuilt": [
+    { "segment": "south", "status": "blocked", "meets": "the crossing", "carries": ["link:shade-garden"], "note": "Not drawn. It reaches the crossing at southLanding; its blockers stay in five-rooms.json." },
+    { "segment": "link-studios", "status": "blocked", "meets": "a tee on south", "carries": ["link:studios-overlook"], "note": "Not drawn, and it tees off south rather than the spine." }
+  ],
+  "inputs": {
+    "route": "config/ribbon/district-spine.json",
+    "contract": "config/ribbon/five-rooms.json",
+    "plan": "preview/src/ribbon-district.js",
+    "renderers": ["preview/src/ribbon-finish.js", "preview/src/ribbon-graybox.js"],
+    "solids": "preview/src/five-rooms/solids.js",
+    "ground": "preview/src/five-rooms/ground.js",
+    "treeCorrections": "preview/src/tree-placements.js",
+    "benchCorrections": "preview/src/street-fixtures.js",
+    "crownClearance": "preview/src/ribbon-crown-clearance.js",
+    "corridorRegression": "preview/tests/ribbon-spine-corridor.test.js",
+    "pixelRegression": "preview/e2e/ribbon-crown-clearance.js"
+  },
+  "rollback": "Code only. The tree and bench corrections are derived at load from source data that did not change. A checkpoint keeps a player seated on the moved bench at the seat's previous spot and restoring seats them on the moved bench, so this build and the one before it accept each other's checkpoints with someone on it. One case still fails closed on rollback: a creator object placed on the seat's old spot. Rehearsed both ways across builds on 2026-11-04."
+}
