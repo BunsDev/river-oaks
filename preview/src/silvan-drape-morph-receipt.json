@@ -24,7 +24,7 @@
     "preview/src/conversation-body.js": "94884f405a479ba9652b6e6c247d505aea388a82c406ac5d335835c9eadf5ee0",
     "preview/src/conversation-gaze.js": "2b87a0df8a9035ecb5327d558b7cdd1be3f887da0ff6c260d1c9f25b27a16811",
     "preview/src/conversation-motion.js": "e2b6bf52e91b32020fb8d27adcfe690c71aa3f2823c144c35470678799b9f5d0",
-    "preview/src/costume-batching.js": "51a3d51f6840cc842a62c2afb8cea5be15a3e87bc04abf89e362ff7c41d1c889",
+    "preview/src/costume-batching.js": "93dd878b3cc44ff7d2f0c92ff96906c2d74651dde48403eb229064b544bf572e",
     "preview/src/drape-geometry.js": "d624e47a003bb761b0663f436e0df201f1ba9b17e8ce4b0271b119a5eb7401ce",
     "preview/src/driving-hands.js": "f669e06d436727b0cc5457228d663570b5ab9dba18f1cd24c110d413293328d9",
     "preview/src/eye-tracking.js": "93b8af25f82f59ffbfecd44b090fc6e32650add837c4a21ce68a1c5099165313",

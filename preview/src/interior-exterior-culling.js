@@ -55,10 +55,14 @@ export function renderWithoutExterior(worldGroup, interiorsLayer, render) {
 // Hides everything under root except the kept objects, for one render: a branch
 // holding a kept object is opened, and any other visible branch is hidden whole.
 export function renderOnly(root, keep, render) {
-  const hidden = [];
+  const hidden = [], silenced = [];
   const holds = (node, item) => { for (let at = item; at; at = at.parent) if (at === node) return true; return false; };
   const visit = node => {
     for (const child of node.children) {
+      // A hidden shadow proxy (store-interiors.js) would be shown by the sun: it draws only for kept batches.
+      if (!child.visible && child.castShadow && child.userData.members && !child.userData.members.some(member => keep.some(item => holds(item, member)))) {
+        child.castShadow = false; silenced.push(child);
+      }
       if (!child.visible || keep.includes(child)) continue;
       if (keep.some(item => holds(child, item))) visit(child);
       else { child.visible = false; hidden.push(child); }
@@ -69,5 +73,6 @@ export function renderOnly(root, keep, render) {
     return render();
   } finally {
     for (const child of hidden) child.visible = true;
+    for (const child of silenced) child.castShadow = true;
   }
 }

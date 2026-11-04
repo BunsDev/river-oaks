@@ -109,3 +109,25 @@ test("the companion's scene is the spot the player is looking toward, stepped ba
   assert.equal(plain.radius, undefined, "with no clear lap, the player's own scene unchanged");
   assert.equal(companionInterests(interests, null), interests, 'no player: the list as given');
 });
+
+// #289: a bird's rigid body casts sun shadow in one draw; the wings still flap their own.
+test('a bird casts its body through one hidden proxy of the same triangles', async () => {
+  const THREE = await import('three');
+  const { birdModel } = await import('../src/bird-cams.js');
+  const bird = birdModel({ name: 'Dove', body: '#ddd', wing: '#bbb', accent: '#eee', beak: '#c90' });
+  const casting = () => { const found = []; bird.traverse(item => { if (item.isMesh && item.castShadow) found.push(item); }); return found; };
+  const { proxy, casters } = bird.userData.shadow;
+  assert.equal(casters.length, 6, 'body, accent, head, two eyes and beak');
+  assert.deepEqual(casting().map(item => item === proxy ? 'proxy' : item.material.side === THREE.DoubleSide ? 'double' : 'front').sort(), ['double', 'double', 'double', 'proxy'],
+    'shadow draws: the proxy, the double-sided tail and both wings');
+  assert.ok(!proxy.visible && proxy.parent === bird, 'hidden, and it flies with the bird');
+  const triangles = item => (item.geometry.index?.count ?? item.geometry.getAttribute('position').count) / 3;
+  assert.equal(proxy.geometry.getAttribute('position').count / 3, casters.reduce((sum, item) => sum + triangles(item), 0));
+  bird.updateMatrixWorld(true);
+  const own = new THREE.Box3(); casters.forEach(item => own.expandByObject(item, true));
+  const proxied = new THREE.Box3(), point = new THREE.Vector3(), position = proxy.geometry.getAttribute('position');
+  for (let v = 0; v < position.count; v++) proxied.expandByPoint(point.fromBufferAttribute(position, v).applyMatrix4(proxy.matrixWorld));
+  for (const key of ['min', 'max']) assert.ok(own[key].distanceTo(proxied[key]) < 1e-6, `silhouette bounds match (${key})`);
+  bird.userData.shadow.enable(false);
+  assert.equal(casting().filter(item => item !== proxy).length, 9, 'switching it off restores every part');
+});
