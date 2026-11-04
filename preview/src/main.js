@@ -9,13 +9,10 @@ import { TYPESAFE_REVISION } from '../../shared/typesafe-place-layout.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
 import { residentFigureBudget, residentFigures } from './resident-figures.js';
-import { fidelityTierForQuality } from './character-fidelity-runtime.js';
 import { combatStateFor } from './combat-motion.js';
 // The resident ids drawn last snapshot (#640): resident-figures.js keeps the set stable at the cut.
 let drawnResidents = new Set();
-// Fewer, nearer neighbours on a low-tier client and on the CPU acceptance renderer (resident-figures.js).
-const residentBudget = () => residentFigureBudget(softwareAcceptance ? 'low' : fidelityTierForQuality(quality?.stats));
-const residents = (locals, at) => { const figures = residentFigures(locals, at, drawnResidents, residentBudget()); drawnResidents = new Set(figures.map(figure => figure.id.slice('resident:'.length))); return figures; };
+const residents = (locals, at) => { const figures = residentFigures(locals, at, drawnResidents, residentFigureBudget()); drawnResidents = new Set(figures.map(figure => figure.id.slice('resident:'.length))); return figures; };
 import { createCommonsStream } from './commons-stream.js';
 import './spatial-stream.css';
 import { createCharacterStudio } from './character-studio.js';
