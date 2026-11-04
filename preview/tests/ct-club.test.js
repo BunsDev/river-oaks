@@ -178,6 +178,41 @@ test('the interior carries ten named ambient lights across the zones, automation
   assert.equal(root.children.length, 0, 'dispose clears the interior (lights group included)');
 });
 
+test('near-black fixtures get thin bright outlines in the zone colours', () => {
+  const root = buildCtClubInterior(room, { local: true });
+  const outlineGroups = root.children.filter(child => child.isLineSegments && /^club-outlines:/.test(child.name));
+  assert.ok(outlineGroups.length >= 3, `yellow, green and purple outline batches exist (${outlineGroups.length})`);
+  const names = outlineGroups.map(g => g.name);
+  for (const color of ['yellow', 'green', 'purple']) {
+    assert.ok(names.some(n => n.endsWith(color)), `${color} outline batch exists`);
+  }
+  // The dancefloor grid alone must produce a large shared yellow line batch.
+  const yellow = outlineGroups.find(g => g.name.endsWith('yellow'));
+  assert.ok(yellow.geometry.attributes.position.count > 500, `tile grid outline has many vertices (${yellow.geometry.attributes.position.count})`);
+  // One shared basic material per outline colour, tone-mapped off (unlit bright).
+  for (const orange of outlineGroups) assert.ok(orange.material.toneMapped === false, `${orange.name} is an unlit bright line`);
+  root.userData.dispose();
+});
+
+test('each wall uses its own brightened tint and the lounge seating glows', () => {
+  const root = buildCtClubInterior(room, { local: true });
+  const mats = new Map(materials(root).map(mat => [mat.name, mat]));
+  const lum = hex => (((hex >> 16) & 255) * 0.2126 + ((hex >> 8) & 255) * 0.7152 + (hex & 255) * 0.0722);
+  const base = lum(mats.get('club-concrete').color.getHex());
+  for (const name of ['club-concrete-back', 'club-concrete-left', 'club-concrete-right', 'club-concrete-front', 'club-concrete-ceil']) {
+    assert.ok(mats.has(name), `${name} exists`);
+    assert.ok(lum(mats.get(name).color.getHex()) > base + 6, `${name} is brighter than neutral concrete`);
+  }
+  // The couches/chairs/tables spill violet: one shared additive material, instanced.
+  assert.ok(mats.has('club-seat-spill'), 'the violet light-spill material exists');
+  const spill = materials(root).filter(mat => mat.name === 'club-seat-spill').length;
+  assert.equal(spill, 1, 'one spill material serves all lounge seating');
+  const spillMeshes = root.children.filter(item => item.isInstancedMesh && item.material?.name === 'club-seat-spill');
+  assert.ok(spillMeshes.length === 1 && spillMeshes[0].count >= 6, `six light pads under couches/chairs/tables (${spillMeshes[0]?.count})`);
+  assert.equal(spillMeshes[0].material.blending, THREE.AdditiveBlending, 'spill adds light, never occludes');
+  root.userData.dispose();
+});
+
 function materials(root) {
   const out = [];
   root.traverse(item => { if (item.material) out.push(...[item.material].flat()); });
