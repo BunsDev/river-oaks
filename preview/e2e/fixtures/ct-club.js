@@ -133,6 +133,12 @@ window.clubFixture = {
       `<li><b>${light.name}</b> · ${light.userData.zone} · #${light.color.getHexString()} · ${light.intensity.toFixed(2)}</li>`).join('');
     document.querySelector('#info').innerHTML =
       `<h1>CT CLUB — everything visible in this room</h1>${sections}` +
+      `<h2>Outline key (near-black fixtures get a visible frame)</h2><ul>` +
+      `<li><b>1px yellow</b> — bar, entry mat, dancefloor tile grid</li>` +
+      `<li><b>bright green</b> — DJ booth, mixer, speaker wall</li>` +
+      `<li><b>purple</b> — lounge couches, chairs, tables + violet spill glow</li></ul>` +
+      `<h2>Shell walls (each brightened/tinted)</h2><ul>` +
+      `<li><b>back</b> warm amber · <b>left</b> violet-blue · <b>right</b> green-teal · <b>front</b> amber · <b>ceiling</b> bright neutral</li></ul>` +
       `<h2>Named ambient lights (automation-ready)</h2><ul>${lights}</ul>` +
       `<h2>Room facts</h2><ul><li><b>Size</b> 40 m × 16 m × 6 m</li>` +
       `<li><b>Position</b> pending — planCtClub({ east, north, yaw })</li>` +

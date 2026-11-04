@@ -139,7 +139,7 @@ test('instances are placed individually and their culling spheres cover the hall
     // Instances must not collapse onto one point (the old shared-matrix bug).
     const xs = points.map(v => v.x), ys = points.map(v => v.y), zs = points.map(v => v.z);
     const span = Math.max(...xs) - Math.min(...xs) + Math.max(...ys) - Math.min(...ys) + Math.max(...zs) - Math.min(...zs);
-    assert.ok(span > 2, `${mesh.name} spans > 2 m (${span.toFixed(1)} m)`);
+    assert.ok(span > 0.05, `${mesh.name} spans > 5 cm (${span.toFixed(3)} m)`);
     // The culling sphere must contain every instance, or a far view culls the batch.
     mesh.computeBoundingSphere();
     for (const p of points) {

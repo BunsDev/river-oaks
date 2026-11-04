@@ -36,13 +36,26 @@ position is still to be decided, so the whole room is built to move.
   `userData` carries `{ kind, zone, role, baseColor, baseIntensity }` and whose
   anchor sits at its zone, so a swap to a point/rect light keeps the same spot.
   Find them on `root.userData.lights = { group, list, byName }`.
+- **Everything black or near-black gets a 1 px bright outline** so no fixture
+  vanishes against the floor: **yellow** for the bar, entry mat, dark column
+  bases and the whole dancefloor tile grid; **bright green** for the DJ booth,
+  mixer deck and speaker wall; **purple** for the lounge couches, chairs and
+  tables. Furniture is framed by a thin 3D edge cage drawn 2% outside its body
+  (never z-fights); flat floor items get a 1 px top rectangle lifted just above
+  their glow strips. Named `club-outlines:{color}` for hosts.
+- **The shell walls are individually brightened and colour-lifted** so a viewer
+  can tell every wall apart even in a near-dark room: warm amber back,
+  violet-blue left, green-teal right, amber front, brighter neutral ceiling
+  (`club-concrete-back/left/right/front/ceil`).
 - **Every glow is an emitter** — emissive `MeshStandardMaterial` or unlit
   `MeshBasicMaterial` with instance colors. No real lights are animated.
 - **The dancefloor** is 13 × 17 one-metre tiles, each ringed by a thin unlit
-  strip with per-instance color — the whole floor is **two** instanced meshes.
+  strip with per-instance color — the whole floor is **two** instanced meshes
+  plus the yellow grid frame.
 - **The bar** carries edge glow along its serving edge and under its lip, and a
-  back glow trough behind the bottles; the **chairs and couches** carry a violet
-  glow on their seat edges and a low base strip.
+  back glow trough behind the bottles; the **couches and chairs** carry a
+  brighter violet glow on their seat edges, a base strip, and a soft additive
+  violet light-spill pad under every couch, chair and table.
 - **Four corner strobes** fire rarely (each under 1% duty, flashes ≤60 ms) and
   **four RGB corner spots** cycle slowly.
 - **The disco ball** spins slowly; **RGB lasers** burst out of it for ~2 s of

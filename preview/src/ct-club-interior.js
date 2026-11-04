@@ -136,8 +136,9 @@ export function buildCtClubInterior(room, options = {}) {
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(list.seg, 3));
       owned.geometries.add(geometry);
-      const lines = new THREE.LineSegments(geometry, basic(`club-outline-${color}`, { color, toneMapped: false }));
-      lines.name = `club-outlines:${color}`;
+      const keyword = Object.keys(OUTLINE).find(key => OUTLINE[key] === color) ?? color;
+      const lines = new THREE.LineSegments(geometry, basic(`club-outline-${keyword}`, { color, toneMapped: false }));
+      lines.name = `club-outlines:${keyword}`;
       root.add(lines);
     }
     outlineSegments.clear();
