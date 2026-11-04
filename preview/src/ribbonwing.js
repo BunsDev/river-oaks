@@ -19,6 +19,13 @@ import { createRibbonwingTrails } from './ribbonwing-trails.js';
 
 const TAU = Math.PI * 2;
 
+// D3 detail pass. Shut lines sit 3 mm proud of the authored loft: enough to read
+// as a panel gap at cockpit distance, inside the 20 mm envelope so no silhouette
+// view moves. The canopy seam stands 45 mrad outboard of the glass opening.
+const SEAM = Object.freeze({ radius: .004, lift: .003, canopyOffset: .045 });
+const inflated = (section, lift = SEAM.lift) => ({ ...section, halfWidth: section.halfWidth + lift, bottom: section.bottom - lift, top: section.top + lift });
+const bodyPoint = (x, angle, lift) => { const [y, z] = sectionPoint(inflated(bodyAt(x), lift), angle);return [x, y, z]; };
+
 // A quilted upholstery normal map, generated (no image asset): diamond tufts
 // on a 64 px tile. Linear data, so no colour space.
 function quiltNormalMap() {
@@ -39,10 +46,10 @@ export function createRibbonwing({ rubberName = 'Road tyre rubber' } = {}) {
   const physical = (name, color, options = {}) => { const m = own(new THREE.MeshPhysicalMaterial({ color, roughness: .4, ...options }));m.name = name;return m; };
   const quilt = own(quiltNormalMap());
   const M = {
-    lacquer: physical('Ribbonwing pink lacquer', P.lacquer, { roughness: .3, clearcoat: 1, clearcoatRoughness: .06 }),
-    ivory: physical('Ribbonwing ivory composite', P.ivory, { roughness: .36, clearcoat: .55, clearcoatRoughness: .16 }),
-    chrome: physical('Ribbonwing chrome', P.chrome, { metalness: 1, roughness: .13 }),
-    edge: physical('Ribbonwing blue chrome edge', P.edgeBlue, { metalness: 1, roughness: .2 }),
+    lacquer: physical('Ribbonwing pink lacquer', P.lacquer, { roughness: .3, clearcoat: 1, clearcoatRoughness: .06, envMapIntensity: 1.35 }),
+    ivory: physical('Ribbonwing ivory composite', P.ivory, { roughness: .36, clearcoat: .55, clearcoatRoughness: .16, envMapIntensity: 1.1 }),
+    chrome: physical('Ribbonwing chrome', P.chrome, { metalness: 1, roughness: .13, envMapIntensity: 1.5 }),
+    edge: physical('Ribbonwing blue chrome edge', P.edgeBlue, { metalness: 1, roughness: .2, envMapIntensity: 1.4 }),
     glass: physical('Ribbonwing mint canopy glass', P.mint, { transparent: true, opacity: .3, roughness: .05, metalness: .1, depthWrite: false }),
     glassFar: physical('Ribbonwing tinted canopy (distance)', '#6E9C92', { roughness: .12, metalness: .35, clearcoat: 1 }),
     seat: physical('Ribbonwing ivory upholstery', P.upholsteryIvory, { roughness: .8, sheen: .4, sheenColor: '#fbf4ea', normalMap: quilt, normalScale: new THREE.Vector2(.35, .35) }),
@@ -51,6 +58,7 @@ export function createRibbonwing({ rubberName = 'Road tyre rubber' } = {}) {
     cockpitIvory: physical('Ribbonwing ivory bulkhead', P.upholsteryIvory, { roughness: .8, side: THREE.DoubleSide }),
     cockpit: physical('Ribbonwing cockpit teal', P.cockpit, { roughness: .62, side: THREE.DoubleSide }),
     mechanical: physical('Ribbonwing dark mechanical', P.mechanical, { metalness: .6, roughness: .45 }),
+    seam: physical('Ribbonwing panel seam', P.mechanical, { metalness: .1, roughness: .72 }),
     bronze: physical('Ribbonwing bronze', P.bronze, { metalness: .9, roughness: .3 }),
     rubber: physical(rubberName, '#151719', { roughness: .88 }),
     gauge: physical('Ribbonwing instrument glow', '#d8f3ea', { emissive: '#bfeee0', emissiveIntensity: .35, roughness: .3 }),
@@ -82,10 +90,21 @@ export function createRibbonwing({ rubberName = 'Road tyre rubber' } = {}) {
     const x = xFrom(u), a = open ? openingHalfAngle(x) : 0, angle = Math.PI / 2 + a + (TAU - 2 * a) * v, [y, z] = sectionPoint(bodyAt(x), angle);return [x, y, z];
   }, M.ivory, parent);
   // Pink lacquer flank swoosh (both sides), 4 mm proud of the ivory.
-  const swoosh = (parent, nu, nv, side) => surface(nu, nv, (u, v) => {
-    const x = cosine(-2.86, 1.62, u), s = (x + 2.86) / 4.48, centre = .34 - .62 * s, half = .02 + .5 * Math.sin(Math.min(1, s * 1.7) * Math.PI / 2) * (1 - .45 * Math.max(0, s - .6) / .4);
-    const angle = centre + half * (v * 2 - 1), section = bodyAt(x), [y, z] = sectionPoint({ ...section, halfWidth: section.halfWidth + .004, bottom: section.bottom - .004, top: section.top + .004 }, side > 0 ? angle : Math.PI - angle);return [x, y, z];
-  }, M.lacquer, parent);
+  const swooshSpan = x => {
+    const s = (x + 2.86) / 4.48, centre = .34 - .62 * s;
+    return { centre, half: .02 + .5 * Math.sin(Math.min(1, s * 1.7) * Math.PI / 2) * (1 - .45 * Math.max(0, s - .6) / .4) };
+  };
+  const swoosh = (parent, nu, nv, side, detail) => {
+    surface(nu, nv, (u, v) => {
+      const x = cosine(-2.86, 1.62, u), { centre, half } = swooshSpan(x), angle = centre + half * (v * 2 - 1), section = bodyAt(x), [y, z] = sectionPoint({ ...section, halfWidth: section.halfWidth + .004, bottom: section.bottom - .004, top: section.top + .004 }, side > 0 ? angle : Math.PI - angle);return [x, y, z];
+    }, M.lacquer, parent);
+    if (detail === 'near') {
+      // Bright rocker line along the panel's lower edge, as on the reference car.
+      const trim = [];
+      for (let i = 0; i <= 24; i++) { const x = cosine(-2.86, 1.62, i / 24), { centre, half } = swooshSpan(x), [y, z] = sectionPoint(inflated(bodyAt(x), .005), side > 0 ? centre - half : Math.PI - centre + half);trim.push([x, y, z]); }
+      tube(trim, .004, M.chrome, parent, 5);
+    }
+  };
   const canopySample = (u, v) => {
     const x = COCKPIT_OPENING.from + (COCKPIT_OPENING.to - COCKPIT_OPENING.from) * u, edge = openingEdge(x) ?? [sectionPoint(bodyAt(x), Math.PI / 2)[0], 0];
     const apex = Math.max(edge[0], profileAt(CANOPY_PROFILE, u)), t = v * Math.PI, sin = Math.sin(t);
@@ -193,6 +212,16 @@ export function createRibbonwing({ rubberName = 'Road tyre rubber' } = {}) {
     }
     const hub = mesh(new THREE.SphereGeometry(.1, 20, 12, 0, TAU, 0, Math.PI / 2), M.chrome, rotor);hub.scale.y = .8;
     cylinder(.1, .1, .05, 20, M.bronze, rotor, [0, -.025, 0]);
+    if (detail === 'near') {
+      // Shut line around the fan's pink panel, following the wing's chord taper.
+      const r = FANS.shroud + .07, ring = [];
+      for (let i = 0; i < 32; i++) {
+        const a = i / 32 * TAU, wz = side * (fz + r * Math.sin(a)), span = Math.abs(wz);
+        const taper = 1 - .75 * Math.max(0, Math.min(1, (span - WING.planformRoot) / (2.92 - WING.planformRoot)));
+        ring.push([fx + r * Math.cos(a) - px, wingHeightAt(span) - py + WING.thickness / 2 * taper + .012, wz - side * pz]);
+      }
+      tube(ring, .0035, M.seam, pivot, 5, true);
+    }
   };
 
   const buildThruster = (parent, side, detail) => {
@@ -210,6 +239,7 @@ export function createRibbonwing({ rubberName = 'Road tyre rubber' } = {}) {
     lathe([[.24, -L / 2], [.28, -L / 2 + .04], [R, -L / 2 + .14], [R, -.08], [R * .98, .2], [R * .82, L / 2 - .06], [R * .7, L / 2]], M.ivory);
     if (detail === 'far') return;
     lathe([[R + .003, -.06], [R + .003, .12]], M.petal);
+    if (detail === 'near') for (const at of [-.06, .12]) torus(R + .004, .004, M.seam, gimbal, [offset + at, 0, 0], [0, Math.PI / 2, 0], 32);
     torus(.255, .03, M.chrome, gimbal, [offset - L / 2 + .015, 0, 0], [0, Math.PI / 2, 0], segments);
     torus(R * .7 - .01, .022, M.chrome, gimbal, [offset + L / 2, 0, 0], [0, Math.PI / 2, 0], segments);
     // Intake fan face and the nozzle's dark throat with its bounded glow.
@@ -321,11 +351,24 @@ export function createRibbonwing({ rubberName = 'Road tyre rubber' } = {}) {
     buildSeat(parent, SEATS.pilot, 1);buildSeat(parent, SEATS.passenger, -1);
   };
 
+  // Near-only shut lines on the authored body: two centreline seams and the
+  // gasket line around the canopy opening. They sit on the unmodified loft, so
+  // the silhouette floors cannot move.
+  const buildDetail = level => {
+    const spine = (from, to, steps) => tube(Array.from({ length: steps + 1 }, (_, i) => bodyPoint(from + (to - from) * i / steps, Math.PI / 2)), SEAM.radius * .9, M.seam, level, 5);
+    spine(-2.78, -2.63, 8);
+    spine(-.40, 1.90, 28);
+    const { from, to } = COCKPIT_OPENING, surround = [];
+    for (let i = 0; i <= 24; i++) { const x = from + (to - from) * i / 24; surround.push(bodyPoint(x, Math.PI / 2 + openingHalfAngle(x) + SEAM.canopyOffset)); }
+    for (let i = 24; i >= 0; i--) { const x = from + (to - from) * i / 24; surround.push(bodyPoint(x, Math.PI / 2 - openingHalfAngle(x) - SEAM.canopyOffset)); }
+    tube(surround, SEAM.radius * .9, M.seam, level, 5, true);
+  };
+
   const buildLevel = detail => {
     const level = new THREE.Group();level.name = `Ribbonwing ${detail}`;batchGroups.push(level);
     const nu = { near: 72, medium: 32, far: 14 }[detail], nv = { near: 48, medium: 22, far: 10 }[detail];
     body(level, nu, nv, detail === 'near');
-    if (detail !== 'far') for (const side of [1, -1]) swoosh(level, Math.round(nu * .6), 6, side);
+    if (detail !== 'far') for (const side of [1, -1]) swoosh(level, Math.round(nu * .6), 6, side, detail);
     // Nose emblem: a small pink inverted triangle.
     if (detail !== 'far') { const tri = new THREE.Shape([new THREE.Vector2(-.05, .04), new THREE.Vector2(.05, .04), new THREE.Vector2(0, -.045)]), g = new THREE.ShapeGeometry(tri);g.rotateY(-Math.PI / 2);const m = mesh(g, M.lacquer, level);m.position.set(-2.835, .86, 0);m.rotation.z = -.5; }
     // Canopy (rear-hinged) with its chrome rim; distance levels get an opaque tint.
@@ -345,7 +388,7 @@ export function createRibbonwing({ rubberName = 'Road tyre rubber' } = {}) {
     }
     for (const side of [1, -1]) { buildWing(level, side, detail);buildThruster(level, side, detail);buildPetal(level, side, detail); }
     for (let i = 0; i < 3; i++) buildFoot(level, i, detail);
-    if (detail === 'near') { buildCockpit(level);for (const side of [1, -1]) buildSteps(level, side); }
+    if (detail === 'near') { buildCockpit(level);buildDetail(level);for (const side of [1, -1]) buildSteps(level, side); }
     // Gear bay outlines under the body and wings (dark recesses).
     if (detail === 'near') for (const [x, , z] of FEET.hinges) { const bay = mesh(new THREE.CircleGeometry(.16, 20), M.mechanical, level);bay.scale.set(1.8, 1, 1);bay.rotation.x = Math.PI / 2;bay.position.set(x, (z ? wingHeightAt(z) - WING.thickness / 2 : bodyAt(x).bottom) - .004, z); }
     return level;
