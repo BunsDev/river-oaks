@@ -103,7 +103,11 @@ import { createPlazaXiangqi } from './plaza-xiangqi.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createQualityControl, readFinishPreference } from './render-quality.js';
-import { buildRibbonGraybox, ribbonAppliesTo } from './ribbon-graybox.js';
+import { fiveRoomsAppliesTo } from './five-rooms/solids.js';
+import { buildRibbon } from './ribbon-finish.js';
+import { buildFiveRoomsShells } from './five-rooms/index.js';
+import { buildFiveRoomsLandscapeForWorld } from './five-rooms/landscape.js';
+import fiveRoomsContract from '../../config/ribbon/five-rooms.json' with { type: 'json' };
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
 import { createPhotoMode } from './photo-mode.js';
@@ -221,7 +225,7 @@ let landmarkAccountId = null;
 let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater, ribbonwingSeat, ribbonwingSounds;
 const craftWorld = new THREE.Vector3();
-let ribbonGraybox = null;
+let ribbonGraybox = null, fiveRoomsShells = null, fiveRoomsLandscape = null; // same admitted geometry for every appearance (#841)
 let plazaSalon = null, cityBikeRacks = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
@@ -770,6 +774,7 @@ function populateWorld(data) {
     worldGroup.remove(interiorsLayer);
     ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     plazaSalon?.userData.rack?.dispose(); cityBikeRacks?.userData.rack?.dispose();
+    ribbonGraybox?.userData.dispose?.(); fiveRoomsShells?.userData.dispose?.(); ribbonGraybox = null; fiveRoomsShells = null; fiveRoomsLandscape = null;
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
@@ -833,9 +838,21 @@ function populateWorld(data) {
   // Curbside bike racks around the District (bike-racks.js), beside the plaza's.
   cityBikeRacks = buildCityBikeRacks(data);
   worldGroup.add(cityBikeRacks);
-  // The Ribbon canopy walk, graybox, under the pink-jet-age finish only (#825; ribbon-graybox.js).
-  ribbonGraybox = ribbonAppliesTo(data, cityKitFinish) ? buildRibbonGraybox({ world: data, groundAt: (x, z) => groundSurfaceHeight(data, x, z) }) : null;
+  // Render the same admitted Ribbon and shell geometry that walking.js and the server block.
+  // A comparison preference changes material roles, never the visibility of a shared solid.
+  const fiveRoomsApply = fiveRoomsAppliesTo(data), surfaceAt = (x, z) => groundSurfaceHeight(data, x, z);
+  fiveRoomsLandscape = buildFiveRoomsLandscapeForWorld(data, { groundAt: (x, north) => surfaceAt(x, -north), finish: cityKitFinish });
+  if (fiveRoomsLandscape) {
+    worldGroup.add(fiveRoomsLandscape);
+    // Register paving only, never planter tops. Keep all base street supports on a rebuild.
+    registerGroundSurfaces(data, [...supports, fiveRoomsLandscape.children[0]]);
+  }
+  ribbonGraybox = fiveRoomsApply ? buildRibbon({ world: data, groundAt: surfaceAt, finish: cityKitFinish }) : null;
   if (ribbonGraybox) worldGroup.add(ribbonGraybox);
+  // The bays' mapped store rooms stay until decision 5 (Val, 2026-11-01), so the shells keep their
+  // frontages and leave the room interiors to them (their floors and walls would fight for depth).
+  fiveRoomsShells = fiveRoomsApply ? buildFiveRoomsShells(fiveRoomsContract, { finish: cityKitFinish, groundAt: surfaceAt, interiors: false }) : null;
+  if (fiveRoomsShells) worldGroup.add(fiveRoomsShells);
   buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   scene.add(worldGroup);
@@ -950,6 +967,7 @@ function updateAtmosphere() {
   const atmosphere = atmosphereFor(hour, weather);
   currentAtmosphere = atmosphere;
   layers.buildings?.getObjectByName('The Gardens (garden campus)')?.userData.relight?.(atmosphere);
+  ribbonGraybox?.userData.relight?.(atmosphere); fiveRoomsShells?.userData.relight?.(atmosphere);
   sunOffset.set(Math.cos(atmosphere.angle) * 4500, Math.max(300, Math.sin(atmosphere.angle) * 5500), 1900);
   sun.position.copy(sun.target.position).add(sunOffset);
   sun.intensity = atmosphere.sunIntensity;
@@ -1389,7 +1407,7 @@ if (import.meta.env.DEV) window.__riverSpatialStream = () => {
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
     renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls,
     // The opted-in kit finish and what each attached part was built with (#742).
-    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null, ribbon: ribbonGraybox?.userData.ribbon ?? null } };
+    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null, ribbon: ribbonGraybox?.userData.ribbon ?? null, fiveRooms: fiveRoomsShells?.userData.fiveRooms ?? null, fiveRoomsLandscape: fiveRoomsLandscape?.userData.fiveRoomsLandscape ?? null } };
 };
 if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
 if (import.meta.env.DEV) window.__riverExteriorCull = () => {
