@@ -499,7 +499,7 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
     ...(world.buildingInteriors ?? []).flatMap(plan => plan.levels.filter(level => level.index > 0)
       .flatMap(level => interiorLevelRoomsFor(world, level.id))),
   ];
-  const interiorGroup = buildStoreInteriors(rooms.filter(room => !room.generatedPlan && !isCampusRoom(room)), { atlas: interiors, reflectionMaterials });
+  const interiorGroup = buildStoreInteriors(rooms.filter(room => !room.generatedPlan && !isCampusRoom(room)), { atlas: interiors, reflectionMaterials, shadowBatch: true });
   group.userData.reflectionMaterials = reflectionMaterials;
   const reflective = [];
   for (const root of [group, interiorGroup]) root.traverse(mesh => { if (mesh.material && reflectionMaterials.includes(mesh.material)) reflective.push(mesh); });
