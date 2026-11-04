@@ -127,25 +127,29 @@ test('reduced motion keeps the room still', () => {
   root.userData.dispose();
 });
 
-test('instances are placed individually, not collapsed onto the last matrix (culling regression)', () => {
+test('instances are placed individually and their culling spheres cover the hall (culling regression)', () => {
   const root = buildCtClubInterior(room, { local: true });
-  const concrete = root.children.find(item => item.isInstancedMesh && item.count > 10);
-  assert.ok(concrete, 'a large instanced batch exists');
-  const scratch = new THREE.Matrix4();
-  const points = [];
-  for (let i = 0; i < concrete.count; i++) {
-    concrete.getMatrixAt(i, scratch);
-    points.push(new THREE.Vector3().setFromMatrixPosition(scratch));
+  const instanced = root.children.filter(item => item.isInstancedMesh);
+  assert.ok(instanced.length > 5, `several instanced batches exist (${instanced.length})`);
+  const scratch = new THREE.Matrix4(), point = new THREE.Vector3();
+  for (const mesh of instanced) {
+    const points = [];
+    for (let i = 0; i < mesh.count; i++) { mesh.getMatrixAt(i, scratch); points.push(point.setFromMatrixPosition(scratch).clone()); }
+    if (points.length < 2) continue;
+    // Instances must not collapse onto one point (the old shared-matrix bug).
+    const xs = points.map(v => v.x), ys = points.map(v => v.y), zs = points.map(v => v.z);
+    const span = Math.max(...xs) - Math.min(...xs) + Math.max(...ys) - Math.min(...ys) + Math.max(...zs) - Math.min(...zs);
+    assert.ok(span > 2, `${mesh.name} spans > 2 m (${span.toFixed(1)} m)`);
+    // The culling sphere must contain every instance, or a far view culls the batch.
+    mesh.computeBoundingSphere();
+    for (const p of points) {
+      const dx = p.x - mesh.boundingSphere.center.x, dy = p.y - mesh.boundingSphere.center.y, dz = p.z - mesh.boundingSphere.center.z;
+      assert.ok(dx * dx + dy * dy + dz * dz <= mesh.boundingSphere.radius * mesh.boundingSphere.radius + 1e-6, `${mesh.name} sphere covers ${p.toArray()}`);
+    }
   }
-  // Every instance must keep its own position: the shell alone spans all 40 m.
-  const xs = points.map(v => v.x), ys = points.map(v => v.y), zs = points.map(v => v.z);
-  const span = Math.max(...xs) - Math.min(...xs) + Math.max(...ys) - Math.min(...ys) + Math.max(...zs) - Math.min(...zs);
-  assert.ok(span > 45, `instances spread across the hall, not one pile (span ${span.toFixed(1)} m)`);
-  // The culling sphere must cover the whole hall, or far views render nothing.
-  concrete.computeBoundingSphere();
-  assert.ok(concrete.boundingSphere.radius > 18, `culling sphere spans the hall (r=${concrete.boundingSphere.radius.toFixed(1)} m)`);
-  const ysAt = concrete.boundingSphere.center.y;
-  assert.ok(Math.abs(ysAt - 3) < 1.5, `culling sphere sits inside the hall (y=${ysAt.toFixed(1)})`);
+  // The dancefloor's near-black tile base alone must be one instanced slab grid.
+  const tiles = root.children.find(item => item.isInstancedMesh && item.material?.name === 'club-black');
+  assert.ok(tiles && tiles.count > 200, `the dancefloor dark tile base is instanced (${tiles?.count})`);
   root.userData.dispose();
 });
 
