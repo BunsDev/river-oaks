@@ -109,6 +109,15 @@ test('the Ribbonwing model exposes named attachments, three LOD levels within bu
       assert.ok(at.distanceTo(new THREE.Vector3(...ATTACHMENTS[name])) < 1e-6, name);
     }
     assert.deepEqual(Object.keys(craft.levels), LODS.map(l => l.name));
+    const seams = level => { const found = [];craft.levels[level].traverse(node => { if (node.isMesh && node.material.name === 'Ribbonwing panel seam') found.push(node); });return found; };
+    assert.deepEqual([seams('medium').length, seams('far').length], [0, 0], 'shut lines are near-only');
+    const onCentreline = [], point = new THREE.Vector3();
+    for (const mesh of seams('near')) {
+      const position = mesh.geometry.attributes.position;
+      for (let i = 0; i < position.count; i++) { point.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld);if (Math.abs(point.z) < .005) onCentreline.push(point.x); }
+    }
+    assert.ok(onCentreline.some(x => x > -2.8 && x < -2.6), 'the nose deck has its centreline shut line');
+    assert.ok(onCentreline.some(x => x > 1 && x < 1.9), 'the rear deck has its centreline shut line');
     const { perLevel } = craft.stats();
     assert.ok(perLevel.near.draws <= 65 && perLevel.near.triangles < 130000, JSON.stringify(perLevel.near));
     assert.ok(perLevel.medium.triangles < perLevel.near.triangles / 2 && perLevel.far.triangles < perLevel.medium.triangles / 5);
@@ -129,6 +138,15 @@ test('the near detail pass adds shut lines inside the authored envelope and the 
       assert.ok(Math.abs(near.min[axis] - medium.min[axis]) < .02, `${axis} min ${near.min[axis]} vs ${medium.min[axis]}`);
       assert.ok(Math.abs(near.max[axis] - medium.max[axis]) < .02, `${axis} max ${near.max[axis]} vs ${medium.max[axis]}`);
     }
+    const seams = level => { const found = [];craft.levels[level].traverse(node => { if (node.isMesh && node.material.name === 'Ribbonwing panel seam') found.push(node); });return found; };
+    assert.deepEqual([seams('medium').length, seams('far').length], [0, 0], 'shut lines are near-only');
+    const onCentreline = [], point = new THREE.Vector3();
+    for (const mesh of seams('near')) {
+      const position = mesh.geometry.attributes.position;
+      for (let i = 0; i < position.count; i++) { point.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld);if (Math.abs(point.z) < .005) onCentreline.push(point.x); }
+    }
+    assert.ok(onCentreline.some(x => x > -2.8 && x < -2.6), 'the nose deck has its centreline shut line');
+    assert.ok(onCentreline.some(x => x > 1 && x < 1.9), 'the rear deck has its centreline shut line');
     const { perLevel } = craft.stats();
     assert.ok(perLevel.near.draws <= 65, `${perLevel.near.draws} draws`);
     assert.ok(perLevel.near.triangles < 130000, `${perLevel.near.triangles} triangles`);

@@ -104,10 +104,10 @@
     "maxChannelError": 0
   },
   "sources": {
-    "preview/src/ribbonwing-design.js": "f2a40f058a86458dda428edf2d4be3066c860f474f1409c2713a64b565b6bf40",
-    "preview/src/ribbonwing.js": "4537e5d6edf938925942882916d161df5a5c2cb64d2b5d88bc3175cdd476c16c",
-    "preview/src/ribbonwing-rig.js": "9d5d8e4c2a9bb9b73097986126131ff1aed31bf99897404640c8254ccde59535",
-    "scripts/ribbonwing/export-glb.mjs": "5e0ed78c84d9656655ed659ae3b469988f3fa437737502340505e0353b075156"
+    "preview/src/ribbonwing-design.js": "42a84c485d289a0ba17290e78062d725466370b1ac09b0ec7b54d46c97e03454",
+    "preview/src/ribbonwing.js": "6f900afa3e31ea22ff73a50badf0870ca249cf98165a38d1ed82fe986edb3b18",
+    "preview/src/ribbonwing-rig.js": "24f9573475360397c4f3072faba8a80f40c0c2234c2434fec456e34c5e611a94",
+    "scripts/ribbonwing/export-glb.mjs": "21e2cb7d874b786c6c364837ccc3275c524ba9d0e396abeb385b853541b39aa4"
   },
   "roundTrip": "passed",
   "problems": []
