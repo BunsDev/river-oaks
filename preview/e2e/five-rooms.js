@@ -82,7 +82,7 @@ async page => {
   check(noFlag.finish.fiveRooms && typeof noFlag.finish.fiveRooms === 'object', `finish.fiveRooms is reported by the page (#841): ${JSON.stringify(noFlag.finish.fiveRooms ?? null)}`);
   const fiveRooms = compactFinish(noFlag.finish.fiveRooms);
   check(!fiveRooms.refused, `The five rooms are built and not refused (#839/#841): ${JSON.stringify(fiveRooms)}`);
-  check(noFlag.finish.fiveRoomsLandscape?.version === 'five-rooms-v2' && noFlag.finish.fiveRoomsLandscape.stats?.paving === 5, `The live v2 landscape draws five entrance aprons (#840/#841): ${JSON.stringify(noFlag.finish.fiveRoomsLandscape)}`);
+  check(noFlag.finish.fiveRoomsLandscape?.version === contract.version && noFlag.finish.fiveRoomsLandscape.stats?.paving === 5, `The live landscape reads the contract's version and draws five entrance aprons (#840/#841): ${JSON.stringify(noFlag.finish.fiveRoomsLandscape)}`);
 
   // 2. Graphics tiers and the spawn frame: sharp is the budget frame; smooth must also apply.
   await pinGraphics(page, 'sharp');
