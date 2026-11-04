@@ -156,9 +156,9 @@ test('ground pieces follow groundSurfaceHeight within 1 cm and face up, ready fo
   assert.equal(meshes[0].geometry.attributes.position.count, pieces.reduce((n, p) => n + p.triangles.length * 3, 0));
 });
 
-test('classic builds nothing; pink-jet-age builds the aprons, with bounded draw calls', t => {
-  assert.equal(fiveRoomsLandscapeAppliesTo(world, 'classic', expanded), false);
-  assert.equal(fiveRoomsLandscapeAppliesTo(world, undefined, expanded), false);
+test('every appearance builds the same aprons, with bounded draw calls', t => {
+  assert.equal(fiveRoomsLandscapeAppliesTo(world, 'classic', expanded), true);
+  assert.equal(fiveRoomsLandscapeAppliesTo(world, undefined, expanded), true);
   assert.equal(fiveRoomsLandscapeAppliesTo(world, 'pink-jet-age', expanded), true);
   assert.equal(fiveRoomsLandscapeAppliesTo({ ...world, scene: 'creator' }, 'pink-jet-age', expanded), false, 'a creator world');
   assert.equal(fiveRoomsLandscapeAppliesTo({ ...world, buildings: world.buildings.filter(b => b.id !== 'osm-way-625330792') }, 'pink-jet-age', expanded), false, 'a District without the host buildings');
@@ -174,4 +174,24 @@ test('classic builds nothing; pink-jet-age builds the aprons, with bounded draw 
   assert.equal(procedural, 67, `procedural planting draw calls ${procedural}`);
   assert.deepEqual(full.userData.fiveRoomsLandscape.stats, landscape(ALL).stats);
   t.diagnostic(`five rooms landscape draw calls: default flags ${draws(today)}; all flags ${draws(full)} (paving 1, bed shells 1, mulch 1, procedural planting ${procedural}; buildPlanterPlanting adds its boxwood and grass model batches once loaded)`);
+});
+
+test('entrance paving wins the depth test against the street it lies on, and leaves flush furniture ahead of it', async () => {
+  const THREE = await import('three'), { findDepthFights } = await import('../src/depth-layer-audit.js');
+  const size = 12, plan = { paving: [{ id: 'paving:test', ring: [[-size, -size], [size, -size], [size, size], [-size, size]] }], courts: [] };
+  // As in the live scene: large triangles following the street, 8 mm above it.
+  const corners = [[-size, 0, -size], [size, 0, -size], [size, 0, size], [-size, 0, size]];
+  const supportTriangles = () => [[corners[0], corners[1], corners[2]], [corners[0], corners[2], corners[3]]];
+  const paving = buildFiveRoomsGround(plan, { groundAt: () => 0, supportTriangles });
+  const fightsWith = options => {
+    const geometry = new THREE.PlaneGeometry(size * 2, size * 2).rotateX(-Math.PI / 2), mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ name: 'street', ...options }));
+    mesh.name = 'street';
+    const root = new THREE.Group();root.add(paving.clone(), mesh);root.updateMatrixWorld(true);
+    return findDepthFights(root).length;
+  };
+  // The street's walkway layer, and a layer with no offset at all (both found by hosted depth).
+  assert.equal(fightsWith({ polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }), 0);
+  assert.equal(fightsWith({}), 0);
+  const { polygonOffsetFactor, polygonOffsetUnits } = paving.children[0].material;
+  assert.ok(polygonOffsetFactor > -3 && polygonOffsetUnits > -3, 'flush furniture (-3, -3) stays ahead of the paving');
 });

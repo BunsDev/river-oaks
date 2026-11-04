@@ -60,13 +60,16 @@ export function venueSolids(venue, world) {
 const round = value => Math.round(value * 1000) / 1000;
 const cache = new WeakMap();
 
+// Appearance cannot select a different admitted layout. The renderer uses this same predicate.
+export const fiveRoomsAppliesTo = world => Boolean(world?.roads?.some(road => road.id === DISTRICT_RIBBON_LANE));
+
 /**
  * Groups of discs for walking.js: the Ribbon posts in runs of ten (so each group's box stays
  * small) and one group per venue. A world without the District's central lane (a creator world)
  * gets none; a world whose fixtures refuse the spine gets no posts.
  */
 export function fiveRoomsFootprints(world, source = contract) {
-  if (!world || !(world.roads ?? []).some(road => road.id === DISTRICT_RIBBON_LANE)) return [];
+  if (!fiveRoomsAppliesTo(world)) return [];
   if (source === contract && cache.has(world)) return cache.get(world);
   const groups = [];
   let posts = [];
