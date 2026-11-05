@@ -113,8 +113,8 @@ export async function addDancers(scene, opts = {}) {
   }
   const jointSet = new Set(clips[0].meta.joint_names);
 
-  // Scale the character to ~1.75 m and drop its feet to the floor (from rest pose).
-  const { scale, footY } = skeletonScale(base, jointSet);
+  // Scale the character to ~1.75 m from its rest-pose joint span.
+  const { scale } = skeletonScale(base, jointSet);
 
   const dancers = [];
   const cols = Math.max(1, Math.ceil(Math.sqrt(count)));
