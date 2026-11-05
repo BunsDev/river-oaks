@@ -60,7 +60,7 @@ export function createAudioEngine() {
     for (const f of [...files]) {
       if (!f.type.startsWith('audio/')) continue;
       try {
-        const buf = await ctx.decodeAudioData(await f.arrayBuffer());
+        const audioBuf = await ctx.decodeAudioData(await f.arrayBuffer());
         const id = 'track-' + (tracks.length + 1);
         tracks.push({ id, name: f.name.replace(/\.[^.]+$/, ''), buffer: buf });
         added.push(tracks[tracks.length - 1]);
