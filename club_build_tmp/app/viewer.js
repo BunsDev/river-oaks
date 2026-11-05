@@ -342,6 +342,18 @@ for (const id of ['audio-react-on', 'audio-band', 'audio-delay', 'audio-onset', 
 window.addEventListener('ct-audio', renderPlaylist);
 window.clubFixture.toggleAudio = toggleAudio;
 
+// Bundled tracks (in the project's public/audio folder, copied to dist/audio on build).
+// Load them as the default playlist so they're ready to play; the file input still
+// adds more tracks on top.
+const BUNDLED_TRACKS = [
+  { file: 'Analog Circuit - Terminal Saturator - Treblo.mp3', name: 'Analog Circuit — Terminal Saturator' },
+  { file: 'Techno - bend the rules  - Treblo.mp3', name: 'Techno — bend the rules' },
+  { file: 'Techno - Hindsight - Treblo.mp3', name: 'Techno — Hindsight' },
+];
+if (audio) for (const t of BUNDLED_TRACKS) {
+  audio.addUrl('audio/' + encodeURIComponent(t.file), t.name).then(ok => { if (ok) renderPlaylist(); });
+}
+
 
 // ---- input ----------------------------------------------------------------------
 addEventListener('keydown', e => {

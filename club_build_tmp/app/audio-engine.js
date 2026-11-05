@@ -70,6 +70,24 @@ export function createAudioEngine() {
     return added;
   };
 
+  // Load a track from a URL (e.g. the bundled tracks in the project's public/audio
+  // folder) and append it to the playlist. Returns the track, or null on failure.
+  const addUrl = async (url, name) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const buf = await res.arrayBuffer();
+      const audioBuf = await ctx.decodeAudioData(buf);
+      if (ctx.state === 'suspended') await ctx.resume().catch(() => { });
+      const id = 'track-' + (tracks.length + 1);
+      const track = { id, name: name || decodeURIComponent(url.split('/').pop().replace(/\.[^.]+$/, '')), buffer: audioBuf };
+      tracks.push(track);
+      if (index < 0) playIndex(0);
+      emit();
+      return track;
+    } catch { return null; }
+  };
+
   const toggle = () => {
     if (index < 0 && tracks.length) { playIndex(0); return; }
     if (playing) { playing = false; stop(); }
@@ -122,5 +140,5 @@ export function createAudioEngine() {
   };
 
   gain.gain.value = volume;
-  return { ctx, analyser, tracks, decode, toggle, next, prev, seek, setVolume, getFreq, getWave, energy, level, state, playIndex };
+  return { ctx, analyser, tracks, decode, addUrl, toggle, next, prev, seek, setVolume, getFreq, getWave, energy, level, state, playIndex };
 }
