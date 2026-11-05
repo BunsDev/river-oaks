@@ -320,8 +320,9 @@ const renderGroups = () => {
   const el = g('audio-groups'); if (!el || !design) return;
   const names = design.groups();
   el.innerHTML = names.map(n => {
-    const cfg = design.sectionAudio.get(n) ?? { on: false };
-    return `<div class="audio-g"><label><input type="checkbox" data-group="${n}"${cfg.on ? ' checked' : ''}> react ${n}</label></div>`;
+    const cfg = design.sectionAudio.get(n) ?? {};
+    const on = cfg.on ?? true;      // sections inherit the master unless switched off
+    return `<div class="audio-g"><label><input type="checkbox" data-group="${n}"${on ? ' checked' : ''}> react ${n}</label></div>`;
   }).join('');
   el.querySelectorAll('[data-group]').forEach(cb => cb.addEventListener('change', () => design.setSectionAudio(cb.dataset.group, { on: cb.checked })));
 };
@@ -370,7 +371,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyP') { planner.toggle(); }
   if (e.code === 'KeyF') { world.toggle(); }
   if (e.code === 'KeyC') { window.clubFixture.toggleCoords(); }
-  if (e.code === 'KeyA') { window.clubFixture.toggleAudio(); }
+  if (e.code === 'KeyM') { window.clubFixture.toggleAudio(); }
 });
 addEventListener('keyup', e => keys.delete(e.code));
 renderer.domElement.addEventListener('click', () => {

@@ -205,22 +205,32 @@ export function attachDesignPanel({ root }) {
     for (const it of items) {
       const hexes = it.colors.filter(Boolean);
       if (hexes.length < 1) continue;
-      const sec = sectionAudio.get(it.group) ?? defaultAudio();
-      if (audio && audioReact.on && sec.on) {
+      // A section reacts when the master is on and the section hasn't been switched off
+      // (unconfigured sections inherit the master, so toggling the master "just works").
+      const sec = sectionAudio.get(it.group);
+      const cfg = sec ?? defaultAudio();
+      const reactive = audio && audioReact.on && (sec?.on ?? true);
+      if (reactive) {
         // Audio-reactive: band energy -> level (delay/onset/fade/ignore/random).
         const st = audioState.get(it.group) ?? (audioState.set(it.group, { level: 0, hist: [] }), audioState.get(it.group));
         let raw = 0;
-        try { raw = audio.energy(sec.band) || 0; } catch { raw = 0; }
-        const gated = raw < (sec.ignore ?? 0.05) ? 0 : raw;
+        try { raw = audio.energy(cfg.band) || 0; } catch { raw = 0; }
+        const gated = raw < (cfg.ignore ?? 0.05) ? 0 : raw;
         st.hist.push(gated); if (st.hist.length > 600) st.hist.shift();
-        const delayN = Math.max(0, Math.round((sec.delay ?? 0) * 60));
+        const delayN = Math.max(0, Math.round((cfg.delay ?? 0) * 60));
         const sample = delayN ? st.hist[Math.max(0, st.hist.length - 1 - delayN)] : gated;
-        const target = sec.random ? (sample > st.level + 0.12 ? Math.random() : st.level) : sample;
-        const rate = sample > st.level ? 1 / Math.max(0.001, sec.onset ?? 0.15) : 1 / Math.max(0.001, sec.fade ?? 0.3);
+        const target = cfg.random ? (sample > st.level + 0.12 ? Math.random() : st.level) : sample;
+        const rate = sample > st.level ? 1 / Math.max(0.001, cfg.onset ?? 0.15) : 1 / Math.max(0.001, cfg.fade ?? 0.3);
         st.level += (target - st.level) * Math.min(1, rate);
-        const pos = st.level * (hexes.length - 1);
-        const i0 = Math.floor(pos), i1 = Math.min(i0 + 1, hexes.length - 1);
-        setColour(it, lerp(hexes[i0], hexes[i1], pos - i0));
+        if (hexes.length < 2) {
+          // Single colour: pulse its brightness with the level so it still reacts.
+          const base = new THREE.Color(hexes[0]);
+          setColour(it, base.clone().lerp(new THREE.Color('#ffffff'), st.level * 0.55));
+        } else {
+          const pos = st.level * (hexes.length - 1);
+          const i0 = Math.floor(pos), i1 = Math.min(i0 + 1, hexes.length - 1);
+          setColour(it, lerp(hexes[i0], hexes[i1], pos - i0));
+        }
         continue;
       }
       if (!it.cycle || hexes.length < 2 || !(it.cycleSeconds > 0)) continue;

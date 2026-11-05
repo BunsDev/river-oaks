@@ -21,6 +21,7 @@ const CLIPS = [
 
 const fetchJson = u => fetch(u).then(r => r.json());
 const fetchBuf = u => fetch(u).then(r => r.arrayBuffer());
+const Y_AXIS = new THREE.Vector3(0, 1, 0);
 
 async function loadClipData(clip) {
   const base = `dancer/${clip.name}`;
@@ -63,6 +64,40 @@ function buildClip(data, model) {
   return new THREE.AnimationClip(meta.name, meta.duration_s, tracks);
 }
 
+// A visible stick-figure body: a capsule along each bone→child segment. Because the
+// clip GLB is skeleton-only (no mesh), this is what makes the dancers actually show up.
+function buildMannequin(model, color, jointSet) {
+  const mat = new THREE.MeshStandardMaterial({
+    color, emissive: new THREE.Color(color), emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.1,
+  });
+  const joint = n => n.isBone || jointSet.has(n.name);
+  model.traverse(n => {
+    if (!joint(n)) return;
+    for (const child of n.children) {
+      if (!joint(child)) continue;
+      const len = child.position.length();
+      if (len < 1e-4) continue;
+      const dir = child.position.clone().normalize();
+      const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, Math.max(0.03, len), 4, 8), mat);
+      mesh.position.copy(dir).multiplyScalar(len / 2);
+      mesh.quaternion.setFromUnitVectors(Y_AXIS, dir);
+      n.add(mesh);
+    }
+  });
+}
+
+// Derive a 1.75 m scale + floor offset from the skeleton's rest-pose node positions.
+// (The clip GLB has no skin, so the joints are plain nodes — we key off their names.)
+function skeletonScale(base, jointSet) {
+  base.updateMatrixWorld(true);
+  let minY = Infinity, maxY = -Infinity;
+  base.traverse(n => {
+    if (jointSet.has(n.name)) { const p = new THREE.Vector3(); n.getWorldPosition(p); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y); }
+  });
+  const height = Math.max(0.01, maxY - minY);
+  return { scale: 1.75 / height, footY: minY };
+}
+
 export async function addDancers(scene, opts = {}) {
   const count = Math.max(0, Math.min(24, opts.count ?? 8));
   if (!count) return { dancers: [], tick: () => { }, toggle: () => true, setCount: () => { }, clips: [] };
@@ -74,27 +109,18 @@ export async function addDancers(scene, opts = {}) {
   const clips = [];
   for (const clip of CLIPS) {
     const data = await loadClipData(clip);
-    clips.push({ ...clip, clip: buildClip(data, base) });
+    clips.push({ ...clip, meta: data.meta, clip: buildClip(data, base) });
   }
+  const jointSet = new Set(clips[0].meta.joint_names);
 
-  // Scale the character to ~1.75 m and drop its feet to the floor.
-  const box = new THREE.Box3().setFromObject(base);
-  const height = Math.max(0.01, box.max.y - box.min.y);
-  const scale = 1.75 / height;
-  const footOffset = box.min.y * scale;
+  // Scale the character to ~1.75 m and drop its feet to the floor (from rest pose).
+  const { scale, footY } = skeletonScale(base, jointSet);
 
   const dancers = [];
   for (let i = 0; i < count; i++) {
     const model = skeletonClone(base);
     const use = clips[i % clips.length];
-    // Tint each dancer with its clip colour so they read as a crowd.
-    model.traverse(n => {
-      if (n.isMesh && n.material) {
-        const m = n.material.clone();
-        if (m.emissive) { m.emissive = new THREE.Color(use.color); m.emissiveIntensity = 0.35; }
-        n.material = m;
-      }
-    });
+    buildMannequin(model, use.color, jointSet);      // visible capsule body (the GLB is skeleton-only)
     const mixer = new THREE.AnimationMixer(model);
     const action = mixer.clipAction(use.clip);
     action.play();
@@ -103,7 +129,7 @@ export async function addDancers(scene, opts = {}) {
     const x = -5.5 + (i % 6) * 2.2 + (Math.random() - 0.5);
     const z = -30 + Math.floor(i / 6) * 3 + (Math.random() - 0.5) * 1.4;
     model.scale.setScalar(scale);
-    model.position.set(x, -footOffset, z);
+    model.position.set(x, -footY * scale, z);
     model.rotation.y = (Math.random() - 0.5) * Math.PI * 2;
     scene.add(model);
     dancers.push({ model, mixer, action, use, phase: Math.random() });
