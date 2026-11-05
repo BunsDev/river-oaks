@@ -109,7 +109,12 @@ export function attachPlanPlanner({ room, onApply }) {
   });
 
   box.style.display = 'none';
-  const toggle = () => { box.style.display = box.style.display === 'none' ? 'block' : 'none'; draw(); };
+  const toggle = () => {
+    const show = box.style.display === 'none';
+    if (show) globalThis.clubFixture?.closePanels?.();
+    box.style.display = show ? 'block' : 'none';
+    draw();
+  };
   draw();
   return { toggle, redraw: draw, movable };
 }

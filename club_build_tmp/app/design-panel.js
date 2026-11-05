@@ -85,6 +85,10 @@ export function attachDesignPanel({ root }) {
   const spotlights = root.userData?.spotlights?.list ?? [];
   const outlines = root.children.filter(c => c.isLineSegments && /^club-outlines:/.test(c.name)).map(c => ({ name: c.name, mat: c.material }));
   const tiles = root.userData?.tiles ?? null;
+  // Preserve the designed tile matrix up front (before any reactive run overwrites the
+  // live `tiles.matrix`), so the dancefloor wave can modulate each tile's hue without
+  // erasing the design.
+  if (tiles && !tiles.base) tiles.base = tiles.matrix.map(row => [...row]);
 
   const items = [];
   const newItem = (id, label, group, kind, ref, field, color) => {
@@ -127,7 +131,15 @@ export function attachDesignPanel({ root }) {
   // delay (lookback), onset (attack), fade (release), ignore (noise floor), random
   // (jump to a fresh colour on a loud transient) and lock. It drives the SAME colour
   // fields the cycle does, so it integrates smoothly with any colour adjustments.
-  const audioReact = { on: false, band: 'all', delay: 0, onset: 0.15, fade: 0.3, ignore: 0.05, random: false, locked: false };
+  // Visualization modes for the audio-reactive colour system. Each mode changes how
+  // the beat drives the defined surfaces (the per-section palettes the host designed):
+  //   pulse     – every section's glow pulses brightness with the beat
+  //   palette   – each section shifts through its own designed colours with the beat
+  //   tiles     – the dancefloor ripples in a beat-synced wave, keeping each tile's hue
+  //   tiles-off – the tile matrix stays exactly as designed; other sections react
+  //   off       – no audio-reactive colour
+  const VISUAL_MODES = ['pulse', 'palette', 'tiles', 'tiles-off', 'off'];
+  const audioReact = { on: false, band: 'all', delay: 0, onset: 0.15, fade: 0.3, ignore: 0.05, random: false, locked: false, mode: 'palette', auto: false, autoSeconds: 8, exclude: [] };
   const sectionAudio = new Map();     // group -> { on, band, delay, onset, fade, ignore, random, locked }
   const audioState = new Map();       // group -> { level, hist } runtime-only (not saved)
   const defaultAudio = () => ({ on: false, band: 'all', delay: 0, onset: 0.15, fade: 0.3, ignore: 0.05, random: false, locked: false });
@@ -201,39 +213,80 @@ export function attachDesignPanel({ root }) {
     else if (it.kind === 'light' || it.kind === 'spotlight') it.ref.color.copy(color);
     else if (it.kind === 'tiles' && tiles) tiles.setAll('#' + color.getHexString());
   };
+  const pulse = (color, level) => new THREE.Color(color).lerp(new THREE.Color('#ffffff'), Math.max(0, Math.min(1, level)) * 0.55);
+  // Attack/release audio level for a section, shared by every reactive mode.
+  const levelFor = (group, audio, sec) => {
+    const band = sec?.band ?? audioReact.band ?? 'all';
+    const delay = sec?.delay ?? audioReact.delay ?? 0;
+    const onset = sec?.onset ?? audioReact.onset ?? 0.15;
+    const fade = sec?.fade ?? audioReact.fade ?? 0.3;
+    const ignore = sec?.ignore ?? audioReact.ignore ?? 0.05;
+    const random = sec?.random ?? audioReact.random ?? false;
+    const st = audioState.get(group) ?? (audioState.set(group, { level: 0, hist: [] }), audioState.get(group));
+    let raw = 0;
+    try { raw = audio.energy(band) || 0; } catch { raw = 0; }
+    const gated = raw < ignore ? 0 : raw;
+    st.hist.push(gated); if (st.hist.length > 600) st.hist.shift();
+    const delayN = Math.max(0, Math.round(delay * 60));
+    const sample = delayN ? st.hist[Math.max(0, st.hist.length - 1 - delayN)] : gated;
+    const target = random ? (sample > st.level + 0.12 ? Math.random() : st.level) : sample;
+    const rate = sample > st.level ? 1 / Math.max(0.001, onset) : 1 / Math.max(0.001, fade);
+    st.level += (target - st.level) * Math.min(1, rate);
+    return st.level;
+  };
+  // Beat-synced dancefloor ripple: keep each tile's designed hue (scale its RGB, which
+  // preserves hue/saturation) and modulate its brightness with a wave that travels
+  // across the matrix, boosted by the beat level. (Scaling RGB avoids the HSL
+  // round-trip that collapsed every tile to one hue under Three.js colour management.)
+  const waveTile = (r, c, level, nowSeconds) => {
+    if (!tiles?.base) return;
+    const base = tiles.base[r]?.[c];
+    if (!base) return;
+    const wave = 0.5 + 0.5 * Math.sin((r * 0.7 + c * 0.5) - nowSeconds * 5);
+    const brightness = Math.max(0.15, Math.min(2.5, 0.45 + 0.55 * level + 1.3 * wave * (0.25 + 0.75 * level)));
+    // getHexString() omits the '#', but tiles.set expects a CSS hex; add it back.
+    tiles.set(r, c, '#' + new THREE.Color(base).multiplyScalar(brightness).getHexString());
+  };
+  let autoLast = 0;
+  // Auto-cycle: every `audioReact.autoSeconds`, jump to a random non-excluded mode.
+  const maybeAutoSwitch = nowSeconds => {
+    if (!audioReact.auto || !audioReact.on) return;
+    const secs = Math.max(2, Number(audioReact.autoSeconds) || 8);
+    if (nowSeconds - autoLast < secs) return;
+    const pool = VISUAL_MODES.filter(m => m !== 'off' && !(audioReact.exclude ?? []).includes(m));
+    if (pool.length) audioReact.mode = pool[Math.floor(Math.random() * pool.length)];
+    autoLast = nowSeconds;
+  };
   const cycle = (nowSeconds, audio) => {
+    maybeAutoSwitch(nowSeconds);
+    const mode = audioReact.mode ?? 'palette';
+    const on = audio && audioReact.on && mode !== 'off';
     for (const it of items) {
       const hexes = it.colors.filter(Boolean);
       if (hexes.length < 1) continue;
       // A section reacts when the master is on and the section hasn't been switched off
       // (unconfigured sections inherit the master, so toggling the master "just works").
       const sec = sectionAudio.get(it.group);
-      const reactive = audio && audioReact.on && (sec?.on ?? true);
+      const reactive = on && (sec?.on ?? true);
       if (reactive) {
-        // Per-section config overrides the master audioReact controls (band/delay/...);
-        // the audio panel's global band/delay/onset/fade/ignore/random/lock drive this.
-        const band = sec?.band ?? audioReact.band ?? 'all';
-        const delay = sec?.delay ?? audioReact.delay ?? 0;
-        const onset = sec?.onset ?? audioReact.onset ?? 0.15;
-        const fade = sec?.fade ?? audioReact.fade ?? 0.3;
-        const ignore = sec?.ignore ?? audioReact.ignore ?? 0.05;
-        const random = sec?.random ?? audioReact.random ?? false;
-        const st = audioState.get(it.group) ?? (audioState.set(it.group, { level: 0, hist: [] }), audioState.get(it.group));
-        let raw = 0;
-        try { raw = audio.energy(band) || 0; } catch { raw = 0; }
-        const gated = raw < ignore ? 0 : raw;
-        st.hist.push(gated); if (st.hist.length > 600) st.hist.shift();
-        const delayN = Math.max(0, Math.round(delay * 60));
-        const sample = delayN ? st.hist[Math.max(0, st.hist.length - 1 - delayN)] : gated;
-        const target = random ? (sample > st.level + 0.12 ? Math.random() : st.level) : sample;
-        const rate = sample > st.level ? 1 / Math.max(0.001, onset) : 1 / Math.max(0.001, fade);
-        st.level += (target - st.level) * Math.min(1, rate);
-        if (hexes.length < 2) {
-          // Single colour: pulse its brightness with the level so it still reacts.
-          const base = new THREE.Color(hexes[0]);
-          setColour(it, base.clone().lerp(new THREE.Color('#ffffff'), st.level * 0.55));
-        } else {
-          const pos = st.level * (hexes.length - 1);
+        const level = levelFor(it.group, audio, sec);
+        // Dancefloor matrix handling.
+        if (it.kind === 'tiles' && tiles) {
+          if (mode === 'tiles-off') continue;                 // leave the matrix exactly as designed
+          if (mode === 'tiles') { for (let r = 0; r < tiles.rows; r++) for (let c = 0; c < tiles.cols; c++) waveTile(r, c, level, nowSeconds); continue; }
+          // pulse / palette: the whole floor follows one colour from the section's palette.
+          const base = hexes[0] ?? '#41e0ff';
+          const color = mode === 'pulse' || hexes.length < 2
+            ? pulse(base, level)
+            : lerp(hexes[Math.min(hexes.length - 1, Math.floor(level * (hexes.length - 1)))], hexes[Math.min(hexes.length - 1, Math.ceil(level * (hexes.length - 1)))], (level * (hexes.length - 1)) % 1);
+          setColour(it, color);
+          continue;
+        }
+        // Materials / lights / outlines.
+        if (mode === 'pulse') setColour(it, pulse(hexes[0] ?? '#ffffff', level));
+        else if (hexes.length < 2) setColour(it, pulse(hexes[0], level));
+        else {
+          const pos = level * (hexes.length - 1);
           const i0 = Math.floor(pos), i1 = Math.min(i0 + 1, hexes.length - 1);
           setColour(it, lerp(hexes[i0], hexes[i1], pos - i0));
         }
@@ -332,7 +385,9 @@ export function attachDesignPanel({ root }) {
     items, byId, applyAll, saveNow, cycle, changed, serialise, sectionFrozen, colorLock, tileLocks, tiles,
     randomizeSection, randomizeAll, tilesItem,
     audioReact, sectionAudio,
+    visualModes: VISUAL_MODES,
     setAudioReact: cfg => Object.assign(audioReact, cfg),
+    maybeAutoSwitch,
     setSectionAudio: (g, cfg) => { const c = sectionAudio.get(g) ?? defaultAudio(); Object.assign(c, cfg); sectionAudio.set(g, c); },
     groups: () => [...new Set(items.map(it => it.group))],
     cycleAll, randomizeColorCount, setColorCount, randomizeCycleColors, randomizeLocks, unlockAll,
@@ -483,6 +538,7 @@ export function mountDesignPanel(infoEl, api) {
         const picker = groupsEl.querySelector('.dp-tilepick');
         api.tiles.set(r, c, picker ? picker.value : api.tilesItem.colors[0]);
         if (api.tilesItem) api.tilesItem.colors[0] = api.tiles.matrix[r][c];
+        if (api.tiles.base) api.tiles.base[r][c] = api.tiles.matrix[r][c];   // keep the preserved design in sync
         api.changed(); render();
       });
       cell.addEventListener('contextmenu', e => {

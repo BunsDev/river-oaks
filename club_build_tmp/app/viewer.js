@@ -197,6 +197,13 @@ const syncCamera = () => {
   camera.rotation.set(player.pitch, player.yaw, 0);
 };
 
+// ---- overlay panel helpers ---------------------------------------------------
+// The tool panels are fixed overlays; only one should be open at a time so they
+// never overlap each other (design/info vs coords on the right, planner/world/audio
+// in the centre). Opening any one closes the rest.
+const PANEL_IDS = ['info', 'coords', 'planner', 'world', 'audio'];
+const closePanels = () => { for (const id of PANEL_IDS) { const el = document.getElementById(id); if (el) el.style.display = 'none'; } };
+
 // ---- the design panel (press i): live colours, 8-colour cycling, save --------
 {
   design = attachDesignPanel({ root: club });
@@ -204,9 +211,10 @@ const syncCamera = () => {
   let panelOpen = false;
   const toggleInfo = () => {
     panelOpen = !panelOpen;
+    if (panelOpen) closePanels();
     document.querySelector('#info').style.display = panelOpen ? 'block' : 'none';
   };
-  window.clubFixture = { toggleInfo, room, club, player, show, nextView, designApi: design };
+  window.clubFixture = { toggleInfo, room, club, player, show, nextView, designApi: design, closePanels };
 }
 
 // ---- audio: upload, playlist, continuous playback, reactive colour -------------
@@ -266,6 +274,7 @@ document.getElementById('dancers-btn')?.addEventListener('click', () => { if (da
 const coordsBox = document.getElementById('coords');
 const toggleCoords = () => {
   const show = coordsBox.style.display !== 'block';
+  if (show) closePanels();
   coordsBox.style.display = show ? 'block' : 'none';
   if (show) {
     coordsBox.innerHTML = '<h1>CT CLUB — exact surface coordinates (x, y, z)</h1>' +
@@ -304,6 +313,10 @@ const readReactive = () => ({
   ignore: Number(g('audio-ignore')?.value) || 0.05,
   random: g('audio-random')?.checked ?? false,
   locked: g('audio-lock')?.checked ?? false,
+  mode: g('visual-mode')?.value ?? 'palette',
+  auto: g('visual-auto')?.checked ?? false,
+  autoSeconds: Number(g('visual-auto-secs')?.value) || 8,
+  exclude: [...(g('visual-exclude')?.querySelectorAll('input:checked') ?? [])].map(cb => cb.dataset.mode),
 });
 const renderPlaylist = () => {
   const st = audio ? audio.state() : { tracks: [], index: -1, current: null, time: 0, duration: 0 };
@@ -335,6 +348,20 @@ const renderGroups = () => {
   }).join('');
   el.querySelectorAll('[data-group]').forEach(cb => cb.addEventListener('change', () => design.setSectionAudio(cb.dataset.group, { on: cb.checked })));
 };
+const renderVisual = () => {
+  if (!design) return;
+  const modes = design.visualModes ?? [];
+  const sel = g('visual-mode');
+  if (sel && sel.options.length !== modes.length) sel.innerHTML = modes.map(m => `<option value="${m}">${m}</option>`).join('');
+  const ex = g('visual-exclude');
+  if (ex) {
+    ex.innerHTML = modes.map(m => `<label><input type="checkbox" data-mode="${m}"${(design.audioReact.exclude ?? []).includes(m) ? ' checked' : ''}> ${m}</label>`).join('');
+    ex.querySelectorAll('input').forEach(cb => cb.addEventListener('change', () => {
+      const exclude = [...ex.querySelectorAll('input:checked')].map(c => c.dataset.mode);
+      design.setAudioReact({ exclude });
+    }));
+  }
+};
 const syncAudioUI = () => {
   if (!design) return;
   const a = design.audioReact;
@@ -347,10 +374,15 @@ const syncAudioUI = () => {
   set('audio-ignore', a.ignore ?? 0.05);
   set('audio-random', a.random);
   set('audio-lock', a.locked);
+  set('visual-mode', a.mode ?? 'palette');
+  set('visual-auto', a.auto ?? false);
+  set('visual-auto-secs', a.autoSeconds ?? 8);
+  renderVisual();
 };
 const toggleAudio = () => {
   if (!audioBox) return;
   const show = audioBox.style.display !== 'block';
+  if (show) closePanels();
   audioBox.style.display = show ? 'block' : 'none';
   if (show) { syncAudioUI(); renderPlaylist(); renderGroups(); }
 };
@@ -368,6 +400,9 @@ g('audio-seek')?.addEventListener('input', e => { audio?.seek(Number(e.target.va
 for (const id of ['audio-react-on', 'audio-band', 'audio-delay', 'audio-onset', 'audio-fade', 'audio-ignore', 'audio-random', 'audio-lock']) {
   g(id)?.addEventListener('change', () => design?.setAudioReact(readReactive()));
 }
+g('visual-mode')?.addEventListener('change', () => design?.setAudioReact({ mode: g('visual-mode').value }));
+g('visual-auto')?.addEventListener('change', () => design?.setAudioReact({ auto: g('visual-auto').checked }));
+g('visual-auto-secs')?.addEventListener('change', () => design?.setAudioReact({ autoSeconds: Number(g('visual-auto-secs').value) || 8 }));
 window.addEventListener('ct-audio', renderPlaylist);
 window.clubFixture.toggleAudio = toggleAudio;
 

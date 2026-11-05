@@ -64,6 +64,13 @@
   .audio-item button{font:9px ui-monospace;padding:0 4px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:3px;cursor:pointer}
   .audio-note{color:#70758a;font:9px ui-monospace,Menlo,Consolas,monospace;margin-top:6px;max-width:420px}
   .audio-react b{color:#ffe9b0;margin-right:2px}
+  .audio-visual{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0;padding:6px;background:#1a2030;border:1px solid #2a2e3a;border-radius:4px}
+  .audio-visual b{color:#7ee0ff;margin-right:2px}
+  .audio-visual label{display:inline-flex;gap:3px;align-items:center;white-space:nowrap;font:9px ui-monospace,Menlo,Consolas,monospace}
+  .audio-visual select,.audio-visual input[type=number]{font:9px ui-monospace;background:#0e1116;color:#e8eaf0;border:1px solid #2a2e3a;border-radius:3px}
+  .audio-visual input[type=number]{width:44px}
+  .audio-exclude{display:flex;flex-wrap:wrap;gap:6px;width:100%;align-items:center}
+  .audio-exclude label{display:inline-flex;gap:3px;align-items:center;white-space:nowrap;font:9px ui-monospace,Menlo,Consolas,monospace;color:#aab}
   #planner{position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:6;background:#0a0b10;border:1px solid #2a2e3a;border-radius:6px;padding:10px;display:none}
   #planner canvas{display:block;cursor:crosshair}
   .planner-head{display:flex;gap:8px;align-items:center;margin-bottom:6px}
@@ -165,8 +172,15 @@
     <label><input type="checkbox" id="audio-random"> random</label>
     <label><input type="checkbox" id="audio-lock"> lock</label>
   </div>
+  <div class="audio-visual">
+    <b>VISUAL</b>
+    <label>mode <select id="visual-mode"></select></label>
+    <label><input type="checkbox" id="visual-auto"> auto-cycle</label>
+    <label>every <input type="number" id="visual-auto-secs" value="8" min="2" step="1"> s</label>
+    <div id="visual-exclude" class="audio-exclude"></div>
+  </div>
   <div id="audio-groups"></div>
-  <div class="audio-note">add one or more tracks to build a playlist that plays continuously (each ends → next). “colours to music” drives the design-panel colours from the audio energy (band, delay, onset, fade, ignore, random, lock) — separate from the time-based cycle. Add equalizer / waveform screens in the 📺 planner, and watch them on the walls.</div>
+  <div class="audio-note">add one or more tracks to build a playlist that plays continuously (each ends → next). “colours to music” drives the design-panel colours from the audio energy (band, delay, onset, fade, ignore, random, lock) — separate from the time-based cycle. VISUAL picks how the beat drives the defined surfaces: <b>pulse</b> (whole-room glow pulses), <b>palette</b> (each surface shifts through its own colours), <b>tiles</b> (dancefloor ripples in a beat-synced wave, keeping each tile's hue), <b>tiles-off</b> (tile matrix untouched, other surfaces react), <b>off</b>. Tick auto-cycle to jump to a random mode every N s, and untick any mode you want to keep out of the rotation.</div>
 </div>
 <div id="info"></div>
 <div id="coords">

@@ -124,6 +124,11 @@ export function attachWorldPlanner({ room, onApply }) {
 
   box.style.display = 'none';
   setCanvas(); draw(); bind();
-  const toggle = () => { box.style.display = box.style.display === 'none' ? 'block' : 'none'; setCanvas(); draw(); };
+  const toggle = () => {
+    const show = box.style.display === 'none';
+    if (show) globalThis.clubFixture?.closePanels?.();
+    box.style.display = show ? 'block' : 'none';
+    setCanvas(); draw();
+  };
   return { toggle, redraw: draw, setSurface: n => { surfaceName = n; setCanvas(); draw(); }, surfaces: () => surfaces() };
 }
