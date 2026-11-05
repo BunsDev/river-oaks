@@ -145,7 +145,39 @@ export function configureCtClub(room) {
 // A planned room at any facade. The default (0, 0, yaw 0) is the pending position:
 // the district spot is still to be decided, so hosts pass east/north/yaw when they
 // place the club. `floor` stays 0 for the same reason (below-grade entry later).
-// Recompute the walkable obstacles from the current fixtures (a floorplanner moves
+// The club's wall-mounted screens (Val, 2026-11-04): flat panels on the four walls
+// that can carry live HTML/CSS/JS animations. `wall` is back|left|right|front; `u`
+// is the along-wall coordinate (a for back/front, d for left/right), y the height
+// of the screen centre, w×h its size in metres. Screens avoid the door gap.
+export const SCREEN_WALLS = {
+  back: { axis: 'a', span: [-8, 8], face: 0, normal: [0, 0, 1] },     // faces -d (into the room)
+  front: { axis: 'a', span: [-8, 8], face: 0, normal: [0, 0, -1] },   // faces +d; avoid the door gap (|a|<1.15)
+  left: { axis: 'd', span: [0.5, 39.5], face: -8, normal: [1, 0, 0] }, // faces +a
+  right: { axis: 'd', span: [0.5, 39.5], face: 8, normal: [-1, 0, 0] },// faces -a
+};
+export function addScreen(room, spec = {}) {
+  const wall = SCREEN_WALLS[spec.wall] ? spec.wall : 'back';
+  const s = {
+    id: spec.id ?? `screen-${room.screens.length + 1}`,
+    wall, u: spec.u ?? 0, y: spec.y ?? 2.4,
+    w: spec.w ?? 2.4, h: spec.h ?? 1.35,
+    html: spec.html ?? '<div class="ct-screen"><b>CT CLUB</b></div>',
+  };
+  room.screens.push(s);
+  return s;
+}
+export function moveScreen(room, id, u, y) {
+  const s = room.screens.find(x => x.id === id);
+  if (!s) return s;
+  const span = SCREEN_WALLS[s.wall].span;
+  s.u = Math.max(span[0] + s.w / 2, Math.min(span[1] - s.w / 2, Number(u) ?? s.u));
+  s.y = Math.max(s.h / 2 + 0.2, Math.min(6 - s.h / 2 - 0.2, Number(y) ?? s.y));
+  return s;
+}
+export function removeScreen(room, id) {
+  room.screens = room.screens.filter(s => s.id !== id);
+}
+
 // fixtures; collision must follow). Only fixtures that carry w/l are solids.
 export function refreshObstacles(room) {
   room.obstacles = room.fixtures.filter(f => typeof f.w === 'number' && typeof f.l === 'number')
@@ -188,7 +220,7 @@ export function planCtClub({ east = 0, north = 0, yaw = 0 } = {}) {
       return a > aMin + shrink && a < aMax - shrink && d > shrink && d < CLUB.depth - shrink;
     },
     footprint: [[aMin, 0], [aMax, 0], [aMax, CLUB.depth], [aMin, CLUB.depth]].map(([a, d]) => toWorld(a, d)),
-    fixtures: [], obstacles: [], people: [], lights: [],
+    fixtures: [], obstacles: [], people: [], lights: [], screens: [],
   };
   const bounds = [...room.footprint, toWorld(-0.85, -1.4), toWorld(0.85, -1.4)];
   room.lookupBounds = [Math.min(...bounds.map(p => p[0])), Math.min(...bounds.map(p => p[1])), Math.max(...bounds.map(p => p[0])), Math.max(...bounds.map(p => p[1]))];

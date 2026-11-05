@@ -2,11 +2,13 @@
 // Runs the real club interior from the repo (preview/src) with first-person
 // walk controls and collision against the same obstacles the server walker uses.
 import * as THREE from 'three';
-import { planCtClub, refreshObstacles } from '../../preview/src/ct-club-plan.js';
+import { planCtClub, refreshObstacles, addScreen } from '../../preview/src/ct-club-plan.js';
 import { buildCtClubInterior } from '../../preview/src/ct-club-interior.js';
 import { configureMaterials } from '../../preview/src/materials.js';
 import { attachDesignPanel, mountDesignPanel } from './design-panel.js';
 import { attachPlanPlanner } from './plan-editor.js';
+import { attachWorldPlanner } from './world-plan.js';
+import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 
 const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 const room = planCtClub();
@@ -26,6 +28,7 @@ const layoutSnapshot = () => ({
   fixtures: room.fixtures.map((fix, i) => ({
     kind: fix.kind, index: room.fixtures.slice(0, i).filter(f => f.kind === fix.kind).length, a: fix.a, d: fix.d,
   })),
+  screens: room.screens.map(s => ({ ...s })),
 });
 const saveLayout = ({ exportFile = false } = {}) => {
   const payload = layoutSnapshot();
@@ -51,7 +54,11 @@ try {
     }
     refreshObstacles(room);
   }
+  if (Array.isArray(saved?.screens)) room.screens = saved.screens.map(s => ({ ...s }));
 } catch { }
+if (room.screens.length === 0) {
+  addScreen(room, { wall: 'back', u: 0, y: 2.6, w: 3.2, h: 1.8, html: '<div class="ct-screen"><b>CT CLUB</b><div class="pulse">● LIVE</div></div>' });
+}
 
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -64,6 +71,33 @@ document.body.append(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#05060a');
+
+// Live HTML/CSS/JS screens on the walls (CSS3D overlay above the WebGL canvas).
+const cssRenderer = new CSS3DRenderer();
+cssRenderer.setSize(innerWidth, innerHeight);
+cssRenderer.domElement.style.position = 'fixed';
+cssRenderer.domElement.style.top = '0';
+cssRenderer.domElement.style.left = '0';
+cssRenderer.domElement.style.pointerEvents = 'none';
+cssRenderer.domElement.style.zIndex = '1';
+document.body.append(cssRenderer.domElement);
+const cssScene = new THREE.Scene();
+const PPM = 100;   // pixels-per-metre for screen content, scaled back to metres
+function refreshScreens() {
+  cssScene.children.slice().forEach(o => cssScene.remove(o));
+  for (const s of club.userData.screens) {
+    const el = document.createElement('div');
+    el.className = 'ct-screen';
+    el.style.width = `${s.size.x * PPM}px`;
+    el.style.height = `${s.size.y * PPM}px`;
+    el.innerHTML = s.screen.html;
+    const obj = new CSS3DObject(el);
+    obj.position.copy(s.position);
+    obj.rotation.y = s.rotY;
+    obj.scale.set(1 / PPM, 1 / PPM, 1 / PPM);
+    cssScene.add(obj);
+  }
+}
 // The interior self-lights (ten ambient + thirteen spotlights); keep only a
 // faint harness wash + key light, matching the design fixture.
 const wash = new THREE.AmbientLight('#8a7fb8', 0.15);
@@ -72,6 +106,7 @@ scene.add(wash, key);
 let club = buildCtClubInterior(room, { local: true, reducedMotion });
 let design = null;                       // design-panel state (re-attached on rebuild)
 scene.add(club);
+refreshScreens();                        // place any wall screens as live CSS3D content
 
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.05, 200);
 camera.rotation.order = 'YXZ';
@@ -166,12 +201,16 @@ function rebuildRoom() {
   mountDesignPanel(document.querySelector('#info'), design);
   window.clubFixture.club = club;
   window.clubFixture.designApi = design;
+  refreshScreens();                     // re-place wall screens after a layout change
 }
 const planner = attachPlanPlanner({ room, onApply: rebuildRoom });
 window.clubFixture.planner = planner;
 window.clubFixture.saveLayout = saveLayout;
+const world = attachWorldPlanner({ room, onApply: rebuildRoom });
+window.clubFixture.world = world;
 document.getElementById('plan-btn')?.addEventListener('click', () => planner.toggle());
 document.getElementById('layout-save')?.addEventListener('click', () => saveLayout({ exportFile: true }));
+document.getElementById('world-btn')?.addEventListener('click', () => world.toggle());
 
 
 // ---- input ----------------------------------------------------------------------
@@ -181,6 +220,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyN') { nextView(); }
   if (e.code === 'KeyI') { window.clubFixture.toggleInfo(); }
   if (e.code === 'KeyP') { planner.toggle(); }
+  if (e.code === 'KeyF') { world.toggle(); }
 });
 addEventListener('keyup', e => keys.delete(e.code));
 renderer.domElement.addEventListener('click', () => {
@@ -215,6 +255,7 @@ const loop = now => {
   stepPlayer();
   syncCamera();
   renderer.render(scene, camera);
+  cssRenderer.render(cssScene, camera);   // live wall-screen HTML/CSS/JS
   if (sampleEvery++ % 60 === 0) {
     const stats = renderer.info;
     if (stats.render.triangles > 0) window.dispatchEvent(new CustomEvent('club-stats', { detail: { calls: stats.render.calls, triangles: stats.render.triangles } }));

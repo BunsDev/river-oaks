@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { CLUB, CLUB_INTERIOR, CLUB_LASERS, CLUB_AMBIENTS, DISCO_BALL } from './ct-club-plan.js';
+import { CLUB, CLUB_INTERIOR, CLUB_LASERS, CLUB_AMBIENTS, DISCO_BALL, SCREEN_WALLS } from './ct-club-plan.js';
 
 // The CT Club interior (Val, 2026-11-04): the underground techno club
 // built whole, like the IPIC and axe rooms. Local +X = a across the door, +Y up,
@@ -474,6 +474,40 @@ export function buildCtClubInterior(room, options = {}) {
   });
   root.add(spotGroup);
   root.userData.spotlights = { group: spotGroup, list: spotList, byName: spotByName };
+
+  // ---- wall screens (live HTML/CSS panels, Val 2026-11-04) ---------------------
+  // A flat dark panel + a soft glowing rim on the chosen wall, plus the world
+  // transform so a CSS3D overlay can place live HTML/CSS/JS animation on top.
+  // `userData.screens` = [{ screen, position, rotY, size }].
+  const screenPanel = basic('club-screen-panel', { color: '#0c0e13' });
+  const screenRim = basic('club-screen-rim', { color: '#7ee0ff', toneMapped: false, transparent: true, opacity: 0.55 });
+  const screenGeo = new THREE.PlaneGeometry(1, 1); owned.geometries.add(screenGeo);
+  const screens = [];
+  for (const screen of room.screens) {
+    const wall = SCREEN_WALLS[screen.wall];
+    let x, z, rotY;
+    if (wall.axis === 'a') {
+      x = screen.u;
+      z = screen.wall === 'back' ? -(D - 0.22) : -0.22;
+      rotY = screen.wall === 'back' ? 0 : Math.PI;
+    } else {
+      z = -screen.u;
+      x = screen.wall === 'left' ? -W + 0.22 : W - 0.22;
+      rotY = screen.wall === 'left' ? Math.PI / 2 : -Math.PI / 2;
+    }
+    const normal = new THREE.Vector3(Math.sin(rotY), 0, Math.cos(rotY));
+    const panel = new THREE.Mesh(screenGeo, screenPanel);
+    panel.scale.set(screen.w, screen.h, 1);
+    panel.position.set(x, screen.y, z); panel.rotation.y = rotY;
+    root.add(panel);
+    const rim = new THREE.Mesh(screenGeo, screenRim);
+    rim.scale.set(screen.w + 0.08, screen.h + 0.08, 1);
+    rim.position.set(x, screen.y, z).addScaledVector(normal, -0.01);
+    rim.rotation.y = rotY;
+    root.add(rim);
+    screens.push({ screen, position: new THREE.Vector3(x, screen.y, z), rotY, size: new THREE.Vector2(screen.w, screen.h) });
+  }
+  root.userData.screens = screens;
 
   // ---- the ten named ambient lights -----------------------------------------
   // The room carries its own base lighting so the buried hall is never pitch

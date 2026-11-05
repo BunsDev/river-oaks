@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import {
   CLUB, CLUB_INTERIOR, CLUB_SPOTS, CLUB_STROBES, DISCO_BALL, CLUB_LASERS, CLUB_AMBIENTS,
   planCtClub, configureCtClub, atClubBar, atClubDancefloor, atClubLounge, moveFixture, refreshObstacles,
+  addScreen, moveScreen, removeScreen,
 } from '../src/ct-club-plan.js';
 import { buildCtClubInterior } from '../src/ct-club-interior.js';
 
@@ -255,6 +256,27 @@ test('the floorplanner moves a fixture and the walking collision follows', () =>
   const scratch = new THREE.Matrix4(), positions = [];
   for (let i = 0; i < upholstery.count; i++) { upholstery.getMatrixAt(i, scratch); positions.push(new THREE.Vector3().setFromMatrixPosition(scratch)); }
   assert.ok(positions.some(p => Math.abs(p.x - 4.0) < 0.3 && Math.abs(-p.z - 9.0) < 0.3), 'a couch instance sits at the moved position');
+  interior.userData.dispose();
+});
+
+test('wall screens can be added, moved and render as panels on the walls', () => {
+  const root = planCtClub();
+  const s = addScreen(root, { wall: 'back', u: 2, y: 3, w: 2.4, h: 1.35 });
+  assert.equal(root.screens.length, 1);
+  moveScreen(root, s.id, 5, 4);
+  assert.equal(s.u, 5);
+  assert.equal(s.y, 4);
+  moveScreen(root, s.id, 99, 99);              // clamp inside the shell
+  assert.ok(s.u <= 8 - s.w / 2 + 1e-9);
+  assert.ok(s.y <= 6 - s.h / 2 - 0.2 + 1e-9);
+  const interior = buildCtClubInterior(root, { local: true });
+  assert.equal(interior.userData.screens.length, 1);
+  const scr = interior.userData.screens[0];
+  assert.equal(scr.screen.id, s.id);
+  assert.ok(Math.abs(scr.position.z - (-(40 - 0.22))) < 1e-6, 'the back-wall screen sits just inside the back wall');
+  assert.equal(scr.size.x, 2.4);
+  removeScreen(root, s.id);
+  assert.equal(root.screens.length, 0);
   interior.userData.dispose();
 });
 
