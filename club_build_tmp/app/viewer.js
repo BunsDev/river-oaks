@@ -60,7 +60,8 @@ try {
   if (Array.isArray(saved?.props)) room.props = saved.props.map(p => ({ ...p }));
 } catch { }
 if (room.screens.length === 0) {
-  addScreen(room, { wall: 'back', u: 0, y: 2.6, w: 3.2, h: 1.8, html: '<div class="ct-screen"><b>CT CLUB</b><div class="pulse">● LIVE</div></div>' });
+  const s = addScreen(room, { x: 0, y: 3.0, z: -(40 - 0.22), nx: 0, ny: 0, nz: 1, w: 3.2, h: 1.8, html: '<div class="ct-screen"><b>CT CLUB</b><div class="pulse">● LIVE</div></div>', surface: 'wall back' });
+  s.u = 0.5; s.v = 0.5;
 }
 
 

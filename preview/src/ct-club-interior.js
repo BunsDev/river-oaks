@@ -484,28 +484,18 @@ export function buildCtClubInterior(room, options = {}) {
   const screenGeo = new THREE.PlaneGeometry(1, 1); owned.geometries.add(screenGeo);
   const screens = [];
   for (const screen of room.screens) {
-    const wall = SCREEN_WALLS[screen.wall];
-    let x, z, rotY;
-    if (wall.axis === 'a') {
-      x = screen.u;
-      z = screen.wall === 'back' ? -(D - 0.22) : -0.22;
-      rotY = screen.wall === 'back' ? 0 : Math.PI;
-    } else {
-      z = -screen.u;
-      x = screen.wall === 'left' ? -W + 0.22 : W - 0.22;
-      rotY = screen.wall === 'left' ? Math.PI / 2 : -Math.PI / 2;
-    }
-    const normal = new THREE.Vector3(Math.sin(rotY), 0, Math.cos(rotY));
+    const rotY = Math.atan2(screen.nx ?? 0, screen.nz ?? 1);
+    const normal = new THREE.Vector3(screen.nx ?? 0, screen.ny ?? 0, screen.nz ?? 1);
     const panel = new THREE.Mesh(screenGeo, screenPanel);
     panel.scale.set(screen.w, screen.h, 1);
-    panel.position.set(x, screen.y, z); panel.rotation.y = rotY;
+    panel.position.set(screen.x, screen.y, screen.z); panel.rotation.y = rotY;
     root.add(panel);
     const rim = new THREE.Mesh(screenGeo, screenRim);
     rim.scale.set(screen.w + 0.08, screen.h + 0.08, 1);
-    rim.position.set(x, screen.y, z).addScaledVector(normal, -0.01);
+    rim.position.set(screen.x, screen.y, screen.z).addScaledVector(normal, -0.01);
     rim.rotation.y = rotY;
     root.add(rim);
-    screens.push({ screen, position: new THREE.Vector3(x, screen.y, z), rotY, size: new THREE.Vector2(screen.w, screen.h) });
+    screens.push({ screen, position: new THREE.Vector3(screen.x, screen.y, screen.z), rotY, size: new THREE.Vector2(screen.w, screen.h) });
   }
   root.userData.screens = screens;
 

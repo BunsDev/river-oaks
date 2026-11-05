@@ -5,20 +5,29 @@ import { CLUB, DISCO_BALL, CLUB_SPOTS, CLUB_STROBES, SCREEN_WALLS } from '../../
 
 const W = CLUB.width, D = CLUB.depth, H = CLUB.height;
 
-// Exact transform for a wall screen (shared with the interior's math).
+// Exact transform for a wall/surface screen (shared with the interior's math).
 export function screenTransform(room, screen) {
-  const wall = SCREEN_WALLS[screen.wall];
-  let x, z, rotY;
-  if (wall.axis === 'a') {
-    x = screen.u;
-    z = screen.wall === 'back' ? -(D - 0.22) : -0.22;
-    rotY = screen.wall === 'back' ? 0 : Math.PI;
-  } else {
-    z = -screen.u;
-    x = screen.wall === 'left' ? -W + 0.22 : W - 0.22;
-    rotY = screen.wall === 'left' ? Math.PI / 2 : -Math.PI / 2;
+  const nx = screen.nx ?? 0, ny = screen.ny ?? 0, nz = screen.nz ?? 1;
+  return { x: screen.x, y: screen.y, z: screen.z, rotY: Math.atan2(nx, nz), normal: [nx, ny, nz] };
+}
+
+// Mount an object flush on ANY surface (used like a physical wall). `u` (0..1)
+// is across the surface, `v` (0..1) is up the face (walls) or across the depth
+// (top surfaces). Returns the world position + the surface normal.
+export function surfaceMount(surface, u = 0.5, v = 0.5, offset = 0.02) {
+  const [cx, cy, cz] = surface.center, [w, h, d] = surface.size, [nx, ny, nz] = surface.normal;
+  const vertical = Math.abs(ny) < 0.5;
+  if (vertical) {
+    const rx = Math.abs(nx) > 0.5 ? 0 : 1;   // across axis for a vertical face
+    const x = cx + nx * (d / 2) + (u - 0.5) * w * rx + nx * offset;
+    const z = cz + nz * (d / 2) + (u - 0.5) * w * (1 - rx) + nz * offset;
+    const y = cy - h / 2 + v * h;
+    return { x, y, z, nx, ny, nz };
   }
-  return { x, y: screen.y, z, rotY, normal: [Math.sin(rotY), 0, Math.cos(rotY)] };
+  const y = cy + h / 2 + offset;
+  const x = cx + (u - 0.5) * w;
+  const z = cz + (v - 0.5) * d;
+  return { x, y, z, nx, ny, nz };
 }
 
 export function surfaceReference(room) {

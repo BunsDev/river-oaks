@@ -156,13 +156,30 @@ export const SCREEN_WALLS = {
   right: { axis: 'd', span: [0.5, 39.5], face: 8, normal: [-1, 0, 0] },// faces -a
 };
 export function addScreen(room, spec = {}) {
-  const wall = SCREEN_WALLS[spec.wall] ? spec.wall : 'back';
   const s = {
     id: spec.id ?? `screen-${room.screens.length + 1}`,
-    wall, u: spec.u ?? 0, y: spec.y ?? 2.4,
     w: spec.w ?? 2.4, h: spec.h ?? 1.35,
     html: spec.html ?? '<div class="ct-screen"><b>CT CLUB</b></div>',
+    surface: spec.surface ?? null,
   };
+  if (spec.x !== undefined) {
+    // Mounted at an exact world position facing a given normal (any surface).
+    s.x = spec.x; s.y = spec.y ?? 2.4; s.z = spec.z ?? -20;
+    s.nx = spec.nx ?? 0; s.ny = spec.ny ?? 0; s.nz = spec.nz ?? 1;
+  } else {
+    // Wall shortcut: compute the world transform from (wall, u, y).
+    const wall = SCREEN_WALLS[spec.wall] ? spec.wall : 'back';
+    const W = CLUB.width, D = CLUB.depth;
+    const u = spec.u ?? 0;
+    let x, z;
+    if (wall === 'back' || wall === 'front') { x = u; z = wall === 'back' ? -(D - 0.22) : -0.22; }
+    else { z = -u; x = wall === 'left' ? -W + 0.22 : W - 0.22; }
+    s.wall = wall; s.u = u; s.y = spec.y ?? 2.4;
+    s.x = x; s.z = z;
+    s.nx = wall === 'left' ? 1 : wall === 'right' ? -1 : 0;
+    s.ny = 0;
+    s.nz = wall === 'back' ? 1 : wall === 'front' ? -1 : 0;
+  }
   room.screens.push(s);
   return s;
 }
