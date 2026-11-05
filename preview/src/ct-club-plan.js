@@ -163,6 +163,7 @@ export function addScreen(room, spec = {}) {
     surface: spec.surface ?? null,
   };
   if (spec.viz) s.viz = spec.viz;   // 'eq' | 'wave' = a live audio visualisation screen
+  if (spec.vizStyle) s.vizStyle = spec.vizStyle;   // bars | peaks | mirror | ring | wave
   if (spec.x !== undefined) {
     // Mounted at an exact world position facing a given normal (any surface).
     s.x = spec.x; s.y = spec.y ?? 2.4; s.z = spec.z ?? -20;

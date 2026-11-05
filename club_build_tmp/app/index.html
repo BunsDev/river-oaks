@@ -73,6 +73,8 @@
   .world-tab{font:10px ui-monospace;padding:3px 8px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:4px;cursor:pointer}
   .world-controls{display:flex;gap:8px;align-items:center;margin-top:6px}
   .world-controls button{font:10px ui-monospace;padding:3px 8px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:4px;cursor:pointer}
+  .world-style{display:inline-flex;gap:4px;align-items:center;font:9px ui-monospace,Menlo,Consolas,monospace;color:#70758a}
+  #screen-viz-style{font:9px ui-monospace;background:#0e1116;color:#e8eaf0;border:1px solid #2a2e3a;border-radius:3px}
   #screen-info{color:#70758a;font:10px ui-monospace}
   #screen-html{width:100%;box-sizing:border-box;margin-top:6px;background:#0e1116;color:#e8eaf0;border:1px solid #2a2e3a;border-radius:4px;font:11px ui-monospace,Menlo,Consolas,monospace;padding:6px}
   /* the live screen content rendered by CSS3D */
@@ -117,7 +119,16 @@
   <canvas id="world-canvas"></canvas>
   <div class="world-controls">
     <button id="screen-add">＋ add screen</button>
-    <button id="screen-eq" title="add a live equalizer screen">＋ eq</button>
+    <button id="screen-eq" title="add a live 16-band equalizer screen">＋ eq</button>
+    <label class="world-style">style
+      <select id="screen-viz-style" title="equalizer style">
+        <option value="bars">bars</option>
+        <option value="peaks">peaks</option>
+        <option value="mirror">mirror</option>
+        <option value="ring">ring</option>
+        <option value="wave">wave</option>
+      </select>
+    </label>
     <button id="screen-wave" title="add a live waveform screen">＋ wave</button>
     <button id="screen-remove" disabled>remove</button>
     <span id="screen-info">click a screen to edit its HTML</span>

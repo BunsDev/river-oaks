@@ -116,6 +116,26 @@ export function createAudioEngine() {
   const getFreq = () => { analyser.getByteFrequencyData(freq); return freq; };
   const getWave = () => { analyser.getByteTimeDomainData(wave); return wave; };
 
+  // Real-time band analysis: split the spectrum into `count` (default 16) log-spaced
+  // bands and return their average energy as 0..1 levels — a proper equalizer readout.
+  const getBands = (count = 16) => {
+    getFreq();
+    const n = freq.length;
+    const lo = Math.max(1, Math.floor(n * 0.02));
+    const hi = Math.min(n - 1, Math.floor(n * 0.92));
+    const out = [];
+    for (let b = 0; b < count; b++) {
+      const f0 = Math.pow(hi / lo, b / count) * lo;
+      const f1 = Math.pow(hi / lo, (b + 1) / count) * lo;
+      const i0 = Math.max(1, Math.floor(f0));
+      const i1 = Math.min(n - 1, Math.max(i0 + 1, Math.floor(f1)));
+      let sum = 0, c = 0;
+      for (let i = i0; i <= i1; i++) { sum += freq[i] / 255; c++; }
+      out.push(c ? sum / c : 0);
+    }
+    return out;
+  };
+
   // Map a band to a 0..1 level. 'all' uses the whole spectrum average.
   const bandRange = band => {
     const n = freq.length;
@@ -140,5 +160,5 @@ export function createAudioEngine() {
   };
 
   gain.gain.value = volume;
-  return { ctx, analyser, tracks, decode, addUrl, toggle, next, prev, seek, setVolume, getFreq, getWave, energy, level, state, playIndex };
+  return { ctx, analyser, tracks, decode, addUrl, toggle, next, prev, seek, setVolume, getFreq, getWave, getBands, energy, level, state, playIndex };
 }

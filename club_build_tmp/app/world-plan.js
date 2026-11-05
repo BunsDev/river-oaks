@@ -90,12 +90,13 @@ export function attachWorldPlanner({ room, onApply }) {
     if (btn) btn.disabled = !s;
   };
 
-  const addViz = kind => {
+  const addViz = (kind, style) => {
     const m = surfaceMount(current(), 0.5, 0.5, 0.03);
-    const s = addScreen(room, { x: m.x, y: m.y, z: m.z, nx: m.nx, ny: m.ny, nz: m.nz, w: 2.4, h: 1.35, viz: kind, html: kind === 'eq' ? 'equalizer' : 'waveform', surface: surfaceName });
+    const s = addScreen(room, { x: m.x, y: m.y, z: m.z, nx: m.nx, ny: m.ny, nz: m.nz, w: 2.4, h: 1.35, viz: kind, vizStyle: style, html: style || kind, surface: surfaceName });
     s.u = 0.5; s.v = 0.5;
     selected = s.id; draw(); updateEditor(); onApply?.();
   };
+  const vizStyle = () => document.getElementById('screen-viz-style')?.value || 'bars';
 
   const bind = () => {
     const select = document.getElementById('surface-select');
@@ -110,8 +111,8 @@ export function attachWorldPlanner({ room, onApply }) {
       s.u = 0.5; s.v = 0.5;
       selected = s.id; draw(); updateEditor(); onApply?.();
     });
-    document.getElementById('screen-eq')?.addEventListener('click', () => addViz('eq'));
-    document.getElementById('screen-wave')?.addEventListener('click', () => addViz('wave'));
+    document.getElementById('screen-eq')?.addEventListener('click', () => addViz('eq', vizStyle()));
+    document.getElementById('screen-wave')?.addEventListener('click', () => addViz('wave', 'wave'));
     document.getElementById('screen-remove')?.addEventListener('click', () => {
       if (selected) { removeScreen(room, selected); selected = null; draw(); updateEditor(); onApply?.(); }
     });

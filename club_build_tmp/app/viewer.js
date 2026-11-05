@@ -109,7 +109,7 @@ function refreshScreens() {
     obj.position.copy(s.position);
     obj.rotation.y = s.rotY;
     obj.scale.set(1 / PPM, 1 / PPM, 1 / PPM);
-    if (s.screen.viz) { obj.userData.viz = s.screen.viz; obj.userData.vizCtx = el.getContext('2d'); }
+    if (s.screen.viz) { obj.userData.viz = s.screen.viz; obj.userData.vizStyle = s.screen.vizStyle; obj.userData.vizCtx = el.getContext('2d'); }
     cssScene.add(obj);
   }
 }
@@ -391,33 +391,66 @@ const _camDir = new THREE.Vector3(), _camTo = new THREE.Vector3();
 let sampleEvery = 0;
 // Draw live visualisation screens (equalizer / waveform) from the analyser. Called
 // every frame; if there is no audio yet (or no viz screens), it does nothing.
+// Styles: bars | peaks | mirror | ring | wave — 16-band real-time analysis.
+const colFor = v => `hsl(${Math.round(120 * (1 - Math.max(0, Math.min(1, v))))}, 92%, 55%)`;
+const drawEq = (ctx, W, H, style, audio, t) => {
+  ctx.fillStyle = '#060810'; ctx.fillRect(0, 0, W, H);
+  const bands = audio.getBands(16);
+  const pad = 4;
+  const bw = (W - pad * 2) / 16;
+  const maxH = H - pad * 2;
+  if (style === 'wave') {
+    const data = audio.getWave();
+    ctx.strokeStyle = '#7ee0ff'; ctx.lineWidth = 2; ctx.beginPath();
+    for (let i = 0; i < data.length; i++) {
+      const x = (i / data.length) * W, y = H / 2 + ((data[i] - 128) / 128) * H * 0.4;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    return;
+  }
+  if (style === 'ring') {
+    const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 10;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 16; i++) {
+      const ang = (i / 16) * Math.PI * 2 - Math.PI / 2;
+      const len = Math.max(3, bands[i] * R);
+      ctx.strokeStyle = colFor(bands[i]); ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(ang) * R * 0.4, cy + Math.sin(ang) * R * 0.4);
+      ctx.lineTo(cx + Math.cos(ang) * (R * 0.4 + len), cy + Math.sin(ang) * (R * 0.4 + len));
+      ctx.stroke();
+    }
+    return;
+  }
+  // bars / peaks / mirror
+  const peaks = ctx.canvas.__peaks || (ctx.canvas.__peaks = new Array(16).fill(0));
+  for (let i = 0; i < 16; i++) {
+    const h = Math.max(2, bands[i] * maxH);
+    peaks[i] = Math.max(peaks[i] * (style === 'peaks' ? 0.985 : 0), h);
+    const x = pad + i * bw;
+    if (style === 'mirror') {
+      const half = maxH / 2, cy = H / 2;
+      const g = Math.max(2, bands[i] * half);
+      ctx.fillStyle = colFor(bands[i]);
+      ctx.fillRect(x, cy - g, bw - 2, g);
+      ctx.fillRect(x, cy, bw - 2, g);
+    } else {
+      ctx.fillStyle = colFor(bands[i]);
+      ctx.fillRect(x, H - pad - h, bw - 2, h);
+      if (style === 'peaks') { ctx.fillStyle = '#ffe142'; ctx.fillRect(x, H - pad - peaks[i] - 2, bw - 2, 2); }
+    }
+  }
+};
+let vizT = 0;
 const drawViz = () => {
   if (!audio) return;
+  vizT += 1 / 60;
   for (const obj of cssScene.children) {
     const kind = obj.userData.viz;
     if (!kind || !obj.userData.vizCtx) continue;
     const ctx = obj.userData.vizCtx, W = ctx.canvas.width, H = ctx.canvas.height;
-    ctx.fillStyle = '#060810'; ctx.fillRect(0, 0, W, H);
-    if (kind === 'eq') {
-      const data = audio.getFreq();
-      const bars = Math.max(8, Math.floor(W / 10));
-      const step = Math.max(1, Math.floor(data.length / bars));
-      const bw = W / bars;
-      ctx.fillStyle = '#7ee0ff';
-      for (let i = 0; i < bars; i++) {
-        const v = (data[Math.min(data.length - 1, i * step)] / 255) || 0;
-        const bh = Math.max(2, v * H * 0.9);
-        ctx.fillRect(i * bw + 1, H - bh, bw - 2, bh);
-      }
-    } else if (kind === 'wave') {
-      const data = audio.getWave();
-      ctx.strokeStyle = '#7ee0ff'; ctx.lineWidth = 2; ctx.beginPath();
-      for (let i = 0; i < data.length; i++) {
-        const x = (i / data.length) * W, y = H / 2 + ((data[i] - 128) / 128) * H * 0.4;
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-    }
+    drawEq(ctx, W, H, obj.userData.vizStyle || (kind === 'wave' ? 'wave' : 'bars'), audio, vizT);
   }
 };
 const loop = now => {
