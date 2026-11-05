@@ -326,11 +326,24 @@ const renderGroups = () => {
   }).join('');
   el.querySelectorAll('[data-group]').forEach(cb => cb.addEventListener('change', () => design.setSectionAudio(cb.dataset.group, { on: cb.checked })));
 };
+const syncAudioUI = () => {
+  if (!design) return;
+  const a = design.audioReact;
+  const set = (id, v) => { const el = g(id); if (el) { if (el.type === 'checkbox') el.checked = Boolean(v); else el.value = v; } };
+  set('audio-react-on', a.on);
+  set('audio-band', a.band ?? 'all');
+  set('audio-delay', a.delay ?? 0);
+  set('audio-onset', a.onset ?? 0.15);
+  set('audio-fade', a.fade ?? 0.3);
+  set('audio-ignore', a.ignore ?? 0.05);
+  set('audio-random', a.random);
+  set('audio-lock', a.locked);
+};
 const toggleAudio = () => {
   if (!audioBox) return;
   const show = audioBox.style.display !== 'block';
   audioBox.style.display = show ? 'block' : 'none';
-  if (show) { renderPlaylist(); renderGroups(); }
+  if (show) { syncAudioUI(); renderPlaylist(); renderGroups(); }
 };
 document.getElementById('audio-btn')?.addEventListener('click', toggleAudio);
 g('audio-file')?.addEventListener('change', async e => {

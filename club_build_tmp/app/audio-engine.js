@@ -22,6 +22,7 @@ export function createAudioEngine() {
   let playing = false;
   let volume = 0.9;
   let lastPlayedAt = 0;         // ctx.currentTime when the current track started
+  let pauseAt = 0;              // offset (s) into the current track when paused
 
   const state = () => ({
     playing, index, volume,
@@ -49,12 +50,12 @@ export function createAudioEngine() {
       if (index === i && playing) playIndex((i + 1) % tracks.length);
     };
     lastPlayedAt = ctx.currentTime;
+    pauseAt = 0;
     if (autoplay) { playing = true; source.start(); }
     emit();
   };
 
   const decode = async files => {
-    if (ctx.state === 'suspended') await ctx.resume().catch(() => { });
     const added = [];
     for (const f of [...files]) {
       if (!f.type.startsWith('audio/')) continue;
@@ -65,6 +66,7 @@ export function createAudioEngine() {
         added.push(tracks[tracks.length - 1]);
       } catch { /* skip undecodable files */ }
     }
+    if (ctx.state === 'suspended') ctx.resume().catch(() => { });   // fire-and-forget
     if (added.length && index < 0) playIndex(0);
     emit();
     return added;
@@ -78,10 +80,10 @@ export function createAudioEngine() {
       if (!res.ok) return null;
       const buf = await res.arrayBuffer();
       const audioBuf = await ctx.decodeAudioData(buf);
-      if (ctx.state === 'suspended') await ctx.resume().catch(() => { });
       const id = 'track-' + (tracks.length + 1);
       const track = { id, name: name || decodeURIComponent(url.split('/').pop().replace(/\.[^.]+$/, '')), buffer: audioBuf };
       tracks.push(track);
+      if (ctx.state === 'suspended') ctx.resume().catch(() => { });   // fire-and-forget (never blocks decode)
       if (index < 0) playIndex(0);
       emit();
       return track;
@@ -90,8 +92,18 @@ export function createAudioEngine() {
 
   const toggle = () => {
     if (index < 0 && tracks.length) { playIndex(0); return; }
-    if (playing) { playing = false; stop(); }
-    else if (index >= 0) { playing = true; lastPlayedAt = ctx.currentTime; try { source?.start(); } catch { playIndex(index); } }
+    if (playing) { pauseAt = Math.max(0, ctx.currentTime - lastPlayedAt); playing = false; stop(); }
+    else if (index >= 0) {
+      // Resume: rebuild the source and start from where we paused (a BufferSource
+      // can't be resumed after stop(), so we recreate it at the saved offset).
+      playing = true;
+      lastPlayedAt = ctx.currentTime - pauseAt;
+      source = ctx.createBufferSource();
+      source.buffer = tracks[index].buffer;
+      source.connect(gain);
+      source.onended = () => { if (index >= 0 && playing) playIndex((index + 1) % tracks.length); };
+      source.start(0, pauseAt);
+    }
     emit();
   };
 

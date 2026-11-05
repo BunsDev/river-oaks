@@ -208,19 +208,25 @@ export function attachDesignPanel({ root }) {
       // A section reacts when the master is on and the section hasn't been switched off
       // (unconfigured sections inherit the master, so toggling the master "just works").
       const sec = sectionAudio.get(it.group);
-      const cfg = sec ?? defaultAudio();
       const reactive = audio && audioReact.on && (sec?.on ?? true);
       if (reactive) {
-        // Audio-reactive: band energy -> level (delay/onset/fade/ignore/random).
+        // Per-section config overrides the master audioReact controls (band/delay/...);
+        // the audio panel's global band/delay/onset/fade/ignore/random/lock drive this.
+        const band = sec?.band ?? audioReact.band ?? 'all';
+        const delay = sec?.delay ?? audioReact.delay ?? 0;
+        const onset = sec?.onset ?? audioReact.onset ?? 0.15;
+        const fade = sec?.fade ?? audioReact.fade ?? 0.3;
+        const ignore = sec?.ignore ?? audioReact.ignore ?? 0.05;
+        const random = sec?.random ?? audioReact.random ?? false;
         const st = audioState.get(it.group) ?? (audioState.set(it.group, { level: 0, hist: [] }), audioState.get(it.group));
         let raw = 0;
-        try { raw = audio.energy(cfg.band) || 0; } catch { raw = 0; }
-        const gated = raw < (cfg.ignore ?? 0.05) ? 0 : raw;
+        try { raw = audio.energy(band) || 0; } catch { raw = 0; }
+        const gated = raw < ignore ? 0 : raw;
         st.hist.push(gated); if (st.hist.length > 600) st.hist.shift();
-        const delayN = Math.max(0, Math.round((cfg.delay ?? 0) * 60));
+        const delayN = Math.max(0, Math.round(delay * 60));
         const sample = delayN ? st.hist[Math.max(0, st.hist.length - 1 - delayN)] : gated;
-        const target = cfg.random ? (sample > st.level + 0.12 ? Math.random() : st.level) : sample;
-        const rate = sample > st.level ? 1 / Math.max(0.001, cfg.onset ?? 0.15) : 1 / Math.max(0.001, cfg.fade ?? 0.3);
+        const target = random ? (sample > st.level + 0.12 ? Math.random() : st.level) : sample;
+        const rate = sample > st.level ? 1 / Math.max(0.001, onset) : 1 / Math.max(0.001, fade);
         st.level += (target - st.level) * Math.min(1, rate);
         if (hexes.length < 2) {
           // Single colour: pulse its brightness with the level so it still reacts.
