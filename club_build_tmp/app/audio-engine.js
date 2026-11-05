@@ -15,6 +15,9 @@ export function createAudioEngine() {
   const gain = ctx.createGain();
   gain.connect(analyser);
   analyser.connect(ctx.destination);
+  // Decode audio through an OfflineAudioContext so it never hangs on a suspended
+  // (autoplay-blocked) AudioContext; the resulting AudioBuffer plays on the main ctx.
+  const offline = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 44100);
 
   const tracks = [];            // { id, name, buffer }
   let index = -1;
@@ -60,7 +63,7 @@ export function createAudioEngine() {
     for (const f of [...files]) {
       if (!f.type.startsWith('audio/')) continue;
       try {
-        const audioBuf = await ctx.decodeAudioData(await f.arrayBuffer());
+        const audioBuf = await offline.decodeAudioData(await f.arrayBuffer());
         const id = 'track-' + (tracks.length + 1);
         tracks.push({ id, name: f.name.replace(/\.[^.]+$/, ''), buffer: buf });
         added.push(tracks[tracks.length - 1]);
@@ -79,7 +82,7 @@ export function createAudioEngine() {
       const res = await fetch(url);
       if (!res.ok) return null;
       const buf = await res.arrayBuffer();
-      const audioBuf = await ctx.decodeAudioData(buf);
+      const audioBuf = await offline.decodeAudioData(buf);
       const id = 'track-' + (tracks.length + 1);
       const track = { id, name: name || decodeURIComponent(url.split('/').pop().replace(/\.[^.]+$/, '')), buffer: audioBuf };
       tracks.push(track);
