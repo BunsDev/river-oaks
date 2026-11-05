@@ -41,8 +41,8 @@ export function surfaceReference(room) {
   add('wall front (left of door)', [-4.575, H / 2, 0], [6.85, H, 0.2], [0, 0, -1]);
   add('wall front (right of door)', [4.575, H / 2, 0], [6.85, H, 0.2], [0, 0, -1]);
   add('wall front (lintel over door)', [0, 4.15, 0], [2.3, 3.7, 0.2], [0, 0, -1]);
-  add('wall left', [-W, H / 2, -D / 2], [0.2, H, D], [1, 0, 0], [-W + 0.1, H, -D / 2]);
-  add('wall right', [W, H / 2, -D / 2], [0.2, H, D], [-1, 0, 0], [W - 0.1, H, -D / 2]);
+  add('wall left', [-W / 2, H / 2, -D / 2], [0.2, H, D], [1, 0, 0], [-W / 2 + 0.1, H, -D / 2]);
+  add('wall right', [W / 2, H / 2, -D / 2], [0.2, H, D], [-1, 0, 0], [W / 2 - 0.1, H, -D / 2]);
   // Columns (8)
   for (const d of [8, 16, 24, 32]) for (const a of [-7.3, 7.3]) {
     add(`column ${a >= 0 ? 'R' : 'L'} @ d${d}`, [a, H / 2, -d], [0.7, H, 0.7], [a > 0 ? -1 : 1, 0, 0], [a, H, -d]);

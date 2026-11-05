@@ -108,7 +108,7 @@ function refreshScreens() {
     }
     const obj = new CSS3DObject(el);
     obj.position.copy(s.position);
-    obj.rotation.y = s.rotY;
+    obj.rotation.set(s.rotX ?? 0, s.rotY ?? 0, 0);
     obj.scale.set(1 / PPM, 1 / PPM, 1 / PPM);
     if (s.screen.viz) { obj.userData.viz = s.screen.viz; obj.userData.vizStyle = s.screen.vizStyle; obj.userData.vizCtx = el.getContext('2d'); }
     cssScene.add(obj);
@@ -312,9 +312,18 @@ const renderPlaylist = () => {
     `<div class="audio-item${i === st.index ? ' current' : ''}" data-i="${i}"><button data-play="${i}">▶</button><span>${name}</span></div>`).join('')
     : '<span class="audio-empty">no tracks yet — upload some</span>';
   el.querySelectorAll('[data-play]').forEach(b => b.addEventListener('click', () => audio?.playIndex(Number(b.dataset.play))));
-  const track = g('audio-track'); if (track) track.textContent = st.current ? `${st.current}${st.playing ? ' · playing' : ''}` : 'no track';
+  const track = g('audio-track'); if (track) { const nameEl = track.querySelector('span'); if (nameEl) nameEl.textContent = st.current ? `${st.current}${st.playing ? ' · playing' : ''}` : 'no track'; }
+  const playBtn = g('audio-play'); if (playBtn) playBtn.textContent = st.playing ? '⏸' : '▶';
   const seek = g('audio-seek'); if (seek && st.duration) seek.value = (st.time / st.duration).toFixed(4);
   const tm = g('audio-time'); if (tm) tm.textContent = `${fmt(st.time)} / ${fmt(st.duration)}`;
+};
+const updateAudioTransport = () => {
+  if (!audio) return;
+  const st = audio.state();
+  const seek = g('audio-seek');
+  if (seek && st.duration) seek.value = (st.time / st.duration).toFixed(4);
+  const tm = g('audio-time');
+  if (tm) tm.textContent = `${fmt(st.time)} / ${fmt(st.duration)}`;
 };
 const renderGroups = () => {
   const el = g('audio-groups'); if (!el || !design) return;
@@ -482,6 +491,7 @@ const loop = now => {
     if (dancers) dancers.tick(clock.delta);   // dance crowd on the floor
   }
   if (design) design.cycle(now / 1000, audio);   // colour cycles + audio-reactive (owned by the host)
+  updateAudioTransport();                       // keep the seek bar + time display live
   stepPlayer();
   syncCamera();
   // Hide any screen that is behind the camera, so CSS3D never draws a flipped one.

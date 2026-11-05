@@ -151,12 +151,18 @@ export function createAudioEngine() {
     return out;
   };
 
-  // Map a band to a 0..1 level. 'all' uses the whole spectrum average.
+  // Map a band to a 0..1 level. 'all' uses the whole spectrum average. The ranges
+  // are true musical bands (bass 20-250 Hz, mid 250-2 kHz, treble 2-8 kHz) mapped to
+  // FFT bin indices from the real sample rate, so the design JSON's band setting and
+  // the actual audio energy line up (the old bin-fraction ranges made 'bass' reach up
+  // to ~1.3 kHz and the lights never tracked the low end).
   const bandRange = band => {
-    const n = freq.length;
-    if (band === 'bass') return [0, Math.max(1, Math.floor(n * 0.06))];
-    if (band === 'mid') return [Math.floor(n * 0.08), Math.max(2, Math.floor(n * 0.30))];
-    if (band === 'treble') return [Math.floor(n * 0.32), Math.max(3, Math.floor(n * 0.90))];
+    const n = freq.length;                          // frequencyBinCount = fftSize/2
+    const sampleRate = ctx.sampleRate || 44100;
+    const binFor = hz => Math.min(n - 1, Math.max(1, Math.round(hz * (2 * n) / sampleRate)));
+    if (band === 'bass') return [0, binFor(250)];
+    if (band === 'mid') return [binFor(250), binFor(2000)];
+    if (band === 'treble') return [binFor(2000), binFor(8000)];
     return [0, n - 1];
   };
   const energy = (band = 'all') => {

@@ -117,6 +117,8 @@ export async function addDancers(scene, opts = {}) {
   const { scale, footY } = skeletonScale(base, jointSet);
 
   const dancers = [];
+  const cols = Math.max(1, Math.ceil(Math.sqrt(count)));
+  const rows = Math.max(1, Math.ceil(count / cols));
   for (let i = 0; i < count; i++) {
     const model = skeletonClone(base);
     const use = clips[i % clips.length];
@@ -124,15 +126,26 @@ export async function addDancers(scene, opts = {}) {
     const mixer = new THREE.AnimationMixer(model);
     const action = mixer.clipAction(use.clip);
     action.play();
-    mixer.update(Math.random());          // desync the crowd
-    // Scatter on the dancefloor (world coords: x = a, z = -d; dancefloor spans a -6.5..6.5, d 16..33).
-    const x = -5.5 + (i % 6) * 2.2 + (Math.random() - 0.5);
-    const z = -30 + Math.floor(i / 6) * 3 + (Math.random() - 0.5) * 1.4;
+    const phase = Math.random();
+    // Advance to a random frame so the crowd is desynced, then anchor the feet to
+    // the floor at that ANIMATED pose (the clip's Hips/root track lifts the body
+    // well above the rest-pose offset, so using the rest pose makes the dancers float).
+    mixer.update(phase * Math.max(0.001, use.clip.duration));
+    // Scatter across the dancefloor (world coords: x = a, z = -d; dancefloor spans
+    // a -6.5..6.5, d 16..33 -> z -16..-33), spread evenly instead of a back cluster.
+    const x = -5.5 + (i % cols) * (11 / Math.max(1, cols - 1)) + (Math.random() - 0.5) * 0.9;
+    const z = -17.5 - Math.floor(i / cols) * (15 / Math.max(1, rows - 1)) + (Math.random() - 0.5) * 1.0;
     model.scale.setScalar(scale);
-    model.position.set(x, -footY * scale, z);
     model.rotation.y = (Math.random() - 0.5) * Math.PI * 2;
+    model.position.set(x, 0, z);
+    model.updateMatrixWorld(true);
+    let lowest = Infinity;
+    model.traverse(n => { const p = new THREE.Vector3(); n.getWorldPosition(p); if (p.y < lowest) lowest = p.y; });
+    // Rest the feet on the dancefloor tile surface (~0.05 m above the slab), not
+    // floating on the clip's lifted Hips and not sunk through the tiles.
+    model.position.y = Number.isFinite(lowest) ? -lowest + 0.05 : 0;
     scene.add(model);
-    dancers.push({ model, mixer, action, use, phase: Math.random() });
+    dancers.push({ model, mixer, action, use, phase });
   }
   const tick = dt => { for (const d of dancers) d.mixer.update(dt); };
   const toggle = () => {

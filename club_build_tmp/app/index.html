@@ -5,10 +5,11 @@
 <style>
   body{margin:0;background:#05060a;font:14px ui-monospace,Menlo,Consolas,monospace;color:#cfd2da;overflow:hidden}
   canvas{display:block}
-  #hud{position:fixed;top:12px;left:16px;padding:10px 14px;background:#10121acc;border:1px solid #2a2e3a;color:#e8eaf0;border-radius:6px;letter-spacing:.03em;z-index:5}
+  #topbar{position:fixed;top:0;left:0;right:0;z-index:8;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 12px;background:rgba(10,12,18,.9);border-bottom:1px solid #2a2e3a}
+  #hud{color:#e8eaf0;font-size:12px;letter-spacing:.03em;white-space:nowrap;min-width:0}
   #hud b{color:#7ee0ff}
   #hint{position:fixed;bottom:12px;left:16px;color:#70758a;font-size:12px;z-index:5}
-  #info{position:fixed;top:12px;right:16px;max-width:560px;max-height:calc(100vh - 110px);overflow:auto;background:#6b6b6b;color:#ffffff;font:9px ui-monospace,Menlo,Consolas,monospace;padding:10px 12px;border:1px solid #8f8f8f;border-radius:4px;display:none;z-index:6}
+  #info{position:fixed;top:56px;right:16px;max-width:560px;max-height:calc(100vh - 130px);overflow:auto;background:#6b6b6b;color:#ffffff;font:9px ui-monospace,Menlo,Consolas,monospace;padding:10px 12px;border:1px solid #8f8f8f;border-radius:4px;display:none;z-index:6}
   #info h1{font-size:10px;margin:0 0 6px;letter-spacing:.08em}
   #info h2{font-size:9px;margin:8px 0 2px;color:#ffe9b0;letter-spacing:.06em}
   #info b{color:#ffd75e}
@@ -42,7 +43,7 @@
   .dp-tool b{color:#ffe9b0;margin-right:2px}
   .dp-tool-btn{font:9px ui-monospace;padding:2px 5px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:3px;cursor:pointer}
   .dp-num{width:46px;font:9px ui-monospace;background:#2c2f34;color:#fff;border:1px solid #7d8490;border-radius:2px}
-  #ribbon{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:7;display:flex;gap:6px;align-items:center}
+  #ribbon{display:flex;gap:6px;align-items:center;flex-shrink:0}
   #ribbon button{padding:6px 12px;background:#10121a;color:#7ee0ff;border:1px solid #2a2e3a;border-radius:6px;cursor:pointer;font:12px ui-monospace,Menlo,Consolas,monospace}
   #ribbon button:hover{background:#161a26}
   #ribbon button.active{background:#1a2530;color:#ffe142;border-color:#3a3d44}
@@ -53,7 +54,9 @@
   .audio-react input[type=number]{width:44px;font:9px ui-monospace;background:#0e1116;color:#e8eaf0;border:1px solid #2a2e3a;border-radius:3px}
   .audio-react input[type=range]{width:80px}
   .audio-actions input[type=range]{width:80px}
-  #audio-track{font:10px ui-monospace,Menlo,Consolas,monospace;color:#7ee0ff;margin:2px 0}
+  #audio{position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:6;background:#0a0b10;border:1px solid #2a2e3a;border-radius:6px;padding:10px;display:none;max-width:640px;max-height:calc(100vh - 120px);overflow:auto}
+  #audio-track{font:10px ui-monospace,Menlo,Consolas,monospace;color:#7ee0ff;margin:2px 0;display:flex;justify-content:space-between;gap:8px}
+  #audio-time{color:#ffe9b0;white-space:nowrap}
   #audio-seek{width:100%;margin:2px 0}
   #audio-playlist{display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto;margin:4px 0}
   .audio-item{display:flex;gap:6px;align-items:center;font:9px ui-monospace,Menlo,Consolas,monospace;padding:2px 4px;border:1px solid #1c2026;border-radius:3px}
@@ -61,13 +64,13 @@
   .audio-item button{font:9px ui-monospace;padding:0 4px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:3px;cursor:pointer}
   .audio-note{color:#70758a;font:9px ui-monospace,Menlo,Consolas,monospace;margin-top:6px;max-width:420px}
   .audio-react b{color:#ffe9b0;margin-right:2px}
-  #planner{position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:6;background:#0a0b10;border:1px solid #2a2e3a;border-radius:6px;padding:10px;display:none}
+  #planner{position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:6;background:#0a0b10;border:1px solid #2a2e3a;border-radius:6px;padding:10px;display:none}
   #planner canvas{display:block;cursor:crosshair}
   .planner-head{display:flex;gap:8px;align-items:center;margin-bottom:6px}
   .planner-head button{font:10px ui-monospace;padding:3px 8px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:4px;cursor:pointer}
   #layout-next{color:#7ee0ff;font:11px ui-monospace}
   /* buttons now live in #ribbon (see above) */
-  #world{position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:6;background:#0a0b10;border:1px solid #2a2e3a;border-radius:6px;padding:10px;display:none}
+  #world{position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:6;background:#0a0b10;border:1px solid #2a2e3a;border-radius:6px;padding:10px;display:none}
   #world-canvas{display:block;cursor:crosshair;margin:6px 0}
   .world-tabs{display:flex;gap:6px}
   .world-tab{font:10px ui-monospace;padding:3px 8px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:4px;cursor:pointer}
@@ -96,15 +99,17 @@
   .prop-form button{font:10px ui-monospace;padding:3px 8px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:4px;cursor:pointer}
   #planner-note{color:#70758a;font:10px ui-monospace,Menlo,Consolas,monospace;margin-top:6px;max-width:640px}
 </style>
-<div id="hud">CT CLUB — <b>WASD</b> walk · <b>click</b> look · <b>N</b> view · <b>Space</b> entry</div>
-<div id="hint">look: click once (Esc to release) · walk: W A S D · next tour view: N · design panel: i · floor planner: P · screens: F · audio: M · coordinates: C · reset to entry: Space</div>
-<div id="ribbon">
-  <button id="plan-btn" title="floor plan (P)">📐 plan</button>
-  <button id="world-btn" title="mount screens on any surface (F)">📺 screens</button>
-  <button id="coords-btn" title="exact surface coordinates (C)">📊 coords</button>
-  <button id="audio-btn" title="audio: upload, playlist, reactive lights (M)">🎵 audio</button>
-  <button id="dancers-btn" title="toggle the dancers on the dancefloor">🕺 dancers</button>
+<div id="topbar">
+  <span id="hud">CT CLUB — <b>WASD</b> walk · <b>click</b> look · <b>N</b> view · <b>Space</b> entry</span>
+  <div id="ribbon">
+    <button id="plan-btn" title="floor plan (P)">📐 plan</button>
+    <button id="world-btn" title="mount screens on any surface (F)">📺 screens</button>
+    <button id="coords-btn" title="exact surface coordinates (C)">📊 coords</button>
+    <button id="audio-btn" title="audio: upload, playlist, reactive lights (M)">🎵 audio</button>
+    <button id="dancers-btn" title="toggle the dancers on the dancefloor">🕺 dancers</button>
+  </div>
 </div>
+<div id="hint">look: click once (Esc to release) · walk: W A S D · next tour view: N · design panel: i · floor planner: P · screens: F · audio: M · coordinates: C · reset to entry: Space</div>
 <div id="planner">
   <div class="drag-handle" data-panel="planner">⋮⋮ drag · floor plan</div>
   <div class="planner-head"><button id="layout-save">💾 save version</button> <span id="layout-next">club_layout_01.json</span></div>
@@ -146,7 +151,7 @@
     <button id="audio-next" title="next track">⏭</button>
     <label>vol <input type="range" id="audio-vol" min="0" max="1" step="0.01" value="0.9"></label>
   </div>
-  <div id="audio-track">no track</div>
+  <div id="audio-track"><span>no track</span><span id="audio-time">0:00 / 0:00</span></div>
   <input type="range" id="audio-seek" min="0" max="1" step="0.001" value="0">
   <div id="audio-playlist"></div>
   <div class="audio-react">
