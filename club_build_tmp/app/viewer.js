@@ -2,12 +2,13 @@
 // Runs the real club interior from the repo (preview/src) with first-person
 // walk controls and collision against the same obstacles the server walker uses.
 import * as THREE from 'three';
-import { planCtClub, refreshObstacles, addScreen } from '../../preview/src/ct-club-plan.js';
+import { planCtClub, refreshObstacles, addScreen, addProp } from '../../preview/src/ct-club-plan.js';
 import { buildCtClubInterior } from '../../preview/src/ct-club-interior.js';
 import { configureMaterials } from '../../preview/src/materials.js';
 import { attachDesignPanel, mountDesignPanel } from './design-panel.js';
 import { attachPlanPlanner } from './plan-editor.js';
 import { attachWorldPlanner } from './world-plan.js';
+import { surfaceReference } from './coordinates.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 
 const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
@@ -29,6 +30,7 @@ const layoutSnapshot = () => ({
     kind: fix.kind, index: room.fixtures.slice(0, i).filter(f => f.kind === fix.kind).length, a: fix.a, d: fix.d,
   })),
   screens: room.screens.map(s => ({ ...s })),
+  props: room.props.map(p => ({ ...p })),
 });
 const saveLayout = ({ exportFile = false } = {}) => {
   const payload = layoutSnapshot();
@@ -55,6 +57,7 @@ try {
     refreshObstacles(room);
   }
   if (Array.isArray(saved?.screens)) room.screens = saved.screens.map(s => ({ ...s }));
+  if (Array.isArray(saved?.props)) room.props = saved.props.map(p => ({ ...p }));
 } catch { }
 if (room.screens.length === 0) {
   addScreen(room, { wall: 'back', u: 0, y: 2.6, w: 3.2, h: 1.8, html: '<div class="ct-screen"><b>CT CLUB</b><div class="pulse">● LIVE</div></div>' });
@@ -142,7 +145,7 @@ const stepPlayer = () => {
   if (!collides(player.x, d)) player.z = -d;
 };
 const resetToEntry = () => {
-  player.x = 1.2; player.z = -6; player.y = EYE; player.yaw = Math.PI; player.pitch = 0;
+  player.x = 1.2; player.z = -6; player.y = EYE; player.yaw = 0; player.pitch = 0;   // face the back wall (default screen)
 };
 
 // Tour views (same frames as the design fixture); N snaps the camera there.
@@ -212,6 +215,37 @@ document.getElementById('plan-btn')?.addEventListener('click', () => planner.tog
 document.getElementById('layout-save')?.addEventListener('click', () => saveLayout({ exportFile: true }));
 document.getElementById('world-btn')?.addEventListener('click', () => world.toggle());
 
+// Exact surface coordinates (press C / the 📊 button): world xyz, size and facing
+// normal for every wall, column, the bar, DJ, speakers, lounge, ball, fixtures
+// and screens, so you can build on any surface precisely.
+const coordsBox = document.getElementById('coords');
+const toggleCoords = () => {
+  const show = coordsBox.style.display !== 'block';
+  coordsBox.style.display = show ? 'block' : 'none';
+  if (show) {
+    coordsBox.innerHTML = '<h1>CT CLUB — exact surface coordinates (x, y, z)</h1>' +
+      surfaceReference(room).map(s =>
+        `<div class="coord-row"><b>${s.name}</b><span>c ${s.center.map(n => n.toFixed(2)).join(', ')}</span>` +
+        `<span>size ${s.size.map(n => n.toFixed(2)).join('×')}</span><span>normal ${s.normal.map(n => n.toFixed(2)).join(', ')}</span>` +
+        `${s.top ? `<span>top ${s.top.map(n => n.toFixed(2)).join(', ')}</span>` : ''}</div>`).join('') +
+      `<div class="prop-form"><b>Place a prop at exact xyz:</b>
+        <input id="prop-x" placeholder="x" value="0"><input id="prop-y" placeholder="y" value="1.25"><input id="prop-z" placeholder="z" value="-33.4">
+        <input id="prop-w" placeholder="w" value="0.5"><input id="prop-h" placeholder="h" value="0.4"><input id="prop-d" placeholder="d" value="0.5">
+        <input id="prop-color" type="color" value="#41e0ff"><button id="prop-add">place</button></div>`;
+    document.getElementById('prop-add')?.addEventListener('click', () => {
+      const g = id => Number(document.getElementById(id)?.value) || 0;
+      addProp(room, {
+        x: g('prop-x'), y: g('prop-y'), z: g('prop-z'),
+        w: g('prop-w') || 0.5, h: g('prop-h') || 0.4, d: g('prop-d') || 0.5,
+        color: document.getElementById('prop-color')?.value,
+      });
+      rebuildRoom();
+    });
+  }
+};
+window.clubFixture.toggleCoords = toggleCoords;
+document.getElementById('coords-btn')?.addEventListener('click', toggleCoords);
+
 
 // ---- input ----------------------------------------------------------------------
 addEventListener('keydown', e => {
@@ -221,6 +255,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyI') { window.clubFixture.toggleInfo(); }
   if (e.code === 'KeyP') { planner.toggle(); }
   if (e.code === 'KeyF') { world.toggle(); }
+  if (e.code === 'KeyC') { window.clubFixture.toggleCoords(); }
 });
 addEventListener('keyup', e => keys.delete(e.code));
 renderer.domElement.addEventListener('click', () => {
@@ -243,6 +278,7 @@ addEventListener('resize', () => {
 
 // ---- render loop -----------------------------------------------------------------
 const clock = { last: performance.now(), delta: 0, t: 0, running: true };
+const _camDir = new THREE.Vector3(), _camTo = new THREE.Vector3();
 let sampleEvery = 0;
 const loop = now => {
   requestAnimationFrame(loop);
@@ -254,6 +290,12 @@ const loop = now => {
   if (design) design.cycle(now / 1000);   // colour cycles (owned by the host, not the panel)
   stepPlayer();
   syncCamera();
+  // Hide any screen that is behind the camera, so CSS3D never draws a flipped one.
+  camera.getWorldDirection(_camDir);
+  for (const obj of cssScene.children) {
+    const v = _camTo.set(obj.position.x - camera.position.x, obj.position.y - camera.position.y, obj.position.z - camera.position.z);
+    obj.element.style.display = v.dot(_camDir) > 0.4 ? '' : 'none';
+  }
   renderer.render(scene, camera);
   cssRenderer.render(cssScene, camera);   // live wall-screen HTML/CSS/JS
   if (sampleEvery++ % 60 === 0) {

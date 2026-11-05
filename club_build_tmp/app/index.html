@@ -62,12 +62,25 @@
   .ct-screen b{color:#7ee0ff;letter-spacing:.08em}
   .ct-screen .pulse{color:#ff5a76;animation:ct-pulse 1.2s infinite}
   @keyframes ct-pulse{0%,100%{opacity:.3}50%{opacity:1}}
+  #coords-btn{position:fixed;top:12px;left:50%;transform:translateX(-50%);margin-left:152px;z-index:7;padding:6px 12px;background:#10121a;color:#7ee0ff;border:1px solid #2a2e3a;border-radius:6px;cursor:pointer;font:12px ui-monospace,Menlo,Consolas,monospace}
+  #coords{position:fixed;top:52px;right:16px;max-width:560px;max-height:calc(100vh - 110px);overflow:auto;background:#0a0b10;color:#e8eaf0;border:1px solid #2a2e3a;border-radius:6px;padding:10px;display:none;font:10px ui-monospace,Menlo,Consolas,monospace}
+  #coords h1{font-size:11px;margin:0 0 6px;letter-spacing:.05em;color:#7ee0ff}
+  #coords-list{display:flex;flex-direction:column;gap:2px}
+  .coord-row{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:6px;padding:2px 4px;border-bottom:1px solid #1c2026;white-space:nowrap}
+  .coord-row b{color:#ffe9b0}
+  .coord-row span{overflow:hidden;text-overflow:ellipsis}
+  .prop-form{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:8px;padding:6px;border:1px solid #2a2e3a;border-radius:4px}
+  .prop-form b{color:#7ee0ff}
+  .prop-form input{width:52px;font:10px ui-monospace;background:#0e1116;color:#e8eaf0;border:1px solid #2a2e3a;border-radius:3px}
+  .prop-form input[type=color]{width:26px;height:18px}
+  .prop-form button{font:10px ui-monospace;padding:3px 8px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:4px;cursor:pointer}
   #planner-note{color:#70758a;font:10px ui-monospace,Menlo,Consolas,monospace;margin-top:6px;max-width:640px}
 </style>
 <div id="hud">CT CLUB — <b>WASD</b> walk · <b>click</b> to look · <b>N</b> next tour view · <b>i</b> info · <b>P</b> floor plan · <b>Space</b> to entry</div>
 <div id="hint">look: click once (Esc to release) · walk: W A S D · next tour view: N · info overlay: i · floor planner: P · reset to entry: Space</div>
 <button id="plan-btn">📐 plan</button>
 <button id="world-btn">📺 screens</button>
+<button id="coords-btn">📊 coords</button>
 <div id="planner">
   <div class="planner-head"><button id="layout-save">💾 save version</button> <span id="layout-next">club_layout_01.json</span></div>
   <canvas id="plan-canvas"></canvas>
@@ -90,5 +103,9 @@
   <div class="world-controls"><button id="screen-apply">apply HTML to screen</button></div>
 </div>
 <div id="info"></div>
+<div id="coords">
+  <h1>CT CLUB — exact surface coordinates (x, y, z)</h1>
+  <div id="coords-list"></div>
+</div>
 <script type="module" src="./viewer.js"></script>
 </html>

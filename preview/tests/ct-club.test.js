@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import {
   CLUB, CLUB_INTERIOR, CLUB_SPOTS, CLUB_STROBES, DISCO_BALL, CLUB_LASERS, CLUB_AMBIENTS,
   planCtClub, configureCtClub, atClubBar, atClubDancefloor, atClubLounge, moveFixture, refreshObstacles,
-  addScreen, moveScreen, removeScreen,
+  addScreen, moveScreen, removeScreen, addProp, removeProp,
 } from '../src/ct-club-plan.js';
 import { buildCtClubInterior } from '../src/ct-club-interior.js';
 
@@ -277,6 +277,20 @@ test('wall screens can be added, moved and render as panels on the walls', () =>
   assert.equal(scr.size.x, 2.4);
   removeScreen(root, s.id);
   assert.equal(root.screens.length, 0);
+  interior.userData.dispose();
+});
+
+test('props can be placed at an exact xyz and render in the interior', () => {
+  const root = planCtClub();
+  const p = addProp(root, { x: 0, y: 1.21, z: -33, w: 0.4, h: 0.25, d: 0.3, color: '#ff5a76' });
+  assert.equal(root.props.length, 1);
+  const interior = buildCtClubInterior(root, { local: true });
+  const propMesh = interior.children.find(m => m.material?.name === `club-prop-${p.id}`);
+  assert.ok(propMesh, 'the prop renders as a mesh');
+  assert.deepEqual(propMesh.position.toArray(), [0, 1.21, -33]);
+  assert.deepEqual(propMesh.scale.toArray(), [0.4, 0.25, 0.3]);
+  removeProp(root, p.id);
+  assert.equal(root.props.length, 0);
   interior.userData.dispose();
 });
 

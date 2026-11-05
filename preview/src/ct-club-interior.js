@@ -509,6 +509,14 @@ export function buildCtClubInterior(room, options = {}) {
   }
   root.userData.screens = screens;
 
+  // ---- free-standing props placed at exact xyz (decor/equipment) ----------------
+  for (const prop of room.props) {
+    const propMesh = new THREE.Mesh(box, material(`club-prop-${prop.id}`, { color: prop.color, roughness: .6, metalness: .1 }));
+    propMesh.scale.set(prop.w, prop.h, prop.d);
+    propMesh.position.set(prop.x, prop.y, prop.z);
+    root.add(propMesh);
+  }
+
   // ---- the ten named ambient lights -----------------------------------------
   // The room carries its own base lighting so the buried hall is never pitch
   // black: ten AmbientLights spread down the 40 m axis (entry, bar ×2, lounge ×2,

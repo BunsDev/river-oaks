@@ -178,6 +178,23 @@ export function removeScreen(room, id) {
   room.screens = room.screens.filter(s => s.id !== id);
 }
 
+// Free-standing props you place at an exact world (x,y,z) on any surface — decor,
+// equipment, or anything you want on the DJ table, bar top, a column, a wall, etc.
+export function addProp(room, spec = {}) {
+  const p = {
+    id: spec.id ?? `prop-${room.props.length + 1}`,
+    x: spec.x ?? 0, y: spec.y ?? 1, z: spec.z ?? -20,
+    w: spec.w ?? 0.5, h: spec.h ?? 0.5, d: spec.d ?? 0.5,
+    color: spec.color ?? '#41e0ff',
+  };
+  room.props.push(p);
+  return p;
+}
+export function removeProp(room, id) {
+  room.props = room.props.filter(p => p.id !== id);
+}
+
+
 // fixtures; collision must follow). Only fixtures that carry w/l are solids.
 export function refreshObstacles(room) {
   room.obstacles = room.fixtures.filter(f => typeof f.w === 'number' && typeof f.l === 'number')
@@ -220,7 +237,7 @@ export function planCtClub({ east = 0, north = 0, yaw = 0 } = {}) {
       return a > aMin + shrink && a < aMax - shrink && d > shrink && d < CLUB.depth - shrink;
     },
     footprint: [[aMin, 0], [aMax, 0], [aMax, CLUB.depth], [aMin, CLUB.depth]].map(([a, d]) => toWorld(a, d)),
-    fixtures: [], obstacles: [], people: [], lights: [], screens: [],
+    fixtures: [], obstacles: [], people: [], lights: [], screens: [], props: [],
   };
   const bounds = [...room.footprint, toWorld(-0.85, -1.4), toWorld(0.85, -1.4)];
   room.lookupBounds = [Math.min(...bounds.map(p => p[0])), Math.min(...bounds.map(p => p[1])), Math.max(...bounds.map(p => p[0])), Math.max(...bounds.map(p => p[1]))];
