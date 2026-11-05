@@ -11,6 +11,7 @@ import { attachWorldPlanner } from './world-plan.js';
 import { surfaceReference } from './coordinates.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 import { createAudioEngine } from './audio-engine.js';
+import { addDancers } from './dancers.js';
 
 const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 const room = planCtClub();
@@ -122,6 +123,10 @@ let club = buildCtClubInterior(room, { local: true, reducedMotion });
 let design = null;                       // design-panel state (re-attached on rebuild)
 scene.add(club);
 refreshScreens();                        // place any wall screens as live CSS3D content
+
+// ---- dancers on the dancefloor --------------------------------------------------
+let dancers = null;                      // { dancers, tick, toggle } from addDancers
+addDancers(scene, { count: 8 }).then(d => { dancers = d; window.clubFixture.dancers = d; }).catch(() => { });
 
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.05, 200);
 camera.rotation.order = 'YXZ';
@@ -253,6 +258,7 @@ window.clubFixture.world = world;
 document.getElementById('plan-btn')?.addEventListener('click', () => planner.toggle());
 document.getElementById('layout-save')?.addEventListener('click', () => saveLayout({ exportFile: true }));
 document.getElementById('world-btn')?.addEventListener('click', () => world.toggle());
+document.getElementById('dancers-btn')?.addEventListener('click', () => { if (dancers) dancers.toggle(); });
 
 // Exact surface coordinates (press C / the 📊 button): world xyz, size and facing
 // normal for every wall, column, the bar, DJ, speakers, lounge, ball, fixtures
@@ -459,6 +465,7 @@ const loop = now => {
   if (clock.running) {
     clock.t += Math.min(1 / 20, clock.delta);
     if (!reducedMotion) club.userData.tick(clock.t);
+    if (dancers) dancers.tick(clock.delta);   // dance crowd on the floor
   }
   if (design) design.cycle(now / 1000, audio);   // colour cycles + audio-reactive (owned by the host)
   stepPlayer();
