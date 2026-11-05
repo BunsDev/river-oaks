@@ -42,13 +42,31 @@
   .dp-tool b{color:#ffe9b0;margin-right:2px}
   .dp-tool-btn{font:9px ui-monospace;padding:2px 5px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:3px;cursor:pointer}
   .dp-num{width:46px;font:9px ui-monospace;background:#2c2f34;color:#fff;border:1px solid #7d8490;border-radius:2px}
-  #plan-btn{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:7;padding:6px 12px;background:#10121a;color:#7ee0ff;border:1px solid #2a2e3a;border-radius:6px;cursor:pointer;font:12px ui-monospace,Menlo,Consolas,monospace}
+  #ribbon{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:7;display:flex;gap:6px;align-items:center}
+  #ribbon button{padding:6px 12px;background:#10121a;color:#7ee0ff;border:1px solid #2a2e3a;border-radius:6px;cursor:pointer;font:12px ui-monospace,Menlo,Consolas,monospace}
+  #ribbon button:hover{background:#161a26}
+  #ribbon button.active{background:#1a2530;color:#ffe142;border-color:#3a3d44}
+  .drag-handle{cursor:move;user-select:none;color:#70758a;font:10px ui-monospace,Menlo,Consolas,monospace;padding:2px 4px;margin:-2px -4px 6px;border-bottom:1px solid #1c2026}
+  .drag-handle:hover{color:#7ee0ff}
+  .audio-actions,.audio-react,.audio-g{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0}
+  .audio-actions label,.audio-react label{display:inline-flex;gap:3px;align-items:center;white-space:nowrap;font:9px ui-monospace,Menlo,Consolas,monospace}
+  .audio-react input[type=number]{width:44px;font:9px ui-monospace;background:#0e1116;color:#e8eaf0;border:1px solid #2a2e3a;border-radius:3px}
+  .audio-react input[type=range]{width:80px}
+  .audio-actions input[type=range]{width:80px}
+  #audio-track{font:10px ui-monospace,Menlo,Consolas,monospace;color:#7ee0ff;margin:2px 0}
+  #audio-seek{width:100%;margin:2px 0}
+  #audio-playlist{display:flex;flex-direction:column;gap:2px;max-height:120px;overflow:auto;margin:4px 0}
+  .audio-item{display:flex;gap:6px;align-items:center;font:9px ui-monospace,Menlo,Consolas,monospace;padding:2px 4px;border:1px solid #1c2026;border-radius:3px}
+  .audio-item.current{color:#ffe142;border-color:#3a3d44}
+  .audio-item button{font:9px ui-monospace;padding:0 4px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:3px;cursor:pointer}
+  .audio-note{color:#70758a;font:9px ui-monospace,Menlo,Consolas,monospace;margin-top:6px;max-width:420px}
+  .audio-react b{color:#ffe9b0;margin-right:2px}
   #planner{position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:6;background:#0a0b10;border:1px solid #2a2e3a;border-radius:6px;padding:10px;display:none}
   #planner canvas{display:block;cursor:crosshair}
   .planner-head{display:flex;gap:8px;align-items:center;margin-bottom:6px}
   .planner-head button{font:10px ui-monospace;padding:3px 8px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:4px;cursor:pointer}
   #layout-next{color:#7ee0ff;font:11px ui-monospace}
-  #world-btn{position:fixed;top:12px;left:50%;transform:translateX(-50%);margin-left:76px;z-index:7;padding:6px 12px;background:#10121a;color:#7ee0ff;border:1px solid #2a2e3a;border-radius:6px;cursor:pointer;font:12px ui-monospace,Menlo,Consolas,monospace}
+  /* buttons now live in #ribbon (see above) */
   #world{position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:6;background:#0a0b10;border:1px solid #2a2e3a;border-radius:6px;padding:10px;display:none}
   #world-canvas{display:block;cursor:crosshair;margin:6px 0}
   .world-tabs{display:flex;gap:6px}
@@ -62,7 +80,7 @@
   .ct-screen b{color:#7ee0ff;letter-spacing:.08em}
   .ct-screen .pulse{color:#ff5a76;animation:ct-pulse 1.2s infinite}
   @keyframes ct-pulse{0%,100%{opacity:.3}50%{opacity:1}}
-  #coords-btn{position:fixed;top:12px;left:50%;transform:translateX(-50%);margin-left:152px;z-index:7;padding:6px 12px;background:#10121a;color:#7ee0ff;border:1px solid #2a2e3a;border-radius:6px;cursor:pointer;font:12px ui-monospace,Menlo,Consolas,monospace}
+  /* coords button now lives in #ribbon (see above) */
   #coords{position:fixed;top:52px;right:16px;max-width:560px;max-height:calc(100vh - 110px);overflow:auto;background:#0a0b10;color:#e8eaf0;border:1px solid #2a2e3a;border-radius:6px;padding:10px;display:none;font:10px ui-monospace,Menlo,Consolas,monospace}
   #coords h1{font-size:11px;margin:0 0 6px;letter-spacing:.05em;color:#7ee0ff}
   #coords-list{display:flex;flex-direction:column;gap:2px}
@@ -76,17 +94,22 @@
   .prop-form button{font:10px ui-monospace;padding:3px 8px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:4px;cursor:pointer}
   #planner-note{color:#70758a;font:10px ui-monospace,Menlo,Consolas,monospace;margin-top:6px;max-width:640px}
 </style>
-<div id="hud">CT CLUB — <b>WASD</b> walk · <b>click</b> to look · <b>N</b> next tour view · <b>i</b> info · <b>P</b> floor plan · <b>Space</b> to entry</div>
-<div id="hint">look: click once (Esc to release) · walk: W A S D · next tour view: N · info overlay: i · floor planner: P · reset to entry: Space</div>
-<button id="plan-btn">📐 plan</button>
-<button id="world-btn">📺 screens</button>
-<button id="coords-btn">📊 coords</button>
+<div id="hud">CT CLUB — <b>WASD</b> walk · <b>click</b> look · <b>N</b> view · <b>Space</b> entry</div>
+<div id="hint">look: click once (Esc to release) · walk: W A S D · next tour view: N · design panel: i · floor planner: P · screens: W · audio: A · coordinates: C · reset to entry: Space</div>
+<div id="ribbon">
+  <button id="plan-btn" title="floor plan (P)">📐 plan</button>
+  <button id="world-btn" title="mount screens on any surface (W)">📺 screens</button>
+  <button id="coords-btn" title="exact surface coordinates (C)">📊 coords</button>
+  <button id="audio-btn" title="audio: upload, playlist, reactive lights (A)">🎵 audio</button>
+</div>
 <div id="planner">
+  <div class="drag-handle" data-panel="planner">⋮⋮ drag · floor plan</div>
   <div class="planner-head"><button id="layout-save">💾 save version</button> <span id="layout-next">club_layout_01.json</span></div>
   <canvas id="plan-canvas"></canvas>
   <div id="planner-note">drag an asset to move it (0.5 m snap; the whole box stays inside the walls) · the 3D room + walking collision update on drop · every drop saves a new layout version · P or 📐 closes</div>
 </div>
 <div id="world">
+  <div class="drag-handle" data-panel="world">⋮⋮ drag · screens on surfaces</div>
   <div class="world-tabs">
     <label>surface:</label>
     <select id="surface-select"></select>
@@ -94,14 +117,43 @@
   <canvas id="world-canvas"></canvas>
   <div class="world-controls">
     <button id="screen-add">＋ add screen</button>
+    <button id="screen-eq" title="add a live equalizer screen">＋ eq</button>
+    <button id="screen-wave" title="add a live waveform screen">＋ wave</button>
     <button id="screen-remove" disabled>remove</button>
     <span id="screen-info">click a screen to edit its HTML</span>
   </div>
   <textarea id="screen-html" rows="4" spellcheck="false" placeholder="HTML/CSS for this screen — CSS + JS animations run live on the wall"></textarea>
   <div class="world-controls"><button id="screen-apply">apply HTML to screen</button></div>
 </div>
+<div id="audio">
+  <div class="drag-handle" data-panel="audio">⋮⋮ drag · audio</div>
+  <div class="audio-actions">
+    <label class="dp-toggle"><input type="file" id="audio-file" multiple accept="audio/*"> add tracks</label>
+    <button id="audio-play" title="play / pause">▶</button>
+    <button id="audio-prev" title="previous track">⏮</button>
+    <button id="audio-next" title="next track">⏭</button>
+    <label>vol <input type="range" id="audio-vol" min="0" max="1" step="0.01" value="0.9"></label>
+  </div>
+  <div id="audio-track">no track</div>
+  <input type="range" id="audio-seek" min="0" max="1" step="0.001" value="0">
+  <div id="audio-playlist"></div>
+  <div class="audio-react">
+    <b>REACT</b>
+    <label><input type="checkbox" id="audio-react-on"> colours to music</label>
+    <label>band <select id="audio-band"><option value="bass">bass</option><option value="mid">mid</option><option value="treble">treble</option><option value="all">all</option></select></label>
+    <label>delay <input type="number" id="audio-delay" value="0" min="0" step="0.05"></label>
+    <label>onset <input type="number" id="audio-onset" value="0.15" min="0" step="0.02"></label>
+    <label>fade <input type="number" id="audio-fade" value="0.3" min="0" step="0.02"></label>
+    <label>ignore <input type="number" id="audio-ignore" value="0.05" min="0" step="0.01"></label>
+    <label><input type="checkbox" id="audio-random"> random</label>
+    <label><input type="checkbox" id="audio-lock"> lock</label>
+  </div>
+  <div id="audio-groups"></div>
+  <div class="audio-note">add one or more tracks to build a playlist that plays continuously (each ends → next). “colours to music” drives the design-panel colours from the audio energy (band, delay, onset, fade, ignore, random, lock) — separate from the time-based cycle. Add equalizer / waveform screens in the 📺 planner, and watch them on the walls.</div>
+</div>
 <div id="info"></div>
 <div id="coords">
+  <div class="drag-handle" data-panel="coords">⋮⋮ drag · coordinates</div>
   <h1>CT CLUB — exact surface coordinates (x, y, z)</h1>
   <div id="coords-list"></div>
 </div>

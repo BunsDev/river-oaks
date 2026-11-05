@@ -23,7 +23,7 @@ export function attachPlanPlanner({ room, onApply }) {
   const box = document.getElementById('planner');
   const canvas = document.getElementById('plan-canvas');
   const ctx = canvas.getContext('2d');
-  const SCALE = 20, PAD = 14;
+  const SCALE = 9, PAD = 14;
   const W = 16 * SCALE + PAD * 2, H = 40 * SCALE + PAD * 2;
   canvas.width = W; canvas.height = H;
   const toPx = (a, d) => [PAD + (a + 8) * SCALE, PAD + d * SCALE];

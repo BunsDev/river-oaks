@@ -5,7 +5,7 @@
 import { addScreen, removeScreen } from '../../preview/src/ct-club-plan.js';
 import { surfaceReference, surfaceMount } from './coordinates.js';
 
-const SCALE = 12;    // px per metre on a surface strip
+let SCALE = 12;    // px per metre on a surface strip (capped so big walls stay small)
 const pad = 14;
 
 export function attachWorldPlanner({ room, onApply }) {
@@ -20,7 +20,11 @@ export function attachWorldPlanner({ room, onApply }) {
   const current = () => surfaces().find(s => s.name === surfaceName) || surfaces()[0];
   const isTop = s => Math.abs(s.normal[1]) >= 0.5;
   const strip = s => { const [w, h, d] = s.size, [nx, ny, nz] = s.normal; if (isTop(s)) return { across: w, height: d }; return { across: Math.abs(nx) > 0.5 ? d : w, height: h }; };
-  const setCanvas = () => { const { across, height } = strip(current()); canvas.width = across * SCALE + pad * 2; canvas.height = height * SCALE + pad * 2; };
+  const setCanvas = () => {
+    const { across, height } = strip(current());
+    SCALE = Math.max(5, Math.min(12, (360 - pad * 2) / Math.max(across, 0.1), (260 - pad * 2) / Math.max(height, 0.1)));
+    canvas.width = across * SCALE + pad * 2; canvas.height = height * SCALE + pad * 2;
+  };
   const toPx = (u, v) => { const { across, height } = strip(current()); return [pad + u * across * SCALE, pad + (1 - v) * height * SCALE]; };
   const toUV = (x, y) => { const { across, height } = strip(current()); return [(x - pad) / SCALE / across, 1 - (y - pad) / SCALE / height]; };
 
@@ -86,6 +90,13 @@ export function attachWorldPlanner({ room, onApply }) {
     if (btn) btn.disabled = !s;
   };
 
+  const addViz = kind => {
+    const m = surfaceMount(current(), 0.5, 0.5, 0.03);
+    const s = addScreen(room, { x: m.x, y: m.y, z: m.z, nx: m.nx, ny: m.ny, nz: m.nz, w: 2.4, h: 1.35, viz: kind, html: kind === 'eq' ? 'equalizer' : 'waveform', surface: surfaceName });
+    s.u = 0.5; s.v = 0.5;
+    selected = s.id; draw(); updateEditor(); onApply?.();
+  };
+
   const bind = () => {
     const select = document.getElementById('surface-select');
     if (select) {
@@ -99,6 +110,8 @@ export function attachWorldPlanner({ room, onApply }) {
       s.u = 0.5; s.v = 0.5;
       selected = s.id; draw(); updateEditor(); onApply?.();
     });
+    document.getElementById('screen-eq')?.addEventListener('click', () => addViz('eq'));
+    document.getElementById('screen-wave')?.addEventListener('click', () => addViz('wave'));
     document.getElementById('screen-remove')?.addEventListener('click', () => {
       if (selected) { removeScreen(room, selected); selected = null; draw(); updateEditor(); onApply?.(); }
     });

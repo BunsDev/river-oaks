@@ -10,6 +10,7 @@ import { attachPlanPlanner } from './plan-editor.js';
 import { attachWorldPlanner } from './world-plan.js';
 import { surfaceReference } from './coordinates.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+import { createAudioEngine } from './audio-engine.js';
 
 const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 const room = planCtClub();
@@ -90,15 +91,25 @@ const PPM = 100;   // pixels-per-metre for screen content, scaled back to metres
 function refreshScreens() {
   cssScene.children.slice().forEach(o => cssScene.remove(o));
   for (const s of club.userData.screens) {
-    const el = document.createElement('div');
-    el.className = 'ct-screen';
-    el.style.width = `${s.size.x * PPM}px`;
-    el.style.height = `${s.size.y * PPM}px`;
-    el.innerHTML = s.screen.html;
+    let el;
+    if (s.screen.viz) {
+      // A live visualisation screen: a <canvas> we draw onto each frame from the audio.
+      el = document.createElement('canvas');
+      el.className = 'ct-screen';
+      el.width = Math.max(2, Math.round(s.size.x * PPM));
+      el.height = Math.max(2, Math.round(s.size.y * PPM));
+    } else {
+      el = document.createElement('div');
+      el.className = 'ct-screen';
+      el.style.width = `${s.size.x * PPM}px`;
+      el.style.height = `${s.size.y * PPM}px`;
+      el.innerHTML = s.screen.html;
+    }
     const obj = new CSS3DObject(el);
     obj.position.copy(s.position);
     obj.rotation.y = s.rotY;
     obj.scale.set(1 / PPM, 1 / PPM, 1 / PPM);
+    if (s.screen.viz) { obj.userData.viz = s.screen.viz; obj.userData.vizCtx = el.getContext('2d'); }
     cssScene.add(obj);
   }
 }
@@ -193,6 +204,33 @@ const syncCamera = () => {
   window.clubFixture = { toggleInfo, room, club, player, show, nextView, designApi: design };
 }
 
+// ---- audio: upload, playlist, continuous playback, reactive colour -------------
+const audio = createAudioEngine();
+window.clubFixture.audio = audio;
+
+// Small helper: make a fixed overlay panel draggable from its .drag-handle so it can
+// be moved out of the way while placing a screen / dragging a fixture.
+const makeDraggable = (el, handle) => {
+  if (!el || !handle) return;
+  handle.style.cursor = 'move';
+  handle.addEventListener('pointerdown', e => {
+    const rect = el.getBoundingClientRect();
+    const ox = e.clientX - rect.left, oy = e.clientY - rect.top;
+    const move = ev => {
+      el.style.left = (ev.clientX - ox) + 'px';
+      el.style.top = (ev.clientY - oy) + 'px';
+      el.style.transform = 'none';
+    };
+    const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); };
+    addEventListener('pointermove', move); addEventListener('pointerup', up);
+    e.preventDefault();
+  });
+};
+for (const h of document.querySelectorAll('.drag-handle')) {
+  const panel = document.getElementById(h.dataset.panel);
+  makeDraggable(panel, h);
+}
+
 // ---- the floorplanner (press P / the 📐 button): drag assets, room follows ------
 function rebuildRoom() {
   if (design) design.saveNow();                 // persist colours/cycles/intensity
@@ -247,6 +285,63 @@ const toggleCoords = () => {
 window.clubFixture.toggleCoords = toggleCoords;
 document.getElementById('coords-btn')?.addEventListener('click', toggleCoords);
 
+// ---- audio panel ---------------------------------------------------------------
+const audioBox = document.getElementById('audio');
+const g = id => document.getElementById(id);
+const fmt = s => { s = Math.max(0, s); const m = Math.floor(s / 60); return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`; };
+const readReactive = () => ({
+  on: g('audio-react-on')?.checked ?? false,
+  band: g('audio-band')?.value ?? 'all',
+  delay: Number(g('audio-delay')?.value) || 0,
+  onset: Number(g('audio-onset')?.value) || 0.15,
+  fade: Number(g('audio-fade')?.value) || 0.3,
+  ignore: Number(g('audio-ignore')?.value) || 0.05,
+  random: g('audio-random')?.checked ?? false,
+  locked: g('audio-lock')?.checked ?? false,
+});
+const renderPlaylist = () => {
+  const st = audio ? audio.state() : { tracks: [], index: -1, current: null, time: 0, duration: 0 };
+  const el = g('audio-playlist'); if (!el) return;
+  el.innerHTML = st.tracks.length ? st.tracks.map((name, i) =>
+    `<div class="audio-item${i === st.index ? ' current' : ''}" data-i="${i}"><button data-play="${i}">▶</button><span>${name}</span></div>`).join('')
+    : '<span class="audio-empty">no tracks yet — upload some</span>';
+  el.querySelectorAll('[data-play]').forEach(b => b.addEventListener('click', () => audio?.playIndex(Number(b.dataset.play))));
+  const track = g('audio-track'); if (track) track.textContent = st.current ? `${st.current}${st.playing ? ' · playing' : ''}` : 'no track';
+  const seek = g('audio-seek'); if (seek && st.duration) seek.value = (st.time / st.duration).toFixed(4);
+  const tm = g('audio-time'); if (tm) tm.textContent = `${fmt(st.time)} / ${fmt(st.duration)}`;
+};
+const renderGroups = () => {
+  const el = g('audio-groups'); if (!el || !design) return;
+  const names = design.groups();
+  el.innerHTML = names.map(n => {
+    const cfg = design.sectionAudio.get(n) ?? { on: false };
+    return `<div class="audio-g"><label><input type="checkbox" data-group="${n}"${cfg.on ? ' checked' : ''}> react ${n}</label></div>`;
+  }).join('');
+  el.querySelectorAll('[data-group]').forEach(cb => cb.addEventListener('change', () => design.setSectionAudio(cb.dataset.group, { on: cb.checked })));
+};
+const toggleAudio = () => {
+  if (!audioBox) return;
+  const show = audioBox.style.display !== 'block';
+  audioBox.style.display = show ? 'block' : 'none';
+  if (show) { renderPlaylist(); renderGroups(); }
+};
+document.getElementById('audio-btn')?.addEventListener('click', toggleAudio);
+g('audio-file')?.addEventListener('change', async e => {
+  if (!audio || !e.target.files?.length) return;
+  await audio.decode(e.target.files);
+  renderPlaylist();
+});
+g('audio-play')?.addEventListener('click', () => { audio?.toggle(); renderPlaylist(); });
+g('audio-prev')?.addEventListener('click', () => { audio?.prev(); renderPlaylist(); });
+g('audio-next')?.addEventListener('click', () => { audio?.next(); renderPlaylist(); });
+g('audio-vol')?.addEventListener('input', e => { audio?.setVolume(Number(e.target.value)); });
+g('audio-seek')?.addEventListener('input', e => { audio?.seek(Number(e.target.value)); });
+for (const id of ['audio-react-on', 'audio-band', 'audio-delay', 'audio-onset', 'audio-fade', 'audio-ignore', 'audio-random', 'audio-lock']) {
+  g(id)?.addEventListener('change', () => design?.setAudioReact(readReactive()));
+}
+window.addEventListener('ct-audio', renderPlaylist);
+window.clubFixture.toggleAudio = toggleAudio;
+
 
 // ---- input ----------------------------------------------------------------------
 addEventListener('keydown', e => {
@@ -257,6 +352,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyP') { planner.toggle(); }
   if (e.code === 'KeyF') { world.toggle(); }
   if (e.code === 'KeyC') { window.clubFixture.toggleCoords(); }
+  if (e.code === 'KeyA') { window.clubFixture.toggleAudio(); }
 });
 addEventListener('keyup', e => keys.delete(e.code));
 renderer.domElement.addEventListener('click', () => {
@@ -281,6 +377,37 @@ addEventListener('resize', () => {
 const clock = { last: performance.now(), delta: 0, t: 0, running: true };
 const _camDir = new THREE.Vector3(), _camTo = new THREE.Vector3();
 let sampleEvery = 0;
+// Draw live visualisation screens (equalizer / waveform) from the analyser. Called
+// every frame; if there is no audio yet (or no viz screens), it does nothing.
+const drawViz = () => {
+  if (!audio) return;
+  for (const obj of cssScene.children) {
+    const kind = obj.userData.viz;
+    if (!kind || !obj.userData.vizCtx) continue;
+    const ctx = obj.userData.vizCtx, W = ctx.canvas.width, H = ctx.canvas.height;
+    ctx.fillStyle = '#060810'; ctx.fillRect(0, 0, W, H);
+    if (kind === 'eq') {
+      const data = audio.getFreq();
+      const bars = Math.max(8, Math.floor(W / 10));
+      const step = Math.max(1, Math.floor(data.length / bars));
+      const bw = W / bars;
+      ctx.fillStyle = '#7ee0ff';
+      for (let i = 0; i < bars; i++) {
+        const v = (data[Math.min(data.length - 1, i * step)] / 255) || 0;
+        const bh = Math.max(2, v * H * 0.9);
+        ctx.fillRect(i * bw + 1, H - bh, bw - 2, bh);
+      }
+    } else if (kind === 'wave') {
+      const data = audio.getWave();
+      ctx.strokeStyle = '#7ee0ff'; ctx.lineWidth = 2; ctx.beginPath();
+      for (let i = 0; i < data.length; i++) {
+        const x = (i / data.length) * W, y = H / 2 + ((data[i] - 128) / 128) * H * 0.4;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }
+};
 const loop = now => {
   requestAnimationFrame(loop);
   clock.delta = (now - clock.last) / 1000; clock.last = now;
@@ -288,7 +415,7 @@ const loop = now => {
     clock.t += Math.min(1 / 20, clock.delta);
     if (!reducedMotion) club.userData.tick(clock.t);
   }
-  if (design) design.cycle(now / 1000);   // colour cycles (owned by the host, not the panel)
+  if (design) design.cycle(now / 1000, audio);   // colour cycles + audio-reactive (owned by the host)
   stepPlayer();
   syncCamera();
   // Hide any screen that is behind the camera, so CSS3D never draws a flipped one.
@@ -299,6 +426,7 @@ const loop = now => {
   }
   renderer.render(scene, camera);
   cssRenderer.render(cssScene, camera);   // live wall-screen HTML/CSS/JS
+  drawViz();                              // draw EQ / waveform screens from the audio
   if (sampleEvery++ % 60 === 0) {
     const stats = renderer.info;
     if (stats.render.triangles > 0) window.dispatchEvent(new CustomEvent('club-stats', { detail: { calls: stats.render.calls, triangles: stats.render.triangles } }));

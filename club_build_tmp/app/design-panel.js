@@ -121,6 +121,16 @@ export function attachDesignPanel({ root }) {
   const colorLock = new Map();        // section -> its colours are frozen from randomize
   let intensityLocked = false;        // light intensities are frozen from randomize/±
   const tileLocks = tiles ? Array.from({ length: tiles.rows }, () => Array(tiles.cols).fill(false)) : null;
+  // Audio-reactive colour mode — separate from the time-based cycle. When the master
+  // `audioReact.on` is true and a section's own audio flag is on, that section's item
+  // colours follow the audio band energy through a smooth attack/release, with
+  // delay (lookback), onset (attack), fade (release), ignore (noise floor), random
+  // (jump to a fresh colour on a loud transient) and lock. It drives the SAME colour
+  // fields the cycle does, so it integrates smoothly with any colour adjustments.
+  const audioReact = { on: false, band: 'all', delay: 0, onset: 0.15, fade: 0.3, ignore: 0.05, random: false, locked: false };
+  const sectionAudio = new Map();     // group -> { on, band, delay, onset, fade, ignore, random, locked }
+  const audioState = new Map();       // group -> { level, hist } runtime-only (not saved)
+  const defaultAudio = () => ({ on: false, band: 'all', delay: 0, onset: 0.15, fade: 0.3, ignore: 0.05, random: false, locked: false });
 
   const apply = item => {
     const hex = item.colors[item.colors.findIndex(c => c != null)] ?? '#000000';
@@ -137,6 +147,8 @@ export function attachDesignPanel({ root }) {
     sections: [...sectionFrozen].map(([id, frozen]) => ({ id, frozen })),
     colorLock: [...colorLock].map(([id, on]) => ({ id, on })),
     intensityLocked,
+    audioReact: { ...audioReact },
+    sectionAudio: [...sectionAudio].map(([g, c]) => ({ id: g, ...c })),
     tiles: tiles ? { matrix: tiles.matrix.map(r => [...r]), locks: tileLocks ? tileLocks.map(r => [...r]) : null } : null,
     items: items.map(it => ({
       id: it.id, label: it.label,
@@ -168,6 +180,8 @@ export function attachDesignPanel({ root }) {
     if (Array.isArray(restored.sections)) for (const s of restored.sections) sectionFrozen.set(s.id, Boolean(s.frozen));
     if (Array.isArray(restored.colorLock)) for (const c of restored.colorLock) colorLock.set(c.id, Boolean(c.on));
     if (typeof restored.intensityLocked === 'boolean') intensityLocked = restored.intensityLocked;
+    if (restored.audioReact) Object.assign(audioReact, restored.audioReact);
+    if (Array.isArray(restored.sectionAudio)) for (const s of restored.sectionAudio) sectionAudio.set(s.id, { ...defaultAudio(), ...s });
     if (restored.tiles?.matrix && tiles) {
       for (let r = 0; r < tiles.rows; r++) for (let c = 0; c < tiles.cols; c++) {
         if (restored.tiles.matrix[r]?.[c]) tiles.matrix[r][c] = restored.tiles.matrix[r][c];
@@ -179,18 +193,41 @@ export function attachDesignPanel({ root }) {
   if (restored) applyAll();
 
   // colour cycling: lerp c0→c1→…→c{n-1}→c0 over cycleSeconds; tiles shift as a floor.
+  // When audio reactivity is on for a section, its colours follow the audio band
+  // energy instead (through delay/onset/fade/ignore/random), driving the same fields.
   const lerp = (a, b, t) => new THREE.Color(a).lerp(new THREE.Color(b), t);
-  const cycle = nowSeconds => {
+  const setColour = (it, color) => {
+    if (it.kind === 'material' || it.kind === 'outline') setField(it.ref, it.field, '#' + color.getHexString());
+    else if (it.kind === 'light' || it.kind === 'spotlight') it.ref.color.copy(color);
+    else if (it.kind === 'tiles' && tiles) tiles.setAll('#' + color.getHexString());
+  };
+  const cycle = (nowSeconds, audio) => {
     for (const it of items) {
       const hexes = it.colors.filter(Boolean);
+      if (hexes.length < 1) continue;
+      const sec = sectionAudio.get(it.group) ?? defaultAudio();
+      if (audio && audioReact.on && sec.on) {
+        // Audio-reactive: band energy -> level (delay/onset/fade/ignore/random).
+        const st = audioState.get(it.group) ?? (audioState.set(it.group, { level: 0, hist: [] }), audioState.get(it.group));
+        let raw = 0;
+        try { raw = audio.energy(sec.band) || 0; } catch { raw = 0; }
+        const gated = raw < (sec.ignore ?? 0.05) ? 0 : raw;
+        st.hist.push(gated); if (st.hist.length > 600) st.hist.shift();
+        const delayN = Math.max(0, Math.round((sec.delay ?? 0) * 60));
+        const sample = delayN ? st.hist[Math.max(0, st.hist.length - 1 - delayN)] : gated;
+        const target = sec.random ? (sample > st.level + 0.12 ? Math.random() : st.level) : sample;
+        const rate = sample > st.level ? 1 / Math.max(0.001, sec.onset ?? 0.15) : 1 / Math.max(0.001, sec.fade ?? 0.3);
+        st.level += (target - st.level) * Math.min(1, rate);
+        const pos = st.level * (hexes.length - 1);
+        const i0 = Math.floor(pos), i1 = Math.min(i0 + 1, hexes.length - 1);
+        setColour(it, lerp(hexes[i0], hexes[i1], pos - i0));
+        continue;
+      }
       if (!it.cycle || hexes.length < 2 || !(it.cycleSeconds > 0)) continue;
       const t = (nowSeconds % it.cycleSeconds) / it.cycleSeconds;
       const pos = t * hexes.length;
       const i0 = Math.floor(pos) % hexes.length, i1 = (i0 + 1) % hexes.length;
-      const color = lerp(hexes[i0], hexes[i1], pos % 1);
-      if (it.kind === 'material' || it.kind === 'outline') setField(it.ref, it.field, '#' + color.getHexString());
-      else if (it.kind === 'light' || it.kind === 'spotlight') it.ref.color.copy(color);
-      else if (it.kind === 'tiles' && tiles) tiles.setAll('#' + color.getHexString());
+      setColour(it, lerp(hexes[i0], hexes[i1], pos % 1));
     }
   };
 
@@ -278,6 +315,10 @@ export function attachDesignPanel({ root }) {
   return {
     items, byId, applyAll, saveNow, cycle, changed, serialise, sectionFrozen, colorLock, tileLocks, tiles,
     randomizeSection, randomizeAll, tilesItem,
+    audioReact, sectionAudio,
+    setAudioReact: cfg => Object.assign(audioReact, cfg),
+    setSectionAudio: (g, cfg) => { const c = sectionAudio.get(g) ?? defaultAudio(); Object.assign(c, cfg); sectionAudio.set(g, c); },
+    groups: () => [...new Set(items.map(it => it.group))],
     cycleAll, randomizeColorCount, setColorCount, randomizeCycleColors, randomizeLocks, unlockAll,
     randomizeIntensity, bumpIntensity, setIntensityAll, toggleIntensityLock, intensityLocked: isIntensityLocked,
   };
