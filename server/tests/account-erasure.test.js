@@ -149,7 +149,7 @@ test('a signed WorkOS deletion leaves no trace of the account in any Redis store
  assert.equal((await s.profiles.get(pat.userId)).tagline,'pat-own-words');
  assert.equal((await s.groups.list(pat.userId)).length,1);
  assert.ok((await s.waitlist.list()).some(record=>record.userId===pat.userId));
- assert.equal((await s.cyclingMiles.rank(pat.userId)).meters,1200);
+ assert.equal((await s.cyclingMiles.rank(pat.userId)).total,1200);
  assert.equal((await s.landmarks.list(pat.userId)).length,1);
  assert.deepEqual(await s.social.list(pat.userId),[]);
  // A duplicate delivery stays a success, finds nothing more and leaves Pat alone.

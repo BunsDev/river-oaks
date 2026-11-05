@@ -45,6 +45,7 @@ export default defineConfig({
       '/api/character': townHttp,
       '/api/office-desk': townHttp,
       '/api/cycling': townHttp,
+      '/api/leaderboards': townHttp,
       '/api/moderation': townHttp,
       '/api/waitlist': townHttp,
       '/api/debug-reports': townHttp,

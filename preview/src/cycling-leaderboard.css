@@ -16,3 +16,7 @@
 .cycling-board-row-mine { box-shadow: inset 0 0 0 2px var(--hud-action); }
 .cycling-board-empty, .cycling-board-status, .cycling-board-footer { margin: 8px 0 0; font-size: 13px; color: var(--hud-muted); }
 .cycling-board-footer { font-weight: 600; color: inherit; }
+/* The board picker: a native select so every board is one keyboard step away. */
+.cycling-board-picker { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; font-size: 13px; color: var(--hud-muted); }
+.cycling-board-select { flex: 1 1 auto; min-width: 0; max-width: 220px; padding: 6px 8px; border: 1px solid var(--hud-hairline); border-radius: var(--hud-control-radius, 9px); background: var(--hud-raised); color: inherit; font: inherit; font-size: 14px; }
+.cycling-board-select:focus-visible { outline: 2px solid var(--hud-focus); outline-offset: 2px; }
