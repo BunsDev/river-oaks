@@ -2,7 +2,7 @@
 // Runs the real club interior from the repo (preview/src) with first-person
 // walk controls and collision against the same obstacles the server walker uses.
 import * as THREE from 'three';
-import { planCtClub } from '../../preview/src/ct-club-plan.js';
+import { planCtClub, refreshObstacles } from '../../preview/src/ct-club-plan.js';
 import { buildCtClubInterior } from '../../preview/src/ct-club-interior.js';
 import { configureMaterials } from '../../preview/src/materials.js';
 import { attachDesignPanel, mountDesignPanel } from './design-panel.js';
@@ -10,6 +10,49 @@ import { attachPlanPlanner } from './plan-editor.js';
 
 const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 const room = planCtClub();
+
+// ---- layout versions ----------------------------------------------------------
+// Positions are saved as versions: a live copy in localStorage (survives reload)
+// and a numbered club_layout_01.json / 02 / … on every layout change. Loads them
+// back on start so you never lose a layout.
+const LAYOUT_LS = 'ct-club-layout.v1';
+const LAYOUT_NEXT = 'ct-club-layout.next';
+const layoutNext = () => {
+  const n = parseInt(localStorage.getItem(LAYOUT_NEXT) ?? '1', 10);
+  return { n, name: `club_layout_${String(n).padStart(2, '0')}.json` };
+};
+const layoutSnapshot = () => ({
+  schemaVersion: 1, room: 'ct-club', savedAt: new Date().toISOString(),
+  fixtures: room.fixtures.map((fix, i) => ({
+    kind: fix.kind, index: room.fixtures.slice(0, i).filter(f => f.kind === fix.kind).length, a: fix.a, d: fix.d,
+  })),
+});
+const saveLayout = ({ exportFile = false } = {}) => {
+  const payload = layoutSnapshot();
+  try { localStorage.setItem(LAYOUT_LS, JSON.stringify(payload)); } catch { }
+  if (exportFile) {
+    const { n, name } = layoutNext();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    localStorage.setItem(LAYOUT_NEXT, String(n + 1));
+    const el = document.getElementById('layout-next'); if (el) el.textContent = layoutNext().name;
+    return name;
+  }
+  return payload;
+};
+try {
+  const saved = JSON.parse(localStorage.getItem(LAYOUT_LS) ?? 'null');
+  if (saved?.fixtures) {
+    for (const f of saved.fixtures) {
+      const matches = room.fixtures.filter(x => x.kind === f.kind);
+      const fix = matches[Math.max(0, Math.min(f.index ?? 0, matches.length - 1))];
+      if (fix) { fix.a = f.a; fix.d = f.d; }
+    }
+    refreshObstacles(room);
+  }
+} catch { }
+
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -114,6 +157,7 @@ const syncCamera = () => {
 // ---- the floorplanner (press P / the 📐 button): drag assets, room follows ------
 function rebuildRoom() {
   if (design) design.saveNow();                 // persist colours/cycles/intensity
+  saveLayout({ exportFile: true });             // save a NEW layout version (club_layout_NN.json)
   club.userData.dispose();
   scene.remove(club);
   club = buildCtClubInterior(room, { local: true, reducedMotion });
@@ -125,7 +169,9 @@ function rebuildRoom() {
 }
 const planner = attachPlanPlanner({ room, onApply: rebuildRoom });
 window.clubFixture.planner = planner;
+window.clubFixture.saveLayout = saveLayout;
 document.getElementById('plan-btn')?.addEventListener('click', () => planner.toggle());
+document.getElementById('layout-save')?.addEventListener('click', () => saveLayout({ exportFile: true }));
 
 
 // ---- input ----------------------------------------------------------------------

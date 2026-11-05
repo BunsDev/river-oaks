@@ -79,7 +79,10 @@ export function attachPlanPlanner({ room, onApply }) {
     const rect = canvas.getBoundingClientRect();
     const entity = hit(e.clientX - rect.left, e.clientY - rect.top);
     if (!entity) return;
-    dragging = { entity, size: sizeOf(entity.fix) };
+    const [ga, gd] = toPlan(e.clientX - rect.left, e.clientY - rect.top);
+    // Keep the grab point under the cursor (don't jump the centre to it), so a big
+    // asset can be put back where it was.
+    dragging = { entity, size: sizeOf(entity.fix), offA: ga - entity.fix.a, offD: gd - entity.fix.d };
     canvas.setPointerCapture(e.pointerId);
     e.preventDefault();
   });
@@ -87,8 +90,13 @@ export function attachPlanPlanner({ room, onApply }) {
     if (!dragging) return;
     const rect = canvas.getBoundingClientRect();
     const [a, d] = toPlan(e.clientX - rect.left, e.clientY - rect.top);
-    dragging.entity.fix.a = Math.max(-8, Math.min(8, snap(a)));
-    dragging.entity.fix.d = Math.max(0.5, Math.min(39.5, snap(d)));
+    const s = dragging.size;
+    // Footprint-aware clamp: the whole box must stay inside the shell, so a big
+    // speaker never clips the wall (and can be returned to its original spot).
+    const clampA = v => Math.max(-8 + s.w / 2, Math.min(8 - s.w / 2, v));
+    const clampD = v => Math.max(s.l / 2, Math.min(40 - s.l / 2, v));
+    dragging.entity.fix.a = clampA(snap(clampA(a - dragging.offA)));
+    dragging.entity.fix.d = clampD(snap(clampD(d - dragging.offD)));
     draw();
   });
   canvas.addEventListener('pointerup', () => {
