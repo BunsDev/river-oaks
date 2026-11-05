@@ -42,9 +42,15 @@
   .dp-tool b{color:#ffe9b0;margin-right:2px}
   .dp-tool-btn{font:9px ui-monospace;padding:2px 5px;background:#454a55;color:#fff;border:1px solid #7d8490;border-radius:3px;cursor:pointer}
   .dp-num{width:46px;font:9px ui-monospace;background:#2c2f34;color:#fff;border:1px solid #7d8490;border-radius:2px}
+  #plan-btn{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:7;padding:6px 12px;background:#10121a;color:#7ee0ff;border:1px solid #2a2e3a;border-radius:6px;cursor:pointer;font:12px ui-monospace,Menlo,Consolas,monospace}
+  #planner{position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:6;background:#0a0b10;border:1px solid #2a2e3a;border-radius:6px;padding:10px;display:none}
+  #planner canvas{display:block;cursor:crosshair}
+  #planner-note{color:#70758a;font:10px ui-monospace,Menlo,Consolas,monospace;margin-top:6px;max-width:640px}
 </style>
-<div id="hud">CT CLUB — <b>WASD</b> walk · <b>click</b> to look · <b>scroll/arrows</b> no jump · <b>N</b> next tour view · <b>i</b> info · <b>Space</b> to entry</div>
-<div id="hint">look: click once (Esc to release the mouse) · walk: W A S D · next tour view: N · reset to entry: Space · info overlay: i</div>
+<div id="hud">CT CLUB — <b>WASD</b> walk · <b>click</b> to look · <b>N</b> next tour view · <b>i</b> info · <b>P</b> floor plan · <b>Space</b> to entry</div>
+<div id="hint">look: click once (Esc to release) · walk: W A S D · next tour view: N · info overlay: i · floor planner: P · reset to entry: Space</div>
+<button id="plan-btn">📐 plan</button>
+<div id="planner"><canvas id="plan-canvas"></canvas><div id="planner-note">drag an asset to move it (0.5 m snap) · the 3D room + walking collision update on drop · P or this button closes</div></div>
 <div id="info"></div>
 <script type="module" src="./viewer.js"></script>
 </html>

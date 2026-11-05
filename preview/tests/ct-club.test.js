@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {
   CLUB, CLUB_INTERIOR, CLUB_SPOTS, CLUB_STROBES, DISCO_BALL, CLUB_LASERS, CLUB_AMBIENTS,
-  planCtClub, configureCtClub, atClubBar, atClubDancefloor, atClubLounge,
+  planCtClub, configureCtClub, atClubBar, atClubDancefloor, atClubLounge, moveFixture, refreshObstacles,
 } from '../src/ct-club-plan.js';
 import { buildCtClubInterior } from '../src/ct-club-interior.js';
 
@@ -233,6 +233,29 @@ test('the dancefloor is a colour matrix, pillars are their own section, and 13 s
   assert.ok(spots[0].intensity > 1, `spotlights carry a visible intensity (${spots[0].intensity})`);
   root.userData.dispose();
   assert.equal(root.children.length, 0);
+});
+
+test('the floorplanner moves a fixture and the walking collision follows', () => {
+  const root = planCtClub();
+  const before = refreshObstacles(root).length;
+  const moved = moveFixture(root, 'lounge-couch', 0, 4.0, 9.0);
+  assert.equal(moved.a, 4.0);
+  assert.equal(moved.d, 9.0);
+  const obstacle = root.obstacles.find(o => o.kind === 'lounge-couch');
+  assert.ok(obstacle, 'the couch remains a walk obstacle');
+  assert.equal(obstacle.a0, 4.0 - 1.3, 'obstacle box follows the couch (w=2.6)');
+  assert.equal(root.obstacles.length, before, 'obstacle count is unchanged');
+  const clamped = moveFixture(root, 'bar-stool', 0, 99, -5);
+  assert.equal(clamped.a, 8, 'clamped inside the room');
+  assert.equal(clamped.d, 0.5);
+  // the interior reads live fixture positions, so a moved couch actually moves
+  const interior = buildCtClubInterior(root, { local: true });
+  const upholstery = interior.children.find(m => m.isInstancedMesh && m.material?.name === 'club-upholstery');
+  assert.ok(upholstery, 'upholstery instanced batch exists');
+  const scratch = new THREE.Matrix4(), positions = [];
+  for (let i = 0; i < upholstery.count; i++) { upholstery.getMatrixAt(i, scratch); positions.push(new THREE.Vector3().setFromMatrixPosition(scratch)); }
+  assert.ok(positions.some(p => Math.abs(p.x - 4.0) < 0.3 && Math.abs(-p.z - 9.0) < 0.3), 'a couch instance sits at the moved position');
+  interior.userData.dispose();
 });
 
 function materials(root) {

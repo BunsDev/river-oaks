@@ -147,6 +147,18 @@ export function buildCtClubInterior(room, options = {}) {
 
   const W = CLUB.width, D = CLUB.depth, H = CLUB.height;
 
+  // A floorplanner moves assets by editing room.fixtures; the interior reads the
+  // live (a,d) of each fixture so the room follows. `pos(kind, nth, defA, defD)`
+  // returns the fixture's position or the built-in default when the fixture is
+  // absent, so the room still builds from a bare plan.
+  const fp = (kind, nth = 0, defA = 0, defD = 0) => {
+    const f = room.fixtures.filter(item => item.kind === kind)[nth];
+    return f ? { a: f.a, d: f.d } : { a: defA, d: defD };
+  };
+  const barP = fp('bar-counter', 0, -7.15, 14);
+  const urnP = fp('chai-urn', 0, -7.3, 5.6);
+  const djP = fp('dj-booth', 0, 0, 33.7);
+
   // ---- shell ----------------------------------------------------------------
   // A buried concrete box: no windows, a heavy slab overhead, and a door gap in
   // the front wall where the future stair throat meets the club.
@@ -163,10 +175,11 @@ export function buildCtClubInterior(room, options = {}) {
   instance(box, m.brass, 1.12, 1.15, -0.08, 0.08, 2.3, 0.14);
   // Entry threshold mat (fixture 'entry-mat'): dark plate with a lit border and a
   // 1 px yellow outline so the dark plate reads against the floor.
-  instance(box, m.dark, 0, 0.016, 1.4, 1.7, 0.032, 1.3);
-  addOutlineRect(1.74, 1.34, OUTLINE.yellow, 0, 0.045, 1.4);
-  for (const a of [-0.83, 0.83]) instance(box, m.edgeCool, a, 0.04, 1.4, 0.06, 0.02, 1.16);
-  for (const d of [0.8, 2.0]) instance(box, m.edgeCool, 0, 0.04, d, 1.6, 0.02, 0.06);
+  const matP = fp('entry-mat', 0, 0, 1.4);
+  instance(box, m.dark, matP.a, 0.016, matP.d, 1.7, 0.032, 1.3);
+  addOutlineRect(1.74, 1.34, OUTLINE.yellow, matP.a, 0.045, matP.d);
+  for (const a of [-0.83, 0.83]) instance(box, m.edgeCool, matP.a + a, 0.04, matP.d, 0.06, 0.02, 1.16);
+  for (const d of [0.8, 2.0]) instance(box, m.edgeCool, matP.a, 0.04, matP.d + (d - 1.4), 1.6, 0.02, 0.06);
 
   // ---- structure -------------------------------------------------------------
   // Columns flush with the side walls and ceiling truss rails, so the buried hall
@@ -216,17 +229,17 @@ export function buildCtClubInterior(room, options = {}) {
   // A 20 m counter along the left wall. Edge glow runs along its serving edge and
   // under its lip (washing the floor); back glow fills the trough behind the
   // bottles, so the whole bar reads as a lit strip from the door to the DJ booth.
-  instance(box, m.timber, -7.15, 0.56, 14, 1.5, 1.12, 20);                    // counter body
-  instance(box, m.timber, -7.0, 1.145, 14, 1.7, 0.06, 20.2);                  // counter top (serving overhang)
-  addOutline(box, OUTLINE.yellow, -7.15, 0.56, 14, 1.5, 1.12, 20);           // dark timber: yellow cage
-  addOutline(box, OUTLINE.yellow, -7.0, 1.145, 14, 1.7, 0.06, 20.2);
-  instance(box, m.edgeGlow, -6.3, 1.176, 14, 0.035, 0.02, 19.6);              // edge glow: along the serving edge
-  instance(box, m.edgeGlow, -6.1, 0.52, 14, 0.025, 0.018, 19.4);              // edge glow: under the lip
-  instance(box, m.dark, -7.82, 1.5, 14, 0.42, 3.0, 20.2);                     // back bar case
-  addOutline(box, OUTLINE.yellow, -7.82, 1.5, 14, 0.42, 3.0, 20.2);          // near-black case: yellow cage
-  instance(box, m.backGlow, -7.9, 2.02, 14, 0.05, 2.55, 19.8);                // back glow trough
-  instance(box, m.backGlow, -7.66, 0.18, 14, 0.03, 0.05, 19.8);               // base kick glow
-  for (const y of [1.35, 1.85, 2.35]) instance(box, m.shelf, -7.7, y, 14, 0.5, 0.02, 19.6); // glass shelves
+  instance(box, m.timber, barP.a, 0.56, barP.d, 1.5, 1.12, 20);                    // counter body
+  instance(box, m.timber, barP.a + 0.15, 1.145, barP.d, 1.7, 0.06, 20.2);          // counter top (serving overhang)
+  addOutline(box, OUTLINE.yellow, barP.a, 0.56, barP.d, 1.5, 1.12, 20);           // dark timber: yellow cage
+  addOutline(box, OUTLINE.yellow, barP.a + 0.15, 1.145, barP.d, 1.7, 0.06, 20.2);
+  instance(box, m.edgeGlow, barP.a + 0.85, 1.176, barP.d, 0.035, 0.02, 19.6);      // edge glow: along the serving edge
+  instance(box, m.edgeGlow, barP.a + 1.05, 0.52, barP.d, 0.025, 0.018, 19.4);      // edge glow: under the lip
+  instance(box, m.dark, barP.a - 0.67, 1.5, barP.d, 0.42, 3.0, 20.2);              // back bar case
+  addOutline(box, OUTLINE.yellow, barP.a - 0.67, 1.5, barP.d, 0.42, 3.0, 20.2);   // near-black case: yellow cage
+  instance(box, m.backGlow, barP.a - 0.75, 2.02, barP.d, 0.05, 2.55, 19.8);        // back glow trough
+  instance(box, m.backGlow, barP.a - 0.51, 0.18, barP.d, 0.03, 0.05, 19.8);        // base kick glow
+  for (const y of [1.35, 1.85, 2.35]) instance(box, m.shelf, barP.a - 0.55, y, barP.d, 0.5, 0.02, 19.6); // glass shelves
   // Bottles across the two lower shelves, one merged shape per bottle, instanced
   // with per-instance colors so a single draw call serves the whole back bar.
   const bottleGeo = mergeGeometries([
@@ -237,9 +250,9 @@ export function buildCtClubInterior(room, options = {}) {
   const bottleColor = new THREE.Color();
   let bottleSeed = 777;
   const bottleRandom = () => (bottleSeed = (bottleSeed * 1664525 + 1013904223) >>> 0) / 4294967296;
-  for (let d = 4.6; d <= 23.4; d += 1) {
+  for (let d = barP.d - 9.4; d <= barP.d + 9.4; d += 1) {
     for (const y of [1.38, 1.88]) {
-      const a = -7.7 + (bottleRandom() - 0.5) * 0.3;
+      const a = barP.a - 0.55 + (bottleRandom() - 0.5) * 0.3;
       const pick = bottleRandom();
       bottleColor.set(pick < 0.45 ? '#c98a3b' : pick < 0.75 ? '#3f7a4d' : '#3f6f9a');
       instance(bottleGeo, m.glass, a, y + 0.09, d, 1, 1, 1, null, bottleColor.clone());
@@ -247,24 +260,25 @@ export function buildCtClubInterior(room, options = {}) {
   }
   // The club's chai urn on the counter (fixture 'chai-urn'): copper kettle under an
   // amber glow, a tiny steam head standing still above it.
-  instance(box, m.copper, -7.3, 1.19, 5.6, 0.2, 0.05, 0.2);                   // drip tray
-  instance(new THREE.CylinderGeometry(0.13, 0.17, 0.3, 14), m.copper, -7.3, 1.44, 5.6); // body
-  instance(new THREE.CylinderGeometry(0.045, 0.06, 0.1, 10), m.brass, -7.3, 1.65, 5.6); // lid
-  instance(box, m.edgeGlow, -7.3, 1.86, 5.6, 0.3, 0.02, 0.3);                 // amber glow behind it
+  instance(box, m.copper, urnP.a, 1.19, urnP.d, 0.2, 0.05, 0.2);                   // drip tray
+  instance(new THREE.CylinderGeometry(0.13, 0.17, 0.3, 14), m.copper, urnP.a, 1.44, urnP.d); // body
+  instance(new THREE.CylinderGeometry(0.045, 0.06, 0.1, 10), m.brass, urnP.a, 1.65, urnP.d); // lid
+  instance(box, m.edgeGlow, urnP.a, 1.86, urnP.d, 0.3, 0.02, 0.3);                 // amber glow behind it
   const steam = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), material('club-chai-steam', { color: '#ffffff', transparent: true, opacity: 0.18, roughness: 1, depthWrite: false }));
-  owned.geometries.add(steam.geometry); steam.scale.set(1, 1.7, 1); steam.position.set(-7.3, 1.78, -5.6); root.add(steam);
+  owned.geometries.add(steam.geometry); steam.scale.set(1, 1.7, 1); steam.position.set(urnP.a, 1.78, -urnP.d); root.add(steam);
   // Bar stools: instanced leather seats, brass foot rings and a violet under-glow
   // ring (the chairs are edge-lit too, as Val asked).
   const seatGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.05, 18); owned.geometries.add(seatGeo);
   const legGeo = new THREE.CylinderGeometry(0.028, 0.028, 0.66, 8); owned.geometries.add(legGeo);
   const glowGeo = new THREE.CylinderGeometry(0.2, 0.22, 0.03, 18); owned.geometries.add(glowGeo);
   const stoolRingGeo = new THREE.TorusGeometry(0.16, 0.012, 8, 20); owned.geometries.add(stoolRingGeo);
-  for (const d of [5, 8, 11, 14, 17, 20, 23]) {
-    instance(legGeo, m.steel, -5.6, 0.33, d, 1, 1, 1);
-    instance(seatGeo, m.leather, -5.6, 0.725, d, 1, 1, 1);
-    instance(glowGeo, m.seatGlow, -5.6, 0.66, d, 1, 1, 1);
-    instance(stoolRingGeo, m.brass, -5.6, 0.52, d, 1, 1, 1, { x: Math.PI / 2 });
-    addOutline(seatGeo, OUTLINE.yellow, -5.6, 0.725, d, 1, 1, 1);            // near-black seats: yellow rim
+  for (const f of room.fixtures.filter(x => x.kind === 'bar-stool')) {
+    const a = f.a, d = f.d;
+    instance(legGeo, m.steel, a, 0.33, d, 1, 1, 1);
+    instance(seatGeo, m.leather, a, 0.725, d, 1, 1, 1);
+    instance(glowGeo, m.seatGlow, a, 0.66, d, 1, 1, 1);
+    instance(stoolRingGeo, m.brass, a, 0.52, d, 1, 1, 1, { x: Math.PI / 2 });
+    addOutline(seatGeo, OUTLINE.yellow, a, 0.725, d, 1, 1, 1);                // near-black seats: yellow rim
   }
 // ---- the lounge: couches, chairs and tables, edge-lit -------------------------
   // Two couches against the right wall face the dancefloor; each carries a violet
@@ -286,8 +300,7 @@ export function buildCtClubInterior(room, options = {}) {
     instance(box, m.steel, a1 - 0.14, 0.03, down + 0.2, 0.14, 0.06, 0.14);                     // feet
     instance(box, m.steel, a1 - 0.14, 0.03, up - 0.2, 0.14, 0.06, 0.14);
   };
-  couch(6.6, 10.5);
-  couch(6.6, 16.5);
+  for (const f of room.fixtures.filter(x => x.kind === 'lounge-couch')) couch(f.a, f.d);
   // Armchairs: smaller, a glow under the seat and a lit base ring.
   const chair = (aCentre, dCentre) => {
     instance(box, m.spill, aCentre, 0.04, dCentre, 1.2, 0.05, 1.2);                         // violet light-spill under the chair
@@ -298,23 +311,23 @@ export function buildCtClubInterior(room, options = {}) {
     instance(box, m.seatGlow, aCentre + 0.415, 0.6, dCentre, 0.25, 0.02, 0.85);
     instance(box, m.seatGlow, aCentre + 0.2, 0.06, dCentre, 0.7, 0.025, 0.7);
   };
-  chair(3.55, 13.6);
-  chair(3.55, 19.6);
+  for (const f of room.fixtures.filter(x => x.kind === 'lounge-chair')) chair(f.a, f.d);
   // Coffee tables with a recessed glow panel on each top.
-  for (const d of [12.4, 18.4]) {
-    instance(box, m.spill, 4.55, 0.04, d, 1.4, 0.05, 1.8);                         // violet light-spill under the table
-    instance(box, m.timber, 4.55, 0.21, d, 1.0, 0.42, 1.4);
-    addOutline(box, OUTLINE.purple, 4.55, 0.21, d, 1.0, 0.42, 1.4);                // dark timber: purple cage
-    instance(box, m.seatGlow, 4.55, 0.425, d, 0.5, 0.018, 0.8);
+  for (const f of room.fixtures.filter(x => x.kind === 'lounge-table')) {
+    const a = f.a, d = f.d;
+    instance(box, m.spill, a, 0.04, d, 1.4, 0.05, 1.8);                         // violet light-spill under the table
+    instance(box, m.timber, a, 0.21, d, 1.0, 0.42, 1.4);
+    addOutline(box, OUTLINE.purple, a, 0.21, d, 1.0, 0.42, 1.4);                // dark timber: purple cage
+    instance(box, m.seatGlow, a, 0.425, d, 0.5, 0.018, 0.8);
   }
 // ---- the DJ booth and the big speaker wall ------------------------------------
-  instance(box, m.timber, 0, 0.55, 33.7, 5.2, 1.1, 1.4);                        // booth body behind the dancefloor
-  addOutline(box, OUTLINE.green, 0, 0.55, 33.7, 5.2, 1.1, 1.4);                // dark timber: green cage
-  instance(box, m.djGlow, 0, 1.14, 33.0, 4.4, 0.03, 0.05);                      // glowing desk edge on the house side
-  instance(box, m.dark, 0, 1.18, 33.1, 1.2, 0.05, 0.5);                         // mixer deck
-  addOutline(box, OUTLINE.green, 0, 1.18, 33.1, 1.2, 0.05, 0.5);               // near-black deck: green cage
+  instance(box, m.timber, djP.a, 0.55, djP.d, 5.2, 1.1, 1.4);                        // booth body behind the dancefloor
+  addOutline(box, OUTLINE.green, djP.a, 0.55, djP.d, 5.2, 1.1, 1.4);                // dark timber: green cage
+  instance(box, m.djGlow, djP.a, 1.14, djP.d - 0.7, 4.4, 0.03, 0.05);               // glowing desk edge on the house side
+  instance(box, m.dark, djP.a, 1.18, djP.d - 0.6, 1.2, 0.05, 0.5);                  // mixer deck
+  addOutline(box, OUTLINE.green, djP.a, 1.18, djP.d - 0.6, 1.2, 0.05, 0.5);        // near-black deck: green cage
   const djGlow = material('club-mixer-glow', { color: '#ffffff', emissive: '#41c8ff', emissiveIntensity: 2.6, roughness: .3 });
-  for (const a of [-0.4, 0, 0.4]) instance(box, djGlow, a, 1.205, 33.1, 0.06, 0.012, 0.02); // channel LEDs
+  for (const a of [-0.4, 0, 0.4]) instance(box, djGlow, djP.a + a, 1.205, djP.d - 0.6, 0.06, 0.012, 0.02); // channel LEDs
   // Three massive speaker faces: the central subwoofer bank and the two corner
   // stacks. Each face is an enclosure with instanced driver cones; the ports glow.
   const driver = new THREE.CylinderGeometry(0.5, 0.5, 0.05, 22); owned.geometries.add(driver);
@@ -325,34 +338,37 @@ export function buildCtClubInterior(room, options = {}) {
     addOutline(box, OUTLINE.green, dc, h / 2, dd, w, h, depth);                   // near-black grille: green cage
     return { dc, front: dd - depth / 2 + 0.04, h };
   };
-  const bank = face(0, 37.0, 6.8, 2.5, 4.6);                                    // the subs behind the DJ
+  const bankFix = fp('speaker-bank', 0, 0, 37.0);
+  const bank = face(bankFix.a, bankFix.d, 6.8, 2.5, 4.6);                        // the subs behind the DJ
   for (const a of [-2.4, -1.2, 0, 1.2, 2.4]) {
-    instance(driver, m.cone, a, bank.h * 0.3, bank.front, 1, 1, 1, { x: Math.PI / 2 });
-    instance(driver, m.cone, a, bank.h * 0.7, bank.front, 1, 1, 1, { x: Math.PI / 2 });
+    instance(driver, m.cone, bankFix.a + a, bank.h * 0.3, bank.front, 1, 1, 1, { x: Math.PI / 2 });
+    instance(driver, m.cone, bankFix.a + a, bank.h * 0.7, bank.front, 1, 1, 1, { x: Math.PI / 2 });
   }
-  instance(portRing, m.bassRing, 0, 0.42, bank.front, 1, 1, 1, { x: Math.PI / 2 });
-  for (const sign of [-1, 1]) {
-    const stack = face(sign * 5.8, 36.8, 4.2, 3.3, 4.6);                        // the two big corner stacks
-    for (const a of [-6.9, -4.7].map(x => sign * x)) {
-      for (const frac of [0.21, 0.45, 0.7]) instance(smallDriver, m.cone, a, stack.h * frac, stack.front, 1, 1, 1, { x: Math.PI / 2 });
+  instance(portRing, m.bassRing, bankFix.a, 0.42, bank.front, 1, 1, 1, { x: Math.PI / 2 });
+  for (const stackFix of room.fixtures.filter(x => x.kind === 'speaker-stack')) {
+    const sign = Math.sign(stackFix.a) || 1;
+    const stack = face(stackFix.a, stackFix.d, 4.2, 3.3, 4.6);                   // the two big corner stacks
+    for (const orig of [-6.9, -4.7].map(x => sign * x)) {
+      for (const frac of [0.21, 0.45, 0.7]) instance(smallDriver, m.cone, stackFix.a + (orig - sign * 5.8), stack.h * frac, stack.front, 1, 1, 1, { x: Math.PI / 2 });
     }
-    instance(portRing, m.bassRing, sign * 5.8, 0.42, stack.front, 1, 1, 1, { x: Math.PI / 2 });
+    instance(portRing, m.bassRing, stackFix.a, 0.42, stack.front, 1, 1, 1, { x: Math.PI / 2 });
   }
   // Pendant spot bar over the DJ, like a mini truss.
   for (const a of [-1.6, 0, 1.6]) {
-    instance(box, m.steel, a, 5.7, 33.3, 0.06, 0.5, 0.06);
-    instance(box, djGlow, a, 5.42, 33.3, 0.16, 0.03, 0.16);
+    instance(box, m.steel, djP.a + a, 5.7, djP.d - 0.4, 0.06, 0.5, 0.06);
+    instance(box, djGlow, djP.a + a, 5.42, djP.d - 0.4, 0.16, 0.03, 0.16);
   }
 // ---- the disco ball and its occasional RGB lasers ---------------------------------
   // The mirrored ball hangs dead centre; the laser beams it "throws" are thin
   // unlit cones that mostly stay dark — a few material writes per tick, never a
   // real light, so the mirror room stays cheap.
   const ball = new THREE.Group(); ball.name = 'Disco ball';
-  ball.position.set(DISCO_BALL.a, DISCO_BALL.y, -DISCO_BALL.d); root.add(ball);
-  instance(box, m.steel, 0, 5.75, 24, 0.05, 0.5, 0.05);                          // mount pipe
+  const ballP = fp('disco-ball', 0, DISCO_BALL.a, DISCO_BALL.d);
+  ball.position.set(ballP.a, DISCO_BALL.y, -ballP.d); root.add(ball);
+  instance(box, m.steel, ballP.a, 5.75, ballP.d, 0.05, 0.5, 0.05);               // mount pipe
   const ringMat = basic('club-ball-ring', { color: '#41e0ff', toneMapped: false });
   const ringGeo = new THREE.TorusGeometry(0.5, 0.02, 8, 32); owned.geometries.add(ringGeo);
-  instance(ringGeo, ringMat, 0, 5.9, 24, 1, 1, 1, { x: Math.PI / 2 });
+  instance(ringGeo, ringMat, ballP.a, 5.9, ballP.d, 1, 1, 1, { x: Math.PI / 2 });
   const ballGeo = new THREE.IcosahedronGeometry(DISCO_BALL.radius, 2); owned.geometries.add(ballGeo);
   const ballMesh = new THREE.Mesh(ballGeo, m.mirror); ballMesh.name = 'Discoball mirror facets'; ball.add(ballMesh);
   const beamMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 1.1, 3.4, 14, 1, true).translate(0, -1.7, 0),

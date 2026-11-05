@@ -6,6 +6,7 @@ import { planCtClub } from '../../preview/src/ct-club-plan.js';
 import { buildCtClubInterior } from '../../preview/src/ct-club-interior.js';
 import { configureMaterials } from '../../preview/src/materials.js';
 import { attachDesignPanel, mountDesignPanel } from './design-panel.js';
+import { attachPlanPlanner } from './plan-editor.js';
 
 const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 const room = planCtClub();
@@ -25,7 +26,8 @@ scene.background = new THREE.Color('#05060a');
 const wash = new THREE.AmbientLight('#8a7fb8', 0.15);
 const key = new THREE.DirectionalLight('#ffd9b8', 0.3); key.position.set(-6, 8, 2);
 scene.add(wash, key);
-const club = buildCtClubInterior(room, { local: true, reducedMotion });
+let club = buildCtClubInterior(room, { local: true, reducedMotion });
+let design = null;                       // design-panel state (re-attached on rebuild)
 scene.add(club);
 
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.05, 200);
@@ -99,7 +101,7 @@ const syncCamera = () => {
 
 // ---- the design panel (press i): live colours, 8-colour cycling, save --------
 {
-  const design = attachDesignPanel({ root: club });
+  design = attachDesignPanel({ root: club });
   mountDesignPanel(document.querySelector('#info'), design);
   let panelOpen = false;
   const toggleInfo = () => {
@@ -109,6 +111,22 @@ const syncCamera = () => {
   window.clubFixture = { toggleInfo, room, club, player, show, nextView, designApi: design };
 }
 
+// ---- the floorplanner (press P / the 📐 button): drag assets, room follows ------
+function rebuildRoom() {
+  if (design) design.saveNow();                 // persist colours/cycles/intensity
+  club.userData.dispose();
+  scene.remove(club);
+  club = buildCtClubInterior(room, { local: true, reducedMotion });
+  scene.add(club);
+  design = attachDesignPanel({ root: club });   // re-attaches and restores the design
+  mountDesignPanel(document.querySelector('#info'), design);
+  window.clubFixture.club = club;
+  window.clubFixture.designApi = design;
+}
+const planner = attachPlanPlanner({ room, onApply: rebuildRoom });
+window.clubFixture.planner = planner;
+document.getElementById('plan-btn')?.addEventListener('click', () => planner.toggle());
+
 
 // ---- input ----------------------------------------------------------------------
 addEventListener('keydown', e => {
@@ -116,6 +134,7 @@ addEventListener('keydown', e => {
   keys.add(e.code);
   if (e.code === 'KeyN') { nextView(); }
   if (e.code === 'KeyI') { window.clubFixture.toggleInfo(); }
+  if (e.code === 'KeyP') { planner.toggle(); }
 });
 addEventListener('keyup', e => keys.delete(e.code));
 renderer.domElement.addEventListener('click', () => {
@@ -146,6 +165,7 @@ const loop = now => {
     clock.t += Math.min(1 / 20, clock.delta);
     if (!reducedMotion) club.userData.tick(clock.t);
   }
+  if (design) design.cycle(now / 1000);   // colour cycles (owned by the host, not the panel)
   stepPlayer();
   syncCamera();
   renderer.render(scene, camera);

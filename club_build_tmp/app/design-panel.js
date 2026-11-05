@@ -118,6 +118,8 @@ export function attachDesignPanel({ root }) {
   const byId = new Map(items.map(it => [it.id, it]));
 
   const sectionFrozen = new Map();
+  const colorLock = new Map();        // section -> its colours are frozen from randomize
+  let intensityLocked = false;        // light intensities are frozen from randomize/±
   const tileLocks = tiles ? Array.from({ length: tiles.rows }, () => Array(tiles.cols).fill(false)) : null;
 
   const apply = item => {
@@ -212,8 +214,6 @@ export function attachDesignPanel({ root }) {
   const randomizeAll = () => { for (const it of items) randomizeItem(it); applyAll(); changed(); };
 
   // ---- v3 tools: cycling, colour counts, locks, intensity -----------------------
-  const colorLock = new Map();        // section -> its colours are frozen from randomize
-  let intensityLocked = false;        // light intensities are frozen from randomize/±
   const randomizable = it => !it.locked && !sectionFrozen.get(it.group);
   const colorRandomizable = it => randomizable(it) && !colorLock.get(it.group);
 
@@ -495,9 +495,7 @@ export function mountDesignPanel(infoEl, api) {
   infoEl.querySelector('#dp-int-up').addEventListener('click', () => { api.bumpIntensity(0.2); render(); });
   infoEl.querySelector('#dp-int-down').addEventListener('click', () => { api.bumpIntensity(-0.2); render(); });
   infoEl.querySelector('#dp-int-apply').addEventListener('click', () => { api.setIntensityAll(infoEl.querySelector('#dp-int-set').value); render(); });
-  // Drive the per-item colour cycles (and animated floors) from the frame loop.
-  const loop = now => { requestAnimationFrame(loop); api.cycle(now / 1000); };
-  requestAnimationFrame(loop);
-
+  // The host (viewer) drives `api.cycle(now/1000)` in its own single frame loop, so
+  // a floorplanner rebuild can re-attach the panel without leaking animation loops.
   return { refresh: render, items };
 }

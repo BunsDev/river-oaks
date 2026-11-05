@@ -145,6 +145,26 @@ export function configureCtClub(room) {
 // A planned room at any facade. The default (0, 0, yaw 0) is the pending position:
 // the district spot is still to be decided, so hosts pass east/north/yaw when they
 // place the club. `floor` stays 0 for the same reason (below-grade entry later).
+// Recompute the walkable obstacles from the current fixtures (a floorplanner moves
+// fixtures; collision must follow). Only fixtures that carry w/l are solids.
+export function refreshObstacles(room) {
+  room.obstacles = room.fixtures.filter(f => typeof f.w === 'number' && typeof f.l === 'number')
+    .map(f => ({ kind: f.kind, a0: f.a - f.w / 2, a1: f.a + f.w / 2, d0: f.d - f.l / 2, d1: f.d + f.l / 2 }));
+  return room.obstacles;
+}
+
+// Move a fixture (by kind, nth occurrence) to a new (a,d), clamped inside the room,
+// and refresh collision. Used by the floor planner.
+export function moveFixture(room, kind, index, a, d) {
+  const matches = room.fixtures.filter(f => f.kind === kind);
+  const fix = matches[Math.max(0, Math.min(index || 0, matches.length - 1))];
+  if (!fix) return fix;
+  fix.a = Math.max(-8, Math.min(8, Number(a) || fix.a));
+  fix.d = Math.max(0.5, Math.min(39.5, Number(d) || fix.d));
+  refreshObstacles(room);
+  return fix;
+}
+
 export function planCtClub({ east = 0, north = 0, yaw = 0 } = {}) {
   const outward = [Math.sin(yaw), Math.cos(yaw)];
   const inward = [-outward[0], -outward[1]];
