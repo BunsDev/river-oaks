@@ -18,9 +18,11 @@ export function surfaceMount(surface, u = 0.5, v = 0.5, offset = 0.02) {
   const [cx, cy, cz] = surface.center, [w, h, d] = surface.size, [nx, ny, nz] = surface.normal;
   const vertical = Math.abs(ny) < 0.5;
   if (vertical) {
-    const rx = Math.abs(nx) > 0.5 ? 0 : 1;   // across axis for a vertical face
-    const x = cx + nx * (d / 2) + (u - 0.5) * w * rx + nx * offset;
-    const z = cz + nz * (d / 2) + (u - 0.5) * w * (1 - rx) + nz * offset;
+    const alongX = Math.abs(nx) > 0.5;   // normal along x -> the wall runs along z
+    const across = alongX ? d : w;        // metres along the wall face
+    const depth = alongX ? w : d;         // thickness to reach the face
+    const x = cx + nx * (depth / 2) + (u - 0.5) * across * (alongX ? 0 : 1) + nx * offset;
+    const z = cz + nz * (depth / 2) + (u - 0.5) * across * (alongX ? 1 : 0) + nz * offset;
     const y = cy - h / 2 + v * h;
     return { x, y, z, nx, ny, nz };
   }

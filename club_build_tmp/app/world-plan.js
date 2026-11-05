@@ -19,19 +19,16 @@ export function attachWorldPlanner({ room, onApply }) {
   const surfaces = () => surfaceReference(room);
   const current = () => surfaces().find(s => s.name === surfaceName) || surfaces()[0];
   const isTop = s => Math.abs(s.normal[1]) >= 0.5;
-  const setCanvas = () => {
-    const s = current();
-    canvas.width = s.size[0] * SCALE + pad * 2;
-    canvas.height = (isTop(s) ? s.size[2] : s.size[1]) * SCALE + pad * 2;
-  };
-  const toPx = (u, v) => { const s = current(); return [pad + u * s.size[0] * SCALE, pad + (1 - v) * (isTop(s) ? s.size[2] : s.size[1]) * SCALE]; };
-  const toUV = (x, y) => { const s = current(); return [(x - pad) / SCALE / s.size[0], 1 - (y - pad) / SCALE / (isTop(s) ? s.size[2] : s.size[1])]; };
+  const strip = s => { const [w, h, d] = s.size, [nx, ny, nz] = s.normal; if (isTop(s)) return { across: w, height: d }; return { across: Math.abs(nx) > 0.5 ? d : w, height: h }; };
+  const setCanvas = () => { const { across, height } = strip(current()); canvas.width = across * SCALE + pad * 2; canvas.height = height * SCALE + pad * 2; };
+  const toPx = (u, v) => { const { across, height } = strip(current()); return [pad + u * across * SCALE, pad + (1 - v) * height * SCALE]; };
+  const toUV = (x, y) => { const { across, height } = strip(current()); return [(x - pad) / SCALE / across, 1 - (y - pad) / SCALE / height]; };
 
   const draw = () => {
-    const s = current(), top = isTop(s), H = top ? s.size[2] : s.size[1];
+    const s = current(), top = isTop(s), { across, height } = strip(s);
     ctx.fillStyle = '#0a0b10'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#1c1f26'; ctx.fillRect(pad, pad, s.size[0] * SCALE, H * SCALE);
-    ctx.strokeStyle = '#3a3d44'; ctx.lineWidth = 2; ctx.strokeRect(pad, pad, s.size[0] * SCALE, H * SCALE);
+    ctx.fillStyle = '#1c1f26'; ctx.fillRect(pad, pad, across * SCALE, height * SCALE);
+    ctx.strokeStyle = '#3a3d44'; ctx.lineWidth = 2; ctx.strokeRect(pad, pad, across * SCALE, height * SCALE);
     ctx.fillStyle = '#70758a'; ctx.font = '10px ui-monospace';
     ctx.fillText(s.name + (top ? ' (top)' : ''), pad, pad - 4);
     for (const scr of room.screens) {
