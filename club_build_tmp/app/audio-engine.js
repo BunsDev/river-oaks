@@ -65,7 +65,7 @@ export function createAudioEngine() {
       try {
         const audioBuf = await offline.decodeAudioData(await f.arrayBuffer());
         const id = 'track-' + (tracks.length + 1);
-        tracks.push({ id, name: f.name.replace(/\.[^.]+$/, ''), buffer: buf });
+        tracks.push({ id, name: f.name.replace(/\.[^.]+$/, ''), buffer: audioBuf });
         added.push(tracks[tracks.length - 1]);
       } catch { /* skip undecodable files */ }
     }
