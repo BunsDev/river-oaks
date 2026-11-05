@@ -194,3 +194,6 @@ unreal/**/Content/Data/district.json
 
 # Isolated local agent worktrees
 .worktrees/
+
+# Temporary CT Club walking viewer build (scratch; nothing committed below dist/)
+club_build_tmp/dist/
