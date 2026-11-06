@@ -12,6 +12,8 @@ keyboard-only in Chromium and WebKit, before river-oaks-4f pins the release head
   `fix/visitor-garage-keys-791-20261105`, worktree `river-oaks-visitor-791`.
 - `visitor-sweep-a11y-20261105`: the sweep's fixes. Branch `fix/visitor-roster-focus-20261105`,
   worktree `river-oaks-visitor-focus`.
+- `visitor-pass-ledger-20261106`: this ledger's status and hand-over (docs only). Branch
+  `docs/visitor-pass-ledger-20261106`, worktree `river-oaks-visitor-ledger`.
 
 **Not owned here:** #885 and the v0.3.0 performance lanes (river-oaks-4f); crime #599; Five Rooms
 and seat chat; Ribbonwing #888/#813. #888 changes `ribbonwing.js` and #813 changes
@@ -197,7 +199,9 @@ The candidate header, counts and BLOCKED status stay with river-oaks-4f's re-qua
     - Python 215 passed;
     - no secrets found;
   - `ribbonwing-passenger` passed (Chromium), with both increments' checks.
-- **Not run:** `verify full`, Redis and the other journeys. Hosted runs on the PR.
+- **Not run:** `verify full`, Redis and the other journeys.
+- **Hosted:** #891 at `48905b03` was 34/34 green (Verify 42166452582, first attempt). It merged as
+  `8b823e5a` at 2026-11-06T05:21:54Z.
 
 ## Decisions for Val
 
@@ -209,8 +213,36 @@ The candidate header, counts and BLOCKED status stay with river-oaks-4f's re-qua
    Adding a memory moderation store to `server/tests/browser-fixture.js` would let a journey
    check it end to end. Not done here.
 
+## Status and hand-over (2026-11-06)
+
+**Delivered:** #890 (`c6f9542d`) and #891 (`8b823e5a`). The evidence comment is on #791
+(issuecomment-6677649939). The issue stays open: closing issues was not this goal's to do.
+
+**Hand-over to river-oaks-4f:**
+
+- SendMessage to `river-oaks-4f` failed at 04:57Z and 05:23Z. The session `3158e24e` was still
+  running, under the new name `river-oaks-d7` (`~/.claude/sessions/<pid>.json` maps names to
+  session ids).
+- A message with the merged heads (pin on or after `8b823e5a`) went to `river-oaks-d7` at about
+  05:31Z. That session **held** it for its user's approval, the usual cause being a different
+  permission mode. The hold then **expired**, so the message was never delivered and its Claude
+  has not seen it. The message also said this docs-only change would land unless 4f had pinned
+  or asked to hold main.
+- At 05:31Z #885 was still a draft at `94ae357c` (base `1dc64db1`), so no pin had been made. Its
+  merge of main picks up both increments.
+
+**Local retirement:** both increments' branches and worktrees were retired with `project:prune`
+at 05:27Z (`retirement-nBOsj4`, `retirement-b9RGNW`). First, their ignored evidence (`.runtime`,
+`output/playwright`, `data/generated`) went to
+`~/worktree-backups/river-oaks/visitor-791-local-evidence-20261106` and
+`visitor-focus-local-evidence-20261106`, and was checked file by file after extraction. That
+includes the sweep probe `visitor-sweep.mjs`.
+
 ## Next step
 
-Land #891 and tell river-oaks-4f its merged head. SendMessage could not reach river-oaks-4f
-(session `3158e24e`) at 04:57Z, so the hand-over is in this task's register rows. #885 has to
-merge main to land, so the pin includes both increments. Then post the evidence comment on #791.
+- **Hand-over:** 4f does not have the heads by message. A resend is held again while the two
+  sessions' permission modes differ. Val can match the modes and ask for a resend, or give
+  river-oaks-d7 the heads directly. Until then the hand-over is only in the register rows.
+- **The pin:** river-oaks-4f pins on or after this ledger's merge head, which goes to it by message
+  too.
+- **Decisions:** the two above are Val's.
