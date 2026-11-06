@@ -2,7 +2,7 @@ import { batchCostumeAttachments } from './costume-batching.js';
 import * as THREE from 'three';
 import { createJevicaDrape } from './jevica-drape.js';
 import { fitJevicaBodice } from './bodice-fitting.js';
-import { applyHairOmbre, createJevicaSuit, shapeJevicaPumps } from './jevica-suit.js';
+import { applyHairOmbre, applyJevicaMakeup, createJevicaSuit, shapeJevicaPumps } from './jevica-suit.js';
 
 // One hero costume: Val's 2026-10-29 reference look (jevica-suit.js). Shared
 // resident geometry and textures are never mutated.
@@ -65,6 +65,7 @@ export function createJevicaCostume(avatar) {
     object.castShadow = object.receiveShadow = true; group.add(object); return object;
   };
   const suit = createJevicaSuit(avatar, {surface, owned, attach, mesh});
+  const makeup = applyJevicaMakeup(model, owned);
   const head = attachments.find(item => item.bone.name === 'head').group;
   // A crystal drop under each earring flower keeps the close-up refraction rule below.
   for (const earring of suit.pieces.earrings) {
@@ -97,6 +98,7 @@ export function createJevicaCostume(avatar) {
   const reducedMotion=globalThis.window?.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false;
   return {
     get suit() {return suit.pieces;},
+    get makeup() {return makeup;},
     getWandTip(target) {return glow.getWorldPosition(target);},
     updateOptics(camera,viewportHeight) {
       if(!camera||!Number.isFinite(viewportHeight)||viewportHeight<=0)return;

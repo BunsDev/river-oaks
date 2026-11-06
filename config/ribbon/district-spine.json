@@ -1,0 +1,20 @@
+{
+  "id": "district-spine",
+  "kit": "ribbon-1",
+  "seed": 825,
+  "segments": [
+    {
+      "id": "spine",
+      "points": [
+        [-2759.288, -1285.5],
+        [-2758.524, -1241.316],
+        [-2757.673, -1197.635]
+      ],
+      "width": 2.4,
+      "clearHeight": 3.6,
+      "style": "canopy",
+      "maxSpan": 6
+    }
+  ],
+  "exclusions": []
+}

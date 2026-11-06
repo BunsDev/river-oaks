@@ -17,12 +17,12 @@ export function normalizeQuality(value) {
 }
 
 // The city-kit finish (shared/city-kit/catalog.js KIT_FINISHES) for the live Commons and
-// Heights (#742). Opt-in and read once per page load, so a change takes a reload:
-// `?finish=pink-jet-age` for this load (`?finish=classic` overrides a stored choice), or
-// localStorage['river-oaks-finish'] to keep it. Without either it is classic. The lazily
-// loaded scene builders validate the name (catalog.js knownFinish), so an unknown one
-// renders classic; this reader keeps the catalog out of the main bundle.
-export const DEFAULT_FINISH = 'classic';
+// Heights (#742). Pink Jet-Age is the default presentation; no URL flag is required.
+// Read once per page load: an explicit `?finish=classic` or saved Classic preference
+// remains a comparison override. Query choices take precedence over saved choices.
+// The lazily loaded scene builders validate names (catalog.js knownFinish), so an
+// unknown well-formed name still renders classic; keep the catalog out of this bundle.
+export const DEFAULT_FINISH = 'pink-jet-age';
 const finishStorageKey = 'river-oaks-finish';
 const finishName = value => typeof value === 'string' && /^[a-z][a-z0-9-]{0,31}$/.test(value) ? value : DEFAULT_FINISH;
 export function readFinishPreference({ search, storage: given } = {}) {

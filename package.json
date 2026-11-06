@@ -23,6 +23,8 @@
     "assets:trees": "node scripts/prepare_ez_tree.js",
     "server": "node --env-file-if-exists=.env server/start.js",
     "test:server": "node --test server/tests/*.test.js",
+    "pretest:server:shard": "node scripts/enforce-pnpm.mjs",
+    "test:server:shard": "node scripts/test-server-shard.mjs",
     "audit:multiplayer": "node server/performance-audit.js data/reports/multiplayer-performance-audit.json",
     "audit:crime": "node server/crime-workload.js data/reports/crime-workload.json",
     "start": "node --env-file-if-exists=.env server/start.js",

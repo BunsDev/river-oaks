@@ -9,13 +9,10 @@ import { TYPESAFE_REVISION } from '../../shared/typesafe-place-layout.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
 import { residentFigureBudget, residentFigures } from './resident-figures.js';
-import { fidelityTierForQuality } from './character-fidelity-runtime.js';
 import { combatStateFor } from './combat-motion.js';
 // The resident ids drawn last snapshot (#640): resident-figures.js keeps the set stable at the cut.
 let drawnResidents = new Set();
-// Fewer, nearer neighbours on a low-tier client and on the CPU acceptance renderer (resident-figures.js).
-const residentBudget = () => residentFigureBudget(softwareAcceptance ? 'low' : fidelityTierForQuality(quality?.stats));
-const residents = (locals, at) => { const figures = residentFigures(locals, at, drawnResidents, residentBudget()); drawnResidents = new Set(figures.map(figure => figure.id.slice('resident:'.length))); return figures; };
+const residents = (locals, at) => { const figures = residentFigures(locals, at, drawnResidents, residentFigureBudget()); drawnResidents = new Set(figures.map(figure => figure.id.slice('resident:'.length))); return figures; };
 import { createCommonsStream } from './commons-stream.js';
 import './spatial-stream.css';
 import { createCharacterStudio } from './character-studio.js';
@@ -75,7 +72,7 @@ import { DISTRICT_REVISION_GARDENS, attachGardenCampus, campusDoorSites, campusG
 import { campusLevelRoom } from './garden-campus-levels.js';
 import { createGardenCampusUI } from './garden-campus-ui.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
-import { castShadowsFromProxies } from './landscape-models.js';
+import { castShadowsFromProxies, TREE_DETAIL_TILE_M } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
 import { createStorefrontReflections } from './reflections.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from './world-surface.js';
@@ -103,6 +100,11 @@ import { createPlazaXiangqi } from './plaza-xiangqi.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createQualityControl, readFinishPreference } from './render-quality.js';
+import { fiveRoomsAppliesTo } from './five-rooms/solids.js';
+import { buildRibbon } from './ribbon-finish.js';
+import { buildFiveRoomsShells } from './five-rooms/index.js';
+import { buildFiveRoomsLandscapeForWorld } from './five-rooms/landscape.js';
+import fiveRoomsContract from '../../config/ribbon/five-rooms.json' with { type: 'json' };
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
 import { createPhotoMode } from './photo-mode.js';
@@ -220,6 +222,7 @@ let landmarkAccountId = null;
 let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
 let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater, ribbonwingSeat, ribbonwingSounds;
 const craftWorld = new THREE.Vector3();
+let ribbonGraybox = null, fiveRoomsShells = null, fiveRoomsLandscape = null; // same admitted geometry for every appearance (#841)
 let plazaSalon = null, cityBikeRacks = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
@@ -607,7 +610,8 @@ function initializeRenderer() {
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
-  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? []), ...(heightsScene?.userData.shadowProxies ?? []), ...(cityBikeRacks?.userData.shadowProxies ?? [])]);
+  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? []), ...(heightsScene?.userData.shadowProxies ?? []), ...(cityBikeRacks?.userData.shadowProxies ?? []),
+    ...(plazaSalon?.userData.shadowProxies ?? []), ...(birdCams?.shadowProxies ?? []), ...(buildingMesh?.userData.interiors?.userData.shadowProxies ?? [])]);
   sun.shadow.bias = -0.00002;
   sun.shadow.normalBias = 0.018;
   sun.shadow.camera.near = 10;
@@ -768,6 +772,7 @@ function populateWorld(data) {
     worldGroup.remove(interiorsLayer);
     ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     plazaSalon?.userData.rack?.dispose(); cityBikeRacks?.userData.rack?.dispose();
+    ribbonGraybox?.userData.dispose?.(); fiveRoomsShells?.userData.dispose?.(); ribbonGraybox = null; fiveRoomsShells = null; fiveRoomsLandscape = null;
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
@@ -831,6 +836,21 @@ function populateWorld(data) {
   // Curbside bike racks around the District (bike-racks.js), beside the plaza's.
   cityBikeRacks = buildCityBikeRacks(data);
   worldGroup.add(cityBikeRacks);
+  // Render the same admitted Ribbon and shell geometry that walking.js and the server block.
+  // A comparison preference changes material roles, never the visibility of a shared solid.
+  const fiveRoomsApply = fiveRoomsAppliesTo(data), surfaceAt = (x, z) => groundSurfaceHeight(data, x, z);
+  fiveRoomsLandscape = buildFiveRoomsLandscapeForWorld(data, { groundAt: (x, north) => surfaceAt(x, -north), finish: cityKitFinish });
+  if (fiveRoomsLandscape) {
+    worldGroup.add(fiveRoomsLandscape);
+    // Register paving only, never planter tops. Keep all base street supports on a rebuild.
+    registerGroundSurfaces(data, [...supports, fiveRoomsLandscape.children[0]]);
+  }
+  ribbonGraybox = fiveRoomsApply ? buildRibbon({ world: data, groundAt: surfaceAt, finish: cityKitFinish }) : null;
+  if (ribbonGraybox) worldGroup.add(ribbonGraybox);
+  // The bays' mapped store rooms stay until decision 5 (Val, 2026-11-01), so the shells keep their
+  // frontages and leave the room interiors to them (their floors and walls would fight for depth).
+  fiveRoomsShells = fiveRoomsApply ? buildFiveRoomsShells(fiveRoomsContract, { finish: cityKitFinish, groundAt: surfaceAt, interiors: false }) : null;
+  if (fiveRoomsShells) worldGroup.add(fiveRoomsShells);
   buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   scene.add(worldGroup);
@@ -945,6 +965,7 @@ function updateAtmosphere() {
   const atmosphere = atmosphereFor(hour, weather);
   currentAtmosphere = atmosphere;
   layers.buildings?.getObjectByName('The Gardens (garden campus)')?.userData.relight?.(atmosphere);
+  ribbonGraybox?.userData.relight?.(atmosphere); fiveRoomsShells?.userData.relight?.(atmosphere);
   sunOffset.set(Math.cos(atmosphere.angle) * 4500, Math.max(300, Math.sin(atmosphere.angle) * 5500), 1900);
   sun.position.copy(sun.target.position).add(sunOffset);
   sun.intensity = atmosphere.sunIntensity;
@@ -1384,7 +1405,7 @@ if (import.meta.env.DEV) window.__riverSpatialStream = () => {
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
     renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls,
     // The opted-in kit finish and what each attached part was built with (#742).
-    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null } };
+    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null, ribbon: ribbonGraybox?.userData.ribbon ?? null, fiveRooms: fiveRoomsShells?.userData.fiveRooms ?? null, fiveRoomsLandscape: fiveRoomsLandscape?.userData.fiveRoomsLandscape ?? null } };
 };
 if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
 if (import.meta.env.DEV) window.__riverExteriorCull = () => {
@@ -1416,6 +1437,21 @@ try {
   if (new URLSearchParams(location.search).get('debug') === '1') void openDebugTools(true);
   else if (JSON.parse(localStorage.getItem('river-oaks-debug') ?? '{}').open) void openDebugTools(true);
 } catch { /* storage unavailable */ }
+
+// Development audit: switches off sun-shadow casting under the matching nodes, and back.
+function leanCasters(match) {
+  const restore = new Set();
+  return enabled => {
+    if (!enabled) { for (const mesh of restore) mesh.castShadow = true; restore.clear(); return 0; }
+    scene.traverse(node => { if (match(node)) node.traverse(mesh => { if (mesh.isMesh && mesh.castShadow) { restore.add(mesh); mesh.castShadow = false; } }); });
+    return restore.size;
+  };
+}
+
+// Development audit: tree shadow proxies batched by size, or the crowns' own tiles.
+function treeShadowTiles(size) {
+  return enabled => { let proxies = 0; scene.traverse(node => { proxies += node.userData.shadowTile?.(enabled ? size : TREE_DETAIL_TILE_M) ?? 0; }); return proxies; };
+}
 
 // Explicit diagnostic timing; normal production builds omit this API.
 // The crowd camera remains development-only.
@@ -1458,6 +1494,28 @@ if (renderAudit) {
       occlusionSortEquality: () => pipeline?.compareOcclusionSort() ?? null,
       // Draws and submitted triangles for one frame, by pass and tagged owner.
       drawCensus: () => new Promise(resolve => { pendingDrawCensus = { census: createDrawCensus(renderer, camera), resolve }; }),
+      // #289 draw reductions, each switchable for a same-instant comparison (still).
+      drawBudget: {
+        'bike-shadow': enabled => plazaSalon?.userData.rack?.shadowProxy(enabled) ?? 0,
+        'interior-shadow-batch': enabled => buildingMesh?.userData.interiors?.userData.shadowBatch?.(enabled) ?? 0,
+        'bird-proxy': enabled => birdCams?.shadowProxy(enabled) ?? 0,
+        'tree-shadow-48': treeShadowTiles(48), 'tree-shadow-96': treeShadowTiles(96),
+        // Measurement only: one lean group at a time stops casting.
+        'interior-shadow': leanCasters(node => node.name === 'Boutique interiors layer'),
+        'bird-shadow': leanCasters(node => node.name.endsWith('(bird cam)')),
+        // Sensitivity check for a parity view: tree shadows gone must change the frame.
+        'tree-shadow-none': leanCasters(node => node.name === 'Mature urban shade trees'),
+        'bike-shadow-none': leanCasters(node => node.name === 'Parked bikes' || node.name === 'Plaza bikes shadow'),
+      },
+      // Renders the current instant again (nothing advances) and reads it back,
+      // so a toggle can be compared against the same scene state.
+      still() {
+        followSunShadow(); treeShadows?.hide();
+        renderer.info.reset(); pipeline.render(0);
+        const gl = renderer.getContext(), width = gl.drawingBufferWidth, height = gl.drawingBufferHeight, pixels = new Uint8Array(width * height * 4);
+        gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        return { calls: renderer.info.render.calls, width, height, pixels };
+      },
       crowdView() {
         const players = multiplayer?.snapshot?.players ?? [];
         if (!players.length) throw new Error('Join the shared world before framing its crowd.');
@@ -1498,6 +1556,38 @@ if (renderAudit) {
           probes.push({ at: [+(east + de).toFixed(2), +(north + dn).toFixed(2)], hits: ray.intersectObjects(meshes, false).slice(0, hits).map(auditHit) });
         }
         return probes;
+      },
+      // #289 parity views: beside a named node, looking past it the way its shadow falls,
+      // or (shadow) from above the ground where the node's shadow lands. Returns the target.
+      frame(name, { shadow = false } = {}) {
+        const node = scene.getObjectByName(name);
+        if (!node || !world) throw new Error(`Nothing named ${name} to frame.`);
+        const box = new THREE.Box3().setFromObject(node), center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()).length();
+        const toSun = sunOffset.clone().normalize(), away = new THREE.Vector3(-toSun.x, 0, -toSun.z).normalize();
+        if (shadow) {
+          const at = center.clone();
+          for (let i = 0; i < 4; i++) at.copy(center).addScaledVector(toSun, -(center.y - groundSurfaceHeight(world, at.x, -at.z)) / toSun.y);
+          auditCamera = { position: at.clone().add(new THREE.Vector3(0.5, 10, 0.5)), target: at, restoreFov: auditCamera?.restoreFov ?? camera.fov };
+          return at.toArray();
+        }
+        const target = center.clone().addScaledVector(away, size * 0.3);
+        const position = center.clone().addScaledVector(new THREE.Vector3(away.z, 0, -away.x), Math.max(4, size * 1.2)).add(new THREE.Vector3(0, Math.max(2, size * 0.5), 0));
+        auditCamera = { position, target, restoreFov: auditCamera?.restoreFov ?? camera.fov };
+        return target.toArray();
+      },
+      // #289 parity view: inside the index-th store nearest the player (a stable order while
+      // the camera moves), just behind its glass, looking in, where sun through the facade
+      // throws the fixtures' shadows. Returns the room's building and name.
+      frameRoom(index) {
+        const at = room => new THREE.Vector3(room.facade[0], room.floor, -room.facade[1]);
+        const [east, north] = walking?.getPosition() ?? [camera.position.x, -camera.position.z], from = room => Math.hypot(room.facade[0] - east, room.facade[1] - north);
+        const rooms = (buildingMesh?.userData.rooms ?? []).filter(room => !room.generatedPlan && room.facade && room.outward).sort((a, b) => from(a) - from(b));
+        const room = rooms[index % rooms.length];
+        if (!room) throw new Error('No store rooms to frame.');
+        const [ox, oy] = room.outward, inward = new THREE.Vector3(-ox, 0, oy);
+        auditCamera = { position: at(room).addScaledVector(inward, 0.8).setY(room.floor + 1.6), target: at(room).addScaledVector(inward, room.depth).setY(room.floor + 0.9),
+          restoreFov: auditCamera?.restoreFov ?? camera.fov };
+        return `${room.buildingId ?? '?'} ${room.name ?? room.storeId ?? index}`;
       },
     } : {}),
     graphics() {
