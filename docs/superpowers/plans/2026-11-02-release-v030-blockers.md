@@ -5,12 +5,25 @@ Objective: clear the gates that left v0.3.0 BLOCKED on `a42b3835`
 pinned `main` head. BLOCKED with a measured residual and a named cause is an acceptable outcome. A
 loosened budget is not.
 
-Owner: `claude:river-oaks-28 (e724ab60)`, taken over from river-oaks-5d by Val's decision on 2026-11-03. Task `v030-blockers-20261103`, branch
+Owner: `claude:river-oaks-4f (3158e24e)` since 2026-11-06 01:50Z, taken over from `claude:river-oaks-28 (e724ab60)` (see Takeover), who took it over from river-oaks-5d by Val's decision on 2026-11-03. Task `v030-blockers-20261103`, branch
 `fix/v030-blockers-20261103`.
 
 ## Authority
 
 Val's goal, as `/goal` in session `e724ab60`. Landing is authorized once required local checks, review and hosted preview pass, except a change to a budget, rollback behavior or the default finish. Val separately chose the low resident budget for every client on 2026-11-03. Not authorized: tag, version bump, publish, deploy, production access, paid services, large downloads, reverting #831, closing other owners' PRs.
+
+Since 2026-11-06, Val's goal in session `3158e24e`: close this PR's gaps, mark it ready, and land it **only once Val authorizes the merge**; then pin the head, rerun rows 3, 4b and 5, core, `verify full` and hosted, and post GO or BLOCKED on #359 and #587. Phone two-player and reconnect are not accepted (Val, 2026-11-03): attribute and fix, never rerun for a pass. One browser lock, caffeinate, load <8. Tag, publish and deploy stay with Val.
+
+## Takeover
+
+On 2026-11-06 at about 01:50Z, river-oaks-28 was not live: it was absent from ListAgents, no process held any of its ten worktrees (`lsof +D`), nothing had been written there since 2026-11-04 14:22Z, its lease had expired at 11:39Z that day, and the land queue was empty. Its worktrees and `.runtime` receipts are preserved unchanged.
+
+Its last chain (`.runtime/v030-blockers-receipts/chain2.log`, `e3bac30b` plus five uncommitted files) passed core at 04:33Z. The `graphics-recovery` and `world-streaming` runs after it, and the leak control in `river-oaks-v030-lowfig`, all died at Chromium launch (`bootstrap_check_in … unknown error code (141)`, the stale-daemon failure after a macOS re-login). They are void, not results.
+
+The five uncommitted files were river-oaks-28's tightening of the bound, committed here after review and a 5/5 unit run:
+- only a figure actually shown excuses anything, read in the frame that drew it, so a step behind the camera cannot pass;
+- a hidden scene object that shares a resource keeps it counted;
+- no figure excuses more than the most one was measured to add: 25 geometries and 5 textures (measured up to 23 and 5).
 
 ## Files owned
 
@@ -61,9 +74,13 @@ The limits stay +20 objects, +20 geometries and +10 textures. `preview/e2e/resou
 
 ## Gaps
 
-- The resident-aware bound has no full `world-streaming` run yet, and no injected per-lap leak was run end to end. The unit tests cover the arithmetic.
+- The resident-aware bound has no full `world-streaming` run yet, and no injected per-lap leak was run end to end. The unit tests cover the arithmetic. Running now from a detached snapshot (see Runs).
 - `graphics-recovery` still compares raw counts, with figures allowed to change between samples. It passed, and it could flake if a new figure walks in during a sample.
+
+## Runs
+
+Pending: core on the merged head, then `graphics-recovery`, a full `world-streaming` and the same journey with three drawn geometries retained per measure (must fail on the resource bound), in one browser lock under caffeinate, each gated on 1- and 5-minute load <8.
 
 ## Next step
 
-Core verify and both journeys on this tree, publish, land, then pin the head and re-qualify every gate row in `2026-11-02-release-v030.md`.
+Read the runs, record them here, mark #885 ready, and ask Val for merge authorization. After the merge, pin the head and re-qualify every gate row in `2026-11-02-release-v030.md`.

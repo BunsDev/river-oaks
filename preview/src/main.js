@@ -1380,13 +1380,22 @@ window.__riverDebug = () => debugTools;
 if (import.meta.env.DEV) window.__riverTravelView = () => ({ camera: camera.position.toArray(), direction: camera.getWorldDirection(new THREE.Vector3()).toArray() });
 // The renderer registers a geometry or texture the first time an object is drawn, so GPU counts
 // read in a journey step up when a resident object (a wandering figure, a prop behind the player)
-// first enters view. Drawing every visible object once makes the counts comparable between samples.
+// first enters view. Drawing every visible object once, figures behind the camera included, makes
+// the counts comparable between samples. What the figures alone hold is read in the frame that drew
+// them (figure-resources.js).
+let residentFigureResources = { figures: 0, geometries: 0, textures: 0 };
 if (import.meta.env.DEV) window.__riverRegisterResident = () => new Promise(resolve => {
   const culled = [];
   scene.traverse(item => { if (item.frustumCulled) { culled.push(item); item.frustumCulled = false; } });
-  requestAnimationFrame(() => requestAnimationFrame(() => { for (const item of culled) item.frustumCulled = true; resolve(culled.length); }));
+  remotePlayers?.setFigureCulling(false);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    residentFigureResources = exclusiveResources(scene, remotePlayers?.residentFigureHolders() ?? []);
+    remotePlayers?.setFigureCulling(true);
+    for (const item of culled) item.frustumCulled = true;
+    resolve(culled.length);
+  }));
 });
-if (import.meta.env.DEV) window.__riverResidentFigureResources = () => exclusiveResources(scene, remotePlayers?.residentFigureHolders() ?? []);
+if (import.meta.env.DEV) window.__riverResidentFigureResources = () => residentFigureResources;
 if (import.meta.env.DEV) window.__riverSpatialStream = () => {
   let objects = 0; worldGroup?.traverse(() => objects++);
   const inventory = object => {
