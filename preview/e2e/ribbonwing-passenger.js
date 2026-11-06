@@ -19,6 +19,8 @@ async page => {
     finally {await tab.keyboard.up(key);}
   };
   const seatOf=tab=>tab.evaluate(()=>window.__riverRibbonwingSeat());
+  // alice has a garage of her own (#767); a passenger's G is the seat's alone and must never reach it (#791).
+  const garageOf=tab=>tab.evaluate(()=>({status:document.querySelector('#player-status')?.textContent??'',riding:window.__riverCarriage().riding,called:document.querySelector('#canvas-host').dataset.carriageReady}));
   // Jevica holds Space until her craft is above `above` metres. A frame lifts the craft by at most
   // 0.08 s of climb, and with three clients the CPU-rendered runner can draw one frame a second:
   // a hosted run was still climbing at 5.1 of 5.2 m when a fixed 20 s ran out (run 41060869403).
@@ -88,8 +90,11 @@ async page => {
   await climb(5.2,'Jevica climbs with alice aboard');
   await alice.waitForFunction(()=>{const m=window.__riverMultiplayer();return (m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??0)>5;},{},{timeout:20000});
   check(await alice.locator('.ribbonwing-seat [data-seat-action]').isDisabled(),'Aloft, alice\'s Step out is disabled');
+  const aloftGarage=await garageOf(alice);
   await host(alice).focus();await alice.keyboard.press('KeyG');await alice.waitForTimeout(400);
   check((await me(alice)).passengerOf===OWNER,'G aloft does not drop alice from the craft');
+  const aloftAfter=await garageOf(alice);
+  check(JSON.stringify(aloftAfter)===JSON.stringify(aloftGarage),`G aloft does not reach alice's own garage (${JSON.stringify({before:aloftGarage,after:aloftAfter})})`);
   // A roll with a passenger: alice's view rolls with the craft and bob keeps her in the seat.
   // alice's page records her view's tilt on every frame it draws. Sampled from here, 14 reads
   // each saw only the latest of a slow page's frames and missed the middle of the 2.6 s roll: a
@@ -143,8 +148,11 @@ async page => {
     check(true,`Jevica's craft lands with alice aboard (${((Date.now()-started)/1000).toFixed(0)} s after G)`);
   }
   await alice.waitForFunction(()=>!document.querySelector('.ribbonwing-seat [data-seat-action]')?.disabled,{},{timeout:10000});
+  const groundGarage=await garageOf(alice);
   await host(alice).focus();await alice.keyboard.press('KeyG');
   await alice.waitForFunction(()=>!window.__riverRibbonwingSeat().riding&&!window.__riverRibbonwingSeat().pilotId,{},{timeout:10000});
+  const groundAfter=await garageOf(alice);
+  check(JSON.stringify(groundAfter)===JSON.stringify(groundGarage),`alice's G steps her out of the Ribbonwing and does nothing in her own garage (${JSON.stringify({before:groundGarage,after:groundAfter})})`);
   // alice's page reads her seat from her own snapshot. Jevica's page learns of the step-out from
   // its own next snapshot, which on the CPU-rendered runner can come seconds later: a hosted run
   // read Jevica's snapshot first and failed, while her failure screenshot already said the seat
