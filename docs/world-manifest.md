@@ -1,6 +1,6 @@
 # Versioned world manifest
 
-`preview/public/data/world-manifest.json` is the bundled location registry. `preview/src/world-manifest.js` validates it in both browser and server through their existing shared `attachDistrictGalleryPlan` loading seam. It describes content in the existing GIS coordinate frame; it does not create multiplayer rooms, authorize travel, enlarge movement bounds, or supply collision geometry. The District scene and its entity IDs remain unchanged.
+`preview/src/data/world-manifest.json` is the bundled location registry. `preview/src/world-manifest.js` validates it in both browser and server through their existing shared `attachDistrictGalleryPlan` loading seam. It describes content in the existing GIS coordinate frame; it does not create multiplayer rooms, authorize travel, enlarge movement bounds, or supply collision geometry. The District scene and its entity IDs remain unchanged.
 
 ## Version 1 contract
 

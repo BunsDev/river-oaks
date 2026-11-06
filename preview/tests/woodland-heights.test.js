@@ -18,7 +18,7 @@ import { TERRACES_REVISION } from '../../shared/bayou-terraces-layout.js';
 import { composeWoodlandHeights, terracesBaseLayout, WOODLAND_RECIPES, WOODLAND_REVISION, WOODLAND_TABLE, inWoodlandHeights } from '../../shared/woodland-heights.js';
 import { assembleNeighborhood, walkableConnectivity } from '../../shared/city-kit/assemble.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from '../src/data/world-manifest.json' with { type: 'json' };
 
 const studewoodWorld = await loadDistrictData({ districtRevision: STUDEWOOD_REVISION });
 const terracesWorld = await loadDistrictData({ districtRevision: TERRACES_REVISION });

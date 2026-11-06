@@ -14,7 +14,7 @@ import { HEIGHTS_REVISION } from '../../shared/bayou-heights-layout.js';
 import { composeStudewood, heightsBaseLayout, STUDEWOOD_RECIPES, STUDEWOOD_REVISION, STUDEWOOD_TABLE, inStudewood } from '../../shared/studewood.js';
 import { assembleNeighborhood, walkableConnectivity } from '../../shared/city-kit/assemble.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from '../src/data/world-manifest.json' with { type: 'json' };
 
 const heightsWorld = await loadDistrictData({ districtRevision: HEIGHTS_REVISION });
 const world = await loadDistrictData({ districtRevision: STUDEWOOD_REVISION }), layout = world.eastGardenCommons, { studewood } = layout;

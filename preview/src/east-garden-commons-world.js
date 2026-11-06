@@ -1,6 +1,6 @@
 import { createCommonsLayout, commonsCollisionRings, COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { groundSurfaceHeight } from './world-surface.js';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from './data/world-manifest.json' with { type: 'json' };
 import { validateWorldManifest } from './world-manifest.js';
 import { composeCommonsDestination } from '../../shared/commons-destination.js';
 

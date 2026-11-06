@@ -16,7 +16,7 @@ import { STUDEWOOD_REVISION } from '../../shared/studewood-layout.js';
 import { composeBayouTerraces, studewoodBaseLayout, TERRACE_RECIPES, TERRACES_REVISION, TERRACES_TABLE, inBayouTerraces } from '../../shared/bayou-terraces.js';
 import { assembleNeighborhood, walkableConnectivity } from '../../shared/city-kit/assemble.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from '../src/data/world-manifest.json' with { type: 'json' };
 
 const commonsWorld = await loadDistrictData({ districtRevision: 'east-garden-commons-market-1' });
 const studewoodWorld = await loadDistrictData({ districtRevision: STUDEWOOD_REVISION });

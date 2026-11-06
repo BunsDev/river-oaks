@@ -1,7 +1,7 @@
 import { commonsCollisionRings } from '../../shared/east-garden-commons-layout.js';
 import { STUDEWOOD_REVISION } from '../../shared/studewood-layout.js';
 import { composeBayouTerraces, studewoodBaseLayout, TERRACE_ENTRIES, TERRACE_LOCATIONS, TERRACES_REVISION } from '../../shared/bayou-terraces.js';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from './data/world-manifest.json' with { type: 'json' };
 import { validateWorldManifest } from './world-manifest.js';
 
 export function validateTerracesRegistration(registration, layout) {

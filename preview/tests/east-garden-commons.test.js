@@ -5,7 +5,7 @@ import { DISTRICT_REVISION_GARDENS } from '../src/garden-campus-district.js';
 import { attachEastGardenCommons, buildEastGardenCommons } from '../src/east-garden-commons.js';
 import { createWalkingEnvironment, createWalkingState, stepWalking } from '../src/walking.js';
 import { commonsAllows, createCommonsLayout } from '../../shared/east-garden-commons-layout.js';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from '../src/data/world-manifest.json' with { type: 'json' };
 import { validateCommonsRegistration } from '../src/east-garden-commons-world.js';
 const district=await loadDistrictData({districtRevision:DISTRICT_REVISION_GARDENS});
 const world=attachEastGardenCommons(district), layout=world.eastGardenCommons;
