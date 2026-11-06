@@ -11,6 +11,7 @@ export const EMBED_RESULTS=['ready','cancelled','attention'];
 export const EMBED_PERSISTENCE=['saved','local','none'];
 // Fixed, reviewed paths on the configured origin. Messages never supply a URL.
 export const EMBED_PATHS={frame:'/?embed=place',signIn:'/api/auth/login',open:'/'};
+export const DEFAULT_COMPUTER_ORIGIN='https://computer.typesafe.place';
 const ID=/^[A-Za-z0-9_-]{16,64}$/;
 const LOOPBACK=new Set(['127.0.0.1','localhost','[::1]']);
 
@@ -22,9 +23,9 @@ export function computerOrigin(value,{allowLoopback=false}={}){
  if(url.protocol==='https:')return url.origin;
  return url.protocol==='http:'&&allowLoopback&&LOOPBACK.has(url.hostname)&&url.port?url.origin:null;
 }
-/** Build-time configuration. Missing, invalid or disabled configuration returns null and loads nothing. */
+/** Use the hosted Computer by default. An explicit invalid or disabled override loads nothing. */
 export function computerConfig(env={}){
- const value=env.VITE_TYPESAFE_COMPUTER_ORIGIN;if(!value||value==='off')return null;
+ const value=env.VITE_TYPESAFE_COMPUTER_ORIGIN??DEFAULT_COMPUTER_ORIGIN;if(!value||value==='off')return null;
  const origin=computerOrigin(value,{allowLoopback:Boolean(env.DEV)&&env.VITE_TYPESAFE_COMPUTER_TEST_LOOPBACK==='1'});if(!origin)return null;
  return {origin,frameURL:origin+EMBED_PATHS.frame,signInURL:origin+EMBED_PATHS.signIn,openURL:origin+EMBED_PATHS.open};
 }

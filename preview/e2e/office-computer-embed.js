@@ -26,7 +26,7 @@ async (page, { computerOrigin }) => {
   await tab.locator('#office-enter').click();
   await tab.waitForFunction(()=>document.querySelector('#office-visit')?.dataset.phase==='office',null,{timeout:60000});
  };
- const openDesk=async(tab=page)=>{await tab.locator('#office-desk-open').click();await tab.locator('#desk-loading').waitFor({state:'hidden'});};
+ const openDesk=async(tab=page,tasks=true)=>{await tab.locator('#office-desk-open').click();await tab.locator('#desk-loading').waitFor({state:'hidden'});if(tasks&&await tab.locator('#office-desk').getAttribute('data-view')==='computer'){await tab.locator('#desk-view-tasks').click();await tab.waitForFunction(()=>document.querySelector('#office-desk')?.dataset.view==='tasks');}};
  const signIn=async(tab,account)=>{
   const [popup]=await Promise.all([tab.context().waitForEvent('page'),tab.locator('#desk-computer-signin').click()]);
   await popup.locator(`button[value=${account}]`).click();await popup.locator('#standalone-account').filter({hasText:'Signed in as'}).waitFor();
@@ -42,10 +42,15 @@ async (page, { computerOrigin }) => {
   const Native=window.WebSocket,sockets=[];window.WebSocket=class extends Native{constructor(...args){super(...args);sockets.push(this);}};
   window.__dropTown=()=>sockets.filter(s=>/\/multiplayer/.test(s.url)&&s.readyState===Native.OPEN).map(s=>s.close(4999,'journey: network drop')).length;});
  await instrument(page);
- await page.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});await arrive();await openDesk();
+ await page.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});await arrive();
+ check(computerRequests.length===0,'Computer makes no request before the player opens a desk');
+ await openDesk(page,false);await waitState('signin');
+ check(await page.locator('#desk-view-computer').getAttribute('aria-selected')==='true'&&await page.locator('#desk-body').isHidden(),'Opening the desk selects TypeSafe Computer instead of the task list');
+ check(await page.locator('#desk-computer-open').isVisible()&&await page.locator('#desk-computer-open').getAttribute('href')===`${computerOrigin}/`&&await page.locator('#desk-computer-open').getAttribute('rel')==='noopener noreferrer','The configured Computer has an immediately available safe separate-tab link');
+ await page.locator('#desk-view-tasks').click();await waitView('tasks');
  const listeners=await page.evaluate(()=>window.__messageListeners());
- check(await page.locator('#desk-views').isVisible()&&await page.locator('#desk-view-tasks').getAttribute('aria-selected')==='true','The desk opens on Tasks with a Computer tab beside it');
- check(await frames()===0&&computerRequests.length===0,'Nothing loads from Computer before its tab opens');
+ computerRequests.length=0;
+ check(await frames()===0,'Switching to Tasks destroys the default Computer frame');
 
  // A Tasks draft whose save failed: its retry and contents must survive a visit to Computer.
  await page.locator('#desk-start').click();await page.locator('#desk-title').fill('Synthetic desk draft');

@@ -26,7 +26,8 @@ function setup(){
 }
 
 test('configuration accepts one exact public HTTPS origin and nothing else', () => {
- assert.equal(computerConfig({}),null,'missing configuration loads nothing');
+ assert.deepEqual(computerConfig({}),{origin:'https://computer.typesafe.place',frameURL:'https://computer.typesafe.place/?embed=place',signInURL:'https://computer.typesafe.place/api/auth/login',openURL:'https://computer.typesafe.place/'},'an unconfigured desk uses the hosted Computer');
+ assert.equal(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:''}),null,'an explicitly empty override loads nothing');
  assert.equal(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:'off'}),null,'disabled configuration loads nothing');
  for(const bad of ['http://computer.example.test','https://computer.example.test/app','https://computer.example.test/?a=1','https://computer.example.test/#x','https://user:pw@computer.example.test',' https://computer.example.test','javascript:alert(1)','https://COMPUTER.example.test','https://computer.example.test:443','not a url'])
   assert.equal(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:bad}),null,bad);

@@ -57,7 +57,7 @@ try {
       // The draft-only workplace slice (#221): both default-off flags on for this fixture server only.
       'workplace':{RIVER_OAKS_WORKPLACE:'1',VITE_WORKPLACE:'true'},
     }[name]??{};
-    // The Computer embed journey frames a separate-origin child fixture (#486); other journeys get no Computer origin.
+    // The Computer embed journey frames a separate-origin child fixture (#486); other journeys disable Computer in fixture-server.js.
     // office-computer-real frames a real Computer checkout instead (RIVER_OAKS_COMPUTER_CHECKOUT, #487).
     if (name === 'office-computer-embed' || name === 'office-computer-real') {
       computerFixture = name === 'office-computer-real' ? await startRealComputer() : await startComputerFixture();
