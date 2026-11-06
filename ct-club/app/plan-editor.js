@@ -1,7 +1,7 @@
 // CT Club floorplanner (temporary scratch tool, Val 2026-11-04).
 // A 2D top-down plan of the club. Drag an asset to move it; the room (3D + walking
 // collision) rebuilds on drop. Toggled with the "P" key / the 📐 button.
-import { moveFixture } from '../../preview/src/ct-club-plan.js';
+import { moveFixture } from '../src/ct-club-plan.js';
 
 const KINDS = {
   'bar-counter': { w: 1.5, l: 20, color: '#c98a3b' },

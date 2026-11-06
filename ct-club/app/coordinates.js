@@ -1,7 +1,7 @@
 // CT Club surface coordinates (scratch tool, Val 2026-11-04).
 // Exact world-space xyz (and facing normal + size) for every major surface so you
 // can build on them precisely. Local frame: x=a across, z=-d inward, y up.
-import { CLUB, DISCO_BALL, CLUB_SPOTS, CLUB_STROBES, SCREEN_WALLS } from '../../preview/src/ct-club-plan.js';
+import { CLUB, DISCO_BALL, CLUB_SPOTS, CLUB_STROBES, SCREEN_WALLS } from '../src/ct-club-plan.js';
 
 const W = CLUB.width, D = CLUB.depth, H = CLUB.height;
 

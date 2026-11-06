@@ -2,8 +2,8 @@
 // Runs the real club interior from the repo (preview/src) with first-person
 // walk controls and collision against the same obstacles the server walker uses.
 import * as THREE from 'three';
-import { planCtClub, refreshObstacles, addScreen, addProp } from '../../preview/src/ct-club-plan.js';
-import { buildCtClubInterior } from '../../preview/src/ct-club-interior.js';
+import { planCtClub, refreshObstacles, addScreen, addProp } from '../src/ct-club-plan.js';
+import { buildCtClubInterior } from '../src/ct-club-interior.js';
 import { configureMaterials } from '../../preview/src/materials.js';
 import { attachDesignPanel, mountDesignPanel } from './design-panel.js';
 import { attachPlanPlanner } from './plan-editor.js';

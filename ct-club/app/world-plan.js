@@ -2,7 +2,7 @@
 // Mount "screens" on ANY surface (walls, columns, bar, DJ, speaker faces, table
 // tops…) flush to its plane, facing its normal — every surface is a physical wall.
 // Toggled with the "W" key / the 📺 button.
-import { addScreen, removeScreen } from '../../preview/src/ct-club-plan.js';
+import { addScreen, removeScreen } from '../src/ct-club-plan.js';
 import { surfaceReference, surfaceMount } from './coordinates.js';
 
 let SCALE = 12;    // px per metre on a surface strip (capped so big walls stay small)
