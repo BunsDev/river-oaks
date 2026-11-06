@@ -527,13 +527,13 @@ const loop = now => {
   clock.delta = (now - clock.last) / 1000; clock.last = now;
   if (clock.running) {
     clock.t += Math.min(1 / 20, clock.delta);
-    if (!reducedMotion) club.userData.tick(clock.t);
     if (dancers) {
       const st = analyzer ? analyzer.state() : null;
-      if (st) club.setAudio(st);                              // lights react to bands
-      const scale = st ? 0.5 + st.bass * 1.5 : 1;             // bass drives dance speed
-      dancers.tick(clock.delta, scale);                       // dancers react to bass
+      if (st) club.userData.setAudio(st);               // lights react to bands
+      const scale = st ? 0.5 + st.bass * 1.5 : 1;       // bass drives dance speed
+      dancers.tick(clock.delta, scale);                  // dancers react to bass
     }
+    if (!reducedMotion) club.userData.tick(clock.t);     // tick after audio state is set
   }
   if (design) design.cycle(now / 1000, audio);   // colour cycles + audio-reactive (owned by the host)
   updateAudioTransport();                       // keep the seek bar + time display live
