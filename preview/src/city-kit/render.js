@@ -262,7 +262,10 @@ function renderCrown(piece, [w, s, e, n], bodyTop, top, batch, detail, m, accent
 // `forms` (a finish's rounded-form vocabulary, catalog.js KIT_FINISHES) adds facade
 // detail only: canopy noses and capsule sign plates in existing slots, never massing,
 // ground or collision. Without it a shell renders exactly as before.
-function renderShell(piece, batch, detail, m, ground, signs, shared = new Set(), forms = false) {
+// `signPlate` is the forms' capsule sign-plate material: the plate stands 2 cm in front of the
+// fascia it hangs on, too close to hold its own depth at a distance, so it is pulled forward by
+// polygon offset like the lettering in front of it (#836).
+function renderShell(piece, batch, detail, m, ground, signs, shared = new Set(), forms = false, signPlate = null) {
   const [w, s, e, n] = piece.rect, style = KIT_STYLES[piece.style] ?? KIT_STYLES['market-row'];
   const wall = m(piece.wall), trim = m(piece.trim), accent = m(style.accent), glass = m('glass'), bronze = m('metal-bronze');
   const top = ground + piece.height, bottom = ground - .4;
@@ -442,9 +445,9 @@ function renderShell(piece, batch, detail, m, ground, signs, shared = new Set(),
       signs.push({ name: piece.sign, palette: style.signPalette, width, height: signHeight, east: x, up: signUp, north: y, yaw });
       if (forms) {
         // Capsule sign plate: an ivory band with round ends, just behind the lettering.
-        const plate = signHeight + .16, ends = width / 2 + .05;
-        put(detail, m('trim-ivory'), f.length / 2, .06, signUp, width + .1, plate, .04);
-        for (const side of [-1, 1]) round(m('trim-ivory'), f.length / 2 + side * ends, .06, signUp, plate / 2, .04, 'out');
+        const tall = signHeight + .16, ends = width / 2 + .05, ivory = signPlate ?? m('trim-ivory');
+        put(detail, ivory, f.length / 2, .06, signUp, width + .1, tall, .04);
+        for (const side of [-1, 1]) round(ivory, f.length / 2 + side * ends, .06, signUp, tall / 2, .04, 'out');
       }
       if (style.signage === 'blade') {
         // A plate on a bracket, standing out from the facade, lettered top to bottom on both faces.
@@ -752,6 +755,8 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
   const grate = new THREE.MeshStandardMaterial({ map: grateTexture, roughness: .55, metalness: .6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8 });
   grate.name = 'city-kit/tree-grate'; disposables.push(grate);
   const overlays = new Map(), paint = overlay('trim-ivory', 3);
+  // The forms' capsule sign plates: one layer ahead of the fascia, behind the lettering (layer 2).
+  const signPlate = forms ? Object.assign(overlay('trim-ivory', 1), { name: 'city-kit/trim-ivory:plate' }) : null;
   const clipStreet = plan.pieces.find(p => p.piece === 'street/court' && p.id.endsWith('/paving'))?.rect;
   const courts = plan.pieces.filter(p => p.piece === 'street/court' && p.id.endsWith('/paving')), paved = new Map();
   for (const piece of plan.pieces) {
@@ -788,7 +793,7 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
   const [sw, ss, se, sn] = plan.site;
   flat.box(m('curb-granite'), (sw + se) / 2, ground - 1.9, (ss + sn) / 2, se - sw, 3.4, sn - ss + 30);
   for (const piece of plan.pieces) {
-    if (piece.piece === 'building/shell') { const block = blockFor(piece); renderShell(piece, block.massing, block.detail, m, ground, signs, partyWalls(piece), forms); }
+    if (piece.piece === 'building/shell') { const block = blockFor(piece); renderShell(piece, block.massing, block.detail, m, ground, signs, partyWalls(piece), forms, signPlate); }
     else if (piece.piece === 'building/context') {
       const [w, s, e, n] = piece.rect, block = blockFor(piece);
       block.massing.box(m(piece.wall ?? 'stucco-ivory'), (w + e) / 2, ground - 1.5 + (piece.height + 1.5) / 2, (s + n) / 2, e - w, piece.height + 1.5, n - s);

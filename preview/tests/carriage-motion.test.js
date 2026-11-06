@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import {Euler,Quaternion,Vector3} from 'three';
 import assert from 'node:assert/strict';
 import * as motion from '../src/carriage-motion.js';
@@ -6,6 +7,26 @@ import { carriageContains } from '../src/carriage-parking.js';
 import { createWalkingEnvironment } from '../src/walking.js';
 import { thirdPersonPose } from '../src/third-person.js';
 import * as flight from '../src/flight.js';
+import { districtRibbonPlan } from '../src/ribbon-district.js';
+
+test('a Ribbonwing descent blocked by a new Ribbon post returns to safe hover and accepts lift again',()=>{
+  const world=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url),'utf8'));
+  const environment=createWalkingEnvironment(world),before=createWalkingEnvironment(world,[],null,{fiveRooms:false});
+  const pose=post=>({vehicle:'hover',position:[post.position[0],environment.groundAt(post.position[0],-post.position[1]),-post.position[1]],yaw:0,speed:0,distance:0,altitude:8,liftTarget:0,landing:true});
+  const post=districtRibbonPlan(world).posts.find(post=>motion.hoverClear(pose(post),environment)
+    &&motion.hoverClear({...pose(post),altitude:.12},before)&&!motion.hoverClear({...pose(post),altitude:.12},environment));
+  assert.ok(post,'a post covers ground where the craft could previously land');
+  const state=pose(post);
+  for(let i=0;i<1200;i++)motion.stepHoverLift(state,environment,{},1/60);
+  const held=state.altitude;
+  assert.ok(held>.1&&held<8,'the craft holds above the obstruction');
+  assert.equal(motion.hoverClear(state,environment),true,'the stopped hull remains clear');
+  assert.equal(state.landing,false,'an obstructed descent must not latch out the pilot controls');
+  for(let i=0;i<120;i++)motion.stepHoverLift(state,environment,{lift:1},1/60);
+  assert.ok(state.altitude>held+.5,'the pilot can climb clear and choose another landing spot');
+  assert.ok(state.altitude<=environment.flightCeiling);
+  assert.equal(motion.hoverClear(state,environment),true);
+});
 
 test('riding accelerates, steers, brakes and advances real wheel distance',()=>{
   assert.equal(typeof motion.stepCarriage,'function');

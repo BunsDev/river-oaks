@@ -151,3 +151,7 @@ This list replaces the open lists in #724 (draft-wave-2) and the `docs/register-
 19. **The f1 streaming mirror** `../river-oaks-streaming-f1-review` (7 dirty files at `059a16a6`): who releases it.
 20. **Ledgers still local**: `docs/register-reconcile-20261028` (`12ea8d75`) and `docs/goal-register-reconcile-20261028` (`3bd1918d`). Push them as draft docs PRs, or drop them.
 21. ~~Release on ended owners' behalf~~: authorized; three branches retired, three waiting (see round 4).
+
+## Delivery record (docs review, 2026-10-31)
+
+#765 (this ledger) merged on 2026-10-30 05:46Z as `5dcac231`; register task `wave-3-steward-20261029` is `delivered` and its worktree (`7567bd1a`, clean, a strict ancestor of the merged head) awaits the guarded prune. Since the Decisions list above was written: #737 (decision 7) merged 2026-10-30; #764, #722 and #695 landed as authorized; #782 (the queue-lock fix) merged 2026-10-30 as `b7dab4e6`. Decisions 11 through 20 are still open; the 2026-10-31 docs review ledger (`2026-10-31-docs-plans-review.md`) records which register rows it reconciled and which still wait on 14 and 16.

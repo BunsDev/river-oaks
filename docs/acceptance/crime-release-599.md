@@ -14,7 +14,7 @@ The portable evidence package `docs/acceptance/crime-release-599/` (2 MB, on the
 | Alternate police branch | Live register records authorized cancellation/archive of the alternate 26a2f033 strategy; #621 remains the delivered implementation | Archive preserved by its owner; no cleanup performed by this task |
 | Broader #587 acceptance | `mvp-release-readiness-20261024` owns expansion/Commons stall investigation and broader rendering acceptance | Consume exact receipts; no duplicate ownership |
 | #637 local/peer movement | #645 merged `a437cbbf` (travel heading and horizontal stride for local and peer feet); issue still open at 2026-10-26T23:33Z for its remaining items. Runtime reproduction on the encounter candidate below (walk/sprint/turn/strafe/back, feet planted every moving frame, worst IK error 0 m) | Delivered foundation on `main`; the issue's own closure is its owner's |
-| #640 on-foot encounter | #646 merged `15334aad` (timed melee, perception, grab/arrest); #708 `da1bfa39` draft on `main` (residents react; hosted 26/26 success); #710 `b7df2c6a` draft on #708 (combat presentation; hosted 19/19 success); increment 5 #732 `700bddb2` draft on #710 (workload, 30/60/120 Hz profiles, two- and three-browser journeys; see the refresh; ledger commit `71bb8d5a` on top) | Delivered on `main` 2026-10-30: #708 `f0d01729`, #710 `163c204a`, #732 `ccffc5c8` (reviewed heads `dec24320`, `545eb21c`, `d6515370`); human feel accept 2026-10-28; device pass accept 2026-10-29; keyboard-only and screen-reader passes open |
+| #640 on-foot encounter | #646 merged `15334aad` (timed melee, perception, grab/arrest); #708 (reviewed at `da1bfa39`; residents react; hosted 26/26 success), #710 (reviewed at `b7df2c6a`; combat presentation; hosted 19/19 success) and increment 5 #732 (reviewed at `700bddb2`; workload, 30/60/120 Hz profiles, two- and three-browser journeys; see the refresh; ledger commit `71bb8d5a` on top) | Delivered on `main` 2026-10-30: #708 `f0d01729`, #710 `163c204a`, #732 `ccffc5c8` (reviewed heads `dec24320`, `545eb21c`, `d6515370`); human feel accept 2026-10-28; device pass accept 2026-10-29; keyboard-only and screen-reader passes open |
 
 ## Expanded gameplay acceptance added to #599
 
@@ -143,7 +143,7 @@ Gates on `aeb95f85` (increment 5, 2026-10-28): focused server suites with an iso
 
 Asset provenance: no binary asset in any #637/#640 PR (file lists of #645, #646, #708, #710 checked; the only non-source, non-test, non-doc file is `preview/audit/rendered-multiplayer.js` in #708). Poses are procedural over the shipped rigs; garment bakes unchanged.
 
-Rollback: per the playbook (`docs/crime-operations.md`, corrected on this branch to checkpoint v17 with writers 21/22, and v18 with writers 23/24 once #708 lands): policy off releases every hold without a restart. Never roll back to a build older than the room's checkpoint: a pre-#646 binary cannot read a v17 room and is fenced, and a pre-#708 binary cannot read a v18 room. Prefer a forward fix with danger off. Default-off; no production account, database or deployment touched.
+Rollback: per the playbook (`docs/crime-operations.md`, checkpoint v17 with writers 21/22 before #708, and v18 with writers 23/24 since #708 merged as `f0d01729`): policy off releases every hold without a restart. Never roll back to a build older than the room's checkpoint: a pre-#646 binary cannot read a v17 room and is fenced, and a pre-#708 binary cannot read a v18 room. Prefer a forward fix with danger off. Default-off; no production account, database or deployment touched.
 
 Archive of the 2026-10-24 candidate: `/Users/buns/worktree-backups/river-oaks/crime-release-599-handoff-20261028/` (made 08:01Z, head `9ee738f8`, SHA256SUMS of the cc29 worktree's dirty and untracked files verified against the live worktree). The cc29 worktree stays undelivered and must not be retired.
 
@@ -156,7 +156,7 @@ Next actions, one per open row: (1) done 2026-10-28: Val accepted on the run-10 
 - [ ] Contrast, keyboard, reduced-motion, safety warning and reporting acceptance; target-device and human evidence appropriate to the intended audience.
 - [x] Isolated rollback/recovery rehearsal and independent branch/playbook review; later new-main integration still needs final verification.
 - [ ] Reviewable verified baseline commits and exact candidate/hosted state, without treating publication or production activation as implied.
-- [x] #637/#640 implementation handoff: #645/#646 merged, #708/#710 drafts and increment 5 bound above.
+- [x] #637/#640 implementation handoff: #645, #646, #708, #710 and #732 merged on `main` (2026-10-30 for the last three).
 - [x] Human gameplay-feel disposition: accept, Val Alexander, 2026-10-28, #732 `700bddb2` (recordings of an automated session).
 - [x] Physical-device accessibility disposition: accept, Val Alexander, 2026-10-29, candidate #732, iPhone in Safari, touch only.
 - [x] #640 stack landed (2026-10-30: #708 `f0d01729`, #710 `163c204a`, #732 `ccffc5c8`); `verify full` 19/19 on a snapshot of `bdb9fde0`; post-merge workload, World, Redis and render tiers recorded above.

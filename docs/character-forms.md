@@ -1,5 +1,11 @@
 # Playable character forms
 
+> Historical implementation record. Beast forms, beast movement and the sculpted
+> animal heads (`preview/src/animal-face.js`) were removed by #496 (2026-10-18,
+> human-only Character Studio); saved beast looks migrate to their human look when
+> read. The current character stack is described in
+> [Character Studio](character-studio.md) and [character fidelity](character-fidelity.md).
+
 **Jevica belongs to the approved waitlist administrator account**
 (`user_01M40Y914S1H4EJCEHH91DKTAY` in Staging; `user_01M402HKJYDTH1QJM5NAQDZ4HH` in Production). Other accounts start as Sable and cannot
 select either Jevica form. Only that account

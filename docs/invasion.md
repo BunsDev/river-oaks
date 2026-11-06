@@ -22,5 +22,6 @@ Witch and Alien player forms are not required for this scenario.
   the saucer leaves. Banishing every alien wins.
 - Whatever the outcome, `releaseResidents` returns everyone beamed aboard.
 
-`preview/tests/invasion.test.js` covers the simulation; `preview/e2e/invasion.js`
-plays the opening of a fight as Jevica in the real renderer.
+`preview/tests/invasion.test.js` covered the simulation and `preview/e2e/invasion.js`
+played the opening of a fight as Jevica in the real renderer; both were removed with
+the solo runtime in #170.

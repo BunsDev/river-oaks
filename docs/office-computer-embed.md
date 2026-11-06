@@ -5,23 +5,23 @@ This page describes how River Oaks embeds TypeSafe Computer in Jevica's office d
 lifecycle contract that Computer's embed mode implements
 ([TypeSafeAI/typesafe-computer#33](https://github.com/TypeSafeAI/typesafe-computer/issues/33)).
 
-**Status.**
+**Status (2026-11-06 source update).** On Place's production origin,
+`https://typesafe.place`, opening an office desk now selects TypeSafe Computer at
+`https://computer.typesafe.place` by default. Tasks remains a secondary
+view; an unsaved retained task draft opens on Tasks so it can be recovered. Computer
+loads only after the player opens a desk. The separate-tab link remains available
+through loading, sign-in and failure, as well as normal use. Other hosts keep the
+Tasks desk unless the build names a Computer origin (see [Configuration](#configuration)).
 
-- **Place side:** implemented and tested against a deterministic local child fixture.
-- **Computer side:** a candidate embed build is in draft
-  [TypeSafeAI/typesafe-computer#34](https://github.com/TypeSafeAI/typesafe-computer/pull/34)
-  (8c0240af, 2026-10-27). Its `docs/PLACE_EMBED.md` adopts version 1 below unchanged.
-  `office-computer-real` runs the desk against it locally (see [Verification](#verification)).
-- **Hosting:** the Place frame policy lists `https://computer.typesafe.place`, the
-  same-site Computer origin proposed in
-  [TypeSafeAI/typesafe-computer#21](https://github.com/TypeSafeAI/typesafe-computer/issues/21)
-  (see [Staged blockers](#staged-blockers)). From 2026-10-29 it listed
-  `https://typesafe-computer.vercel.app`, which is cross-site from `typesafe.place`.
-  `VITE_TYPESAFE_COMPUTER_ORIGIN` is still unset in every hosted environment, so no
-  deployed desk loads a frame; setting it is the owner's configuration step. No Computer
-  deployment serves that origin yet, and Computer's main branch has no embed mode: until
-  #34 deploys there, a frame to it never answers `init`, and the desk reports that
-  Computer did not open and returns to Tasks.
+The existing Place frame owner and Computer's merged embed implementation use the
+same version 1 contract below. Unauthenticated checks on 2026-11-06 returned
+HTTP 200 from the Computer host with `frame-ancestors 'self' https://typesafe.place`.
+Its public `/api/embed` returned `{"placeOrigins":["https://typesafe.place"]}`, and
+its served bundle contains the version 1 `typesafe-place-embed` handler.
+This proves host reachability, the delivered framing policy and the deployed embed
+build, not signed-in account persistence or rollout of this Place source change.
+Real authentication, cookie isolation and cross-device save acceptance remain
+separate checks.
 
 ## Ownership
 
@@ -42,8 +42,13 @@ penthouse displays stay neutral `SCREEN_DYNAMIC` surfaces.
 `VITE_TYPESAFE_COMPUTER_ORIGIN` is a public build variable naming Computer's exact
 origin, such as `https://computer.example.test`. Place accepts it only as a bare HTTPS
 origin: no path, query, fragment, credentials, surrounding spaces or default port.
-Missing, invalid or `off` configuration hides the Computer tab and loads nothing. The
-Tasks desk is unchanged.
+Omitting the variable uses `https://computer.typesafe.place` when the page's origin
+is exactly `https://typesafe.place`. Hosted Computer frames no other Place origin,
+so elsewhere (Vercel Preview, `pnpm run dev`, fixtures, other domains) an omitted
+variable keeps the Tasks desk instead of a frame that would time out after 15 s.
+An explicit origin applies on every host. An explicit empty,
+invalid or `off` override hides the Computer tab and loads nothing. Use `off` for
+Tasks-only rollback; unsetting the variable no longer disables Computer in production.
 
 Loopback `http://127.0.0.1:<port>`, `http://localhost:<port>` or `http://[::1]:<port>` is accepted only in a Vite development build with
 `VITE_TYPESAFE_COMPUTER_TEST_LOOPBACK=1`. The experience runner sets both for the
@@ -236,8 +241,11 @@ guard:
 - If that save fails, the desk asks before switching. The draft and its retry
   operation wait in the same model.
 
-Autosave pauses while Computer is shown. The desk always reopens on Tasks, so opening
-the desk never loads Computer by itself.
+Autosave pauses while Computer is shown. Opening a desk selects Computer after the
+existing task load settles, unless a retained task draft is dirty. That exception
+keeps the draft visible and retains its save/conflict guard. A late task load after
+close, suspension or a new desk session cannot create a frame. Selecting Tasks
+uses the existing save-close handshake before revealing the task list.
 
 Since #496 (2026-10-18), the desk is **My tasks** only, in Jevica's office. Personal
 offices and shared **Office tasks** were removed before this integration, so there is
@@ -246,7 +254,7 @@ no shared scope to preserve.
 ## Verification
 
 - `node --test preview/tests/office-computer-frame.test.js` covers:
-  - configuration validation;
+  - default hosted origin, explicit rollback and configuration validation;
   - exact message shapes;
   - lazy single-frame creation and the sandbox;
   - origin, source and instance fencing;
@@ -255,6 +263,7 @@ no shared scope to preserve.
   - listener and timer cleanup.
 - `pnpm run test:experience office-computer-embed` runs the real desk against the child
   fixture:
+  - Computer-first desk entry, the always-available separate-tab link and no requests before opening a desk;
   - top-level sign-in and the account gate on every frame;
   - note save, then recovery after the frame is removed and recreated;
   - a slow save while leaving, cancel, attention, local copy and no answer;
@@ -302,30 +311,23 @@ Computer's hosting, authentication or sync. Both fixture servers run on `127.0.0
 cookies ignore ports. The journey therefore cannot show that Place and Computer
 cookies stay apart; that needs the real host pair (#21).
 
-## Staged blockers
+## Hosted acceptance and rollback
 
-These must be resolved before a hosted pilot (tracked in
-[combined acceptance #487](https://github.com/BunsDev/river-oaks/issues/487)):
+The remaining combined acceptance scope is tracked in
+[#487](https://github.com/BunsDev/river-oaks/issues/487):
 
-1. **Computer embed build (#33).** Candidate in draft #34 (8c0240af), with
-   `docs/PLACE_EMBED.md` adopting version 1. Not merged or deployed.
-2. **Hosting (#21).**
-   - Prove the actual origin pair: same-site, separate origins.
-   - Repair the staging WorkOS registrations.
-   - Prove Computer's `frame-ancestors`, its cookie behavior when framed, and top-level
-     sign-in.
-3. **Continuity (#27).** Record the decision for a new Computer host's origin-local data.
-4. **Place frame policy and configuration.** `frame-src` in `vercel.json` and
-   `server/security-headers.js` lists `https://computer.typesafe.place`, with the
-   expectation in `server/tests/hardening2-security-headers.test.js` and the origin
-   accepted by `preview/tests/office-computer-frame.test.js`. What remains is the owner's
-   step: once Computer's embed build (#34) is deployed at that origin with
-   `frame-ancestors https://typesafe.place`, set
-   `VITE_TYPESAFE_COMPUTER_ORIGIN=https://computer.typesafe.place` for Production. Before
-   that the Computer tab appears, times out and returns to Tasks. Place Preview
-   deployments run on `*.vercel.app`, which is cross-site from that origin, so a Preview
-   desk would show framed players as signed out: prove the pair on a same-site staging
-   host instead.
+1. Prove real Computer sign-in, account confirmation, save/reopen and sign-out on
+   the production origin pair. The unauthenticated header check is narrower.
+2. Prove cookie isolation and account switching; preserve origin-local drafts
+   when moving between Computer hosts (#21 / #27).
+3. Test mobile Safari, keyboard return and disconnect/revocation against the real
+   child, alongside the deterministic local lifecycle tests.
+4. Preview deployments on `*.vercel.app` and local development hosts are not on
+   Computer's production `frame-ancestors` list, so they keep the Tasks desk by
+   default. Use a reviewed same-site staging pair with an explicit origin, or the
+   loopback fixture for development.
 
-   The variable is a production configuration change that needs its own authorization.
-   Leaving it unset is the rollback: the desk returns to Tasks only.
+To disable the integration, set `VITE_TYPESAFE_COMPUTER_ORIGIN=off` and rebuild.
+Unsetting it restores the hosted default on `https://typesafe.place`. Synthetic experience journeys explicitly
+set `off`, except Computer journeys that use their own loopback child; tests never
+send fixture identities or notes to the production Computer.

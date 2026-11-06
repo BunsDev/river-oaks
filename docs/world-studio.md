@@ -92,6 +92,19 @@ changes pending until a result arrives. Failed assessments offer **Retry assessm
 remain required when furniture is moved. A work-limit result is blocked, never
 a pass; simplify the layout and assess again.
 
+**Kit finish (#744 under #738).** A furnished space takes the city-kit finish the town follows
+(`render-quality.js readFinishPreference`: `?finish=pink-jet-age` on `studio.html`, or the stored
+choice; classic by default). `preview/src/studio/space-kit-finish.js` is render-only and
+document-free: under Pink Jet-Age `plaster` draws warm ivory, `brass` satin chrome and `fabric` a
+pale rose, while oak, walnut, limestone, concrete, terracotta, sage, linen, white and charcoal keep
+their classic look. Documents never change: every object keeps its `finish` name, so saved v1
+files, templates, IDs, dimensions, routes, collision and the editing controls are identical under
+every finish, and a file saved under one finish opens the same under another
+(`preview/tests/studio-space-kit-finish.test.js`). The finish is an editor pass over the built
+scene; `space-scene.js` is unchanged, so an approved space placed in town (#420) draws exactly as
+it was approved, under any finish. `STUDIO_FINISH=pink-jet-age` runs the template
+station captures under the finish.
+
 ## Build a region
 
 Start with **New region**, **Open JSON**, or the saved device draft. The initial

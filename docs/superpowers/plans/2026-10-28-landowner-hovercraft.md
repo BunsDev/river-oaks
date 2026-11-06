@@ -56,3 +56,7 @@ Register task `landowner-hovercraft-20261028`, branch `feat/landowner-hovercraft
 ## Next step
 
 Run 40776735604 on `0feb59f6` finished 20/20 green (`preview checks` passed first time). Run 40778883371 on `7d99e77f` (ledger only) failed `preview checks` once with the main-wide stack-rehearsal flake `alice snapshot on river-oaks-gardens-3@7` (job 123135191472; `main` 7cc1fb87 push run 40768823845 fails the same assertion): the one authorised rerun (attempt 2, job 123141781346, 22:41Z) failed on the same assertion, so the aggregate `preview` on `7d99e77f` stays red for that flake alone (19/20 jobs green, commons with hover-coach included); it passed first time on `0feb59f6`. Not rerun again; the flake needs its own task on `main`. The branch merges cleanly with `main` 7cc1fb87 but is behind it (#752, docs/baseline only): merge `main` before landing. Mark ready and land only with merge authorization.
+
+## Delivery record (docs review, 2026-10-31)
+
+#737 merged on 2026-10-30 10:15Z as `5598f75c` (reviewed head `b33bf154`, the branch after its `main` merge; tree `d83fd5db`). Register task `landowner-hovercraft-20261028` is `delivered`; the owner checkout `river-oaks-landowner-hovercraft` (`1cd96019`, clean, a strict ancestor of the merged head) and the scratch copy `river-oaks-737-main-merge` await the guarded prune. Still open after delivery: the browser flight and phase-tube evidence on a quiet host, and `desktop/vehicles-e2e.js` covering the coach.

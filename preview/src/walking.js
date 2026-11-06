@@ -6,6 +6,7 @@ import { roomBlocksConversation } from './conversation-sight.js';
 import { plazaSalonFootprints } from './plaza-salon-plan.js';
 import { cityBikeRackFootprints } from './bike-racks.js';
 import { campusFlightVolumes } from './garden-campus-district.js';
+import { fiveRoomsFootprints } from './five-rooms/solids.js';
 import { isJevicaAccount } from './jevica-accounts.js';
 
 const RADIUS = 0.35, EYE_HEIGHT = 1.68;
@@ -50,7 +51,9 @@ function overlaps(x, z, ring, radius = RADIUS) {
   return inside;
 }
 
-export function createWalkingEnvironment(world, placedObjects = [], levelId = null) {
+// `fiveRooms: false` builds the environment as it stood before the Five Rooms solids (#841), for
+// restoring a checkpoint saved then; every live caller keeps the default.
+export function createWalkingEnvironment(world, placedObjects = [], levelId = null, { fiveRooms = true } = {}) {
   const [west, south, east, north] = world.bounds_m;
   const polygons = (world.collisionPolygons ?? []).map((ring) => ring.map(([x, y]) => [x, -y]));
   if (!world.collisionPolygons) for (const building of world.buildings ?? []) {
@@ -88,7 +91,9 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   // Plaza salon furniture (plaza-salon-plan.js) and the curbside bike rack bars
   // (bike-racks.js) block bodies and low flight like a placed object. One box
   // around the plaza and one per rack keep every other query to a few compares.
-  const propBoxes = [plazaSalonFootprints(world), ...cityBikeRackFootprints(world)].filter(group => group.length).map(group => {
+  // The Five Rooms Ribbon posts and shell frontages (five-rooms/solids.js) block the same way, for
+  // every finish: client and server read the same discs.
+  const propBoxes = [plazaSalonFootprints(world), ...cityBikeRackFootprints(world), ...(fiveRooms ? fiveRoomsFootprints(world) : [])].filter(group => group.length).map(group => {
     const props = group.map(([east, north, radius, height]) => ({ x: east, z: -north, radius, height }));
     return { props, minX: Math.min(...props.map(p => p.x - p.radius)) - 2, maxX: Math.max(...props.map(p => p.x + p.radius)) + 2,
       minZ: Math.min(...props.map(p => p.z - p.radius)) - 2, maxZ: Math.max(...props.map(p => p.z + p.radius)) + 2 };

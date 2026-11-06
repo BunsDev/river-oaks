@@ -1,5 +1,7 @@
 // Coworking studio (fixture): the #218 plan with a stand-in companion, rendered
-// as the finished office (default) or the graybox (?finish=graybox). It is a
+// as the finished office (default, `?finish=classic`), the same office under the
+// Pink Jet-Age kit finish (`?finish=pink-jet-age`, #738/#744) or the graybox
+// (`?finish=graybox`). It is a
 // labeled fixture site, never placed in the district. The companion's
 // pose comes only from companionPresentation(presence, task): idle life never
 // reads as work. window.workplaceFixture.show(state, camera) renders a state;
@@ -9,6 +11,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { planWorkplaceRoom, buildWorkplaceGraybox, findRoute, AVATAR_ENVELOPE } from '../../src/workplace-room.js';
 import { buildWorkplaceOffice, OFFICE_VIEWS } from '../../src/workplace-office.js';
 import { companionPresentation } from '../../src/workplace-contract.js';
+import { workplaceKitFinish, workplaceKitFinishName } from '../../src/workplace-kit-finish.js';
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setPixelRatio(1);renderer.setSize(innerWidth, innerHeight);renderer.shadowMap.enabled = true;renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -22,8 +25,12 @@ Object.assign(sun.shadow.camera, {left: -6, right: 6, top: 6, bottom: -6});scene
 const outside = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({color: '#77706a', roughness: 0.95}));
 outside.rotation.x = -Math.PI / 2;outside.position.y = -0.06;outside.receiveShadow = true;scene.add(outside);
 const room = planWorkplaceRoom();
-const finish = new URLSearchParams(location.search).get('finish') === 'graybox' ? 'graybox' : 'office';
-const build = finish === 'graybox' ? buildWorkplaceGraybox : buildWorkplaceOffice;
+// The graybox is the measured blockout; any other value is a kit finish name, and an
+// unknown one is classic (workplace-kit-finish.js), as readFinishPreference treats the town.
+const requested = new URLSearchParams(location.search).get('finish');
+const finish = requested === 'graybox' ? 'graybox' : workplaceKitFinishName(requested);
+const finishLabel = finish === 'graybox' ? 'Graybox' : workplaceKitFinish(finish).label;
+const build = finish === 'graybox' ? buildWorkplaceGraybox : (THREE, room) => buildWorkplaceOffice(THREE, room, { finish });
 let graybox = build(THREE, room);scene.add(graybox.object);
 const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.05, 80);
 const world = ([x, d], y = 0) => new THREE.Vector3(x, y, -d);
@@ -68,7 +75,7 @@ function show(state = 'arriving', cameraName = 'CAM-01', {progress = 1, time = 0
   const view = room.cameras[cameraName] ?? OFFICE_VIEWS[cameraName];
   camera.position.set(...view.position.map((value, index) => index === 2 ? -value : value));camera.lookAt(view.target[0], view.target[1], -view.target[2]);
   camera.aspect = innerWidth / innerHeight;camera.updateProjectionMatrix();
-  label.textContent = `${room.site.label} · ${view.label} · ${presentation.label}`;
+  label.textContent = `${room.site.label} · ${finishLabel} · ${view.label} · ${presentation.label}`;
   graybox.update?.(time);
   renderer.render(scene, camera);
   current = {state, camera: cameraName, presentation};

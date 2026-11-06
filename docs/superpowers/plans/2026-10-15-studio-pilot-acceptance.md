@@ -1334,3 +1334,7 @@ of `e1ac3422` under the shared browser lock, load 13–21:
 | --- | --- | --- |
 | `office-visit` / `office-desk` / `office-computer-embed` | passed, 12 / 18 / 62 checks, first run | `studio-417-e1ac3422-office359.json` |
 | `office-ipic-journey-runner.mjs` | passed, 30 checks, 124 s, first run (viewers converged after 10 ms) | `studio-417-e1ac3422-ipic.json` |
+
+## Delivery record (docs review, 2026-10-31)
+
+The #417 closeout on `main` `f0d01729` (#806) merged on 2026-10-30 20:32Z as `870d6f3b` (reviewed head `6bd41236`). Register task `studio-417-closeout-f0d01729-20261030` is `delivered`; its worktree `river-oaks-studio-417-closeout-f0d01729` (`2a41f224`, clean, a strict ancestor of the merged head) passed a `project:prune --cancel-stale` dry run with no blockers on 2026-10-31 and awaits the apply. Val's decisions recorded in the #417 packet (keep the M3 Max budget as record; Cafe phone/GPU and touch deferred as a documented limit; the Cafe creator region stays with #420) stand.

@@ -30,10 +30,10 @@ function allowedRegions(room, zone) {
 }
 const inside = (region, x, d) => x >= region.x0 - EPS && x <= region.x1 + EPS && d >= region.d0 - EPS && d <= region.d1 + EPS;
 
-test('every office mesh stays in its plan zone, so routes, sockets and the aisle are unchanged', () => {
+for (const finish of ['classic', 'pink-jet-age']) test(`every ${finish} office mesh stays in its plan zone, so routes, sockets and the aisle are unchanged`, () => {
   const room = planWorkplaceRoom();
   assert.deepEqual(validateRoomPlan(room), []);
-  const office = buildWorkplaceOffice(THREE, room), list = meshes(office.object);
+  const office = buildWorkplaceOffice(THREE, room, { finish }), list = meshes(office.object);
   assert.ok(list.length > 80, `a furnished room, not a blockout (${list.length} meshes)`);
   for (const mesh of list) {
     const zone = mesh.userData.zone, e = extent(mesh), label = `${mesh.name || mesh.material.name} (${zone})`;
@@ -66,9 +66,9 @@ test('the office keeps the doorway open to the door height that clears the talle
   }
 });
 
-test('the office releases every geometry, material and texture it made', () => {
+for (const finish of ['classic', 'pink-jet-age']) test(`the ${finish} office releases every geometry, material and texture it made`, () => {
   const room = planWorkplaceRoom(), scene = new THREE.Scene();
-  const office = buildWorkplaceOffice(THREE, room); scene.add(office.object);
+  const office = buildWorkplaceOffice(THREE, room, { finish }); scene.add(office.object);
   const geometries = new Set(), materials = new Set(), textures = new Set();
   office.object.traverse(node => {
     if (node.geometry) geometries.add(node.geometry);
