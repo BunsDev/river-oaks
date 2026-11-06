@@ -1,0 +1,68 @@
+{
+  "name": "dance_chill",
+  "prompts": [
+    "a person dances chill"
+  ],
+  "segments": [
+    {
+      "prompt": "a person dances chill",
+      "frames": 150
+    }
+  ],
+  "engine_animation_id": "48178058d022bc6c",
+  "frames": 150,
+  "fps": 30,
+  "duration_s": 5,
+  "half_time_s": 10,
+  "settings": {
+    "steps": 100,
+    "seed": 0,
+    "model": "soma-rp-v1.1",
+    "text_quantization": "q8_0",
+    "transition_frames": 5
+  },
+  "skeleton": "soma30",
+  "rotation_order": "xyzw",
+  "joint_names": [
+    "Hips",
+    "Spine1",
+    "Spine2",
+    "Chest",
+    "Neck1",
+    "Neck2",
+    "Head",
+    "Jaw",
+    "LeftEye",
+    "RightEye",
+    "LeftShoulder",
+    "LeftArm",
+    "LeftForeArm",
+    "LeftHand",
+    "LeftHandThumbEnd",
+    "LeftHandMiddleEnd",
+    "RightShoulder",
+    "RightArm",
+    "RightForeArm",
+    "RightHand",
+    "RightHandThumbEnd",
+    "RightHandMiddleEnd",
+    "LeftLeg",
+    "LeftShin",
+    "LeftFoot",
+    "LeftToeBase",
+    "RightLeg",
+    "RightShin",
+    "RightFoot",
+    "RightToeBase"
+  ],
+  "files": {
+    "glb": "dance_chill.glb",
+    "prompt": "prompt.txt",
+    "root_positions": "root_positions.f32",
+    "local_rotations_xyzw": "local_rotations_xyzw.f32"
+  },
+  "usage": {
+    "three_js": "GLTFLoader + AnimationMixer on the glb; loop plays automatically",
+    "half_time_playback": "set mixer.timeScale = 0.5 (doubles apparent duration)"
+  }
+}
