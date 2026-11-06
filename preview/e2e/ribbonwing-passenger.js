@@ -68,6 +68,12 @@ async page => {
   await page.locator('.ribbonwing-seat [data-seat-action]').click();
   await alice.waitForFunction(()=>document.querySelector('.ribbonwing-seat:not([hidden]) [data-seat-status]')?.textContent.includes('invites you aboard'),{},{timeout:10000});
   check((await town(alice)).players.find(p=>p.id===OWNER)?.vehicle==='hover','alice is invited aboard Jevica\'s Ribbonwing and is offered Board');
+  // The seat panel updates every frame; its polite line must not be rewritten each time, or a screen
+  // reader repeats the invitation (visitor sweep, 2026-11-05). Count writes over ten drawn frames.
+  const rewrites=await alice.evaluate(()=>new Promise(resolve=>{const line=document.querySelector('.ribbonwing-seat [data-seat-status]');let writes=0,frames=0;
+    const observer=new MutationObserver(records=>{writes+=records.length;});observer.observe(line,{childList:true,characterData:true,subtree:true});
+    const tick=()=>{if(++frames>=10){observer.disconnect();resolve({writes,frames,text:line.textContent});}else requestAnimationFrame(tick);};requestAnimationFrame(tick);}));
+  check(rewrites.writes===0,`alice's invitation line is written once, not every frame (${JSON.stringify(rewrites)})`);
   await alice.locator('.ribbonwing-seat [data-seat-action]').click();
   await alice.waitForFunction(()=>window.__riverRibbonwingSeat().riding,{},{timeout:10000});
   const aboard=await me(alice),pilot=(await town(alice)).players.find(p=>p.id===OWNER);
