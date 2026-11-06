@@ -113,44 +113,17 @@
   <span id="hud">CT CLUB — <b>WASD</b> walk · <b>click</b> look · <b>N</b> view · <b>Space</b> entry</span>
   <div id="ribbon">
     <button id="plan-btn" title="floor plan (P)">📐 plan</button>
-    <button id="world-btn" title="mount screens on any surface (F)">📺 screens</button>
     <button id="coords-btn" title="exact surface coordinates (C)">📊 coords</button>
     <button id="audio-btn" title="audio: upload, playlist, reactive lights (M)">🎵 audio</button>
     <button id="dancers-btn" title="toggle the dancers on the dancefloor">🕺 dancers</button>
   </div>
 </div>
-<div id="hint">look: click once (Esc to release) · walk: W A S D · next tour view: N · design panel: i · floor planner: P · screens: F · audio: M · coordinates: C · reset to entry: Space</div>
+<div id="hint">look: click once (Esc to release) · walk: W A S D · next tour view: N · design panel: i · floor planner: P · audio: M · coordinates: C · reset to entry: Space</div>
 <div id="planner">
   <div class="drag-handle" data-panel="planner">⋮⋮ drag · floor plan</div>
   <div class="planner-head"><button id="layout-save">💾 save version</button> <span id="layout-next">club_layout_01.json</span></div>
   <canvas id="plan-canvas"></canvas>
   <div id="planner-note">drag an asset to move it (0.5 m snap; the whole box stays inside the walls) · the 3D room + walking collision update on drop · every drop saves a new layout version · P or 📐 closes</div>
-</div>
-<div id="world">
-  <div class="drag-handle" data-panel="world">⋮⋮ drag · screens on surfaces</div>
-  <div class="world-tabs">
-    <label>surface:</label>
-    <select id="surface-select"></select>
-  </div>
-  <canvas id="world-canvas"></canvas>
-  <div class="world-controls">
-    <button id="screen-add">＋ add screen</button>
-    <button id="screen-eq" title="add a live 16-band equalizer screen">＋ eq</button>
-    <label class="world-style">style
-      <select id="screen-viz-style" title="equalizer style">
-        <option value="bars">bars</option>
-        <option value="peaks">peaks</option>
-        <option value="mirror">mirror</option>
-        <option value="ring">ring</option>
-        <option value="wave">wave</option>
-      </select>
-    </label>
-    <button id="screen-wave" title="add a live waveform screen">＋ wave</button>
-    <button id="screen-remove" disabled>remove</button>
-    <span id="screen-info">click a screen to edit its HTML</span>
-  </div>
-  <textarea id="screen-html" rows="4" spellcheck="false" placeholder="HTML/CSS for this screen — CSS + JS animations run live on the wall"></textarea>
-  <div class="world-controls"><button id="screen-apply">apply HTML to screen</button></div>
 </div>
 <div id="audio">
   <div class="drag-handle" data-panel="audio">⋮⋮ drag · audio</div>

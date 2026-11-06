@@ -7,7 +7,6 @@ import { buildCtClubInterior } from '../src/ct-club-interior.js';
 import { configureMaterials } from '../../preview/src/materials.js';
 import { attachDesignPanel, mountDesignPanel } from './design-panel.js';
 import { attachPlanPlanner } from './plan-editor.js';
-import { attachWorldPlanner } from './world-plan.js';
 import { surfaceReference } from './coordinates.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 import { createAudioEngine } from './audio-engine.js';
@@ -270,11 +269,8 @@ function rebuildRoom() {
 const planner = attachPlanPlanner({ room, onApply: rebuildRoom });
 window.clubFixture.planner = planner;
 window.clubFixture.saveLayout = saveLayout;
-const world = attachWorldPlanner({ room, onApply: rebuildRoom });
-window.clubFixture.world = world;
 document.getElementById('plan-btn')?.addEventListener('click', () => planner.toggle());
 document.getElementById('layout-save')?.addEventListener('click', () => saveLayout({ exportFile: true }));
-document.getElementById('world-btn')?.addEventListener('click', () => world.toggle());
 document.getElementById('dancers-btn')?.addEventListener('click', () => { if (dancers) dancers.toggle(); });
 
 // Exact surface coordinates (press C / the 📊 button): world xyz, size and facing
@@ -433,7 +429,6 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyN') { nextView(); }
   if (e.code === 'KeyI') { window.clubFixture.toggleInfo(); }
   if (e.code === 'KeyP') { planner.toggle(); }
-  if (e.code === 'KeyF') { world.toggle(); }
   if (e.code === 'KeyC') { window.clubFixture.toggleCoords(); }
   if (e.code === 'KeyM') { window.clubFixture.toggleAudio(); }
 });
