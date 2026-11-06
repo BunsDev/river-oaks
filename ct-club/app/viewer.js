@@ -512,7 +512,30 @@ const drawEq = (ctx, W, H, style, audio, t) => {
   }
 };
 let vizT = 0;
-const drawViz = () => {
+const drawBands = () => {
+  const canvas = document.getElementById('band-viz');
+  if (!canvas || !analyzer) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = '#0a0b10';
+  ctx.fillRect(0, 0, W, H);
+  const st = analyzer.state();
+  const bands = st.bands;
+  const bw = W / 32;
+  for (let i = 0; i < 32; i++) {
+    const h = bands[i] * H * 0.9;
+    const x = i * bw;
+    // Color gradient: bass (red) → mid (green) → treble (blue)
+    const hue = (i / 32) * 240; // 0=red, 120=green, 240=blue
+    ctx.fillStyle = `hsl(${hue}, 80%, 50%)`;
+    ctx.fillRect(x + 1, H - h, bw - 2, h);
+  }
+  // Update readout
+  const readout = document.getElementById('band-readout');
+  if (readout) {
+    readout.textContent = `bass ${st.bass.toFixed(2)} · mid ${st.mid.toFixed(2)} · treble ${st.treble.toFixed(2)} · energy ${st.energy.toFixed(2)} · beat ${st.beat ? '●' : '○'}`;
+  }
+};
   if (!audio) return;
   vizT += 1 / 60;
   for (const obj of cssScene.children) {
@@ -529,11 +552,14 @@ const loop = now => {
     clock.t += Math.min(1 / 20, clock.delta);
     if (dancers) {
       const st = analyzer ? analyzer.state() : null;
-      if (st) club.userData.setAudio(st);               // lights react to bands
-      const scale = st ? 0.5 + st.bass * 1.5 : 1;       // bass drives dance speed
-      dancers.tick(clock.delta, scale);                  // dancers react to bass
+      // Only react to audio when the control panel's "colours to music" is ON.
+      const reactOn = design?.audioReact?.on ?? false;
+      if (st && reactOn) club.userData.setAudio(st);
+      else club.userData.setAudio(null);               // clear → autonomous mode
+      const scale = (st && reactOn) ? 0.5 + st.bass * 1.5 : 1;
+      dancers.tick(clock.delta, scale);
     }
-    if (!reducedMotion) club.userData.tick(clock.t);     // tick after audio state is set
+    if (!reducedMotion) club.userData.tick(clock.t);
   }
   if (design) design.cycle(now / 1000, audio);   // colour cycles + audio-reactive (owned by the host)
   updateAudioTransport();                       // keep the seek bar + time display live

@@ -1,7 +1,7 @@
 // CT Club audio frequency analyser — 32 log-spaced bands from 20 Hz to 15 kHz.
 // Wraps the audio engine's AnalyserNode and returns band levels (0..1) plus
 // bass/mid/treble convenience readings, overall energy, and beat detection.
-export function createAudioAnalyzer({ analyser, sampleRate = 44100 } = {}) {
+export function createAudioAnalyzer({ analyser } = {}) {
   const AC = window.AudioContext || window.webkitAudioContext;
   let ctx;
   if (!analyser) {
@@ -15,9 +15,11 @@ export function createAudioAnalyzer({ analyser, sampleRate = 44100 } = {}) {
     a.connect(ctx.destination);
     analyser = a;
   }
+  // Use the analyser's actual AudioContext sample rate (not a hardcoded 44100).
+  const audioCtx = analyser.context || ctx;
+  const sr = audioCtx ? audioCtx.sampleRate : 44100;
   const fftSize = analyser.fftSize;
   const n = analyser.frequencyBinCount;          // = fftSize / 2
-  const sr = sampleRate || (ctx ? ctx.sampleRate : 44100);
   const freq = new Uint8Array(n);
   const wave = new Uint8Array(analyser.fftSize);
 
@@ -53,15 +55,14 @@ export function createAudioAnalyzer({ analyser, sampleRate = 44100 } = {}) {
   };
 
   // Convenience band groupings (true musical ranges).
-  const bandAvg = (b0, b1) => {
-    const bands = getBands();
+  const bandAvgFrom = (bands, b0, b1) => {
     let sum = 0;
     for (let i = b0; i <= b1 && i < 32; i++) sum += bands[i];
     return sum / (Math.min(b1, 31) - b0 + 1);
   };
-  const getBass = () => bandAvg(0, 6);     // ~20–260 Hz
-  const getMid = () => bandAvg(7, 20);     // ~260 Hz–2 kHz
-  const getTreble = () => bandAvg(21, 31); // ~2 kHz–15 kHz
+  const getBass = () => bandAvgFrom(getBands(), 0, 6);     // ~20–260 Hz
+  const getMid = () => bandAvgFrom(getBands(), 7, 20);     // ~260 Hz–2 kHz
+  const getTreble = () => bandAvgFrom(getBands(), 21, 31); // ~2 kHz–15 kHz
 
   // Overall energy from waveform RMS.
   const getEnergy = () => {
@@ -75,25 +76,26 @@ export function createAudioAnalyzer({ analyser, sampleRate = 44100 } = {}) {
   };
 
   // Beat detection: bass energy threshold with hysteresis decay.
-  let beat = false;
-  let decay = 0;
-  const getBeat = () => {
-    const bass = getBass();
-    decay = Math.max(decay * 0.92, bass - 0.02);
-    const hit = bass > 0.5 && bass > decay + 0.12;
-    if (hit) { beat = true; decay = bass; }
-    else if (beat && bass < 0.3) beat = false;
-    return beat;
+  let beatState = false;
+  let beatDecay = 0;
+  const getBeat = (bass) => {
+    const b = bass !== undefined ? bass : getBass();
+    beatDecay = Math.max(beatDecay * 0.92, b - 0.02);
+    const hit = b > 0.5 && b > beatDecay + 0.12;
+    if (hit) { beatState = true; beatDecay = b; }
+    else if (beatState && b < 0.3) beatState = false;
+    return beatState;
   };
 
-  const state = () => ({
-    bands: Array.from(getBands()),
-    bass: getBass(),
-    mid: getMid(),
-    treble: getTreble(),
-    energy: getEnergy(),
-    beat: getBeat(),
-  });
+  const state = () => {
+    const b = getBands();
+    const bass = bandAvgFrom(b, 0, 6);
+    const mid = bandAvgFrom(b, 7, 20);
+    const treble = bandAvgFrom(b, 21, 31);
+    const energy = getEnergy();
+    const beat = getBeat(bass);
+    return { bands: Array.from(b), bass, mid, treble, energy, beat };
+  };
 
-  return { analyser, ctx, fftSize, sampleRate: sr, getBands, getWave, getBass, getMid, getTreble, getEnergy, getBeat, state };
+  return { analyser, ctx: audioCtx, fftSize, sampleRate: sr, getBands, getWave, getBass, getMid, getTreble, getEnergy, getBeat, state };
 }
