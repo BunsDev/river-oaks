@@ -32,6 +32,8 @@ import { AXE_LANES, AXE_ROOM_DARTS, AXE_ROOM_INTERIOR, atAxeLane, atAxeRoomDarts
 import { isVenueRoom } from '../preview/src/venue-rooms.js';
 import { campusSuiteSeatSites, districtRevisionOf, isCampusRoom, isCampusSeat, isCampusSuiteSeat } from '../preview/src/garden-campus-district.js';
 import { campusSit, campusStand } from '../shared/garden-campus-seats.js';
+import { seatClusterIndex } from '../preview/src/seat-clusters.js';
+import { createSeatChat } from './seat-chat.js';
 import { campusToSource, sourceToCampus } from '../shared/garden-campus-layout.js';
 import { createScreenings } from './screenings.js';
 import { SCREENING_VENUES } from '../preview/src/screening-contract.js';
@@ -250,6 +252,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
   const benches=benchSeats(worldData);
+  // Private talk between people seated in one cluster (#825 slice 3): never in the shared snapshot.
+  const seatClusterOfBuild=seatClusterIndex(worldData);
+  const seatChat=createSeatChat({clusterOf:id=>{const player=players.get(id);return player?.sitting&&player.altitude<=.1&&!player.vehicle?seatClusterOfBuild.get(player.sitting.buildId)??null:null;},nameOf:id=>accountName(id,players.get(id)?.name)});
   // The Gardens (#510): seated at a campus workstation, a resident may open their own private
   // desk. Snapshots carry only that boolean; which seat and whose work stay private.
   const campusWorkstations=new Set(benches.filter(seat=>isCampusSeat(seat.buildId)&&seat.workstation).map(seat=>seat.buildId));
@@ -602,6 +607,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const time=now(),names=new Set([players.get(userId)?.name,...chat.filter(entry=>entry.authorId===userId).map(entry=>entry.authorName),
       ...[...builds.values()].filter(item=>item.ownerId===userId).map(item=>item.ownerName)].filter(Boolean));
     leave(userId);
+    seatChat.forget(userId);
     for(const [id,item] of [...builds])if(item.ownerId===userId){
       for(const player of players.values())if(player.sitting?.buildId===id)stand(player,{type:'stand'},time);
       if(!buildOccupied(id))builds.delete(id);
@@ -643,6 +649,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const greeting=interactions.snapshot().some(item=>[a,b].includes(item.fromId)&&[a,b].includes(item.toId));
     if (greeting) {interactions.cancel(a);revision++;}
     const invited=[tableGames,cafeGames,dartsGames,axeGames].map(games=>games.separate(a,b)).some(Boolean);
+    if(seatChat.separate(a,b))revision++;
     const time=now();
     let ended=campus.separate(a,b,time);
     if (isAdmin(a)!==isAdmin(b)) {
@@ -1417,6 +1424,22 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       revision++;
       return {ok:true,id:entry.id};
     }
+    if (message.type==='seatChat') {
+      const allowed={invite:['type','action','peerId'],accept:['type','action','peerId'],decline:['type','action','peerId'],cancel:['type','action'],leave:['type','action'],send:['type','action','sessionId','text']}[message.action];
+      if(!allowed || !fields(message,allowed))return reject('invalid_seat_chat');
+      if(message.action==='send'){
+        if(typeof message.text!=='string' || /[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/u.test(message.text))return reject('invalid_chat');
+        const content=message.text.trim().replace(/\s+/gu,' ');
+        if(!content || [...content].length>MAX_CHAT_LENGTH || Buffer.byteLength(content,'utf8')>MAX_CHAT_LENGTH*4)return reject('invalid_chat');
+        if(time-ledger.chatAt<CHAT_COOLDOWN_MS)return reject('chat_cooldown','Wait a moment before sending another message.');
+        const result=seatChat.command(userId,{...message,text:content},time);
+        if(result.ok){ledger.chatAt=time;revision++;}
+        return result;
+      }
+      const result=seatChat.command(userId,message,time);
+      if(result.ok)revision++;
+      return result;
+    }
     if (message.type==='scenario') {
       if (!fields(message,['type','action']) || !['start','pause'].includes(message.action)) return reject('invalid_action');
       if (['success','failed'].includes(state.status)) return reject('scenario_finished');
@@ -1456,6 +1479,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     return result;
   }
   function step(delta) {
+    if(seatChat.live()&&seatChat.reconcile(now()))revision++;
     if (!Number.isFinite(delta) || delta<=0) return;
     const duration=Math.min(delta,0.25),time=now();
     clearExpiredLedgers(time);
@@ -1513,7 +1537,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (life?.planning) throw new Error('Cannot checkpoint an unfinished route search');
     interactions.prune();
     tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();lanternWalk.prune(now());screenings.prune(now());
-    const payload=JSON.parse(checkpointJSON({offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.checkpoint()}:{}),screenings:screenings.checkpoint(now()),worldPolicy,crime:crime.checkpoint(),police:police.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
+    const payload=JSON.parse(checkpointJSON({...(seatChat.checkpoint()?{seatChat:seatChat.checkpoint()}:{}),offices:offices.checkpoint(),campus:campus.checkpoint(),tableGames:tableGames.checkpoint(),cafeGames:cafeGames.checkpoint(),dartsGames:dartsGames.checkpoint(),axeGames:axeGames.checkpoint(),...(lanternWalk.enabled?{lanternWalk:lanternWalk.checkpoint()}:{}),screenings:screenings.checkpoint(now()),worldPolicy,crime:crime.checkpoint(),police:police.checkpoint(),revision,elapsed,state,interactions:interactions.snapshot(),players:[...players.values()].map(player=>{
       // An active maneuver is saved as admitted, so another instance (or this one after a
       // cache miss) replays the same path from the same start; restore re-checks it.
       // A pending passenger invitation is not saved (it lasts a minute); the seat is.
@@ -1878,6 +1902,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       ledgers.clear();for (const [id,ledger] of nextLedgers) ledgers.set(id,ledger);
       focus.clear();for (const [id,hold] of nextFocus) focus.set(id,hold);
       chat.splice(0,chat.length,...nextChat);
+      seatChat.restore(recovered.seatChat);
       appearanceByUser.clear();for(const [id,appearance] of nextAppearances) appearanceByUser.set(id,appearance);
       characterByUser.clear();for(const [id,character] of nextCharacters)characterByUser.set(id,character);
       movementByUser.clear();for(const [id,movement] of nextMovements) movementByUser.set(id,movement);
@@ -1922,7 +1947,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     for(const player of players.values())if(player.sitting)Object.assign(player,{sitting:null,
       position:[player.position[0],player.position[1],environment.groundAt(player.position[0],-player.position[1])],
       poseAt:now(),moveBudget:.1,liftBudget:.1,gesture:null,gestureUntil:0});
-    focus.clear();voiceIdentities.clear();chat.length=0;builds.clear();syncColliders();life=createResidentLife(worldData,state);elapsed=0;revision++;
+    focus.clear();voiceIdentities.clear();chat.length=0;seatChat.clear();builds.clear();syncColliders();life=createResidentLife(worldData,state);elapsed=0;revision++;
   }
   // Preparation consumes the ordinary command budget, but never changes a look
   // or its cooldown. The coordinator persists the intent before account CAS.
@@ -1938,7 +1963,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
   const listPlaces = () => placesOf(worldData);
-  return {worldId,protocolVersion,approvedSpaceRoutesBlocked:()=>approvedSpaceRoutesBlocked(),join,rename,leave,forgetAccount,separate,command,step,snapshot,checkpoint,restore,reset,
+  return {worldId,protocolVersion,approvedSpaceRoutesBlocked:()=>approvedSpaceRoutesBlocked(),seatChatView:id=>{const time=now();seatChat.reconcile(time);return seatChat.viewFor(id,time);},seatChatViews:()=>{const time=now();seatChat.reconcile(time);return seatChat.views(time);},seatChatLines:id=>seatChat.linesFor(id),join,rename,leave,forgetAccount,separate,command,step,snapshot,checkpoint,restore,reset,
     // World rules (#596): the public rule and the one violence decision for #597's attacks.
     worldPolicy:publicWorldPolicy,violenceFor,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.

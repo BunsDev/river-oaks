@@ -504,7 +504,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
     }
     const revision=(previous?.revision??0)+1;
     const snapshot={...world.snapshot(),serverTimeMs:time};if(currentHash)snapshot.regionSha256=currentHash;if(world.districtRevision)snapshot.districtRevision=world.districtRevision;
-    const view={worldId,snapshot,connections:[...connections.values()].map(({identity,connectionId})=>({userId:identity.userId,connectionId,sessionId:identity.sessionId,expiresAt:identity.expiresAt})),revision};
+    const seatChat=world.seatChatViews?.();
+    const view={worldId,snapshot,...(seatChat&&Object.keys(seatChat).length?{seatChat}:{}),connections:[...connections.values()].map(({identity,connectionId})=>({userId:identity.userId,connectionId,sessionId:identity.sessionId,expiresAt:identity.expiresAt})),revision};
     const checkpoint={version:characters?3:2,worldId,revision,lastTick:time,connections:[...connections.values()],checkpoint:world.checkpoint(),
       ...(characters?{pendingSelections:[...pendingSelections.values()],selectionVersions:[...selectionVersions]}:{}),
       ...(previous?.regionSha256||revisionUpdate?{regionSha256:currentHash}:{}),

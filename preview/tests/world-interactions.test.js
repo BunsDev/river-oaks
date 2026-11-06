@@ -15,7 +15,8 @@ const forward = heading => [Math.sin(heading), -Math.cos(heading)];
 
 test('every storefront bench offers two places, side by side, facing the street', () => {
   // The plaza salon's chairs and curved bench join the same list; plaza-salon.test.js covers them.
-  const spots = storefrontBenchSpots(world), seats = benchSeats(world).filter(seat => !seat.buildId.startsWith('bench:plaza-salon-') && !seat.buildId.startsWith('bench:ipic-'));
+  // So do the seat clusters; seat-chat.test.js covers those.
+  const spots = storefrontBenchSpots(world), seats = benchSeats(world).filter(seat => !seat.buildId.startsWith('bench:plaza-salon-') && !seat.buildId.startsWith('bench:ipic-') && !seat.buildId.startsWith('bench:seat-cluster-'));
   assert.ok(spots.length > 3);
   assert.equal(seats.length, spots.length * 2);
   for (const spot of spots) {
