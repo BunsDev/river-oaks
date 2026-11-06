@@ -536,6 +536,9 @@ const drawBands = () => {
     readout.textContent = `bass ${st.bass.toFixed(2)} · mid ${st.mid.toFixed(2)} · treble ${st.treble.toFixed(2)} · energy ${st.energy.toFixed(2)} · beat ${st.beat ? '●' : '○'}`;
   }
 };
+const drawViz = () => {
+  if (!audio) return;
+  vizT += 1 / 60;
   for (const obj of cssScene.children) {
     const kind = obj.userData.viz;
     if (!kind || !obj.userData.vizCtx) continue;
@@ -571,6 +574,7 @@ const loop = now => {
   }
   renderer.render(scene, camera);
   cssRenderer.render(cssScene, camera);   // live wall-screen HTML/CSS/JS
+  drawViz();                            // draw EQ / waveform screens from the audio
   drawBands();                          // draw 32-band audio frequency visualization
   if (sampleEvery++ % 60 === 0) {
     const stats = renderer.info;
