@@ -85,7 +85,7 @@ WebKit 27.2, load 8–16 (core verify ran alongside; timing is not measured here
 | Claim | Steps (visitor, keyboard only) | Chromium | WebKit |
 |---|---|---|---|
 | Garage and motorcycle (#767, #791) | Q calls, G boards, G steps out | pass with #791 (`multiplayer-exclusivity`) | pass with #791 (visitor part) |
-| Ribbonwing passenger (#777, #779) | invited; Tab reaches **Board** (14 stops); Enter boards; G steps out | not reached: earlier steps had walked alice 100 m away (probe order; rerun in the second increment) | pass; **the invitation line was rewritten every frame (50 writes in 0.8 s)** |
+| Ribbonwing passenger (#777, #779) | invited; Tab reaches **Board** (14 stops); Enter boards; G steps out | pass (on the second-increment tree); the first run had walked alice 100 m away first | pass; **the invitation line was rewritten every frame (50 writes in 0.8 s)** |
 | Garden Circuit (#834) | Tab to Start (4 stops), Enter; W drives; Space hops without restarting; focus moves to the course | pass | pass |
 | Character Studio random start (#694, #766) | Tab to "Open character studio" (9), Enter: a random person of your own (`create`, `custom-human`, "unsaved edits"); Surprise me keeps focus and is announced; Escape returns focus to the trigger | pass | pass |
 | Roster Block (#711) | Tab to "Block bob", Enter asks to confirm (announced), Enter blocks (announced) | **focus fell to the page after the block** | **same** |
@@ -120,6 +120,46 @@ The fixes are in the second increment (`visitor-sweep-a11y-20261105`).
 - **Jevica, flight (B) and Jev's companionship (J):** the owner's, as
   `multiplayer-exclusivity` checks.
 
+## 3. The sweep's fixes (`visitor-sweep-a11y-20261105`, #891)
+
+**Fixes:**
+
+- **Roster Block and Report** (`player-blocks.js`, `multiplayer-client.js`): `aria-disabled`
+  while the town answers, not `disabled`, and presses are ignored meanwhile. This is the pattern
+  `plaza-wine-pong.js` already uses.
+- **Settings Unblock** (`player-blocks.js`):
+  - focus on an Unblock button follows its resident across the list's rebuilds;
+  - after an Unblock it moves to the next resident (the one before, for the last), then to the
+    status line (`tabIndex = -1`);
+  - it never takes focus that was elsewhere.
+- **Ribbonwing seat line** (`ribbonwing-seat.js`): `show()` runs every frame, and now writes the
+  polite line only when its words change (`writeLive` from #867).
+
+**Failing first:**
+
+| Regression | On main | With the fix |
+|---|---|---|
+| `player-blocks.test.js`: a busy Block stays focusable and ignores presses | fails (`disabled` while busy) | passes |
+| `player-blocks.test.js`: Unblock focus moves to the next resident, then the status line | fails (focus stays on the removed button) | passes |
+| `player-blocks.test.js`: Settings does not take focus that was elsewhere | passes (guard) | passes |
+| `ribbonwing-passenger`: the invitation line is not rewritten over ten drawn frames | **fails**: `{"writes":10,"frames":10}` | passed |
+
+**Sweep after the fix** (Chromium 156 and WebKit 27.2, 04:43–04:45Z):
+
+| Step | Chromium | WebKit |
+|---|---|---|
+| Ribbonwing boarding | the invitation is heard once; Tab reaches Board (14); boards; G steps out | same |
+| Roster Block | focus stays on the button, now "Unblock bob"; both announcements heard | same |
+| Settings Unblock | focus moves to the status line "You unblocked bob."; Escape returns to the Settings button | same |
+| Report | focus stays on "Report disruption by bob"; the result is announced | same |
+
+**Release notes** (`docs/releases/0.3.0.md`):
+
+- the garage line now says what is the visitor's and what is the owner's (#767, #791);
+- the seat line and the focus fixes are listed (#891).
+
+The candidate header, counts and BLOCKED status stay with river-oaks-4f's re-qualification.
+
 ## Checks
 
 **#791 tree** (main `1dc64db1` + this change), 2026-11-06:
@@ -135,7 +175,29 @@ The fixes are in the second increment (`visitor-sweep-a11y-20261105`).
 
   The receipt is `.runtime/agent/core.json` (`passed`).
 - **Journeys:** `multiplayer-exclusivity` and `ribbonwing-passenger`, as in the table in section 1.
-- **Not run here:** `verify full`, Redis, other journeys and hosted. Hosted preview runs on the PR.
+- **Not run here:** `verify full`, Redis and other journeys.
+- **Hosted:** #890 at `06a08972` was 34/34 green (Verify 42164242176, first attempt). It merged as
+  `c6f9542d` at 2026-11-06T04:56:15Z.
+
+**Second-increment tree** (`477e9237` + main `c6f9542d`):
+
+- **Before the merge:**
+  - `node --test preview/tests/player-blocks.test.js`, 17/17;
+  - `pnpm test`, 5248 passed, 1 skipped, 30 todo;
+  - shared `player-blocking`, `player-blocking-lifecycle` and `player-blocking-interface`
+    (Chromium) passed;
+  - `ribbonwing-passenger` passed;
+  - the sweep steps passed in both engines.
+- **After the merge** (`73ea32fa` + these docs):
+  - `pnpm run verify`, 04:57–05:03Z at load 10–12, passed:
+    - tooling 307/0;
+    - preview 5252 passed, 1 skipped, 30 todo;
+    - server 1125 passed, 285 skipped;
+    - desktop 127 passed, 5 skipped;
+    - Python 215 passed;
+    - no secrets found;
+  - `ribbonwing-passenger` passed (Chromium), with both increments' checks.
+- **Not run:** `verify full`, Redis and the other journeys. Hosted runs on the PR.
 
 ## Decisions for Val
 
@@ -149,5 +211,6 @@ The fixes are in the second increment (`visitor-sweep-a11y-20261105`).
 
 ## Next step
 
-Land #791, then tell river-oaks-4f the merged head. Then land the second increment (focus and
-seat-line fixes, release-notes wording) on top of it, before the pin.
+Land #891 and tell river-oaks-4f its merged head. SendMessage could not reach river-oaks-4f
+(session `3158e24e`) at 04:57Z, so the hand-over is in this task's register rows. #885 has to
+merge main to land, so the pin includes both increments. Then post the evidence comment on #791.
