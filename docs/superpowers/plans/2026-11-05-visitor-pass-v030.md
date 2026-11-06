@@ -225,9 +225,9 @@ The candidate header, counts and BLOCKED status stay with river-oaks-4f's re-qua
   session ids).
 - A message with the merged heads (pin on or after `8b823e5a`) went to `river-oaks-d7` at about
   05:31Z. That session **held** it for its user's approval, the usual cause being a different
-  permission mode, so its Claude had not seen it when this was written. It is not delivered
-  until that session's user approves it. The message also said this docs-only change would land
-  unless 4f had pinned or asked to hold main.
+  permission mode. The hold then **expired**, so the message was never delivered and its Claude
+  has not seen it. The message also said this docs-only change would land unless 4f had pinned
+  or asked to hold main.
 - At 05:31Z #885 was still a draft at `94ae357c` (base `1dc64db1`), so no pin had been made. Its
   merge of main picks up both increments.
 
@@ -240,8 +240,9 @@ includes the sweep probe `visitor-sweep.mjs`.
 
 ## Next step
 
-- **Hand-over:** the held message needs approval in the `river-oaks-d7` terminal before 4f has
-  the heads. Until then the hand-over is only in the register rows.
+- **Hand-over:** 4f does not have the heads by message. A resend is held again while the two
+  sessions' permission modes differ. Val can match the modes and ask for a resend, or give
+  river-oaks-d7 the heads directly. Until then the hand-over is only in the register rows.
 - **The pin:** river-oaks-4f pins on or after this ledger's merge head, which goes to it by message
   too.
 - **Decisions:** the two above are Val's.
