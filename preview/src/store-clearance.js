@@ -1,3 +1,4 @@
+import { stableHypot } from './stable-math.js';
 // Standing stations need space for bodies as well as point positions. Include
 // rendered counter overhangs and seating even where those fixtures are walkable.
 function footprints(room) {
@@ -26,7 +27,7 @@ export function clearStandingStations(room) {
     if(person.role==='mannequin'||person.pose==='seated')continue;
     const free=(a,d)=>a>room.aMin+radius&&a<room.aMax-radius&&d>radius&&d<room.depth-radius
       &&!boxes.some(b=>a>b.a0-radius&&a<b.a1+radius&&d>b.d0-radius&&d<b.d1+radius)
-      &&room.people.every(other=>other===person||Math.hypot(a-other.a,d-other.d)>=0.55);
+      &&room.people.every(other=>other===person||stableHypot(a-other.a,d-other.d)>=0.55);
     if(free(person.a,person.d))continue;
     const candidates=[];
     const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
@@ -36,13 +37,13 @@ export function clearStandingStations(room) {
     // a grid. The grid finds gaps between intersecting fixture footprints.
     for(const box of boxes){add(box.a0-margin,person.d);add(box.a1+margin,person.d);add(person.a,box.d0-margin);add(person.a,box.d1+margin);}
     for(let a=room.aMin+margin;a<room.aMax-margin;a+=0.1)for(let d=margin;d<room.depth-margin;d+=0.1)add(a,d);
-    candidates.sort((a,b)=>Math.hypot(a[0]-person.a,a[1]-person.d)-Math.hypot(b[0]-person.a,b[1]-person.d));
+    candidates.sort((a,b)=>stableHypot(a[0]-person.a,a[1]-person.d)-stableHypot(b[0]-person.a,b[1]-person.d));
     const clear=candidates.find(([a,d])=>free(a,d));
     if(clear){
       const station=person.role==='staff'&&person.pose==='attend'?room.fixtures.filter(f=>['counter','desk','reception','concession'].includes(f.kind))
-        .sort((a,b)=>Math.hypot(a.a-person.a,a.d-person.d)-Math.hypot(b.a-person.a,b.d-person.d))[0]:null;
+        .sort((a,b)=>stableHypot(a.a-person.a,a.d-person.d)-stableHypot(b.a-person.a,b.d-person.d))[0]:null;
       [person.a,person.d]=clear;
-      if(station){const a=station.a-person.a,d=station.d-person.d,length=Math.hypot(a,d);person.facing=[a/length,d/length];}
+      if(station){const a=station.a-person.a,d=station.d-person.d,length=stableHypot(a,d);person.facing=[a/length,d/length];}
     }
   }
 }

@@ -178,8 +178,9 @@ export function createMultiplayer({ getPose, getEnvironment = () => null, getReg
           profile.addEventListener('click',()=>social.inspect(latestPlayers.get(player.id)??player));row.append(profile);
           const invite=element('button','Add contact');invite.type='button';invite.dataset.label='Add {name} as a contact';invite.setAttribute('aria-label',`Add ${player.name} as a contact`);
           invite.addEventListener('click',()=>social.invite(latestPlayers.get(player.id)??player));row.append(invite);
+          // aria-disabled while the town answers: a disabled button would drop keyboard focus to the page.
           const report=element('button','Report');report.type='button';report.dataset.label='Report disruption by {name}';report.setAttribute('aria-label',`Report disruption by ${player.name}`);
-          report.addEventListener('click',async()=>{report.disabled=true;try{const result=await command({type:'report',playerId:player.id,reason:'disruption'});notice.textContent=result.message;}catch(error){notice.textContent=error.message;}finally{report.disabled=false;}});row.append(report);
+          report.addEventListener('click',async()=>{if(report.getAttribute('aria-disabled')==='true')return;report.setAttribute('aria-disabled','true');try{const result=await command({type:'report',playerId:player.id,reason:'disruption'});notice.textContent=result.message;}catch(error){notice.textContent=error.message;}finally{report.removeAttribute('aria-disabled');}});row.append(report);
           blockUI.rosterButton(row,player);
           if(moderator){const ban=element('button','Ban');ban.type='button';ban.addEventListener('click',async()=>{ban.disabled=true;try{await api('/api/moderation/ban',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:player.id,banned:true})});notice.textContent='Account removed from the town.';}catch(error){notice.textContent=error.message;ban.disabled=false;}});row.append(ban);}
           voiceUI.rosterButton(row,player);

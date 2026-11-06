@@ -68,7 +68,9 @@ export function createBlockUI({ blocks, announce = () => {}, setTimer = setTimeo
     const label = entry.confirming ? 'Confirm blocking {name}' : blocks.has(id) ? 'Unblock {name}' : 'Block {name}';
     button.textContent = entry.confirming ? 'Confirm block' : blocks.has(id) ? 'Unblock' : 'Block';
     button.dataset.label = label; button.setAttribute('aria-label', label.replace('{name}', name));
-    button.disabled = entry.busy || !blocks.loaded || !blocks.connected;
+    // Busy while the town answers: aria-disabled, not disabled, which would drop keyboard focus to the page.
+    button.disabled = !blocks.loaded || !blocks.connected;
+    if (entry.busy) button.setAttribute('aria-disabled', 'true'); else button.removeAttribute('aria-disabled');
   };
   const settle = entry => { clearTimer(entry.confirming); entry.confirming = null; };
   let session = blocks.session;
@@ -84,7 +86,7 @@ export function createBlockUI({ blocks, announce = () => {}, setTimer = setTimeo
       const button = document.createElement('button'); button.type = 'button'; button.className = 'multiplayer-block';
       const entry = { button, row, id: player.id, confirming: null, busy: false };
       button.addEventListener('click', async () => {
-        if (button.disabled || rows.get(player.id) !== entry) return;
+        if (button.disabled || entry.busy || rows.get(player.id) !== entry) return;
         const asked = blocks.session, current = () => asked === blocks.session && rows.get(player.id) === entry;
         const name = row.dataset.name, blocked = blocks.has(player.id);
         if (!blocked && !entry.confirming) {
@@ -116,6 +118,8 @@ export function createBlockedPlayersSettings({ blocks }) {
   const empty = document.createElement('p'); empty.className = 'blocked-players-empty';
   const status = document.createElement('p'); status.className = 'blocked-players-status';
   status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+  // Unblocking the last resident leaves keyboard focus here rather than on the page.
+  status.tabIndex = -1;
   const retry = document.createElement('button'); retry.type = 'button'; retry.textContent = 'Refresh blocked residents';
   let session = blocks.session, message = '', disposed = false;
   const refresh = async () => {
@@ -125,24 +129,34 @@ export function createBlockedPlayersSettings({ blocks }) {
   };
   retry.addEventListener('click', refresh);
   root.append(help, list, empty, status, retry);
+  // Each render rebuilds the list. Focus on an Unblock button follows its resident, or moves to the
+  // next one (the one before, for the last) when they were unblocked, then to the status line.
+  let buttons = new Map();
   const render = () => {
     if (session !== blocks.session) { session = blocks.session; message = ''; }
     status.textContent = message || blocks.error;
     retry.disabled = !blocks.connected;
-    const entries = blocks.entries();
+    const entries = blocks.entries(), before = [...buttons.keys()];
+    const focusedId = before.find(id => buttons.get(id) === document.activeElement) ?? null;
+    buttons = new Map();
     list.replaceChildren(...entries.map(({ id, name }) => {
       const asked = blocks.session;
       const item = document.createElement('li'), label = document.createElement('span'), button = document.createElement('button');
       label.textContent = name;
       button.type = 'button'; button.textContent = 'Unblock'; button.setAttribute('aria-label', `Unblock ${name}`);
       button.addEventListener('click', async () => {
-        if (button.disabled || asked !== blocks.session || disposed) return;
-        button.disabled = true;
+        if (button.getAttribute('aria-disabled') === 'true' || asked !== blocks.session || disposed) return;
+        button.setAttribute('aria-disabled', 'true');
         try { await blocks.unblock(id); if (asked === blocks.session && !disposed) { message = `You unblocked ${name}.`; render(); } }
-        catch (error) { if (asked === blocks.session && !disposed) { button.disabled = false; message = error.message; render(); } }
+        catch (error) { if (asked === blocks.session && !disposed) { button.removeAttribute('aria-disabled'); message = error.message; render(); } }
       });
+      buttons.set(id, button);
       item.append(label, button); return item;
     }));
+    if (focusedId !== null) {
+      const later = before.slice(before.indexOf(focusedId) + 1).find(id => buttons.has(id)), earlier = before.slice(0, before.indexOf(focusedId)).reverse().find(id => buttons.has(id));
+      (buttons.get(focusedId) ?? buttons.get(later) ?? buttons.get(earlier) ?? status).focus();
+    }
     list.hidden = !entries.length;
     empty.textContent = !blocks.loaded ? 'Residents you block appear here while you’re in town.' : entries.length ? '' : 'You haven’t blocked anyone.';
     empty.hidden = !empty.textContent;
