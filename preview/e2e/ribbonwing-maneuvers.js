@@ -60,9 +60,11 @@ async page => {
   await step('resumed after reload',()=>page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true'&&window.__riverCarriage().vehicle==='hover',{},{timeout:30000}));
   await page.waitForTimeout(1500);
   const resumed=await self(),local=await page.evaluate(()=>window.__riverCarriage().placement.altitude);
-  check(resumed.vehicle==='hover'&&Math.abs(resumed.altitude-before.altitude)<.5&&Math.abs(local-before.altitude)<.5,`After a reload at ${before.altitude.toFixed(1)} m Jevica is still flying the Ribbonwing (town ${resumed.altitude.toFixed(1)} m, page ${local.toFixed(1)} m)`);
-  // The resumed craft is flown, not only replayed: it climbs another metre on Space.
-  await climb(Math.max(resumed.altitude,local)+1);
+  // While the page was gone the town brought the craft down (world.away, at most 2 m/s), so it
+  // resumes lower or landed, but where the town holds it and with her still at the controls.
+  check(resumed.vehicle==='hover'&&Math.abs(local-resumed.altitude)<.5&&resumed.altitude<=before.altitude+.1,`After a reload at ${before.altitude.toFixed(1)} m Jevica is still at the Ribbonwing's controls where the town holds it (town ${resumed.altitude.toFixed(1)} m, page ${local.toFixed(1)} m; the town brought it down ${(before.altitude-resumed.altitude).toFixed(1)} m while the page was away)`);
+  // The resumed craft is flown, not only replayed: it climbs on Space, back above the tuck dive's entry.
+  await climb(Math.max(10.5,Math.max(resumed.altitude,local)+1));
   checks.push('After the reload the resumed Ribbonwing climbs under her control');
   // The town refuses any pose that would leave the craft aloft (land_before_leaving); count what the reload cost.
   const reloadRefusals=refusals.splice(refusalsBeforeReload);
