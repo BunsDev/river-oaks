@@ -2,13 +2,12 @@
 // Runs the real club interior from the repo (ct-club/src) with first-person
 // walk controls and collision against the same obstacles the server walker uses.
 import * as THREE from 'three';
-import { planCtClub, refreshObstacles, addScreen, addProp } from '../src/ct-club-plan.js';
+import { planCtClub, refreshObstacles, addProp } from '../src/ct-club-plan.js';
 import { buildCtClubInterior } from '../src/ct-club-interior.js';
 import { configureMaterials } from '../../preview/src/materials.js';
 import { attachDesignPanel, mountDesignPanel } from './design-panel.js';
 import { attachPlanPlanner } from './plan-editor.js';
 import { surfaceReference } from './coordinates.js';
-import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 import { createAudioEngine } from './audio-engine.js';
 import { createAudioAnalyzer } from './audio-analyzer.js';
 import { addDancers } from './dancers.js';
@@ -31,7 +30,6 @@ const layoutSnapshot = () => ({
   fixtures: room.fixtures.map((fix, i) => ({
     kind: fix.kind, index: room.fixtures.slice(0, i).filter(f => f.kind === fix.kind).length, a: fix.a, d: fix.d,
   })),
-  screens: room.screens.map(s => ({ ...s })),
   props: room.props.map(p => ({ ...p })),
 });
 const saveLayout = ({ exportFile = false } = {}) => {
@@ -58,13 +56,11 @@ try {
     }
     refreshObstacles(room);
   }
-  if (Array.isArray(saved?.screens)) room.screens = saved.screens.map(s => ({ ...s }));
   if (Array.isArray(saved?.props)) room.props = saved.props.map(p => ({ ...p }));
 } catch { }
-if (room.screens.length === 0) {
-  const s = addScreen(room, { x: 0, y: 3.0, z: -(40 - 0.22), nx: 0, ny: 0, nz: 1, w: 3.2, h: 1.8, html: '<div class="ct-screen"><b>CT CLUB</b><div class="pulse">● LIVE</div></div>', surface: 'wall back' });
-  s.u = 0.5; s.v = 0.5;
-}
+// Screens are fully removed from the club: ignore any screens stored in older
+// saved layouts or seeded by the plan so no wall screens can come back.
+room.screens.length = 0;
 
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -78,42 +74,6 @@ document.body.append(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#05060a');
 
-// Live HTML/CSS/JS screens on the walls (CSS3D overlay above the WebGL canvas).
-const cssRenderer = new CSS3DRenderer();
-cssRenderer.setSize(innerWidth, innerHeight);
-cssRenderer.domElement.style.position = 'fixed';
-cssRenderer.domElement.style.top = '0';
-cssRenderer.domElement.style.left = '0';
-cssRenderer.domElement.style.pointerEvents = 'none';
-cssRenderer.domElement.style.zIndex = '1';
-document.body.append(cssRenderer.domElement);
-const cssScene = new THREE.Scene();
-const PPM = 100;   // pixels-per-metre for screen content, scaled back to metres
-function refreshScreens() {
-  cssScene.children.slice().forEach(o => cssScene.remove(o));
-  for (const s of club.userData.screens) {
-    let el;
-    if (s.screen.viz) {
-      // A live visualisation screen: a <canvas> we draw onto each frame from the audio.
-      el = document.createElement('canvas');
-      el.className = 'ct-screen';
-      el.width = Math.max(2, Math.round(s.size.x * PPM));
-      el.height = Math.max(2, Math.round(s.size.y * PPM));
-    } else {
-      el = document.createElement('div');
-      el.className = 'ct-screen';
-      el.style.width = `${s.size.x * PPM}px`;
-      el.style.height = `${s.size.y * PPM}px`;
-      el.innerHTML = s.screen.html;
-    }
-    const obj = new CSS3DObject(el);
-    obj.position.copy(s.position);
-    obj.rotation.set(s.rotX ?? 0, s.rotY ?? 0, 0);
-    obj.scale.set(1 / PPM, 1 / PPM, 1 / PPM);
-    if (s.screen.viz) { obj.userData.viz = s.screen.viz; obj.userData.vizStyle = s.screen.vizStyle; obj.userData.vizCtx = el.getContext('2d'); }
-    cssScene.add(obj);
-  }
-}
 // The interior self-lights (ten ambient + thirteen spotlights); keep only a
 // faint harness wash + key light, matching the design fixture.
 const wash = new THREE.AmbientLight('#8a7fb8', 0.15);
@@ -122,7 +82,6 @@ scene.add(wash, key);
 let club = buildCtClubInterior(room, { local: true, reducedMotion });
 let design = null;                       // design-panel state (re-attached on rebuild)
 scene.add(club);
-refreshScreens();                        // place any wall screens as live CSS3D content
 
 // ---- dancers on the dancefloor --------------------------------------------------
 let dancers = null;                      // { dancers, tick, toggle } from addDancers
@@ -264,7 +223,6 @@ function rebuildRoom() {
   mountDesignPanel(document.querySelector('#info'), design);
   window.clubFixture.club = club;
   window.clubFixture.designApi = design;
-  refreshScreens();                     // re-place wall screens after a layout change
 }
 const planner = attachPlanPlanner({ room, onApply: rebuildRoom });
 window.clubFixture.planner = planner;
@@ -453,62 +411,9 @@ addEventListener('resize', () => {
 
 // ---- render loop -----------------------------------------------------------------
 const clock = { last: performance.now(), delta: 0, t: 0, running: true };
-const _camDir = new THREE.Vector3(), _camTo = new THREE.Vector3();
 let sampleEvery = 0;
-// Draw live visualisation screens (equalizer / waveform) from the analyser. Called
-// every frame; if there is no audio yet (or no viz screens), it does nothing.
-// Styles: bars | peaks | mirror | ring | wave — 16-band real-time analysis.
-const colFor = v => `hsl(${Math.round(120 * (1 - Math.max(0, Math.min(1, v))))}, 92%, 55%)`;
-const drawEq = (ctx, W, H, style, audio, t) => {
-  ctx.fillStyle = '#060810'; ctx.fillRect(0, 0, W, H);
-  const bands = audio.getBands(16);
-  const pad = 4;
-  const bw = (W - pad * 2) / 16;
-  const maxH = H - pad * 2;
-  if (style === 'wave') {
-    const data = audio.getWave();
-    ctx.strokeStyle = '#7ee0ff'; ctx.lineWidth = 2; ctx.beginPath();
-    for (let i = 0; i < data.length; i++) {
-      const x = (i / data.length) * W, y = H / 2 + ((data[i] - 128) / 128) * H * 0.4;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-    return;
-  }
-  if (style === 'ring') {
-    const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 10;
-    ctx.lineCap = 'round';
-    for (let i = 0; i < 16; i++) {
-      const ang = (i / 16) * Math.PI * 2 - Math.PI / 2;
-      const len = Math.max(3, bands[i] * R);
-      ctx.strokeStyle = colFor(bands[i]); ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(cx + Math.cos(ang) * R * 0.4, cy + Math.sin(ang) * R * 0.4);
-      ctx.lineTo(cx + Math.cos(ang) * (R * 0.4 + len), cy + Math.sin(ang) * (R * 0.4 + len));
-      ctx.stroke();
-    }
-    return;
-  }
-  // bars / peaks / mirror
-  const peaks = ctx.canvas.__peaks || (ctx.canvas.__peaks = new Array(16).fill(0));
-  for (let i = 0; i < 16; i++) {
-    const h = Math.max(2, bands[i] * maxH);
-    peaks[i] = Math.max(peaks[i] * (style === 'peaks' ? 0.985 : 0), h);
-    const x = pad + i * bw;
-    if (style === 'mirror') {
-      const half = maxH / 2, cy = H / 2;
-      const g = Math.max(2, bands[i] * half);
-      ctx.fillStyle = colFor(bands[i]);
-      ctx.fillRect(x, cy - g, bw - 2, g);
-      ctx.fillRect(x, cy, bw - 2, g);
-    } else {
-      ctx.fillStyle = colFor(bands[i]);
-      ctx.fillRect(x, H - pad - h, bw - 2, h);
-      if (style === 'peaks') { ctx.fillStyle = '#ffe142'; ctx.fillRect(x, H - pad - peaks[i] - 2, bw - 2, 2); }
-    }
-  }
-};
-let vizT = 0;
+// Draw the 32-band audio frequency visualization in the audio panel. Flat when
+// no music plays — it mirrors reality, it does not animate in silence.
 const drawBands = () => {
   const canvas = document.getElementById('band-viz');
   if (!canvas || !analyzer) return;
@@ -533,16 +438,6 @@ const drawBands = () => {
     readout.textContent = `bass ${st.bass.toFixed(2)} · mid ${st.mid.toFixed(2)} · treble ${st.treble.toFixed(2)} · energy ${st.energy.toFixed(2)} · beat ${st.beat ? '●' : '○'}`;
   }
 };
-const drawViz = () => {
-  if (!audio) return;
-  vizT += 1 / 60;
-  for (const obj of cssScene.children) {
-    const kind = obj.userData.viz;
-    if (!kind || !obj.userData.vizCtx) continue;
-    const ctx = obj.userData.vizCtx, W = ctx.canvas.width, H = ctx.canvas.height;
-    drawEq(ctx, W, H, obj.userData.vizStyle || (kind === 'wave' ? 'wave' : 'bars'), audio, vizT);
-  }
-};
 const loop = now => {
   requestAnimationFrame(loop);
   clock.delta = (now - clock.last) / 1000; clock.last = now;
@@ -563,15 +458,7 @@ const loop = now => {
   updateAudioTransport();                       // keep the seek bar + time display live
   stepPlayer();
   syncCamera();
-  // Hide any screen that is behind the camera, so CSS3D never draws a flipped one.
-  camera.getWorldDirection(_camDir);
-  for (const obj of cssScene.children) {
-    const v = _camTo.set(obj.position.x - camera.position.x, obj.position.y - camera.position.y, obj.position.z - camera.position.z);
-    obj.element.style.display = v.dot(_camDir) > 0.4 ? '' : 'none';
-  }
   renderer.render(scene, camera);
-  cssRenderer.render(cssScene, camera);   // live wall-screen HTML/CSS/JS
-  drawViz();                            // draw EQ / waveform screens from the audio
   drawBands();                          // draw 32-band audio frequency visualization
   if (sampleEvery++ % 60 === 0) {
     const stats = renderer.info;
