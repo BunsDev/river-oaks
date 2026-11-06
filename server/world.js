@@ -6,7 +6,7 @@ import { officesFor } from '../preview/src/office-contract.js';
 import { createHash } from 'node:crypto';
 import { createInteractions } from './interactions.js';
 import { COMMUNITY_SCENARIOS, createCommunity, interactWithLocal, stepCommunity } from '../preview/src/community.js';
-import { createResidentLife, stepResidentLife } from '../preview/src/resident-life.js';
+import { REACTION_RULES, alarmResidents, createResidentLife, stepResidentLife, validReaction } from '../preview/src/resident-life.js';
 import { createWalkingEnvironment, createWalkingState, fastWalkFor } from '../preview/src/walking.js';
 import { FLIGHT_SPEED } from '../preview/src/flight.js';
 import { grantWish, undoWish, stepWishes, wishFor, refreshWishTrouble } from '../preview/src/wishes.js';
@@ -69,7 +69,7 @@ const fields = (message, allowed) => Object.keys(message).every(key => allowed.i
 const textId = value => typeof value === 'string' && value.length > 0 && value.length <= 160;
 const reject = (error, message = error) => ({ok:false,error,message});
 
-const CHECKPOINT_VERSION = 17, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
+const CHECKPOINT_VERSION = 18, MAX_CHECKPOINT_BYTES = 8 * 1024 * 1024;
 const LIFE_FIELDS = ['elapsed','storm','revision','packet','cursor','paused','stats'];
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const nonnegative = value => Number.isFinite(value) && value >= 0;
@@ -218,7 +218,12 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // the same bounded grid and physical collision, across the full walking area.
   const policeWorldData={...worldData,site_ring:null};
   const policeNavigation=createResidentNavigation(policeWorldData,{allowRoads:true,placedObjects:colliders});
+  // Trouble residents may notice (#640 increment 3): police taking hold of someone, landed
+  // contacts, and wanted players at arm's length. Drained each step into the resident simulation.
+  const policeAlarms=[];let wantedScanAt=-Infinity;
+  const residentSight=(from,to)=>environment.hasSightLine([from[0],from[1],from[2]+1.2],[to[0],to[1],to[2]+1.2]);
   const police=createPolice({players,starsOf:crime.starsOf,changed:()=>revision++,navigation:policeNavigation,observe:crime.observe,evading:crime.evading,participating:crime.participating,
+    alarm:position=>{if(policeAlarms.length<64)policeAlarms.push({kind:'police',position});},
     posts:(CRIME_TARGETS[worldId]??[]).flatMap(target=>[4].map(offset=>{
       const east=target.position[0]+offset,north=target.position[1];
       return [east,north,environment.groundAt(east,-north)];
@@ -549,6 +554,12 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if (player.name!==name) {player.name=name;revision++;}
     return publicPlayer(player);
   }
+  // The transport's reconnect grace (app.js departures, redis-room leftAt): connected or not.
+  // Kept out of checkpoints; each transport says it again (redis-room before every step).
+  const awayPlayers=new Set();
+  function away(userId,isAway) {
+    if(isAway&&players.has(userId))awayPlayers.add(userId);else awayPlayers.delete(userId);
+  }
   function join(identity) {
     if (!identity || !textId(identity.userId) || typeof identity.name !== 'string') return reject('invalid_identity');
     if (players.has(identity.userId)) return reject('already_joined');
@@ -570,6 +581,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   function leave(userId) {
     const leaving=players.get(userId);
+    awayPlayers.delete(userId);
     if (!leaving) return false;
     offices.leave(userId);
     releaseBike(leaving);
@@ -779,6 +791,17 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   const releasePassenger=(pilot,time,right=0)=>{const passenger=pilot.passengerId&&players.get(pilot.passengerId);if(passenger)setDownPassenger(passenger,time,right);else if(pilot.passengerId){delete pilot.passengerId;revision++;}};
   // Every tick and snapshot: the seat follows the pilot; a lost craft or entitlement ends the ride.
+  // A pilot whose connection dropped (the transport's reconnect grace: away) cannot fly, so
+  // once any maneuver has ended the craft comes straight down at AWAY_DESCENT, holding where
+  // the sky below is blocked or the ground is not open, and lands. A passenger rides down in
+  // the seat. A page that reconnects resumes the craft wherever the town then holds it.
+  const AWAY_DESCENT=2;
+  function descendAway(player,duration) {
+    if(!awayPlayers.has(player.id)||player.maneuver||!VEHICLES[player.vehicle]?.flies||!(player.altitude>0))return;
+    const [east,north]=player.position,next=Math.max(0,player.altitude-AWAY_DESCENT*duration);
+    if(next>.1?!environment.canFly(east,environment.groundAt(east,-north)+next,-north):!environment.isFree(east,-north))return;
+    player.altitude=next>.1?next:0;revision++;
+  }
   function settleSeat(player,time) {
     if(player.ribbonwingInvite&&(player.ribbonwingInvite.until<=time||player.vehicle!=='hover'||player.altitude>.1||player.passengerId)){delete player.ribbonwingInvite;revision++;}
     if(player.passengerId&&(player.vehicle!=='hover'||!isJevicaOwner(player.id)))releasePassenger(player,time,player.altitude>.1?0:2.6);
@@ -1009,6 +1032,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       return reject('private_home','This home is private. Jevica can invite you inside.');
     if (store && mode==='leave' && environment.roomAt(player.position[0],-player.position[1])?.storeId!==store.id) return reject('not_in_store');
     if (time-ledger.travelAt < TRAVEL_COOLDOWN_MS) return reject('travel_cooldown');
+    // #785 (#599 fair chase): a travel is a step out of the world, not a run. While an officer is on the
+    // player (pursuing in sight, grabbing or arresting) the chase is settled on foot, by evading, or by
+    // surrender; once the officers have lost them, or stood down, travel opens again.
+    if (police.pursuing(player.id)) return reject('pursued','An officer is on you. Lose them on foot, or surrender.');
     let destination = null;
     if (peer) {
       // Meeting another player never bypasses a private door. Stand beside an
@@ -1452,6 +1479,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     clearExpiredLedgers(time);
     // Maneuvers end on the tick too, so a pilot who stops sending (focus lost, tab asleep) still lands level.
     for(const player of players.values())settleManeuver(player,time);
+    for(const player of players.values())descendAway(player,duration);
     for(const player of players.values())settleSeat(player,time);
     tableGames.prune();cafeGames.prune();dartsGames.prune();axeGames.prune();lanternWalk.prune(time);screenings.prune(time);campus.prune(time);
     for (const [id,hold] of focus) if (hold.until<=time || !reachable(players.get(id),localById.get(hold.localId))) focus.delete(id);
@@ -1471,6 +1499,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     worldPolicy.clock=advanceClock(worldPolicy.clock,duration);
     crime.step(time);
     police.step(time,duration);
+    if(life){
+      const alarms=[...crime.drainContacts().map(contact=>({kind:'contact',position:contact.position})),...policeAlarms.splice(0)];
+      if(time-wantedScanAt>=250){
+        wantedScanAt=time;
+        for(const player of players.values())if(crime.starsOf(player.id)>0 && !player.levelId && !player.sitting && !player.vehicle && player.altitude<=.1 && !offices.has(player.id))alarms.push({kind:'wanted',position:[...player.position]});
+      }
+      for(const alarm of alarms)alarmResidents(life,alarm,{sees:residentSight});
+    }
     elapsed+=duration;
     revision++;
   }
@@ -1485,7 +1521,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       chat:copy(chat).map(entry=>({...entry,authorName:accountName(entry.authorId,entry.authorName)})),
       builds:copy([...builds.values()]).map(item=>({...item,ownerName:accountName(item.ownerId,item.ownerName)})),wishes:copy(state.wishes),community,
       locals:state.locals.map(local=>({id:local.id,name:local.name,position:[...local.position],indoor:!!local.indoor,storeId:local.storeId??null,
-        life:local.life?{speed:local.life.speed,distance:local.life.distance,heading:local.life.heading,status:local.life.status,action:local.life.action,source:local.life.source,blocked:local.life.blocked,visitId:local.life.visitId??null,helping:copy(local.life.helping??null),seat:copy(local.life.seat??null)}:null,
+        life:local.life?{speed:local.life.speed,distance:local.life.distance,heading:local.life.heading,status:local.life.status,action:local.life.action,source:local.life.source,blocked:local.life.blocked,visitId:local.life.visitId??null,helping:copy(local.life.helping??null),seat:copy(local.life.seat??null),reaction:local.life.reaction?.kind??null}:null,
         wish:copy(local.wish??null),wishDisruption:local.wishDisruption??null,priority:local.priority,need:local.need,needKnown:local.needKnown,status:local.status,
         action:local.action,source:local.source,lastInteraction:local.lastInteraction,lastResult:copy(local.lastResult),anchorId:local.anchorId,anchorName:local.anchorName})),
     };
@@ -1521,7 +1557,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         ? {version:saved.version,worldFingerprint:saved.worldFingerprint,payload:saved.payload}
         : {version:saved.version,worldId:saved.worldId,worldFingerprint:saved.worldFingerprint,payload:saved.payload};
       if (!record(saved) || !fields(saved,legacy?['version','worldFingerprint','payload','checksum']:['version','worldId','worldFingerprint','payload','checksum'])
-        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
+        || !(legacy || [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,CHECKPOINT_VERSION].includes(saved.version) && saved.worldId===worldId)
         || saved.worldFingerprint!==worldFingerprint || saved.checksum!==digest(envelope)) throw new Error('Invalid envelope');
       let recovered=decodeCheckpoint(JSON.stringify(saved.payload));
       if (sharedPopulation && recovered.state?.locals?.length!==residentIdentities.length) {
@@ -1683,6 +1719,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean),levelId));
         return recoveredUpperEnvironments.get(levelId);
       };
+      let recoveredBeforeFiveRooms=null;
       const occupiedSeats=new Set(),heldSlots=new Set();
       for(const rider of nextPlayers.values())if(rider.cycling){if(heldSlots.has(rider.cycling))throw new Error('Invalid cycling slot');heldSlots.add(rider.cycling);}
       for (const player of nextPlayers.values()) {
@@ -1699,8 +1736,21 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           const [standEast,standNorth]=campusToSource(stood.position);
           player.position=[standEast,standNorth,interiorLevels.get(site.levelId).level.floorElevation];player.sitting=null;
         }
-        const [east,north,ground]=player.position;
         const playerEnvironment=recoveredEnvironmentFor(player.levelId);
+        // A town saved before the Five Rooms solids (#841) may hold a player standing where a
+        // Ribbon post or a shell frontage now stands: valid then, blocked now. Restore them on
+        // the nearest free ground instead of refusing the town; anything else still fails closed.
+        if(!player.levelId && !player.sitting && !(player.altitude>0.1) && !player.vehicle) {
+          const [px,pn]=player.position;
+          if(!playerEnvironment.isFree(px,-pn)) {
+            recoveredBeforeFiveRooms??=createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean),null,{fiveRooms:false});
+            if(recoveredBeforeFiveRooms.isFree(px,-pn)) {
+              const landed=createWalkingState(playerEnvironment,[px,pn]).position;
+              player.position=[landed[0],-landed[2],playerEnvironment.groundAt(landed[0],landed[2])];
+            }
+          }
+        }
+        const [east,north,ground]=player.position;
         if (!nextLedgers.has(player.id) || (!player.sitting && Math.abs(ground-playerEnvironment.groundAt(east,-north))>0.2)
           || (player.altitude>0.1?!playerEnvironment.canFly(east,ground+player.altitude,-north):!playerEnvironment.isFree(east,-north))
           || player.levelId && (playerEnvironment.roomAt(east,-north)?.planId!==player.levelId
@@ -1733,6 +1783,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       for (const id of nextMovements.keys()) if (!nextAppearances.has(id)) nextMovements.delete(id);
       const nextFocus=restoreMap(recovered.focus,maxPlayers,hold=>record(hold) && textId(hold.localId) && Number.isFinite(hold.until));
       for (const [id,hold] of nextFocus) if (!nextPlayers.has(id) || !localById.has(hold.localId)) throw new Error('Invalid focus');
+      const restoredElapsed=Number.isFinite(recovered.life?.elapsed)?recovered.life.elapsed:0;
       for (let index=0;index<nextState.locals.length;index++) {
         const local=nextState.locals[index],identity=residentIdentities[index],motion=local?.life;
         if (!record(local) || !Object.keys(identity).every(key=>local[key]===identity[key]) || !point(local.position,3)
@@ -1742,6 +1793,11 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           || !Number.isFinite(motion.heading) || !(nonnegative(motion.waitUntil) || motion.waitUntil===Infinity)
           || !Array.isArray(motion.route) || motion.route.length>40000 || !motion.route.every(step=>point(step,2))
           || motion.route.length && !record(motion.destination))) throw new Error('Invalid resident route');
+        if (life && (!validReaction(motion.reaction) || motion.reactionCooldownUntil!==undefined && !nonnegative(motion.reactionCooldownUntil)
+          || (local.indoor || local.stationary) && (motion.reaction || motion.reactionCooldownUntil!==undefined))) throw new Error('Invalid resident reaction');
+        // Reaction timers left in the future by a stale or forged record come back to now, as crime and police timers do.
+        if (life && motion.reaction) motion.reaction.until=Math.min(motion.reaction.until,restoredElapsed+REACTION_RULES.fleeMs/1000);
+        if (life && motion.reactionCooldownUntil!==undefined) motion.reactionCooldownUntil=Math.min(motion.reactionCooldownUntil,restoredElapsed+REACTION_RULES.cooldownMs/1000);
         if (local.wish && (!wishFor(local.wish.kind) || !nextPlayers.has(local.wish.ownerId) || !nonnegative(local.wish.age)
           || !['gift','trouble','pleading'].includes(local.wish.phase) || typeof local.wish.message!=='string')) throw new Error('Invalid wish');
       }
@@ -1763,13 +1819,32 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       // Older v4 writers let residents walk/land inside assemblies. Repair
       // only those occupied starts before committing recovery. Normal walking
       // never teleports. Search nearby free ground in the same room, leaving
-      // players/other residents clear and preserving the original destination.
+      // players/other residents clear and preserving destinations that remain valid.
       const nextColliders=[...nextBuilds.values()].map(objectCollider).filter(Boolean);
       const nextLife=createResidentLife(worldData,createCommunity(worldData,environment.rooms,{carriage:false,sharedPopulation}));
       nextLife?.navigation.setPlacedObjects(nextColliders);
       const repairedResidents=new Set();
       for(const local of nextState.locals){
-        if(!nextColliders.some(collider=>residentBlocked(collider,local)))continue;
+        // An occupied start can remain valid while the saved destination is now a post.
+        // Sanitize that route independently of relocation, preserving every still-valid one.
+        const end=local.life?.route.at(-1);
+        if(!local.indoor && end && !recoveredEnvironment.isFree(end[0],-end[1])) {
+          recoveredBeforeFiveRooms??=createWalkingEnvironment(worldData,nextColliders,null,{fiveRooms:false});
+          if(recoveredBeforeFiveRooms.isFree(end[0],-end[1])) {
+            Object.assign(local.life,{route:[],destination:null,routeVersion:local.life.routeVersion+1,
+              attempt:0,waitUntil:restoredElapsed,speed:0,velocity:0,blocked:false,replanAt:0});
+            repairedResidents.add(local.id);
+          }
+        }
+        // New Five Rooms solids may cover a resident's previously valid public-ground start.
+        // Only migrate ground that was free before those solids; other invalid data is not a
+        // reason to broaden the existing placed-object recovery or change world authority.
+        let coveredByFiveRooms=false;
+        if(!local.indoor && !recoveredEnvironment.isFree(local.position[0],-local.position[1])) {
+          recoveredBeforeFiveRooms??=createWalkingEnvironment(worldData,nextColliders,null,{fiveRooms:false});
+          coveredByFiveRooms=recoveredBeforeFiveRooms.isFree(local.position[0],-local.position[1]);
+        }
+        if(!coveredByFiveRooms && !nextColliders.some(collider=>residentBlocked(collider,local)))continue;
         const original=[...local.position],roomId=recoveredEnvironment.roomAt(original[0],-original[1])?.storeId??null;
         let repaired=false;
         for(let radius=.25;radius<=4&&!repaired;radius+=.25)for(let i=0;i<32;i++){
@@ -1783,7 +1858,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
             || [...nextPlayers.values()].some(player=>Math.hypot(player.position[0]-x,player.position[1]-north)<.7)
             || nextState.locals.some(other=>other!==local&&Math.abs(other.position[2]-ground)<1.8&&Math.hypot(other.position[0]-x,other.position[1]-north)<.7))continue;
           local.position=candidate.position;
-          if(local.life){local.life.speed=0;local.life.velocity=0;local.life.blocked=false;local.life.replanAt=0;local.life.seat=null;}
+          if(local.life){
+            local.life.speed=0;local.life.velocity=0;local.life.blocked=false;local.life.replanAt=0;local.life.seat=null;
+          }
           repairedResidents.add(local.id);repaired=true;break;
         }
         if(!repaired)throw new Error('Cannot recover enclosed resident');
@@ -1838,7 +1915,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       screenings.load(nextScreenings);
       interactions.restore(nextInteractions);
       life=nextLife;revision=recovered.revision;elapsed=recovered.elapsed;voiceIdentities.clear();
-      worldPolicy=nextWorldPolicy;worldPolicyAt=-Infinity;crime.load(nextCrime);police.load(nextPolice,now());policeNavigation?.setPlacedObjects(colliders);
+      worldPolicy=nextWorldPolicy;worldPolicyAt=-Infinity;crime.load(nextCrime);police.load(nextPolice,now());policeAlarms.length=0;policeNavigation?.setPlacedObjects(colliders);
       return {ok:true};
     } catch (error) {
       onFailure?.(checkpointFailureReason(error));
@@ -1848,7 +1925,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Trusted process/admin hook; deliberately absent from the command protocol.
   function reset() {
     interactions.clear();
-    crime.clear();police.clear();
+    crime.clear();police.clear();policeAlarms.length=0;
     tableGames.clear();
     cafeGames.clear();
     dartsGames.clear();
@@ -1880,7 +1957,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   }
   const resolvePlace = placeId => placesOf(worldData).find(place=>place.id===placeId)??null;
   const listPlaces = () => placesOf(worldData);
-  return {worldId,protocolVersion,approvedSpaceRoutesBlocked:()=>approvedSpaceRoutesBlocked(),join,rename,leave,forgetAccount,separate,command,step,snapshot,checkpoint,restore,reset,
+  return {worldId,protocolVersion,approvedSpaceRoutesBlocked:()=>approvedSpaceRoutesBlocked(),join,rename,leave,away,forgetAccount,separate,command,step,snapshot,checkpoint,restore,reset,
     // World rules (#596): the public rule and the one violence decision for #597's attacks.
     worldPolicy:publicWorldPolicy,violenceFor,
     // Frames carry the clock that anchors screenings (screenings.js), stamped by the transport.

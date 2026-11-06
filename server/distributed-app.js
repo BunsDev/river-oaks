@@ -169,8 +169,9 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
       if (path === '/api/moderation/reports') { await handleModerationReports(req, res); return; }
       if (handleCharacters && await handleCharacters(req,res,path)) return;
       if (handleVoice && await handleVoice(req, res, path, url)) return;
-      // The default district answers with its served revision (#507) even without a catalog.
-      if (path === '/api/world-data' && req.method === 'GET' && (worldCatalog || room.districtRevision)) {
+      // The default district answers with its served revision (#507) even without a catalog,
+      // and the garage default (no revision) still answers for the world it serves.
+      if (path === '/api/world-data' && req.method === 'GET') {
         if (!await approvedIdentity(req, res)) return;
         const ids=url.searchParams.getAll('world');
         if(ids.length!==1)return json(res,400,{error:'Choose one world.'});

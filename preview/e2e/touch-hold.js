@@ -26,8 +26,6 @@ async page => {
     await touch.waitForFunction(() => document.querySelector('#canvas-host').dataset.playerReady === 'true' && window.__riverMultiplayer?.().connected, null, { timeout: 90000 });
     await touch.locator('#loading').waitFor({ state: 'hidden' });
     if (await touch.locator('#panel-toggle').getAttribute('aria-expanded') === 'true') await touch.locator('#panel-toggle').click();
-    const toggle = touch.locator('#walking-controls-toggle');
-    if (await toggle.getAttribute('aria-expanded') !== 'true') await toggle.click();
     // On a phone an open chat dock hides the walking console (game-hud.css), and the dock
     // opens by default: fold it with a tap, as a player would, before using the pad.
     const foldChat = async () => {
@@ -35,8 +33,12 @@ async page => {
       await touch.locator('.town-chat-toggle').tap();
       await touch.waitForFunction(() => !document.querySelector('.town-chat-dock').open && document.querySelector('.walking-console').checkVisibility({ visibilityProperty: true }));
     };
-    metrics.chatOpenHidesPad = await touch.evaluate(() => document.querySelector('.town-chat-dock').open && !document.querySelector('[data-walk-key=KeyW]').checkVisibility({ visibilityProperty: true }));
+    metrics.chatOpenHidesPad = await touch.evaluate(() => document.querySelector('.town-chat-dock').open && !document.querySelector('.walking-console').checkVisibility({ visibilityProperty: true }));
     await foldChat();
+    // Touch walks with the thumbstick, so the button pad starts collapsed; this journey
+    // exercises the pad, so open it (the console is only tappable once chat is folded).
+    const toggle = touch.locator('#walking-controls-toggle');
+    if (await toggle.getAttribute('aria-expanded') !== 'true') await toggle.click();
 
     const contacts = new Map(), client = engine === 'chromium' ? await context.newCDPSession(touch) : null;
     const points = () => [...contacts].map(([id, [x, y]]) => ({ id, x, y, radiusX: 1, radiusY: 1, force: 1 }));

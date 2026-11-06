@@ -129,8 +129,9 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
       if (pathname==='/api/moderation/reports') {await handleModerationReports(req,res);return;}
       if (handleCharacters && await handleCharacters(req,res,pathname)) return;
       if (handleVoice && await handleVoice(req,res,pathname,new URL(req.url,'http://localhost'))) return;
-      // The default district answers with its served revision (#507) even without a catalog.
-      if (pathname==='/api/world-data' && req.method==='GET' && (worldCatalog || world.districtRevision)) {
+      // The default district answers with its served revision (#507) even without a catalog,
+      // and the garage default (no revision) still answers for the world it serves.
+      if (pathname==='/api/world-data' && req.method==='GET') {
         if(!await approvedIdentity(req,res))return;
         const ids=new URL(req.url,'http://localhost').searchParams.getAll('world');
         if(ids.length!==1)return json(res,400,{error:'Choose one world.'});
@@ -396,7 +397,7 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           if(joinedHere){world.leave(identity.userId);joinedHere=false;}
           return;
         }
-        clearTimeout(departures.get(identity.userId));departures.delete(identity.userId);
+        clearTimeout(departures.get(identity.userId));departures.delete(identity.userId);world.away?.(identity.userId,false);
         const old=connections.get(identity.userId);
         const connection={ws,identity,token,alive:true,pending:0,...hiding};connections.set(identity.userId,connection);
         // A block made while this socket joined reaches it now rather than at the next sync.
@@ -487,6 +488,8 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
           connections.delete(identity.userId);
           if(presence)void presence.leave(identity.userId,token).catch(()=>{});
           if(stopped){world.leave(identity.userId);characterSelection?.forget(identity.userId);void flushRides();return;}
+          // Away for the grace: a flying pilot's craft lands itself meanwhile (world.away).
+          world.away?.(identity.userId,true);
           const timer=setTimeout(()=>{departures.delete(identity.userId);world.leave(identity.userId);characterSelection?.forget(identity.userId);void flushRides();if(voice)void voice.revokeUser(identity.userId).catch(()=>{});},departureGraceMs);timer.unref();departures.set(identity.userId,timer);
         });
         send(ws,{...viewFor(snapshot(),connection.hidden,identity.userId),selfId:identity.userId});
@@ -497,8 +500,11 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
   let previous=now(),broadcastAt=0;
   const loop=setInterval(()=>{
     const time=now(),delta=Math.min(0.25,Math.max(0,(time-previous)/1000));previous=time;
-    if(!connections.size)return;
+    // Players in their departure grace still tick (an away pilot's craft lands meanwhile); only
+    // connected ones get frames.
+    if(!connections.size&&!departures.size)return;
     world.step(delta);
+    if(!connections.size)return;
     if(time-broadcastAt<200)return;broadcastAt=time;
     const view=snapshot(),frame=JSON.stringify(view);
     for(const {ws,identity,hidden} of connections.values()) {

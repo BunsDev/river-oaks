@@ -44,7 +44,11 @@ export function createWalkDriver({ self, routes, refusals, now = () => Date.now(
     let dragYaw = null, frameMs = 0, seen = null;
     try {
       for (const target of points) {
-        const deadline = now() + 120000;
+        // Stalled means no longer getting closer: two minutes without gaining 5 cm on the waypoint.
+        // A fixed time per waypoint was a speed limit: on the CPU-rendered runner a page can draw
+        // two or three frames a second for minutes, and walking covers at most 0.08 s of stride
+        // per frame, so a long leg ran out of time while still closing in (run 41060785602).
+        let closest = Infinity, closerAt = now();
         for (;;) {
           const current = await pose(tab), dx = target[0] - current.position[0], dz = -target[1] - current.position[2], distance = Math.hypot(dx, dz);
           // The page reads held keys once per frame. Key events arrive in milliseconds while a
@@ -62,7 +66,8 @@ export function createWalkDriver({ self, routes, refusals, now = () => Date.now(
           // the walker through the waypoint at full speed; let it stop and measure again, or it
           // coasts on (a hosted run ended 0.9 m past its lantern, outside the town's arrival check).
           if (distance < .15) { await releaseKeys(); if (current.speed < .05) break; await stopped(tab); continue; }
-          if (now() > deadline) throw new Error(`${label}: stalled ${JSON.stringify({ target, pose: current, turns, presses, refusals: await refused(tab) })}`);
+          if (distance < closest - .05) { closest = distance; closerAt = now(); }
+          if (now() - closerAt > 120000) throw new Error(`${label}: stalled ${JSON.stringify({ target, closest, pose: current, turns, presses, refusals: await refused(tab) })}`);
           const heading = Math.atan2(-dx, -dz), difference = Math.atan2(Math.sin(heading - current.yaw), Math.cos(heading - current.yaw));
           if (Math.abs(difference) > .035) { await releaseKeys(); await turn.drag(tab, difference); dragYaw = current.yaw; continue; }
           turn.end();

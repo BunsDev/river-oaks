@@ -158,7 +158,11 @@ for (const distributed of [false, true]) {
         : createGameServer({ ...options, world: { worldId: 'river-oaks', districtRevision: revision }, moderation: { isBanned: () => false } });
       await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
       t.after(() => app.close());
-      const get = async world => (await fetch(`http://127.0.0.1:${app.server.address().port}/api/world-data?world=${world}`, { headers: { Cookie: 'session=viewer' } })).json();
+      const get = async world => {
+        const response = await fetch(`http://127.0.0.1:${app.server.address().port}/api/world-data?world=${world}`, { headers: { Cookie: 'session=viewer' } });
+        const body = await response.json().catch(() => ({}));
+        return response.ok ? body : { status: response.status, ...body };
+      };
       return { home: await get('river-oaks'), creator: await get('creator-region') };
     };
     const served = await read(DISTRICT_REVISION_GARDENS);
@@ -167,6 +171,11 @@ for (const distributed of [false, true]) {
     assert.deepEqual((await read(null)).home, { template: 'river-oaks' });
     // A town without a world catalog (the loopback fixture) still names its campus.
     assert.deepEqual((await read(DISTRICT_REVISION_GARDENS, null)).home, { template: 'river-oaks', districtRevision: DISTRICT_REVISION_GARDENS });
+    // The garage loopback fixture has neither: the served world still answers, so every
+    // page load does not log a 404 for the world it is standing in; others stay unknown.
+    const garage = await read(null, null);
+    assert.deepEqual(garage.home, { template: 'river-oaks' });
+    assert.deepEqual(garage.creator, { status: 404, error: 'World not found.' });
   });
 }
 

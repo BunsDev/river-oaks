@@ -29,7 +29,7 @@ async (page, { computerOrigin, computerRevision, computerFraming }) => {
   await tab.locator('#office-enter').click();
   await tab.waitForFunction(()=>document.querySelector('#office-visit')?.dataset.phase==='office',null,{timeout:60000});
  };
- const openDesk=async(tab=page)=>{await tab.locator('#office-desk-open').click();await tab.locator('#desk-loading').waitFor({state:'hidden'});};
+ const openDesk=async(tab=page,tasks=true)=>{await tab.locator('#office-desk-open').click();await tab.locator('#desk-loading').waitFor({state:'hidden'});if(tasks&&await tab.locator('#office-desk').getAttribute('data-view')==='computer'){await tab.locator('#desk-view-tasks').click();await tab.waitForFunction(()=>document.querySelector('#office-desk')?.dataset.view==='tasks');}};
  // The gate comes first in every frame: Place says account-confirmation and Computer shows no widget.
  const openComputer=async()=>{
   await page.locator('#desk-view-computer').click();await waitState('account-confirmation');

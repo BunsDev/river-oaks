@@ -45,17 +45,26 @@ async page => {
   // A reload mid-flight (a crash, a dropped connection, a dev-server reload) puts Jevica
   // back at the controls where the town holds the craft, instead of on foot in the sky.
   // Let the climb coast to a hover first, so the height compared after the reload is where the craft holds.
-  let settled=await self();
-  for(let i=0;i<20;i++){await page.waitForTimeout(500);const next=await self();if(Math.abs(next.altitude-settled.altitude)<.03){settled=next;break;}settled=next;}
+  // Compare snapshots half a second of town time apart: a slow page can hold one snapshot for longer
+  // than the 500 ms between reads, and two reads of the same snapshot looked settled while the craft
+  // still rose from 11.1 to 11.8 m (run 41140523840).
+  const sample=()=>page.evaluate(()=>{const m=window.__riverMultiplayer();return {altitude:m.snapshot.players.find(p=>p.id===m.selfId).altitude,elapsed:m.snapshot.elapsed};});
+  let settled=await sample();
+  for(let i=0;i<20;i++){
+    await page.waitForFunction(since=>window.__riverMultiplayer().snapshot.elapsed>=since+.5,settled.elapsed,{timeout:10000});
+    const next=await sample();if(Math.abs(next.altitude-settled.altitude)<.03){settled=next;break;}settled=next;
+  }
   const before=settled,refusalsBeforeReload=refusals.length;
   await page.reload();
   await page.waitForFunction(()=>document.querySelector('#canvas-host')?.dataset.playerReady==='true',{},{timeout:120000});
   await step('resumed after reload',()=>page.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true'&&window.__riverCarriage().vehicle==='hover',{},{timeout:30000}));
   await page.waitForTimeout(1500);
   const resumed=await self(),local=await page.evaluate(()=>window.__riverCarriage().placement.altitude);
-  check(resumed.vehicle==='hover'&&Math.abs(resumed.altitude-before.altitude)<.5&&Math.abs(local-before.altitude)<.5,`After a reload at ${before.altitude.toFixed(1)} m Jevica is still flying the Ribbonwing (town ${resumed.altitude.toFixed(1)} m, page ${local.toFixed(1)} m)`);
-  // The resumed craft is flown, not only replayed: it climbs another metre on Space.
-  await climb(Math.max(resumed.altitude,local)+1);
+  // While the page was gone the town brought the craft down (world.away, at most 2 m/s), so it
+  // resumes lower or landed, but where the town holds it and with her still at the controls.
+  check(resumed.vehicle==='hover'&&Math.abs(local-resumed.altitude)<.5&&resumed.altitude<=before.altitude+.1,`After a reload at ${before.altitude.toFixed(1)} m Jevica is still at the Ribbonwing's controls where the town holds it (town ${resumed.altitude.toFixed(1)} m, page ${local.toFixed(1)} m; the town brought it down ${(before.altitude-resumed.altitude).toFixed(1)} m while the page was away)`);
+  // The resumed craft is flown, not only replayed: it climbs on Space, back above the tuck dive's entry.
+  await climb(Math.max(10.5,Math.max(resumed.altitude,local)+1));
   checks.push('After the reload the resumed Ribbonwing climbs under her control');
   // The town refuses any pose that would leave the craft aloft (land_before_leaving); count what the reload cost.
   const reloadRefusals=refusals.splice(refusalsBeforeReload);
@@ -99,6 +108,8 @@ async page => {
   check(petal.seen.maxTilt>2.5&&petal.seen.maxTuck>.3,`The Petal Roll rolls over with the wings half-tucked (tilt ${petal.seen.maxTilt.toFixed(2)} rad, tuck ${petal.seen.maxTuck.toFixed(2)})`);
   await step('ribbons fade',()=>page.waitForFunction(()=>window.__riverRibbonwingEffects().trails?.draws===0,{},{timeout:5000}));
   // Land and step out.
+  // The Ribbon's posts run beside the street this flies up: fly clear of them before landing (#841).
+  await (await import('./hover-landing.js')).clearHoverSpot(page,{focus:()=>host().focus()});
   await host().focus();await page.keyboard.press('KeyG');
   await step('landed',()=>page.waitForFunction(()=>(window.__riverCarriage().placement.altitude??0)<=.02,{},{timeout:60000}));
   await host().focus();await page.keyboard.press('KeyG');

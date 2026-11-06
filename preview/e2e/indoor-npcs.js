@@ -27,7 +27,7 @@ async page => {
     await owner.goto(origin+'/?motion-debug=1',{waitUntil:'commit'});await ready(owner);
     await owner.waitForFunction(()=>document.querySelector('#canvas-host').dataset.carriageDriverReady==='true'&&window.__riverCarriage().visible);
     check(await owner.evaluate(()=>window.__riverCarriage().princeVisible&&!document.querySelector('#player-companion').hidden&&!document.querySelector('.vehicle-garage').hidden),'Jevica retains her companion, chauffeur, and vehicles in multiplayer');
-    await owner.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.ready));
+    await owner.waitForFunction(()=>window.__riverMultiplayer().remotes?.some(player=>player.ready&&player.kind==='player'));
     check(true,'A real player is still rendered as a remote avatar');
   } finally {await ownerContext.close();}
   check(!errors.length,`No browser errors: ${errors.join('; ')}`);

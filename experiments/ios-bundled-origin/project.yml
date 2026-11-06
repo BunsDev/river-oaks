@@ -1,0 +1,39 @@
+name: BundledOrigin
+options:
+  bundleIdPrefix: ai.typesafe.place
+  deploymentTarget:
+    iOS: '16.4'
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    TARGETED_DEVICE_FAMILY: '1'
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGNING_ALLOWED: 'NO'
+    PRODUCT_BUNDLE_IDENTIFIER: ai.typesafe.place.bundled-origin
+    MARKETING_VERSION: '0.0.1'
+    CURRENT_PROJECT_VERSION: '1'
+    GENERATE_INFOPLIST_FILE: NO
+    INFOPLIST_FILE: App/Info.plist
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+targets:
+  BundledOrigin:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - Sources/ExperimentPolicy
+      - path: Web/context-parity.js
+        buildPhase: resources
+      - path: Web/harness.js
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_NAME: BundledOrigin
+        TARGETED_DEVICE_FAMILY: 1
+schemes:
+  BundledOrigin:
+    build:
+      targets:
+        BundledOrigin: all
+    run:
+      config: Debug

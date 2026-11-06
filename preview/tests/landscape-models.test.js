@@ -97,11 +97,23 @@ test('EZ Tree oaks ship licensed, bounded assets without multiplying leaf shells
   assert.ok(manifest.derivatives.reduce((sum, asset) => sum + asset.bytes, 0) < 4e6);
 });
 
+// A non-caster never reaches onAfterShadow, so showing it would leave it in the beauty and AO passes.
+test('a proxy that stopped casting stays hidden through the shadow pass', () => {
+  const sun = new THREE.DirectionalLight(); sun.position.set(0, 100, 0); sun.target.position.set(0, 0, 0);
+  Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 1, far: 300 });
+  sun.shadow.camera.updateProjectionMatrix(); sun.updateMatrixWorld(); sun.target.updateMatrixWorld();
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(4), new THREE.MeshBasicMaterial()); mesh.updateMatrixWorld(); mesh.castShadow = true;
+  castShadowsFromProxies(sun, () => [mesh]);
+  sun.shadow.updateMatrices(sun); assert.equal(mesh.visible, true, 'a caster in the frustum is shown');
+  mesh.castShadow = false; mesh.visible = false;
+  sun.shadow.updateMatrices(sun); assert.equal(mesh.visible, false, 'a non-caster is not');
+});
+
 test('tree shadow proxies appear only for shadow casting inside the sun frustum', () => {
   const sun = new THREE.DirectionalLight(); sun.position.set(0, 100, 0); sun.target.position.set(0, 0, 0);
   Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, near: 1, far: 300 });
   sun.shadow.camera.updateProjectionMatrix(); sun.updateMatrixWorld(); sun.target.updateMatrixWorld();
-  const proxy = at => { const mesh = new THREE.Mesh(new THREE.SphereGeometry(4), new THREE.MeshBasicMaterial()); mesh.position.set(at, 0, 0); mesh.updateMatrixWorld(); mesh.visible = false; return mesh; };
+  const proxy = at => { const mesh = new THREE.Mesh(new THREE.SphereGeometry(4), new THREE.MeshBasicMaterial()); mesh.castShadow = true; mesh.position.set(at, 0, 0); mesh.updateMatrixWorld(); mesh.visible = false; return mesh; };
   const near = proxy(10), far = proxy(400);
   const shadows = castShadowsFromProxies(sun, () => [near, far]);
   sun.shadow.updateMatrices(sun);

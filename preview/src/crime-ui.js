@@ -10,6 +10,8 @@ import { describeRisk } from './world-policy-ui.js';
 // the reply only admits a windup, and the outcome is read from the snapshot's actions. A rival's
 // telegraphed counter is announced in text, with an evade (U or the button).
 
+import { combatFocusFor, combatStateFor } from './combat-motion.js';
+
 export const ATTACK_KEY = 'KeyT';
 export const EVADE_KEY = 'KeyU';
 export const MAX_STARS = 5;
@@ -109,7 +111,7 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
   evadeButton.append(node('span', 'Evade'), node('kbd', 'U')); evadeButton.hidden = true;
   hud.append(wanted, policeState, surrender, evadeButton, card, result);
   host?.append(hud);
-  let busy = false, target = null, disposed = false, lastPaint = -Infinity, wasHeld = false, surrenderCue = null, evading = false;
+  let busy = false, target = null, disposed = false, lastPaint = -Infinity, wasHeld = false, surrenderCue = null, evading = false, syncedAt = -Infinity, myEvade = null;
   // Announce each action event once. When several change at once, say the one that matters most
   // to this player: a counter that lands, then a counter coming, then their own strike.
   const heard = new Set();
@@ -147,6 +149,8 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
     try {
       let reply;
       try { reply = await request(message); } catch { reply = await request(message); }
+      // The town admitted the evade: the figure leans away for the window it granted (#640 increment 4).
+      if (!disposed && reply.ok && reply.evade) myEvade = { id: message.evadeId, at: performance.now(), remainingMs: reply.evade.remainingMs ?? 0, direction: reply.evade.direction ?? 'back' };
       if (!disposed && !reply.ok) setText(result, reply.message ?? 'Could not evade.');
     } catch (error) { if (!disposed) setText(result, error.message); }
     finally { evading = false; if (!disposed) paint(); }
@@ -177,6 +181,23 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
   };
   keys?.addEventListener('keydown', onKey, true);
 
+  // #640 increment 4: the local figure (player-avatar.js) reads these and poses itself; nothing here
+  // moves a bone. The state is the town's, played forward by the snapshot's age; a telegraph names
+  // what is coming so the evade can be cued.
+  function publishCombat(town, snapshot, self, crime, police) {
+    const now = performance.now(), ageMs = Number.isFinite(syncedAt) ? Math.max(0, now - syncedAt) : 0;
+    const left = myEvade ? myEvade.remainingMs - (now - myEvade.at) : 0;
+    const evade = left > 0 ? { id: myEvade.id, direction: myEvade.direction, remainingMs: left } : undefined;
+    const state = self && town.connected !== false ? combatStateFor(town.selfId, { crime, police, players: snapshot?.players, evade, ageMs }) : null;
+    const focus = state ? combatFocusFor(town.selfId, { crime, police }) : null;
+    const telegraph = !state ? null : (crime?.actions ?? []).some(action => action.kind === 'counter' && action.targetId === town.selfId && action.outcome === null && action.phase === 'windup') ? 'counter'
+      : police?.units?.some(unit => unit.targetId === town.selfId && unit.state === 'grab') ? 'grab' : null;
+    const data = hud.dataset;
+    if (!data) return;
+    if (state?.kind) data.combatState = JSON.stringify(state); else delete data.combatState;
+    if (focus) data.combatFocus = JSON.stringify(focus); else delete data.combatFocus;
+    if (telegraph) data.telegraph = telegraph; else delete data.telegraph;
+  }
   function paint() {
     const town = getTown(), snapshot = town.snapshot, crime = snapshot?.crime;
     const self = snapshot?.players?.find(player => player.id === town.selfId);
@@ -201,6 +222,7 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
     if (involved.length) announce(involved, action => crime.targets?.find(item => item.id === (action.kind === 'strike' ? action.targetId : action.actorId))?.name ?? 'The rival');
     evadeButton.hidden = !self || town.connected === false || level !== 'danger' || !stars && !mine;
     evadeButton.disabled = evading || offered || arresting;
+    publishCombat(town, snapshot, self, crime, police);
     hud.hidden = !self || (!stars && !near && !result.textContent);
     wanted.hidden = !stars;
     setText(wanted, starsText(stars)); wanted.setAttribute('aria-label', starsLabel(stars));
@@ -222,7 +244,7 @@ export function createCrimeUI({ host, getTown, getEnvironment = () => null, requ
   }
   return {
     update(now) { if (disposed || now - lastPaint < 150) return; lastPaint = now; paint(); },
-    sync() { if (!disposed) paint(); },
+    sync() { if (disposed) return; syncedAt = performance.now(); paint(); },
     dispose() { disposed = true; surrenderCue?.stop(); keys?.removeEventListener('keydown', onKey, true); hud.remove(); },
   };
 }

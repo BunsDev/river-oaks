@@ -200,9 +200,9 @@ testRedis('coordinators: one acceptance wins, leases outlive presence and replac
   assert.equal(race.filter(reply => reply.ok).length, 1, JSON.stringify(race));
   const winner = race[0].ok ? A : B, winnerLease = race.find(reply => reply.ok).lease;
   assert.deepEqual((await b.read()).snapshot.campus.leased, [U1]);
-  assert.match(await f.redis.get(`${f.prefix}:lease`), /^v21:/);
+  assert.match(await f.redis.get(`${f.prefix}:lease`), /^v23:/);
   const state = async () => JSON.parse(inflateSync(await f.redis.getBuffer(`${f.prefix}:state`)).toString());
-  assert.equal((await state()).checkpoint.version, 17);
+  assert.equal((await state()).checkpoint.version, 18);
   assert.deepEqual((await state()).checkpoint.payload.campus.leases.filter(lease => lease.status === 'active').map(lease => lease.tenantId), [winner]);
   // Everyone leaves past the presence timeouts; the lease is not presence.
   await a.close();await b.close();

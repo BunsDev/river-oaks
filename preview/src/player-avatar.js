@@ -1,5 +1,6 @@
 import { bindPageLifecycle } from './background-lifecycle.js';
 import { poseFor } from './crime-poses.js';
+import { applyCombatPose, createLocalCombat } from './combat-motion.js';
 import { selectedCharacterFor } from './character-selection-view.js';
 import { createCharacterMaterials } from './character-studio-materials.js';
 import { migrateCharacterAppearance, characterAppearanceFor } from './character-definition.js';
@@ -19,6 +20,7 @@ import { localLocomotion } from './locomotion-handoff.js';
 import { APPEARANCE_COOLDOWN_MS, CHARACTERS, appearanceFor, canFlyAs, canUseAppearance, defaultAppearanceFor, isJevicaOwner, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './player-avatar.css';
 import { isGameplayKey } from './keyboard-input.js';
+import { aboardAnotherRide, garageKeyAction } from './garage-keys.js';
 import { RIBBONWING_MANEUVERS, RIBBONWING_MANEUVER_KINDS, maneuverMinimumAltitude } from './ribbonwing-maneuvers.js';
 import { soundToggle } from './throw-sounds.js';
 
@@ -42,6 +44,9 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
   };
   const carriage=createParkedCarriage({scene,walking,getWorld,getLocals:crewLocals,getConversation,requestExit:requestVehicleExit,requestChauffeur,requestManeuver,reducedMotion});
   if(!rideKinds.some(spec=>spec.kind===carriage.kind))carriage.select(rideKinds[0].kind);
+  // #640 increment 4: the crime HUD publishes the town's combat state for this figure; combat-motion.js
+  // turns the body toward the opponent and layers a pose on after the rig is posed.
+  const combat=createLocalCombat();let combatHeld=false,crimeHud=null;
   // Hidden until the walk has a pose (update() below): shown first, it flashed for a frame at sign-in.
   const panel = document.createElement('section');panel.className = 'player-controls';panel.hidden = true;panel.setAttribute('aria-label', 'Your character');
   panel.innerHTML = `<header class="player-identity">
@@ -62,6 +67,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     <div class="player-actions"><button id="player-camera" type="button" aria-pressed="true"><span data-camera-label>Third person</span><kbd>V</kbd></button></div>
     <section class="vehicle-garage" aria-label="${owner?'Jev chauffeur':'Your ride'}">
       <div class="vehicle-garage-title"><span>${owner?'Your chauffeur':'Your garage'}</span><span aria-hidden="true">✧</span></div>
+      <a class="player-reference" href="/racing.html">Garden Circuit · practice races</a>
       <label for="player-vehicle">Your ride</label><select id="player-vehicle">${rideKinds.map(spec=>`<option value="${spec.kind}">${spec.label}</option>`).join('')}</select>
       <div class="player-actions"><button id="player-carriage" type="button" aria-keyshortcuts="Q"><span data-call-label>Call Jev</span><kbd>Q</kbd></button><button id="player-ride" type="button" aria-keyshortcuts="G"><span data-ride-label>Ride with Jev</span><kbd>G</kbd></button></div>
       <button id="player-chauffeur" type="button" aria-pressed="false">Jev smart drive</button><div class="player-actions" data-tour-actions><button id="player-drive-pause" type="button">Pause ride</button><button id="player-drive-park" type="button">Brake & park</button></div><div class="player-drive-pad" aria-label="Driving directions"><button type="button" data-drive="forward">Accelerate ↑</button><button type="button" data-drive="left">Steer ←</button><button type="button" data-drive="reverse">Reverse ↓</button><button type="button" data-drive="right">Steer →</button></div><p id="player-drive-status" role="status" aria-live="polite">Jev is ready</p>
@@ -126,9 +132,10 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(carriage.riding){if(carriage.maneuver)status.textContent=`Hold on: the ${RIBBONWING_MANEUVERS[carriage.maneuver.kind].label} finishes first.`;else if(carriage.airborne){carriage.land();status.textContent='The Ribbonwing is landing. Press G again once it is down.';}else status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';}
     else status.textContent=carriage.board()?(carriage.chauffeured?'Ride with Jev, or give directions with W/S and A/D.':'You have the controls: W/S to ride or reverse, A/D to steer.'):'Walk closer to your vehicle before boarding.';
   });
+  // Q and G work for every account with a garage (#791), and stay off aboard someone else's ride.
   host.addEventListener('keydown',event=>{
-    if(!owner||event.repeat||event.defaultPrevented||!isGameplayKey(event))return;
-    const button=event.code==='KeyQ'?carriageButton:event.code==='KeyG'?rideButton:null;
+    const action=garageKeyAction(event,{hasGarage:rideKinds.length>0,pose:walking.getPose(),ownRiding:carriage.riding});
+    const button=action==='call'?carriageButton:action==='ride'?rideButton:null;
     if(!button)return;
     // A key the button would refuse says why (the button's hint) rather than doing nothing.
     if(button.disabled){if(button.title)status.textContent=button.title;return;}
@@ -366,9 +373,11 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       const prince=carriage.prince.companion,chauffeured=carriage.chauffeured,away=chauffeured&&prince.mode!=='seat';
       // A craft that flies can be called while its owner is aloft; it sets down below her.
       const callsAloft=Boolean(VEHICLES[carriage.kind]?.flies);
-      carriageButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||(pose.flying&&!callsAloft)||carriage.riding||away;
+      // Aboard another pilot's craft or a plaza bike, your own ride can be neither called nor boarded.
+      const elsewhere=aboardAnotherRide(pose,carriage.riding);
+      carriageButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||(pose.flying&&!callsAloft)||carriage.riding||away||elsewhere;
       companionButton.disabled=!owner||!chauffeured||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
-      rideButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away||carriage.exiting;
+      rideButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away||carriage.exiting||elsewhere;
       carriageButton.querySelector('[data-call-label]').textContent=chauffeured?'Call Jev':'Call your ride';
       rideButton.querySelector('[data-ride-label]').textContent=carriage.riding?'Step out':chauffeured?'Ride with Jev':'Ride';
       vehicleSelect.disabled=carriage.riding||away;driveButton.disabled=!chauffeured||!carriage.riding||away;
@@ -380,7 +389,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       if(driveStatus.textContent!==driveLabel)driveStatus.textContent=driveLabel;
       host.dataset.vehicle=carriage.kind;host.dataset.chauffeur=JSON.stringify(carriage.chauffeur);host.dataset.driving=String(Boolean(carriage.riding&&!chauffeured));
       host.dataset.riding=String(carriage.riding);flightButton.disabled=seated||!canFlyAs(userId,appearance);
-      carriageButton.title=pose?.roomId?'Step outside to call your ride':pose?.flying&&!callsAloft?'Land to call your ride':'';
+      carriageButton.title=pose?.roomId?'Step outside to call your ride':pose?.flying&&!callsAloft?'Land to call your ride':elsewhere?'Step out of this ride to call your own':'';
       host.dataset.carriageReady=String(Boolean(carriage.placement));
       host.dataset.playerSeat = pose?.sitting ? `${pose.sitting.buildId}:${pose.sitting.slot}` : '';host.dataset.playerWatering = String(now < waterUntil);
       host.dataset.cameraMode = walking.thirdPerson ? 'third' : 'first';host.dataset.playerVisible = String(holder.visible);
@@ -399,16 +408,27 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
         // Walking off, sitting, riding or flying ends watering.
         if(waterUntil&&(pose.speed>.3||seated||pose.flying))waterUntil=0;
         const watering=now<waterUntil&&waterTarget;
-        if(!seated&&(watering||previous===null||pose.speed>.05)) {
+        // #640 increment 4: while engaged, the body turns toward the fight (combat-motion.js) and the
+        // travel turn below stands down, so a backpedal or strafe keeps facing the opponent.
+        if(!crimeHud?.isConnected)crimeHud=document.querySelector('.crime-hud');
+        const fight=presentation?null:combat.update({dataset:crimeHud?.dataset,now,dt,position:holder.position,yaw:holder.rotation.y,heading:travelHeading,seated,flying:pose.flying,reducedMotion});
+        const engaged=fight!==null&&fight.yaw!==null;
+        if(!seated&&!engaged&&(watering||previous===null||pose.speed>.05)) {
           const aim=watering?waterTarget:null;
           const facing=aim?Math.atan2(aim[0]-holder.position.x,aim[2]-holder.position.z):travelHeading??pose.yaw+Math.PI;
           holder.rotation.y=turnToward(holder.rotation.y,facing,previous===null?1:dt);
         }
-        if(!seated&&focus.facing!==null&&!sharedInteraction)holder.rotation.y=focus.facing;
+        if(!seated&&focus.facing!==null&&!sharedInteraction&&!engaged)holder.rotation.y=focus.facing;
         if(sharedInteraction&&!presentation&&!seated&&!pose.flying)holder.rotation.y=turnToward(holder.rotation.y,sharedInteraction.heading,previous===null?1:dt);
+        if(engaged)holder.rotation.y=fight.yaw;
+        // Down, surrendered or held: the town will not move this player, so held keys and buttons let go.
+        const combatHold=['down','surrender'].includes(fight?.state?.kind);
+        if(combatHold&&!combatHeld)walking.halt();
+        combatHeld=combatHold;host.dataset.combat=fight?.layers.at(-1)?.kind??'';
         const throwing = !seated && !pose.flying && now - throwStart < 850;
         pilotHands?.reset();
-        avatar.update(now, now < castUntil ? 'amazed' : throwing ? (now - throwStart < 180 ? 'throw-windup' : 'throw-release') : watering ? 'water' : !pose.flying&&!pose.riding ? (poseFor(sharedGesture)??'continue') : 'continue', false, {...localLocomotion(pose,{seated}),flightSpeed:pose.flying?pose.speed:0,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,ridingDriver:Boolean(pose.riding?.driver),seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,ridingDistance:pose.riding?.distance,ridingSpeed:pose.riding?.speed,ridingSteering:pose.riding?.steering,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});outfit.update(pose.flying,now,seated);
+        // While the town reports a combat state the layer owns the figure: the legacy shove gesture never stacks on the strike pose.
+        avatar.update(now, now < castUntil ? 'amazed' : throwing ? (now - throwStart < 180 ? 'throw-windup' : 'throw-release') : watering ? 'water' : !pose.flying&&!pose.riding ? (fight?.state?'continue':poseFor(sharedGesture)??'continue') : 'continue', false, {...localLocomotion(pose,{seated}),flightSpeed:pose.flying?pose.speed:0,flying:pose.flying,riding:seated,ridingKind:pose.sitting?'seat':pose.riding?.kind,ridingDriver:Boolean(pose.riding?.driver),seatToFloor:pose.sitting?.height??pose.riding?.seatToFloor,ridingDistance:pose.riding?.distance,ridingSpeed:pose.riding?.speed,ridingSteering:pose.riding?.steering,vehicle:form,handshakeTarget:sharedInteraction?.kind==='handshake'?sharedInteraction.target:undefined,gestureTime:sharedInteraction?sharedInteraction.elapsed+Math.max(0,now-interactionAt)/1000:undefined}, pose.groundAt, focus.target, {conversing:focus.mode==='conversation'});if(!seated&&!pose.flying&&!pose.riding)for(const layer of fight?.layers??[])applyCombatPose(avatar.rig,layer,{reducedMotion});outfit.update(pose.flying,now,seated);
         if(pose.riding?.driver&&pose.riding.kind==='hover'&&pilotHands){holder.updateMatrixWorld(true);pilotHands(carriage.object,VEHICLES.hover);}
         outfit.updateOptics(camera,viewportHeight);
         if(portraitWanted&&getPortrait){

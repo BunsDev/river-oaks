@@ -123,7 +123,10 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
   // a sheet sits a few centimetres off it, which the depth buffer can't separate from afar.
   const masses = new Map(), behind = material => {
     if (!masses.has(material)) {
-      const back = material.clone(); Object.assign(back, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 });
+      const back = material.clone();
+      // Material.clone copies maps, not shader callbacks. Preserve the authored finish.
+      back.onBeforeCompile = material.onBeforeCompile; back.customProgramCacheKey = material.customProgramCacheKey;
+      Object.assign(back, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 });
       masses.set(material, back); materials.add(back);
     }
     return masses.get(material);
@@ -496,7 +499,7 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
     ...(world.buildingInteriors ?? []).flatMap(plan => plan.levels.filter(level => level.index > 0)
       .flatMap(level => interiorLevelRoomsFor(world, level.id))),
   ];
-  const interiorGroup = buildStoreInteriors(rooms.filter(room => !room.generatedPlan && !isCampusRoom(room)), { atlas: interiors, reflectionMaterials });
+  const interiorGroup = buildStoreInteriors(rooms.filter(room => !room.generatedPlan && !isCampusRoom(room)), { atlas: interiors, reflectionMaterials, shadowBatch: true });
   group.userData.reflectionMaterials = reflectionMaterials;
   const reflective = [];
   for (const root of [group, interiorGroup]) root.traverse(mesh => { if (mesh.material && reflectionMaterials.includes(mesh.material)) reflective.push(mesh); });

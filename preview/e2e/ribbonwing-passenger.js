@@ -19,6 +19,25 @@ async page => {
     finally {await tab.keyboard.up(key);}
   };
   const seatOf=tab=>tab.evaluate(()=>window.__riverRibbonwingSeat());
+  // alice has a garage of her own (#767); a passenger's G is the seat's alone and must never reach it (#791).
+  const garageOf=tab=>tab.evaluate(()=>({status:document.querySelector('#player-status')?.textContent??'',riding:window.__riverCarriage().riding,called:document.querySelector('#canvas-host').dataset.carriageReady}));
+  // Jevica holds Space until her craft is above `above` metres. A frame lifts the craft by at most
+  // 0.08 s of climb, and with three clients the CPU-rendered runner can draw one frame a second:
+  // a hosted run was still climbing at 5.1 of 5.2 m when a fixed 20 s ran out (run 41060869403).
+  // The climb fails when the craft stops rising: less than 5 cm gained in 20 s.
+  const climb=async(above,label)=>{
+    await host(page).focus();await page.keyboard.down('Space');
+    try {
+      let highest=-Infinity,risingAt=Date.now();
+      for(;;){
+        try {await page.waitForFunction(above=>(window.__riverCarriage().placement.altitude??0)>above,above,{polling:'raf',timeout:2000});return;}
+        catch(error){if(!/Timeout/.test(error.message))throw error;}
+        const altitude=await page.evaluate(()=>window.__riverCarriage().placement.altitude??0);
+        if(altitude>highest+.05){highest=altitude;risingAt=Date.now();}
+        if(Date.now()-risingAt>20000)throw new Error(`${label}: the craft stopped rising at ${altitude.toFixed(2)} m, short of ${above} m`);
+      }
+    } finally {await page.keyboard.up('Space');}
+  };
   const host=tab=>tab.locator('#canvas-host');
   const gap=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
   const ready=async tab=>{
@@ -51,6 +70,12 @@ async page => {
   await page.locator('.ribbonwing-seat [data-seat-action]').click();
   await alice.waitForFunction(()=>document.querySelector('.ribbonwing-seat:not([hidden]) [data-seat-status]')?.textContent.includes('invites you aboard'),{},{timeout:10000});
   check((await town(alice)).players.find(p=>p.id===OWNER)?.vehicle==='hover','alice is invited aboard Jevica\'s Ribbonwing and is offered Board');
+  // The seat panel updates every frame; its polite line must not be rewritten each time, or a screen
+  // reader repeats the invitation (visitor sweep, 2026-11-05). Count writes over ten drawn frames.
+  const rewrites=await alice.evaluate(()=>new Promise(resolve=>{const line=document.querySelector('.ribbonwing-seat [data-seat-status]');let writes=0,frames=0;
+    const observer=new MutationObserver(records=>{writes+=records.length;});observer.observe(line,{childList:true,characterData:true,subtree:true});
+    const tick=()=>{if(++frames>=10){observer.disconnect();resolve({writes,frames,text:line.textContent});}else requestAnimationFrame(tick);};requestAnimationFrame(tick);}));
+  check(rewrites.writes===0,`alice's invitation line is written once, not every frame (${JSON.stringify(rewrites)})`);
   await alice.locator('.ribbonwing-seat [data-seat-action]').click();
   await alice.waitForFunction(()=>window.__riverRibbonwingSeat().riding,{},{timeout:10000});
   const aboard=await me(alice),pilot=(await town(alice)).players.find(p=>p.id===OWNER);
@@ -68,36 +93,79 @@ async page => {
   await bob.waitForFunction(id=>{const s=window.__riverRibbonwingSeat(),h=s.holders[id],seat=Object.values(s.seats).find(Boolean);return h?.aboard&&seat&&Math.hypot(h.position[0]-seat[0],h.position[1]-seat[1],h.position[2]-seat[2])<.05;},aliceId,{timeout:20000});
   check(true,'bob sees alice seated in Jevica\'s Ribbonwing');
   // Climb: alice cannot step out aloft.
-  await host(page).focus();await page.keyboard.down('Space');
-  try {await page.waitForFunction(()=>(window.__riverCarriage().placement.altitude??0)>5.2,{},{timeout:20000});}finally{await page.keyboard.up('Space');}
+  await climb(5.2,'Jevica climbs with alice aboard');
   await alice.waitForFunction(()=>{const m=window.__riverMultiplayer();return (m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??0)>5;},{},{timeout:20000});
   check(await alice.locator('.ribbonwing-seat [data-seat-action]').isDisabled(),'Aloft, alice\'s Step out is disabled');
+  const aloftGarage=await garageOf(alice);
   await host(alice).focus();await alice.keyboard.press('KeyG');await alice.waitForTimeout(400);
   check((await me(alice)).passengerOf===OWNER,'G aloft does not drop alice from the craft');
+  const aloftAfter=await garageOf(alice);
+  check(JSON.stringify(aloftAfter)===JSON.stringify(aloftGarage),`G aloft does not reach alice's own garage (${JSON.stringify({before:aloftGarage,after:aloftAfter})})`);
   // A roll with a passenger: alice's view rolls with the craft and bob keeps her in the seat.
+  // alice's page records her view's tilt on every frame it draws. Sampled from here, 14 reads
+  // each saw only the latest of a slow page's frames and missed the middle of the 2.6 s roll: a
+  // hosted run measured 1.06 rad (run 41069203704). Every frame of a page drawing one a second
+  // falls within a fifth of the roll's middle, at 1.42 rad or more.
+  await alice.evaluate(()=>{const roll=window.__rollView={tilt:0,frames:0,stopped:false};const tick=()=>{const q=window.__riverCarriage().pose.riding?.quaternion;
+    if(q){const [x,,z]=q;roll.tilt=Math.max(roll.tilt,Math.acos(Math.max(-1,Math.min(1,1-2*(x*x+z*z)))));roll.frames++;}if(!roll.stopped)requestAnimationFrame(tick);};requestAnimationFrame(tick);});
   await host(page).focus();await page.keyboard.press('Digit1');
   await page.waitForFunction(()=>window.__riverCarriage().maneuver?.kind==='roll',{},{timeout:10000});
-  let aliceTilt=0,bobDrift=0,samples=0;
+  let bobDrift=0,samples=0;
   for(let i=0;i<14;i++){
-    const [view,seen]=await Promise.all([alice.evaluate(()=>window.__riverCarriage().pose.riding?.quaternion??null),bob.evaluate(id=>{const s=window.__riverRibbonwingSeat(),h=s.holders[id],seat=Object.values(s.seats).find(Boolean);return h&&seat?{h:h.position,seat}:null;},aliceId)]);
-    if(view){const [x,,z]=view;aliceTilt=Math.max(aliceTilt,Math.acos(Math.max(-1,Math.min(1,1-2*(x*x+z*z)))));}
+    const seen=await bob.evaluate(id=>{const s=window.__riverRibbonwingSeat(),h=s.holders[id],seat=Object.values(s.seats).find(Boolean);return h&&seat?{h:h.position,seat}:null;},aliceId);
     if(seen){bobDrift=Math.max(bobDrift,gap(seen.h,seen.seat));samples++;}
     await page.waitForTimeout(170);
   }
-  check(aliceTilt>1.2,`alice's view rolls with the craft (max tilt ${aliceTilt.toFixed(2)} rad)`);
   check(samples>8&&bobDrift<.05,`bob draws alice in the passenger seat through the roll (max ${bobDrift.toFixed(3)} m off over ${samples} samples)`);
   await page.waitForFunction(()=>window.__riverCarriage().maneuver===null,{},{timeout:10000});
   await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return !m.snapshot.players.find(p=>p.id===m.selfId)?.maneuver;},{},{timeout:10000});
+  // alice's page has drawn the whole roll once its own snapshot shows the craft out of it.
+  await alice.waitForFunction(owner=>!window.__riverMultiplayer().snapshot.players.find(p=>p.id===owner)?.maneuver,OWNER,{timeout:10000});
+  const aliceRoll=await alice.evaluate(()=>{window.__rollView.stopped=true;return window.__rollView;});
+  check(aliceRoll.tilt>1.2,`alice's view rolls with the craft (max tilt ${aliceRoll.tilt.toFixed(2)} rad over ${aliceRoll.frames} frames)`);
   const [pilotAfter,aliceAfter]=await Promise.all([me(page),me(alice)]);
   check(aliceAfter.passengerOf===OWNER&&Math.abs(aliceAfter.altitude-pilotAfter.altitude)<.01,'After the roll alice is still aboard at the pilot\'s altitude');
   // Land; alice steps out beside the craft and walks on.
+  // The Ribbon's posts run beside the street this flies up: fly clear of them before landing (#841).
+  // A Ribbonwing that starts landing over a solid hovers there for good (landing cannot be
+  // cancelled), so it must be still and clear when G is pressed. On a CPU runner at about 1 fps the
+  // craft can still be drifting after clearHoverSpot's own wait for it to stop: wait for it to stop
+  // here (up to 60 s), then check the spot again, which returns at once when it is still clear.
+  const {clearHoverSpot}=await import('./hover-landing.js');
+  let landingSpot=await clearHoverSpot(page,{focus:()=>host(page).focus(),label:'Jevica lands with alice aboard'});
+  for(let i=0;i<3;i++){
+    await page.waitForFunction(()=>Math.abs(window.__riverCarriage().placement?.speed??0)<0.02,null,{timeout:60000});
+    const settled=await clearHoverSpot(page,{focus:()=>host(page).focus(),label:'Jevica lands with alice aboard (settled)'});
+    const moved=Math.hypot(settled.east-landingSpot.east,settled.north-landingSpot.north),turned=Math.abs(Math.atan2(Math.sin(settled.yaw-landingSpot.yaw),Math.cos(settled.yaw-landingSpot.yaw)));landingSpot=settled;
+    if(moved<.05&&turned<.01)break;
+  }
   await host(page).focus();await page.keyboard.press('KeyG');
-  await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return (m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??1)<=.1;},{},{timeout:30000});
+  // The descent advances at most 0.08 s per drawn frame (carriage-motion.js stepHoverLift), so a
+  // CPU runner at about 1 fps lands in minutes, not seconds: wait while the craft is still coming
+  // down, and fail only when it stops descending for 15 s (or after 150 s).
+  {
+    const altitude=()=>page.evaluate(()=>{const m=window.__riverMultiplayer();return m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??null;});
+    const started=Date.now();let low=Infinity,lowAt=Date.now(),now=await altitude();
+    while(!(now!==null&&now<=.1)){
+      if(now!==null&&now<low-.05){low=now;lowAt=Date.now();}
+      if(!(Date.now()-lowAt<15000&&Date.now()-started<150000))throw new Error(`Jevica's craft stopped short of landing with alice aboard (altitude ${now?.toFixed(2)} m, lowest ${low.toFixed(2)} m, at ${JSON.stringify(await page.evaluate(()=>window.__riverCarriage().placement?.position?.map(v=>+v.toFixed(2))??null))}, yaw ${await page.evaluate(()=>window.__riverCarriage().placement?.yaw??null)}, G pressed at ${JSON.stringify(landingSpot)}, ${((Date.now()-started)/1000).toFixed(0)} s after G)`);
+      await page.waitForTimeout(500);now=await altitude();
+    }
+    check(true,`Jevica's craft lands with alice aboard (${((Date.now()-started)/1000).toFixed(0)} s after G)`);
+  }
   await alice.waitForFunction(()=>!document.querySelector('.ribbonwing-seat [data-seat-action]')?.disabled,{},{timeout:10000});
+  const groundGarage=await garageOf(alice);
   await host(alice).focus();await alice.keyboard.press('KeyG');
   await alice.waitForFunction(()=>!window.__riverRibbonwingSeat().riding&&!window.__riverRibbonwingSeat().pilotId,{},{timeout:10000});
-  const stepped=await me(alice),landed=await me(page);
-  check(stepped.passengerOf===null&&stepped.altitude===0&&landed.passengerId===null,'On the ground alice steps out and the seat is free');
+  const groundAfter=await garageOf(alice);
+  check(JSON.stringify(groundAfter)===JSON.stringify(groundGarage),`alice's G steps her out of the Ribbonwing and does nothing in her own garage (${JSON.stringify({before:groundGarage,after:groundAfter})})`);
+  // alice's page reads her seat from her own snapshot. Jevica's page learns of the step-out from
+  // its own next snapshot, which on the CPU-rendered runner can come seconds later: a hosted run
+  // read Jevica's snapshot first and failed, while her failure screenshot already said the seat
+  // was free (run 41058334553). Wait for it there; the check below still reads both pages.
+  await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return m.snapshot.players.find(p=>p.id===m.selfId)?.passengerId==null;},{},{timeout:10000}).catch(()=>{});
+  const stepped=await me(alice),landed=await me(page),free=stepped.passengerOf===null&&stepped.altitude===0&&landed.passengerId===null;
+  check(free,`On the ground alice steps out and the seat is free${free?'':` (alice: passenger of ${stepped.passengerOf} at ${stepped.altitude} m; Jevica's passenger: ${landed.passengerId})`}`);
   const beside=Math.hypot(stepped.position[0]-landed.position[0],stepped.position[1]-landed.position[1]);
   check(beside>2.5&&beside<6,`alice stands beside the craft (${beside.toFixed(2)} m from the pilot)`);
   await alice.waitForFunction(()=>!document.querySelector('.walking-title strong')?.textContent.includes('Ribbonwing'),{},{timeout:5000}).catch(()=>{});
@@ -112,8 +180,7 @@ async page => {
   await alice.waitForFunction(()=>document.querySelector('.ribbonwing-seat:not([hidden]) [data-seat-status]')?.textContent.includes('invites you aboard'),{},{timeout:10000});
   await alice.locator('.ribbonwing-seat [data-seat-action]').click();
   await alice.waitForFunction(()=>window.__riverRibbonwingSeat().riding,{},{timeout:10000});
-  await host(page).focus();await page.keyboard.down('Space');
-  try {await page.waitForFunction(()=>(window.__riverCarriage().placement.altitude??0)>4,{},{timeout:20000});}finally{await page.keyboard.up('Space');}
+  await climb(4,'Jevica climbs again');
   await alice.waitForFunction(()=>{const m=window.__riverMultiplayer();return (m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??0)>3.5;},{},{timeout:20000});
   check(true,'alice boards again and Jevica climbs');
   const closedAt=Date.now();await page.close();

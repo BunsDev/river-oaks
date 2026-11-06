@@ -57,10 +57,15 @@ async page => {
   check(sequence.exterior && sequence.interior, `sequence cuts from actual exterior to interior${sequence.exterior && sequence.interior ? '' : `; camera depths behind the facade ${JSON.stringify(sequence.depths)}`}`);
   check(Math.hypot(...(await pose()).map((v,i)=>v-start[i])) < .01, 'camera sequence does not move player');
   check(await page.locator('#canvas-host').evaluate(el=>el===document.activeElement), 'Escape restores walking focus');
-  // The page reads held keys once per frame, and a CPU-rendered frame can outlast a 180 ms
-  // press (a hosted run released S unread and failed this check): hold for two frames at least.
-  const frameMs = await page.evaluate(() => new Promise(resolve => requestAnimationFrame(first => requestAnimationFrame(second => resolve(second - first)))));
-  await page.keyboard.down('s'); await page.waitForTimeout(Math.max(180, frameMs * 2)); await page.keyboard.up('s');
+  // The page reads held keys once per frame, and a CPU-rendered frame can outlast any timed
+  // press: hosted runs released S unread with a 180 ms press, and again with two frames' worth
+  // measured just before. Hold S until a frame has begun since the key went down.
+  await page.evaluate(() => { window.__storeIntroFrames = 0; const tick = () => { window.__storeIntroFrames++; requestAnimationFrame(tick); }; requestAnimationFrame(tick); });
+  const framesBefore = await page.evaluate(() => window.__storeIntroFrames);
+  await page.keyboard.down('s');
+  // The frame counted second began after the key went down, so its update read S.
+  await Promise.all([page.waitForTimeout(180), page.waitForFunction(before => window.__storeIntroFrames >= before + 2, framesBefore, { polling: 'raf' })]);
+  await page.keyboard.up('s');
   check(Math.hypot(...(await pose()).map((v,i)=>v-start[i])) > .01, 'movement works after skip');
   await arrive('Harry Winston'); await page.waitForTimeout(1200);
   check(!await dialog.isVisible(), 'second entry does not replay intro');
