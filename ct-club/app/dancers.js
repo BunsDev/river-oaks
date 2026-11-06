@@ -147,11 +147,19 @@ export async function addDancers(scene, opts = {}) {
     scene.add(model);
     dancers.push({ model, mixer, action, use, phase });
   }
-  const tick = dt => { for (const d of dancers) d.mixer.update(dt); };
+  // Audio-reactive dance: bass energy scales the animation playback rate.
+  // When the kick hits, dancers move faster; when it's quiet, they slow down.
+  // `audioScale` (0..~2) comes from the analyser's bass energy each frame.
+  let audioScale = 1;
+  const setAudioScale = s => { audioScale = Math.max(0, Math.min(2, s)); };
+  const tick = (dt, s = audioScale) => {
+    const scale = Math.max(0, Math.min(2, s));
+    for (const d of dancers) d.mixer.update(dt * scale);
+  };
   const toggle = () => {
     const on = dancers[0] ? dancers[0].model.visible : true;
     for (const d of dancers) d.model.visible = !on;
     return !on;
   };
-  return { dancers, tick, toggle, setCount: () => { }, clips: clips.map(c => c.key) };
+  return { dancers, tick, toggle, setCount: () => { }, setAudioScale, clips: clips.map(c => c.key) };
 }

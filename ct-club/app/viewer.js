@@ -11,6 +11,7 @@ import { attachWorldPlanner } from './world-plan.js';
 import { surfaceReference } from './coordinates.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 import { createAudioEngine } from './audio-engine.js';
+import { createAudioAnalyzer } from './audio-analyzer.js';
 import { addDancers } from './dancers.js';
 
 const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
@@ -220,6 +221,10 @@ const closePanels = () => { for (const id of PANEL_IDS) { const el = document.ge
 // ---- audio: upload, playlist, continuous playback, reactive colour -------------
 const audio = createAudioEngine();
 window.clubFixture.audio = audio;
+
+// ---- audio frequency analyser: 32 bands, 20 Hz – 15 kHz -----------------------
+const analyzer = audio ? createAudioAnalyzer({ analyser: audio.analyser }) : null;
+window.clubFixture.analyzer = analyzer;
 
 // Small helper: make a fixed overlay panel draggable from its .drag-handle so it can
 // be moved out of the way while placing a screen / dragging a fixture.
@@ -523,7 +528,12 @@ const loop = now => {
   if (clock.running) {
     clock.t += Math.min(1 / 20, clock.delta);
     if (!reducedMotion) club.userData.tick(clock.t);
-    if (dancers) dancers.tick(clock.delta);   // dance crowd on the floor
+    if (dancers) {
+      const st = analyzer ? analyzer.state() : null;
+      if (st) club.setAudio(st);                              // lights react to bands
+      const scale = st ? 0.5 + st.bass * 1.5 : 1;             // bass drives dance speed
+      dancers.tick(clock.delta, scale);                       // dancers react to bass
+    }
   }
   if (design) design.cycle(now / 1000, audio);   // colour cycles + audio-reactive (owned by the host)
   updateAudioTransport();                       // keep the seek bar + time display live

@@ -545,25 +545,75 @@ export function buildCtClubInterior(room, options = {}) {
     if (reducedMotion) return;
     ball.rotation.y = t * 0.55;
     ball.rotation.x = Math.sin(t * 0.21) * 0.4;
+
+    const a = root.userData.audioState;
+    const audioOn = a && a.bass != null;
+    // Audio-driven scales: bass drives the low end, treble the high end, energy the whole room.
+    const bass = audioOn ? a.bass : 0;
+    const mid = audioOn ? a.mid : 0;
+    const treble = audioOn ? a.treble : 0;
+    const energy = audioOn ? a.energy : 0;
+    const beat = audioOn ? a.beat : false;
+
+    // --- RGB corner spots: hue shifts with bass, saturation with mid, brightness with energy ---
     for (let i = 0; i < spotMats.length; i++) {
-      if (!spotMats[i].userData.manual) spotMats[i].color.setHSL((t * 0.045 + i * 0.25) % 1, 0.75, 0.5);
+      if (spotMats[i].userData.manual) continue;
+      if (audioOn) {
+        const h = (bass * 0.6 + i * 0.15) % 1;           // bass moves the hue
+        const s = 0.5 + mid * 0.5;                        // mid fattens the saturation
+        const l = 0.35 + energy * 0.45;                   // energy lifts the brightness
+        spotMats[i].color.setHSL(h, s, l);
+      } else {
+        spotMats[i].color.setHSL((t * 0.045 + i * 0.25) % 1, 0.75, 0.5);
+      }
     }
-    ringMat.color.setHSL((t * 0.05) % 1, 0.9, 0.55);
+
+    // --- Dancefloor edge ring: colour follows mid-frequency energy ---
+    if (audioOn) ringMat.color.setHSL((mid * 0.8) % 1, 0.9, 0.55);
+    else ringMat.color.setHSL((t * 0.05) % 1, 0.9, 0.55);
+
+    // --- Lasers: intensity and hue driven by treble when audio is on;
+    //     otherwise the original t-based RGB burst cycle ---
     const cycle = t % 9, burst = cycle < 2;
-    if (burst) {
-      const glow = Math.min(1, 2 * cycle * (2 - cycle));
-      for (let i = 0; i < laserGroups.length; i++) {
+    const laserOn = audioOn ? treble > 0.25 : burst;
+    for (let i = 0; i < laserMats.length; i++) {
+      if (laserMats[i].userData.manual) continue;
+      if (laserOn) {
         const base = CLUB_LASERS[i].yaw;
         laserGroups[i].rotation.set(-CLUB_LASERS[i].pitch, -(base + Math.sin(t * 0.85 + i * 2.1) * 0.3 * (i % 2 ? -1 : 1)), 0);
-        laserMats[i].color.setHSL((t * 0.8 + i * 0.33) % 1, 1, 0.6);
-        laserMats[i].opacity = (Math.sin(t * 22 + i) > -0.3 ? 0.85 : 0.3) * glow;
+        let h;
+        if (audioOn) h = (treble * 0.7 + i * 0.2) % 1;   // band-driven hue
+        else h = (t * 0.8 + i * 0.33) % 1;               // original RGB cycle
+        laserMats[i].color.setHSL(h, 1, 0.6);
+        laserMats[i].opacity = (0.3 + treble * 0.55) * (beat ? 1 : 0.6);
+      } else {
+        laserMats[i].opacity = 0;
       }
-    } else {
-      for (const mat of laserMats) mat.opacity = 0;
     }
+
+    // --- Strobes: fire on bass beat, brighter with bass energy ---
     for (let i = 0; i < strobeMats.length; i++) {
-      const phase = (t + i * 0.37) % 41;
-      strobeMats[i].opacity = phase < 0.8 ? (Math.sin(t * 160) > 0 ? 1 : 0.1) : 0.06;
+      if (strobeMats[i].userData.manual) continue;
+      if (audioOn) {
+        const flash = beat ? (0.6 + bass * 0.4) : (0.06 + bass * 0.1);
+        strobeMats[i].opacity = flash;
+      } else {
+        const phase = (t + i * 0.37) % 41;
+        strobeMats[i].opacity = phase < 0.8 ? (Math.sin(t * 160) > 0 ? 1 : 0.1) : 0.06;
+      }
+    }
+
+    // --- Ambient zone lights: intensity scaled by overall energy, slow hue shift with bass ---
+    if (audioOn) {
+      for (const light of lightList) {
+        const base = light.userData.baseColor;
+        const baseInt = light.userData.baseIntensity;
+        const h = new THREE.Color(base).getHSL(new THREE.Color());
+        // Slow hue drift keyed to bass; intensity pulsing with energy
+        const drifted = (h.h + bass * 0.1) % 1;
+        light.color.setHSL(drifted, 0.8, 0.5);
+        light.intensity = baseInt * (0.3 + energy * 1.4);
+      }
     }
   };
 
@@ -574,6 +624,10 @@ export function buildCtClubInterior(room, options = {}) {
   });
   root.userData.room = room;
   root.userData.reducedMotion = reducedMotion;
+  // Audio-reactive state: { bands, bass, mid, treble, energy, beat } from the analyser.
+  // When set, the tick() below overrides autonomous colour cycling with band-driven light.
+  root.userData.audioState = null;
+  root.userData.setAudio = state => { root.userData.audioState = state; };
   root.userData.ready = Promise.resolve();
   root.userData.dispose = () => {
     root.traverse(item => { if (item.isInstancedMesh) item.dispose(); });
