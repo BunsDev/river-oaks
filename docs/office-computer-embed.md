@@ -5,18 +5,23 @@ This page describes how River Oaks embeds TypeSafe Computer in Jevica's office d
 lifecycle contract that Computer's embed mode implements
 ([TypeSafeAI/typesafe-computer#33](https://github.com/TypeSafeAI/typesafe-computer/issues/33)).
 
-**Status (2026-11-06 source update).** Opening an office desk now selects TypeSafe
-Computer at `https://computer.typesafe.place` by default. Tasks remains a secondary
+**Status (2026-11-06 source update).** On Place's production origin,
+`https://typesafe.place`, opening an office desk now selects TypeSafe Computer at
+`https://computer.typesafe.place` by default. Tasks remains a secondary
 view; an unsaved retained task draft opens on Tasks so it can be recovered. Computer
 loads only after the player opens a desk. The separate-tab link remains available
-through loading, sign-in and failure, as well as normal use.
+through loading, sign-in and failure, as well as normal use. Other hosts keep the
+Tasks desk unless the build names a Computer origin (see [Configuration](#configuration)).
 
 The existing Place frame owner and Computer's merged embed implementation use the
-same version 1 contract below. An unauthenticated header check on 2026-11-06 returned
+same version 1 contract below. Unauthenticated checks on 2026-11-06 returned
 HTTP 200 from the Computer host with `frame-ancestors 'self' https://typesafe.place`.
-This proves host reachability and the delivered framing policy, not signed-in
-account persistence or rollout of this Place source change. Real authentication,
-cookie isolation and cross-device save acceptance remain separate checks.
+Its public `/api/embed` returned `{"placeOrigins":["https://typesafe.place"]}`, and
+its served bundle contains the version 1 `typesafe-place-embed` handler.
+This proves host reachability, the delivered framing policy and the deployed embed
+build, not signed-in account persistence or rollout of this Place source change.
+Real authentication, cookie isolation and cross-device save acceptance remain
+separate checks.
 
 ## Ownership
 
@@ -37,9 +42,13 @@ penthouse displays stay neutral `SCREEN_DYNAMIC` surfaces.
 `VITE_TYPESAFE_COMPUTER_ORIGIN` is a public build variable naming Computer's exact
 origin, such as `https://computer.example.test`. Place accepts it only as a bare HTTPS
 origin: no path, query, fragment, credentials, surrounding spaces or default port.
-Omitting the variable uses `https://computer.typesafe.place`. An explicit empty,
+Omitting the variable uses `https://computer.typesafe.place` when the page's origin
+is exactly `https://typesafe.place`. Hosted Computer frames no other Place origin,
+so elsewhere (Vercel Preview, `pnpm run dev`, fixtures, other domains) an omitted
+variable keeps the Tasks desk instead of a frame that would time out after 15 s.
+An explicit origin applies on every host. An explicit empty,
 invalid or `off` override hides the Computer tab and loads nothing. Use `off` for
-Tasks-only rollback; unsetting the variable no longer disables Computer.
+Tasks-only rollback; unsetting the variable no longer disables Computer in production.
 
 Loopback `http://127.0.0.1:<port>`, `http://localhost:<port>` or `http://[::1]:<port>` is accepted only in a Vite development build with
 `VITE_TYPESAFE_COMPUTER_TEST_LOOPBACK=1`. The experience runner sets both for the
@@ -314,10 +323,11 @@ The remaining combined acceptance scope is tracked in
 3. Test mobile Safari, keyboard return and disconnect/revocation against the real
    child, alongside the deterministic local lifecycle tests.
 4. Preview deployments on `*.vercel.app` and local development hosts are not on
-   Computer's production `frame-ancestors` list. Use the visible separate-tab link,
-   a reviewed same-site staging pair, or the loopback fixture for development.
+   Computer's production `frame-ancestors` list, so they keep the Tasks desk by
+   default. Use a reviewed same-site staging pair with an explicit origin, or the
+   loopback fixture for development.
 
 To disable the integration, set `VITE_TYPESAFE_COMPUTER_ORIGIN=off` and rebuild.
-Unsetting it restores the hosted default. Synthetic experience journeys explicitly
+Unsetting it restores the hosted default on `https://typesafe.place`. Synthetic experience journeys explicitly
 set `off`, except Computer journeys that use their own loopback child; tests never
 send fixture identities or notes to the production Computer.

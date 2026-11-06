@@ -35,8 +35,10 @@ class Element extends EventTarget {
  scrollIntoView(){}
 }
 
-function setup(t,{computer,request=async()=>({desk:emptyDesk()})}={}){
- const original={document:globalThis.document,window:globalThis.window};
+function setup(t,{computer,pageOrigin='https://typesafe.place',request=async()=>({desk:emptyDesk()})}={}){
+ const original={document:globalThis.document,window:globalThis.window,location:globalThis.location};
+ // The desk reads its default Computer configuration from the page origin when it is created.
+ globalThis.location={origin:pageOrigin};
  const body=new Element('body'),trigger=new Element('button'),createdFrames=[],calls=[];body.append(trigger);
  globalThis.document={body,activeElement:trigger,createElement:tag=>{const element=new Element(tag);if(tag==='iframe')createdFrames.push(element);return element;}};
  globalThis.window=new EventTarget();
@@ -63,6 +65,13 @@ test('opening a desk selects hosted Computer and offers its safe separate-tab li
  assert.equal(f.find('computer-open').hidden,false,'separate opening is available while the frame loads');
  await f.click('view-tasks');
  assert.equal(f.dialog.dataset.view,'tasks');assert.equal(f.frames().length,0,'switching views destroys the unused frame');
+});
+
+test('a default desk on a Preview host stays on Tasks and never frames hosted Computer',async t=>{
+ const f=setup(t,{pageOrigin:'https://river-oaks-git-branch-bunsdev.vercel.app'});
+ await f.ui.open();
+ assert.equal(f.dialog.dataset.view,'tasks');assert.equal(f.find('body').hidden,false);
+ assert.equal(f.find('views').hidden,true,'no Computer tab where Computer refuses to be framed');assert.equal(f.createdFrames.length,0);
 });
 
 test('the explicit off configuration retains the Tasks desk and creates no Computer frame',async t=>{

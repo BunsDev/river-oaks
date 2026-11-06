@@ -59,6 +59,32 @@ journeys cannot contact production, and share an in-flight task load across desk
 reentry while keeping stale sessions fenced. Merge and hosted acceptance are still
 pending at the time of this source checkpoint.
 
+## Delivery review — 2026-11-06 (claude:river-oaks-c7)
+
+Val's goal: review, confirm the optimal solution, merge. Live register task
+`desk-computer-default-20261106`; worktree `river-oaks-desk-computer-894`.
+
+- **Hosted Computer serves the contract.** Unauthenticated probes: `/?embed=place`
+  returned 200 with `frame-ancestors 'self' https://typesafe.place`. `/api/embed`
+  returned `{"placeOrigins":["https://typesafe.place"]}`. The served bundle has the
+  version 1 `typesafe-place-embed` handler (`init`, `prepare-close`,
+  `account-confirmation`). Place's CSP already lists the origin in `frame-src`,
+  and the desktop shell loads `https://typesafe.place/play`.
+- **Finding, fixed here:** the unconditional default also applied to Vercel
+  Preview (`*.vercel.app`) and `pnpm run dev` hosts. Computer refuses to be framed
+  there, so every desk open would wait out the 15 s load timeout, then show a
+  failure. `computerConfig` now applies the hosted default only when the page
+  origin is exactly `https://typesafe.place`. An explicit variable still applies on
+  every host, and `off` still wins. Production behavior is unchanged.
+- Regression: `office-computer-frame.test.js` covers the default on the production
+  origin and none on Preview, `www`, loopback or a missing origin.
+  `office-desk-ui.test.js` checks that a default Preview desk stays on Tasks with
+  no tab or frame. Mutation (unconditional default restored) fails both; restored
+  code passes.
+- Signing: both original commits were unsigned. They were re-created with
+  `commit-tree -S` with identical trees, authors and dates, followed by one signed
+  review commit.
+
 ## Widget exploration — proposal, not shipped scope
 
 Recommend an opt-in **My Place** desktop preset using Computer's existing movable

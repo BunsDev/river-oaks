@@ -12,6 +12,10 @@ export const EMBED_PERSISTENCE=['saved','local','none'];
 // Fixed, reviewed paths on the configured origin. Messages never supply a URL.
 export const EMBED_PATHS={frame:'/?embed=place',signIn:'/api/auth/login',open:'/'};
 export const DEFAULT_COMPUTER_ORIGIN='https://computer.typesafe.place';
+// The one Place origin hosted Computer frames: its frame-ancestors and its /api/embed
+// placeOrigins list name only this origin, so a default frame on any other host (Vercel
+// Preview, local development, fixtures) would be refused and time out.
+export const DEFAULT_PLACE_ORIGIN='https://typesafe.place';
 const ID=/^[A-Za-z0-9_-]{16,64}$/;
 const LOOPBACK=new Set(['127.0.0.1','localhost','[::1]']);
 
@@ -23,9 +27,12 @@ export function computerOrigin(value,{allowLoopback=false}={}){
  if(url.protocol==='https:')return url.origin;
  return url.protocol==='http:'&&allowLoopback&&LOOPBACK.has(url.hostname)&&url.port?url.origin:null;
 }
-/** Use the hosted Computer by default. An explicit invalid or disabled override loads nothing. */
-export function computerConfig(env={}){
- const value=env.VITE_TYPESAFE_COMPUTER_ORIGIN??DEFAULT_COMPUTER_ORIGIN;if(!value||value==='off')return null;
+/**
+ * Without an override, Place on its production origin uses the hosted Computer; other hosts keep
+ * the Tasks desk. An explicit origin applies on every host. An explicit invalid or disabled override loads nothing.
+ */
+export function computerConfig(env={},{pageOrigin=globalThis.location?.origin}={}){
+ const value=env.VITE_TYPESAFE_COMPUTER_ORIGIN??(pageOrigin===DEFAULT_PLACE_ORIGIN?DEFAULT_COMPUTER_ORIGIN:null);if(!value||value==='off')return null;
  const origin=computerOrigin(value,{allowLoopback:Boolean(env.DEV)&&env.VITE_TYPESAFE_COMPUTER_TEST_LOOPBACK==='1'});if(!origin)return null;
  return {origin,frameURL:origin+EMBED_PATHS.frame,signInURL:origin+EMBED_PATHS.signIn,openURL:origin+EMBED_PATHS.open};
 }
