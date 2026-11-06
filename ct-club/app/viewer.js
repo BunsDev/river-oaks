@@ -461,28 +461,12 @@ let sampleEvery = 0;
 const colFor = v => `hsl(${Math.round(120 * (1 - Math.max(0, Math.min(1, v))))}, 92%, 55%)`;
 const drawEq = (ctx, W, H, style, audio, t) => {
   ctx.fillStyle = '#060810'; ctx.fillRect(0, 0, W, H);
-  let bands = audio.getBands(16);
-  // Idle mode: with no track playing the analyser is flat, so synthesize a gentle
-  // animated pattern from the clock — the wall EQ is alive even in silence and
-  // switches to the real analysis the moment music plays.
-  if (bands.every(v => v < 0.012)) {
-    bands = bands.map((_, i) => Math.max(0, Math.abs(Math.sin(t * 1.4 + i * 0.55)) * 0.6 * Math.max(0.12, 1 - i / 16)));
-  }
+  const bands = audio.getBands(16);
   const pad = 4;
   const bw = (W - pad * 2) / 16;
   const maxH = H - pad * 2;
   if (style === 'wave') {
     const data = audio.getWave();
-    // Idle mode: a flat line means silence — draw a slow travelling sine instead.
-    if (data.every(v => Math.abs(v - 128) < 2)) {
-      ctx.strokeStyle = '#7ee0ff'; ctx.lineWidth = 2; ctx.beginPath();
-      for (let i = 0; i < 128; i++) {
-        const x = (i / 128) * W, y = H / 2 + Math.sin(t * 2.2 + (i / 128) * Math.PI * 4) * H * 0.22;
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-      return;
-    }
     ctx.strokeStyle = '#7ee0ff'; ctx.lineWidth = 2; ctx.beginPath();
     for (let i = 0; i < data.length; i++) {
       const x = (i / data.length) * W, y = H / 2 + ((data[i] - 128) / 128) * H * 0.4;
