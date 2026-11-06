@@ -1,5 +1,5 @@
 // CT Club walk-around viewer (temporary scratch build, Val 2026-11-04).
-// Runs the real club interior from the repo (preview/src) with first-person
+// Runs the real club interior from the repo (ct-club/src) with first-person
 // walk controls and collision against the same obstacles the server walker uses.
 import * as THREE from 'three';
 import { planCtClub, refreshObstacles, addScreen, addProp } from '../src/ct-club-plan.js';

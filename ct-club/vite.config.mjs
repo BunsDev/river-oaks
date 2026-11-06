@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 // Temporary self-contained build for the CT Club walk-around viewer. Root is the
 // viewer's own app/ folder so the output is just the game page; the club code is
-// imported from the repo's preview/src. Output -> ct-club-tool/dist.
+// imported from ../src (ct-club/src). Output -> ct-club/dist.
 export default defineConfig({
   root: fileURLToPath(new URL('./app/', import.meta.url)),
   base: './',
