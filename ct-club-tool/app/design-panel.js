@@ -89,6 +89,19 @@ export function attachDesignPanel({ root }) {
   // live `tiles.matrix`), so the dancefloor wave can modulate each tile's hue without
   // erasing the design.
   if (tiles && !tiles.base) tiles.base = tiles.matrix.map(row => [...row]);
+  // Effect materials (strobe lenses, RGB corner spots, lasers) for the beat-driven
+  // effect modes. The tick drives these on a time cycle; the reactive cycle overrides
+  // them when a beat effect mode is active, and we flag spots as manual so the tick
+  // leaves them alone while we control them.
+  const strobeMats = [], spotMats = [], laserMats = [];
+  root.traverse(n => {
+    const list = [].concat(n.material ?? []);
+    for (const mat of list) {
+      if (mat.name === 'club-strobe-lens') strobeMats.push(mat);
+      else if (mat.name === 'club-spot-rgb') spotMats.push(mat);
+      else if (mat.name === 'club-laser') laserMats.push(mat);
+    }
+  });
 
   const items = [];
   const newItem = (id, label, group, kind, ref, field, color) => {
@@ -138,7 +151,7 @@ export function attachDesignPanel({ root }) {
   //   tiles     – the dancefloor ripples in a beat-synced wave, keeping each tile's hue
   //   tiles-off – the tile matrix stays exactly as designed; other sections react
   //   off       – no audio-reactive colour
-  const VISUAL_MODES = ['pulse', 'palette', 'tiles', 'tiles-off', 'off'];
+  const VISUAL_MODES = ['pulse', 'palette', 'tiles', 'tiles-off', 'strobe', 'spot', 'laser', 'off'];
   const audioReact = { on: false, band: 'all', delay: 0, onset: 0.15, fade: 0.3, ignore: 0.05, random: false, locked: false, mode: 'palette', auto: false, autoSeconds: 8, exclude: [] };
   const sectionAudio = new Map();     // group -> { on, band, delay, onset, fade, ignore, random, locked }
   const audioState = new Map();       // group -> { level, hist } runtime-only (not saved)
@@ -261,9 +274,18 @@ export function attachDesignPanel({ root }) {
     maybeAutoSwitch(nowSeconds);
     const mode = audioReact.mode ?? 'palette';
     const on = audio && audioReact.on && mode !== 'off';
+    const effectModes = ['strobe', 'spot', 'laser'];
+    const inEffect = effectModes.includes(mode);
+    // Effect modes drive the strobe/spot/laser materials AND a base colour behaviour for
+    // the defined surfaces (strobe/laser = brightness pulse, spot = palette shift).
+    const baseMode = inEffect ? (mode === 'spot' ? 'palette' : 'pulse') : mode;
+    // Let the interior tick resume driving the RGB spots whenever we're not in spot mode.
+    if (mode !== 'spot') for (const m of spotMats) m.userData.manual = false;
     for (const it of items) {
       const hexes = it.colors.filter(Boolean);
       if (hexes.length < 1) continue;
+      // In an effect mode the strobe/spot materials are beat-driven, not palette-driven.
+      if (inEffect && (it.id === 'club-strobe-lens' || it.id === 'club-spot-rgb')) continue;
       // A section reacts when the master is on and the section hasn't been switched off
       // (unconfigured sections inherit the master, so toggling the master "just works").
       const sec = sectionAudio.get(it.group);
@@ -272,18 +294,18 @@ export function attachDesignPanel({ root }) {
         const level = levelFor(it.group, audio, sec);
         // Dancefloor matrix handling.
         if (it.kind === 'tiles' && tiles) {
-          if (mode === 'tiles-off') continue;                 // leave the matrix exactly as designed
-          if (mode === 'tiles') { for (let r = 0; r < tiles.rows; r++) for (let c = 0; c < tiles.cols; c++) waveTile(r, c, level, nowSeconds); continue; }
+          if (baseMode === 'tiles-off') continue;                 // leave the matrix exactly as designed
+          if (baseMode === 'tiles') { for (let r = 0; r < tiles.rows; r++) for (let c = 0; c < tiles.cols; c++) waveTile(r, c, level, nowSeconds); continue; }
           // pulse / palette: the whole floor follows one colour from the section's palette.
           const base = hexes[0] ?? '#41e0ff';
-          const color = mode === 'pulse' || hexes.length < 2
+          const color = baseMode === 'pulse' || hexes.length < 2
             ? pulse(base, level)
             : lerp(hexes[Math.min(hexes.length - 1, Math.floor(level * (hexes.length - 1)))], hexes[Math.min(hexes.length - 1, Math.ceil(level * (hexes.length - 1)))], (level * (hexes.length - 1)) % 1);
           setColour(it, color);
           continue;
         }
         // Materials / lights / outlines.
-        if (mode === 'pulse') setColour(it, pulse(hexes[0] ?? '#ffffff', level));
+        if (baseMode === 'pulse') setColour(it, pulse(hexes[0] ?? '#ffffff', level));
         else if (hexes.length < 2) setColour(it, pulse(hexes[0], level));
         else {
           const pos = level * (hexes.length - 1);
@@ -297,6 +319,13 @@ export function attachDesignPanel({ root }) {
       const pos = t * hexes.length;
       const i0 = Math.floor(pos) % hexes.length, i1 = (i0 + 1) % hexes.length;
       setColour(it, lerp(hexes[i0], hexes[i1], pos % 1));
+    }
+    // Drive the beat-synced effect materials last (final say over the tick and the palette).
+    if (on && inEffect) {
+      const beat = levelFor('__effect__', audio, { band: 'bass' });
+      if (mode === 'strobe') for (const m of strobeMats) m.opacity = beat > 0.18 ? Math.min(1, 0.25 + beat * 1.8) : 0.05;
+      else if (mode === 'spot') for (const m of spotMats) { m.userData.manual = true; m.color.setHSL((nowSeconds * 0.35 + beat * 0.6) % 1, 0.9, 0.55); }
+      else if (mode === 'laser') for (const m of laserMats) m.opacity = beat > 0.14 ? Math.min(1, 0.35 + beat * 1.5) : 0;
     }
   };
 
