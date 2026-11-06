@@ -435,7 +435,9 @@ export function mountDesignPanel(infoEl, api) {
   // unless the box below is ticked. localStorage keeps the working design.
   let autoExport = localStorage.getItem('ct-club-design.auto') === 'on';
 
-  infoEl.innerHTML = `
+  let rootEl = infoEl.querySelector('#dp-root');
+  if (!rootEl) { rootEl = document.createElement('div'); rootEl.id = 'dp-root'; infoEl.appendChild(rootEl); }
+  rootEl.innerHTML = `
     <h1>CT CLUB — design panel</h1>
     <div class="dp-actions">
       <button id="dp-rnd-all" title="randomize every unfrozen/unlocked section">🔀 randomize all</button>

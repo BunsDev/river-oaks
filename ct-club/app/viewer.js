@@ -202,20 +202,24 @@ const syncCamera = () => {
 // The tool panels are fixed overlays; only one should be open at a time so they
 // never overlap each other (design/info vs coords on the right, planner/world/audio
 // in the centre). Opening any one closes the rest.
-const PANEL_IDS = ['info', 'coords', 'planner', 'world', 'audio'];
+const PANEL_IDS = ['info', 'coords', 'planner', 'world'];
 const closePanels = () => { for (const id of PANEL_IDS) { const el = document.getElementById(id); if (el) el.style.display = 'none'; } };
 
-// ---- the design panel (press i): live colours, 8-colour cycling, save --------
+// ---- the unified control panel (press i or m): design + audio in one ----------
 {
   design = attachDesignPanel({ root: club });
   mountDesignPanel(document.querySelector('#info'), design);
   let panelOpen = false;
-  const toggleInfo = () => {
+  // One combined menu: the design section (mounted above) and the audio section
+  // (nested into #info at startup, see the audio panel block below) open and
+  // close together, so I and M both show the same control panel.
+  const toggleControls = () => {
     panelOpen = !panelOpen;
     if (panelOpen) closePanels();
     document.querySelector('#info').style.display = panelOpen ? 'block' : 'none';
+    if (panelOpen) { syncAudioUI(); renderPlaylist(); renderGroups(); }
   };
-  window.clubFixture = { toggleInfo, room, club, player, show, nextView, designApi: design, closePanels };
+  window.clubFixture = { toggleInfo: toggleControls, toggleAudio: toggleControls, room, club, player, show, nextView, designApi: design, closePanels };
 }
 
 // ---- audio: upload, playlist, continuous playback, reactive colour -------------
@@ -307,6 +311,12 @@ document.getElementById('coords-btn')?.addEventListener('click', toggleCoords);
 
 // ---- audio panel ---------------------------------------------------------------
 const audioBox = document.getElementById('audio');
+// Unified control panel: nest the audio section inside the design/info panel so
+// I and M open one combined menu. It is always "on" — visibility is owned by #info.
+if (audioBox) {
+  audioBox.style.display = 'block';
+  document.getElementById('info')?.appendChild(audioBox);
+}
 const g = id => document.getElementById(id);
 const fmt = s => { s = Math.max(0, s); const m = Math.floor(s / 60); return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`; };
 const readReactive = () => ({
@@ -384,14 +394,7 @@ const syncAudioUI = () => {
   set('visual-auto-secs', a.autoSeconds ?? 8);
   renderVisual();
 };
-const toggleAudio = () => {
-  if (!audioBox) return;
-  const show = audioBox.style.display !== 'block';
-  if (show) closePanels();
-  audioBox.style.display = show ? 'block' : 'none';
-  if (show) { syncAudioUI(); renderPlaylist(); renderGroups(); }
-};
-document.getElementById('audio-btn')?.addEventListener('click', toggleAudio);
+document.getElementById('audio-btn')?.addEventListener('click', () => window.clubFixture.toggleInfo());
 g('audio-file')?.addEventListener('change', async e => {
   if (!audio || !e.target.files?.length) return;
   await audio.decode(e.target.files);
@@ -409,7 +412,6 @@ g('visual-mode')?.addEventListener('change', () => design?.setAudioReact({ mode:
 g('visual-auto')?.addEventListener('change', () => design?.setAudioReact({ auto: g('visual-auto').checked }));
 g('visual-auto-secs')?.addEventListener('change', () => design?.setAudioReact({ autoSeconds: Number(g('visual-auto-secs').value) || 8 }));
 window.addEventListener('ct-audio', renderPlaylist);
-window.clubFixture.toggleAudio = toggleAudio;
 
 // Bundled tracks (in the project's public/audio folder, copied to dist/audio on build).
 // Load them as the default playlist so they're ready to play; the file input still
