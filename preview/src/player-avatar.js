@@ -20,6 +20,7 @@ import { localLocomotion } from './locomotion-handoff.js';
 import { APPEARANCE_COOLDOWN_MS, CHARACTERS, appearanceFor, canFlyAs, canUseAppearance, defaultAppearanceFor, isJevicaOwner, sharedAppearance, sharedCharacter } from './shared-appearances.js';
 import './player-avatar.css';
 import { isGameplayKey } from './keyboard-input.js';
+import { aboardAnotherRide, garageKeyAction } from './garage-keys.js';
 import { RIBBONWING_MANEUVERS, RIBBONWING_MANEUVER_KINDS, maneuverMinimumAltitude } from './ribbonwing-maneuvers.js';
 import { soundToggle } from './throw-sounds.js';
 
@@ -131,9 +132,10 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
     if(carriage.riding){if(carriage.maneuver)status.textContent=`Hold on: the ${RIBBONWING_MANEUVERS[carriage.maneuver.kind].label} finishes first.`;else if(carriage.airborne){carriage.land();status.textContent='The Ribbonwing is landing. Press G again once it is down.';}else status.textContent=await carriage.leave()?'You stepped out of the vehicle.':'There is no clear place to step out here.';}
     else status.textContent=carriage.board()?(carriage.chauffeured?'Ride with Jev, or give directions with W/S and A/D.':'You have the controls: W/S to ride or reverse, A/D to steer.'):'Walk closer to your vehicle before boarding.';
   });
+  // Q and G work for every account with a garage (#791), and stay off aboard someone else's ride.
   host.addEventListener('keydown',event=>{
-    if(!owner||event.repeat||event.defaultPrevented||!isGameplayKey(event))return;
-    const button=event.code==='KeyQ'?carriageButton:event.code==='KeyG'?rideButton:null;
+    const action=garageKeyAction(event,{hasGarage:rideKinds.length>0,pose:walking.getPose(),ownRiding:carriage.riding});
+    const button=action==='call'?carriageButton:action==='ride'?rideButton:null;
     if(!button)return;
     // A key the button would refuse says why (the button's hint) rather than doing nothing.
     if(button.disabled){if(button.title)status.textContent=button.title;return;}
@@ -371,9 +373,11 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       const prince=carriage.prince.companion,chauffeured=carriage.chauffeured,away=chauffeured&&prince.mode!=='seat';
       // A craft that flies can be called while its owner is aloft; it sets down below her.
       const callsAloft=Boolean(VEHICLES[carriage.kind]?.flies);
-      carriageButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||(pose.flying&&!callsAloft)||carriage.riding||away;
+      // Aboard another pilot's craft or a plaza bike, your own ride can be neither called nor boarded.
+      const elsewhere=aboardAnotherRide(pose,carriage.riding);
+      carriageButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||(pose.flying&&!callsAloft)||carriage.riding||away||elsewhere;
       companionButton.disabled=!owner||!chauffeured||!pose||!carriage.placement||carriage.riding||(!prince.enabled&&away)||(!away&&(pose.flying||Boolean(pose.roomId)));
-      rideButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away||carriage.exiting;
+      rideButton.disabled=!pose||Boolean(pose.roomId)||Boolean(pose.sitting)||pose.flying||!carriage.placement||away||carriage.exiting||elsewhere;
       carriageButton.querySelector('[data-call-label]').textContent=chauffeured?'Call Jev':'Call your ride';
       rideButton.querySelector('[data-ride-label]').textContent=carriage.riding?'Step out':chauffeured?'Ride with Jev':'Ride';
       vehicleSelect.disabled=carriage.riding||away;driveButton.disabled=!chauffeured||!carriage.riding||away;
@@ -385,7 +389,7 @@ export function createPlayerAvatar({ scene, host, walking, userId, getLocals, ge
       if(driveStatus.textContent!==driveLabel)driveStatus.textContent=driveLabel;
       host.dataset.vehicle=carriage.kind;host.dataset.chauffeur=JSON.stringify(carriage.chauffeur);host.dataset.driving=String(Boolean(carriage.riding&&!chauffeured));
       host.dataset.riding=String(carriage.riding);flightButton.disabled=seated||!canFlyAs(userId,appearance);
-      carriageButton.title=pose?.roomId?'Step outside to call your ride':pose?.flying&&!callsAloft?'Land to call your ride':'';
+      carriageButton.title=pose?.roomId?'Step outside to call your ride':pose?.flying&&!callsAloft?'Land to call your ride':elsewhere?'Step out of this ride to call your own':'';
       host.dataset.carriageReady=String(Boolean(carriage.placement));
       host.dataset.playerSeat = pose?.sitting ? `${pose.sitting.buildId}:${pose.sitting.slot}` : '';host.dataset.playerWatering = String(now < waterUntil);
       host.dataset.cameraMode = walking.thirdPerson ? 'third' : 'first';host.dataset.playerVisible = String(holder.visible);
