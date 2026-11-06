@@ -8,6 +8,11 @@ import { WOODLAND_REVISION } from '../../shared/woodland-heights-layout.js';
 import { TYPESAFE_REVISION } from '../../shared/typesafe-place-layout.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
+import { residentFigureBudget, residentFigures } from './resident-figures.js';
+import { combatStateFor } from './combat-motion.js';
+// The resident ids drawn last snapshot (#640): resident-figures.js keeps the set stable at the cut.
+let drawnResidents = new Set();
+const residents = (locals, at) => { const figures = residentFigures(locals, at, drawnResidents, residentFigureBudget()); drawnResidents = new Set(figures.map(figure => figure.id.slice('resident:'.length))); return figures; };
 import { createCommonsStream } from './commons-stream.js';
 import './spatial-stream.css';
 import { createCharacterStudio } from './character-studio.js';
@@ -67,7 +72,7 @@ import { DISTRICT_REVISION_GARDENS, attachGardenCampus, campusDoorSites, campusG
 import { campusLevelRoom } from './garden-campus-levels.js';
 import { createGardenCampusUI } from './garden-campus-ui.js';
 import { buildFoliage, buildObservedFoliage } from './foliage.js';
-import { castShadowsFromProxies } from './landscape-models.js';
+import { castShadowsFromProxies, TREE_DETAIL_TILE_M } from './landscape-models.js';
 import { validateVegetation } from './vegetation.js';
 import { createStorefrontReflections } from './reflections.js';
 import { registerGroundSurfaces, groundSurfaceHeight } from './world-surface.js';
@@ -95,12 +100,20 @@ import { createPlazaXiangqi } from './plaza-xiangqi.js';
 import { atmosphereFor } from './atmosphere.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createQualityControl, readFinishPreference } from './render-quality.js';
+import { fiveRoomsAppliesTo } from './five-rooms/solids.js';
+import { buildRibbon } from './ribbon-finish.js';
+import { buildFiveRoomsShells } from './five-rooms/index.js';
+import { buildFiveRoomsLandscapeForWorld } from './five-rooms/landscape.js';
+import fiveRoomsContract from '../../config/ribbon/five-rooms.json' with { type: 'json' };
 import { mountAssetProgress } from './asset-progress.js';
 import { createClearView } from './clear-view.js';
 import { createPhotoMode } from './photo-mode.js';
 import { createGuideEntry } from './salon-guide.js';
 import { createMultiplayer } from './multiplayer-client.js';
 import { createRemotePlayers } from './remote-players.js';
+import { createRibbonwingSeat } from './ribbonwing-seat.js';
+import { createRibbonwingSounds } from './ribbonwing-sounds.js';
+import { VEHICLES } from './vehicle-config.js';
 import { createSharedBuildLayer } from './shared-build-layer.js';
 import { createSeatAndWater } from './seat-and-water.js';
 import { createSharedSeatingControls } from './shared-seating-ui.js';
@@ -129,6 +142,7 @@ import './hud-glass.css';
 import './game-hud.css';
 import './settings-dialog.css';
 import './play-rail-menu.css';
+import './pink-jet-age-hud.css';
 import { createPlazaBicycle } from './plaza-bicycle.js';
 import { createCyclingLeaderboard } from './cycling-leaderboard.js';
 import './cycling-leaderboard.css';
@@ -179,6 +193,8 @@ const aoTailShedding = new URLSearchParams(location.search).get('aotail') === 'o
 const officeSkylineOff = import.meta.env.DEV && new URLSearchParams(location.search).get('office-skyline') === 'off';
 // The Commons and Heights city-kit finish: classic unless opted in (render-quality.js, #742).
 const cityKitFinish = readFinishPreference();
+// The HUD follows the same finish (pink-jet-age-hud.css); an unknown name matches no rule.
+document.documentElement.dataset.finish = cityKitFinish;
 let auditCamera = null;
 let renderer, pipeline, world, worldGroup, buildingMesh, walking, community, storePeople, interiorsLayer, generatedInteriors;
 // East Garden Commons and its assembled destination, when the revision composes them.
@@ -204,7 +220,9 @@ let worldRegionSha256 = null;
 let worldDistrictRevision;
 let landmarkAccountId = null;
 let playerAvatar, characterStudio, officeUI, ipicScreening, campusUI;
-let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater;
+let multiplayer, remotePlayers, buildLayer, buildControls, seatingControls, seatAndWater, ribbonwingSeat, ribbonwingSounds;
+const craftWorld = new THREE.Vector3();
+let ribbonGraybox = null, fiveRoomsShells = null, fiveRoomsLandscape = null; // same admitted geometry for every appearance (#841)
 let plazaSalon = null, cityBikeRacks = null, plazaGames = null, plazaDominoes = null, plazaHearts = null, plazaBackgammon = null, cafeGame = 'dominoes', plazaStage = null, plazaBicycle = null, cyclingBoard = null;
 let plazaJenga = null, plazaYacht = null, benchGame = 'jenga';
 let plazaCribbage = null, walnutGame = 'backgammon';
@@ -393,6 +411,7 @@ function initializeRenderer() {
       return fetch('/api/chauffeur',{...options,credentials:'same-origin',headers:{...options.headers,'X-CSRF-Token':session.csrfToken??''}});
     },
     requestVehicleExit: position => multiplayer.travel({position:[position[0],-position[2]]}),
+    requestManeuver: async kind => multiplayer?.connected ? multiplayer.maneuver(kind) : {ok:false,message:'Maneuvers are flown with the town: reconnect first.'},
     getPortrait: id => portraits.portrait(id) });
   if(characterStudioShown(import.meta.env)){
     characterStudio = createCharacterStudio({ownerId:document.body.dataset.accountId,
@@ -591,7 +610,8 @@ function initializeRenderer() {
   sun.castShadow = true;
   const shadowResolution=Math.min(4096,renderer.capabilities.maxTextureSize);
   sun.shadow.mapSize.set(shadowResolution,shadowResolution);
-  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? []), ...(heightsScene?.userData.shadowProxies ?? []), ...(cityBikeRacks?.userData.shadowProxies ?? [])]);
+  treeShadows = castShadowsFromProxies(sun, () => [...(layers.trees?.userData.shadowProxies ?? []), ...(commonsScene?.userData.shadowProxies ?? []), ...(heightsScene?.userData.shadowProxies ?? []), ...(cityBikeRacks?.userData.shadowProxies ?? []),
+    ...(plazaSalon?.userData.shadowProxies ?? []), ...(birdCams?.shadowProxies ?? []), ...(buildingMesh?.userData.interiors?.userData.shadowProxies ?? [])]);
   sun.shadow.bias = -0.00002;
   sun.shadow.normalBias = 0.018;
   sun.shadow.camera.near = 10;
@@ -640,8 +660,10 @@ function gameDiagnostics() {
 function startMultiplayer() {
   if (multiplayer) return;
   // Peers out of view are culled with their shadows, while the sun casts any.
+  // A passenger of this page's landowner rides in her craft as drawn here (#777).
+  const ownCraft = id => id === multiplayer?.identity?.id && playerAvatar?.carriage.kind === 'hover' && playerAvatar.carriage.riding ? playerAvatar.carriage.object : null;
   remotePlayers = createRemotePlayers(scene, host, { shadowDirection: () => renderer.shadowMap.enabled && sun.castShadow && sun.intensity > 0
-    ? sunDirection.copy(sunOffset).negate().normalize() : null });
+    ? sunDirection.copy(sunOffset).negate().normalize() : null, localCraft: ownCraft });
   buildLayer ??= createSharedBuildLayer(scene);
   buildControls?.hide();
   multiplayer = createMultiplayer({
@@ -655,16 +677,21 @@ function startMultiplayer() {
     getRegionSha256: () => worldRegionSha256,
     getDistrictRevision: () => worldDistrictRevision,
     onHomeAccess: () => districtUI?.refreshAccess(),
-    onSnapshot: snapshot => { ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []);cityBikeRacks?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
-    onCorrection: player => { if (world && player) { walking.applyServerPose(player); plazaBicycle?.sync(); } },
+    onSnapshot: snapshot => { const self=snapshot.players?.find(player=>player.id===multiplayer?.identity?.id);playerAvatar?.carriage.setTownCeiling?.(snapshot.flightCeiling);playerAvatar?.carriage.resumeRide?.(self);playerAvatar?.carriage.syncManeuver?.(self);ipicScreening?.onSnapshot(snapshot);campusUI?.onSnapshot(snapshot); if (world) community.applyRemote(snapshot);buildLayer?.sync(snapshot.builds??[]);plazaSalon?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []);cityBikeRacks?.userData.rack?.setTaken(snapshot.cycling?.taken ?? []); },
+    onCorrection: player => { if (world && player) { walking.applyServerPose(player); playerAvatar?.carriage.resumeRide?.(player); plazaBicycle?.sync(); } },
     onPlayers: (players, selfId) => {
       host.dataset.multiplayer = players.length ? 'joined' : 'disconnected';
-      // Authored rivals (#597) draw like players, from the town's crime state only.
-      remotePlayers.sync([...players.filter(p=>!p.office),...(players.length?[...rivalFigures(multiplayer?.snapshot?.crime),...policeFigures(multiplayer?.snapshot?.police)]:[])], selfId);
+      const self = players.find(player => player.id === selfId);
+      // Authored rivals (#597), officers (#598) and nearby outdoor residents (#640) draw like players, from the town's state only.
+      const town=multiplayer?.snapshot??{};
+      // #640 increment 4: each figure carries the town's combat state for its renderer; a figure the
+      // combat state (a pose, or just facing an opponent) drops the legacy gesture so the two never
+      // stack and a rival's fading flinch never pops into the old stagger pose.
+      const fighting=figure=>{const combat=combatStateFor(figure.id,town);return combat?{...figure,combat,gesture:null}:figure;};
+      remotePlayers.sync([...players.filter(p=>!p.office).map(fighting),...(players.length?[...rivalFigures(town.crime).map(fighting),...policeFigures(town.police).map(fighting),...residents(town.locals,self?.position)]:[])], selfId);
       officeUI?.sync(players,selfId);
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);
-      const self = players.find(player => player.id === selfId);
       walking?.syncAuthoritativePose(self);
       if (self) cyclingBoard?.setName(self.name);
       playerAvatar?.setSharedIdentity(self);
@@ -693,6 +720,9 @@ function startMultiplayer() {
     getPose:()=>walking?.getPose(),getEnvironment:()=>walking?.environment,
     request:message=>multiplayer.command(message),onConfirmed:player=>walking.applyServerPose(player),
     getBenches:()=>[...(seatAndWater?.benches()??[]),...suiteSeatsHere()],isHeld:key=>seatAndWater?.residentHolds(key)??false,isBusy:()=>seatAndWater?.busy()??false});
+  ribbonwingSeat = createRibbonwingSeat({ host, viewport: document.querySelector('#viewport'), walking, selfId: () => multiplayer?.identity?.id ?? null,
+    snapshot: () => multiplayer?.snapshot, command: body => multiplayer?.connected ? multiplayer.ribbonwing(body) : Promise.resolve({ ok: false, message: 'Reconnect first.' }),
+    craftOf: id => remotePlayers?.craftOf(id) ?? null });
   host.dataset.multiplayer = 'connecting';
 }
 
@@ -742,6 +772,7 @@ function populateWorld(data) {
     worldGroup.remove(interiorsLayer);
     ipicScreening?.dispose(); storePeople?.userData.dispose?.(); storePeople = null; interiorsLayer = null;
     plazaSalon?.userData.rack?.dispose(); cityBikeRacks?.userData.rack?.dispose();
+    ribbonGraybox?.userData.dispose?.(); fiveRoomsShells?.userData.dispose?.(); ribbonGraybox = null; fiveRoomsShells = null; fiveRoomsLandscape = null;
     worldGroup.traverse((item) => {
       item.userData.cancelLandscapeLoad?.();
       item.userData.texture?.dispose();
@@ -805,6 +836,21 @@ function populateWorld(data) {
   // Curbside bike racks around the District (bike-racks.js), beside the plaza's.
   cityBikeRacks = buildCityBikeRacks(data);
   worldGroup.add(cityBikeRacks);
+  // Render the same admitted Ribbon and shell geometry that walking.js and the server block.
+  // A comparison preference changes material roles, never the visibility of a shared solid.
+  const fiveRoomsApply = fiveRoomsAppliesTo(data), surfaceAt = (x, z) => groundSurfaceHeight(data, x, z);
+  fiveRoomsLandscape = buildFiveRoomsLandscapeForWorld(data, { groundAt: (x, north) => surfaceAt(x, -north), finish: cityKitFinish });
+  if (fiveRoomsLandscape) {
+    worldGroup.add(fiveRoomsLandscape);
+    // Register paving only, never planter tops. Keep all base street supports on a rebuild.
+    registerGroundSurfaces(data, [...supports, fiveRoomsLandscape.children[0]]);
+  }
+  ribbonGraybox = fiveRoomsApply ? buildRibbon({ world: data, groundAt: surfaceAt, finish: cityKitFinish }) : null;
+  if (ribbonGraybox) worldGroup.add(ribbonGraybox);
+  // The bays' mapped store rooms stay until decision 5 (Val, 2026-11-01), so the shells keep their
+  // frontages and leave the room interiors to them (their floors and walls would fight for depth).
+  fiveRoomsShells = fiveRoomsApply ? buildFiveRoomsShells(fiveRoomsContract, { finish: cityKitFinish, groundAt: surfaceAt, interiors: false }) : null;
+  if (fiveRoomsShells) worldGroup.add(fiveRoomsShells);
   buildingMesh.add(seeThroughNearCameraIn(buildDistrictFantasy(data)));
   document.querySelectorAll('[data-layer]').forEach((input) => { layers[input.dataset.layer].visible = input.checked; });
   scene.add(worldGroup);
@@ -919,6 +965,7 @@ function updateAtmosphere() {
   const atmosphere = atmosphereFor(hour, weather);
   currentAtmosphere = atmosphere;
   layers.buildings?.getObjectByName('The Gardens (garden campus)')?.userData.relight?.(atmosphere);
+  ribbonGraybox?.userData.relight?.(atmosphere); fiveRoomsShells?.userData.relight?.(atmosphere);
   sunOffset.set(Math.cos(atmosphere.angle) * 4500, Math.max(300, Math.sin(atmosphere.angle) * 5500), 1900);
   sun.position.copy(sun.target.position).add(sunOffset);
   sun.intensity = atmosphere.sunIntensity;
@@ -1011,7 +1058,8 @@ async function loadWorld() {
     enterWalk(data.walkSpawn, data.walkLookAt);
     if (multiplayer?.snapshot) {
       community.applyRemote(multiplayer.snapshot);
-      walking.applyServerPose(multiplayer.snapshot.players.find(player => player.id === multiplayer.identity?.id));
+      const self = multiplayer.snapshot.players.find(player => player.id === multiplayer.identity?.id);
+      walking.applyServerPose(self);playerAvatar?.carriage.resumeRide?.(self);
     }
     const places = placesOf(data);
     placesUI?.setPlaces(places);
@@ -1131,6 +1179,15 @@ function render(now) {
   storeIntros?.update(now);
   renderAudit?.phase('interactions');
   remotePlayers?.update(now, camera);
+  ribbonwingSeat?.update();
+  // Ribbonwing sounds (#777): this page's craft and the remote ones, heard from the camera.
+  if (playerAvatar) {
+    ribbonwingSounds ??= createRibbonwingSounds();
+    const own = playerAvatar.carriage, crafts = [];
+    if (own.kind === 'hover' && own.placement && own.object.visible && own.mechanisms) crafts.push({ id: 'self', object: own.object, mechanisms: own.mechanisms, maneuvering: Boolean(own.maneuver) });
+    for (const craft of remotePlayers?.ribbonwings() ?? []) if (craft.mechanisms) crafts.push(craft);
+    ribbonwingSounds.update(camera.position.toArray(), crafts.map(({ id, object, mechanisms, maneuvering }) => ({ id, position: object.getWorldPosition(craftWorld).toArray(), fanRate: mechanisms.fanRate, canopy: mechanisms.canopy, gear: mechanisms.gear, maneuvering })));
+  }
   buildLayer?.update(camera.position);
   updateBuilder();
   playerAvatar?.update(now, camera, renderer.getSize(viewportSize).y, Boolean(multiplayer?.connected));
@@ -1348,7 +1405,7 @@ if (import.meta.env.DEV) window.__riverSpatialStream = () => {
     direction: camera.getWorldDirection(new THREE.Vector3()).toArray(),
     renderer: { ...renderer.info.memory }, calls: renderer.info.render.calls,
     // The opted-in kit finish and what each attached part was built with (#742).
-    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null } };
+    finish: { preference: cityKitFinish, commons: commonsScene?.userData.finish ?? null, heights: heightsScene?.children.map(part => part.userData.finish) ?? [], campus: buildingMesh?.userData.campusKitFinish ?? null, ribbon: ribbonGraybox?.userData.ribbon ?? null, fiveRooms: fiveRoomsShells?.userData.fiveRooms ?? null, fiveRoomsLandscape: fiveRoomsLandscape?.userData.fiveRoomsLandscape ?? null } };
 };
 if (import.meta.env.DEV) window.__riverGeneratedInteriors = () => generatedInteriors?.debug() ?? [];
 if (import.meta.env.DEV) window.__riverExteriorCull = () => {
@@ -1380,6 +1437,21 @@ try {
   if (new URLSearchParams(location.search).get('debug') === '1') void openDebugTools(true);
   else if (JSON.parse(localStorage.getItem('river-oaks-debug') ?? '{}').open) void openDebugTools(true);
 } catch { /* storage unavailable */ }
+
+// Development audit: switches off sun-shadow casting under the matching nodes, and back.
+function leanCasters(match) {
+  const restore = new Set();
+  return enabled => {
+    if (!enabled) { for (const mesh of restore) mesh.castShadow = true; restore.clear(); return 0; }
+    scene.traverse(node => { if (match(node)) node.traverse(mesh => { if (mesh.isMesh && mesh.castShadow) { restore.add(mesh); mesh.castShadow = false; } }); });
+    return restore.size;
+  };
+}
+
+// Development audit: tree shadow proxies batched by size, or the crowns' own tiles.
+function treeShadowTiles(size) {
+  return enabled => { let proxies = 0; scene.traverse(node => { proxies += node.userData.shadowTile?.(enabled ? size : TREE_DETAIL_TILE_M) ?? 0; }); return proxies; };
+}
 
 // Explicit diagnostic timing; normal production builds omit this API.
 // The crowd camera remains development-only.
@@ -1422,6 +1494,28 @@ if (renderAudit) {
       occlusionSortEquality: () => pipeline?.compareOcclusionSort() ?? null,
       // Draws and submitted triangles for one frame, by pass and tagged owner.
       drawCensus: () => new Promise(resolve => { pendingDrawCensus = { census: createDrawCensus(renderer, camera), resolve }; }),
+      // #289 draw reductions, each switchable for a same-instant comparison (still).
+      drawBudget: {
+        'bike-shadow': enabled => plazaSalon?.userData.rack?.shadowProxy(enabled) ?? 0,
+        'interior-shadow-batch': enabled => buildingMesh?.userData.interiors?.userData.shadowBatch?.(enabled) ?? 0,
+        'bird-proxy': enabled => birdCams?.shadowProxy(enabled) ?? 0,
+        'tree-shadow-48': treeShadowTiles(48), 'tree-shadow-96': treeShadowTiles(96),
+        // Measurement only: one lean group at a time stops casting.
+        'interior-shadow': leanCasters(node => node.name === 'Boutique interiors layer'),
+        'bird-shadow': leanCasters(node => node.name.endsWith('(bird cam)')),
+        // Sensitivity check for a parity view: tree shadows gone must change the frame.
+        'tree-shadow-none': leanCasters(node => node.name === 'Mature urban shade trees'),
+        'bike-shadow-none': leanCasters(node => node.name === 'Parked bikes' || node.name === 'Plaza bikes shadow'),
+      },
+      // Renders the current instant again (nothing advances) and reads it back,
+      // so a toggle can be compared against the same scene state.
+      still() {
+        followSunShadow(); treeShadows?.hide();
+        renderer.info.reset(); pipeline.render(0);
+        const gl = renderer.getContext(), width = gl.drawingBufferWidth, height = gl.drawingBufferHeight, pixels = new Uint8Array(width * height * 4);
+        gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        return { calls: renderer.info.render.calls, width, height, pixels };
+      },
       crowdView() {
         const players = multiplayer?.snapshot?.players ?? [];
         if (!players.length) throw new Error('Join the shared world before framing its crowd.');
@@ -1462,6 +1556,38 @@ if (renderAudit) {
           probes.push({ at: [+(east + de).toFixed(2), +(north + dn).toFixed(2)], hits: ray.intersectObjects(meshes, false).slice(0, hits).map(auditHit) });
         }
         return probes;
+      },
+      // #289 parity views: beside a named node, looking past it the way its shadow falls,
+      // or (shadow) from above the ground where the node's shadow lands. Returns the target.
+      frame(name, { shadow = false } = {}) {
+        const node = scene.getObjectByName(name);
+        if (!node || !world) throw new Error(`Nothing named ${name} to frame.`);
+        const box = new THREE.Box3().setFromObject(node), center = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3()).length();
+        const toSun = sunOffset.clone().normalize(), away = new THREE.Vector3(-toSun.x, 0, -toSun.z).normalize();
+        if (shadow) {
+          const at = center.clone();
+          for (let i = 0; i < 4; i++) at.copy(center).addScaledVector(toSun, -(center.y - groundSurfaceHeight(world, at.x, -at.z)) / toSun.y);
+          auditCamera = { position: at.clone().add(new THREE.Vector3(0.5, 10, 0.5)), target: at, restoreFov: auditCamera?.restoreFov ?? camera.fov };
+          return at.toArray();
+        }
+        const target = center.clone().addScaledVector(away, size * 0.3);
+        const position = center.clone().addScaledVector(new THREE.Vector3(away.z, 0, -away.x), Math.max(4, size * 1.2)).add(new THREE.Vector3(0, Math.max(2, size * 0.5), 0));
+        auditCamera = { position, target, restoreFov: auditCamera?.restoreFov ?? camera.fov };
+        return target.toArray();
+      },
+      // #289 parity view: inside the index-th store nearest the player (a stable order while
+      // the camera moves), just behind its glass, looking in, where sun through the facade
+      // throws the fixtures' shadows. Returns the room's building and name.
+      frameRoom(index) {
+        const at = room => new THREE.Vector3(room.facade[0], room.floor, -room.facade[1]);
+        const [east, north] = walking?.getPosition() ?? [camera.position.x, -camera.position.z], from = room => Math.hypot(room.facade[0] - east, room.facade[1] - north);
+        const rooms = (buildingMesh?.userData.rooms ?? []).filter(room => !room.generatedPlan && room.facade && room.outward).sort((a, b) => from(a) - from(b));
+        const room = rooms[index % rooms.length];
+        if (!room) throw new Error('No store rooms to frame.');
+        const [ox, oy] = room.outward, inward = new THREE.Vector3(-ox, 0, oy);
+        auditCamera = { position: at(room).addScaledVector(inward, 0.8).setY(room.floor + 1.6), target: at(room).addScaledVector(inward, room.depth).setY(room.floor + 0.9),
+          restoreFov: auditCamera?.restoreFov ?? camera.fov };
+        return `${room.buildingId ?? '?'} ${room.name ?? room.storeId ?? index}`;
       },
     } : {}),
     graphics() {
@@ -1605,6 +1731,20 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
   window.__riverScreening = () => ipicScreening?.inspect() ?? null;
   // Development-only: send a raw command, as a modified client could, to prove the server refuses it.
   window.__riverMultiplayerCommand = message => multiplayer?.command(message);
+  // The Ribbonwing passenger seat as this page draws it (#777): each hover craft's passenger
+  // seat, where each remote player is drawn, and this page's own seat state.
+  // Ribbonwing effects (#777): the sound bounds in use and each drawn craft's wingtip ribbons.
+  window.__riverRibbonwingEffects = () => ({ sounds: ribbonwingSounds?.stats() ?? null, trails: playerAvatar?.carriage.trails ?? null });
+  window.__riverRibbonwingSeat = () => {
+    const seat = new THREE.Vector3(...VEHICLES.hover.passengerSeat), players = multiplayer?.snapshot?.players ?? [], selfId = multiplayer?.identity?.id;
+    const craft = id => id === selfId ? (playerAvatar?.carriage.kind === 'hover' && playerAvatar.carriage.riding ? playerAvatar.carriage.object : null) : remotePlayers?.craftOf(id);
+    // The seat's point at the craft's base (where a passenger's holder sits) and its cushion.
+    const at = (id, height) => { const object = craft(id);object?.updateWorldMatrix(true, false);return object ? object.localToWorld(seat.clone().setY(height)).toArray() : null; };
+    const hovering = players.filter(player => player.vehicle === 'hover');
+    const seats = Object.fromEntries(hovering.map(player => [player.id, at(player.id, 0)])), cushions = Object.fromEntries(hovering.map(player => [player.id, at(player.id, VEHICLES.hover.passengerSeat[1])]));
+    return { pilotId: ribbonwingSeat?.pilotId ?? null, riding: ribbonwingSeat?.riding ?? false, panel: document.querySelector('.ribbonwing-seat:not([hidden]) [data-seat-status]')?.textContent ?? null,
+      seats, cushions, holders: Object.fromEntries(players.filter(player => player.id !== selfId).map(player => [player.id, remotePlayers?.holderOf(player.id)])) };
+  };
   window.__riverMultiplayer = () => ({ connected: multiplayer?.connected ?? false, selfId: multiplayer?.identity?.id, snapshot: multiplayer?.snapshot, remotes: remotePlayers?.stats(), selfMaterials:playerAvatar?.materials,selfRealism:playerAvatar?.realism??null, voice: multiplayer?.voice.debug() ?? null,creations:buildLayer?.stats(),birds:birdCams?.state,builder:buildControls?{...buildControls.builder,ghost:buildLayer?.ghost?{position:buildLayer.ghost.position.toArray(),visible:buildLayer.ghost.visible}:null,hint:document.querySelector('#build-hint')?.textContent,valid:document.querySelector('#build-hint')?.dataset.valid}:null });
   window.__riverPlayerAttention=()=>{
     const rig=playerAvatar?.rig;if(!rig)return null;
@@ -1621,7 +1761,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose,face:station?.face.pose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
   window.__riverCreatorObjects=()=>({resources:buildLayer?.stats(),rendered:(buildLayer?.object.children??[]).filter(entry=>entry.userData.build).map(entry=>({id:entry.userData.build.id,parts:entry.children.filter(child=>child.isMesh).map(child=>({color:child.material.color.getHexString(),transmission:child.material.transmission??0,position:child.position.toArray(),size:child.scale.toArray()}))}))});
-  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray(),verticalFovDegrees:camera.fov,aspect:camera.aspect,near:camera.near,far:camera.far},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray(),verticalFovDegrees:camera.fov,aspect:camera.aspect,near:camera.near,far:camera.far},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,mechanisms:playerAvatar?.carriage.mechanisms,maneuver:playerAvatar?.carriage.maneuver??null,maneuverTrace:playerAvatar?.carriage.maneuverTrace,craftQuaternion:playerAvatar?.carriage.object?.quaternion.toArray(),pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&(community.state?.locals ?? []).some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);

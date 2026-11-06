@@ -10,6 +10,7 @@ import { officePeerVisible } from './office-world-presentation.js';
 import { buildOfficeGeometry } from './office-penthouse-graybox.js';
 import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeElevationAt, officeLayout, officeLevelElevation, officeSeatedPose, officeView } from './office-layouts.js';
 import { releaseSceneGraphics } from './graphics-resources.js';
+import { readFinishPreference } from './render-quality.js';
 
 // Keep the eye clear when residents share the arrival point or pass each other.
 export const officePlayerVisible=officePeerVisible;
@@ -32,12 +33,14 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
   scene.add(new THREE.HemisphereLight('#fff5e6','#647386',1.6));
   const light=new THREE.DirectionalLight('#fff1de',2.5);light.position.set(2,6,2);scene.add(light);
   const layout=officeLayout(self.office?.layout??OFFICE_LAYOUT_LEGACY)??{id:self.office.layout};
-  office=buildOfficeGeometry(THREE,layout.id,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM)});scene.add(office.object);
+  // The kit finish (office-kit-finish.js) is the visitor's render-quality.js preference, the one the street follows.
+  office=buildOfficeGeometry(THREE,layout.id,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM),finish:readFinishPreference()});scene.add(office.object);
   lift=buildOfficeArrival();scene.add(lift.object);
   // Behind the penthouse glass the lift and lobby would show once the visitor walks.
   const glass=arrivalBehindGlass(lift,layout.id!==OFFICE_LAYOUT_LEGACY);
-  let firstPerson=false;
-  actors=createRemotePlayers(scene,host,{snapInitialHeading:true,isVisible:player=>officePlayerVisible(player,self.id,lastPosition,firstPerson,levelId)});
+  let firstPerson=false,presence=1;
+  // Phasing between floors (office-arrival-model.js) draws no body for a beat at the top of the light's sweep.
+  actors=createRemotePlayers(scene,host,{snapInitialHeading:true,isVisible:player=>(player.id!==self.id||presence>0)&&officePlayerVisible(player,self.id,lastPosition,firstPerson,levelId)});
   let started=null,skipped=reducedMotion,lastPosition=[...OFFICE_SPAWN],levelId=self.office?.levelId??null;
   function render(now,position,yaw,allPlayers,place={}) {
     if(disposed)return null;
@@ -46,7 +49,7 @@ export function createOfficeScene({renderer,host,self,players,reducedMotion=fals
     if(started===null&&ready)started=now;
     const elapsed=started===null?0:(now-started)/1000,frame=elevatorFrame(elapsed,{reducedMotion:skipped});
     // A view (#363) moves only the camera to its fixed eye, and shows the visitor's own body.
-    const walking=frame.done,at=walking?position:frame.position,fixed=walking&&place.viewId?officeView(layout,place.viewId):null;firstPerson=walking&&!fixed;
+    const walking=frame.done,at=walking?position:frame.position,fixed=walking&&place.viewId?officeView(layout,place.viewId):null;firstPerson=walking&&!fixed;presence=frame.presence??1;
     lastPosition=[...at];
     const activePlayers=allPlayers.filter(p=>p.office?.id===self.office.id);
     actors.sync(activePlayers.map(p=>({...p,position:p.id===self.id?[...at,walking?floor:0]:[...p.office.position,p.office.elevation??0],yaw:p.id===self.id?(walking?yaw:0):p.office.yaw,altitude:0,vehicle:null,sitting:p.id===self.id?(place.seatId?officeSeatedPose(layout,{seat:{id:place.seatId},levelId}):null):officeSeatedPose(layout,p.office),interaction:null})),null);

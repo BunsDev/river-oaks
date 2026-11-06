@@ -12,6 +12,14 @@ function localPoint(placement,x,z) {
   const dx=x-placement.position[0],dz=z-placement.position[2],c=Math.cos(placement.yaw),s=Math.sin(placement.yaw);
   return [dx*c-dz*s,dx*s+dz*c];
 }
+// A vehicle's half-width at local x: its plan envelope when it has one (the
+// widest point within `reach` of x), otherwise the full width.
+function planHalfWidth(vehicle,x,reach=0) {
+  const plan=vehicle.plan;if(!plan)return vehicle.width/2;
+  const at=v=>{if(v<=plan[0][0])return plan[0][1];for(let i=1;i<plan.length;i++)if(v<=plan[i][0]){const [x0,w0]=plan[i-1],[x1,w1]=plan[i];return w0+(w1-w0)*(v-x0)/(x1-x0);}return plan[plan.length-1][1];};
+  let widest=Math.max(at(x-reach),at(x+reach));for(const [px,w] of plan)if(Math.abs(px-x)<=reach)widest=Math.max(widest,w);
+  return widest;
+}
 export function carriageContains(placement,x,y,z,radius=0) {
   if(!placement)return false;
   const [a,b]=localPoint(placement,x,z),scale=placement.scale??1;
@@ -19,7 +27,7 @@ export function carriageContains(placement,x,y,z,radius=0) {
   if(vehicle) {
     // Glass above the body line stops bodies and the flight bubble, not a line of sight.
     const top=radius<.1?vehicle.bodyHeight:vehicle.height;
-    return Math.abs(a)<vehicle.length/2*scale+radius&&Math.abs(b)<vehicle.width/2*scale+radius&&y+radius>placement.position[1]-.15&&y-radius<placement.position[1]+top*scale;
+    return Math.abs(a)<vehicle.length/2*scale+radius&&Math.abs(b)<planHalfWidth(vehicle,a/scale,radius/scale)*scale+radius&&y+radius>placement.position[1]-.15&&y-radius<placement.position[1]+top*scale;
   }
   return a>-(placement.team?8:HALF_LENGTH)*scale-radius && a<HALF_LENGTH*scale+radius && Math.abs(b)<halfWidth(placement.team,a/scale)*scale+radius
     && y+radius>placement.position[1]-.15 && y-radius<placement.position[1]+(a< -3.12*scale?3.2:Math.abs(a)>1.65*scale?2:HEIGHT)*scale;
@@ -42,10 +50,17 @@ export function vehicleCanOccupy(placement,environment,world,people=[]) {
   if(people.some(p=>!p.indoor&&!p.vehicleRole&&carriageContains(placement,p.position[0],placement.position[1]+1,-p.position[1],.65)))return false;
   return !treeSupports(world).some(tree=>carriageContains(placement,tree.position[0],placement.position[1]+1,-tree.position[1],.6));
 }
+// A craft that flies (the Ribbonwing, VEHICLES[kind].flies) comes down vertically,
+// so it needs no lane: it may set down on a road's centre or on any open, level,
+// outdoor ground (plaza, lawn, wide pavement) a little further away, and it can
+// be called while its owner is aloft, landing below. Rooms, trees, people and
+// slopes still refuse a spot. Road vehicles keep their lanes.
+const FLYING_REACH=40;
 export function findCarriageParking(world,pose,people=[],scale=1,team=false,vehicle=null) {
-  if(!world||!pose||pose.roomId||pose.flying||pose.altitude>0.05)return null;
+  const flies=Boolean(vehicle&&VEHICLES[vehicle]?.flies);
+  if(!world||!pose||pose.roomId||(!flies&&(pose.flying||pose.altitude>0.05)))return null;
   const environment=createWalkingEnvironment(world),network=createPedestrianNetwork(world),candidates=[];
-  const [vx,,vz]=pose.position;
+  const [vx,,vz]=pose.position,reach=flies?FLYING_REACH:25;
   for(const road of world.roads??[]) {
     if(road.width_m<5)continue;
     for(let i=1;i<road.points.length;i++) {
@@ -55,9 +70,25 @@ export function findCarriageParking(world,pose,people=[],scale=1,team=false,vehi
       for(const shift of [0,-3,3,-6,6,-9,9,-12,12,-18,18])for(const side of [-1,1]) {
         const t=Math.max(0,Math.min(length,nearest+shift)),offset=side*(vehicle?(road.width_m/2-STREET.gutterWidth)/2:road.width_m/2-(team?TEAM_HALF_WIDTH:HALF_WIDTH)*scale-.45);
         const x=a[0]+ux*t-un*offset,z=-(a[1]+un*t+ux*offset),distance=Math.hypot(x-vx,z-vz);
-        if(distance>25||distance<3)continue;
+        if(distance>reach||distance<3)continue;
         candidates.push({position:[x,environment.groundAt(x,z),z],yaw:Math.atan2(un,ux)+(vehicle&&side<0?Math.PI:0),pitch:0,roll:0,distance,scale,team,...(vehicle?{vehicle}:{})});
       }
+    }
+  }
+  if(flies) {
+    for(const road of world.roads??[])for(let i=1;i<road.points.length;i++) {
+      const a=road.points[i-1],b=road.points[i],dx=b[0]-a[0],dn=b[1]-a[1],length=Math.hypot(dx,dn);
+      if(length<1)continue;
+      const ux=dx/length,un=dn/length,nearest=(vx-a[0])*ux+(-vz-a[1])*un;
+      for(const shift of [0,-4,4,-8,8,-14,14,-20,20,-28,28]) {
+        const t=Math.max(0,Math.min(length,nearest+shift)),x=a[0]+ux*t,z=-(a[1]+un*t),distance=Math.hypot(x-vx,z-vz);
+        if(distance>reach||distance<3)continue;
+        for(const turn of [0,Math.PI])candidates.push({position:[x,environment.groundAt(x,z),z],yaw:Math.atan2(un,ux)+turn,pitch:0,roll:0,distance,scale,team,vehicle});
+      }
+    }
+    for(const radius of [6,9,12,16,20,25,31,FLYING_REACH])for(let k=0;k<24;k++) {
+      const angle=k/24*Math.PI*2,x=vx+Math.cos(angle)*radius,z=vz+Math.sin(angle)*radius;
+      for(const yaw of [angle+Math.PI,angle+Math.PI/2])candidates.push({position:[x,environment.groundAt(x,z),z],yaw,pitch:0,roll:0,distance:radius+.01,scale,team,vehicle});
     }
   }
   candidates.sort((a,b)=>a.distance-b.distance);
@@ -66,7 +97,7 @@ export function findCarriageParking(world,pose,people=[],scale=1,team=false,vehi
     if(people.some(p=>!p.indoor&&!p.vehicleRole&&carriageContains(placement,p.position[0],placement.position[1]+1,-p.position[1],1.1)))continue;
     if((treeSupports(world)).some(tree=>carriageContains(placement,tree.position[0],placement.position[1]+1,-tree.position[1],.6)))continue;
     const points=carriageFootprint(placement);
-    if(points.some(([x,z])=>!environment.isFree(x,z)||environment.roomAt(x,z)||network.classify([x,-z])!=='road'))continue;
+    if(points.some(([x,z])=>!environment.isFree(x,z)||environment.roomAt(x,z)||(!flies&&network.classify([x,-z])!=='road')))continue;
     const [x,y,z]=placement.position,c=Math.cos(placement.yaw),s=Math.sin(placement.yaw);
     const sx=(environment.groundAt(x+c*2,z-s*2)-environment.groundAt(x-c*2,z+s*2))/4;
     const sz=(environment.groundAt(x+s,z+c)-environment.groundAt(x-s,z-c))/2;

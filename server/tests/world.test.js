@@ -896,3 +896,255 @@ test('a flying bubble may cover its 21 m/s fast speed (1.5x the old 14), and no 
   time += 1000; assert.equal(pose(north - .7, 3).error, 'movement_too_fast', 'faster than the bubble flies');
   assert.equal(pose(north + 14, 3).ok, true, 'the refused pose moved nothing');
 });
+
+test('the landowner hover coach is owner-only, budgeted by its own speed and restored from a checkpoint',()=>{
+  let time=1000;
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
+  const world=createSharedWorld(data,{now:()=>time});
+  const ownerPosition=world.join({userId:owner,name:'Owner'}).player.position;
+  const guestPosition=world.join({userId:'guest',name:'Guest'}).player.position;
+  time+=1000;
+  const pose=(position,vehicle,north)=>({type:'pose',position:[position[0],position[1]+north,position[2]],yaw:0,altitude:0,vehicle});
+  assert.equal(world.command('guest',pose(guestPosition,'hover',5.5)).error,'exclusive_vehicle');
+  // 7.5 m in one second is beyond the car's 7 m/s budget and within the coach's 9 m/s.
+  assert.equal(world.command(owner,pose(ownerPosition,'rolls',7.5)).error,'movement_too_fast');
+  assert.equal(world.command(owner,pose(ownerPosition,'hover',7.5)).ok,true);
+  assert.equal(world.snapshot().players.find(player=>player.id===owner).vehicle,'hover');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  const restored=createSharedWorld(data,{now:()=>time});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  assert.equal(restored.snapshot().players.find(player=>player.id===owner).vehicle,'hover');
+});
+
+test('the hover coach flies for its owner in any appearance, the car never leaves the ground, and a checkpoint keeps the coach aloft',()=>{
+  let time=1000;
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
+  const world=createSharedWorld(data,{now:()=>time});
+  const position=world.join({userId:owner,name:'Owner'}).player.position;
+  world.join({userId:'guest',name:'Guest'});
+  time+=1000;
+  // Kai cannot fly on foot (canFlyAs), but the coach's flight is the coach's.
+  assert.equal(world.command(owner,{type:'appearance',appearance:'kai-noir'}).ok,true);
+  time+=1000;
+  assert.equal(world.command(owner,{type:'pose',position,yaw:0,altitude:2}).error,'flight_not_allowed');
+  assert.equal(world.command(owner,{type:'pose',position,yaw:0,altitude:2,vehicle:'rolls'}).error,'invalid_pose');
+  assert.equal(world.command(owner,{type:'pose',position,yaw:0,altitude:2,vehicle:'hover'}).ok,true);
+  const aloft=world.snapshot().players.find(player=>player.id===owner);
+  assert.deepEqual([aloft.vehicle,aloft.altitude],['hover',2]);
+  time+=1000;
+  assert.equal(world.command(owner,{type:'pose',position,yaw:0,altitude:world.environment?.flightCeiling??32+1,vehicle:'hover'}).ok,false,'the world ceiling still binds');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  const restored=createSharedWorld(data,{now:()=>time});
+  assert.deepEqual(restored.restore(checkpoint),{ok:true});
+  const kept=restored.snapshot().players.find(player=>player.id===owner);
+  assert.deepEqual([kept.vehicle,kept.altitude],['hover',2],'restored still flying the coach');
+  checkpoint.payload.players.find(player=>player.id===owner).vehicle='rolls';
+  assert.equal(restored.restore(resign(checkpoint)).error,'invalid_checkpoint','an airborne car is not a valid checkpoint');
+});
+
+// Five Rooms (#841): the Ribbon posts and shell frontages block movement on the server exactly
+// as walking.js blocks them in the browser, and a town saved before them still restores.
+test('the Five Rooms posts and frontages are solid for server movement, whatever the finish',async()=>{
+  const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  const { districtRibbonPlan }=await import('../../preview/src/ribbon-district.js');
+  const { venueSolids }=await import('../../preview/src/five-rooms/solids.js');
+  const contract=JSON.parse(await readFile(new URL('../../config/ribbon/five-rooms.json',import.meta.url),'utf8'));
+  const environment=createWalkingEnvironment(district);
+  let time=1000;const world=createSharedWorld(district,{now:()=>time});
+  world.join({userId:'a',name:'Alice'});
+  // Stand the player on the walk beside a post, through a re-signed checkpoint.
+  const post=districtRibbonPlan(district).posts.find(item=>item.id==='ribbon:spine:post:010:l');
+  const module=districtRibbonPlan(district).modules.find(item=>item.id==='ribbon:spine:module:010');
+  const centre=[(module.from[0]+module.to[0])/2,(module.from[1]+module.to[1])/2];
+  assert.equal(environment.isFree(centre[0],-centre[1]),true,'the walk centre is free');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  checkpoint.payload.players[0].position=[centre[0],centre[1],environment.groundAt(centre[0],-centre[1])];
+  const restored=createSharedWorld(district,{now:()=>time});
+  assert.deepEqual(restored.restore(resign(checkpoint)),{ok:true});
+  time+=1500;
+  const onPost=[post.position[0],post.position[1],environment.groundAt(post.position[0],-post.position[1])];
+  const blocked=restored.command('a',{type:'pose',position:onPost,yaw:0,altitude:0});
+  assert.equal(blocked.ok,false,'cannot walk into a Ribbon post');
+  assert.deepEqual(blocked.correction.position.slice(0,2),checkpoint.payload.players[0].position.slice(0,2));
+  // A shell frontage disc in front of the Counter blocks too.
+  const counter=contract.venues.find(venue=>venue.id==='venue:counter'),[east,north]=venueSolids(counter,district)[3];
+  assert.equal(environment.isFree(east,-north),false);
+});
+
+test('a town saved before the Five Rooms solids restores a player standing on a post onto free ground nearby',async()=>{
+  const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  const { districtRibbonPlan }=await import('../../preview/src/ribbon-district.js');
+  const environment=createWalkingEnvironment(district),before=createWalkingEnvironment(district,[],null,{fiveRooms:false});
+  const world=createSharedWorld(district);world.join({userId:'a',name:'Alice'});
+  const post=districtRibbonPlan(district).posts.find(item=>before.isFree(item.position[0],-item.position[1]));
+  assert.ok(post,'a post stands on ground that was free before');
+  const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+  checkpoint.payload.players[0].position=[post.position[0],post.position[1],before.groundAt(post.position[0],-post.position[1])];
+  const restored=createSharedWorld(district);
+  assert.deepEqual(restored.restore(resign(checkpoint)),{ok:true});
+  const [x,n]=restored.snapshot().players[0].position;
+  assert.equal(environment.isFree(x,-n),true,'restored on free ground');
+  assert.ok(Math.hypot(x-post.position[0],n-post.position[1])<=2,'next to where they stood');
+  // Anything else invalid still fails closed: inside a building footprint.
+  const building=district.buildings.find(item=>item.id==='osm-way-625330790');
+  checkpoint.payload.players[0].position=[building.center[0],building.center[1],0];
+  assert.equal(createSharedWorld(district).restore(resign(checkpoint)).ok,false);
+});
+
+test('a resident saved before the Five Rooms solids restores onto nearby free public ground', async () => {
+  const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  const { districtRibbonPlan }=await import('../../preview/src/ribbon-district.js');
+  const before=createWalkingEnvironment(district,[],null,{fiveRooms:false}),after=createWalkingEnvironment(district);
+  const world=createSharedWorld(district),checkpoint=world.checkpoint();
+  const resident=checkpoint.payload.state.locals.find(local=>!local.indoor&&!local.stationary&&!local.life?.seat);
+  assert.ok(resident,'the real District has an outdoor mobile resident');
+  const post=districtRibbonPlan(district).posts.find(item=>before.isFree(item.position[0],-item.position[1])&&!before.roomAt(item.position[0],-item.position[1]));
+  assert.ok(post,'the post covers previously free public ground');
+  resident.position=[post.position[0],post.position[1],before.groundAt(post.position[0],-post.position[1])];
+  if(resident.life){resident.life.route=[];resident.life.destination=null;resident.life.seat=null;}
+  const original=structuredClone(resident),restored=createSharedWorld(district);
+  assert.deepEqual(restored.restore(resign(checkpoint)),{ok:true});
+  const recovered=restored.snapshot().locals.find(local=>local.id===original.id);
+  assert.ok(recovered,'the resident identity is preserved');
+  assert.equal(after.isFree(recovered.position[0],-recovered.position[1]),true,'resident must not overlap a new solid');
+  assert.ok(Math.hypot(recovered.position[0]-original.position[0],recovered.position[1]-original.position[1])<=4,'recovery stays nearby');
+  assert.deepEqual(restored.checkpoint().payload.state.locals.find(local=>local.id===original.id).persona,original.persona,'persona and memory are preserved');
+});
+
+async function fiveRoomsResidentRestoreFixture() {
+  const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  const { districtRibbonPlan }=await import('../../preview/src/ribbon-district.js');
+  const before=createWalkingEnvironment(district,[],null,{fiveRooms:false}),after=createWalkingEnvironment(district);
+  const world=createSharedWorld(district,{now:()=>1000});
+  world.join({userId:'restore-witness',name:'Witness'});
+  const checkpoint=world.checkpoint(),residents=checkpoint.payload.state.locals.filter(local=>!local.indoor&&!local.stationary&&!local.life?.seat);
+  const post=districtRibbonPlan(district).posts.find(item=>before.isFree(item.position[0],-item.position[1])&&!before.roomAt(item.position[0],-item.position[1]));
+  assert.ok(post&&residents.length>=2);
+  const putOnPost=local=>{
+    local.position=[post.position[0],post.position[1],before.groundAt(post.position[0],-post.position[1])];
+    Object.assign(local.life,{route:[],destination:null,seat:null});
+  };
+  return {district,before,after,checkpoint,residents,post,putOnPost,restored:createSharedWorld(district,{now:()=>1000})};
+}
+
+test('a restored resident abandons a saved destination newly covered by a Five Rooms post and resumes its routine',async()=>{
+  const f=await fiveRoomsResidentRestoreFixture(),resident=f.residents[0];
+  f.putOnPost(resident);
+  Object.assign(resident.life,{route:[f.post.position.slice(0,2)],destination:{id:'saved-stroll',name:'Saved destination',stroll:true},waitUntil:0});
+  assert.deepEqual(f.restored.restore(resign(f.checkpoint)),{ok:true});
+  for(let i=0;i<800;i++)f.restored.step(.05);
+  const recovered=f.restored.checkpoint().payload.state.locals.find(local=>local.id===resident.id);
+  assert.notDeepEqual(recovered.life.route.at(-1),f.post.position,'the blocked saved endpoint must not keep being retried');
+  assert.notEqual(recovered.life.destination?.id,'saved-stroll','a newly blocked ordinary destination is replaced');
+  assert.ok(recovered.life.distance>1,'the resident continues its routine beyond a collision-margin shuffle');
+  assert.equal(f.after.isFree(recovered.position[0],-recovered.position[1]),true);
+});
+
+test('recovering a displaced visit recipient preserves the job and helper while requeuing its old approach',async()=>{
+  const f=await fiveRoomsResidentRestoreFixture(),[recipient,helper]=f.residents;
+  f.putOnPost(recipient);
+  const job={id:'restore-visit',generation:f.checkpoint.payload.state.generation,localId:recipient.id,helperId:helper.id,progress:1,duration:2,phase:'assisting',approachAttempt:5};
+  f.checkpoint.payload.state.jobs=[job];
+  Object.assign(helper.life,{visitId:job.id,helping:{onSite:true},route:[recipient.position.slice(0,2)],destination:{visit:true}});
+  assert.deepEqual(f.restored.restore(resign(f.checkpoint)),{ok:true});
+  const next=f.restored.checkpoint().payload,kept=next.state.jobs.find(item=>item.id===job.id),recovered=next.state.locals.find(local=>local.id===helper.id);
+  assert.deepEqual(kept,{...job,phase:'queued',approachAttempt:0},'job identity, progress, duration and helper are preserved');
+  assert.equal(recovered.life.visitId,job.id);
+  assert.deepEqual(recovered.life.route,[]);
+  assert.equal(recovered.life.destination,null);
+  assert.equal(recovered.life.helping.onSite,false);
+});
+
+test('a restored resident on free ground stops retrying a saved endpoint newly covered by a Five Rooms post',async()=>{
+  const f=await fiveRoomsResidentRestoreFixture(),resident=f.residents[0],east=f.post.position[0]+1,north=f.post.position[1];
+  assert.equal(f.after.isFree(east,-north),true);
+  resident.position=[east,north,f.after.groundAt(east,-north)];
+  Object.assign(resident.life,{route:[f.post.position.slice(0,2)],destination:{id:'covered-stroll',name:'Saved destination',stroll:true},waitUntil:0});
+  assert.deepEqual(f.restored.restore(resign(f.checkpoint)),{ok:true});
+  for(let i=0;i<800;i++)f.restored.step(.05);
+  const recovered=f.restored.checkpoint().payload.state.locals.find(local=>local.id===resident.id);
+  assert.notEqual(recovered.life.destination?.id,'covered-stroll');
+  assert.ok(recovered.life.distance>1,'a valid restored start must not leave the routine stuck at the post');
+  assert.equal(f.after.isFree(recovered.position[0],-recovered.position[1]),true);
+});
+
+test('a helper on free ground with a newly blocked visit endpoint requeues the same job without losing progress',async()=>{
+  const f=await fiveRoomsResidentRestoreFixture(),[recipient,helper]=f.residents,east=f.post.position[0]+1,north=f.post.position[1];
+  helper.position=[east,north,f.after.groundAt(east,-north)];
+  const job={id:'covered-visit',generation:f.checkpoint.payload.state.generation,localId:recipient.id,helperId:helper.id,progress:1,duration:2,phase:'assisting',approachAttempt:5};
+  f.checkpoint.payload.state.jobs=[job];
+  Object.assign(helper.life,{visitId:job.id,helping:{onSite:true},route:[f.post.position.slice(0,2)],destination:{visit:true}});
+  assert.deepEqual(f.restored.restore(resign(f.checkpoint)),{ok:true});
+  const next=f.restored.checkpoint().payload;
+  assert.deepEqual(next.state.jobs.find(j=>j.id===job.id),{...job,phase:'queued',approachAttempt:0});
+  assert.equal(next.state.locals.find(l=>l.id===helper.id).life.visitId,job.id);
+});
+
+test('a resident whose start and endpoint remain valid keeps the saved route and destination',async()=>{
+  const f=await fiveRoomsResidentRestoreFixture(),resident=f.residents[0],east=f.post.position[0]+1,north=f.post.position[1];
+  resident.position=[east,north,f.after.groundAt(east,-north)];
+  Object.assign(resident.life,{route:[[east+.25,north]],destination:{id:'valid-stroll',name:'Saved destination',stroll:true},waitUntil:0});
+  assert.equal(f.after.isFree(east+.25,-north),true);
+  const {route,destination,routeVersion}=structuredClone(resident.life);
+  assert.deepEqual(f.restored.restore(resign(f.checkpoint)),{ok:true});
+  const kept=f.restored.checkpoint().payload.state.locals.find(l=>l.id===resident.id).life;
+  assert.deepEqual({route:kept.route,destination:kept.destination,routeVersion:kept.routeVersion},{route,destination,routeVersion});
+});
+
+test('two displaced residents recover clear of each other and a player occupying the first recovery candidate',async()=>{
+  const f=await fiveRoomsResidentRestoreFixture(),residents=f.residents.slice(0,2);
+  residents.forEach(f.putOnPost);
+  const player=f.checkpoint.payload.players[0],east=f.post.position[0]+.75,north=f.post.position[1];
+  assert.equal(f.after.isFree(east,-north),true,'the player has a valid current ground position');
+  player.position=[east,north,f.after.groundAt(east,-north)];
+  assert.deepEqual(f.restored.restore(resign(f.checkpoint)),{ok:true});
+  const next=f.restored.snapshot(),recovered=residents.map(resident=>next.locals.find(local=>local.id===resident.id));
+  for(const local of recovered){
+    assert.equal(f.after.isFree(local.position[0],-local.position[1]),true);
+    assert.ok(Math.hypot(local.position[0]-east,local.position[1]-north)>=.7,'recovery respects player occupancy');
+  }
+  assert.ok(Math.hypot(recovered[0].position[0]-recovered[1].position[0],recovered[0].position[1]-recovered[1].position[1])>=.7,'recovery respects other residents');
+});
+
+test('a newly covered resident with an unrecoverable height rejects atomically instead of discarding its state',async()=>{
+  const f=await fiveRoomsResidentRestoreFixture();
+  f.putOnPost(f.residents[0]);f.residents[0].position[2]+=10;
+  const original=f.restored.checkpoint();
+  assert.equal(f.restored.restore(resign(f.checkpoint)).ok,false);
+  assert.deepEqual(f.restored.checkpoint(),original,'failed recovery leaves the existing world intact');
+});
+
+test('the real authority admits Ribbon post landing recovery poses and restores the same pilot in the craft',async()=>{
+  const {hoverClear,stepHoverLift}=await import('../../preview/src/carriage-motion.js');
+  const {districtRibbonPlan}=await import('../../preview/src/ribbon-district.js');
+  const {VEHICLES}=await import('../../preview/src/vehicle-config.js');
+  // Same fixture entitlement identity as the existing server Ribbonwing suites; local only.
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY',data=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  const env=createWalkingEnvironment(data),before=createWalkingEnvironment(data,[],null,{fiveRooms:false});
+  const at=p=>({vehicle:'hover',position:[p.position[0],env.groundAt(p.position[0],-p.position[1]),-p.position[1]],yaw:0,speed:0,distance:0,altitude:8,liftTarget:0,landing:true});
+  const post=districtRibbonPlan(data).posts.find(p=>hoverClear(at(p),env)&&hoverClear({...at(p),altitude:.12},before)&&!hoverClear({...at(p),altitude:.12},env));
+  assert.ok(post);
+  let time=1000;
+  const world=createSharedWorld(data,{now:()=>time});world.join({userId:owner,name:'Pilot fixture'});
+  const state=at(post),seat=VEHICLES.hover.driverSeat;
+  const position=()=>{const x=state.position[0]+seat[0],north=-state.position[2]-seat[2];return [x,north,env.groundAt(x,-north)];};
+  const saved=world.checkpoint(),player=saved.payload.players.find(p=>p.id===owner);
+  Object.assign(player,{position:position(),altitude:8,vehicle:'hover',yaw:0});
+  const {checksum,...envelope}=saved;
+  const occupied={...envelope,checksum:createHash('sha256').update(JSON.stringify(envelope)).digest('hex')};
+  assert.deepEqual(world.restore(occupied),{ok:true},'an occupied in-flight checkpoint is admitted');
+  let replies=0,held=null;
+  const simulate=(frames,input)=>{
+    for(let i=0;i<frames;i++){
+      stepHoverLift(state,env,input,1/60);time+=1000/60;
+      if(i%12===11){const reply=world.command(owner,{type:'pose',position:position(),altitude:state.altitude,yaw:0,vehicle:'hover'});assert.equal(reply.ok,true,JSON.stringify(reply));assert.equal(reply.player.id,owner);assert.equal(reply.player.vehicle,'hover');replies++;}
+    }
+  };
+  simulate(1200,{});held=state.altitude;
+  assert.ok(held>.1&&held<8);assert.equal(state.landing,false);
+  simulate(180,{lift:1});assert.ok(state.altitude>held+.5);
+  const final=world.snapshot().players.find(p=>p.id===owner),rejoined=createSharedWorld(data,{now:()=>time});
+  assert.deepEqual(rejoined.restore(world.checkpoint()),{ok:true});
+  const restored=rejoined.snapshot().players.find(p=>p.id===owner);
+  for(const key of ['id','appearance','vehicle','position','altitude','yaw'])assert.deepEqual(restored[key],final[key],key);
+});

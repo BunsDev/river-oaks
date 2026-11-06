@@ -128,6 +128,24 @@ test('reach, height, walls, seats and flight are checked from the town\'s own po
   f.world.players.get(ALICE).altitude = 0;f.world.players.get(ALICE).vehicle = 'bicycle';
   assert.equal(f.attack(ALICE).error, 'attack_on_foot');
   f.world.players.get(ALICE).vehicle = null;
+  // A passenger on a landed Ribbonwing has no vehicle and stands at ground height, but is aboard:
+  // a swing begun on foot misses if the attacker boards before contact (review of #710).
+  const PILOT = 'user_01M40Y914S1H4EJCEHH91DKTAY'; // entitled to the Ribbonwing
+  f.world.join({ userId: PILOT, name: 'Pilot' });f.place(PILOT, [RX + 1.88, RN]);
+  const parked = f.world.snapshot().players.find(player => player.id === PILOT);
+  assert.equal(f.world.command(PILOT, { type: 'pose', position: parked.position, yaw: Math.PI / 2, altitude: 0, vehicle: 'hover' }).ok, true, 'the pilot sits in the landed craft');
+  // Nose south: the passenger seat, 0.68 m to the pilot's right, is where alice stands, in reach.
+  const swing = f.attack(ALICE, { attackId: 'alice-board-0001' });
+  assert.equal(swing.ok, true, JSON.stringify(swing));
+  assert.equal(f.world.command(PILOT, { type: 'ribbonwing', action: 'invite', peerId: ALICE }).ok, true);
+  const boarding = f.world.command(ALICE, { type: 'ribbonwing', action: 'board', pilotId: PILOT });
+  assert.equal(boarding.ok, true, JSON.stringify(boarding));
+  f.later(CRIME_RULES.strikeWindupMs);f.world.step(0.05);
+  const seat = f.world.players.get(ALICE), boarded = f.world.snapshot().crime.actions.find(item => item.id === swing.action.id);
+  assert.equal(seat.passengerOf, PILOT, 'still aboard at contact');
+  assert.deepEqual([boarded.outcome, boarded.reason, f.rival().health], ['miss', 'attack_on_foot', 100], 'no hit lands from a passenger seat');
+  assert.equal(f.world.command(ALICE, { type: 'ribbonwing', action: 'leave' }).ok, true, 'steps out on the ground');
+  f.world.leave(PILOT);f.place(ALICE, [RX + 1.2, RN]);f.later(CRIME_RULES.cooldownMs);
   // A wall between them, in an otherwise identical district.
   const walled = { ...district, collisionPolygons: [...district.collisionPolygons, [[RX + 0.5, RN - 2], [RX + 0.7, RN - 2], [RX + 0.7, RN + 2], [RX + 0.5, RN + 2], [RX + 0.5, RN - 2]]] };
   const w = town({ data: walled });open(w);
@@ -194,7 +212,7 @@ test('checkpoints keep health, stars and receipts; older towns restore with none
   const f = town();open(f);
   f.land({ attackId: 'alice-hit-0002' });f.land();
   const saved = f.world.checkpoint();
-  assert.equal(saved.version, 17);
+  assert.equal(saved.version, 18);
   const back = town({ restore: saved });back.clock.time = f.clock.time;
   assert.deepEqual(back.world.snapshot().crime, f.world.snapshot().crime);
   back.place(ALICE, [RX + 1.2, RN]);back.later(CRIME_RULES.cooldownMs);

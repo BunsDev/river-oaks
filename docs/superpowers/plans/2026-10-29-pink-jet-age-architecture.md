@@ -88,3 +88,7 @@ The switch is also the rollback lever.
 ## Next step
 
 Core verify, signed commit, push a draft PR, matched captures, then land.
+
+## Delivery record (docs review, 2026-10-31)
+
+#774 merged on 2026-10-30 03:16Z as `2b16a479` (reviewed head `3af28f10`). Register task `pink-jet-age-r3-architecture` is `delivered`; the worktree `river-oaks-pja-arch` (`96e3771f`, clean, a strict ancestor of the merged head) passed a `project:prune --cancel-stale` dry run with no blockers on 2026-10-31 and awaits the apply. Increment 2 (tower eyebrows, curved corners, pergola and canopy height) waits on Val.

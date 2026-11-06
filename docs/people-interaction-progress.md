@@ -1005,7 +1005,7 @@ offset can place a vertical query over the lower road, producing a misleading
 curb-height gap. Comparing the rendered sole point with the nearby valid surface
 point retains the same 3 mm contact tolerance. Evidence:
 `data/reports/browser-ground-query-cost.json` and
-`preview/e2e/district-ground-contact.js`.
+`preview/e2e/district-ground-contact.js` (the journey was removed with the solo runtime in #170).
 
 ### Nearby encounters across rooms and elevations, September 25, 2026
 

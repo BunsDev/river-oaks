@@ -9,3 +9,9 @@ export async function answeredFetch(fetcher, ...args) {
 }
 
 export const reloadAfterFailedCheck = (entered, error) => entered && !error?.unanswered;
+
+// The town client (session-account-notice.js) dispatches this when its connection reads
+// another account than the one this page entered as; the gate then rechecks at once.
+// The game side defines the name separately: the access entry must not share a module with
+// game code (scripts/check-access-entry.mjs), and a test keeps the two names equal.
+export const ACCOUNT_CHANGED = 'river-oaks:account-changed';

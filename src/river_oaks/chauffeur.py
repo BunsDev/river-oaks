@@ -36,7 +36,7 @@ class ChauffeurSnapshot(Packet):
     schema_version: Literal[1]
     tick: Annotated[int, Field(ge=0)]
     generation: Annotated[int, Field(ge=0)]
-    vehicle: Literal["rolls", "motorcycle"]
+    vehicle: Literal["rolls", "motorcycle", "hover"]
     speed: Annotated[Finite, Field(ge=0, le=20)]
     remaining_m: Annotated[Finite, Field(ge=0, le=100000)]
     turn_radians: Annotated[Finite, Field(ge=-3.142, le=3.142)]

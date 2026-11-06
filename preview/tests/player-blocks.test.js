@@ -6,13 +6,15 @@ class Element {
   constructor() { this.children = [];this.dataset = {};this.attributes = {};this.events = {};this.textContent = '';this.hidden = false;this.disabled = false; }
   setAttribute(name, value) { this.attributes[name] = String(value); }
   getAttribute(name) { return this.attributes[name] ?? null; }
+  removeAttribute(name) { delete this.attributes[name]; }
+  focus() { globalThis.document.activeElement = this; }
   addEventListener(type, listener) { this.events[type] = listener; }
   append(...nodes) { this.children.push(...nodes); }
   replaceChildren(...nodes) { this.children = nodes; }
 }
 function withDocument(t) {
   const prior = globalThis.document;t.after(() => { globalThis.document = prior; });
-  globalThis.document = { createElement: () => new Element() };
+  globalThis.document = { createElement: () => new Element(), activeElement: null };
 }
 // A town that answers like /api/blocks: the list it holds, and every call it was asked.
 function town(initial = []) {
@@ -240,4 +242,64 @@ test('a confirmation from a previous account cannot submit a one-click block for
   assert.deepEqual(next.calls, [['list', null]]);
   assert.equal(button.textContent, 'Confirm block');
   ui.dispose();
+});
+
+// Keyboard focus through a change (the visitor sweep for #791, 2026-11-05). A button that turns
+// disabled while the town answers drops focus to the page in Chromium, and a list rebuilt after
+// Unblock drops it in both engines: a keyboard user then starts again from the top of the page.
+test('a Block waiting on the town keeps keyboard focus and ignores more presses until it answers', async t => {
+  withDocument(t);
+  const held = new Map(), calls = [];let release;
+  const blocks = createBlockList();
+  blocks.attach(async (action, data) => {
+    calls.push(action);
+    if (action === 'add') { await new Promise(resolve => { release = resolve; });held.set(data.peerId, 'Pat');return { ok: true }; }
+    return { blocked: [...held].map(([id, name]) => ({ id, name })) };
+  });
+  await blocks.refresh();
+  const said = [], ui = createBlockUI({ blocks, announce: text => said.push(text) });
+  const row = new Element();row.dataset.name = 'Pat';
+  const button = ui.rosterButton(row, { id: 'pat', name: 'Pat' });
+  button.focus();
+  await button.events.click();
+  const pending = button.events.click();
+  assert.equal(button.disabled, false, 'a busy Block stays focusable');
+  assert.equal(button.getAttribute('aria-disabled'), 'true', 'and says it is unavailable');
+  await button.events.click();
+  assert.deepEqual(calls.filter(action => action === 'add'), ['add'], 'a press while the town answers sends nothing');
+  release();await pending;
+  assert.equal(button.getAttribute('aria-disabled'), null);
+  assert.deepEqual([button.textContent, said.at(-1), document.activeElement], ['Unblock', 'You blocked Pat. They are not told.', button]);
+  ui.dispose();
+});
+
+test('Unblock in Settings leaves focus on the next blocked resident, then on the status line', async t => {
+  withDocument(t);
+  const blocks = createBlockList(), settings = createBlockedPlayersSettings({ blocks });
+  const [, list, , status] = settings.children;
+  const { request } = town([{ id: 'pat', name: 'Pat' }, { id: 'kim', name: 'Kim' }, { id: 'lee', name: 'Lee' }]);
+  blocks.attach(request);await blocks.refresh();
+  const unblock = name => list.children.find(item => item.children[0].textContent === name).children[1];
+  unblock('Kim').focus();await unblock('Kim').events.click();
+  assert.deepEqual(list.children.map(item => item.children[0].textContent), ['Pat', 'Lee']);
+  assert.equal(document.activeElement, unblock('Lee'), 'focus moves to the resident after the one unblocked');
+  await blocks.refresh();
+  assert.equal(document.activeElement, unblock('Lee'), 'a refresh keeps focus on the same resident');
+  await unblock('Lee').events.click();
+  assert.equal(document.activeElement, unblock('Pat'), 'the last one unblocked: focus moves to the one before');
+  await unblock('Pat').events.click();
+  assert.equal(list.hidden, true);
+  assert.deepEqual([document.activeElement, status.tabIndex, status.textContent], [status, -1, 'You unblocked Pat.'], 'an empty list leaves focus on the status line');
+  settings.dispose();
+});
+
+test('Settings does not take focus when it was elsewhere', async t => {
+  withDocument(t);
+  const blocks = createBlockList(), settings = createBlockedPlayersSettings({ blocks });
+  const { request } = town([{ id: 'pat', name: 'Pat' }]);
+  const elsewhere = new Element();elsewhere.focus();
+  blocks.attach(request);await blocks.refresh();
+  await settings.children[1].children[0].children[1].events.click();
+  assert.equal(document.activeElement, elsewhere);
+  settings.dispose();
 });

@@ -192,7 +192,7 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
       if(realism===undefined)unsubscribeQuality=await followCharacterQuality(fidelity);else await fidelity.setTier(realism);
     }catch(error){fidelity.dispose();expressions.dispose();upperBody.dispose();look?.dispose();avatar.dispose();throw error;}
   }
-  let previousTime=null,walkingSpeed=0;
+  let previousTime=null,walkingSpeed=0,feetAway=false;
   return {
     object:root, profile, rig:avatar, expressions,
     get realismReport(){return fidelity?.report??{tier:'off'};},
@@ -230,7 +230,10 @@ export async function loadResidentAvatar(index, id, profileOverride, { folk = tr
         adjustment.setFromAxisAngle(avatar.axes.get(bone)[bone.name.startsWith('lowerarm') ? 'z' : 'x'],angle); bone.quaternion.multiply(adjustment);
         if(bone.name==='head') {adjustment.setFromAxisAngle(avatar.axes.get(bone).z,conversationPose.roll);bone.quaternion.multiply(adjustment);}
       }
-      if(!locomotion?.flying&&!locomotion?.riding)feet.update(dt,locomotion,groundAt);
+      // Seated, riding or flying, the feet are posed elsewhere; standing again (a
+      // seat 0.4-0.9 m from the last footprints) stretched the legs back to them (#637).
+      if(!locomotion?.flying&&!locomotion?.riding){if(feetAway)feet.reset();feetAway=false;feet.update(dt,locomotion,groundAt);}
+      else feetAway=true;
       upperBody.update(dt,locomotion?.riding?0:walkingSpeed,feet.legs,{flying:locomotion?.flying||locomotion?.riding,carrying:Boolean(locomotion?.visitId||locomotion?.carrying)});
       if(!locomotion?.flying&&!locomotion?.riding)conversationBody.apply(conversationPose);
       for(const bone of bones) {

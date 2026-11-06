@@ -51,8 +51,11 @@ const invitation = command => command.type === 'office' && command.action === 'i
 // themself is an invalid guest, and anyone else keeps the refusal they would get. A
 // retry of a grant first sent before the block is answered as a conflicting operation.
 export async function screenCommand(blocks, userId, command, isAdmin) {
+  // Boarding a Ribbonwing names the pilot: toward a blocked pilot it is boarding someone not here (#777).
+  if (blocks && command?.type === 'ribbonwing' && command.action === 'board' && typeof command.pilotId === 'string')
+    return await blocks.between(userId, command.pilotId) ? { command: { ...command, pilotId: ABSENT_RESIDENT } } : { command };
   if (!blocks || typeof command?.peerId !== 'string') return { command };
-  const aimed = command.type === 'travel' || ['interaction', 'darts', 'axes'].includes(command.type) && command.action === 'invite';
+  const aimed = command.type === 'travel' || ['interaction', 'darts', 'axes', 'ribbonwing'].includes(command.type) && command.action === 'invite';
   const grant = command.type === 'campus' && command.action === 'grant';
   const refusal = invitation(command);
   if (!aimed && !grant && !(refusal && isAdmin(userId))) return { command };

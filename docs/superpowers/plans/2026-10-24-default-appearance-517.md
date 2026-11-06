@@ -374,3 +374,7 @@ whether to land it that way, how to measure Sable ×24 (and, if Jevica is wanted
 her ×8 crowd) on a quiet host or a device before turning it on, and the pore mask.
 Landing is not this session's to do. The lander (river-oaks-71) lands only after Val
 decides, with hosted checks green on the final head.
+
+## Delivery record (docs review, 2026-10-31)
+
+#656 merged on 2026-10-26 23:29Z as `caa1a7ef` (reviewed head `8594d3f5`, tree `a0d9212d`), switched off as shipped. The local branch had already been archived by a stale cancellation (`~/worktree-backups/river-oaks/cancel-stale-Goi9Ya/manifest.json`); register task `default-appearance-517-20261024` is `retired` with that archive. The Decisions above (turning the policy on, the Sable ×24 measurement, the pore mask) are still Val's and need their own task when taken up.

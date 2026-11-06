@@ -1,7 +1,7 @@
 // @ts-check
-/** @typedef {'rolls'|'motorcycle'|'bicycle'} VehicleKind */
+/** @typedef {'rolls'|'motorcycle'|'bicycle'|'hover'} VehicleKind */
 /** @typedef {[number,number,number]} Point3 */
-/** @typedef {{kind:VehicleKind,label:string,length:number,width:number,height:number,wheelbase:number,maxSpeed:number,cruiseSpeed?:number,seats?:number,chauffeur?:boolean,shared?:boolean,steeringLimit:number,steeredWheels:number,wheels:Point3[],driverSeat:Point3,passengerSeat:Point3,driverFloor:number,bodyHeight:number,passengerFloor:number,grips:Point3[]}} VehicleSpec */
+/** @typedef {{kind:VehicleKind,label:string,length:number,width:number,height:number,wheelbase:number,maxSpeed:number,cruiseSpeed?:number,seats?:number,chauffeur?:boolean,shared?:boolean,hover?:boolean,flies?:boolean,steeringLimit:number,steeredWheels:number,wheels:Point3[],driverSeat:Point3,passengerSeat:Point3,driverFloor:number,bodyHeight:number,passengerFloor:number,grips:Point3[],steeringPivot?:Point3}} VehicleSpec */
 // Who drives, and who may ride (Val, 2026-10-29): Jev chauffeurs only the pink
 // car (`chauffeur`), so Jevica rides in its passenger seat and may hand him the
 // route. Every other kind is driven by the player from its driver seat, with no
@@ -21,11 +21,31 @@ export const VEHICLES = {
   wheels:[[-.525,.34,0],[.525,.34,0]],driverSeat:[.12,.92,0],passengerSeat:[.12,.92,0],driverFloor:.30,passengerFloor:.30,bodyHeight:.95,
   // Palm points: 3 cm above the bar's axis, where a closed hand's palm sits on it.
   grips:[[-.42,1.05,-.22],[-.42,1.05,.22]],steeringPivot:[-.46,.98,0]},
+ // The landowner's flying vehicle: the Ribbonwing (#777), a two-seat
+ // side-by-side petal-wing VTOL craft (geometry, mechanisms and the metric
+ // contract in ribbonwing.js, ribbonwing-rig.js and ribbonwing-design.js; the
+ // kind id stays `hover`, so server authority, checkpoints and the smart-ride
+ // gates are unchanged). The landowner pilots it from the left seat; the
+ // right seat is the passenger's. It stands on three landing feet whose pads
+ // are its ground contacts (nothing steers or rolls) and flies above the
+ // ground it follows, up to the world's flight ceiling (carriage-motion.js,
+ // server/world.js); it lands before anyone steps out. `width` is the spread
+ // span, so parking and flight clearance keep the wings clear.
+ hover:{kind:'hover',label:'Ribbonwing',length:5.79,width:5.84,height:3.05,wheelbase:2.96,maxSpeed:9,seats:2,hover:true,flies:true,steeringLimit:.42,steeredWheels:0,
+  wheels:[[-2.1,.06,0],[.86,.06,1.12],[.86,.06,-1.12]],driverSeat:[-1.36,.92,.34],passengerSeat:[-1.36,.92,-.34],driverFloor:.56,passengerFloor:.56,bodyHeight:2.03,
+  // Right palm on the side stick, left palm on the throttle (ribbonwing-design.js CONTROLS).
+  grips:[[-1.62,1.16,.07],[-1.56,1.12,.62]],steeringPivot:[-1.62,.9,.06],
+  // Half-width envelope along the length ([x, half-width], front -X): nose, the deployed
+  // ladder band, the wing's leading-edge vertices, the tip, the trailing hook and the petals
+  // (ribbonwing-design.js). Walkers and the camera pass ahead of the wings.
+  plan:[[-2.95,.1],[-2.6,.55],[-2.25,.62],[-1.72,1.84],[-1.18,1.84],[-1.06,1.3],[-.95,1.6],[-.7,1.98],[-.32,2.34],[.12,2.62],[.6,2.84],[1.1,2.92],[1.5,2.92],[1.9,2.74],[2,.9],[2.86,.72]]},
 };
 /** @param {unknown} value @returns {VehicleKind|null} */
-export function vehicleKind(value) { return value==='rolls'||value==='motorcycle'||value==='bicycle'?value:null; }
+export function vehicleKind(value) { return value==='rolls'||value==='motorcycle'||value==='bicycle'||value==='hover'?value:null; }
 /** Jev drives this kind from its driver seat; the rider is his passenger. @param {unknown} kind */
 export const vehicleChauffeured=kind=>Boolean(VEHICLES[vehicleKind(kind)??'']?.chauffeur);
+/** The seat a player rides in: the passenger seat beside Jev, else the driver seat. @param {VehicleSpec} spec */
+export const riderSeat=spec=>vehicleChauffeured(spec.kind)?spec.passengerSeat:spec.driverSeat;
 /** Any account may ride this kind; the others belong to the Jevica owner. @param {unknown} kind */
 export const vehicleShared=kind=>Boolean(VEHICLES[vehicleKind(kind)??'']?.shared);
 /** @param {unknown} value */

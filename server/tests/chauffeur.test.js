@@ -73,3 +73,8 @@ test('hosted driving asks for the pinned Jev model and holds on a reply from any
   assert.equal(held.candidate_id, null, 'a reply from the previous pin does not drive the car');
   assert.notEqual(held.source, 'jev');
 });
+
+test('the hover coach is a chauffeured vehicle and the bicycle is not', () => {
+  assert.ok(Object.keys(chauffeurChoices(packet({ vehicle: 'hover' }))).includes('cruise'));
+  assert.throws(() => chauffeurChoices(packet({ vehicle: 'bicycle' })));
+});

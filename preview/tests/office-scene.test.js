@@ -50,7 +50,7 @@ test('the standalone fallback scene hides its lift behind the penthouse glass on
  const glazed = visit('office-penthouse-1');
  assert.ok(glazed.lift.children.length > 2, 'the real arrival architecture is in the scene');
  assert.equal(glazed.visible.length, 2, 'walking in the penthouse: only the two front door panels are drawn');
- assert.ok(glazed.visible.every(part => part.isMesh), 'and they are the door panels, not a batch of cabin or lobby parts');
+ assert.ok(glazed.visible.every(part => !part.isInstancedMesh && part.children.length === 2 && part.children.every(leaf => leaf.isMesh)), 'and they are the tube leaves (a glass pane and its rail), not a batch of cabin or lobby parts');
  const legacy = visit('office-legacy-1');
  assert.ok(legacy.visible.length > 2, 'the windowless legacy room keeps the arrival as it was');
 });

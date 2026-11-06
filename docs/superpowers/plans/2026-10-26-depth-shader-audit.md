@@ -271,3 +271,7 @@ Hosted checks on `86afad18` (the third merge): 26 of 26 passed, including the `d
    Both touch every frame and the phone budgets, so neither is in this branch.
 2. **Landing with a known list.** This branch lands the planter, city-kit, the shader fixes and the journey, with 164 earlier pairs listed for burn-down (388 at increment 1). The alternative is holding it until the list is empty.
 3. **Merge order with #649.** The planter block's neighbours change in both branches.
+
+## Delivery record (docs review, 2026-10-31)
+
+#695 merged on 2026-10-30 09:40Z as `0d54a18d` (reviewed head `8e7d87c5`), with the burn-down list as decision 2 above describes. Register task `depth-shader-audit-20261026` is `delivered`; its worktree `river-oaks-depth-audit` (`f790ef8b`) is preserved because it holds two undelivered river-oaks-3e edits (`preview/src/sidewalks.js`, `preview/tests/district-depth.test.js`, zebra bars following the asphalt cells). The burn-down continues in the depth-burndown and depth-clone-callbacks branches and #795's ledger.

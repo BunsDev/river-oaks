@@ -89,12 +89,23 @@ async page => {
     const at = q => values.length ? values[Math.min(values.length - 1, Math.floor(q * values.length))] : null;
     return { frames: values.length, p05: at(.05), p50: at(.5), p95: at(.95), max: values.at(-1) ?? null };
   };
+  // Lift-offs per second (either foot leaving contact), per phase: 3.2 m/s was a
+  // 7.4 steps/s shuffle before the run gait (foot-placement.js RUN_SPEED).
+  const stepRate = (trace, window) => {
+    let lifts = 0;
+    for (let i = 1; i < trace.length; i++) if (trace[i].t >= window[0] && trace[i].t <= window[1])
+      for (const [j, foot] of (trace[i].feet ?? []).entries()) if (trace[i - 1].feet?.[j]?.contact && !foot.contact) lifts++;
+    return lifts / Math.max(1e-3, (window[1] - window[0]) / 1000);
+  };
   const clockOffset = await observer.evaluate(() => performance.timeOrigin) - await walker.evaluate(() => performance.timeOrigin);
   // The peer shows the walk about 0.6 s later: pose and broadcast cadence (up to 0.4 s),
   // the 0.3 s pacing buffer and the follow. Its windows shift by that and stay inside the phase.
   const PEER_DELAY = 600;
   const windows = phases.map((phase, i) => ({ name: phase.name, walker: [phase.at + 500, (phases[i + 1]?.at ?? local.at(-1).t) - 300] }));
-  const byPhase = windows.map(w => ({ name: w.name, local: paces(local, w.walker), peer: paces(peer.filter(sample => sample.onScreen !== false), [w.walker[0] - clockOffset + PEER_DELAY, w.walker[1] - clockOffset + PEER_DELAY]) }));
+  const byPhase = windows.map(w => {
+    const peerWindow = [w.walker[0] - clockOffset + PEER_DELAY, w.walker[1] - clockOffset + PEER_DELAY], seen = peer.filter(sample => sample.onScreen !== false);
+    return { name: w.name, local: { ...paces(local, w.walker), stepsPerSecond: stepRate(local, w.walker) }, peer: { ...paces(seen, peerWindow), stepsPerSecond: stepRate(seen, peerWindow) } };
+  });
   const frameRate = trace => trace.length / ((trace.at(-1).t - trace[0].t) / 1000);
   const result = {
     walkerId, start, phases: byPhase, rates: { walkerHz: frameRate(local), observerHz: frameRate(peer) },

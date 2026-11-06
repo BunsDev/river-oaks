@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createCartierFinishes, isCartierRoom } from './cartier-pilot.js';
 import { RETRO } from './retro-palette.js';
 import { ROOM_HEIGHT } from './store-rooms.js';
 import { createLuxeFinishes, createSurfaceCollector, flutedPanels, luxeShellPlan, luxeSuiteFor, tintEmissiveByColor } from './interior-luxe.js';
@@ -8,6 +9,7 @@ import { buildAxeRoomInterior } from './axe-room-interior.js';
 import { AXE_ROOM_INTERIOR } from './axe-room-plan.js';
 import { generatedVerticalRoute } from './generated-vertical-route.js';
 import { generatedContactPixels } from './generated-contact-shading.js';
+import { plainDepthMaterial, shadowProxyMesh } from './shadow-proxy.js';
 
 // Walk-in boutique interiors: shell, finishes, fixtures and merchandise per
 // room plan. Generic shops use procedural surfaces; IPIC uses its dedicated
@@ -84,7 +86,7 @@ function garmentGeometry() {
   const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: false }); geometry.translate(0, 0, -0.025); return geometry;
 }
 
-export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } = {}) {
+export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [], cartierPilot = true, shadowBatch = false } = {}) {
   const group = new THREE.Group(); group.name = 'Boutique interiors';
   const geometries = new Set(), materials = new Set(), textures = new Set();
   const track = { g: g => { geometries.add(g); return g; }, m: m => { materials.add(m); return m; }, t: t => { textures.add(t); return t; } };
@@ -127,6 +129,10 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const steel = standard({ color: '#bfc3c7', roughness: 0.3, metalness: 0.9 });
   const cream = standard({ color: '#ffffff', roughness: 0.6 });
   for (const [name, material] of Object.entries({ textile, leather, velvet, brass, chrome, black, oak, walnut, white, ceramic, marbleTop, stone, glassCase, bottleGlass, glow, lamp, warmPanel, mirror, foliage, bronze, steel, cream, ceiling, wall })) material.name = `interior-${name}`;
+  // Allocate the bounded finish set only when a mapped Cartier room is built.
+  const cartier = cartierPilot && rooms.some(isCartierRoom) ? createCartierFinishes(track) : null;
+  const pilotRoles = new Map([[textile, 'velvet'], [brass, 'brass'], [black, 'lacquer'], [velvet, 'velvet'], [stone, 'stone'], [marbleTop, 'stone'], [wall, 'wall'], [glassCase, 'glass']]);
+  const isDisplayGlass = material => material === glassCase || material === bottleGlass || material === cartier?.glass;
   // geometries
   const box = track.g(new THREE.BoxGeometry(1, 1, 1));
   const cylinder = track.g(new THREE.CylinderGeometry(1, 1, 1, 12));
@@ -158,9 +164,11 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
   const M = new THREE.Matrix4(), P = new THREE.Vector3(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), E = new THREE.Euler();
   let room = null, roomMatrix = new THREE.Matrix4();
   const add = (geometry, material, a, d, y, scale, yaw = 0, color = '#ffffff', tilt = [0, 0]) => {
+    const role = cartier && isCartierRoom(room) && pilotRoles.get(material);
+    if (role) { material = cartier[role]; color = '#ffffff'; }
     const key = `${room?.buildingId ?? 'x'}:${geometry.uuid}:${material.uuid}`;
     if (tinted.has(material) && color === '#ffffff') color = suiteOf(room)[tinted.get(material)];
-    if (!batches.has(key)) batches.set(key, { geometry, material, matrices: [], colors: [] });
+    if (!batches.has(key)) batches.set(key, { geometry, material, building: room?.buildingId ?? 'x', matrices: [], colors: [] });
     E.set(tilt[0], yaw, tilt[1]); Q.setFromEuler(E); P.set(a, y, -d); S.set(scale[0], scale[1], scale[2]);
     M.compose(P, Q, S).premultiply(roomMatrix);
     const batch = batches.get(key); batch.matrices.push(M.clone()); batch.colors.push(color);
@@ -526,18 +534,45 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [] } =
     luxeShell(room);
   }
   surfaces.build(group, track);
-  for (const { geometry, material, matrices, colors } of batches.values()) {
+  const shadowShared = new Map();
+  for (const { geometry, material, building, matrices, colors } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometry, material, matrices.length);
     const color = new THREE.Color();
     matrices.forEach((matrix, index) => { mesh.setMatrixAt(index, matrix); mesh.setColorAt(index, color.set(colors[index])); });
-    mesh.castShadow = material !== generatedWallContact && material !== glow && material !== lamp && material !== luxe.halo && material !== glassCase && material !== bottleGlass && material !== warmPanel;
+    mesh.castShadow = material !== generatedWallContact && material !== glow && material !== lamp && material !== luxe.halo && !isDisplayGlass(material) && material !== warmPanel;
     mesh.receiveShadow = material !== generatedWallContact;
     if (material === generatedWallContact) mesh.userData.aoExclude = true;
     // One batch per building and material: the renderer culls by instance bounds without a draw-call explosion.
     mesh.computeBoundingSphere();
-    if (material === glassCase || material === bottleGlass) mesh.renderOrder = 2;
+    if (isDisplayGlass(material)) mesh.renderOrder = 2;
     group.add(mesh);
+    if (mesh.castShadow && plainDepthMaterial(material)) {
+      const key = `${building}:${geometry.uuid}`;
+      if (!shadowShared.has(key)) shadowShared.set(key, []);
+      shadowShared.get(key).push(mesh);
+    }
   }
+  // Sun shadows (#289): the depth pass ignores finish, so a building's casting batches of one
+  // geometry cast through one hidden instanced proxy of the same instances (shadow-proxy.js).
+  const shadowProxies = [], shadowMembers = [];
+  for (const meshes of shadowShared.values()) {
+    if (meshes.length < 2) continue;
+    const proxy = shadowProxyMesh(meshes[0].geometry, meshes.reduce((sum, mesh) => sum + mesh.count, 0));
+    let index = 0;
+    for (const mesh of meshes) for (let i = 0; i < mesh.count; i++) { mesh.getMatrixAt(i, M); proxy.setMatrixAt(index++, M); }
+    proxy.name = 'Interior shadow batch'; proxy.userData.members = meshes; proxy.computeBoundingSphere();
+    group.add(proxy); shadowProxies.push(proxy); shadowMembers.push(...meshes);
+  }
+  // main.js shows the proxies only while the sun draws its map, and only the District's, so only
+  // that build opts in: a streamed room keeps its own casters. Development audit: false
+  // lets every batch cast for itself again.
+  group.userData.shadowBatch = enabled => {
+    for (const mesh of shadowMembers) mesh.castShadow = !enabled;
+    for (const proxy of shadowProxies) proxy.visible = false;
+    group.userData.shadowProxies = enabled ? shadowProxies : [];
+    return shadowProxies.length;
+  };
+  group.userData.shadowBatch(shadowBatch);
   group.userData.lightPositions = lightPositions;
   group.userData.screens = specialtyInteriors.filter(interior => interior.userData.screen).map(interior => ({ material: interior.userData.screen, aspect: interior.userData.screenAspect, frame: interior.userData.screenFrame ?? null, object: interior }));
   group.userData.dartboards = specialtyInteriors.filter(interior => interior.userData.darts).map(interior => interior.userData.darts);

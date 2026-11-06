@@ -57,6 +57,11 @@ residents and existing worker roles remain the population standard. Jev chauffeu
 Jevica in a compact pink four-wheel glass-canopy car; she and every visitor ride a rose
 motorcycle themselves, from its own saddle. Both have fitted seats,
 gold spinners and restrained jewel glints; see [character controls](character-forms.md).
+Landowners pilot the Ribbonwing themselves (the `hover` kind; [design brief](design/ribbonwing/brief.md)):
+a two-seat, side-by-side VTOL in #F486A1 lacquer, ivory, mint glass and chrome, with petal
+wings around two lift fans, twin gimballed rear thrusters, a split petal tail, a rear-hinged
+canopy, telescoping steps and three landing feet. Jevica flies from the left seat; it lifts off
+to fly beneath the world's ceiling.
 
 ## Streets and planting
 

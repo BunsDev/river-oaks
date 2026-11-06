@@ -1,0 +1,44 @@
+from pathlib import Path
+import subprocess,json,hashlib,time,shutil
+root=Path.cwd()
+out=root/'.runtime'/f'probe-owned-native-{int(time.time()*1000)}'
+out.mkdir()
+def run(args,**kwargs):return subprocess.run(args,check=True,cwd=root,**kwargs)
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def inventory(folder):return [{'path':str(p.relative_to(folder)),'sha256':sha(p)} for p in sorted(folder.rglob('*')) if p.is_file()]
+inputs=sorted(list((root/'experiments/ios-probe/App').glob('*.swift'))+list((root/'experiments/ios-probe/Sources/ProbeCore').glob('*.swift'))+list((root/'experiments/ios-probe/Web').glob('*.js'))+[root/'experiments/ios-probe/App/Info.plist',root/'experiments/ios-probe/project.yml',root/'scripts/ios-probe-launch-smoke.mjs',root/'scripts/ios-probe-controls-smoke.swift',Path(__file__).resolve()])
+source=[{'path':str(p.relative_to(root)),'sha256':sha(p)} for p in inputs]
+(out/'source-inputs.json').write_text(json.dumps(source,indent=2))
+print('Owned probe evidence',out,flush=True)
+head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+run(['xcodegen','generate','--spec','experiments/ios-probe/project.yml','--quiet'])
+run(['nice','-n','19','xcodebuild','-project','experiments/ios-probe/TypeSafeProbe.xcodeproj','-scheme','TypeSafeProbe','-configuration','Release','-sdk','iphonesimulator','-destination','generic/platform=iOS Simulator','-derivedDataPath',str(out/'build'),'-jobs','1','CODE_SIGNING_ALLOWED=NO',f'PROBE_SOURCE_SHA={head}','PROBE_SOURCE_DIRTY=true','-quiet','build'])
+assert source==[{'path':str(p.relative_to(root)),'sha256':sha(p)} for p in inputs], 'Inputs changed during build'
+app=out/'build/Build/Products/Release-iphonesimulator/TypeSafeProbe.app'
+manifest=inventory(app)
+(out/'package-files.json').write_text(json.dumps(manifest,indent=2))
+helper=root/'scripts/ios-probe-launch-smoke.mjs'
+# Fixture profiles only: copy the existing runner and change installed device
+# selection and the two existing launch argument lists. All assertions remain.
+copy=helper.read_text()
+assert copy.count("'--probe-native-only'")==2
+assert copy.count("value.name === 'iPhone 17'")==1
+copy=copy.replace("value.name === 'iPhone 17'", "value.name === 'iPhone SE (3rd generation)'")
+copy=copy.replace("'--probe-native-only'", "'--probe-native-only', '--probe-render-phases'")
+narrow=root/'.runtime/probe-owned-narrow-smoke.mjs'
+narrow.write_text(copy)
+(out/'narrow-helper.sha256').write_text(sha(narrow)+'\n')
+run(['node','--check',str(narrow)])
+failed=out/'Unavailable.app'
+shutil.copytree(app,failed)
+run(['plutil','-replace','ProbeEntry','-string','https://unavailable.invalid/play',str(failed/'Info.plist')])
+assert [r for r in inventory(failed) if r['path']!='Info.plist']==[r for r in manifest if r['path']!='Info.plist'], 'Failure fixture changed more than Info.plist'
+for name,binary,runner in [('default',app,helper),('unavailable',failed,helper),('narrow-four-actions',app,narrow)]:
+ destination=out/name
+ run(['node',str(runner),'--app',str(binary),'--output',str(destination)])
+ for screenshot in ['screen.png','after-foreground.png']:
+  result=subprocess.check_output(['swift','scripts/ios-probe-controls-smoke.swift',str(destination/screenshot)],cwd=root,text=True)
+  (destination/(screenshot+'.controls.json')).write_text(result)
+assert source==[{'path':str(p.relative_to(root)),'sha256':sha(p)} for p in inputs], 'Inputs changed during trial'
+(out/'summary.json').write_text(json.dumps({'source':head,'dirty':True,'inputSHA256':source,'packageFiles':manifest,'profiles':['default','unavailable','narrow-four-actions'],'scope':'Unsigned Release simulator; native-only mode and existing flag enables four actions on installed iPhone SE3. Manual screenshot inspection still required. Not physical-device, keyboard/VoiceOver focus, highlighted/disabled or real-world acceptance.'},indent=2))
+print('Final owned probe evidence',out,flush=True)

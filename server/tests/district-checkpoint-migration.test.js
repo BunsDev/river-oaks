@@ -62,7 +62,10 @@ for (const [revision, values, fingerprint] of [
   assert.deepEqual(checkpoint, before, 'migration does not mutate its input');
   const restored = createSharedWorld(data, options);
   assert.equal(restored.restore(result.checkpoint).ok, true);
-  assert.deepEqual(restored.snapshot(), original.snapshot());
+  // The flight ceiling belongs to the world, not the town: it follows the new facade heights.
+  const { flightCeiling, ...town } = restored.snapshot(), { flightCeiling: _, ...originalTown } = original.snapshot();
+  assert.deepEqual(town, originalTown);
+  assert.equal(flightCeiling, createSharedWorld(data, options).snapshot().flightCeiling);
   assert.equal(result.checkpoint.worldFingerprint, hash(data));
 });
 

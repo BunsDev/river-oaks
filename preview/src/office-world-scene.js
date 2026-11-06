@@ -8,6 +8,7 @@ import { buildOfficeGeometry } from './office-penthouse-graybox.js';
 import { OFFICE_EYE_HEIGHT, OFFICE_LAYOUT_LEGACY, OFFICE_SEATED_EYE_HEIGHT, officeElevationAt, officeLayout, officeLevelElevation, officeSeatedPose, officeView } from './office-layouts.js';
 import { createVisitSkyline } from './office-skyline.js';
 import { arrivalBehindGlass } from './office-arrival-architecture.js';
+import { readFinishPreference } from './render-quality.js';
 
 // The street, car and office share one scene/camera/composer. Once both car
 // doors close the outside district is occluded and can stop drawing. The same
@@ -23,7 +24,8 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
   const peerRoot=new THREE.Group();street.scene.add(peerRoot);lease.allow(peerRoot);
   const dispose=()=>{if(disposed)return;disposed=true;actors?.dispose();peerRoot.removeFromParent();office?.dispose();glass.restore();lease.dispose();};
   try{
-    office=buildOfficeGeometry(THREE,layoutId,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM)});stage.add(office.object);office.object.visible=false;
+    // The kit finish (office-kit-finish.js) is the visitor's render-quality.js preference, the one the street follows.
+    office=buildOfficeGeometry(THREE,layoutId,{buildLegacy:()=>buildWorkplaceOffice(THREE,OFFICE_ROOM),finish:readFinishPreference()});stage.add(office.object);office.object.visible=false;
     const lights=[2,-3].map((z,i)=>({position:new THREE.Vector3(0,2.9,z),color:new THREE.Color('#fff1df'),intensity:i?65:45,distance:i?10:7,decay:2}));
     // Preserve the office's authored lighting using the existing world pool.
     // Detached owned light objects have no GPU resources to dispose.
@@ -117,7 +119,7 @@ export function createOfficeWorldScene({street,host,self,reducedMotion=false}) {
       const ground=worldBody.y;
       // The car floor carries the body (foot-placement.js `platform`): read as a curb step,
       // each frame of the climb left the body and shoes behind, sinking out through the floor.
-      street.avatar.setPresentation({...street.startPose,position:[worldBody.x,ground+1.68,worldBody.z],ground,groundAt:()=>ground,platform:stage.position.toArray(),altitude:0,flying:false,landing:false,riding:null,sitting:seated?{buildId:'office',slot:0,height:seated.height,yaw:seated.yaw+turn}:null,roomId:'authorized-office',showBody:!firstPerson&&(entering?street.startPose.showBody:true),speed,velocity:delta?[dx/delta,dz/delta]:[0,0],distance,heading:Math.hypot(dx,dz)>.0001?Math.atan2(dx,dz):undefined});
+      street.avatar.setPresentation({...street.startPose,position:[worldBody.x,ground+1.68,worldBody.z],ground,groundAt:()=>ground,platform:stage.position.toArray(),altitude:0,flying:false,landing:false,riding:null,sitting:seated?{buildId:'office',slot:0,height:seated.height,yaw:seated.yaw+turn}:null,roomId:'authorized-office',showBody:!firstPerson&&(frame.presence??1)>0&&(entering?street.startPose.showBody:true),speed,velocity:delta?[dx/delta,dz/delta]:[0,0],distance,heading:Math.hypot(dx,dz)>.0001?Math.atan2(dx,dz):undefined});
       lastNow=now;lastBody=worldBody.clone();
       current.position=[body.x,-body.z];
     }

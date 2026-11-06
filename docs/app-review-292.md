@@ -4,7 +4,8 @@ Recorded 2026-10-24, at the revision that adds report confirmation and the suppo
 contact; refreshed 2026-10-27 at the revision that adds the content filter (#713),
 moderation routing (#715) and the contact under the gate (#716), with the native
 sign-in design on #714 and the Block button wired in (#711). It is stacked on in-app
-deletion (#666), blocking (#665) and erasure (#661). Every row below is either met or
+deletion (#666), blocking (#665) and erasure (#661); #711, #713, #714, #715 and #716 have
+since merged to `main` (2026-10-28 and 10-29). Every row below is either met or
 integrated in source, or a named decision for Val.
 It compares what River Oaks does today with the App Review guidelines that #292 names.
 Apple's text was read on 2026-10-24 from the
@@ -255,7 +256,7 @@ private. Two readings:
   under the exception for apps that use only the company's own sign-in.
 
 Decision 4. The sign-in design for the native host, the exchange contract and its
-host-independent server tests are on #714 (`docs/ios-auth.md`, on that branch until it lands); its 4.8 note
+host-independent server tests landed with #714 (`docs/ios-auth.md`, merged 2026-10-28); its 4.8 note
 weighs both readings and recommends adding Sign in with Apple through WorkOS, staged
 (Staging first), keeping GitHub and email codes. Enabling Apple in WorkOS is a
 configuration change for Val, not a code change.

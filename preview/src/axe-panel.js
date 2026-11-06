@@ -25,8 +25,10 @@ const GUIDE_KEY = 'river-oaks-axes-guide';
 const STEP_HINT = { under: 'The handle hit first: under-rotated. Step back a little.', over: 'The top hit first: over-rotated. Step a little closer.' };
 const tenth = n => Math.round(n * 10) / 10;
 
+// Reading `localStorage` itself throws when site data is blocked, so the default is guarded too.
+const deviceStorage = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
 export function createAxePanel({ host = document.querySelector('#viewport'), getMirror = () => null, focusWorld = () => {},
-  now = () => performance.now(), reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false, shared, storage = globalThis.localStorage, sounds = throwSounds() }) {
+  now = () => performance.now(), reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false, shared, storage = deviceStorage(), sounds = throwSounds() }) {
   // pending: a throw is with the town; flying: its axe is in the air on the sheet.
   let laneId = null, release = [0, AXE_THROW.nominal], ready = now(), steady = false, pending = false, flying = false, frame = 0, said = '', lastKey = '', generation = 0;
   let guide = true;

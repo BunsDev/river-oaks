@@ -15,7 +15,7 @@ export function createOfficeDeskUI({getMultiplayer,onClose=()=>{},computer:compu
  const dialog=node('dialog',null,'office-desk');dialog.id='office-desk';dialog.setAttribute('aria-labelledby','desk-heading');
  // This template is static. Every user-authored value is assigned through value/textContent.
  dialog.innerHTML=`<div class="desk-topbar"><div class="desk-brand"><span class="desk-monogram" aria-hidden="true">RO</span><div><p class="desk-eyebrow">RIVER OAKS · OFFICE</p><h2 id="desk-heading">Your desk</h2></div></div><div class="desk-top-actions"><span id="desk-scope-label" class="desk-private">Private to you</span><button type="button" id="desk-close" class="desk-icon-button" aria-label="Close desk">×</button></div></div>
- <div id="desk-views" class="desk-scopes desk-views" hidden><div class="desk-tabs" role="tablist" aria-label="Desk"><button type="button" id="desk-view-tasks" role="tab" aria-selected="true" aria-controls="desk-body">Tasks</button><button type="button" id="desk-view-computer" role="tab" aria-selected="false" aria-controls="desk-computer" tabindex="-1">Computer</button></div><p id="desk-computer-receipt" class="desk-computer-receipt" role="status"></p></div>
+ <div id="desk-views" class="desk-scopes desk-views" hidden><div class="desk-tabs" role="tablist" aria-label="Desk"><button type="button" id="desk-view-computer" role="tab" aria-selected="false" aria-controls="desk-computer" tabindex="-1">TypeSafe Computer</button><button type="button" id="desk-view-tasks" role="tab" aria-selected="true" aria-controls="desk-body">Tasks</button></div><p id="desk-computer-receipt" class="desk-computer-receipt" role="status"></p></div>
  <div id="desk-body" class="desk-body"><aside class="desk-sidebar" aria-label="Your tasks"><div class="desk-sidebar-heading"><h3 id="desk-list-heading">My tasks</h3><span id="desk-count">0</span></div><button type="button" id="desk-new" class="desk-new"><span aria-hidden="true">＋</span> New task</button><nav id="desk-tasks" aria-label="Tasks"></nav><p class="desk-sidebar-note">A little space for<br>your next good idea.</p></aside>
  <main class="desk-work"><div id="desk-empty" class="desk-empty"><span class="desk-empty-mark" aria-hidden="true">✧</span><p class="desk-eyebrow">MAKE ROOM FOR GOOD WORK</p><h3>What’s on your mind?</h3><p>Start with a task. Keep your notes and file links together, then save something worth coming back to.</p><button type="button" id="desk-start" class="desk-primary">Start your first task <span aria-hidden="true">↗</span></button><button type="button" id="desk-scene" class="desk-text-button">Or write a three-line scene idea</button><small id="desk-scope-help">Your work stays private, even when you share an office.</small></div>
  <div id="desk-loading" class="desk-loading" role="status" hidden>Opening your desk…</div>
@@ -27,14 +27,14 @@ export function createOfficeDeskUI({getMultiplayer,onClose=()=>{},computer:compu
  <div id="desk-notice" class="desk-notice" hidden><p id="desk-error" role="alert"></p><div><button type="button" id="desk-retry" class="desk-secondary">Try again</button><button type="button" id="desk-reload" class="desk-secondary">Reload saved work</button><button type="button" id="desk-rescue" class="desk-text-button">Download draft</button></div></div>
  <div id="desk-confirm" class="desk-confirm" hidden><p id="desk-confirm-message"></p><div><button type="button" id="desk-confirm-yes" class="desk-primary">Continue</button><button type="button" id="desk-confirm-no" class="desk-secondary">Keep editing</button></div></div>
  </main></div>
- <section id="desk-computer" class="desk-computer" hidden><div class="desk-computer-bar"><p id="desk-computer-status" role="status" aria-live="polite"></p><button type="button" id="desk-computer-return" class="desk-secondary">Return to office</button></div>
- <div id="desk-computer-notice" class="desk-notice desk-computer-notice" hidden><p id="desk-computer-message" role="alert"></p><div><a id="desk-computer-signin" class="desk-primary" target="_blank" rel="noopener noreferrer">Sign in to Computer <span aria-hidden="true">↗</span></a><button type="button" id="desk-computer-continue" class="desk-primary">Continue</button><button type="button" id="desk-computer-keep" class="desk-primary">Keep working</button><button type="button" id="desk-computer-try" class="desk-secondary">Try again</button><button type="button" id="desk-computer-leave" class="desk-secondary">Leave without confirmation</button><a id="desk-computer-open" class="desk-secondary" target="_blank" rel="noopener noreferrer">Open Computer separately <span aria-hidden="true">↗</span></a><button type="button" id="desk-computer-tasks" class="desk-text-button">Back to Tasks</button></div></div>
+ <section id="desk-computer" class="desk-computer" hidden><div class="desk-computer-bar"><p id="desk-computer-status" role="status" aria-live="polite"></p><div class="desk-computer-actions"><a id="desk-computer-open" class="desk-secondary" target="_blank" rel="noopener noreferrer">Open Computer separately <span aria-hidden="true">↗</span></a><button type="button" id="desk-computer-return" class="desk-secondary">Return to office</button></div></div>
+ <div id="desk-computer-notice" class="desk-notice desk-computer-notice" hidden><p id="desk-computer-message" role="alert"></p><div><a id="desk-computer-signin" class="desk-primary" target="_blank" rel="noopener noreferrer">Sign in to Computer <span aria-hidden="true">↗</span></a><button type="button" id="desk-computer-continue" class="desk-primary">Continue</button><button type="button" id="desk-computer-keep" class="desk-primary">Keep working</button><button type="button" id="desk-computer-try" class="desk-secondary">Try again</button><button type="button" id="desk-computer-leave" class="desk-secondary">Leave without confirmation</button><button type="button" id="desk-computer-tasks" class="desk-text-button">Back to Tasks</button></div></div>
  <div id="desk-computer-mount" class="desk-computer-mount"></div></section>
  <footer id="desk-footer" class="desk-footer"><p id="desk-save-status" tabindex="-1" role="status" aria-live="polite">Ready when you are</p><div><button type="button" id="desk-export" class="desk-text-button">Download</button><button type="button" id="desk-save" class="desk-secondary">Save</button><button type="button" id="desk-finish" class="desk-primary">Mark complete <span aria-hidden="true">✓</span></button></div></footer>`;
  document.body.append(dialog);
  const $=id=>dialog.querySelector(`#desk-${id}`),listen=(id,fn)=>$(id).addEventListener('click',fn,{signal});
  let sceneTask=null;const TITLE_HINT=$('title').placeholder,NOTES_HINT=$('notes').placeholder,SCENE_HINT='Three lines: who is there, where they are, and what happens next.';
- let disposed=false,timer=null,renderedTask=null,listKey='',linkKey='',confirmAction=null,returnFocus=null,lastError=null,view='tasks',departing=false,departTarget=null,heldTarget=null,session=0;
+ let disposed=false,timer=null,renderedTask=null,listKey='',linkKey='',confirmAction=null,returnFocus=null,lastError=null,view='tasks',departing=false,departTarget=null,heldTarget=null,session=0,openingLoad=null;
  function fitTitle(){if($('editor').hidden)return;$('title').style.height='0px';$('title').style.height=`${$('title').scrollHeight}px`;}
  window.addEventListener('resize',fitTitle,{signal});
  const model=createDeskModel({account:()=>getMultiplayer()?.identity?.id??null,request:async(action,data)=>{
@@ -84,6 +84,7 @@ export function createOfficeDeskUI({getMultiplayer,onClose=()=>{},computer:compu
  function setView(next){
   view=next;dialog.dataset.view=next;$('body').hidden=next!=='tasks';$('footer').hidden=next!=='tasks';$('computer').hidden=next!=='computer';
   for(const [id,name] of [['view-tasks','tasks'],['view-computer','computer']]){$(id).setAttribute('aria-selected',String(view===name));$(id).tabIndex=view===name?0:-1;}
+  $('heading').textContent=next==='computer'?'TypeSafe Computer':'Your desk';
   $('scope-label').textContent=next==='computer'?'Separate Computer sign-in':'Private to you';
   if(next==='computer')$('computer-receipt').textContent='';
   renderComputer();
@@ -93,9 +94,9 @@ export function createOfficeDeskUI({getMultiplayer,onClose=()=>{},computer:compu
   dialog.dataset.computer=c.state;
   text('computer-status',c.state==='usable'?computerSync[c.sync]:computerStatus[c.state]??'');
   $('computer-notice').hidden=!(failed||signin||held);
-  text('computer-message',signin?'Sign in to TypeSafe Computer in a new tab, then continue here. River Oaks never shares your sign-in with Computer.':failed?`${computerFailures[c.code]??computerFailures.unavailable} Your tasks are still here.`:c.state==='attention'?'TypeSafe Computer needs your decision before you leave.':held?'TypeSafe Computer didn’t confirm your saves. Changes it hasn’t saved may be lost if you leave now.':'');
+  text('computer-message',signin?'Sign in to TypeSafe Computer in a new tab, then continue here. TypeSafe Place never shares your sign-in with Computer.':failed?`${computerFailures[c.code]??computerFailures.unavailable} Your tasks are still here.`:c.state==='attention'?'TypeSafe Computer needs your decision before you leave.':held?'TypeSafe Computer didn’t confirm your saves. Changes it hasn’t saved may be lost if you leave now.':'');
   $('computer-signin').hidden=!signin;$('computer-continue').hidden=!(signin||failed);$('computer-continue').textContent=signin?'Continue':'Try again';
-  $('computer-keep').hidden=$('computer-try').hidden=$('computer-leave').hidden=!held;$('computer-open').hidden=!failed;$('computer-tasks').hidden=!(failed||signin);
+  $('computer-keep').hidden=$('computer-try').hidden=$('computer-leave').hidden=!held;$('computer-tasks').hidden=!(failed||signin);
   $('computer-mount').hidden=!c.mounted;if(computer.frame)computer.frame.inert=c.state==='closing';$('view-tasks').disabled=$('view-computer').disabled=departing||c.state==='closing';
  }
  async function showComputer(){
@@ -158,11 +159,19 @@ export function createOfficeDeskUI({getMultiplayer,onClose=()=>{},computer:compu
  dialog.addEventListener('keydown',e=>{if(view==='tasks'&&(e.ctrlKey||e.metaKey)&&e.code==='KeyS'){e.preventDefault();void model.save();}},{signal});
  window.addEventListener('beforeunload',e=>{if(model.state.dirty){e.preventDefault();e.returnValue='';}},{signal});
  return {get active(){return dialog.open;},async open(){
-  returnFocus=document.activeElement;hideConfirm();session++;computer?.destroy();$('computer-receipt').textContent='';setView('tasks');
+  returnFocus=document.activeElement;hideConfirm();const token=++session;computer?.destroy();$('computer-receipt').textContent='';setView('tasks');
   dialog.showModal();$('close').focus();
-  if(!model.state.dirty)await model.load();else render();
+  if(!model.state.dirty){
+   // Reopening while the same read is pending waits for it instead of treating
+   // the model's busy refusal as a completed load. Account reset clears this owner.
+   const load=openingLoad??model.load();openingLoad=load;
+   try{await load;}finally{if(openingLoad===load)openingLoad=null;}
+  }else render();
+  // Opening a desk is the deliberate Computer entry. Retained task drafts stay visible;
+  // a late task load must never reopen a closed, suspended or replaced desk session.
+  if(computer&&token===session&&dialog.open&&!disposed&&!model.state.dirty)enterComputer();
  },
  // Access loss (leaving, revocation, disconnect, an account change or world teardown) removes Computer at once,
  // without waiting for it. A change Computer's service already accepted is not undone by this.
- suspend(){clearTimeout(timer);computer?.destroy();if(dialog.open)close();},reset(){clearTimeout(timer);computer?.destroy();$('computer-receipt').textContent='';if(dialog.open)close();model.reset();$('link-form').hidden=true;},dispose(){computer?.destroy();disposed=true;clearTimeout(timer);lifetime.abort();dialog.remove();model.reset();}};
+ suspend(){clearTimeout(timer);computer?.destroy();if(dialog.open)close();},reset(){clearTimeout(timer);openingLoad=null;computer?.destroy();$('computer-receipt').textContent='';if(dialog.open)close();model.reset();$('link-form').hidden=true;},dispose(){computer?.destroy();disposed=true;openingLoad=null;clearTimeout(timer);lifetime.abort();dialog.remove();model.reset();}};
 }

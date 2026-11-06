@@ -4,6 +4,7 @@ import { batchCostumeAttachments } from './costume-batching.js';
 import { VEHICLES } from './vehicle-config.js';
 import { BICYCLE_CRANK, BICYCLE_SEATPOST, bicyclePedal, bicyclePedalPitch } from './bicycle-crank.js';
 import { createVehicleGlints } from './vehicle-glints.js';
+import { createRibbonwingVehicle } from './ribbonwing.js';
 
 // Authored real-scale meshes, front -X. Shared materials are batched per moving
 // assembly; the high-detail wheels and steering remain independent transforms.
@@ -11,6 +12,8 @@ import { createVehicleGlints } from './vehicle-glints.js';
 // parked bikes keep them in the frame batch.
 export function createRoadVehicle(kind='rolls',{pedalling=false}={}) {
  const spec=VEHICLES[kind];if(!spec)throw new Error('Unknown road vehicle');
+ // The landowner's flying vehicle is the Ribbonwing (#777), built by its own module.
+ if(kind==='hover')return createRibbonwingVehicle(spec);
  const object=new THREE.Group();object.name=spec.label;
  const owned=new Set(),groups=[object],wheels=[],hubs=[],spinners=[],pedals=[];let crank=null,saddle=null;
  const material=(name,color,options={})=>{const m=new THREE.MeshPhysicalMaterial({color,roughness:.4,...options});m.name=name;owned.add(m);return m;};

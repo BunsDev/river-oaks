@@ -26,7 +26,7 @@ async (page, { computerOrigin }) => {
   await tab.locator('#office-enter').click();
   await tab.waitForFunction(()=>document.querySelector('#office-visit')?.dataset.phase==='office',null,{timeout:60000});
  };
- const openDesk=async(tab=page)=>{await tab.locator('#office-desk-open').click();await tab.locator('#desk-loading').waitFor({state:'hidden'});};
+ const openDesk=async(tab=page,tasks=true)=>{await tab.locator('#office-desk-open').click();await tab.locator('#desk-loading').waitFor({state:'hidden'});if(tasks&&await tab.locator('#office-desk').getAttribute('data-view')==='computer'){await tab.locator('#desk-view-tasks').click();await tab.waitForFunction(()=>document.querySelector('#office-desk')?.dataset.view==='tasks');}};
  const signIn=async(tab,account)=>{
   const [popup]=await Promise.all([tab.context().waitForEvent('page'),tab.locator('#desk-computer-signin').click()]);
   await popup.locator(`button[value=${account}]`).click();await popup.locator('#standalone-account').filter({hasText:'Signed in as'}).waitFor();
@@ -42,10 +42,15 @@ async (page, { computerOrigin }) => {
   const Native=window.WebSocket,sockets=[];window.WebSocket=class extends Native{constructor(...args){super(...args);sockets.push(this);}};
   window.__dropTown=()=>sockets.filter(s=>/\/multiplayer/.test(s.url)&&s.readyState===Native.OPEN).map(s=>s.close(4999,'journey: network drop')).length;});
  await instrument(page);
- await page.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});await arrive();await openDesk();
+ await page.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});await arrive();
+ check(computerRequests.length===0,'Computer makes no request before the player opens a desk');
+ await openDesk(page,false);await waitState('signin');
+ check(await page.locator('#desk-view-computer').getAttribute('aria-selected')==='true'&&await page.locator('#desk-body').isHidden(),'Opening the desk selects TypeSafe Computer instead of the task list');
+ check(await page.locator('#desk-computer-open').isVisible()&&await page.locator('#desk-computer-open').getAttribute('href')===`${computerOrigin}/`&&await page.locator('#desk-computer-open').getAttribute('rel')==='noopener noreferrer','The configured Computer has an immediately available safe separate-tab link');
+ await page.locator('#desk-view-tasks').click();await waitView('tasks');
  const listeners=await page.evaluate(()=>window.__messageListeners());
- check(await page.locator('#desk-views').isVisible()&&await page.locator('#desk-view-tasks').getAttribute('aria-selected')==='true','The desk opens on Tasks with a Computer tab beside it');
- check(await frames()===0&&computerRequests.length===0,'Nothing loads from Computer before its tab opens');
+ computerRequests.length=0;
+ check(await frames()===0,'Switching to Tasks destroys the default Computer frame');
 
  // A Tasks draft whose save failed: its retry and contents must survive a visit to Computer.
  await page.locator('#desk-start').click();await page.locator('#desk-title').fill('Synthetic desk draft');
@@ -269,15 +274,15 @@ async (page, { computerOrigin }) => {
   check(await guest.frameLocator('.desk-computer-frame').locator('#desktop').isHidden()&&await guest.frameLocator('.desk-computer-frame').locator('#gate-name').textContent()==='Cy Fixture','The next Place account gets a fresh Computer gate, not the previous desktop');
   await guest.frameLocator('.desk-computer-frame').locator('#continue').click();await guest.waitForFunction(()=>document.querySelector('#office-desk')?.dataset.computer==='usable');
   await fixture({close:'hang'});
-  // A live Place account change on this page: the connection returns as another account, and
-  // access-entry reloads the page into that account at its next check (every 15 s). Wait for
-  // that reload before going on, so it cannot land in the middle of a later step.
+  // A live Place account change on this page: the connection returns as another account. The
+  // town client tells access-entry, which rechecks at once and reloads the page into that
+  // account (before, it waited for its next 15 s check and could land mid-step later on).
   const reloaded=guest.waitForEvent('domcontentloaded',{timeout:30000});reloaded.catch(()=>{});
   await guestContext.addCookies([{name:'fixture_session',value:'guest',url:page.url()}]);
   const switched=Date.now();check(await guest.evaluate(()=>window.__dropTown())>0,'The page reconnects as another Place account');
   await guest.waitForFunction(()=>!document.querySelector('.desk-computer-frame')&&!document.querySelector('#office-desk').open,null,{timeout:10000});
   check(Date.now()-switched<5000,`The account change removes bob’s unresponsive Computer at once (${Date.now()-switched} ms)`);
-  await reloaded;check(true,'The page then reloads into the new Place account');
+  await reloaded;check(Date.now()-switched<10000,`The page then reloads into the new Place account promptly (${Date.now()-switched} ms)`);
   await guest.waitForFunction(()=>window.__riverMultiplayer?.().connected&&window.__riverMultiplayer().selfId==='guest',null,{timeout:60000});
   await page.locator('#office-management select option',{hasText:'guest'}).waitFor({state:'attached',timeout:15000});
   await page.locator('#office-management select').selectOption({label:'guest'});await page.locator('#office-management button').filter({hasText:'Invite resident'}).click();

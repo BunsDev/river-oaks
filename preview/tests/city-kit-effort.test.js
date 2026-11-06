@@ -33,7 +33,7 @@ test('every shipped neighborhood with authored blocks needs its rectangles retyp
     assert.ok(entry.change.quarters.shells > 0 && entry.change.quarters.shells <= entry.change.shellsBefore, `${entry.id}: the wider street leaves less land, never more`);
   }
   // The terraces' quarters type eight numbers more than their blocks did (an inset each) and two words (split none).
-  assert.deepEqual(world.shipped, { recipes: 18, blocks: 32, shells: 354, typed: { numbers: 2615, names: 205, words: 45 }, massing: { numbers: 705, names: 175, words: 45 },
+  assert.deepEqual(world.shipped, { recipes: 18, blocks: 32, shells: 354, typed: { numbers: 2617, names: 205, words: 45 }, massing: { numbers: 707, names: 175, words: 45 },
     authored: { blocksToRetype: 32, numbersToRetype: 128, shellsInStreet: 180 }, quarters: { blocksToRetype: 0, numbersToRetype: 0, shellsInStreet: 0, shells: 314 } });
 });
 

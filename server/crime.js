@@ -48,7 +48,8 @@ const inArc = (direction, from, to) => {
   const vector = flat(from, to), length = Math.hypot(vector[0], vector[1]);
   return length < 1e-6 || (direction[0] * vector[0] + direction[1] * vector[1]) / length >= Math.cos(R.arcDegrees * Math.PI / 180) - 1e-9;
 };
-const onFoot = player => !(player.sitting || player.vehicle || player.cycling || player.performing || player.altitude > 0.1 || player.levelId);
+// A passenger is aboard even on a landed craft (vehicle null, altitude ~0), so passengerOf counts too.
+const onFoot = player => !(player.sitting || player.vehicle || player.passengerOf || player.cycling || player.performing || player.altitude > 0.1 || player.levelId);
 
 /**
  * groundAt(east, north) places the rivals; decide(attacker, target, targetType) is the world
@@ -73,6 +74,9 @@ export function createCrime({ worldId, groundAt, now, changed, decide, reachable
   // Public: stars per account, actions in progress. Private: when the quiet period started,
   // cooldowns, receipts, participants' timers and evade windows.
   let wanted = new Map(), cooldowns = new Map(), receipts = new Map(), actions = new Map(), participants = new Map(), evades = new Map(), sequence = 0;
+  // Contacts since the town last asked (#640 increment 3): what nearby residents may notice.
+  // Process-local, never checkpointed: a restored town alarms nobody about a fight it slept through.
+  let contacts = [];
   const starsOf = userId => wanted.get(userId)?.stars ?? 0;
   // A contact the town has not resolved yet reads as contact, never done: the outcome follows.
   const phaseOf = (action, at) => action.outcome === null ? (at < action.contactAt ? 'windup' : 'contact') : action.outcome === 'cancelled' || at >= action.endsAt ? 'done'
@@ -102,6 +106,10 @@ export function createCrime({ worldId, groundAt, now, changed, decide, reachable
   };
   const resolve = (action, outcome, reason, at, effect = null) => {
     Object.assign(action, { outcome, reason, resolvedAt: Math.max(action.startedAt, at), effect });changed();
+    const actor = players.get(action.actorId) ?? rivals.get(action.actorId);
+    // A swing from the air (or any airborne actor) is not a street alarm: the wanted scan skips
+    // airborne players for the same reason, and position[2] is the ground under them.
+    if (outcome !== 'cancelled' && actor && !(actor.altitude > .1) && contacts.length < 64) contacts.push({ at, kind: action.kind, actorId: action.actorId, position: [...actor.position] });
   };
   // Participation: the minimal player health this PvE exchange needs, on the player record the
   // police capture already reads. It ends with full health; the field stays at 100.
@@ -392,6 +400,7 @@ export function createCrime({ worldId, groundAt, now, changed, decide, reachable
   function load(next, at = now()) {
     for (const rival of rivals.values()) Object.assign(rival, { health: R.maxHealth, hitAt: null, engagedId: null, counterAt: null }, next.rivals.get(rival.id) ?? {});
     ({ wanted, cooldowns, receipts, actions, participants, evades, sequence } = next);
+    contacts = [];
     for (const action of actions.values()) if (action.outcome === null && action.contactAt + LATE_CONTACT < at)
       Object.assign(action, { outcome: 'cancelled', reason: 'interrupted', resolvedAt: Math.max(action.startedAt, at), effect: null });
     for (const participant of participants.values()) {
@@ -411,6 +420,7 @@ export function createCrime({ worldId, groundAt, now, changed, decide, reachable
     evading(userId, at) { const entry = evades.get(userId); return Boolean(entry && entry.at <= at && at <= entry.at + R.evadeMs); },
     // Only an active crime participant can be grabbed for refusing to surrender (#640).
     participating: userId => participants.has(userId),
+    drainContacts() { const list = contacts;contacts = [];return list; },
     arrest(userId) { endParticipation(userId, now(), 'arrested');if (wanted.delete(userId)) changed(); } };
 }
 

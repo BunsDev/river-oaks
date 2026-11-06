@@ -1,0 +1,1235 @@
+{
+  "createdAt": "2026-10-29T03:18:46.673Z",
+  "status": "passed",
+  "namespace": "river-oaks:takeover-test:e5fcf6cf-787b-497d-a3d5-a01b211cb52f",
+  "scope": "Loopback fixture identities, two world processes on one isolated Redis behind a switching proxy; no live provider or hosted service acceptance.",
+  "results": [
+    {
+      "name": "crime-takeover",
+      "status": "passed",
+      "seconds": 114.571,
+      "result": {
+        "passed": true,
+        "checks": [
+          "Owner, visitor and witness are the fixture identities (user_01M40Y914S1H4EJCEHH91DKTAY, alice, bob)",
+          "The page reaches world A through the proxy",
+          "A writer holds the town lease ([\":lease\"])",
+          "The visitor arrives within arm's reach of the service lane rival",
+          "An officer pursues the wanted visitor",
+          "The officer reaches stand-off with the visitor in sight ({\"id\":\"police:0\",\"position\":[-2796.2786910007894,-1438.6729952635733,18.06712361764406],\"yaw\":2.0552742558318613,\"targetId\":\"alice\",\"state\":\"pursue\"})",
+          "The visitor is moved 85 m east along the lane, beyond sight ([{\"ok\":true,\"error\":null,\"message\":null,\"moved\":85,\"held\":false,\"health\":100}])",
+          "The officer loses sight and starts a search ({\"searching\":{\"state\":\"search\",\"position\":[-2795.5,-1438.26,18.05],\"toSeenSpot\":0.56},\"seenPosition\":[-2795,-1438,18.03],\"searchStartedAfterMs\":290})",
+          "The officer searches at the spot the visitor was last seen on, never nearer the visitor than its sight ({\"searchStartedAfterMs\":290,\"searchLastedMs\":7857,\"nearestToSeenSpot\":0,\"nearestToVisitor\":85.02,\"closedIn\":true,\"scanned\":true,\"endedAs\":\"return\",\"starsDuring\":[1],\"samples\":33,\"firstSample\":{\"t\":293,\"state\":\"search\",\"targetId\":\"alice\",\"officer\":[-2795.5,-1438.26,18.05],\"toSeenSpot\":0.56,\"toVisitor\":85.52,\"yaw\":2.06,\"stars\":1,\"near\":[],\"units\":[{\"id\":\"police:0\",\"state\":\"search\",\"targetId\":\"alice\",\"position\":[-2795.5,-1438.26,18.05]}]},\"lastSample\":{\"t\":8404,\"state\":\"return\",\"targetId\":null,\"officer\":[-2795.32,-1438.64,18.03],\"toSeenSpot\":0.72,\"toVisitor\":85.33,\"yaw\":-0.46,\"stars\":1,\"near\":[],\"units\":[{\"id\":\"police:0\",\"state\":\"return\",\"targetId\":null,\"position\":[-2795.32,-1438.64,18.03]}]}})",
+          "The search runs on the 8 s clock then the officer returns ({\"searchStartedAfterMs\":290,\"searchLastedMs\":7857,\"nearestToSeenSpot\":0,\"nearestToVisitor\":85.02,\"closedIn\":true,\"scanned\":true,\"endedAs\":\"return\",\"starsDuring\":[1],\"samples\":33,\"firstSample\":{\"t\":293,\"state\":\"search\",\"targetId\":\"alice\",\"officer\":[-2795.5,-1438.26,18.05],\"toSeenSpot\":0.56,\"toVisitor\":85.52,\"yaw\":2.06,\"stars\":1,\"near\":[],\"units\":[{\"id\":\"police:0\",\"state\":\"search\",\"targetId\":\"alice\",\"position\":[-2795.5,-1438.26,18.05]}]},\"lastSample\":{\"t\":8404,\"state\":\"return\",\"targetId\":null,\"officer\":[-2795.32,-1438.64,18.03],\"toSeenSpot\":0.72,\"toVisitor\":85.33,\"yaw\":-0.46,\"stars\":1,\"near\":[],\"units\":[{\"id\":\"police:0\",\"state\":\"return\",\"targetId\":null,\"position\":[-2795.32,-1438.64,18.03]}]}})",
+          "Back within 35 m the visitor is seen and pursued again to the new position ({\"state\":\"pursue\",\"closedAgain\":{\"state\":\"pursue\",\"gap\":2.24}})",
+          "After the search: surrender and arrest end in the safe recovery (149 m away, health 100)",
+          "The visitor walks back to the rival",
+          "An officer pursues the visitor across the lane",
+          "World A was killed (SIGKILL after 12 ms) and world B holds a new lease",
+          "All three browsers reconnected through the proxy to the new writer ({\"visitor\":5578,\"witness\":6106,\"owner\":5383} ms)",
+          "The same identity, position, stars, health, rival health and rules come back from the new writer ({\"stars\":[1,1],\"rivalHealth\":[50,50],\"drift\":0})",
+          "The pursuit continues on the new writer (officer search)",
+          "One evade id sent to the dying writer and again to its replacement opens at most one window: carried over in the checkpoint and replayed ({\"pre\":{\"ok\":true,\"error\":null,\"remainingMs\":350,\"replayed\":false,\"replyMs\":209},\"replay\":{\"ok\":true,\"error\":null,\"remainingMs\":0,\"replayed\":true},\"carriedOver\":true,\"lostWithTheWriter\":false})",
+          "The witness came back as the same identity and still draws the visitor ({\"seesVisitor\":true,\"seesOfficer\":true,\"selfId\":\"bob\"})",
+          "Through the new writer: surrender and arrest end in the safe recovery (149 m away, health 100)",
+          "The owner arrives within arm's reach of the rival",
+          "Airborne at contact, the strike misses with attack_on_foot: nothing lands, no star ({\"attempt\":0,\"atKey\":{\"altitude\":0.11,\"flying\":true,\"reply\":{\"ok\":true,\"error\":null,\"phase\":\"windup\",\"id\":\"strike:4\",\"replyMs\":110}},\"altitudeAfter\":3.32,\"strike\":{\"outcome\":\"miss\",\"reason\":\"attack_on_foot\"},\"rivalHealth\":[100,100],\"ownerStars\":[0,0]})",
+          "Emergency off from the owner reaches every browser through the new writer",
+          "No page errors: "
+        ],
+        "evidence": {
+          "identities": {
+            "owner": "user_01M40Y914S1H4EJCEHH91DKTAY",
+            "visitor": "alice",
+            "witness": "bob"
+          },
+          "worlds": {
+            "A": {
+              "port": 57232,
+              "pid": 21620
+            },
+            "B": {
+              "port": 57233,
+              "pid": 21621
+            }
+          },
+          "liveWorldAtEnd": "B",
+          "rows": [
+            {
+              "name": "perception-led search after sight loss (browser)",
+              "status": "pass",
+              "detail": {
+                "searchStartedAfterMs": 290,
+                "searchLastedMs": 7857,
+                "nearestToSeenSpot": 0,
+                "nearestToVisitor": 85.02,
+                "closedIn": true,
+                "scanned": true,
+                "endedAs": "return",
+                "starsDuring": [
+                  1
+                ],
+                "samples": [
+                  {
+                    "t": 293,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795.5,
+                      -1438.26,
+                      18.05
+                    ],
+                    "toSeenSpot": 0.56,
+                    "toVisitor": 85.52,
+                    "yaw": 2.06,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795.5,
+                          -1438.26,
+                          18.05
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 547,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 2.06,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 802,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 2.37,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 1060,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 2.74,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 1313,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 3.07,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 1565,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -2.88,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 1817,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -2.2,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 2068,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -1.87,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 2323,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -1.54,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 2574,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -1.21,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 2827,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -0.55,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 3082,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -0.22,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 3335,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 0.11,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 3588,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 0.44,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 3840,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 1.11,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 4095,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 1.44,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 4353,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 1.77,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 4605,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 2.1,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 4857,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 2.74,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 5111,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 3.05,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 5362,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 3.05,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 5616,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -2.89,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 5869,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -2.23,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 6122,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -1.89,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 6378,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -1.55,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 6632,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -0.89,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 6885,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -0.56,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 7137,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": -0.23,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 7391,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 0.1,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 7644,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 0.77,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 7898,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 1.1,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 8150,
+                    "state": "search",
+                    "targetId": "alice",
+                    "officer": [
+                      -2795,
+                      -1438,
+                      18.03
+                    ],
+                    "toSeenSpot": 0,
+                    "toVisitor": 85.02,
+                    "yaw": 1.44,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "search",
+                        "targetId": "alice",
+                        "position": [
+                          -2795,
+                          -1438,
+                          18.03
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "t": 8404,
+                    "state": "return",
+                    "targetId": null,
+                    "officer": [
+                      -2795.32,
+                      -1438.64,
+                      18.03
+                    ],
+                    "toSeenSpot": 0.72,
+                    "toVisitor": 85.33,
+                    "yaw": -0.46,
+                    "stars": 1,
+                    "near": [],
+                    "units": [
+                      {
+                        "id": "police:0",
+                        "state": "return",
+                        "targetId": null,
+                        "position": [
+                          -2795.32,
+                          -1438.64,
+                          18.03
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "firstSample": {
+                  "t": 293,
+                  "state": "search",
+                  "targetId": "alice",
+                  "officer": [
+                    -2795.5,
+                    -1438.26,
+                    18.05
+                  ],
+                  "toSeenSpot": 0.56,
+                  "toVisitor": 85.52,
+                  "yaw": 2.06,
+                  "stars": 1,
+                  "near": [],
+                  "units": [
+                    {
+                      "id": "police:0",
+                      "state": "search",
+                      "targetId": "alice",
+                      "position": [
+                        -2795.5,
+                        -1438.26,
+                        18.05
+                      ]
+                    }
+                  ]
+                },
+                "lastSample": {
+                  "t": 8404,
+                  "state": "return",
+                  "targetId": null,
+                  "officer": [
+                    -2795.32,
+                    -1438.64,
+                    18.03
+                  ],
+                  "toSeenSpot": 0.72,
+                  "toVisitor": 85.33,
+                  "yaw": -0.46,
+                  "stars": 1,
+                  "near": [],
+                  "units": [
+                    {
+                      "id": "police:0",
+                      "state": "return",
+                      "targetId": null,
+                      "position": [
+                        -2795.32,
+                        -1438.64,
+                        18.03
+                      ]
+                    }
+                  ]
+                },
+                "findings": [],
+                "reseen": {
+                  "state": "pursue",
+                  "closedAgain": {
+                    "state": "pursue",
+                    "gap": 2.24
+                  }
+                }
+              }
+            },
+            {
+              "name": "writer takeover mid-pursuit (browser)",
+              "status": "pass",
+              "detail": {
+                "failover": {
+                  "from": "A",
+                  "to": "B",
+                  "killedAt": 1793244015949,
+                  "exitedAfterMs": 12,
+                  "signal": "SIGKILL",
+                  "leaseBefore": [
+                    ":lease"
+                  ],
+                  "switchedAt": 1793244015962
+                },
+                "reconnectedAfterMs": {
+                  "visitor": 5578,
+                  "witness": 6106,
+                  "owner": 5383
+                },
+                "liveWorld": "B",
+                "leaseChanged": true,
+                "pre": {
+                  "ok": true,
+                  "error": null,
+                  "remainingMs": 350,
+                  "replayed": false,
+                  "replyMs": 209
+                },
+                "identity": [
+                  "alice",
+                  "alice"
+                ],
+                "stars": [
+                  1,
+                  1
+                ],
+                "rivalHealth": [
+                  50,
+                  50
+                ],
+                "selfHealth": [
+                  100,
+                  100
+                ],
+                "positionDriftMetres": 0,
+                "pursuer": [
+                  {
+                    "id": "police:0",
+                    "state": "pursue"
+                  },
+                  {
+                    "id": "police:0",
+                    "state": "search"
+                  },
+                  {
+                    "id": "police:0",
+                    "state": "pursue",
+                    "afterMs": 2500
+                  }
+                ],
+                "policyActive": [
+                  true,
+                  true
+                ],
+                "once": {
+                  "pre": {
+                    "ok": true,
+                    "error": null,
+                    "remainingMs": 350,
+                    "replayed": false,
+                    "replyMs": 209
+                  },
+                  "replay": {
+                    "ok": true,
+                    "error": null,
+                    "remainingMs": 0,
+                    "replayed": true
+                  },
+                  "carriedOver": true,
+                  "lostWithTheWriter": false
+                },
+                "witness": {
+                  "seesVisitor": true,
+                  "seesOfficer": true,
+                  "selfId": "bob"
+                },
+                "owner": {
+                  "identity": [
+                    "user_01M40Y914S1H4EJCEHH91DKTAY",
+                    "user_01M40Y914S1H4EJCEHH91DKTAY"
+                  ]
+                },
+                "recovery": {
+                  "afterSearch": [
+                    -2763.72,
+                    -1295.06,
+                    18.38
+                  ],
+                  "afterTakeover": [
+                    -2763.72,
+                    -1295.06,
+                    18.38
+                  ]
+                }
+              }
+            },
+            {
+              "name": "altitude transition during windup (browser)",
+              "status": "pass",
+              "detail": {
+                "attempt": 0,
+                "atKey": {
+                  "altitude": 0.11,
+                  "flying": true,
+                  "reply": {
+                    "ok": true,
+                    "error": null,
+                    "phase": "windup",
+                    "id": "strike:4",
+                    "replyMs": 110
+                  }
+                },
+                "altitudeAfter": 3.32,
+                "strike": {
+                  "outcome": "miss",
+                  "reason": "attack_on_foot"
+                },
+                "rivalHealth": [
+                  100,
+                  100
+                ],
+                "ownerStars": [
+                  0,
+                  0
+                ],
+                "attempts": [
+                  {
+                    "attempt": 0,
+                    "atKey": {
+                      "altitude": 0.11,
+                      "flying": true,
+                      "reply": {
+                        "ok": true,
+                        "error": null,
+                        "phase": "windup",
+                        "id": "strike:4",
+                        "replyMs": 110
+                      }
+                    },
+                    "altitudeAfter": 3.32,
+                    "strike": {
+                      "outcome": "miss",
+                      "reason": "attack_on_foot"
+                    },
+                    "rivalHealth": [
+                      100,
+                      100
+                    ],
+                    "ownerStars": [
+                      0,
+                      0
+                    ]
+                  }
+                ],
+                "findings": []
+              }
+            }
+          ],
+          "screenshots": [
+            "output/playwright/crime-takeover-pursued-then-far.png",
+            "output/playwright/crime-takeover-searched.png",
+            "output/playwright/crime-takeover-after-takeover-visitor.png",
+            "output/playwright/crime-takeover-after-takeover-witness.png",
+            "output/playwright/crime-takeover-surrendered-on-new-writer.png",
+            "output/playwright/crime-takeover-altitude-owner.png"
+          ],
+          "viewport": "1280x860",
+          "videos": [
+            {
+              "path": "output/playwright/crime-takeover-video/crime-takeover-run6-visitor.webm",
+              "name": "visitor"
+            }
+          ]
+        }
+      },
+      "proxySwitches": [
+        {
+          "at": 1793244015962,
+          "to": 57233,
+          "dropped": 2
+        }
+      ]
+    }
+  ],
+  "ports": {
+    "web": 57230,
+    "town": 57231,
+    "worldA": 57232,
+    "worldB": 57233
+  },
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+  "leaseAtEnd": {
+    ":lease": "v22:631fd272-8c0b-4155-874b-26f6221e58e3"
+  },
+  "finishedAt": "2026-10-29T03:20:42.382Z"
+}

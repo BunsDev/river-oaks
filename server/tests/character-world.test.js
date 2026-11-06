@@ -84,7 +84,7 @@ test('a published recipe selects the custom look for its owner and survives chec
 
 test('selected canonical revisions and their cooldown survive departure, checkpoint recovery and geography migration',()=>{
   const f=fixture(),look=definition();assert.equal(f.equip(look).ok,true);
-  const saved=f.world.checkpoint();assert.equal(saved.version,17);
+  const saved=f.world.checkpoint();assert.equal(saved.version,18);
   const recovered=createSharedWorld(data,{now:f.now});assert.deepEqual(recovered.restore(saved),{ok:true});
   assert.deepEqual(recovered.snapshot().players[0].character,look);
   assert.equal(recovered.command('alice',{type:'character',revision:2},{characterDefinition:definition('alice',2)}).error,'appearance_cooldown');
