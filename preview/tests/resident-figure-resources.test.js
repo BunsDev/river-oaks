@@ -2,9 +2,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { exclusiveResources } from '../src/figure-resources.js';
-import { FIGURE_GEOMETRIES, FIGURE_LISTENERS, restoreBounds, withinResourceBounds } from '../e2e/resource-bounds.js';
+import { FIGURE_GEOMETRIES, FIGURE_LISTENERS, FIGURE_TEXTURES, restoreBounds, withinResourceBounds } from '../e2e/resource-bounds.js';
 
 const mesh = (geometry = new THREE.BufferGeometry(), map = new THREE.Texture()) => new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ map }));
+
+// The renderer adds one disposal listener to each resource it draws; model that for a scene.
+const draw = scene => {
+  const seen = new Set();
+  scene.traverse(object => {
+    const materials = [object.material].flat().filter(Boolean);
+    for (const resource of [object.geometry, object.skeleton?.boneTexture, ...materials, ...materials.flatMap(material => Object.values(material).filter(value => value?.isTexture))])
+      if (resource && !seen.has(resource)) { seen.add(resource); resource.addEventListener('dispose', () => {}); }
+  });
+};
 
 test('a figure counts only what nothing else in the scene uses', () => {
   const sharedGeometry = new THREE.BufferGeometry(), sharedMap = new THREE.Texture();
@@ -12,7 +22,9 @@ test('a figure counts only what nothing else in the scene uses', () => {
   const figure = new THREE.Group();
   figure.add(mesh(sharedGeometry, sharedMap), mesh(), mesh());
   scene.add(player, figure);
-  assert.deepEqual(exclusiveResources(scene, [figure]), { figures: 1, geometries: 2, textures: 2, listeners: 0 });
+  draw(scene);
+  // Own: two geometries, two maps, and the three materials (one per mesh, the look-sharing one included).
+  assert.deepEqual(exclusiveResources(scene, [figure]), { figures: 1, geometries: 2, textures: 2, listeners: 7 });
   assert.deepEqual(exclusiveResources(scene, []), { figures: 0, geometries: 0, textures: 0, listeners: 0 });
 });
 
@@ -29,13 +41,23 @@ test('two figures sharing a look count it once; a drawn scene object claims it, 
   const scene = new THREE.Scene(), a = new THREE.Group(), b = new THREE.Group();
   a.add(mesh(look, map), mesh(own, map)); b.add(mesh(own, map));
   scene.add(a, b);
-  assert.deepEqual(exclusiveResources(scene, [a, b]), { figures: 2, geometries: 2, textures: 1, listeners: 0 });
+  draw(scene);
+  assert.deepEqual(exclusiveResources(scene, [a, b]), { figures: 2, geometries: 2, textures: 1, listeners: 6 });
   // A boutique guest wearing the same look behind a hidden interior never draws it.
   const interior = new THREE.Group(), guest = mesh(look, map);
   interior.visible = false; interior.add(guest); scene.add(interior);
-  assert.deepEqual(exclusiveResources(scene, [a, b]), { figures: 2, geometries: 2, textures: 1, listeners: 0 });
+  assert.deepEqual(exclusiveResources(scene, [a, b]), { figures: 2, geometries: 2, textures: 1, listeners: 6 });
   interior.visible = true;
-  assert.deepEqual(exclusiveResources(scene, [a, b]), { figures: 2, geometries: 1, textures: 0, listeners: 0 });
+  assert.deepEqual(exclusiveResources(scene, [a, b]), { figures: 2, geometries: 1, textures: 0, listeners: 4 });
+});
+
+test('a texture three has not uploaded is not on the GPU, so it excuses nothing', () => {
+  const scene = new THREE.Scene(), figure = new THREE.Group();
+  figure.add(mesh(), mesh());
+  scene.add(figure);
+  assert.equal(exclusiveResources(scene, [figure]).textures, 0, 'a figure not drawn yet');
+  draw(scene);
+  assert.equal(exclusiveResources(scene, [figure]).textures, 2);
 });
 
 const state = (geometries, textures, figures = 0, figureGeometries = 0, figureTextures = 0, objects = 9000) => ({ objects, renderer: { geometries, textures }, residentResources: { figures, geometries: figureGeometries, textures: figureTextures } });
@@ -60,16 +82,6 @@ test('a live figure excuses only what one was measured to add', () => {
   assert.equal(withinResourceBounds([state(769, 278 + 20, 1, 0, 20)], baseline), false, 'one figure holding 20 textures has grown');
 });
 
-// The renderer adds one disposal listener to each resource it draws; model that for a scene.
-const draw = scene => {
-  const seen = new Set();
-  scene.traverse(object => {
-    const materials = [object.material].flat().filter(Boolean);
-    for (const resource of [object.geometry, object.skeleton?.boneTexture, ...materials, ...materials.flatMap(material => Object.values(material).filter(value => value?.isTexture))])
-      if (resource && !seen.has(resource)) { seen.add(resource); resource.addEventListener('dispose', () => {}); }
-  });
-};
-
 test("a figure's listeners are the ones on resources only it holds, its bone texture included", () => {
   const sharedGeometry = new THREE.BufferGeometry(), sharedMap = new THREE.Texture();
   const scene = new THREE.Scene(), player = mesh(sharedGeometry, sharedMap), figure = new THREE.Group();
@@ -82,9 +94,47 @@ test("a figure's listeners are the ones on resources only it holds, its bone tex
   // Own: one geometry, map and material in mesh(); geometry, material and bone texture in the skinned
   // mesh; and the material of the mesh that shares the player's look. The extra listener on the shared
   // geometry is not the figure's.
-  assert.deepEqual(exclusiveResources(scene, [figure]), { figures: 1, geometries: 2, textures: 1, listeners: 7 });
+  assert.deepEqual(exclusiveResources(scene, [figure]), { figures: 1, geometries: 2, textures: 2, listeners: 7 });
   figure.visible = false;
   assert.deepEqual(exclusiveResources(scene, [figure]), { figures: 0, geometries: 0, textures: 0, listeners: 0 });
+});
+
+// An avatar like resident-figures.js builds: body parts sharing one skeleton (avatar-skeletons.js)
+// and a head bound to its own two-bone gaze skeleton (eye-tracking.js).
+const avatar = () => {
+  const figure = new THREE.Group(), root = new THREE.Bone(), eyes = [new THREE.Bone(), new THREE.Bone()];
+  const body = new THREE.Skeleton([root, ...Array.from({ length: 40 }, () => new THREE.Bone())]);
+  const parts = [0, 1, 2].map(() => new THREE.SkinnedMesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial()));
+  parts.forEach(part => part.bind(body)); parts[2].bind(new THREE.Skeleton(eyes));
+  figure.add(root, ...parts);
+  return { figure, body, gaze: parts[2].skeleton };
+};
+
+test("a figure's bone textures are textures it alone holds, once three has drawn its skeletons", () => {
+  const scene = new THREE.Scene(), { figure, body, gaze } = avatar();
+  scene.add(figure);
+  // three creates and uploads a skeleton's bone texture on its first draw.
+  assert.equal(exclusiveResources(scene, [figure]).textures, 0);
+  body.computeBoneTexture(); gaze.computeBoneTexture(); draw(scene);
+  assert.deepEqual([body.boneTexture.image.width, gaze.boneTexture.image.width], [16, 4]);
+  assert.equal(exclusiveResources(scene, [figure]).textures, 2, 'one for the shared body skeleton, one for the gaze');
+  // A drawn object outside the figures bound to the same skeleton keeps its bone texture counted.
+  const mirror = new THREE.SkinnedMesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial());
+  mirror.bind(body); scene.add(mirror);
+  assert.equal(exclusiveResources(scene, [figure]).textures, 1);
+  mirror.visible = false;
+  assert.equal(exclusiveResources(scene, [figure]).textures, 2);
+});
+
+test('the streaming bound leaves out two bone textures per shown figure, and still catches a retained texture', () => {
+  // 2026-11-07, client 0: 274 evicted textures on every lap with no figure shown.
+  const baseline = [state(769, 274)];
+  // Three figures holding 4 material and 6 bone textures, with 5 more uploaded besides.
+  assert.equal(withinResourceBounds([state(769, 289, 3, 0, 4)], baseline), false, 'leaving out only material textures reads +11');
+  assert.equal(withinResourceBounds([state(769, 289, 3, 0, 4 + 6)], baseline), true, 'leaving out the bone textures too reads +5');
+  assert.equal(withinResourceBounds([state(769, 274 + 10 + 10, 3, 0, 10)], baseline), true, 'exactly at the limit beside them');
+  assert.equal(withinResourceBounds([state(769, 274 + 10 + 11, 3, 0, 10)], baseline), false, '+11 textures beside three figures');
+  assert.equal(withinResourceBounds([state(769, 274 + FIGURE_TEXTURES + 11, 1, 0, FIGURE_TEXTURES + 11)], baseline), false, 'one figure cannot excuse more than its cap');
 });
 
 const sample = (geometries, textures, listeners, figures = 0, figureGeometries = 0, figureTextures = 0, figureListeners = 0) =>

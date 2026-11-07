@@ -8,8 +8,16 @@
 // An object hidden after it was drawn keeps its upload until disposed, so at most what a
 // shown figure shares with it is excused, and only while that figure is shown.
 // The renderer adds its disposal listeners to each geometry, texture, material and bone texture on first
-// draw, so a figure walking in also steps a listener count (graphics-recovery). Materials and bone
-// textures are tracked for those listeners only; the geometry and texture counts are unchanged.
+// draw, so a figure walking in also steps a listener count (graphics-recovery). Materials are tracked
+// for those listeners only.
+// A bone texture is a GPU texture as well: three creates one per skeleton on its first draw. Every
+// avatar has two, a 16x16 for the body skeleton its parts share (avatar-skeletons.js) and a 4x4 for its
+// two-bone gaze skeleton (eye-tracking.js). Counted only for listeners, they left two textures per
+// shown figure in the world-streaming texture bound (a GL-level trace on 2026-11-07, 87 of 88 samples).
+// A texture counts only once three has uploaded it, which is when it adds its disposal listener
+// (WebGLTextures initTexture): one never uploaded is not in the renderer's count, so excusing it would
+// make room for a retained texture. The same trace had a lap's two figures credited with 5 material textures
+// while none of their figure-only textures had been uploaded.
 const texturesOf = material => Object.values(material).filter(value => value?.isTexture);
 const listenersOf = resource => Object.values(resource._listeners ?? {}).reduce((sum, list) => sum + list.length, 0);
 const resourceSets = () => ({ geometries: new Set(), textures: new Set(), materials: new Set(), bones: new Set() });
@@ -41,5 +49,6 @@ export function exclusiveResources(scene, figures) {
   collectRest(scene, rest, new Set(figures));
   const only = kind => [...own[kind]].filter(item => !rest[kind].has(item));
   const listeners = ['geometries', 'textures', 'materials', 'bones'].flatMap(only).reduce((sum, resource) => sum + listenersOf(resource), 0);
-  return { figures: shown.length, geometries: only('geometries').length, textures: only('textures').length, listeners };
+  const textures = [...only('textures'), ...only('bones')].filter(texture => listenersOf(texture) > 0).length;
+  return { figures: shown.length, geometries: only('geometries').length, textures, listeners };
 }
