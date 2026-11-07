@@ -289,6 +289,8 @@ export function createRedisRoom({redis,prefix,worldData,worldId=DEFAULT_WORLD_ID
       if(!authorized || time-connection.identity.expiresAt>=10000 || connection.leftAt!==null && time-connection.leftAt>=LEAVE_GRACE_MS || time-connection.lastSeen>=HEARTBEAT_TIMEOUT_MS) remove(connection.identity.userId);
     }
     // Real clocks govern cooldowns/presence; simulation never catches up offline.
+    // A connection in its leave grace is away; the world is rebuilt from checkpoints, so say it each tick.
+    for(const connection of connections.values())world.away?.(connection.identity.userId,connection.leftAt!==null);
     if(connections.size)world.step(previous?Math.min(0.25,Math.max(0,(time-previous.lastTick)/1000)):0);
     // Accepted bicycle metres leave the world here, so the checkpoint carries
     // none; they reach the (cross-world) store only once this tick commits,

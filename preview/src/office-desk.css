@@ -21,3 +21,6 @@
 .office-desk :is(a.desk-primary,a.desk-secondary){display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:10px 16px;border:1px solid transparent;border-radius:10px;text-decoration:none}.office-desk a.desk-secondary{border-color:#cdd4c4}
 @media(max-width:760px){.desk-computer-bar{padding:8px 16px}.desk-computer-notice{margin:12px 16px 0}.desk-computer-receipt{flex-basis:100%;margin:0}}
 .desk-tabs{display:flex;gap:8px}
+
+.desk-computer-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.desk-computer-actions a{font-size:12px;text-underline-offset:3px;color:var(--desk-ink)}
+@media(max-width:760px){.desk-computer-bar{flex-wrap:wrap}.desk-computer-actions{width:100%;justify-content:space-between}}
