@@ -22,12 +22,7 @@ duties. Mannequins are displays, not conversation targets.
 
 ## Player and flight
 
-The shared town includes **Jevica**, a fictional celebrated magical visitor with a
-Glinda-inspired pink gown, blonde hair, gold filigree crown and luminous star wand. The character name is
-Jevica in her authored story. Shared-town players use their account names and select from 11 looks built on seven shipped rigs, including human, fox, wolf, lynx, and hybrid styles. The Witch and Alien player forms, their
-portraits, the broom, and the personal UFO were retired on September 23, 2026.
-See [character forms](character-forms.md) for the latest visual reference,
-rendering decisions and verification entry points.
+The shared town includes **Jevica**, a fictional celebrated magical visitor wearing an iridescent pink satin pantsuit, rose-gold trim and pink lilies, with a star wand shown while casting. Her October 29 reference supersedes the former gown and crown. Shared-town players use their account names and choose from the current human-only appearance catalog in `shared-appearances.js`; saved beast appearances migrate to their human counterparts. The Witch and Alien forms, Oz portraits, broom, personal UFO and horse-drawn coach are retired. See [Character Studio](character-studio.md) for current identity and customization contracts and [character forms](character-forms.md#reference-direction) for the latest visual references.
 
 - Jevica flies in an iridescent bubble.
 - Third person is the default; **V** switches the camera.

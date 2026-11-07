@@ -10,8 +10,6 @@ import {createPrinceCostume,loadPrinceSkinTexture} from './prince-costume.js';
 import {companionSlot,createCompanionBody,createCompanionBrain,playerHeading,protectiveSide,stepCompanion} from './prince-companion.js';
 import {createCompanionNavigation,createCompanionRouteService,createCompanionRouteFollower} from './companion-navigation.js';
 
-const SEAT=[-2.10,1.635,0];
-
 // The dedicated Prince Jev hero and Jev stance policy share one encounter.
 // Code owns every position, including stepping off and back onto the bench.
 export function createCarriageDriver({scene,getLocals,getConversation=()=>null,brain=createCompanionBrain(),loadAvatar=loadResidentAvatar,loadSkinTexture=loadPrinceSkinTexture,createCostume=createPrinceCostume,createRouteService=createCompanionRouteService}) {
@@ -21,8 +19,8 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
   let returnStall=0,returnFrom=null,flightEnvironment=null;
   let world=null,placement=null,navigation=null,service=null,follower=null,exit=null,transition=null,identity=null,lastPose=null,lastCoach=null;
   const listeners=new Set();let drivingHands=null,flight=null,wings=null,flightHands=null;
-  const vehicle=()=>VEHICLES[placement?.vehicle];
-  const driverSeat=()=>vehicle()?.driverSeat??SEAT;
+  const vehicle=()=>VEHICLES[placement?.vehicle??'rolls'];
+  const driverSeat=()=>vehicle().driverSeat;
   const status={enabled:false,mode:'seat',stance:'seat',source:null,label:'Ready to drive',reason:null,decisions:0,carrying:false};
   const publish=changes=>{
     if(Object.entries(changes).every(([key,value])=>status[key]===value))return;
@@ -53,7 +51,7 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
     if(!nav||!base)return false;
     const seated=seatPose(lastCoach),start=[seated.position.x,-seated.position.z];
     for(const side of [1,-1]) {
-      const point=lastCoach.localToWorld(new THREE.Vector3(driverSeat()[0],0,side*((vehicle()?.width/2||1.36)+.55/lastCoach.scale.x))),end=[point.x,-point.z];
+      const point=lastCoach.localToWorld(new THREE.Vector3(driverSeat()[0],0,side*((vehicle().width/2)+.55/lastCoach.scale.x))),end=[point.x,-point.z];
       if(!nav.free(end)||!base.canTravel(start,end)||(getLocals()??[]).some(p=>p.id!=='carriage-driver'&&Math.hypot(p.position[0]-point.x,p.position[1]+point.z)<.7))continue;
       service?.dispose();navigation=nav;service=createRouteService(world,placement);follower=createCompanionRouteFollower(nav,service);
       exit=[point.x,nav.ground(end),point.z];body=createCompanionBody([point.x,point.z],object.rotation.y);
@@ -164,7 +162,7 @@ export function createCarriageDriver({scene,getLocals,getConversation=()=>null,b
       avatar.object.rotation.set(pitch,0,bank,'YXZ');
       avatar.object.position.set(0,hip*(1-Math.cos(pitch)),-hip*Math.sin(pitch));
       wings?.update(now,dt,{amount:flight?.blend??0,rest:mode==='seat'?0:WING_REST,speed:body?.speed??0,climbing:flight?.velocity[1]??0,bank:flight?.bank??0});
-      avatar.update(now,action,false,{speed:mode==='walking'?body.speed:0,flying:mode==='flying'||Boolean(flight),superheroFlight:flight?.blend??0,flightGlide:flight?glideAmount(flight.pitch/Math.max(flight.blend,.01)):0,distance:body?.distance??0,heading:body?.heading,riding,carrying:!riding&&mode!=='flying',ridingDriver:true,ridingSpeed:placement?.speed??0,ridingSteering:placement?.steering??0,ridingKind:vehicle()?.kind,seatToFloor:vehicle()?vehicle().driverSeat[1]-vehicle().driverFloor:(1.635-1.1275)*coach.scale.x},environment?.groundAt??(()=>0),look??(player&&body?.speed<.2?pose.position:null),{conversing:speaking});
+      avatar.update(now,action,false,{speed:mode==='walking'?body.speed:0,flying:mode==='flying'||Boolean(flight),superheroFlight:flight?.blend??0,flightGlide:flight?glideAmount(flight.pitch/Math.max(flight.blend,.01)):0,distance:body?.distance??0,heading:body?.heading,riding,carrying:!riding&&mode!=='flying',ridingDriver:true,ridingSpeed:placement?.speed??0,ridingSteering:placement?.steering??0,ridingKind:vehicle()?.kind,seatToFloor:vehicle().driverSeat[1]-vehicle().driverFloor},environment?.groundAt??(()=>0),look??(player&&body?.speed<.2?pose.position:null),{conversing:speaking});
       if(riding&&vehicle())drivingHands?.(coach,vehicle());
       if(flight)flightHands?.update({amount:flight.blend,speed:body?.speed??0,bank:flight.bank});
       object.updateWorldMatrix(true,true);costume?.update({carrying:!riding&&mode!=='flying'});publish({mode,carrying:!riding&&mode!=='flying'});

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCommunity, interactWithLocal } from '../src/community.js';
-import { supportAvailability } from '../src/community-presentation.js';
+import { chooseCommunityScenario, createCommunity, interactWithLocal } from '../src/community.js';
+import { communityScenarioDescription, supportAvailability } from '../src/community-presentation.js';
 
 const world = { buildings: Array.from({ length: 24 }, (_, i) => ({ id: `house-${i}`, center: [i * 25, 0, 0], size: [12, 14, 9] })) };
 
@@ -51,4 +51,17 @@ test('known resolved requests do not suggest starting the clock would enable sup
   const state = createCommunity(world), local = state.locals[0];
   local.needKnown = true; local.status = 'supported';
   assert.deepEqual(supportAvailability(state, local), { supply: 'No further support needed.', dispatch: 'No further support needed.' });
+});
+
+
+test('shared scenario descriptions omit retired economy controls without changing checkpoint descriptors', () => {
+  const state = createCommunity(world);
+  for (const key of ['heatwave', 'storm', 'delivery']) {
+    chooseCommunityScenario(state, key);
+    const serialized = JSON.stringify(state.scenario);
+    const description = communityScenarioDescription(state);
+    assert.ok(description.length > 40);
+    assert.doesNotMatch(description, /economy|replenish|staff|25 jobs/);
+    assert.equal(JSON.stringify(state.scenario), serialized);
+  }
 });

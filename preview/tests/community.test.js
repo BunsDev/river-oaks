@@ -9,8 +9,8 @@ function start(key = 'heatwave') {
   state.running = true;
   return state;
 }
-function advance(state, seconds, economy, fps = 60) {
-  for (let i = 0; i < seconds * fps; i++) stepCommunity(state, 1 / fps, economy);
+function advance(state, seconds, weather, fps = 60) {
+  for (let i = 0; i < seconds * fps; i++) stepCommunity(state, 1 / fps, weather);
 }
 function priority(state) { return state.locals.filter((local) => local.priority); }
 function ask(state, local) { return interactWithLocal(state, local.id, 'ask'); }
@@ -142,41 +142,31 @@ test('finite resources cannot go negative even when multiple households request 
   assert.equal(unserved[0].need, need);
 });
 
-test('storm pauses dispatched work while staffing changes its completion time', () => {
-  const storm = start(), staffed = start(), sparse = start();
-  for (const state of [storm, staffed, sparse]) {
-    const local = priority(state)[0]; ask(state, local);
-    interactWithLocal(state, local.id, 'dispatch');
-  }
-  advance(storm, 10, { config: { storm: true, staff: 80 }, metrics: { completed: 0 } });
-  assert.equal(storm.jobs[0].progress, 0);
-  assert.ok(priority(storm)[0].need > 42);
-  advance(staffed, 7, { config: { storm: false, staff: 160 }, metrics: { completed: 0 } });
-  advance(sparse, 7, { config: { storm: false, staff: 20 }, metrics: { completed: 0 } });
-  assert.equal(staffed.supported, 1);
-  assert.equal(sparse.supported, 0);
-  advance(storm, 10, { config: { storm: false, staff: 80 }, metrics: { completed: 0 } });
-  assert.equal(storm.supported, 1);
+test('storm pauses dispatched work and clearing it resumes the fixed volunteer rate', () => {
+  const state = start(), local = priority(state)[0]; ask(state, local);
+  interactWithLocal(state, local.id, 'dispatch');
+  advance(state, 10, { storm: true });
+  assert.equal(state.jobs[0].progress, 0);
+  assert.ok(local.need > 42);
+  advance(state, 10, { storm: false });
+  assert.equal(state.supported, 1);
 });
 
-test('delivery disruption earns bounded supplies from new economy completions, never past jobs', () => {
-  const state = start('delivery');
-  const economy = { config: { staff: 80, storm: false }, metrics: { completed: 300 } };
-  advance(state, 1, economy);
+test('retired service-economy inputs cannot replenish kits or alter volunteer speed', () => {
+  const state = start('delivery'), control = start('delivery');
+  for (const current of [state, control]) {
+    const local = priority(current)[0]; ask(current, local);
+    interactWithLocal(current, local.id, 'dispatch');
+  }
+  const retired = { config: { staff: 20, storm: false }, metrics: { completed: 300 } };
   const stock = state.supplies;
+  advance(state, 1, retired); advance(control, 1);
+  retired.metrics.completed += 10000;
+  advance(state, 1, retired); advance(control, 1);
+  assert.equal(state.supplies, stock);
   assert.equal(state.resupplied, 0);
-  economy.metrics.completed += 25;
-  advance(state, 1, economy);
-  assert.equal(state.supplies, stock + 1);
-  economy.metrics.completed += 10000;
-  advance(state, 1, economy);
-  assert.equal(state.resupplied, state.scenario.maxResupply);
-  assert.equal(state.supplies, stock + state.scenario.maxResupply);
-  economy.metrics.completed = 0;
-  advance(state, 1, economy);
-  assert.equal(state.supplies, stock + state.scenario.maxResupply);
-  assert.notEqual(state.scenario.supplyRelief, start('heatwave').scenario.supplyRelief);
-  assert.ok(start('storm').scenario.dispatchSeconds > start('heatwave').scenario.dispatchSeconds);
+  assert.deepEqual(state.jobs, control.jobs);
+  assert.equal(state.elapsed, control.elapsed);
 });
 
 test('scenario reset invalidates pending jobs and reactions without reusing a stale generation', () => {
