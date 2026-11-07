@@ -42,7 +42,7 @@ test('a road vehicle drives off the road wherever its whole footprint fits, as a
   assert.equal(vehicleCanOccupy(open,{...environment,roomAt:()=>({storeId:'shop'})},site),false,'never indoors');
 });
 test('a parked carriage blocks walking and low flight but leaves the space above open',()=>{
-  const placement={position:[0,0,0],yaw:Math.PI/2,pitch:0,roll:0};
+  const placement={vehicle:'rolls',position:[0,0,0],yaw:Math.PI/2,pitch:0,roll:0};
   assert.equal(carriageContains(placement,0,1,2),true);
   assert.equal(carriageContains(placement,2,1,0),false);
   assert.equal(carriageContains(placement,0,6,0),false);
@@ -70,9 +70,9 @@ test('the Ribbonwing can be called from anywhere outdoors, on foot or aloft, and
  assert.ok(points.length>40,`${points.length} outdoor points`);
  let road=0;
  for(const position of points) {
-  if(findCarriageParking(world,{position,flying:false,altitude:0},[],1,false,'rolls'))road++;
+  if(findCarriageParking(world,{position,flying:false,altitude:0},[],'rolls'))road++;
   for(const pose of [{position,flying:false,altitude:0},{position:[position[0],position[1]+8,position[2]],flying:true,altitude:8}]) {
-   const spot=findCarriageParking(world,pose,[],1,false,'hover');
+   const spot=findCarriageParking(world,pose,[],'hover');
    assert.ok(spot,`the Ribbonwing finds a spot from ${position.map(v=>v.toFixed(0))}${pose.flying?' aloft':''}`);
    assert.ok(Math.hypot(spot.position[0]-position[0],spot.position[2]-position[2])<=40);
    assert.ok(carriageFootprint(spot).every(([x,z])=>environment.isFree(x,z)&&!environment.roomAt(x,z)),'clear, outdoor ground under the whole craft');
@@ -80,5 +80,5 @@ test('the Ribbonwing can be called from anywhere outdoors, on foot or aloft, and
   }
  }
  assert.ok(road<points.length,'(road vehicles still keep to lanes, so some points have no car spot)');
- assert.equal(findCarriageParking(world,{position:points[0],flying:false,altitude:0,roomId:'shop'},[],1,false,'hover'),null,'not from indoors');
+ assert.equal(findCarriageParking(world,{position:points[0],flying:false,altitude:0,roomId:'shop'},[],'hover'),null,'not from indoors');
 });

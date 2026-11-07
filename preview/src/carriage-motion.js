@@ -1,23 +1,23 @@
 import { VEHICLES, drivingInput } from './vehicle-config.js';
-// Carriage locomotion and terrain contact are independent of rendering and UI.
+// Vehicle locomotion and terrain contact are independent of rendering and UI.
 import { Euler, Quaternion, Vector3 } from 'three';
 import { carriageContains } from './carriage-parking.js';
 
-export const CARRIAGE_WHEELS=[[-1.78,.70,-1.16],[-1.78,.70,1.16],[1.66,.82,-1.16],[1.66,.82,1.16]];
 const WHEEL_UP=new Vector3(0,1,0);
 const pilotSeatPosition=new Vector3(),pilotSeatRotation=new Euler();
 const orientation=p=>new Quaternion().setFromEuler(new Euler(p.pitch??0,p.yaw,p.roll??0,'YXZ'));
 
 export function carriageTyreClearances(state,groundAt,wheelTreads) {
   const q=orientation(state),point=new Vector3(),scale=state.scale??1,spec=VEHICLES[state.vehicle];
-  return (VEHICLES[state.vehicle]?.wheels??CARRIAGE_WHEELS).map(([x,r,z],i)=>{
+  if(!spec)return [];
+  return spec.wheels.map(([x,r,z],i)=>{
     let clearance=Infinity;
     const samples=wheelTreads?.[i];
     if(samples) {
       const angle=(state.distance??0)/(r*scale),c=Math.cos(angle),s=Math.sin(angle);
       for(const sample of samples) {
-        point.set(sample.x*c-sample.y*s,sample.x*s+sample.y*c,sample.z*(spec?1:(Math.sign(z)||1)));
-        if(spec&&i<spec.steeredWheels)point.applyAxisAngle(WHEEL_UP,state.steering??0);
+        point.set(sample.x*c-sample.y*s,sample.x*s+sample.y*c,sample.z);
+        if(i<spec.steeredWheels)point.applyAxisAngle(WHEEL_UP,state.steering??0);
         point.x+=x;point.y+=r;point.z+=z;point.multiplyScalar(scale).applyQuaternion(q);
         point.x+=state.position[0];point.y+=state.position[1]+(state.wheelOffsets?.[i]??0);point.z+=state.position[2];
         clearance=Math.min(clearance,point.y-groundAt(point.x,point.z));
@@ -37,16 +37,17 @@ export function carriageTyreClearances(state,groundAt,wheelTreads) {
 
 export function fitCarriageToGround(state,groundAt,wheelTreads) {
   const [x,,z]=state.position,c=Math.cos(state.yaw),s=Math.sin(state.yaw),scale=state.scale??1;
-  const spec=VEHICLES[state.vehicle],halfBase=(spec?.wheelbase??3.44)/2,halfTrack=spec?Math.max(.3,...spec.wheels.map(w=>Math.abs(w[2]))):1.16;
+  const spec=VEHICLES[state.vehicle];if(!spec)return state;
+  const halfBase=spec.wheelbase/2,halfTrack=Math.max(.3,...spec.wheels.map(w=>Math.abs(w[2])));
   state.position[1]=groundAt(x,z);
   // Airborne, the hull hangs level over the ground it follows; position[1] stays that ground
   // (the shared pose carries altitude separately) and nothing presses on the suspension.
-  if((state.altitude??0)>.1){state.roll=state.flightPitch??0;state.pitch=state.flightBank??0;state.wheelOffsets=(spec?.wheels??CARRIAGE_WHEELS).map(()=>0);return state;}
+  if((state.altitude??0)>.1){state.roll=state.flightPitch??0;state.pitch=state.flightBank??0;state.wheelOffsets=spec.wheels.map(()=>0);return state;}
   state.roll=Math.atan((groundAt(x+c*halfBase*scale,z-s*halfBase*scale)-groundAt(x-c*halfBase*scale,z+s*halfBase*scale))/(2*halfBase*scale));
   state.pitch=-Math.atan((groundAt(x+s*halfTrack*scale,z+c*halfTrack*scale)-groundAt(x-s*halfTrack*scale,z-c*halfTrack*scale))/(2*halfTrack*scale));
   // Local X is the two-wheeler longitudinal axis. Solve contacts after banking.
   if(state.vehicle==='motorcycle')state.pitch+=state.lean??0;
-  state.wheelOffsets=(spec?.wheels??CARRIAGE_WHEELS).map(()=>0);
+  state.wheelOffsets=spec.wheels.map(()=>0);
   // World-vertical suspension leaves every contact sample's X/Z unchanged.
   // One solve is exact, including road seams that would defeat iteration along
   // a tilted chassis axis by moving a sample back and forth over an edge.
@@ -57,28 +58,28 @@ export function fitCarriageToGround(state,groundAt,wheelTreads) {
 export function stepCarriage(state,environment,input,delta) {
   if(!Number.isFinite(delta)||delta<=0)return state;
   const duration=Math.min(.08,delta),steps=Math.ceil(duration*120),dt=duration/steps;
-  const controls=drivingInput(input),spec=VEHICLES[state.vehicle];
+  const controls=drivingInput(input),spec=VEHICLES[state.vehicle];if(!spec)return state;
   if(controls.brake){state.speed=0;state.lean=(state.lean??0)*Math.exp(-8*duration);state.yawRate=0;state.flightBank=(state.flightBank??0)*Math.exp(-5*duration);state.flightPitch=(state.flightPitch??0)*Math.exp(-5*duration);fitCarriageToGround(state,environment.groundAt,environment.wheelTreads);return state;}
   const forward=controls.forward,turn=Math.max(-1,Math.min(1,controls.turn-controls.strafe));
   for(let i=0;i<steps;i++) {
-    const top=controls.sprint||!spec?.cruiseSpeed?(spec?.maxSpeed??4):spec.cruiseSpeed;
+    const top=controls.sprint||!spec.cruiseSpeed?spec.maxSpeed:spec.cruiseSpeed;
     const target=forward*(forward<0?1.4:top);
     if(state.vehicle==='motorcycle') {
       // Bounded throttle and engine braking, stronger braking before reversing.
       const rate=!forward?3:Math.sign(target)!==Math.sign(state.speed)&&state.speed!==0?7:4.5;
       state.speed+=Math.max(-rate*dt,Math.min(rate*dt,target-state.speed));
-    } else if(spec?.flies&&(state.altitude??0)>.1) {
+    } else if(spec.flies&&(state.altitude??0)>.1) {
       const rate=!forward?1.8:target*state.speed<0?5:3;
       state.speed+=Math.max(-rate*dt,Math.min(rate*dt,target-state.speed));
     } else state.speed+=(target-state.speed)*(1-Math.exp(-(forward?2:5)*dt));
     if(Math.abs(state.speed)<.0001)state.speed=0;
-    state.steering=(state.steering??0)+(turn*(spec?.steeringLimit??.25)-(state.steering??0))*(1-Math.exp(-8*dt));
+    state.steering=(state.steering??0)+(turn*spec.steeringLimit-(state.steering??0))*(1-Math.exp(-8*dt));
     if(state.vehicle==='motorcycle') {
       const lateral=state.speed*state.speed*Math.tan(state.steering)/spec.wheelbase;
       const lean=Math.max(-.5,Math.min(.5,Math.atan(lateral/9.81)));
       state.lean=(state.lean??0)+(lean-(state.lean??0))*(1-Math.exp(-8*dt));
     }
-    const flying=spec?.flies&&(state.altitude??0)>.1;
+    const flying=spec.flies&&(state.altitude??0)>.1;
     if(flying){
       const rate=(state.steering/spec.steeringLimit)*(.9-.35*Math.min(1,Math.abs(state.speed)/spec.maxSpeed));
       state.yawRate=(state.yawRate??0)+(rate-(state.yawRate??0))*(1-Math.exp(-6*dt));
@@ -88,7 +89,7 @@ export function stepCarriage(state,environment,input,delta) {
       state.flightBank=(state.flightBank??0)+(bank-(state.flightBank??0))*(1-Math.exp(-5*dt));
       state.flightPitch=(state.flightPitch??0)+(pitch-(state.flightPitch??0))*(1-Math.exp(-5*dt));
     }else{state.yawRate=0;state.flightBank=0;state.flightPitch=0;}
-    const travelled=state.speed*dt,yaw=state.yaw+(flying?state.yawRate*dt:(spec?Math.tan(state.steering)*travelled/spec.wheelbase:turn*travelled/3.4*.75));
+    const travelled=state.speed*dt,yaw=state.yaw+(flying?state.yawRate*dt:Math.tan(state.steering)*travelled/spec.wheelbase);
     const next={...state,position:[state.position[0]-Math.cos(yaw)*travelled,state.position[1],state.position[2]+Math.sin(yaw)*travelled],yaw};
     if(!environment.canOccupy(next)){state.speed=0;break;}
     state.position=next.position;state.yaw=yaw;state.distance+=travelled;
@@ -121,7 +122,7 @@ export function hoverClear(state,environment) {
 // the hull follows at up to 3 m/s, under the server's lift budget, never into a blocked sky
 // and never above the flight ceiling. Landing ignores lift until touchdown or an obstruction.
 export function stepHoverLift(state,environment,input,delta) {
-  const spec=VEHICLES[state.vehicle];if(!spec?.flies||!Number.isFinite(delta)||delta<=0)return state;
+  const spec=VEHICLES[state.vehicle];if(!spec.flies||!Number.isFinite(delta)||delta<=0)return state;
   const duration=Math.min(.08,delta),steps=Math.ceil(duration*120),dt=duration/steps,limit=environment.flightCeiling??32;
   const value=Number(input?.lift),lift=Number.isFinite(value)?Math.max(-1,Math.min(1,value)):0;
   state.altitude??=0;state.liftTarget??=0;state.verticalSpeed??=0;

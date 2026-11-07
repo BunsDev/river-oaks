@@ -1,6 +1,6 @@
 # Gatherings across shared worlds
 
-> **Status (2026-10-12):** the client's Events panel has been removed from the Map panel. The `/api/events` service, its rewrites and its tests remain, so the panel can return. The rest of this page describes the feature as it worked when the panel was shown.
+> **Status:** the client's Events panel was removed from the Map panel on 2026-10-12. Its unused module and styles were removed in the current scope cleanup. The `/api/events` service, its rewrites and its tests remain supported. The rest of this page describes the feature as it worked when the panel was shown.
 
 Open **Places → Events** to find upcoming and active gatherings. The calendar
 shows the host, named outdoor meeting point, world, dates in your local time

@@ -10,10 +10,10 @@ async page => {
       return f.avatar.feet.map(leg=>{
         leg.foot.updateWorldMatrix(true,false);
         const points=leg.sole.map(p=>f.carriage.object.worldToLocal(p.clone().applyMatrix4(leg.foot.matrixWorld)));
-        return {side:leg.side,minY:Math.min(...points.map(p=>p.y)),minX:Math.min(...points.map(p=>p.x)),maxX:Math.max(...points.map(p=>p.x))};
+        return {floor:f.carriage.spec.passengerFloor,halfLength:f.carriage.spec.length/2,side:leg.side,minY:Math.min(...points.map(p=>p.y)),minX:Math.min(...points.map(p=>p.x)),maxX:Math.max(...points.map(p=>p.x))};
       });
     },view);
-    check(feet.every(f=>Math.abs(f.minY-1.1725)<.001&&f.minX>=-.925&&f.maxX<=.925),`${view}: both soles contact the actual transformed cabin floor`);
+    check(feet.every(f=>Math.abs(f.minY-f.floor)<.001&&f.minX>=-f.halfLength&&f.maxX<=f.halfLength),`${view}: both soles contact the actual transformed cabin floor`);
     contacts.push({view,feet});
     if(view==='riding')await page.screenshot({path:'output/playwright/carriage-seated-detail.png'});
   }

@@ -4,6 +4,8 @@ import { createWishState } from './wishes.js';
 // Source district locations anchor encounters; they do not identify real people.
 import { createStoreEncounters } from './store-encounters.js';
 import { createPersona, residentContext } from './personas.js';
+// These descriptors are persisted and checksum-validated by server/world.js. Keep
+// their existing shape/text for checkpoint recovery; current UI copy lives in community-presentation.js.
 export const COMMUNITY_SCENARIOS = Object.freeze({
   heatwave: Object.freeze({
     title: 'Heatwave support', need: 'cooling supplies',
@@ -75,9 +77,9 @@ export function chooseCommunityScenario(state, key) {
     scenarioKey: key, scenario, status: 'ready', running: false, elapsed: 0,
     target: Math.min(6, count), supported: 0, unmet: 0,
     supplies: scenario.supplies, helpBudget: scenario.helpBudget,
+    // resupplied is retained as inert checkpoint metadata for existing saved towns.
     resupplied: 0, storm: false, jobs: [], events: [], result: null,
-    generation: state.generation + 1, _accumulator: 0, _lastEconomyCompleted: null,
-    _economyRemainder: 0, _packet: null, _appliedTick: -1,
+    generation: state.generation + 1, _accumulator: 0, _packet: null, _appliedTick: -1,
   });
   state.locals.forEach((local, index) => {
     const priority = targets.has(local.id);
@@ -111,34 +113,11 @@ function assess(state) {
   else if (available < state.target || state.elapsed >= state.scenario.duration) finish(state, 'failed');
 }
 
-function observeEconomy(state, economy) {
-  const completed = economy?.metrics?.completed;
-  if (!Number.isFinite(completed) || completed < 0) return;
-  if (state._lastEconomyCompleted === null || completed < state._lastEconomyCompleted) {
-    // Starting or resetting the service economy cannot award historical work.
-    state._lastEconomyCompleted = completed;
-    state._economyRemainder = 0;
-    return;
-  }
-  state._economyRemainder += Math.floor(completed - state._lastEconomyCompleted);
-  state._lastEconomyCompleted = completed;
-  const kits = Math.min(Math.floor(state._economyRemainder / 25), state.scenario.maxResupply - state.resupplied);
-  if (kits > 0) {
-    state.supplies += kits;
-    state.resupplied += kits;
-    state._economyRemainder -= kits * 25;
-    event(state, `${kits} supply ${kits === 1 ? 'kit' : 'kits'} replenished by new service completions.`);
-  }
-  state._economyRemainder = Math.min(state._economyRemainder, 24);
-}
-
-export function stepCommunity(state, realDelta, economy) {
+export function stepCommunity(state, realDelta, weather) {
   if (!state.running || isFinished(state) || !state.target || !Number.isFinite(realDelta) || realDelta <= 0) return state;
   state.status = 'running';
-  state.storm = economy?.config?.storm === true;
-  observeEconomy(state, economy);
-  const staff = Number.isFinite(economy?.config?.staff) ? economy.config.staff : 80;
-  const workRate = state.storm ? 0 : clamp(staff / 80, 0.5, 1.5);
+  state.storm = weather?.storm === true;
+  const workRate = state.storm ? 0 : 1;
   state._accumulator += Math.min(realDelta, 0.25) * 60;
   while (state._accumulator >= 1 - 1e-9 && state.running) {
     state._accumulator = Math.max(0, state._accumulator - 1);

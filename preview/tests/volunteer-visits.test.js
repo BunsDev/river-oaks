@@ -7,7 +7,7 @@ import {conversationLine} from '../src/personas.js';
 const positions=[[-10,0],[-22,-20],[-22,20],[-30,0],[-10,-25],[10,-25],[25,-15],[25,25],[10,0]];
 const world={scene:'district',bounds_m:[-35,-35,35,35],collisionPolygons:[[[-2,-8],[2,-8],[2,8],[-2,8]]],communityLocations:positions.map((p,i)=>({id:`stop-${i}`,name:`Public stop ${i}`,position:[...p,0]}))};
 const create=(provider)=>{const state=createCommunity(world),life=createResidentLife(world,state,provider);state.running=true;const local=state.locals[0];interactWithLocal(state,local.id,'ask');interactWithLocal(state,local.id,'dispatch');state.selectedId=null;return {state,life,local,helper:state.locals[8]};};
-const advance=(life,seconds,{storm=false}={})=>{for(let i=0;i<seconds*60;i++){stepCommunity(life.state,1/60,{config:{storm,staff:80}});stepResidentLife(life,1/60,{paused:true,storm});}};
+const advance=(life,seconds,{storm=false}={})=>{for(let i=0;i<seconds*60;i++){stepCommunity(life.state,1/60,{storm});stepResidentLife(life,1/60,{paused:true,storm});}};
 
 test('an existing resident walks around a building and resolves a visit only after arrival and work',()=>{
   const {state,life,local,helper}=create(),start=[...helper.position];

@@ -28,35 +28,23 @@ test('mature crowns use shared placements and leave source layout untouched', ()
   fallback.forEach((tree, index) => assert.equal(tree.position[0], world.trees[index].position[0]));
 });
 
-test('shipped vegetation has reproducible receipts, embedded PBR maps and bounded LODs', () => {
+test('shipped ground cover retains licensed receipts, embedded PBR maps and its transfer bound', () => {
   const manifest = JSON.parse(read('../public/assets/landscape/manifest.json'));
   assert.equal(manifest.license, 'CC0-1.0');
-  const counts = [], crownMaterials = [];
+  assert.deepEqual(manifest.derivatives.map(asset => asset.path), [
+    '/assets/landscape/boxwood-source.glb', '/assets/landscape/fountain-grass-source.glb',
+  ]);
   for (const asset of manifest.derivatives) {
+    assert.ok(manifest.sources.some(source => source.asset === asset.source_asset && source.license === 'CC0-1.0'));
     const bytes = read(`../public${asset.path}`);
     assert.equal(bytes.length, asset.bytes);
     assert.equal(createHash('sha256').update(bytes).digest('hex'), asset.sha256);
     assert.equal(bytes.subarray(0, 4).toString(), 'glTF');
     const gltf = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
-    if (/shade-tree-(mid|low)/.test(asset.path)) {
-      // Lower crowns borrow the high LOD materials by name, so they ship geometry only.
-      assert.equal(gltf.images, undefined, `${asset.path}: no duplicate texture download`);
-      crownMaterials.push(gltf.materials.map(material => material.name).sort().join());
-    } else {
-      assert.ok(gltf.images.every(image => image.bufferView !== undefined), 'no runtime texture downloads');
-      assert.ok(gltf.materials.every(material => material.pbrMetallicRoughness.baseColorTexture && material.normalTexture), 'retain color and normal detail');
-      if (asset.path.includes('shade-tree-high')) crownMaterials.unshift(gltf.materials.map(material => material.name).sort().join());
-    }
-    const triangles = gltf.meshes.reduce((sum, mesh) => sum + mesh.primitives.reduce((total, primitive) => total + gltf.accessors[primitive.indices].count / 3, 0), 0);
-    if (asset.path.includes('shade-tree')) counts.push(triangles);
+    assert.ok(gltf.images.every(image => image.bufferView !== undefined), 'no runtime texture downloads');
+    assert.ok(gltf.materials.every(material => material.pbrMetallicRoughness.baseColorTexture && material.normalTexture), 'retain color and normal detail');
   }
-  assert.equal(manifest.derivatives.length, 5);
-  assert.equal(counts.length, 3);
-  assert.ok(counts[0] < 110000 && counts[1] < 26000 && counts[2] < 7000);
-  assert.ok(counts[0] > counts[1] && counts[1] > counts[2]);
-  assert.equal(crownMaterials.length, 3);
-  assert.ok(crownMaterials.every(names => names === crownMaterials[0]), 'every crown LOD resolves the high LOD materials');
-  assert.ok(manifest.derivatives.reduce((sum, asset) => sum + asset.bytes, 0) < 16e6, 'landscape transfer stays near 15 MB');
+  assert.ok(manifest.derivatives.reduce((sum, asset) => sum + asset.bytes, 0) < 2e6);
 });
 
 test('crowns step down in detail with distance and never add leaf layers', () => {
