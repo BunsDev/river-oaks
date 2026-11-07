@@ -190,3 +190,97 @@ This ledger was left uncommitted in `river-oaks-v030-perf-attr`; it is committed
 
 Val's goal (2026-11-06): phone two-player and reconnect are still not accepted; attribute and fix, never rerun for a pass. Next: `v030-drape-reach-20261106` (the drape updates only the rows the peplum reads, exact output) and a phone-viewport ABC under one lock: v0.2.2, main, main plus the drape change. The gate itself is the ABBA on the head pinned after #885.
 
+
+## 2026-11-07: phone ABC on main, and the reconnect attributed (river-oaks-c7)
+
+### ABC: v0.2.2, main `230d8814`, main + #897, 14:27–15:24Z
+
+`.runtime/v030-attr/abc.mjs` held one browser lock and ran the unmodified audit in three trees:
+
+- A: `river-oaks-v022-baseline` (`f4dd959a`).
+- B: `river-oaks-v030-perf-arm` (`230d8814`).
+- C: `river-oaks-drape-reach` (`75a3fffe`, #897).
+
+The full protocol ran A1 B1 C1 C2 B2 A2, then the same order with `--reconnect-backoff=skip --samples=1 --seconds=5`. Every arm started at one- and five-minute load below 8 (2.6 to 6.7) and exited 0. The comparisons are in `.runtime/v030-attr/compare-*.json` (`baseline-compare.js`, two arms each).
+
+| Full protocol, against v0.2.2 | main | main + #897 |
+| --- | ---: | ---: |
+| desktop 1p CPU p95 | +6.7% | +1.7% |
+| desktop 2p CPU p95 | **+12.7% over** | +8.6% |
+| desktop 2p frame mean | +7.6% | +5.7% |
+| phone 1p CPU p95 | **+12.6% over** | +5.3% |
+| phone 2p CPU p95 | **+15.3% over** | +6.2% |
+| phone 2p frame mean | +4.8% | +4.7% |
+| desktop reconnect (keep) | **+22.8% over** | **+25.3% over** |
+| phone reconnect (keep) | +17.7% | +0.8% |
+
+| Skip set (one 5 s sample per workload), against v0.2.2 | main | main + #897 |
+| --- | ---: | ---: |
+| desktop 2p CPU p95 | **+17.0% over** | **+14.6% over** |
+| desktop reconnect (skip) | +7.4% | +0.5% |
+| phone reconnect (skip) | **+26.9% over** (175 → 222 ms) | **+27.2% over** (175 → 223 ms) |
+
+**Phone two-player.** #897 brings the players phase back to v0.2.2's level: phone 2p players mean is 1.51–1.75 ms with #897, 2.02–2.25 ms on main, and 1.63–1.72 ms on v0.2.2.
+
+What remains is in the render pipeline phase. Phone 2p pipeline p95 is about 6.65 ms against 6.2 ms on v0.2.2; desktop 2p is about 8.5 ms against 7.75 ms. Main issues fewer draw calls than v0.2.2 (desktop 1p 1563–1606 against 1611–1647) but draws more triangles (6.2–6.3 M against 5.5 M) and holds more geometries (623–646 against 530). The desktop 2p rows are within budget in the full protocol. The skip set's single 5 s sample reads them over, so the gate ABBA decides that row.
+
+**Desktop reconnect (keep)** is the client's random retry delay. Each keep rejoin waits a random 500–1000 ms before it starts (`retryDelay(0)`), so five rejoins per arm are mostly noise. With skip it is within (+0.5% with #897).
+
+### Phone reconnect: figures rebuilt and recompiled on every rejoin
+
+`.runtime/v030-attr/reconnect-phases.mjs` uses the audit's two-player setup, camera and skip close, and records an in-page timeline of each rejoin. The transport is done in about 12 ms: session, ticket, socket open and first snapshot. The rest is main-thread work. On main, the snapshot's task runs about 40 ms, then one 114–213 ms task blocks every frame.
+
+CPU profiles (3 rejoins per tree, 15:29–15:31Z) name that task as `setProgram` → `onFirstUse` → `getProgramInfoLog`, shader programs compiled in the first frame:
+
+| Per rejoin | v0.2.2 | main |
+| --- | ---: | ---: |
+| Program compile | 64 ms | 113 ms |
+| Figure rebuild (`loadResidentAvatar`) | 15 ms | 33 ms |
+
+The cause: `lost()` in `multiplayer-client.js` calls `onPlayers([])`. `main.js` passed that to `remotePlayers.sync([])`, which disposed all six remote figures (alice, two rivals, three residents). Their materials were disposed, so three released their programs, and the rejoin's first snapshot loaded and compiled them again.
+
+The fix is #898 (`v030-reconnect-hold-20261107`, `7b246bcc`): `remotePlayers.hold()` keeps the figures, undrawn, for 10 s, and the next sync keeps the ones it names. Phone rejoin medians with A B H H B A at load 5–7 (15:35–15:40Z): v0.2.2 172 and 187 ms, main 203 and 255 ms, **#898 37 and 42 ms**, with no long task.
+
+### ABC2: v0.2.2, main + #897, main + #897 + #898, 15:47–16:44Z
+
+`.runtime/v030-attr/abc2.mjs` held one browser lock and ran the unmodified audit in three trees:
+
+- A: `river-oaks-v022-baseline` (`f4dd959a`).
+- C: `river-oaks-drape-reach` (`75a3fffe`, #897).
+- H: `river-oaks-v030-combo`, the local merge `9c32ecb9` of #897 and #898 (`7b246bcc`) on main `230d8814`. It was never pushed.
+
+The full protocol ran A1 C1 H1 H2 C2 A2, then the same order with `--reconnect-backoff=skip --samples=1 --seconds=5`. Every arm started at one- and five-minute load below 8 (4.2 to 7.6) and exited 0. The comparisons are in `.runtime/v030-attr/compare2-*.json` (`compare2.mjs`, `baseline-compare.js`, two arms each). **Every budgeted metric of main + #897 + #898 is within allowance against v0.2.2, in both sets.**
+
+| Full protocol, against v0.2.2 | main + #897 | main + #897 + #898 |
+| --- | ---: | ---: |
+| desktop 1p CPU p95 | +4.0% | +3.4% |
+| desktop 2p CPU p95 | +5.4% | +9.9% (11.1 → 12.2 ms) |
+| desktop 2p frame mean | +5.8% | +7.7% |
+| phone 1p CPU p95 | +3.9% | +3.9% |
+| phone 2p CPU p95 | +2.8% | +4.4% |
+| phone 2p frame mean | +4.9% | +4.8% |
+| desktop reconnect (keep) | −0.4% | −14.5% |
+| phone reconnect (keep) | +12.7% | −3.5% |
+
+| Skip set, against v0.2.2 | main + #897 | main + #897 + #898 |
+| --- | ---: | ---: |
+| desktop 2p CPU p95 | +2.3% | +3.2% |
+| phone 2p CPU p95 | −8.1% | −4.9% |
+| desktop reconnect (skip) | +13.1% (243 → 275 ms) | **−85.6% (243 → 35 ms)** |
+| phone reconnect (skip) | +19.0% (183 → 217 ms) | **−83.1% (183 → 31 ms)** |
+
+**Phone two-player** is within with #897 in both ABCs: CPU p95 +6.2% in the first, +2.8% here, and +4.4% with #898 as well. The +11.0% Val left open on 2026-11-03 is gone with #897.
+
+**Reconnect.** With #898, every skip rejoin took 24 to 69 ms, against 77 to 280 ms on v0.2.2 and 165 to 316 ms with #897 alone. The keep rows still carry the random 500–1000 ms retry delay; with #898 they are below v0.2.2 on both profiles. Without #898, the phone skip rejoin is again 35–50 ms slower than v0.2.2 (+27.2% in the first ABC, +19.0% here).
+
+**Desktop two-player** is the row to watch. H reads +9.9%, one point inside the 10% budget. H1's third two-player sample ran at load 8.2 (CPU p95 15.6 ms, pipeline p95 10.9 ms); the other five match C's (H 11.4–12.9 ms, C 11.0–12.8 ms). #898 changes nothing on the steady two-player path except that `update` skips held figures, and none are held then; H against C reads +4.3%. The structural excess is still the render pipeline: desktop 2p pipeline p95 is 7.1–8.1 ms on v0.2.2 and 7.8–9.3 ms on both v0.3.0 arms (more triangles and geometries, above). The gate ABBA on the pinned head decides that row. It is not rerun for a pass here.
+
+### Gaps
+
+- H is a local merge, not the pinned release head. The gate ABBA runs after #885, #897 and #898 land.
+- Desktop 2p CPU p95 is within by one point, with one sample above load 8. The pipeline excess (triangles, geometries) is not attributed further.
+- The audit's view holds six remote figures. A crowded town holds more through a lost socket for up to 10 s; nothing draws them.
+
+### Next step
+
+Val authorizes #885, #897 and #898. Land #885 first, then #897 and #898 on top. Pin the head, run the gate ABBA (desktop and phone, full protocol) on it, and post GO or BLOCKED on #359.
