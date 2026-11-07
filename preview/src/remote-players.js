@@ -23,12 +23,16 @@ import { serverNow } from './server-clock.js';
 // of view skip its update and every pass, like a peer beyond the distance gate.
 // Audits and journeys count players apart from the town's own figures (rivals, police, residents).
 export const figureKind=id=>/^(rival|police|resident):/.test(id)?id.slice(0,id.indexOf(':')):'player';
+// How long hold() keeps figures through a lost town socket. The client's first three
+// retries wait at most 7 s in all (connection-policy.js retryDelay), so a short outage
+// rejoins inside the hold and its first snapshot keeps the figures still there.
+export const RECONNECT_HOLD_MS=10000;
 export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=>true,snapInitialHeading=false,shadowDirection=null,localCraft=()=>null,reducedMotion=Boolean(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches)}={}){
   const entries=new Map(),labels=document.createElement('div');labels.className='remote-player-labels';labels.setAttribute('aria-hidden','true');host.append(labels);
   // Who is talking on shared voice right now: a ring on the nameplate and the
   // speaker cadence in conversation-motion. Set at event time, read per frame.
   const speaking=new Set();
-  let disposed=false,previous=null,labelWidth=0,labelHeight=0,culling=true,figureCulling=true,shadowDepth=true;
+  let disposed=false,previous=null,labelWidth=0,labelHeight=0,culling=true,figureCulling=true,shadowDepth=true,holdTimer=null;
   const frustum=new THREE.Frustum(),viewProjection=new THREE.Matrix4(),figureCenter=new THREE.Vector3();
   const fonts=document.fonts;
   const invalidateLabelSizes=()=>{for(const entry of entries.values())entry.labelSize=null;};
@@ -85,7 +89,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
   return {
     // Explicit inspection only: skinning every vertex is too expensive for the
     // normal render loop. Hidden source bodies and flight rigs are excluded.
-    bounds(){return [...entries].filter(([,entry])=>entry.avatar&&entry.holder.visible).map(([id,entry])=>{
+    bounds(){return [...entries].filter(([,entry])=>entry.avatar&&entry.holder.visible&&!entry.held).map(([id,entry])=>{
       entry.holder.updateWorldMatrix(true,true);const bounds=new THREE.Box3();
       entry.holder.traverseVisible(mesh=>{
         if(!mesh.isMesh)return;
@@ -95,18 +99,20 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       });
       return {id,min:bounds.min.toArray(),max:bounds.max.toArray()};
     });},
-    stats(){return [...entries].map(([id,entry])=>{
+    stats(){return [...entries].filter(([,entry])=>!entry.held).map(([id,entry])=>{
       const arm=entry.avatar?.rig?.model?.getObjectByName('upperarm_r'),rest=arm&&entry.avatar.rig.rest.get(arm);
       return {id,kind:figureKind(id),combat:entry.combat?.kind??null,combatProgress:entry.combat?.progress??null,onScreen:Boolean(entry.onScreen),labelVisible:Boolean(entry.labelVisible),ready:Boolean(entry.avatar),fallback:Boolean(entry.placeholder),appearance:entry.loadedAppearance,look:entry.loadedLook,character:entry.definition?structuredClone(entry.definition):null,materials:entry.colors?.inspect()??[],realism:entry.avatar?.realismReport??null,movement:entry.target.movement??'upright',gesture:entry.target.gesture??null,rightArmMotion:rest?arm.quaternion.angleTo(rest):0,vehicle:entry.road?.spec.kind??null,roadVisible:Boolean(entry.road?.object.visible),riderSeated:Boolean(entry.riderSeated),sitting:entry.target.sitting??null,watering:Boolean(entry.avatar?.object.getObjectByName('Watering can')?.visible),heading:entry.holder.rotation.y,position:entry.holder.position.toArray(),locomotion:{speed:entry.motion.state.speed,heading:entry.motion.state.heading??null,distance:entry.motion.state.distance},feet:(entry.avatar?.feet??[]).map(leg=>({side:leg.side,contact:leg.contact,error:leg.error,target:leg.target?.toArray()??null,actual:leg.foot.getWorldPosition(new THREE.Vector3()).toArray()}))};
     });},
     // Where each remote player is drawn (debug: a passenger's seat as observers see it).
-    holderOf(id){const entry=entries.get(id);return entry?{position:entry.holder.position.toArray(),quaternion:entry.holder.quaternion.toArray(),aboard:Boolean(entry.aboard)}:null;},
+    holderOf(id){const entry=entries.get(id);return entry&&!entry.held?{position:entry.holder.position.toArray(),quaternion:entry.holder.quaternion.toArray(),aboard:Boolean(entry.aboard)}:null;},
     // Every remote Ribbonwing as drawn here, for its sounds (ribbonwing-sounds.js).
-    ribbonwings(){return [...entries].filter(([,entry])=>entry.road?.spec.kind==='hover'&&entry.holder.visible).map(([id,entry])=>({id,object:entry.road.object,mechanisms:entry.road.ribbonwing?.rig.value??null,maneuvering:Boolean(entry.maneuvering)}));},
+    ribbonwings(){return [...entries].filter(([,entry])=>entry.road?.spec.kind==='hover'&&entry.holder.visible&&!entry.held).map(([id,entry])=>({id,object:entry.road.object,mechanisms:entry.road.ribbonwing?.rig.value??null,maneuvering:Boolean(entry.maneuvering)}));},
     // The Ribbonwing a remote pilot flies, as drawn here (a passenger rides in it, #777).
-    craftOf(id){const road=entries.get(id)?.road;return road?.spec.kind==='hover'?road.object:null;},
+    craftOf(id){const entry=entries.get(id),road=entry?.held?null:entry?.road;return road?.spec.kind==='hover'?road.object:null;},
     sync(players,selfId){
       if(disposed)return;
+      // The town's state again: held figures it still names carry on, the rest leave.
+      clearTimeout(holdTimer);holdTimer=null;
       const peers=players.filter(player=>player.id!==selfId),ids=new Set(peers.map(player=>player.id));
       for(const [id,entry]of entries)if(!ids.has(id)){remove(entry);entries.delete(id);}
       for(const player of peers){
@@ -119,8 +125,18 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
           entry={holder,label,placeholder,target:player,removed:false,motion:createPeerMotion(player.id),blend:createCombatBlend(),combat:null,version:0,loadedAppearance:null,loadedLook:null,pendingLook:null,requestedLook:null,failures:0,retryAt:0};entries.set(player.id,entry);
           if(speaking.has(player.id))label.dataset.speaking='true';
         }
-        entry.target=player;entry.posed=true;entry.syncedAt=performance.now();setLabelText(entry,player.name+(entry.failures?' · avatar unavailable':entry.avatar?'':' · loading avatar'));syncRoad(entry,player.vehicle);loadAppearance(entry,player);
+        entry.held=false;entry.target=player;entry.posed=true;entry.syncedAt=performance.now();setLabelText(entry,player.name+(entry.failures?' · avatar unavailable':entry.avatar?'':' · loading avatar'));syncRoad(entry,player.vehicle);loadAppearance(entry,player);
       }
+    },
+    // The town socket was lost (multiplayer-client.js lost()). Hide every figure as removal
+    // would, but keep its rig, outfit and materials for `ms`: the rejoin's first snapshot
+    // (sync) keeps the figures it still names instead of loading them again, and three keeps
+    // their shader programs instead of compiling them in the first frame after the rejoin.
+    hold(ms=RECONNECT_HOLD_MS){
+      if(disposed)return;
+      for(const entry of entries.values()){entry.held=true;entry.holder.visible=false;entry.onScreen=false;entry.labelVisible=false;entry.label.hidden=true;entry.avatar?.suspend();}
+      clearTimeout(holdTimer);
+      holdTimer=setTimeout(()=>{holdTimer=null;for(const [id,entry]of entries)if(entry.held){remove(entry);entries.delete(id);}},ms);
     },
     update(now,camera){
       if(disposed)return;
@@ -131,6 +147,7 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       const light=shadowDirection&&figureCulling?shadowDirection():undefined;
       if(light!==undefined){camera.updateMatrixWorld();frustum.setFromProjectionMatrix(viewProjection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));}
       for(const entry of entries.values()){
+        if(entry.held){entry.holder.visible=false;entry.onScreen=false;continue;}
         const {holder,target,avatar}=entry;next.set(target.position[0],target.position[2]+target.altitude,-target.position[1]);
         // Horizontal stride, travel heading and lift carry (locomotion-handoff.js).
         const motion=entry.motion.step(holder.position,next,delta,now,{posed:entry.posed,snap:Boolean(target.sitting||entry.wasSitting),walking:!target.vehicle&&target.altitude<=0.1,levelId:target.levelId??null}),[dx,dz]=motion.moved;entry.posed=false;
@@ -233,6 +250,6 @@ export function createRemotePlayers(scene,host,{now=()=>Date.now(),isVisible=()=
       speaking.clear();for(const id of ids??[])speaking.add(id);
       for(const [id,entry] of entries){const on=String(speaking.has(id));if(entry.label.dataset.speaking!==on)entry.label.dataset.speaking=on;}
     },
-    dispose(){if(disposed)return;disposed=true;fonts?.removeEventListener('loadingdone',invalidateLabelSizes);for(const entry of entries.values())remove(entry);entries.clear();labels.remove();},
+    dispose(){if(disposed)return;disposed=true;clearTimeout(holdTimer);holdTimer=null;fonts?.removeEventListener('loadingdone',invalidateLabelSizes);for(const entry of entries.values())remove(entry);entries.clear();labels.remove();},
   };
 }
