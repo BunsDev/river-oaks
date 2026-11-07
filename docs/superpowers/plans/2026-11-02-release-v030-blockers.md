@@ -110,9 +110,22 @@ That explains part of lap 20, not all of it. Client A, about 1 m away and most l
 
 The rule now counts a shared resource as the figure's unless a **drawn** object outside the figures uses it. An object hidden after it was drawn keeps its upload until disposed, so at most what a shown figure shares with it is excused, and only while that figure is shown. The per-figure caps were re-measured under the new rule (240 samples, two context-loss cycles, 03:50Z): up to 26 geometries, 2 textures and 54 listeners. Caps: 28 geometries, 5 textures (the 2026-11-04 measure) and 58 listeners.
 
+### 2026-11-07 merged head `5800b4c1`: passes, with no texture headroom on one lap
+
+Main `230d8814` (#896, removing retired features) was merged in as signed `5800b4c1`. From the same snapshot moved to `5800b4c1`, under one lock (06:36 to 07:58Z, 1-minute load 4.9 to 5.3 at each start):
+
+- Per-figure caps re-measured (240 samples, two context-loss cycles): up to 54 listeners, 26 geometries and 2 textures. All within 58, 28 and 5.
+- `graphics-recovery` **passed**: 2621 listeners, 725 geometries and 214 textures on all five samples; three figures holding 70 geometries alone.
+- `world-streaming` **passed**, 20 of 20 measured trips. Net geometries are flat as before: loaded 882–883 (A) and 831–832 (B), evicted 768–769 and 717–718; scene objects 9093 and 8610 on all 22 laps.
+
+Textures had no headroom. The baseline is lap 2, where client A's evicted state had two figures and all five of their textures counted, so its net (274) equalled the no-figure level. On laps 6 to 9 three figures stayed shown and the net rose +7, +8, +9 and **+10** over it; the bound allows +10. Raw textures held at 285 to 287 while the textures counted as the figures' fell from 4 to 2. On every lap with no figure shown (10, 12 and 18 to 22) the net is exactly 274, so nothing is retained. The pre-merge run has the same rise, about 2 to 3 uncounted textures per figure (three figures: 285 to 287 raw, 4 or 5 counted), but its baseline lap had three figures and a net of 282, so later laps stayed under it. Whether the texture bound passes therefore depends on which residents are near on the baseline lap.
+
+Not yet attributed. Refuted (08:02Z probe, 160 samples at the District spawn, `5800b4c1`): bone and morph textures. With 0 to 3 figures (up to 6 bone textures and 9 morph geometries), raw textures stayed 220 to 223, and raw minus the no-figure level minus counted material textures was −2 to +2. A diagnostic world-streaming run (scratch only) is listing, per lap, uploaded textures on hidden parts of shown figures and figure textures a drawn object outside the figures also uses.
+
 ## Gaps
 
-- The world-streaming leak control showed detection on 12 laps but crashed at lap 18 before its final assertion (see Runs). It was not rerun.
+- `world-streaming` textures passed with no headroom on the merged head (above); the figure-correlated part not counted as the figures' is not yet attributed.
+- The world-streaming leak control showed detection on 12 laps but crashed at lap 18 before its final assertion (see Runs). It was not rerun. Why the page reloaded is unproven. An independent review (session d2e1, 06:28 and 07:37Z) found: the access entry deliberately reloads after any server-answered failed recheck (`access-recheck.js`, fail-closed, unchanged here); the browser fixture's `/auth/session` never answers 503 and sets each identity's expiry an hour from every request, so elapsed time does not explain it; the report kept two console 503s without URLs. Its diagnostics-only patch to `world-streaming.js` (main-frame navigations, HTTP errors by path, failed requests; no query, header, cookie or body; no assertion or bound changed) was reviewed here and is in the diagnostic run above.
 - About 16 geometries at lap 20 of the failed `465413bb` run are not attributed; they were freed by the next lap and did not recur in the passing run.
 - `graphics-recovery` now leaves out what the shown figures alone hold, as world-streaming does. A figure walking in during the cycles has not been seen in a run; the unit tests cover it.
 - One pass of each journey; hosted CI runs neither long journey.
@@ -133,9 +146,11 @@ Core (`pnpm run verify`) on `89c6ad12` plus this patch passed 01:48–01:53Z: to
 
 - 04:07–05:21Z, load 5 to 7 at start: full `world-streaming` **passed**, 20 of 20 measured trips within the bound. Net of what the shown figures alone hold, loaded is 882–883 (A) and 831–832 (B) and evicted 768–769 and 717–718 on every lap; scene objects 9093 and 8610 on all 22. The −1 laps are the rule's stated leniency (a geometry a figure shares with an object hidden after it drew). The lap-20 step of the earlier run did not recur.
 
-- 05:21–06:20Z: the same journey with three drawn geometries retained per measure. The bound flagged every measured lap from lap 6 to lap 17 ("Resource bound exceeded", net loaded rising 6 a lap from 897 to 988), against none in the clean run. At lap 18, about 59 minutes in, the run stopped on `window.__riverCarriage is not a function` before its final assertion. That is not attributed; it matches the timing of the fixture identity's hour (the run's other known late failure). The detection is shown; a clean end-to-end failure of the control is not.
+- 05:21–06:20Z: the same journey with three drawn geometries retained per measure. The bound flagged every measured lap from lap 6 to lap 17 ("Resource bound exceeded", net loaded rising 6 a lap from 897 to 988), against none in the clean run. At lap 18, about 59 minutes in, the run stopped on `window.__riverCarriage is not a function` before its final assertion. The page was on the opening splash with no canvas, so it had reloaded. The detection is shown; a clean end-to-end failure of the control is not. An earlier version of this line tied the stop to the fixture identity's hour; that is withdrawn (see Gaps).
 - Core (`pnpm run verify`) on the final tree passed 06:22–06:27Z: tooling 307/307, preview 5272 pass / 1 skip / 30 todo, server 1132 pass / 285 skip, desktop 127 pass / 5 skip, Python 215 passed.
+- Merge of main `230d8814` as signed `5800b4c1`. Core on it passed 06:28–06:33Z: tooling 307/307, preview 5238 pass / 1 skip / 30 todo, server 1132 pass / 285 skip, desktop 127 pass / 5 skip, Python 215. Hosted: 34 of 34 checks passed.
+- 06:36–07:58Z on `5800b4c1`: cap probe, `graphics-recovery` passed, `world-streaming` passed (above). 08:02–08:07Z: texture probe at the spawn (above).
 
 ## Next step
 
-Mark #885 ready and ask Val for merge authorization; do not land before it. After the merge, pin the head and re-qualify every gate row in `2026-11-02-release-v030.md`, then the phone two-player and reconnect work in `2026-11-03-v030-perf-attribution.md`.
+Mark #885 ready and ask Val for merge authorization, naming the texture headroom; do not land before it. Finish attributing the figure-correlated textures; any accounting change is pushed to #885 if it is still open, else opened as its own PR. After the merge, pin the head and re-qualify every gate row in `2026-11-02-release-v030.md`, then the phone two-player and reconnect work in `2026-11-03-v030-perf-attribution.md`.
