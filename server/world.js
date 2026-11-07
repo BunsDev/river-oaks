@@ -18,7 +18,7 @@ import { SEATS as RIBBONWING_SEATS } from '../preview/src/ribbonwing-design.js';
 import { RIBBONWING_MANEUVERS, MANEUVER_RECOVERY_ALTITUDE, MANEUVER_TIP_CLEARANCE, isManeuverKind, maneuverPose, maneuverSweep } from '../preview/src/ribbonwing-maneuvers.js';
 import { buildKind, buildGeometry, buildYaw, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, BUILD_REASONS, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.js';
-import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
+import { WATER_REACH, WATER_MS, benchSeats, movedBenchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
 import { bikeRackSlots } from '../preview/src/bike-racks.js';
 import { objectCollider, blocksPlayer, blocksResident } from '../preview/src/creator-object.js';
 import { verifyApprovedSpaceRoutes } from '../preview/src/approved-space-plan.js';
@@ -250,6 +250,10 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   // Seats are Jevica's garden seats and lounge chairs, and the two places on
   // every storefront bench ('bench:<store>', slots 0 and 1).
   const benches=benchSeats(worldData);
+  // A checkpoint keeps a player seated on a corrected bench at the seat's previous spot (#740), and
+  // restoring puts them back on the bench. Either build then accepts the other's checkpoint, whoever is sitting.
+  const movedSeats=movedBenchSeats(worldData);
+  const movedSeatKey=player=>player.sitting&&movedSeats.has(`${player.sitting.buildId}:${player.sitting.slot}`)?`${player.sitting.buildId}:${player.sitting.slot}`:null;
   // The Gardens (#510): seated at a campus workstation, a resident may open their own private
   // desk. Snapshots carry only that boolean; which seat and whose work stay private.
   const campusWorkstations=new Set(benches.filter(seat=>isCampusSeat(seat.buildId)&&seat.workstation).map(seat=>seat.buildId));
@@ -1537,6 +1541,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       // cache miss) replays the same path from the same start; restore re-checks it.
       // A pending passenger invitation is not saved (it lasts a minute); the seat is.
       if(player.ribbonwingInvite){const {ribbonwingInvite,...rest}=player;player=rest;}
+      if(movedSeatKey(player)){const [east,north]=movedSeats.get(movedSeatKey(player));return {...player,position:[east,north,environment.groundAt(east,-north)]};}
       if(!player.performing)return player;
       const {performing,...rest}=player;
       return {...rest,position:stageStepDown(player)??performing.from};
@@ -1750,6 +1755,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
             }
           }
         }
+        // The saved spot is the seat's previous one; judge the player where they will actually sit.
+        if(movedSeatKey(player)&&Math.hypot(player.position[0]-movedSeats.get(movedSeatKey(player))[0],player.position[1]-movedSeats.get(movedSeatKey(player))[1])<1e-6)player.position=[...seatAt(player.sitting.buildId,player.sitting.slot,nextBuilds).position];
         const [east,north,ground]=player.position;
         if (!nextLedgers.has(player.id) || (!player.sitting && Math.abs(ground-playerEnvironment.groundAt(east,-north))>0.2)
           || (player.altitude>0.1?!playerEnvironment.canFly(east,ground+player.altitude,-north):!playerEnvironment.isFree(east,-north))

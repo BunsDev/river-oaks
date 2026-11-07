@@ -53,19 +53,39 @@ export function laneFixtures(world, isFree = () => true) {
 // A bench and lamp column beside every third storefront, on the pavement: the
 // first of a few spots off the shopfront that clears every drawn road, lamp
 // arm included. A storefront with no clear spot simply goes without.
+// The Van Cleef & Arpels bench stood on the 2.4 m Ribbon spine (#740). It moves 0.76 m toward the
+// street, past the walk's edge and clear of the post the canopy spans at it, and keeps its id,
+// seats and facing. Its lamp could not follow straight out without nearing the road, so it stands at
+// the bench's north end instead.
+const BENCH_CORRECTIONS = new Map([['osm-node-8172494966', { x: -2760.05, north: -1240.3, lamp: [-2760.2, -1239.1] }]]);
+// Where a bench's lamp column stands: straight out from the seat unless corrected.
+export const benchLamp = ({ x, north, outward: [nx, ny], lamp }) => lamp ?? [x + nx * 1.2, north + ny * 1.2];
+// The first clear spot off the shopfront, before any correction.
+function surveyedBenchSpot(world, store) {
+  const [nx, ny] = store.outward;
+  const candidates = [];
+  for (const out of [2.8, 1.8, 1.1]) for (const along of [4, -4, 6.5, -6.5, 9, -9]) candidates.push([out, along]);
+  for (const [out, along] of candidates) {
+    const x = store.visit[0] + nx * out + ny * along, north = store.visit[1] + ny * out - nx * along;
+    const lamp = [x + nx * 1.2, north + ny * 1.2];
+    if (clearOfRoads(world, x, -north, 1.2) && clearOfRoads(world, lamp[0], -lamp[1], 0.9)) return { storeId: store.id, x, north, outward: [nx, ny] };
+  }
+  return null;
+}
+const benchStores = world => (world.stores ?? []).filter((store, index) => !(index % 3) && Array.isArray(store.visit) && Array.isArray(store.outward));
+const correctsBenches = world => world.roads?.some(road => road.id === 'osm-way-583333526-0');
 export function storefrontBenchSpots(world) {
-  const spots = [];
-  (world.stores ?? []).forEach((store, index) => {
-    if (index % 3 || !Array.isArray(store.visit) || !Array.isArray(store.outward)) return;
-    const [nx, ny] = store.outward;
-    const candidates = [];
-    for (const out of [2.8, 1.8, 1.1]) for (const along of [4, -4, 6.5, -6.5, 9, -9]) candidates.push([out, along]);
-    for (const [out, along] of candidates) {
-      const x = store.visit[0] + nx * out + ny * along, north = store.visit[1] + ny * out - nx * along;
-      const lamp = [x + nx * 1.2, north + ny * 1.2];
-      if (clearOfRoads(world, x, -north, 1.2) && clearOfRoads(world, lamp[0], -lamp[1], 0.9)) { spots.push({ storeId: store.id, x, north, outward: [nx, ny] }); return; }
-    }
+  return benchStores(world).flatMap(store => {
+    const corrected = correctsBenches(world) && BENCH_CORRECTIONS.get(store.id);
+    if (corrected) return [{ storeId: store.id, ...corrected, outward: [store.outward[0], store.outward[1]] }];
+    const spot = surveyedBenchSpot(world, store);
+    return spot ? [spot] : [];
   });
-  return spots;
+}
+// Where a corrected bench stood before. Checkpoints keep a seated player at this spot, so a town
+// survives a deploy or a rollback of the correction whoever is sitting on it.
+export function movedBenchSpots(world) {
+  if (!correctsBenches(world)) return [];
+  return benchStores(world).filter(store => BENCH_CORRECTIONS.has(store.id)).map(store => surveyedBenchSpot(world, store)).filter(Boolean);
 }
 

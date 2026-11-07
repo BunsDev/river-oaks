@@ -971,6 +971,69 @@ test('the Five Rooms posts and frontages are solid for server movement, whatever
   assert.equal(environment.isFree(east,-north),false);
 });
 
+// The main spine (#740): the server walks the same corridor the client does, with the corrected trees
+// and bench it loads itself, and a town saved before the bench moved restores.
+test('the server lets two people pass along the clear spine, both ways, and seats them at the moved bench',async()=>{
+  const { loadDistrictData }=await import('../district-data.js');
+  const { districtRibbonPlan }=await import('../../preview/src/ribbon-district.js');
+  const { benchSeats,movedBenchSeats }=await import('../../preview/src/world-interactions.js');
+  const district=await loadDistrictData();
+  const EARLIER_SEAT=[[-2759.275351,-1240.129739],[-2759.287795,-1241.029653]];
+  const environment=createWalkingEnvironment(district),modules=districtRibbonPlan(district).modules;
+  const along=[modules[0].from,...modules.map(item=>item.to)],stations=[];
+  along.slice(1).forEach((to,i)=>{const from=along[i];for(let t=0;t<1;t+=.25)stations.push([from[0]+(to[0]-from[0])*t,from[1]+(to[1]-from[1])*t]);});
+  stations.push(along.at(-1));
+  for(const lane of [-.45,.45])for(const route of [stations,[...stations].reverse()]){
+    let time=1000;const world=createSharedWorld(district,{now:()=>time});
+    world.join({userId:'a',name:'Alice'});
+    const place=([x,north])=>[x+lane,north,environment.groundAt(x+lane,-north)];
+    const checkpoint=JSON.parse(JSON.stringify(world.checkpoint()));
+    checkpoint.payload.players[0].position=place(route[0]);
+    const restored=createSharedWorld(district,{now:()=>time});
+    assert.deepEqual(restored.restore(resign(checkpoint)),{ok:true});
+    for(const station of route.slice(1)){
+      time+=700;
+      const moved=restored.command('a',{type:'pose',position:place(station),yaw:0,altitude:0});
+      assert.equal(moved.ok,true,`server refused ${lane} m at ${station}: ${JSON.stringify(moved)}`);
+    }
+  }
+  // The moved bench keeps its id and slots; the server resolves the seat where the client draws it.
+  const buildId='bench:osm-node-8172494966',seats=benchSeats(district).filter(seat=>seat.buildId===buildId),seat=seats[0];
+  assert.equal(seats.length,2);
+  let time=1000;const world=createSharedWorld(district,{now:()=>time});
+  world.join({userId:'a',name:'Alice'});
+  assert.equal(world.command('a',{type:'travel',position:seat.approach}).ok,true);
+  assert.equal(world.command('a',{type:'sit',buildId,slot:0}).ok,true);
+  const sitting=world.snapshot().players.find(player=>player.id==='a');
+  assert.equal(sitting.sitting.buildId,buildId);
+  assert.ok(Math.hypot(sitting.position[0]-seat.x,sitting.position[1]-seat.north)<.01,'seated at the bench the client draws');
+  // Checkpoints keep the seat's position from before the move, so the build before this one accepts
+  // them too. That build tests all three coordinates to 1e-6, and these are its own numbers.
+  const saved=JSON.parse(JSON.stringify(world.checkpoint())),stored=saved.payload.players.find(player=>player.id==='a');
+  assert.equal(stored.sitting.buildId,buildId);
+  assert.ok(Math.abs(stored.position[0]-EARLIER_SEAT[0][0])<1e-6&&Math.abs(stored.position[1]-EARLIER_SEAT[0][1])<1e-6,`saved at ${stored.position}`);
+  assert.ok(Math.abs(stored.position[2]-environment.groundAt(stored.position[0],-stored.position[1]))<1e-6,'saved at that seat\'s own ground');
+  assert.deepEqual([...movedBenchSeats(district).values()].map(([east,north])=>[east,north].map(value=>Math.round(value*1e6)/1e6)),EARLIER_SEAT);
+  const after=createSharedWorld(district,{now:()=>time});
+  assert.deepEqual(after.restore(resign(saved)),{ok:true});
+  const back=after.snapshot().players.find(player=>player.id==='a');
+  assert.equal(back.sitting.buildId,buildId);
+  assert.ok(Math.hypot(back.position[0]-seat.x,back.position[1]-seat.north)<1e-6,'restored on the moved bench');
+  // Open walk now, so someone may build on the old spot. That must not invalidate the whole town.
+  const builder=createSharedWorld(district,{now:()=>time,isAdmin:()=>true});
+  builder.join({userId:'b',name:'Bo'});
+  assert.equal(builder.command('b',{type:'travel',position:[EARLIER_SEAT[0][0]+.3,EARLIER_SEAT[0][1]+2]}).ok,true);
+  time+=2000;
+  const placed=builder.command('b',{type:'build',action:'place',kind:'object',finish:'rose',position:EARLIER_SEAT[0],yaw:0,assembly:{name:'Rose lantern',parts:[{shape:'box',size:[.3,.6,.3],position:[0,.3,0],rotation:[0,0,0],color:'#b97986',material:'metal'}]}});
+  assert.equal(placed.ok,true,JSON.stringify(placed));
+  builder.join({userId:'c',name:'Cy'});
+  assert.equal(builder.command('c',{type:'travel',position:seat.approach}).ok,true);
+  assert.equal(builder.command('c',{type:'sit',buildId,slot:0}).ok,true);
+  assert.deepEqual(createSharedWorld(district,{now:()=>time,isAdmin:()=>true}).restore(JSON.parse(JSON.stringify(builder.checkpoint()))),{ok:true},'an object on the old spot leaves the town valid');
+  // The seat must be free to stand up from, into the walk or the street.
+  time+=1000;assert.equal(after.command('a',{type:'stand'}).ok,true);
+});
+
 test('a town saved before the Five Rooms solids restores a player standing on a post onto free ground nearby',async()=>{
   const district=JSON.parse(await readFile(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
   const { districtRibbonPlan }=await import('../../preview/src/ribbon-district.js');

@@ -38,6 +38,8 @@ test('Ribbon corridor rejects a bypass outside its declared walk width', async (
   const segment = { points: [[0, 0], [0, 10], [10, 10]], width: 2 };
   assert.equal(inRibbonCorridor(segment, [0.9, 5]), true);
   assert.equal(inRibbonCorridor(segment, [1.1, 5]), false);
+  assert.equal(inRibbonCorridor(segment, [0.9, 5], 0.35), false, 'a body-wide check refuses a body past the edge');
+  assert.equal(inRibbonCorridor(segment, [0.6, 5], 0.35), true);
   assert.equal(inRibbonCorridor(segment, [5, 10.9]), true);
   assert.equal(inRibbonCorridor(segment, [5, 5]), false);
 });

@@ -38,6 +38,9 @@ export const FIVE_ROOMS_LANDSCAPE_FLAGS = Object.freeze({
   // REF-HW-01 bed): a blocked segment's placements are raw geometry, so its planted edge is drawn
   // only behind this flag until its blockers move.
   blockedSegmentPlanting: false,
+  // Clearing a segment does not plant it: the planted edge on a clear segment is still a choice
+  // for Val (#840), and the Ribbon foundation adds no draw calls without one.
+  clearSegmentPlanting: false,
 });
 
 const shellHeight = 0.62, tallest = Math.max(...Object.values(PLANT_SPECIES).map(species => species.height[1]));
@@ -129,13 +132,13 @@ export function fiveRoomsLandscapePlan(expanded, { groundAt, flags = FIVE_ROOMS_
   for (const segment of expanded.segments) {
     const linked = new Set(expanded.links.filter(link => link.segment === segment.id && link.side).map(link => link.side));
     const sides = ['left', 'right'].filter(side => !linked.has(side));
-    const built = segment.status === 'clear' || Boolean(flags.blockedSegmentPlanting);
+    const flag = segment.status === 'clear' ? 'clearSegmentPlanting' : 'blockedSegmentPlanting', built = Boolean(flags[flag]);
     for (const module of expanded.modules.filter(item => item.segment === segment.id && item.index % rules.plantedEdge.every === 0)) {
       const dir = [Math.cos(module.yaw), Math.sin(module.yaw)];
       for (const side of sides) {
         const sign = side === 'left' ? 1 : -1, n = [-dir[1] * sign, dir[0] * sign], offset = module.width / 2 + RIBBON_RULES.post / 2 + rules.plantedEdge.gap + bed.depth / 2;
         const centre = [(module.from[0] + module.to[0]) / 2 + n[0] * offset, (module.from[1] + module.to[1]) / 2 + n[1] * offset];
-        edgeBeds.push({ id: `bed:${module.id.replace(/^ribbon:/, '').replace(':module:', ':edge:')}:${side[0]}`, kind: 'edge', source: module.id, segment: segment.id, side, centre, yaw: module.yaw, built, ...(built ? {} : { flag: 'blockedSegmentPlanting', status: segment.status }) });
+        edgeBeds.push({ id: `bed:${module.id.replace(/^ribbon:/, '').replace(':module:', ':edge:')}:${side[0]}`, kind: 'edge', source: module.id, segment: segment.id, side, centre, yaw: module.yaw, built, ...(built ? {} : { flag, status: segment.status }) });
       }
     }
   }

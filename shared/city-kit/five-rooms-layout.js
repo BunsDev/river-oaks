@@ -19,7 +19,7 @@ import { stableHash } from './assemble.js';
 import { expandRibbon, RIBBON_KIT, RIBBON_RULES } from './ribbon-layout.js';
 import { GARDEN_CAMPUS_LAYOUT, GARDEN_CAMPUS_VERSIONS, sourceToCampus, validateGardenCampus, rectContains } from '../garden-campus-layout.js';
 
-export const FIVE_ROOMS_VERSION = 'five-rooms-v2';
+export const FIVE_ROOMS_VERSION = 'five-rooms-v3';
 export const VENUE_IDS = Object.freeze(['venue:counter', 'venue:atelier', 'venue:starlight-screen', 'venue:shade-garden', 'venue:studios-overlook']);
 export const FIVE_ROOMS_RULES = Object.freeze({
   // A door's clear zone: along the facade and out from it. The repo states no door clearance;
@@ -122,7 +122,7 @@ export function siteFromDistrict(world, { fixtures = { lamps: [], planters: [], 
     trees: trees.map((tree, i) => {
       const x = tree.position[0], y = -tree.position[2], support = supports.get(`${mm(x)},${mm(y)}`);
       const ends = support?.endpoints?.length ? support.endpoints.map(p => p[2]) : null;
-      return { id: `tree-${i}`, x, y, radius: tree.radius, height: tree.height, crownBase: ends ? Math.min(...ends) : tree.height * FIVE_ROOMS_RULES.crownBaseShare, basis: support?.basis ?? 'placement' };
+      return { id: `tree-${i}`, x, y, radius: tree.radius, height: tree.height, crownBase: tree.crownBase ?? (ends ? Math.min(...ends) : tree.height * FIVE_ROOMS_RULES.crownBaseShare), basis: support?.basis ?? 'placement' };
     }),
     beds: beds.filter(Boolean).map(bed => ({ id: bed.id, ring: bed.ring.map(p => [p[0], p[1]]) })),
     tenants: tenants.map(room => ({ id: room.storeId, name: room.name, buildingId: room.buildingId, facade: [room.facade[0], room.facade[1]], outward: [room.outward[0], room.outward[1]], footprint: room.footprint.map(p => [p[0], p[1]]), width: room.width, depth: room.depth, floor: room.floor })),

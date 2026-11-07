@@ -26,23 +26,23 @@ const groundAt = (x, north) => groundSurfaceHeight(world, x, -north);
 const tenants = storeRoomsFor(world).filter(room => world.stores.some(store => store.id === room.storeId));
 const site = siteFromDistrict(world, { fixtures: laneFixtures(world), benches: storefrontBenchSpots(world), treePits: treePits(world), trees: matureTreePlacements(world), beds: [winstonBed(world)], tenants, groundAt });
 const expanded = expandFiveRooms(contract, site);
-const ALL = Object.freeze({ shadeGardenOpenCourt: true, blockedSegmentPlanting: true });
+const ALL = Object.freeze({ shadeGardenOpenCourt: true, blockedSegmentPlanting: true, clearSegmentPlanting: true });
 const landscape = (flags = FIVE_ROOMS_LANDSCAPE_FLAGS, plan = expanded) => fiveRoomsLandscapePlan(plan, { groundAt, flags });
 const corners = r => [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]];
 const shapeOf = m => { const d = [Math.cos(m.yaw), Math.sin(m.yaw)], n = [-d[1], d[0]], c = [(m.from[0] + m.to[0]) / 2, (m.from[1] + m.to[1]) / 2]; return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([i, j]) => [c[0] + i * d[0] * m.length / 2 + j * n[0] * m.width / 2, c[1] + i * d[1] * m.length / 2 + j * n[1] * m.width / 2]); };
 const insideConvex = (p, ring, tolerance = 1e-3) => { const s = ring.map((a, i) => { const b = ring[(i + 1) % ring.length], l = Math.hypot(b[0] - a[0], b[1] - a[1]); return ((b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])) / l; }); return s.every(v => v >= -tolerance) || s.every(v => v <= tolerance); };
 
 test('the landscape is built from the contract: aprons always, the court and blocked planting behind named flags', () => {
-  assert.deepEqual(FIVE_ROOMS_LANDSCAPE_FLAGS, { shadeGardenOpenCourt: false, blockedSegmentPlanting: false });
+  assert.deepEqual(FIVE_ROOMS_LANDSCAPE_FLAGS, { shadeGardenOpenCourt: false, blockedSegmentPlanting: false, clearSegmentPlanting: false });
   const plan = landscape();
   assert.equal(plan.hash, expanded.hash);
   assert.deepEqual(plan.stats, { paving: 5, courts: 0, beds: 0, dropped: 6, pending: 36 });
   assert.deepEqual(plan.paving.map(item => item.id), ['paving:counter', 'paving:atelier', 'paving:starlight-screen', 'paving:shade-garden', 'paving:studios-overlook']);
-  // The Shade Garden court waits on Val's decision 6; every segment is blocked (#838), so its planted edge waits too.
+  // The Shade Garden court waits on Val's decision 6; no planted edge is built: a blocked segment waits for its blockers, and clearing one (#740) does not plant it.
   const court = plan.pending.find(item => item.id === 'court:shade-garden');
   assert.equal(court.flag, 'shadeGardenOpenCourt');
   assert.match(court.decision, /decision 6/);
-  assert.ok(plan.pending.filter(item => item.kind === 'edge').every(item => item.flag === 'blockedSegmentPlanting' && item.status === 'blocked'));
+  assert.ok(plan.pending.filter(item => item.kind === 'edge').every(item => item.flag === (item.segment === 'spine' ? 'clearSegmentPlanting' : 'blockedSegmentPlanting')));
   assert.deepEqual(landscape(ALL).stats, { paving: 5, courts: 1, beds: 35, dropped: 6, pending: 0 });
   assert.deepEqual(landscape(ALL), landscape(ALL), 'deterministic');
 });
@@ -80,7 +80,7 @@ test('no planting envelope enters a doorway, seat access, step-free route, no-go
   // starts north of the side lane, so no bed meets its carriageway; #865 widened the walk to 2.4 m.
   assert.deepEqual(plan.dropped.map(item => `${item.id} <- ${item.conflicts.join(' | ')}`), [
     'bed:spine:edge:002:l <- no-go lamp-13 | no-go tree-pit-103', 'bed:spine:edge:004:l <- no-go tree-pit-76',
-    'bed:spine:edge:014:l <- seat-access bench-5 | no-go bin-3', 'bed:spine:edge:022:l <- no-go tree-pit-126',
+    'bed:spine:edge:014:l <- no-go bin-3', 'bed:spine:edge:022:l <- no-go tree-pit-126',
     'bed:south:edge:012:l <- no-go tree-pit-3', 'bed:south:edge:016:l <- no-go lamp-11',
   ]);
   // The Shade Garden bed is planted in the court floor, under its interior camera's sight line.
@@ -100,7 +100,7 @@ test('a bed moved into a door, or raised into the camera corridor, is refused by
 
 test('the street trees the #828 ledger flagged are declared in each segment\'s blocked record', () => {
   const through = Object.fromEntries(expanded.segments.map(segment => [segment.id, [...new Set(segment.crowns.filter(c => c.through).map(c => c.tree))].sort()]));
-  assert.deepEqual(through, { spine: ['tree-104', 'tree-127', 'tree-153', 'tree-37', 'tree-77', 'tree-84', 'tree-85'], south: ['tree-108'], 'link-studios': ['tree-118', 'tree-48'] });
+  assert.deepEqual(through, { spine: [], south: ['tree-108'], 'link-studios': ['tree-118', 'tree-48'] });
   for (const segment of expanded.segments) for (const tree of through[segment.id]) assert.ok(segment.blocked.blockers.includes(tree), `${segment.id} declares ${tree}`);
   // No bed is planted under a crown that passes through the canopy's height band.
   for (const bed of landscape(ALL).beds) for (const tree of site.trees) {

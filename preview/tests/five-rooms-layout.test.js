@@ -30,7 +30,7 @@ const segment = (copy, id) => copy.ribbon.segments.find(item => item.id === id);
 test('the contract validates against the live District and rebuilds the full plan', () => {
   assert.equal(contract.version, FIVE_ROOMS_VERSION);
   assert.deepEqual(plan.venues.map(venue => venue.id), VENUE_IDS);
-  assert.deepEqual(plan.stats, { venues: 5, segments: 3, clear: 0, blocked: 3, modules: 68, posts: 142, lamps: 37, fans: 68, seats: 0, skipped: 0, links: 5, cameras: 5, exclusions: 1024, retired: 4 });
+  assert.deepEqual(plan.stats, { venues: 5, segments: 3, clear: 1, blocked: 2, modules: 68, posts: 140, lamps: 37, fans: 68, seats: 0, skipped: 2, links: 5, cameras: 5, exclusions: 1024, retired: 4 });
   assert.equal(site.stores.length, 30);
   assert.equal(site.buildings.length, 9);
   assert.equal(site.tenants.length, 30);
@@ -46,9 +46,9 @@ test('the #827 spine is carried unchanged and meets the south segment by a marke
   const spine = read('../../config/ribbon/district-spine.json').segments[0];
   const { status, blocked, source, ...carried } = segment(contract, 'spine');
   assert.deepEqual(carried, spine);
-  assert.equal(status, 'blocked');
-  // Since #853 the spine starts north of the side lane: no road piece blocks it any more.
-  assert.ok(!blocked.blockers.some(id => id.startsWith('road-')), blocked.blockers.join(', '));
+  // #740 cleared it; the validator refuses a `clear` the live site does not confirm.
+  assert.equal(status, 'clear');
+  assert.equal(blocked, undefined);
   const crossing = plan.joins.find(join => join.kind === 'crossing');
   assert.equal(crossing.road, 'osm-way-625330795-0');
   assert.ok(crossing.length > 8.4 && crossing.length < 12, `crossing ${crossing.length} m`);
@@ -71,8 +71,9 @@ test('every venue entrance is reached from the Ribbon without crossing a road or
     if (venue.id === 'venue:studios-overlook') assert.ok(link.crossesLaneEnd.every(id => id.startsWith('road-625330795-')));
     else assert.deepEqual(link.crossesLaneEnd, []);
   }
-  // No post was left out: entrances sit between edge posts.
-  assert.deepEqual(plan.skipped, []);
+  // The only posts left out are on the clear spine: one at the Counter door, one at the bench's
+  // reach. expandRibbon holds each gap to the segment's 6 m maxSpan.
+  assert.deepEqual(plan.skipped.map(item => [item.id, item.zone]), [['ribbon:spine:post:015:l', 'bench-5'], ['ribbon:spine:post:024:r', 'door-entrance-counter']]);
 });
 
 test('attachments and interiors stay inside their envelopes', () => {
