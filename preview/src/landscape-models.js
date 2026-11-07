@@ -65,8 +65,10 @@ export function castShadowsFromProxies(light, proxies) {
   light.shadow.updateMatrices = (...args) => {
     const result = updateMatrices(...args), frustum = light.shadow.getFrustum();
     // Only proxies three will actually draw, so each one hides itself again: casting, inside
-    // the frustum and under shown ancestors (any other proxy would stay shown after the pass).
-    for (const proxy of proxies()) proxy.visible = proxy.castShadow && frustum.intersectsObject(proxy) && shownAncestors(proxy);
+    // the frustum unless its culling is off (three's own test) and under shown ancestors (any other
+    // proxy would stay shown after the pass). Development registration (main.js) turns culling off
+    // to draw every resident object once, so it now reaches proxies outside the sun's frustum too.
+    for (const proxy of proxies()) proxy.visible = proxy.castShadow && (!proxy.frustumCulled || frustum.intersectsObject(proxy)) && shownAncestors(proxy);
     return result;
   };
   return { hide() { for (const proxy of proxies()) proxy.visible = false; } };

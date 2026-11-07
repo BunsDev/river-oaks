@@ -109,4 +109,10 @@ test('tree shadow proxies appear only for shadow casting inside the sun frustum'
   assert.equal(far.visible, false, 'culled proxies stay hidden, so they cannot leak into the view');
   shadows.hide();
   assert.equal(near.visible, false, 'the beauty pass never sees a proxy');
+  // Three draws a caster with culling off wherever it is, so the proxy is shown for it too: the
+  // development registration that turns culling off then reaches a bird outside the sun's frustum.
+  far.frustumCulled = false;
+  sun.shadow.updateMatrices(sun);
+  assert.equal(far.visible, true, 'a proxy with culling off is drawn wherever it is');
+  shadows.hide();
 });
