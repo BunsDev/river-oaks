@@ -43,8 +43,8 @@ function render(view='full',time=0,speed=0,pose={}) {
   }
   else {camera.position.set(2.1,1.4,4.4);camera.lookAt(0,0.90,0);}
   camera.position.add(holder.position);camera.lookAt(holder.position.x,holder.position.y+(view==='portrait'?1.48:view==='reference'?.86:.90),holder.position.z);
-  avatar.update(time,pose.action??'continue',false,{speed,distance:pose.distance??time/1000*speed,heading:pose.heading,flying:pose.flying??false,flightSpeed:pose.flightSpeed??speed,vehicle:form},()=>0);
-  const costumeStart=performance.now();outfit.update(pose.flying??false,time);
+  avatar.update(time,pose.action??'continue',false,{speed,distance:pose.distance??time/1000*speed,heading:pose.heading,flying:pose.flying??false,flightSpeed:pose.flightSpeed??speed,vehicle:form,riding:pose.riding??false,ridingKind:pose.riding?'seat':undefined,seatToFloor:pose.seatToFloor},()=>0);
+  const costumeStart=performance.now();outfit.update(pose.flying??false,time,pose.riding??false);
   outfit.updateOptics?.(camera,innerHeight);
   const costumeUpdateMs=performance.now()-costumeStart;
   renderer.render(scene,camera);
