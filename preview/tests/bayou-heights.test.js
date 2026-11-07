@@ -17,7 +17,7 @@ import { buildCityKit, cullPlanting } from '../src/city-kit/render.js';
 import { buildEastGardenCommons } from '../src/east-garden-commons.js';
 import { heightsCommonsLayout } from '../src/heights-stream.js';
 import { COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from '../src/data/world-manifest.json' with { type: 'json' };
 
 const gardens = await loadDistrictData({ districtRevision: DISTRICT_REVISION_GARDENS });
 const commons = await loadDistrictData({ districtRevision: COMMONS_REVISION });

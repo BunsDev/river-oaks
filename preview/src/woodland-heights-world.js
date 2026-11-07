@@ -1,7 +1,7 @@
 import { commonsCollisionRings } from '../../shared/east-garden-commons-layout.js';
 import { TERRACES_REVISION } from '../../shared/bayou-terraces-layout.js';
 import { composeWoodlandHeights, terracesBaseLayout, WOODLAND_ENTRY, WOODLAND_ID, WOODLAND_REVISION } from '../../shared/woodland-heights.js';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from './data/world-manifest.json' with { type: 'json' };
 import { validateWorldManifest } from './world-manifest.js';
 
 export function validateWoodlandRegistration(registration, layout) {

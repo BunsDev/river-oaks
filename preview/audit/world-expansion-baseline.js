@@ -22,7 +22,7 @@ const release = await holdBrowserLock('world expansion baseline');
 // against it; RIVER_OAKS_BASELINE_PROFILES=desktop (or --profiles) limits the viewports.
 const revision = process.env.RIVER_OAKS_BASELINE_REVISION ?? 'river-oaks-gardens-3', view = process.env.RIVER_OAKS_BASELINE_VIEW ?? 'spawn';
 const output = join(root, '.runtime/world-expansion', `baseline-${options.label ? `${options.label}-` : ''}${revision === 'river-oaks-gardens-3' && view === 'spawn' ? '' : `${revision}-${view}-`}${new Date().toISOString().replaceAll(':', '-')}`);
-const files = ['preview/public/data/district.json', 'preview/public/data/world-manifest.json',
+const files = ['preview/public/data/district.json', 'preview/src/data/world-manifest.json',
   'preview/src/world-manifest.js', 'preview/src/district-interior-contract.js', 'preview/src/garden-campus-district.js',
   'preview/src/main.js', 'preview/src/render-audit.js', 'preview/src/walking.js', 'preview/src/world-surface.js',
   'server/district-data.js', 'server/world.js', 'shared/east-garden-commons-layout.js',

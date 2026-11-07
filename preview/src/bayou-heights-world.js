@@ -1,6 +1,6 @@
 import { commonsCollisionRings, COMMONS_REVISION } from '../../shared/east-garden-commons-layout.js';
 import { composeBayouHeights, commonsBaseLayout, HEIGHTS_ENTRY, HEIGHTS_ID, HEIGHTS_REVISION } from '../../shared/bayou-heights.js';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from './data/world-manifest.json' with { type: 'json' };
 import { validateWorldManifest } from './world-manifest.js';
 
 export function validateHeightsRegistration(registration, layout) {

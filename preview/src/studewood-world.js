@@ -1,7 +1,7 @@
 import { commonsCollisionRings } from '../../shared/east-garden-commons-layout.js';
 import { HEIGHTS_REVISION } from '../../shared/bayou-heights-layout.js';
 import { composeStudewood, heightsBaseLayout, STUDEWOOD_ENTRY, STUDEWOOD_ID, STUDEWOOD_REVISION } from '../../shared/studewood.js';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from './data/world-manifest.json' with { type: 'json' };
 import { validateWorldManifest } from './world-manifest.js';
 
 export function validateStudewoodRegistration(registration, layout) {

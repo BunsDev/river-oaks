@@ -4,7 +4,7 @@ The expansion preserves the authored District, Gardens revision, gallery and int
 
 ## Spatial contract
 
-`preview/public/data/world-manifest.json` describes locations within a continuous coordinate frame. Location IDs are distinct from multiplayer room IDs: registering a location does not create a room or authorize movement. Version 1 supports translation only; it deliberately retains metre scale and the existing east/north/up axes. Rendering uses east/up/negative-north, while server poses retain east/north/up. The projection is EPSG:32615 relative to longitude −95.425, latitude 29.755, matching the existing District derivative.
+`preview/src/data/world-manifest.json` describes locations within a continuous coordinate frame. Location IDs are distinct from multiplayer room IDs: registering a location does not create a room or authorize movement. Version 1 supports translation only; it deliberately retains metre scale and the existing east/north/up axes. Rendering uses east/up/negative-north, while server poses retain east/north/up. The projection is EPSG:32615 relative to longitude −95.425, latitude 29.755, matching the existing District derivative.
 
 Each location has an immutable identity, local rectangular bounds, translation, content revision, entry IDs and positions, content status and reciprocal adjacency. Adjacency requires a shared edge of positive length; corners and gaps are insufficient. Positive-area overlap is rejected, including overlap introduced by translation. Shared boundary coordinates are permitted; future traversal must retain the current location until the server accepts a crossing to avoid ambiguity on the edge. The manifest is a content description, not a collision or walkability representation.
 

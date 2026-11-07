@@ -15,7 +15,7 @@ import { distribution } from './metrics.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const output = join(root, '.runtime/world-streaming', `matched-${new Date().toISOString().replaceAll(':', '-')}`);
-const files = ['preview/public/data/district.json', 'preview/public/data/world-manifest.json',
+const files = ['preview/public/data/district.json', 'preview/src/data/world-manifest.json',
   'preview/src/world-manifest.js', 'preview/src/district-interior-contract.js', 'preview/src/garden-campus-district.js',
   'preview/src/main.js', 'preview/src/render-audit.js', 'preview/audit/world-streaming-matched.js',
   'preview/src/commons-stream.js', 'preview/src/spatial-chunk-stream.js', 'preview/src/east-garden-commons.js',

@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { validateWorldManifest, validateDistrictLocation, localToWorld, worldToLocal, locationWorldBounds } from '../src/world-manifest.js';
 const read = name => JSON.parse(readFileSync(new URL(`../public/data/${name}.json`, import.meta.url)));
+const readManifest = () => JSON.parse(readFileSync(new URL('../src/data/world-manifest.json', import.meta.url)));
 // Keep malformed-input fixtures independent of the bundled location count/order.
 const manifest = () => {
-  const bundled = read('world-manifest');
+  const bundled = readManifest();
   const district = { ...bundled.locations.find(location => location.id === 'river-oaks-district'), adjacent: ['empty-test'] };
   const [west, south, east, north] = district.bounds_m;
   return { ...bundled, default_location: district.id, locations: [district, {
@@ -16,7 +17,7 @@ const manifest = () => {
 
 test('registered District preserves original objects, IDs, coordinates and data', () => {
   const district = read('district'), before = structuredClone(district);
-  assert.equal(validateDistrictLocation(read('world-manifest'), district), district);
+  assert.equal(validateDistrictLocation(readManifest(), district), district);
   assert.deepEqual(district, before);
   const value = manifest(), validated = validateWorldManifest(value);
   validated.locations[0].bounds_m[0] = 0;
@@ -189,7 +190,7 @@ test('location and entry identities survive registry reordering', () => {
 });
 
 test('authored Commons partitions the original reservation without overlaps or total-area growth', () => {
-  const value=validateWorldManifest(read('world-manifest')), district=value.locations.find(location=>location.id==='river-oaks-district');
+  const value=validateWorldManifest(readManifest()), district=value.locations.find(location=>location.id==='river-oaks-district');
   const commons=value.locations.find(location=>location.id==='east-garden-commons');
   assert.equal(commons.status,'authored');
   assert.equal(commons.content_revision,'east-garden-commons-market-1');

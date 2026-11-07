@@ -14,7 +14,7 @@ import { WOODLAND_REVISION } from '../../shared/woodland-heights-layout.js';
 import { composeTypeSafePlace, woodlandBaseLayout, TYPESAFE_RECIPES, TYPESAFE_REVISION, WOODLAND_OPENINGS, inTypeSafePlace } from '../../shared/typesafe-place.js';
 import { assembleNeighborhood, walkableConnectivity } from '../../shared/city-kit/assemble.js';
 import { KIT_CONVENTIONS } from '../../shared/city-kit/catalog.js';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from '../src/data/world-manifest.json' with { type: 'json' };
 
 const woodlandWorld = await loadDistrictData({ districtRevision: WOODLAND_REVISION });
 const world = await loadDistrictData({ districtRevision: TYPESAFE_REVISION }), layout = world.eastGardenCommons, { typesafe } = layout;

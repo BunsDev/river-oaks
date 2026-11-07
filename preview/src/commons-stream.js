@@ -1,5 +1,5 @@
 import { Box3, Frustum, Matrix4, Vector3 } from 'three';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from './data/world-manifest.json' with { type: 'json' };
 import { locationWorldBounds } from './world-manifest.js';
 import { validateCommonsRegistration } from './east-garden-commons-world.js';
 import { createSpatialChunkStream } from './spatial-chunk-stream.js';

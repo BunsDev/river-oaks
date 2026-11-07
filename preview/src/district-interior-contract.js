@@ -1,4 +1,4 @@
-import worldManifest from '../public/data/world-manifest.json' with { type: 'json' };
+import worldManifest from './data/world-manifest.json' with { type: 'json' };
 import { validateDistrictLocation } from './world-manifest.js';
 import { generateBuildingInteriorPlan } from './building-interiors-plan.js';
 import { planStoreRooms } from './store-rooms.js';

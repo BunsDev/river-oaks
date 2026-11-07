@@ -14,7 +14,7 @@ import { captureBaselineSource } from './baseline-580-source.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const output = join(root, '.runtime/world-expansion', `baseline-580-${new Date().toISOString().replaceAll(':', '-')}`);
-const files = ['preview/public/data/district.json', 'preview/public/data/world-manifest.json',
+const files = ['preview/public/data/district.json', 'preview/src/data/world-manifest.json',
   'preview/src/world-manifest.js', 'preview/src/district-interior-contract.js', 'preview/src/garden-campus-district.js',
   'preview/src/main.js', 'preview/src/render-audit.js', 'preview/audit/baseline-580-browser.js', 'pnpm-lock.yaml'];
 const snapshot = () => captureBaselineSource(root);
