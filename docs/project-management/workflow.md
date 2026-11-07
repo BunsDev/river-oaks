@@ -190,8 +190,9 @@ Do not abort another owner's merge or cherry-pick their partial work implicitly.
 
 At handoff report before/after worktree and branch counts, exact delivered PRs,
 checks/skips, preserved tasks and their next actions. Refresh after cleanup: other
-agents can create worktrees during the same round. This workflow adds no scheduler
-or external PM service; run it at these explicit lifecycle boundaries.
+agents can create worktrees during the same round. Run it at these explicit
+lifecycle boundaries; the optional [scheduled sweep](#scheduled-sweep) repeats the
+same evidence pass between sessions but adds no new authority or external PM service.
 
 ## Safe retirement
 
@@ -220,7 +221,7 @@ evidence and the restoration manifest; do not prune them as part of the same rou
 
 ### Proactive retirement rule
 
-Evaluate candidates at session start, immediately after each verified merge and before handoff. This is an agent lifecycle obligation, not an unattended deletion scheduler or new cleanup authority. When local retirement is authorized, finish every eligible candidate in the same session after delivery evidence is secured. Never hold the landing queue while archiving or pruning. Preserve blocked work and continue with independent candidates; report each blocker, responsible owner and exact next action.
+Evaluate candidates at session start, immediately after each verified merge and before handoff. This is an agent lifecycle obligation and grants no new cleanup authority; the [scheduled sweep](#scheduled-sweep) only retires what an owner has already released and queues the rest. When local retirement is authorized, finish every eligible candidate in the same session after delivery evidence is secured. Never hold the landing queue while archiving or pruning. Preserve blocked work and continue with independent candidates; report each blocker, responsible owner and exact next action.
 
 | Current evidence | Required action |
 | --- | --- |
@@ -362,7 +363,8 @@ exact-ref/SHA permit only after verification. Normal commits, fetches and pushes
 are unaffected. Git offers no hook for `git worktree remove` or registration pruning: use this command as
 the supported removal path. Hooks are an accidental-deletion guard, not a security
 boundary; an explicit hooks override (including an older bootstrap resetting hooksPath) can
-bypass them. This command does not install a background cleanup scheduler.
+bypass them. This command installs no scheduler; the opt-in
+[scheduled sweep](#scheduled-sweep) calls the same guarded `retire()` path.
 
 ## Inventory, archives and remote branches
 
@@ -406,6 +408,56 @@ every command here.
 
 `pnpm run project:cancel` is `project:prune --cancel-stale` under its own name;
 the authorization, cutoff and guard rules above apply unchanged.
+
+## Scheduled sweep
+
+`pnpm run project:sweep` is one pass of the lifecycle loop above. It runs the
+inventory (local and `--remote`), then writes an action queue to
+`<primary>/.runtime/project-sweep/latest.md` (and `latest.json`, plus the newest 72
+timestamped receipts). Each row names the action, who must take it and a starting
+command:
+
+| Action | Meaning | Who acts |
+| --- | --- | --- |
+| `retire` | `project:prune` accepts the branch now | the sweep, only with `--apply` |
+| `release-needed` | delivered at the exact merged head; only the owner release is missing | the owner (exact-head release) |
+| `archive-ignored` | delivered; only ignored files and the release remain | the owner: archive evidence, remove named caches, release |
+| `reconcile-delivered` | delivered, with dirty files, an unmerged head or other guard blockers | the owner |
+| `stale-claim` | the owner's lease expired more than `--stale-lease-hours` (24) ago, or it has no lease and was last updated that long ago | the owner renews, hands off or releases; Val may reassign |
+| `orphan` | no task records the branch or detached checkout | Val or its creator: claim, record or cancel |
+| `cancel-review` | no commits beyond the default branch and no owner | Val (cancellation authority) |
+| `remote-review`, `remote-delete-review` | remote branch without, or with, exact merge proof | Val (remote deletion authority) |
+
+Exit 0 means nothing needs action, 1 means the queue is not empty (or a retirement
+was refused between plan and apply), 2 means an error. `--apply` retires only the
+`retire` rows, each through `retire()`, which re-plans from live evidence, archives
+and restore-tests the tip, then removes it. The sweep never releases a claim,
+cancels work, deletes caches or ignored files, or deletes a remote branch. Those
+stay with the owner or Val as described above. An expired lease is still not a release.
+
+`pnpm run project:sweep-agent install [--interval-minutes 60] [--apply]` installs a
+macOS launch agent (`dev.bunsdev.river-oaks.project-sweep`) for the primary
+checkout. Each run fetches `origin`, stages `origin/main`'s `scripts/` under
+`~/Library/Application Support/river-oaks/project-sweep/stage` (outside every
+worktree, so the sweep always runs current main tooling and never counts as
+activity in a checkout), runs the sweep at low priority and posts a notification.
+`--fallback-ref refs/remotes/origin/<branch>` names a branch to stage from only
+while `origin/main` lacks `scripts/project-sweep.mjs` (for an install made before
+this tooling merges); main wins as soon as it has the script.
+It is report-only unless installed with `--apply`. Owner releases are fresh for two
+hours, so the interval is capped at 110 minutes. `print` shows the generated runner
+and plist without installing, `status` reports whether it is loaded and in which
+mode, and `uninstall` removes it while keeping receipts and the log.
+
+Every run ends its log (`~/Library/Application Support/river-oaks/project-sweep/sweep.log`)
+with one `exit N` line; 2 or more is a failed run and also posts a notification.
+macOS privacy protection (TCC) applies to launch agents: when the checkout lives
+under `~/Documents`, `~/Desktop` or `~/Downloads`, the first scheduled run on
+2026-11-01 failed with `fatal: Unable to read current working directory: Operation
+not permitted` although the same commands succeed in a terminal session. The job
+then needs Full Disk Access for `/bin/sh` (the program launchd starts), granted by
+the maintainer in System Settings > Privacy & Security, or a checkout outside those
+folders. Granting it is a host security decision, not something the installer does.
 
 ## Register sweeps
 
