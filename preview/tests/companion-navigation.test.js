@@ -72,9 +72,9 @@ test('companion routes enter and leave shipped shops through doors and around th
   assert.ok(checked>=20,`Only ${checked} shop doors tested`);
 });
 
-test('outdoor companion routing includes the parked coach and unicorn team footprint',()=>{
+test('outdoor companion routing includes the parked road vehicle footprint',()=>{
   assert.equal(typeof routes.createCompanionNavigation,'function');
-  const placement={position:[0,0,0],yaw:.4,scale:.9,team:true};
+  const placement={position:[0,0,0],yaw:.4,scale:1,vehicle:'rolls'};
   const nav=routes.createCompanionNavigation(empty,{placement});
   const start=[-12,-5],end=[10,5],route=nav.route(start,end);
   assert.ok(route);let previous=start;

@@ -6,7 +6,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
-ASSETS = ("tree_small_02", "shrub_02", "grass_medium_02")
+ASSETS = ("shrub_02", "grass_medium_02")
 RAW = ROOT / "data/raw/landscape"
 MAX_BYTES = 128 * 1024 * 1024
 
