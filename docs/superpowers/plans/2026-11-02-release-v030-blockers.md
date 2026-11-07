@@ -149,9 +149,21 @@ Why: avatar materials are clones (`avatars.js` `instantiateAvatar`), and `Materi
 
 Change, on top of `c0b41e74`: a figure's textures are its drawn bone textures plus one for each drawn figure-only geometry with morph position, normal or color attributes. Material textures count for listeners only. The per-figure texture cap goes from 7 to 6, one over the most one figure added in this run. The probe confirms it before `world-streaming` runs. If the count is exact, credited textures equal the rise over the no-figure level on every row; the next run is read for that. Unit tests: a drawn figure's maps count no textures and still count listeners; a morph geometry counts once drawn, and not while a drawn object outside the figures shares it; the streaming-bound test uses this run's client B evicted numbers. Five tests fail on the `c0b41e74` count.
 
+### 2026-11-07 on `08ec9326`: credited textures track the raw rise
+
+From the snapshot moved to `08ec9326` (the change above), under one lock (12:30 to 13:53Z, 1-minute load 3.6 to 6.6 at each start):
+
+- Per-figure caps (240 samples, two context-loss cycles): up to 54 listeners, 26 geometries and 5 textures, within 58, 28 and 6. The chain was set to stop here otherwise.
+- `graphics-recovery` **passed**: 2620 listeners, 725 geometries and 214 textures on four samples, with three figures holding 70 geometries and 13 textures alone. On the fifth a figure changed (68 and 12) and the raw counts fell with it (2610, 723, 212).
+- `world-streaming` **passed**, 20 of 20 measured trips; retained heap 1.015 and 1.019 times the warmed baseline.
+
+Net of the figures, textures rose at most **+2** over lap 2, loaded and evicted: +8 on `c0b41e74`, +10 on `5800b4c1`. Geometries rose at most +1; scene objects were 9093 and 8610 on all 22 laps. On the 66 rows with a figure shown, the credited textures equal the raw rise over the no-figure level on 33, are one short on 24 and one over on 6. The other 3 are exact against a lower no-figure level. Geometries match or are one over, as before.
+
+That lower level: client A's loaded state read 277 instead of 281 with no figure shown on laps 16, 17 and 22, and client B's read 270 instead of 274 on laps 17 and 22. Net of figures, A's lap 6 and B's laps 15 and 21 sat at the same lower level. The run on `c0b41e74` held 281 and 274 on every such lap. Four fewer textures is not retention; which textures they are is not attributed.
+
 ## Gaps
 
-- `world-streaming` textures: `c0b41e74` passed using +8 of the +10 allowed, because material textures were over-credited. The bone-and-morph count that replaces it has not yet run in the browser; see Runs.
+- `world-streaming` textures: on `08ec9326` the credited textures track the raw rise, and the bound used +2 of the +10 allowed. On some loaded laps the no-figure level was 4 textures lower (above), a drop, not attributed. The new count has one run.
 - The world-streaming leak control showed detection on 12 laps but crashed at lap 18 before its final assertion (see Runs). It was not rerun. Why the page reloaded is unproven. An independent review (session d2e1, 06:28 and 07:37Z) found: the access entry deliberately reloads after any server-answered failed recheck (`access-recheck.js`, fail-closed, unchanged here); the browser fixture's `/auth/session` never answers 503 and sets each identity's expiry an hour from every request, so elapsed time does not explain it; the report kept two console 503s without URLs. Its diagnostics-only patch to `world-streaming.js` (main-frame navigations, HTTP errors by path, failed requests; no query, header, cookie or body; no assertion or bound changed) was reviewed here and was exercised in both diagnostic runs: no navigation beyond the first page load, and the 503s are the voice-settings calls. The control was not rerun with it.
 - About 16 geometries at lap 20 of the failed `465413bb` run are not attributed; they were freed by the next lap and did not recur in the passing run.
 - `graphics-recovery` now leaves out what the shown figures alone hold, as world-streaming does. A figure walking in during the cycles has not been seen in a run; the unit tests cover it.
@@ -180,7 +192,9 @@ Core (`pnpm run verify`) on `89c6ad12` plus this patch passed 01:48–01:53Z: to
 - 08:08–09:23Z and 09:26–10:40Z: the two diagnostic `world-streaming` runs (above), each passed 20 of 20; the snapshot was restored clean after each.
 - Core on `c0b41e74` passed 10:51–10:55Z: tooling 307/307, preview 5241 pass / 1 skip / 30 todo, server 1132 pass / 285 skip, desktop 127 pass / 5 skip, Python 215.
 - 10:56–12:18Z on `c0b41e74`: cap probe, `graphics-recovery` passed, `world-streaming` passed 20 of 20 (above); the snapshot was restored clean.
+- Core on `08ec9326`'s tree passed 12:25–12:30Z: tooling 307/307, preview 5242 pass / 1 skip / 30 todo, server 1132 pass / 285 skip, desktop 127 pass / 5 skip, Python 215. The ledger was edited during the run; tooling was rerun on the final tree (307/307).
+- 12:30–13:53Z on `08ec9326`: cap probe within the caps, `graphics-recovery` passed, `world-streaming` passed 20 of 20 (above); the snapshot was restored clean.
 
 ## Next step
 
-#885 is ready at `93d88066` and Val's merge authorization was requested; do not land before it. Run the cap probe, `graphics-recovery` and `world-streaming` on the bone-and-morph count from the snapshot; the chain stops if the probe exceeds a cap. Push it to #885 only if they pass and credited textures track the raw rise over the no-figure level, then tell Val what changed. If Val authorizes the earlier head first, land that head and open the count as its own PR. After the merge, pin the head and re-qualify every gate row in `2026-11-02-release-v030.md`, then the phone two-player and reconnect work in `2026-11-03-v030-perf-attribution.md`.
+#885 carries the bone-and-morph count once its hosted checks pass on the pushed head. Val's merge authorization was requested and has not been given; do not land before it. Before landing, check the PR is not a draft, every commit is verified and it is not behind main. After the merge, pin the head and re-qualify every gate row in `2026-11-02-release-v030.md`, then the phone two-player and reconnect work in `2026-11-03-v030-perf-attribution.md`. After the merge, pin the head and re-qualify every gate row in `2026-11-02-release-v030.md`, then the phone two-player and reconnect work in `2026-11-03-v030-perf-attribution.md`.
