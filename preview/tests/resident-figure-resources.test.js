@@ -24,15 +24,17 @@ test('a figure not shown excuses nothing, so a real step cannot pass behind the 
   assert.deepEqual(exclusiveResources(scene, [figure]), { figures: 0, geometries: 0, textures: 0, listeners: 0 });
 });
 
-test('two figures sharing a look count it once, and a hidden scene object still claims it', () => {
+test('two figures sharing a look count it once; a drawn scene object claims it, a hidden one does not', () => {
   const look = new THREE.BufferGeometry(), map = new THREE.Texture(), own = new THREE.BufferGeometry();
   const scene = new THREE.Scene(), a = new THREE.Group(), b = new THREE.Group();
   a.add(mesh(look, map), mesh(own, map)); b.add(mesh(own, map));
   scene.add(a, b);
   assert.deepEqual(exclusiveResources(scene, [a, b]), { figures: 2, geometries: 2, textures: 1, listeners: 0 });
-  const hidden = mesh(look, map);
-  hidden.visible = false;
-  scene.add(hidden);
+  // A boutique guest wearing the same look behind a hidden interior never draws it.
+  const interior = new THREE.Group(), guest = mesh(look, map);
+  interior.visible = false; interior.add(guest); scene.add(interior);
+  assert.deepEqual(exclusiveResources(scene, [a, b]), { figures: 2, geometries: 2, textures: 1, listeners: 0 });
+  interior.visible = true;
   assert.deepEqual(exclusiveResources(scene, [a, b]), { figures: 2, geometries: 1, textures: 0, listeners: 0 });
 });
 

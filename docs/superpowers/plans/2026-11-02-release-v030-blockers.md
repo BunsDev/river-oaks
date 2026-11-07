@@ -98,10 +98,24 @@ Earlier single runs, one run each at different load: `33ade52a` passed, `f0d0172
 
 The limits stay +20 objects, +20 geometries and +10 textures. `preview/e2e/resource-bounds.js` removes, from both sides, only what the drawn figures alone hold (`preview/src/figure-resources.js`). A resource shared with anything else still counts, and anything retained alongside figures still fails (`preview/tests/resident-figure-resources.test.js`). This is the bound change the goal allowed; the PR names it so Val can read it.
 
+### 2026-11-07 full run on `465413bb`: one lap over, from a figure's shared geometry
+
+`river-oaks-v030-qualify-c7`, 01:56 to 03:11Z, load 6 to 8 at start. All other checks passed. The bound failed at lap 20, on client B's loaded state only: 890 geometries against 855 at the baseline. Net of what the shown figures alone hold, every lap is flat: loaded 883 (A) on laps 2 to 22, and 832 (B) on all of them except lap 20. Evicted is 769 (A) and 718 (B) on every lap. Scene objects are 9093 and 8610 on all 22.
+
+At lap 20, client B showed two figures that added 58 geometries, but only 35 counted as theirs alone. The other 23, one figure's worth, are also held by some object outside the figures that was not drawn. Avatars are `SkeletonUtils.clone`s of one cached template per appearance (`instantiateAvatar`), and residents wear the appearances players can wear, so every wearer of a look shares its geometries. The leak control was stopped before it started, because it would be void once the figure accounting changes.
+
+A scratch probe (120 samples at the District spawn, 03:44Z) listed, for every shown figure, the resources some object outside the figures also uses. In 57 of 120 samples a resident shared geometry only with objects that are never drawn: a hidden avatar holder directly under the scene (Jevica-rig body, hair, brows, lashes) and hidden boutique staff in the store interiors layer (`man-casual` suit). The old rule kept those counted, though only the figure uploaded them; `remove()` disposes the figure's avatar, which frees them when the figure leaves.
+
+That explains part of lap 20, not all of it. Client A, about 1 m away and most likely drawing the same two residents, had them add 42 geometries, all figure-only. On client B they added 58 and only 35 counted: about 7 shared with an undrawn object (the class above) and about 16 new geometries no shown figure held, freed by the next lap. Those 16 are not attributed.
+
+The rule now counts a shared resource as the figure's unless a **drawn** object outside the figures uses it. An object hidden after it was drawn keeps its upload until disposed, so at most what a shown figure shares with it is excused, and only while that figure is shown. The per-figure caps were re-measured under the new rule (240 samples, two context-loss cycles, 03:50Z): up to 26 geometries, 2 textures and 54 listeners. Caps: 28 geometries, 5 textures (the 2026-11-04 measure) and 58 listeners.
+
 ## Gaps
 
-- The resident-aware bound has no full `world-streaming` run yet, and no injected per-lap leak was run end to end. The unit tests cover the arithmetic. The proxy rule change also widens what world-streaming's registration draws, so that run covers it too (see Runs).
+- The world-streaming leak control showed detection on 12 laps but crashed at lap 18 before its final assertion (see Runs). It was not rerun.
+- About 16 geometries at lap 20 of the failed `465413bb` run are not attributed; they were freed by the next lap and did not recur in the passing run.
 - `graphics-recovery` now leaves out what the shown figures alone hold, as world-streaming does. A figure walking in during the cycles has not been seen in a run; the unit tests cover it.
+- One pass of each journey; hosted CI runs neither long journey.
 
 ## Runs
 
@@ -113,8 +127,15 @@ From detached snapshot `river-oaks-v030-qualify-c7` (`89c6ad12` plus this patch'
 
 Core (`pnpm run verify`) on `89c6ad12` plus this patch passed 01:48–01:53Z: tooling 307/307, preview 5272 pass / 1 skip / 30 todo, server 1132 pass / 285 skip, desktop 127 pass / 5 skip, Python 215 passed.
 
-Pending: a full `world-streaming` and the same journey with three drawn geometries retained per measure (must fail on the resource bound).
+- 01:56–03:11Z: full `world-streaming` on `465413bb` failed lap 20 (above); its leak control was stopped before it started.
+- 03:44Z: figure sharing probe (above). 03:50Z: per-figure caps re-measured under the new rule.
+- With the drawn-sharer rule and the new caps (`figure-resources.js` here differs from the run snapshot by one comment line, edited after the runs began): 04:05Z `graphics-recovery` passed (2620 listeners ×5, 725 geometries and 214 textures ×5, three figures holding 70 geometries alone); 04:07Z its 21-listener control failed on the listener check (2662 to 2746).
+
+- 04:07–05:21Z, load 5 to 7 at start: full `world-streaming` **passed**, 20 of 20 measured trips within the bound. Net of what the shown figures alone hold, loaded is 882–883 (A) and 831–832 (B) and evicted 768–769 and 717–718 on every lap; scene objects 9093 and 8610 on all 22. The −1 laps are the rule's stated leniency (a geometry a figure shares with an object hidden after it drew). The lap-20 step of the earlier run did not recur.
+
+- 05:21–06:20Z: the same journey with three drawn geometries retained per measure. The bound flagged every measured lap from lap 6 to lap 17 ("Resource bound exceeded", net loaded rising 6 a lap from 897 to 988), against none in the clean run. At lap 18, about 59 minutes in, the run stopped on `window.__riverCarriage is not a function` before its final assertion. That is not attributed; it matches the timing of the fixture identity's hour (the run's other known late failure). The detection is shown; a clean end-to-end failure of the control is not.
+- Core (`pnpm run verify`) on the final tree passed 06:22–06:27Z: tooling 307/307, preview 5272 pass / 1 skip / 30 todo, server 1132 pass / 285 skip, desktop 127 pass / 5 skip, Python 215 passed.
 
 ## Next step
 
-Read the runs, record them here, mark #885 ready, and ask Val for merge authorization. After the merge, pin the head and re-qualify every gate row in `2026-11-02-release-v030.md`.
+Mark #885 ready and ask Val for merge authorization; do not land before it. After the merge, pin the head and re-qualify every gate row in `2026-11-02-release-v030.md`, then the phone two-player and reconnect work in `2026-11-03-v030-perf-attribution.md`.

@@ -1,7 +1,12 @@
 // Development probe for resource journeys: what the figures drawn right now alone hold on the GPU.
 // A resident figure comes and goes as residents walk (resident-figures.js), so raw renderer counts
-// swing with who is near. Only a figure actually shown counts, and anything else in the scene that
-// uses a resource keeps it counted, even if hidden: a wrong answer here makes the bound stricter.
+// swing with who is near. Only a figure actually shown counts, and anything else drawn that uses a
+// resource keeps it counted. A hidden object that shares one does not: avatars are clones of one
+// template per appearance (avatars.js instantiateAvatar), and a hidden avatar holder or boutique
+// guest wearing a resident's look shares its geometry without drawing it, so only the figure
+// uploaded it, and removing the figure frees it (part of a world-streaming failure on 2026-11-07).
+// An object hidden after it was drawn keeps its upload until disposed, so at most what a
+// shown figure shares with it is excused, and only while that figure is shown.
 // The renderer adds its disposal listeners to each geometry, texture, material and bone texture on first
 // draw, so a figure walking in also steps a listener count (graphics-recovery). Materials and bone
 // textures are tracked for those listeners only; the geometry and texture counts are unchanged.
@@ -24,7 +29,7 @@ function collectShown(object, sets) {
 }
 
 function collectRest(object, sets, figures) {
-  if (figures.has(object)) return;
+  if (figures.has(object) || !object.visible) return;
   add(object, sets);
   for (const child of object.children) collectRest(child, sets, figures);
 }
