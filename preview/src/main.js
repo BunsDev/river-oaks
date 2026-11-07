@@ -688,7 +688,10 @@ function startMultiplayer() {
       // combat state (a pose, or just facing an opponent) drops the legacy gesture so the two never
       // stack and a rival's fading flinch never pops into the old stagger pose.
       const fighting=figure=>{const combat=combatStateFor(figure.id,town);return combat?{...figure,combat,gesture:null}:figure;};
-      remotePlayers.sync([...players.filter(p=>!p.office).map(fighting),...(players.length?[...rivalFigures(town.crime).map(fighting),...policeFigures(town.police).map(fighting),...residents(town.locals,self?.position)]:[])], selfId);
+      // No players: the town socket was lost or closed. Its figures are hidden and held, so a
+      // rejoin within the hold keeps them instead of loading and compiling them again.
+      if (players.length) remotePlayers.sync([...players.filter(p=>!p.office).map(fighting),...rivalFigures(town.crime).map(fighting),...policeFigures(town.police).map(fighting),...residents(town.locals,self?.position)], selfId);
+      else remotePlayers.hold();
       officeUI?.sync(players,selfId);
       placesUI?.setPlayers(players, selfId);
       if (!players.length) buildLayer?.sync([]);

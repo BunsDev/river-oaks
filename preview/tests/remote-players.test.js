@@ -389,6 +389,33 @@ test('pending fallback resources are released on departure and layer teardown',a
  }finally{delete globalThis.__remoteAvatarGate;globalThis.document=previousDocument;}
 });
 
+test('a lost town socket hides and holds every figure; the rejoin keeps the ones still named without loading them again',async()=>{
+ const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};globalThis.__remoteAvatarAttempts=[];let players;
+ try{
+  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera();camera.position.set(0,1.6,8);players=createRemotePlayers(scene,new Element());
+  const resident={id:'resident:n1',name:'Neighbour',position:[2,0,0],altitude:0,yaw:0,appearance:'man-casual',gesture:null,movement:'upright'};
+  players.sync([peerLook(custom('rose')),resident],'self');await settle();players.update(0,camera);
+  const [peerHolder,residentHolder]=scene.children,peerRig=peerHolder.children[0],residentRig=residentHolder.children[0];
+  assert.equal(globalThis.__remoteAvatarAttempts.length,2);assert.equal(peerHolder.visible,true);
+  players.hold(60000);players.update(16,camera);
+  assert.equal(scene.children.length,2,'held figures stay in the scene');
+  assert.ok(scene.children.every(holder=>holder.visible===false),'a held figure is not drawn');
+  assert.deepEqual(players.stats(),[],'held figures read as gone');assert.deepEqual(players.bounds(),[]);
+  assert.ok(peerRig.userData.suspends>0,'a held rig stops animating');
+  // The rejoin's first snapshot names the peer again but not the resident.
+  players.sync([peerLook(custom('rose'))],'self');await settle();players.update(32,camera);
+  assert.equal(globalThis.__remoteAvatarAttempts.length,2,'the peer is kept, not loaded again');
+  assert.equal(peerHolder.children[0],peerRig);assert.equal(peerRig.userData.disposed,undefined);assert.equal(peerHolder.visible,true);
+  assert.equal(players.stats()[0].ready,true);
+  assert.equal(residentRig.userData.disposed,true,'a figure the town no longer names leaves');assert.equal(residentHolder.parent,null);
+  // A rejoin that does not come within the hold: the held figures are released.
+  players.hold(5);await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(scene.children.length,0);assert.equal(peerRig.userData.disposed,true);
+  players.sync([peerLook(custom('rose'))],'self');await settle();
+  assert.equal(globalThis.__remoteAvatarAttempts.length,3,'after the hold the peer loads again');
+ }finally{players?.dispose();delete globalThis.__remoteAvatarAttempts;globalThis.document=previousDocument;}
+});
+
 test('a pending placeholder follows the peer position and existing visibility rules',async()=>{
  const previousDocument=globalThis.document;globalThis.document={createElement:()=>new Element()};let release,visible=true,players;
  globalThis.__remoteAvatarGate=()=>new Promise(resolve=>{release=resolve;});
