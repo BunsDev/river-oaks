@@ -8,18 +8,22 @@
 // An object hidden after it was drawn keeps its upload until disposed, so at most what a
 // shown figure shares with it is excused, and only while that figure is shown.
 // The renderer adds its disposal listeners to each geometry, texture, material and bone texture on first
-// draw, so a figure walking in also steps a listener count (graphics-recovery). Materials are tracked
-// for those listeners only.
-// A bone texture is a GPU texture as well: three creates one per skeleton on its first draw. Every
-// avatar has two, a 16x16 for the body skeleton its parts share (avatar-skeletons.js) and a 4x4 for its
-// two-bone gaze skeleton (eye-tracking.js). Counted only for listeners, they left two textures per
-// shown figure in the world-streaming texture bound (a GL-level trace on 2026-11-07, 87 of 88 samples).
-// A texture counts only once three has uploaded it, which is when it adds its disposal listener
-// (WebGLTextures initTexture): one never uploaded is not in the renderer's count, so excusing it would
-// make room for a retained texture. The same trace had a lap's two figures credited with 5 material textures
-// while none of their figure-only textures had been uploaded.
+// draw, so a figure walking in also steps a listener count (graphics-recovery). Materials and their
+// textures are tracked for those listeners only.
+// The textures a figure alone adds to the renderer's count are the ones three makes when it draws it:
+// one bone texture per skeleton, and one morph-target texture per geometry with morph attributes
+// (WebGLMorphtargets), freed when the geometry is disposed. Every avatar has two bone textures, a 16x16
+// for the body skeleton its parts share (avatar-skeletons.js) and a 4x4 for its two-bone gaze skeleton
+// (eye-tracking.js). Either counts only once drawn: the bone texture carries its disposal listener once
+// uploaded (WebGLTextures initTexture), and a drawn geometry carries the renderer's.
+// Material textures are not the figure's: avatar materials are clones that keep the look's own maps
+// (avatars.js instantiateAvatar), uploaded once for everyone wearing that look and not freed when a figure
+// goes. On 2026-11-07 each shown figure added 3 to 5 textures to the raw count; crediting material
+// textures excused up to 10 for two, so the world-streaming bound read +8 where bone textures alone read +5.
 const texturesOf = material => Object.values(material).filter(value => value?.isTexture);
 const listenersOf = resource => Object.values(resource._listeners ?? {}).reduce((sum, list) => sum + list.length, 0);
+const drawn = resource => listenersOf(resource) > 0;
+const morphTargets = geometry => ['position', 'normal', 'color'].some(name => geometry.morphAttributes?.[name] !== undefined);
 const resourceSets = () => ({ geometries: new Set(), textures: new Set(), materials: new Set(), bones: new Set() });
 const add = (object, sets) => {
   if (object.geometry) sets.geometries.add(object.geometry);
@@ -49,6 +53,6 @@ export function exclusiveResources(scene, figures) {
   collectRest(scene, rest, new Set(figures));
   const only = kind => [...own[kind]].filter(item => !rest[kind].has(item));
   const listeners = ['geometries', 'textures', 'materials', 'bones'].flatMap(only).reduce((sum, resource) => sum + listenersOf(resource), 0);
-  const textures = [...only('textures'), ...only('bones')].filter(texture => listenersOf(texture) > 0).length;
+  const textures = only('bones').filter(drawn).length + only('geometries').filter(geometry => morphTargets(geometry) && drawn(geometry)).length;
   return { figures: shown.length, geometries: only('geometries').length, textures, listeners };
 }

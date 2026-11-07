@@ -3,9 +3,10 @@
 // hold is left out of both sides (figure-resources.js). The limits are unchanged. No figure may
 // excuse more than the most one was measured to add, so growth inside a live figure still counts:
 // up to 26 geometries over 240 samples on 2026-11-07, now that what only hidden objects share counts
-// as the figure's (23 on 2026-11-04 before that). Textures: up to 5 material textures (2026-11-04),
-// plus the two bone textures every avatar's skeletons hold (counted since 2026-11-07).
-export const FIGURE_GEOMETRIES = 28, FIGURE_TEXTURES = 7;
+// as the figure's (23 on 2026-11-04 before that). Textures: its two bone textures and its morph-target
+// textures, which one figure added 3 to 5 of to the raw count on 2026-11-07 (material textures are the
+// look's and are not counted).
+export const FIGURE_GEOMETRIES = 28, FIGURE_TEXTURES = 6;
 
 const withoutFigures = state => {
   const { figures, geometries, textures } = state.residentResources;
