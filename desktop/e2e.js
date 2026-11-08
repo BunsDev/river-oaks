@@ -6,8 +6,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer as createSocket } from 'node:net';
+import { harnessSource, observeApplication, observeRenderer } from './e2e-revisions.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+const source = harnessSource(root);
 const profile = await mkdtemp(join(tmpdir(), 'river-oaks-e2e-'));
 const env = { ...process.env };
 // CPU rendering for CI runners, with the browser journeys' scene budget
@@ -65,7 +67,8 @@ const app = await electron.launch({ executablePath, args: [...(executablePath ? 
 // stay in Playwright's buffer and only surface on a launch failure.
 for (const stream of ['stdout', 'stderr']) app.process()[stream]?.on('data', chunk => process.stderr.write(`[electron] ${chunk}`));
 const errors = [], failedAssets = [];
-const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'hosted', software, checks: [] };
+const report = { mode: executablePath ? 'packaged' : env.RIVER_OAKS_DEV_URL ? 'development' : 'hosted', software, checks: [],
+  revisions: { harness: source, application: { status: 'unavailable', reason: 'application-not-yet-observed' } } };
 function check(name) { report.checks.push(name); console.log(`✓ ${name}`); }
 try {
   const page = await app.firstWindow();
@@ -111,6 +114,8 @@ try {
   };
   await gameReady();
   report.readyMs = Math.round(performance.now() - started);
+  report.revisions.application = await observeApplication(app);
+  report.revisions.atReady = await observeRenderer(page);
   report.assets = await page.locator('#viewport').evaluate(el => JSON.parse(el.dataset.assetProgress));
   assert.equal(report.assets.failed, 0);
   assert.deepEqual(failedAssets, []);
@@ -316,6 +321,7 @@ try {
     const canvas = host.querySelector('canvas');
     return { samples: intervals.length, medianMs: intervals[Math.floor(intervals.length * 0.5)], p95Ms: intervals[Math.floor(intervals.length * 0.95)], meanFps: 1000 * intervals.length / intervals.reduce((a, b) => a + b, 0), canvas: [canvas.width, canvas.height], quality: JSON.parse(host.dataset.quality), renderer: JSON.parse(host.dataset.renderStats) };
   });
+  report.revisions.atPerformance = await observeRenderer(page);
   report.performance.autoSettledMs = settledMs;
   assert.ok(report.performance.samples > 100, 'render loop keeps advancing');
   for (const fullScreen of [true, false]) {
@@ -408,7 +414,9 @@ try {
   report.status = 'passed';
 } catch (error) {
   report.status = 'failed'; report.error = error.stack; report.errors = errors;
+  if (report.revisions.application.status !== 'observed') report.revisions.application = await observeApplication(app);
   const failedPage=await app.firstWindow();
+  report.revisions.atFailure = await observeRenderer(failedPage);
   report.failureUI=await failedPage.evaluate(()=>({position:document.querySelector('#walking-hud')?.dataset.position,body:document.body.className,places:document.querySelector('#explore-section')?.textContent,walking:document.querySelector('#walking-hud')?.textContent})).catch(()=>null);
   await failedPage.screenshot({path:join(root,`output/playwright/desktop-${report.mode}-failure.png`)}).catch(()=>{});
   report.failureTrail = await failedPage.evaluate(() => ({ now: Math.round(performance.now()), events: window.__desktopTrail ?? null })).catch(() => null);
