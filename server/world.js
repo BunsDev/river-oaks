@@ -1747,7 +1747,15 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       let recoveredBeforeFiveRooms=null;
       const occupiedSeats=new Set(),heldSlots=new Set();
       for(const rider of nextPlayers.values())if(rider.cycling){if(heldSlots.has(rider.cycling))throw new Error('Invalid cycling slot');heldSlots.add(rider.cycling);}
-      for (const player of nextPlayers.values()) {
+      const restoredPilot=player=>{
+        const pilot=nextPlayers.get(player.passengerOf);
+        return pilot&&pilot.passengerId===player.id&&pilot.vehicle==='hover'&&isJevicaOwner(pilot.id)
+          &&pilot.passengerOf===undefined&&player.vehicle==null&&player.passengerId===undefined&&!player.sitting&&!player.performing?pilot:null;
+      };
+      // A passenger's pose belongs to the carrier, not an independent flight bubble.
+      // Validate/recover pilots first even when the checkpoint lists the rider first.
+      const restoreOrder=[...nextPlayers.values()].sort((a,b)=>Number(Boolean(restoredPilot(a)))-Number(Boolean(restoredPilot(b))));
+      for (const player of restoreOrder) {
         player.gesture??=null;player.gestureUntil??=0;
         player.buildingId??=null;player.levelId??=null;
         player.appearance=permittedAppearance(player.id,player.appearance??nextAppearances.get(player.id));
@@ -1762,10 +1770,18 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           player.position=[standEast,standNorth,interiorLevels.get(site.levelId).level.floorElevation];player.sitting=null;
         }
         const playerEnvironment=recoveredEnvironmentFor(player.levelId);
+        const ridingPilot=restoredPilot(player);
+        if(ridingPilot){
+          const [savedEast,savedNorth,savedGround]=player.position;
+          if(!inBounds(savedEast,savedNorth)||Math.abs(savedGround-playerEnvironment.groundAt(savedEast,-savedNorth))>.2
+            ||player.levelId!==ridingPilot.levelId||player.buildingId!==ridingPilot.buildingId)throw new Error('Invalid player position');
+          const [x,north]=besidePilot(ridingPilot,PASSENGER_SIDE);
+          Object.assign(player,{position:[x,north,playerEnvironment.groundAt(x,-north)],yaw:ridingPilot.yaw,altitude:ridingPilot.altitude});
+        }
         // A town saved before the Five Rooms solids (#841) may hold a player standing where a
         // Ribbon post or a shell frontage now stands: valid then, blocked now. Restore them on
         // the nearest free ground instead of refusing the town; anything else still fails closed.
-        if(!player.levelId && !player.sitting && !(player.altitude>0.1) && !player.vehicle) {
+        if(!ridingPilot && !player.levelId && !player.sitting && !(player.altitude>0.1) && !player.vehicle) {
           const [px,pn]=player.position;
           if(!playerEnvironment.isFree(px,-pn)) {
             recoveredBeforeFiveRooms??=createWalkingEnvironment(worldData,[...nextBuilds.values()].map(objectCollider).filter(Boolean),null,{fiveRooms:false});
@@ -1777,13 +1793,13 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
         }
         const [east,north,ground]=player.position;
         const flyingHull=Boolean(player.vehicle&&VEHICLES[player.vehicle]?.flies);
-        if(!player.levelId && !player.sitting && player.altitude>0.1) {
+        if(!ridingPilot && !player.levelId && !player.sitting && player.altitude>0.1) {
           const height=flyingHull ? playerEnvironment.recoverFlightHull(east,ground+player.altitude,-north,player.yaw)
             : playerEnvironment.recoverCanopyFlight(east,ground+player.altitude,-north);
           if(height!==null)player.altitude=height-ground;
         }
         if (!nextLedgers.has(player.id) || (!player.sitting && Math.abs(ground-playerEnvironment.groundAt(east,-north))>0.2)
-          || (player.altitude>0.1?!(flyingHull ? playerEnvironment.canFlyHullPilot(east,ground+player.altitude,-north,player.yaw)
+          || (player.altitude>0.1?!ridingPilot&&!(flyingHull ? playerEnvironment.canFlyHullPilot(east,ground+player.altitude,-north,player.yaw)
             : playerEnvironment.canFly(east,ground+player.altitude,-north)):!playerEnvironment.isFree(east,-north))
           || player.levelId && (playerEnvironment.roomAt(east,-north)?.planId!==player.levelId
             || interiorLevels.get(player.levelId).level.index>0 && (player.altitude>0 || player.sitting || player.vehicle))) throw new Error('Invalid player position');
@@ -1794,9 +1810,9 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
             || Math.abs(seatYaw(player.yaw-(seat.yaw-Math.PI)))>1e-6)throw new Error('Invalid seated player');
           occupiedSeats.add(key);
         }
-        // Older signed checkpoints allowed every player to fly. Keep their
-        // account and appearance, but restore non-Jevica players on safe ground.
-        if(player.altitude>0&&!canFlyAs(player.id,player.appearance)&&!(player.vehicle&&VEHICLES[player.vehicle]?.flies)){
+        // Older signed checkpoints allowed every player to fly independently.
+        // A matched passenger keeps the carrier's flight; solo non-Jevica flyers land.
+        if(!ridingPilot&&player.altitude>0&&!canFlyAs(player.id,player.appearance)&&!(player.vehicle&&VEHICLES[player.vehicle]?.flies)){
           const grounded=createWalkingState(recoveredEnvironment,[east,north]).position;
           player.position=[grounded[0],-grounded[2],recoveredEnvironment.groundAt(grounded[0],grounded[2])];
           player.altitude=0;
@@ -1915,11 +1931,7 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
       // A saved seat is a matched pair: the pilot owns and flies the Ribbonwing, the passenger is not in a vehicle.
       // A pair that no longer matches (a town that kept one side after a rollback, then lost the other)
       // is cleared on both sides and the passenger set on the ground below, rather than refusing the town.
-      const seatMatches=player=>{
-        const pilot=nextPlayers.get(player.passengerOf);
-        return Boolean(pilot)&&pilot.passengerId===player.id&&pilot.vehicle==='hover'&&isJevicaOwner(pilot.id)&&player.vehicle==null&&player.passengerId===undefined&&!player.sitting&&!player.performing;
-      };
-      for(const player of nextPlayers.values())if(player.passengerOf!==undefined&&!seatMatches(player)){
+      for(const player of nextPlayers.values())if(player.passengerOf!==undefined&&!restoredPilot(player)){
         delete player.passengerOf;player.altitude=0;player.position=[player.position[0],player.position[1],environment.groundAt(player.position[0],-player.position[1])];
       }
       for(const player of nextPlayers.values())if(player.passengerId!==undefined&&nextPlayers.get(player.passengerId)?.passengerOf!==player.id)delete player.passengerId;

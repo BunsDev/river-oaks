@@ -14,6 +14,7 @@ import { registerGroundSurfaces } from '../src/world-surface.js';
 import { hoverClear } from '../src/carriage-motion.js';
 import { VEHICLES } from '../src/vehicle-config.js';
 import { loadDistrictData } from '../../server/district-data.js';
+import { benchSeats } from '../src/world-interactions.js';
 
 const data = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url), 'utf8'));
 const environment = createWalkingEnvironment(data), plan = districtRibbonPlan(data);
@@ -391,5 +392,58 @@ test('passenger roll setup keeps the unsafe hull refusal and admits the settled 
       assert.equal(result.player.maneuver.kind, 'roll');
       assert.equal(world.snapshot().players.find(p => p.id === 'alice').passengerOf, owner);
     }
+  }
+});
+
+function occupiedCarrierCheckpoint(order = [owner, 'bob', 'alice']) {
+  const fixture = { ...data, walkSpawn: [east, north, 0] }, world = createSharedWorld(fixture, { now: () => 1000 });
+  for (const id of order) assert.equal(world.join({ userId: id, name: id }).ok, true);
+  const bench = benchSeats(fixture).find(item => item.buildId === 'bench:osm-node-8172494966');
+  assert.equal(world.command('bob', { type: 'travel', position: bench.approach }).ok, true);
+  assert.equal(world.command('bob', { type: 'sit', buildId: bench.buildId, slot: 0 }).ok, true);
+  const saved = world.checkpoint(), pilot = saved.payload.players.find(p => p.id === owner), passenger = saved.payload.players.find(p => p.id === 'alice');
+  Object.assign(pilot, { position: [east, north, ground], altitude: 1.8, yaw: 0, vehicle: 'hover', passengerId: 'alice' });
+  Object.assign(passenger, { position: [east, north + .68, environment.groundAt(east, -north - .68)], altitude: 1.8, yaw: 0, passengerOf: owner });
+  const seal = value => { const { checksum, ...envelope } = value; return { ...envelope, checksum: createHash('sha256').update(JSON.stringify(envelope)).digest('hex') }; };
+  return { fixture, saved, seal, bench };
+}
+
+test('a recovered carrier restores its seated passenger before independent flight admission, in either player order', () => {
+  for (const order of [[owner, 'bob', 'alice'], ['alice', 'bob', owner]]) {
+    const { fixture, saved, seal, bench } = occupiedCarrierCheckpoint(order);
+    const passenger = saved.payload.players.find(p => p.id === 'alice');
+    assert.equal(environment.canFly(east, passenger.position[2] + passenger.altitude, -passenger.position[1]), false,
+      'the recorded seated passenger cannot independently clear this station as a flight bubble');
+    const world = createSharedWorld(fixture, { now: () => 1000 });
+    assert.equal(world.restore(seal(saved)).ok, true, 'the valid carrier pair must not strand the occupied town');
+    const players = world.snapshot().players, pilot = players.find(p => p.id === owner), rider = players.find(p => p.id === 'alice'), sitter = players.find(p => p.id === 'bob');
+    assert.equal(pilot.vehicle, 'hover');
+    assert.equal(pilot.passengerId, 'alice');
+    assert.equal(rider.passengerOf, owner);
+    assert.equal(rider.altitude, pilot.altitude);
+    assert.notEqual(pilot.altitude, 1.8);
+    assert.equal(environment.canFlyHullPilot(east, ground + pilot.altitude, -north, 0), true);
+    assert.equal(sitter.sitting.buildId, bench.buildId);
+    for (const player of players) assert.equal(player.appearance, saved.payload.players.find(p => p.id === player.id).appearance);
+    const durable = world.checkpoint();
+    assert.equal(durable.payload.players.find(p => p.id === 'alice').altitude, durable.payload.players.find(p => p.id === owner).altitude,
+      'the writer must retain the recovered passenger altitude, not only project it in public snapshots');
+    const restarted = createSharedWorld(fixture, { now: () => 1000 });
+    assert.equal(restarted.restore(durable).ok, true);
+    assert.deepEqual(restarted.snapshot().players, players);
+  }
+});
+
+test('an unmatched passenger cannot borrow carrier recovery and an invalid carrier still fails closed', () => {
+  const { fixture, saved, seal } = occupiedCarrierCheckpoint();
+  const unmatched = structuredClone(saved); delete unmatched.payload.players.find(p => p.id === owner).passengerId;
+  assert.equal(createSharedWorld(fixture, { now: () => 1000 }).restore(seal(unmatched)).ok, false);
+  const invalidCarrier = structuredClone(saved); invalidCarrier.payload.players.find(p => p.id === owner).position[0] = 1e9;
+  assert.equal(createSharedWorld(fixture, { now: () => 1000 }).restore(seal(invalidCarrier)).ok, false);
+  for (const corrupt of [p => { p.position[0] = data.bounds_m[0] - 100; }, p => { p.position[2] += 10; }, p => { p.vehicle = 'not-a-vehicle'; }]) {
+    const invalidPassenger = structuredClone(saved); corrupt(invalidPassenger.payload.players.find(p => p.id === 'alice'));
+    const world = createSharedWorld(fixture, { now: () => 1000 }), before = world.checkpoint();
+    assert.equal(world.restore(seal(invalidPassenger)).ok, false);
+    assert.deepEqual(world.checkpoint(), before, 'invalid rider records must fail atomically before carrier normalization');
   }
 });
