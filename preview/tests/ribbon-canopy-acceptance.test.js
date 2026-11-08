@@ -395,6 +395,29 @@ test('passenger roll setup keeps the unsafe hull refusal and admits the settled 
   }
 });
 
+test('the captured hover-coach roll refuses the obstructed sweep and admits the clear-air path', async () => {
+  const fixture = await loadDistrictData(), env = createWalkingEnvironment(fixture);
+  const [x, north] = [-2765.0328207700218, -1288.3256128940986], yaw = -1.588093915593603;
+  for (const [index, altitude] of [6.399199999988082, 9].entries()) {
+    const world = createSharedWorld(fixture, { now: () => 1000 });
+    world.join({ userId: owner, name: 'Captured hover-coach pilot' });
+    const saved = world.checkpoint(), pilot = saved.payload.players.find(p => p.id === owner);
+    Object.assign(pilot, { position: [x, north, env.groundAt(x, -north)], altitude, yaw, vehicle: 'hover' });
+    const { checksum, ...envelope } = saved;
+    assert.equal(world.restore({ ...envelope, checksum: createHash('sha256').update(JSON.stringify(envelope)).digest('hex') }).ok, true);
+    const before = world.snapshot().players;
+    assert.equal(before[0].altitude, altitude, 'the legal starting pose must not need recovery');
+    const result = world.command(owner, { type: 'maneuver', kind: 'roll', id: `hover-coach-roll-${index}`, seq: 1 });
+    if (altitude < 9) {
+      assert.equal(result.error, 'maneuver_blocked');
+      assert.deepEqual(world.snapshot().players, before, 'refusing the canopy sweep must not move the pilot');
+    } else {
+      assert.equal(result.ok, true);
+      assert.equal(result.player.maneuver.kind, 'roll');
+    }
+  }
+});
+
 function occupiedCarrierCheckpoint(order = [owner, 'bob', 'alice']) {
   const fixture = { ...data, walkSpawn: [east, north, 0] }, world = createSharedWorld(fixture, { now: () => 1000 });
   for (const id of order) assert.equal(world.join({ userId: id, name: id }).ok, true);
