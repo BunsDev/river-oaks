@@ -71,10 +71,12 @@ export function buildAxeRoomInterior(room, options = {}) {
   for (const lane of AXE_LANES) {
     box(m.maple, lane.a, .005, (cage + D) / 2, lane.width - .1, .01, cageLength);
     box(m.yellow, lane.a, .012, lane.line, lane.width - .2, .006, .06);
-    box(m.timber, lane.a, 1.2, lane.target + .08, 1.2, 2.4, .12);
+    // The backboard stands 8 cm behind the painted target face.
+    box(m.timber, lane.a, 1.2, lane.target + .13, 1.2, 2.4, .1);
   }
   for (const a of fences) {
-    box(m.mesh, a, 1.3, cage + cageLength / 2, .02, 2.6, cageLength);
+    // Where the plaster wall is the cage's side, a mesh panel inside the wall would only fight it for depth.
+    if (a < aMax - .1) box(m.mesh, a, 1.3, cage + cageLength / 2, .02, 2.6, cageLength);
     for (let d = cage; d <= D + .01; d += cageLength / 3) box(m.steel, a, 1.3, Math.min(d, D - .03), .05, 2.6, .05);
     box(m.steel, a, 2.6, cage + cageLength / 2, .05, .05, cageLength);
   }
@@ -90,7 +92,8 @@ export function buildAxeRoomInterior(room, options = {}) {
   // Counter and axe rack inside the door, benches along the left wall, a neon strip.
   box(m.timber, -3.9, .52, 2.2, 2.2, 1.04, .7);
   box(m.maple, -3.9, 1.07, 2.2, 2.3, .05, .8);
-  box(m.timber, aMin + .1, 1.6, 2.2, .06, .9, 2.0);
+  // The rack's board runs from the plaster's face to 8 cm proud of it.
+  box(m.timber, aMin + .115, 1.6, 2.2, .08, .9, 2.0);
   for (let i = 0; i < 6; i++) {
     const d = 1.45 + i * .3;
     box(m.maple, aMin + .2, 1.6, d, .04, .55, .04);

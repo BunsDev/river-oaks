@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const suite = ['player-lifecycle', 'multiplayer-lifecycle', 'contextual-first-visit', 'store-intro', 'photo-mode', 'connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'game-hud', 'town-chat', 'game-chat-shared', 'rail-navigation', 'places', 'places-guide', 'destination-minimap', 'world-studio', 'ui-polish', 'hud-and-quality', 'hardware-acceleration', 'player-forms', 'carriage', 'unicorn-carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades', 'street-level', 'plaza-salon', 'plaza-stage', 'plaza-chess', 'plaza-checkers', 'plaza-connect-four', 'plaza-reversi', 'plaza-morris', 'plaza-shared-game', 'plaza-dominoes', 'cycling-rack', 'cycling-leaderboard', 'plaza-hearts', 'plaza-spades', 'plaza-mancala', 'plaza-go', 'plaza-chinese-checkers', 'plaza-xiangqi', 'salon-guide', 'plaza-backgammon', 'plaza-cribbage', 'plaza-jenga', 'plaza-yacht', 'plaza-wine-pong', 'plaza-shuffleboard', 'plaza-darts', 'plaza-liars-dice', 'plaza-table-lessons', 'ui-improvements', 'nearby-encounters'];
+const suite = ['player-lifecycle', 'multiplayer-lifecycle', 'contextual-first-visit', 'store-intro', 'photo-mode', 'connection-required', 'birds-visible', 'bird-cams', 'debug-tools', 'movement-review', 'sable', 'experience', 'sidebar', 'game-hud', 'town-chat', 'game-chat-shared', 'rail-navigation', 'places', 'places-guide', 'destination-minimap', 'world-studio', 'ui-polish', 'hud-and-quality', 'hardware-acceleration', 'player-forms', 'carriage', 'carriage-driver', 'carriage-companion', 'carriage-mobile', 'reference-facades', 'street-level', 'plaza-salon', 'plaza-stage', 'plaza-chess', 'plaza-checkers', 'plaza-connect-four', 'plaza-reversi', 'plaza-morris', 'plaza-shared-game', 'plaza-dominoes', 'cycling-rack', 'cycling-leaderboard', 'plaza-hearts', 'plaza-spades', 'plaza-mancala', 'plaza-go', 'plaza-chinese-checkers', 'plaza-xiangqi', 'salon-guide', 'plaza-backgammon', 'plaza-cribbage', 'plaza-jenga', 'plaza-yacht', 'plaza-wine-pong', 'plaza-shuffleboard', 'plaza-darts', 'plaza-liars-dice', 'plaza-table-lessons', 'ui-improvements', 'nearby-encounters'];
 const names = process.argv.slice(2);
 // Linux CI renders through Mesa under Xvfb, like the shared and security journeys;
 // Chromium's headless SwiftShader path stalls on the district scene.
@@ -57,7 +57,7 @@ try {
       // The draft-only workplace slice (#221): both default-off flags on for this fixture server only.
       'workplace':{RIVER_OAKS_WORKPLACE:'1',VITE_WORKPLACE:'true'},
     }[name]??{};
-    // The Computer embed journey frames a separate-origin child fixture (#486); other journeys get no Computer origin.
+    // The Computer embed journey frames a separate-origin child fixture (#486); other journeys disable Computer in fixture-server.js.
     // office-computer-real frames a real Computer checkout instead (RIVER_OAKS_COMPUTER_CHECKOUT, #487).
     if (name === 'office-computer-embed' || name === 'office-computer-real') {
       computerFixture = name === 'office-computer-real' ? await startRealComputer() : await startComputerFixture();

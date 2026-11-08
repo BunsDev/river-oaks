@@ -8,6 +8,7 @@ import { Euler, Quaternion, Vector3 } from 'three';
 import { serverNow } from './server-clock.js';
 import { VEHICLES } from './vehicle-config.js';
 import { isGameplayKey } from './keyboard-input.js';
+import { writeLive } from './action-cue.js';
 import './ribbonwing-seat.css';
 
 const REACH = 8;
@@ -53,9 +54,14 @@ export function createRibbonwingSeat({ host, viewport, walking, selfId, snapshot
     catch (error) { status.textContent = error.message; } finally { busy = false; }
   };
   const nameOf = id => snapshot()?.players?.find(player => player.id === id)?.name ?? 'Someone';
+  // Called every frame: the polite line is written only when its words change, or screen readers
+  // hear "… invites you aboard" again and again.
   const show = (text, label = null, cancelling = false) => {
-    panel.hidden = !text;status.textContent = text ?? '';
-    action.hidden = !label;if (label) action.textContent = label;cancel.hidden = !cancelling;
+    if (panel.hidden !== !text) panel.hidden = !text;
+    writeLive(status, text ?? '');
+    if (action.hidden !== !label) action.hidden = !label;
+    if (label && action.textContent !== label) action.textContent = label;
+    if (cancel.hidden !== !cancelling) cancel.hidden = !cancelling;
   };
   action.addEventListener('click', () => offer?.());
   cancel.addEventListener('click', () => run({ action: 'cancel' }));

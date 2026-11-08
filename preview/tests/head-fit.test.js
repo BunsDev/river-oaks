@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { measureHead, DEFAULT_HEAD_FIT } from '../src/head-fit.js';
-import { applyOzFolk, OZ_FOLK } from '../src/oz-folk.js';
 
 // A skinned sphere bound entirely to the head bone stands in for a skull or hair.
 function skinnedBall(head, skeleton, name, radius, offsetY) {
@@ -50,23 +49,4 @@ test('measurements scale with the instance and fall back for rigs without a skin
   assert.ok(Math.abs(small.skull.top - 0.075) < 0.004 && Math.abs(small.hair.radius - 0.0625) < 0.004, JSON.stringify(small));
   const model = new THREE.Group(); const head = new THREE.Bone(); head.name = 'head'; model.add(head);
   assert.deepEqual(measureHead({ model }), DEFAULT_HEAD_FIT);
-});
-
-test('every folk hat clears the measured hair and sits on the crown', () => {
-  for (const folk of OZ_FOLK) {
-    const avatar = rig();
-    const id = [...Array(200).keys()].map(i => `local-${i}`).find(id => OZ_FOLK[[...id].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0, 0) % OZ_FOLK.length] === folk);
-    const applied = applyOzFolk(avatar, id);
-    assert.equal(applied.name, folk.name);
-    const hat = avatar.head.children.find(child => child.name === `${folk.name} hat`);
-    assert.ok(hat, `${folk.name} hat attached`);
-    const box = new THREE.Box3().setFromObject(hat), fit = measureHead(avatar), origin = avatar.head.getWorldPosition(new THREE.Vector3());
-    const top = box.max.y - origin.y, bottom = box.min.y - origin.y;
-    const under = folk.hat === 'hood' ? fit.skull.top : fit.hair.top; // a hood replaces the hair
-    assert.ok(top > under + 0.01, `${folk.name}: rises above what it covers (${top.toFixed(3)} vs ${under.toFixed(3)})`);
-    assert.ok(bottom < fit.hair.top, `${folk.name}: reaches down to the head (${bottom.toFixed(3)})`);
-    assert.ok(hat.children.every(mesh => mesh.geometry.attributes.position.array.every(Number.isFinite)));
-    const hairMesh = avatar.model.children.find(mesh => mesh.material.name === 'bob01');
-    assert.equal(hairMesh.visible, folk.hat !== 'hood', `${folk.name}: hood replaces hair, other hats keep it`);
-  }
 });

@@ -19,3 +19,11 @@ export function supportAvailability(state, local) {
     dispatch: state.helpBudget < 1 ? 'No volunteer visits remaining.' : null,
   };
 }
+
+// Persisted scenario descriptions still identify older checkpoint payloads.
+// Present only capabilities available in shared-town play.
+export function communityScenarioDescription(state) {
+  if (state.scenarioKey === 'storm') return 'Reach six of eight neighbors after a storm. Cleanup takes longer, and supply kits offer limited relief. Storms hold volunteer visits.';
+  if (state.scenarioKey === 'delivery') return 'Restore essentials for six of eight neighbors using the available supplies and volunteer visits.';
+  return state.scenario.description;
+}

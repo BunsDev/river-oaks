@@ -9,6 +9,7 @@ import { TYPESAFE_REVISION } from '../../shared/typesafe-place-layout.js';
 import { createLanternWalkClient } from './lantern-walk.js';
 import { rivalFigures, policeFigures } from './crime-ui.js';
 import { residentFigureBudget, residentFigures } from './resident-figures.js';
+import { exclusiveResources } from './figure-resources.js';
 import { combatStateFor } from './combat-motion.js';
 // The resident ids drawn last snapshot (#640): resident-figures.js keeps the set stable at the cut.
 let drawnResidents = new Set();
@@ -1379,12 +1380,22 @@ window.__riverDebug = () => debugTools;
 if (import.meta.env.DEV) window.__riverTravelView = () => ({ camera: camera.position.toArray(), direction: camera.getWorldDirection(new THREE.Vector3()).toArray() });
 // The renderer registers a geometry or texture the first time an object is drawn, so GPU counts
 // read in a journey step up when a resident object (a wandering figure, a prop behind the player)
-// first enters view. Drawing every visible object once makes the counts comparable between samples.
+// first enters view. Drawing every visible object once, figures behind the camera included, makes
+// the counts comparable between samples. What the figures alone hold is read in the frame that drew
+// them (figure-resources.js).
+let residentFigureResources = { figures: 0, geometries: 0, textures: 0 };
 if (import.meta.env.DEV) window.__riverRegisterResident = () => new Promise(resolve => {
   const culled = [];
   scene.traverse(item => { if (item.frustumCulled) { culled.push(item); item.frustumCulled = false; } });
-  requestAnimationFrame(() => requestAnimationFrame(() => { for (const item of culled) item.frustumCulled = true; resolve(culled.length); }));
+  remotePlayers?.setFigureCulling(false);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    residentFigureResources = exclusiveResources(scene, remotePlayers?.residentFigureHolders() ?? []);
+    remotePlayers?.setFigureCulling(true);
+    for (const item of culled) item.frustumCulled = true;
+    resolve(culled.length);
+  }));
 });
+if (import.meta.env.DEV) window.__riverResidentFigureResources = () => residentFigureResources;
 if (import.meta.env.DEV) window.__riverSpatialStream = () => {
   let objects = 0; worldGroup?.traverse(() => objects++);
   const inventory = object => {
@@ -1761,7 +1772,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('motion-debu
     return {id,speaking:Boolean(id&&community?.speakingId===id),nod:station?.conversation.pose,face:station?.face.pose,mouth:rig?.speechPose,eyes:rig?.eyes.pose,head:head?.quaternion.toArray()};
   };
   window.__riverCreatorObjects=()=>({resources:buildLayer?.stats(),rendered:(buildLayer?.object.children??[]).filter(entry=>entry.userData.build).map(entry=>({id:entry.userData.build.id,parts:entry.children.filter(child=>child.isMesh).map(child=>({color:child.material.color.getHexString(),transmission:child.material.transmission??0,position:child.position.toArray(),size:child.scale.toArray()}))}))});
-  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray(),verticalFovDegrees:camera.fov,aspect:camera.aspect,near:camera.near,far:camera.far},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,unicorns:playerAvatar?.carriage.unicorns,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,mechanisms:playerAvatar?.carriage.mechanisms,maneuver:playerAvatar?.carriage.maneuver??null,maneuverTrace:playerAvatar?.carriage.maneuverTrace,craftQuaternion:playerAvatar?.carriage.object?.quaternion.toArray(),pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
+  window.__riverCarriage = () => ({camera:{view:walking?.cameraView,position:camera.position.toArray(),verticalFovDegrees:camera.fov,aspect:camera.aspect,near:camera.near,far:camera.far},vehicle:playerAvatar?.carriage.kind,chauffeur:playerAvatar?.carriage.chauffeur,companion:playerAvatar?.carriage.prince.companion,princePosition:playerAvatar?.carriage.prince.object.position.toArray(),princeVisible:playerAvatar?.carriage.prince.object.visible,wingsVisible:playerAvatar?.carriage.prince.object.getObjectByName('Jev’s angel wings')?.visible,placement:playerAvatar?.carriage.placement,spinners:playerAvatar?.carriage.spinners?.map(spinner=>({rotation:spinner.rotation.z})),visible:playerAvatar?.carriage.object.visible,riding:playerAvatar?.carriage.riding,tyreClearances:playerAvatar?.carriage.tyreClearances,mechanisms:playerAvatar?.carriage.mechanisms,maneuver:playerAvatar?.carriage.maneuver??null,maneuverTrace:playerAvatar?.carriage.maneuverTrace,craftQuaternion:playerAvatar?.carriage.object?.quaternion.toArray(),pose:walking.getPose(),rider:playerAvatar?.object.position.toArray(),riderYaw:playerAvatar?.object.rotation.y});
   window.__riverPeople = (bone = 'head') => [...[playerAvatar?.carriage.driver].filter(p=>p?.userData.avatar).map(person => ({id:person.userData.localId,holder:person})), ...(storePeople?.userData.figures ?? [])]
     .filter(person => person.id&&(community.state?.locals ?? []).some(local=>local.id===person.id)).map(person => {
       person.holder.updateWorldMatrix(true,true);

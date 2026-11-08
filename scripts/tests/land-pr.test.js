@@ -226,7 +226,7 @@ test('a queue lock held longer than the old ten-second budget delays rather than
   const dir = scratch(t), lock = join(dir, 'queue.lock');
   const mine = createQueue({ file: join(dir, 'queue.json'), lock, pid: 1, host: 'here', alive: () => true, lockWaitMs: 2000 });
   mkdirSync(lock);
-  const release = spawn(process.execPath, ['-e', `setTimeout(() => require('fs').rmdirSync(${JSON.stringify(lock)}), 600)`]);
+  const release = spawn(process.execPath, ['-e', "setTimeout(() => require('fs').rmdirSync(process.argv[1]), 600)", lock]);
   t.after(() => release.kill());
   const started = Date.now();
   mine.enqueue(7);

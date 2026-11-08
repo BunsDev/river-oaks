@@ -4,10 +4,6 @@ import { VEHICLES } from './vehicle-config.js';
 import { createWalkingEnvironment } from './walking.js';
 import { createPedestrianNetwork } from './pedestrian-network.js';
 
-export const CARRIAGE_SCALE=.78;
-
-const HALF_LENGTH=3.12,HALF_WIDTH=1.36,HEIGHT=3.7,TEAM_HALF_WIDTH=2.9;
-const halfWidth=(team,x)=>team&&x< -3.12?TEAM_HALF_WIDTH:HALF_WIDTH;
 function localPoint(placement,x,z) {
   const dx=x-placement.position[0],dz=z-placement.position[2],c=Math.cos(placement.yaw),s=Math.sin(placement.yaw);
   return [dx*c-dz*s,dx*s+dz*c];
@@ -23,21 +19,18 @@ function planHalfWidth(vehicle,x,reach=0) {
 export function carriageContains(placement,x,y,z,radius=0) {
   if(!placement)return false;
   const [a,b]=localPoint(placement,x,z),scale=placement.scale??1;
-  const vehicle=VEHICLES[placement.vehicle];
-  if(vehicle) {
-    // Glass above the body line stops bodies and the flight bubble, not a line of sight.
-    const top=radius<.1?vehicle.bodyHeight:vehicle.height;
-    return Math.abs(a)<vehicle.length/2*scale+radius&&Math.abs(b)<planHalfWidth(vehicle,a/scale,radius/scale)*scale+radius&&y+radius>placement.position[1]-.15&&y-radius<placement.position[1]+top*scale;
-  }
-  return a>-(placement.team?8:HALF_LENGTH)*scale-radius && a<HALF_LENGTH*scale+radius && Math.abs(b)<halfWidth(placement.team,a/scale)*scale+radius
-    && y+radius>placement.position[1]-.15 && y-radius<placement.position[1]+(a< -3.12*scale?3.2:Math.abs(a)>1.65*scale?2:HEIGHT)*scale;
+  const vehicle=VEHICLES[placement.vehicle];if(!vehicle)return false;
+  // Glass above the body line stops bodies and the flight bubble, not a line of sight.
+  const top=radius<.1?vehicle.bodyHeight:vehicle.height;
+  return Math.abs(a)<vehicle.length/2*scale+radius&&Math.abs(b)<planHalfWidth(vehicle,a/scale,radius/scale)*scale+radius&&y+radius>placement.position[1]-.15&&y-radius<placement.position[1]+top*scale;
 }
+
 export function carriageFootprint(placement) {
   const points=[],c=Math.cos(placement.yaw),s=Math.sin(placement.yaw),scale=placement.scale??1;
-  const vehicle=VEHICLES[placement.vehicle],rear=vehicle?vehicle.length/2:HALF_LENGTH;
-  const front=vehicle?rear:placement.team?8:HALF_LENGTH,steps=Math.ceil((front+rear)/.38);
+  const vehicle=VEHICLES[placement.vehicle];if(!vehicle)return [];
+  const rear=vehicle.length/2,front=rear,steps=Math.ceil((front+rear)/.38);
   for(let i=0;i<=steps;i++)for(let j=0;j<=8;j++){
-    const localX=-front+i*(front+rear)/steps,width=vehicle?vehicle.width/2:halfWidth(placement.team,localX);
+    const localX=-front+i*(front+rear)/steps,width=vehicle.width/2;
     const x=localX*scale,z=(-width+j*width/4)*scale;
     points.push([placement.position[0]+x*c+z*s,placement.position[2]-x*s+z*c]);
   }
@@ -46,6 +39,7 @@ export function carriageFootprint(placement) {
 // A road vehicle can stand wherever its whole footprint fits where a walker could stand:
 // on the road or off it, but never indoors, through a person or through a tree.
 export function vehicleCanOccupy(placement,environment,world,people=[]) {
+  if(!VEHICLES[placement?.vehicle])return false;
   if(carriageFootprint(placement).some(([x,z])=>!environment.isFree(x,z)||environment.roomAt?.(x,z)))return false;
   if(people.some(p=>!p.indoor&&!p.vehicleRole&&carriageContains(placement,p.position[0],placement.position[1]+1,-p.position[1],.65)))return false;
   return !treeSupports(world).some(tree=>carriageContains(placement,tree.position[0],placement.position[1]+1,-tree.position[1],.6));
@@ -56,8 +50,9 @@ export function vehicleCanOccupy(placement,environment,world,people=[]) {
 // be called while its owner is aloft, landing below. Rooms, trees, people and
 // slopes still refuse a spot. Road vehicles keep their lanes.
 const FLYING_REACH=40;
-export function findCarriageParking(world,pose,people=[],scale=1,team=false,vehicle=null) {
-  const flies=Boolean(vehicle&&VEHICLES[vehicle]?.flies);
+export function findCarriageParking(world,pose,people=[],vehicle='rolls') {
+  if(!Object.hasOwn(VEHICLES,vehicle))return null;
+  const scale=1,flies=Boolean(VEHICLES[vehicle].flies);
   if(!world||!pose||pose.roomId||(!flies&&(pose.flying||pose.altitude>0.05)))return null;
   const environment=createWalkingEnvironment(world),network=createPedestrianNetwork(world),candidates=[];
   const [vx,,vz]=pose.position,reach=flies?FLYING_REACH:25;
@@ -68,10 +63,10 @@ export function findCarriageParking(world,pose,people=[],scale=1,team=false,vehi
       if(length<1)continue;
       const ux=dx/length,un=dn/length,nearest=(vx-a[0])*ux+(-vz-a[1])*un;
       for(const shift of [0,-3,3,-6,6,-9,9,-12,12,-18,18])for(const side of [-1,1]) {
-        const t=Math.max(0,Math.min(length,nearest+shift)),offset=side*(vehicle?(road.width_m/2-STREET.gutterWidth)/2:road.width_m/2-(team?TEAM_HALF_WIDTH:HALF_WIDTH)*scale-.45);
+        const t=Math.max(0,Math.min(length,nearest+shift)),offset=side*(road.width_m/2-STREET.gutterWidth)/2;
         const x=a[0]+ux*t-un*offset,z=-(a[1]+un*t+ux*offset),distance=Math.hypot(x-vx,z-vz);
         if(distance>reach||distance<3)continue;
-        candidates.push({position:[x,environment.groundAt(x,z),z],yaw:Math.atan2(un,ux)+(vehicle&&side<0?Math.PI:0),pitch:0,roll:0,distance,scale,team,...(vehicle?{vehicle}:{})});
+        candidates.push({position:[x,environment.groundAt(x,z),z],yaw:Math.atan2(un,ux)+(side<0?Math.PI:0),pitch:0,roll:0,distance,scale,vehicle});
       }
     }
   }
@@ -83,12 +78,12 @@ export function findCarriageParking(world,pose,people=[],scale=1,team=false,vehi
       for(const shift of [0,-4,4,-8,8,-14,14,-20,20,-28,28]) {
         const t=Math.max(0,Math.min(length,nearest+shift)),x=a[0]+ux*t,z=-(a[1]+un*t),distance=Math.hypot(x-vx,z-vz);
         if(distance>reach||distance<3)continue;
-        for(const turn of [0,Math.PI])candidates.push({position:[x,environment.groundAt(x,z),z],yaw:Math.atan2(un,ux)+turn,pitch:0,roll:0,distance,scale,team,vehicle});
+        for(const turn of [0,Math.PI])candidates.push({position:[x,environment.groundAt(x,z),z],yaw:Math.atan2(un,ux)+turn,pitch:0,roll:0,distance,scale,vehicle});
       }
     }
     for(const radius of [6,9,12,16,20,25,31,FLYING_REACH])for(let k=0;k<24;k++) {
       const angle=k/24*Math.PI*2,x=vx+Math.cos(angle)*radius,z=vz+Math.sin(angle)*radius;
-      for(const yaw of [angle+Math.PI,angle+Math.PI/2])candidates.push({position:[x,environment.groundAt(x,z),z],yaw,pitch:0,roll:0,distance:radius+.01,scale,team,vehicle});
+      for(const yaw of [angle+Math.PI,angle+Math.PI/2])candidates.push({position:[x,environment.groundAt(x,z),z],yaw,pitch:0,roll:0,distance:radius+.01,scale,vehicle});
     }
   }
   candidates.sort((a,b)=>a.distance-b.distance);

@@ -34,10 +34,13 @@ async page => {
     // A self-driven ride is not parked beside a new arrival (it would stand in their path); it comes when called.
     if(await rider.evaluate(()=>document.querySelector('#canvas-host').dataset.carriageReady==='true'||window.__riverCarriage().visible))
       throw new Error('A resident\'s motorcycle was parked before they called it');
-    await rider.locator('#player-carriage').click();
-    await rider.waitForFunction(()=>document.querySelector('#canvas-host').dataset.carriageReady==='true');
-    await rider.locator('#player-ride').click();
-    await rider.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true'&&document.querySelector('#canvas-host').dataset.driving==='true');
+    // Her garage's keys are hers too (#791): Q calls the motorcycle and G boards it, from the world.
+    await rider.locator('#canvas-host').focus();await rider.keyboard.press('KeyQ');
+    await rider.waitForFunction(()=>document.querySelector('#canvas-host').dataset.carriageReady==='true',null,{timeout:10000}).catch(async()=>{
+      throw new Error(`Q did not call a non-owner's motorcycle: ${JSON.stringify(await rider.evaluate(()=>({status:document.querySelector('#player-status')?.textContent,call:document.querySelector('#player-carriage')?.disabled,title:document.querySelector('#player-carriage')?.title})))}`);});
+    await rider.locator('#canvas-host').focus();await rider.keyboard.press('KeyG');
+    await rider.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='true'&&document.querySelector('#canvas-host').dataset.driving==='true',null,{timeout:10000}).catch(async()=>{
+      throw new Error(`G did not board a non-owner's motorcycle: ${JSON.stringify(await rider.evaluate(()=>({status:document.querySelector('#player-status')?.textContent,ride:document.querySelector('#player-ride')?.disabled})))}`);});
     await rider.locator('#canvas-host').focus();await rider.keyboard.down('w');
     await rider.waitForFunction(id=>window.__riverMultiplayer().snapshot.players.find(player=>player.id===id)?.vehicle==='motorcycle',riderId,{timeout:20000});
     await rider.keyboard.up('w');
@@ -46,7 +49,8 @@ async page => {
     if(guestRide.jev||guestRide.kind!=='motorcycle'||!guestRide.driver||guestRide.title!=='Riding'||!guestRide.smartDriveHidden||!guestRide.padShown)
       throw new Error(`A resident is not driving the motorcycle herself: ${JSON.stringify(guestRide)}`);
     await rider.screenshot({path:'output/playwright/shared-ride-guest-motorcycle.png'});
-    await rider.locator('#player-ride').click();
+    // G steps her out again.
+    await rider.locator('#canvas-host').focus();await rider.keyboard.press('KeyG');
     await rider.waitForFunction(()=>document.querySelector('#canvas-host').dataset.riding==='false');
   } finally {await riderContext.close();}
   await page.locator('#play-tab-character').click();

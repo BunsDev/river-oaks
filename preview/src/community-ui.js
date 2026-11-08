@@ -4,7 +4,7 @@ import { COMMUNITY_SCENARIOS } from './community.js';
 import { createStoreEncounters } from './store-encounters.js';
 import './community.css';
 import './community-dialogue.css';
-import { supportAvailability } from './community-presentation.js';
+import { communityScenarioDescription, supportAvailability } from './community-presentation.js';
 import { createLocalSpeech } from './speech.js';
 import { prepareSpeechAvatar } from './speech-avatar.js';
 import { conversationLine } from './personas.js';
@@ -328,7 +328,7 @@ export function createCommunityPanel({ host, onFocus = () => {}, getVisitor = ()
     const finished = terminal(state);
     const remaining = state.scenario.duration - state.elapsed;
     text(scenarioTitle, state.scenario.title);
-    text(description, state.scenario.description);
+    text(description, communityScenarioDescription(state));
     text(run, finished ? 'Scenario ended' : state.running ? 'Pause scenario' : state.elapsed > 0 ? 'Resume scenario' : 'Begin scenario');
     run.disabled = !online || finished || !state.locals.length || actionPending;
     run.setAttribute('aria-pressed', String(state.running));

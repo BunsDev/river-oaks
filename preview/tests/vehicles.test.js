@@ -44,7 +44,7 @@ import { readFileSync } from 'node:fs';
 for(const kind of ['rolls','motorcycle','hover'])test(`${kind}: parking, swept driving, steering tyre contact and exit envelope use its own size`,()=>{
  const world=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url))),model=createRoadVehicle(kind);
  const pose={position:[world.walkSpawn[0],0,-world.walkSpawn[1]],flying:false,altitude:0};
- const parked=findCarriageParking(world,pose,[],1,false,kind);assert.ok(parked,'parking near the actual spawn');
+ const parked=findCarriageParking(world,pose,[],kind);assert.ok(parked,'parking near the actual spawn');
  const state={...parked,position:[0,0,0],yaw:.4,scale:1,distance:2,speed:0,steering:.35};
  const ground=(x,z)=>.02*x+.013*z;
  fitCarriageToGround(state,ground,model.wheelTreads);
@@ -153,7 +153,7 @@ test('the Ribbonwing stands on three pad contacts, pilots from the left seat and
 test('the Ribbonwing parks on the same streets as the car with both seats inside its envelope and canopy headroom',()=>{
  const world=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url))),spec=VEHICLES.hover;
  const pose={position:[world.walkSpawn[0],0,-world.walkSpawn[1]],flying:false,altitude:0};
- const parked=findCarriageParking(world,pose,[],1,false,'hover');assert.ok(parked,'parking near the spawn');
+ const parked=findCarriageParking(world,pose,[],'hover');assert.ok(parked,'parking near the spawn');
  assert.equal(parked.vehicle,'hover');
  for(const seat of [spec.driverSeat,spec.passengerSeat]) {
   assert.ok(carriageContains({vehicle:'hover',position:[0,0,0],yaw:0},seat[0],seat[1],seat[2]),`seat ${seat} inside the envelope`);

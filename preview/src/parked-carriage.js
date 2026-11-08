@@ -14,7 +14,7 @@ import { serverNow } from './server-clock.js';
 export function createParkedCarriage({scene,walking,getWorld,getLocals,getConversation,requestExit=async()=>({ok:true}),requestChauffeur,requestManeuver=async()=>({ok:false}),reducedMotion=false}) {
  let kind='rolls',model=createRoadVehicle(kind);model.object.visible=false;scene.add(model.object);
  const driver=createCarriageDriver({scene,getLocals,getConversation}),chauffeur=createChauffeur({fetcher:requestChauffeur});
- let placement=null,loadedWorld=null,environment=null,companionEnvironment=null,mounted=false,enabled=true,exiting=false,heldControls={};
+ let joinedOnce=false,placement=null,loadedWorld=null,environment=null,companionEnvironment=null,mounted=false,enabled=true,exiting=false,heldControls={};
  // Jev drives only a chauffeured kind (the pink car). In every other kind the
  // player takes the driver seat and the controls, and Jev stays out of it; the
  // Ribbonwing is flown from its driver (left) seat.
@@ -83,7 +83,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
  };
  const summon=()=>{
   if(!enabled||mounted||!environment||(chauffeured()&&driver.companion.mode!=='seat'))return false;
-  const next=findCarriageParking(getWorld(),walking.getPose(),getLocals()??[],1,false,kind);if(!next)return false;
+  const next=findCarriageParking(getWorld(),walking.getPose(),getLocals()??[],kind);if(!next)return false;
   chauffeur.request({mode:'stop'});placement={...next,speed:0,distance:0,steering:0,altitude:0,liftTarget:0,verticalSpeed:0,landing:false};fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);
   apply();model.object.visible=true;if(chauffeured())driver.configure(getWorld(),placement);else{driver.reset();driver.object.visible=false;}return true;
  };
@@ -91,7 +91,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   get object(){return model.object;},get kind(){return kind;},get label(){return model.spec.label;},get chauffeur(){return chauffeur.status;},
   select(value){
    const next=vehicleKind(value);if(!next||mounted||(chauffeured()&&driver.companion.mode!=='seat'))return false;if(next===kind)return true;
-   const parked=environment?findCarriageParking(getWorld(),walking.getPose(),getLocals()??[],1,false,next):null;if(environment&&!parked)return false;
+   const parked=environment?findCarriageParking(getWorld(),walking.getPose(),getLocals()??[],next):null;if(environment&&!parked)return false;
    activeManeuver=null;model.dispose();kind=next;model=createRoadVehicle(kind);model.object.visible=false;scene.add(model.object);placement=null;
    if(parked){placement={...parked,speed:0,distance:0,steering:0,altitude:0,liftTarget:0,verticalSpeed:0,landing:false};fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);apply();model.object.visible=enabled;if(chauffeured())driver.configure(getWorld(),placement);}
    if(!chauffeured()){driver.reset();driver.object.visible=false;}
@@ -104,7 +104,7 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   park(){ride.brake();if(placement)apply();return mounted;},
   stopTour(){chauffeur.request({mode:'stop'});if(placement)placement.speed=0;},
   setEnabled(value){enabled=value;if(!enabled){activeManeuver=null;if(mounted){const seat=ride.pose.seat;walking.dismount([seat[0],environment.groundAt(seat[0],seat[2]),seat[2]]);}driver.reset();placement=null;loadedWorld=null;model.object.visible=false;driver.object.visible=false;}},
-  get driver(){return driver.object;},get prince(){return driver;},get unicorns(){return [];},get spinners(){return model.spinners;},get placement(){return placement;},get chauffeured(){return chauffeured();},get riding(){return mounted;},get airborne(){return airborne();},land(){return ride.land();},
+  get driver(){return driver.object;},get prince(){return driver;},get spinners(){return model.spinners;},get placement(){return placement;},get chauffeured(){return chauffeured();},get riding(){return mounted;},get airborne(){return airborne();},land(){return ride.land();},
   // The Ribbonwing's mechanism state (canopy, steps, gear, tuck, fans, nozzles), for the journeys.
   get mechanisms(){return model.ribbonwing?.rig.value??null;},get trails(){return model.trails??null;},
   get maneuver(){return activeManeuver?{...activeManeuver}:null;},get maneuverTrace(){return maneuverTrace.map(entry=>({...entry}));},
@@ -120,11 +120,17 @@ export function createParkedCarriage({scene,walking,getWorld,getLocals,getConver
   // correction), before the page's next pose, and loads the world itself if it must. Only
   // aloft: she steps out on the ground, so a snapshot still naming the craft she just left
   // never puts her back in it.
+  // The page's first look at itself (joining) also resumes a craft the town already landed
+  // while it was away (world.away lands it during the reconnect grace); after that, only aloft.
   resumeRide(self){
-   if(!self||!enabled||!walking.active||mounted||exiting||self.passengerOf||!((self.altitude??0)>.1)||!VEHICLES[vehicleKind(self.vehicle)??'']?.flies)return false;
+   if(!self||!enabled||!walking.active)return false;
    if(!loadWorld()){trace('resume: world not ready');return false;}
+   // The first look counts whatever it finds (on foot too), so a later snapshot never passes for one.
+   const joining=!joinedOnce;joinedOnce=true;
+   if(mounted||exiting||self.passengerOf||!VEHICLES[vehicleKind(self.vehicle)??'']?.flies)return false;
+   if(!((self.altitude??0)>.1)&&!joining)return false;
    if(kind!==self.vehicle){activeManeuver=null;model.dispose();kind=self.vehicle;model=createRoadVehicle(kind);scene.add(model.object);driver.reset();driver.object.visible=false;}
-   placement={vehicle:kind,scale:1,team:false,position:[0,0,0],yaw:self.yaw,pitch:0,roll:0,speed:0,distance:0,steering:0,altitude:0,liftTarget:0,verticalSpeed:0,landing:false};
+   placement={vehicle:kind,scale:1,position:[0,0,0],yaw:self.yaw,pitch:0,roll:0,speed:0,distance:0,steering:0,altitude:0,liftTarget:0,verticalSpeed:0,landing:false};
    placeAtSeat(self.position[0],-self.position[1],self.altitude??0,self.yaw);fitCarriageToGround(placement,environment.groundAt,model.wheelTreads);
    apply();model.object.visible=true;chauffeur.request({mode:'stop'});
    mounted=true;if(!walking.mount(ride)){mounted=false;trace(`resume refused: ${walking.mountRefusal}`);return false;}

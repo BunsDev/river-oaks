@@ -176,7 +176,7 @@
 :root[data-theme] #control-panel .panel-footer { min-height: 42px; background: transparent; border-top: 1px solid var(--hud-hairline); color: var(--hud-muted); font-size: 11px; }
 :root[data-theme] #control-panel :is(select, textarea, input:not([type]), input[type=text], input[type=search], input[type=email]) { border: 1px solid var(--hud-hairline); border-radius: 10px; background: var(--hud-tile); color: var(--ink); box-shadow: none; }
 /* Tiles replace cards inside the sheet: no nested borders or shadows. */
-:root[data-theme] #control-panel :is(.multiplayer-roster, .wish-journal, .world-portal, .world-events) { border: 0; border-radius: var(--hud-tile-radius); background: var(--hud-tile); box-shadow: none; }
+:root[data-theme] #control-panel :is(.multiplayer-roster, .wish-journal, .world-portal) { border: 0; border-radius: var(--hud-tile-radius); background: var(--hud-tile); box-shadow: none; }
 :root[data-theme] #control-panel .community-primary { border: 0; border-radius: 10px; box-shadow: inset 0 1px 0 rgb(255 255 255 / .25); }
 :root[data-theme] #control-panel .experience-nav button:focus-visible,
 :root[data-theme] #control-panel .access-tools button:focus-visible { outline: 2px solid var(--section-color, var(--accent)); outline-offset: 2px; }

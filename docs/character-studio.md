@@ -421,8 +421,7 @@ GPL build tool and is not shipped.
 Everything else a look wears is authored in this repository: no third-party
 garment, hair or texture asset is loaded for these looks.
 
-- **Jevica:** `player-costume.js` → `jevica-costume.js`, with `jevica-drape.js`,
-  `jevica-embroidery.js`, `bodice-fitting.js` and `riding-clothes.js`.
+- **Jevica:** `player-costume.js` → `jevica-costume.js` and `jevica-suit.js`, with `jevica-drape.js`, `bodice-fitting.js` and `riding-clothes.js`. The unused gown embroidery was removed after the pantsuit replaced it.
 - **The other ten:** `romance-look.js` → `reference-archetypes.js`.
 - **Baked deformation data** carries its own receipt, which hashes the authored
   inputs, the rig and the generator, and states its provenance:

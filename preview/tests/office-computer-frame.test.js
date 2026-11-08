@@ -26,7 +26,15 @@ function setup(){
 }
 
 test('configuration accepts one exact public HTTPS origin and nothing else', () => {
- assert.equal(computerConfig({}),null,'missing configuration loads nothing');
+ const place={pageOrigin:'https://typesafe.place'};
+ assert.deepEqual(computerConfig({},place),{origin:'https://computer.typesafe.place',frameURL:'https://computer.typesafe.place/?embed=place',signInURL:'https://computer.typesafe.place/api/auth/login',openURL:'https://computer.typesafe.place/'},'an unconfigured desk on Place\'s production origin uses the hosted Computer');
+ // Hosted Computer's frame-ancestors refuse every other Place host, so its default frame could only time out there.
+ for(const pageOrigin of ['https://river-oaks-git-branch-bunsdev.vercel.app','https://www.typesafe.place','http://127.0.0.1:5173','http://localhost:5173',undefined])
+  assert.equal(computerConfig({},{pageOrigin}),null,`no default Computer on ${pageOrigin}`);
+ assert.equal(computerConfig({}),null,'without a page origin the default loads nothing');
+ assert.equal(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:ORIGIN},{pageOrigin:'http://127.0.0.1:5173'}).origin,ORIGIN,'an explicit origin applies on any host');
+ assert.equal(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:''},place),null,'an explicitly empty override loads nothing');
+ assert.equal(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:'off'},place),null,'the off rollback wins on the production origin');
  assert.equal(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:'off'}),null,'disabled configuration loads nothing');
  for(const bad of ['http://computer.example.test','https://computer.example.test/app','https://computer.example.test/?a=1','https://computer.example.test/#x','https://user:pw@computer.example.test',' https://computer.example.test','javascript:alert(1)','https://COMPUTER.example.test','https://computer.example.test:443','not a url'])
   assert.equal(computerConfig({VITE_TYPESAFE_COMPUTER_ORIGIN:bad}),null,bad);
