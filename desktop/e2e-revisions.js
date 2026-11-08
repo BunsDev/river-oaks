@@ -1,5 +1,13 @@
 import { execFileSync } from 'node:child_process';
 
+// Only the locally created --dev fixture uses this address. The existing world
+// snapshot observer is gated by motion-debug; it remains absent in production.
+export function revisionFixtureURL(address) {
+  const url = new URL(address);
+  url.searchParams.set('motion-debug', '1');
+  return url.href;
+}
+
 // This identifies the harness checkout, never a separately launched binary or
 // the hosted renderer. Missing provenance stays unknown rather than using CI env.
 export function harnessSource(root) {
@@ -27,9 +35,16 @@ export function rendererRevisions() {
   let style, content;
   try {
     const finish = window.__riverSpatialStream?.()?.finish;
+    const component = (key, identity = []) => {
+      const observed = field(finish, key), value = observed.value;
+      if (observed.status !== 'observed' || value === null || typeof value === 'string' || Array.isArray(value)) return observed;
+      return { status: 'observed', value: Object.fromEntries(identity.map(name => [name, field(value, name)])) };
+    };
     style = finish ? { status: 'observed', preference: field(finish, 'preference'),
       // Null means this component is unattached, not that it uses the preference.
-      components: Object.fromEntries(['commons', 'heights', 'campus', 'ribbon', 'fiveRooms', 'fiveRoomsLandscape'].map(key => [key, field(finish, key)])) }
+      components: { commons: component('commons'), heights: component('heights'), campus: component('campus'),
+        ribbon: component('ribbon', ['id', 'hash', 'finish']), fiveRooms: component('fiveRooms', ['version', 'finish', 'interiors']),
+        fiveRoomsLandscape: component('fiveRoomsLandscape', ['version', 'hash', 'finish']) } }
       : { status: 'unavailable', reason: 'renderer-finish-observer-unavailable' };
   } catch {
     style = { status: 'unavailable', reason: 'renderer-finish-observation-failed' };

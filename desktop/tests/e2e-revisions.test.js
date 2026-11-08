@@ -5,11 +5,21 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runInNewContext } from 'node:vm';
-import { harnessSource, observeApplication, observeRenderer } from '../e2e-revisions.js';
+import { harnessSource, observeApplication, observeRenderer, revisionFixtureURL } from '../e2e-revisions.js';
 
 // Match Playwright's cross-process serialization, including its lack of closures.
 const evaluated = (observer, realm, args = []) => JSON.parse(JSON.stringify(runInNewContext(`(${observer.toString()})(...args)`, { ...realm, args })));
 const page = window => ({ evaluate: observer => evaluated(observer, { window }) });
+
+test('the local fixture address enables its existing snapshot observer while retaining its route and query', () => {
+  const url = new URL(revisionFixtureURL('http://127.0.0.1:12345/play?world=fixture-world&finish=classic'));
+  assert.equal(url.origin, 'http://127.0.0.1:12345');
+  assert.equal(url.pathname, '/play');
+  assert.equal(url.searchParams.get('world'), 'fixture-world');
+  assert.equal(url.searchParams.get('finish'), 'classic');
+  assert.equal(url.searchParams.get('motion-debug'), '1');
+  assert.equal(revisionFixtureURL(url.href), url.href);
+});
 
 test('harness provenance observes real clean/dirty Git state and leaves a missing checkout unknown', async t => {
   const root = await mkdtemp(join(tmpdir(), 'desktop-revision-test-'));
@@ -33,14 +43,21 @@ test('launched app identity comes from its own process and does not invent sourc
 
 test('renderer receipts separate the preferred finish, attached components and accepted snapshot facts', async () => {
   const result = await observeRenderer(page({
-    __riverSpatialStream: () => ({ finish: { preference: 'pink-jet-age', commons: 'classic', heights: ['classic', 'pink-jet-age'], campus: null, ribbon: 'fixture-ribbon' }, inventory: { private: 'do-not-copy' } }),
+    __riverSpatialStream: () => ({ finish: { preference: 'pink-jet-age', commons: 'classic', heights: ['classic', 'pink-jet-age'], campus: null,
+      ribbon: { id: 'fixture-ribbon', hash: 'fixture-ribbon-hash', finish: 'classic', stats: { private: 'do-not-copy' } },
+      fiveRooms: { version: 'fixture-v2', finish: 'pink-jet-age', interiors: false, venues: [{ private: 'do-not-copy' }] },
+      fiveRoomsLandscape: { version: 'fixture-v2', hash: 'fixture-landscape', pending: ['do-not-copy'] } }, inventory: { private: 'do-not-copy' } }),
     __riverMultiplayer: () => ({ connected: false, selfId: 'do-not-copy', snapshot: { worldId: 'fixture-world', protocolVersion: 8, districtRevision: null, revision: 0, players: [{ name: 'do-not-copy' }], regionSha256: 'fixture-region' } }),
   }));
   assert.equal(result.style.preference.value, 'pink-jet-age');
   assert.deepEqual(result.style.components.commons, { status: 'observed', value: 'classic' });
   assert.deepEqual(result.style.components.heights.value, ['classic', 'pink-jet-age']);
   assert.deepEqual(result.style.components.campus, { status: 'observed', value: null });
-  assert.deepEqual(result.style.components.fiveRooms, { status: 'unavailable', reason: 'field-not-exposed' });
+  assert.equal(result.style.components.ribbon.value.finish.value, 'classic');
+  assert.equal(result.style.components.fiveRooms.value.version.value, 'fixture-v2');
+  assert.equal(result.style.components.fiveRooms.value.interiors.value, false);
+  assert.equal(result.style.components.fiveRoomsLandscape.value.hash.value, 'fixture-landscape');
+  assert.deepEqual(result.style.components.fiveRoomsLandscape.value.finish, { status: 'unavailable', reason: 'field-not-exposed' });
   assert.equal(result.content.source, 'accepted-multiplayer-snapshot');
   assert.equal(result.content.connected, false);
   assert.deepEqual(result.content.districtRevision, { status: 'observed', value: null });

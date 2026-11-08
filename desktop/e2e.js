@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer as createSocket } from 'node:net';
-import { harnessSource, observeApplication, observeRenderer } from './e2e-revisions.js';
+import { harnessSource, observeApplication, observeRenderer, revisionFixtureURL } from './e2e-revisions.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const source = harnessSource(root);
@@ -45,7 +45,7 @@ if (process.argv.includes('--dev')) {
   await writeFile(tempFiles.at(-1), ':root { --desktop-hmr-probe: before; }');
   vite = await createServer({ configFile: join(root, 'preview/vite.config.js'), plugins: [offlineBridge], server: { port: 0 } });
   await vite.listen();
-  env.RIVER_OAKS_DEV_URL = `http://127.0.0.1:${vite.httpServer.address().port}/`;
+  env.RIVER_OAKS_DEV_URL = revisionFixtureURL(`http://127.0.0.1:${vite.httpServer.address().port}/`);
 }
 delete env.ELECTRON_RUN_AS_NODE;
 const started = performance.now();
