@@ -1,5 +1,6 @@
 async page => {
   const { openHudSpace } = await import('./hud-navigation.js');
+  const { restoreBounds } = await import('./resource-bounds.js');
   const checks = [], samples = [], errors = [];
   const check = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); console.log(message); };
   page.on('pageerror', error => errors.push(error.message));
@@ -125,15 +126,35 @@ async page => {
     // Compare complete rebuilds, not whichever partial cube happened to render
     // before the once-per-second render-stats publication.
     await page.waitForFunction(captures => window.__graphicsProbe().reflections.captures > captures, capturesAtLoss);
-    const result = await probe();
-    samples.push({ memory: result.memory, listeners: result.listeners, resources: result.resources, frames: result.frames, reflections: result.reflections, capturesBefore: beforeCycle.reflections?.captures, capturesAtLoss, quality: result.quality, domListeners: await domListeners() });
+    // Context loss empties three's disposal listeners (7 remain) and each resource registers again on
+    // its next draw, so a raw count says which objects have been in view since the restore: walking
+    // residents moved it by +14 with no resource added. Draw everything once (main.js, dev only),
+    // as world-streaming does, so a rise between samples means a retained or added listener. That
+    // includes the sun-shadow proxies outside the sun's frustum: two flying birds' proxies once
+    // stepped the count by +2 after the first restore (landscape-models.js).
+    await page.evaluate(() => window.__riverRegisterResident());
+    // A resource can still arrive after that draw (the first sample once read 679 of 721 geometries).
+    // Sample once two reads a second apart agree: a leak steps per restore, so waiting cannot hide it.
+    let result = await probe();
+    for (let attempt = 0, last = ''; attempt < 30; attempt++) {
+      result.residentResources = await page.evaluate(() => window.__riverResidentFigureResources());
+      const counts = JSON.stringify([result.memory, result.resources, result.listeners, result.residentResources]);
+      if (counts === last) break;
+      last = counts;
+      await page.waitForTimeout(1000);
+      await page.evaluate(() => window.__riverRegisterResident());
+      result = await probe();
+    }
+    samples.push({ memory: result.memory, residentResources: result.residentResources, listeners: result.listeners, resources: result.resources, frames: result.frames, reflections: result.reflections, capturesBefore: beforeCycle.reflections?.captures, capturesAtLoss, quality: result.quality, domListeners: await domListeners() });
   }
   console.log('Five-cycle samples:', JSON.stringify(samples));
   const first = samples[0];
   check(samples.every(sample => sample.reflections.captures > sample.capturesAtLoss && !sample.reflections.failed), 'd: each resource sample follows a completed reflection rebuild');
   check(samples.every(sample => sample.domListeners === first.domListeners), 'd: five cycles keep DOM listener counts fixed');
-  check(samples.every(sample => sample.listeners <= first.listeners), 'd: five cycles keep GPU-resource listener counts bounded');
-  check(samples.every(sample => sample.memory.geometries <= first.memory.geometries && sample.memory.textures <= first.memory.textures), 'd: five cycles keep renderer geometry and texture counts bounded');
+  // A resident figure that walks in during the cycles is left out of both sides (resource-bounds.js).
+  const bounded = restoreBounds(samples);
+  check(bounded.listeners, 'd: five cycles keep GPU-resource listener counts bounded');
+  check(bounded.memory, 'd: five cycles keep renderer geometry and texture counts bounded');
   await page.screenshot({ path: 'output/playwright/graphics-recovery-five-cycles.png' });
 
   // Model a browser that does not expose the restore extension to the app. The
