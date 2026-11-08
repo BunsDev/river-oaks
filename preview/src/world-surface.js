@@ -35,8 +35,11 @@ export function registerGroundSurfaces(world,objects) {
       }
     }
   }
-  surfaces.set(world,{buckets,lastX:NaN,lastZ:NaN,lastBucket:[]});
+  surfaces.set(world,{buckets,lastX:NaN,lastZ:NaN,lastBucket:[],revision:(surfaces.get(world)?.revision??0)+1});
 }
+
+// Cached geometry anchored to these surfaces refreshes once after a world rebuild.
+export const groundSurfaceRevision = world => surfaces.get(world)?.revision ?? 0;
 
 // Read-only view of the registered ground triangles within a square around
 // (x, z), for the debug overlay. Each triangle is returned once, as three

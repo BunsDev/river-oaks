@@ -24,8 +24,9 @@ try {
     await writeFile('output/playwright/ipic/screening.json', JSON.stringify({ status: 'passed', browser: await browser.version(), ...result }, null, 2));
     console.log(JSON.stringify({ checks: result.checks, convergedAfterMs: result.convergedAfterMs, pausedSpreadMs: result.pausedSpreadMs }));
   } catch (error) {
+    // Retain the assertion and its frame evidence before potentially slow captures.
+    await writeFile('output/playwright/ipic/screening.json', JSON.stringify({ status: 'failed', error: error.stack, journeyEvidence: error.journeyEvidence ?? null }, null, 2));
     await Promise.all([host.screenshot({ path: 'output/playwright/ipic/screening-host-failure.png' }), viewer.screenshot({ path: 'output/playwright/ipic/screening-viewer-failure.png' })].map(p => p.catch(() => {})));
-    await writeFile('output/playwright/ipic/screening.json', JSON.stringify({ status: 'failed', error: error.stack }, null, 2));
     throw error;
   }
 } finally { await browser?.close(); await fixture?.close(); release(); }

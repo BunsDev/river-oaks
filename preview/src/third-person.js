@@ -26,7 +26,8 @@ export function thirdPersonPose(state, environment) {
     const t = step / 42, px = x + boom[0] * t, pz = z + boom[2] * t;
     // Indoor rooms already define traversable floor space. Outdoor roof-height
     // restrictions would collapse the camera into the visitor inside every shop.
-    const clear = room !== null ? environment.isFree(px, pz) : (environment.canFly?.(px, target[1] + boom[1] * t, pz) ?? environment.isFree(px, pz));
+    const cameraFree = environment.canPlaceCamera ?? environment.canFly;
+    const clear = room !== null ? environment.isFree(px, pz) : (cameraFree?.(px, target[1] + boom[1] * t, pz) ?? environment.isFree(px, pz));
     const here = environment.roomAt?.(px, pz) ?? null, y = target[1] + boom[1] * t;
     if (!clear || (here?.storeId ?? null) !== room) break;
     if (y < environment.groundAt(px, pz) + 0.25) break;
@@ -34,6 +35,12 @@ export function thirdPersonPose(state, environment) {
     // the escalators and upstairs, the view was the top of a ceiling slab or the inside of a lamp (Val, 2026-10-26).
     if (here?.ceilingAt && y > here.ceilingAt(px, -pz) - 0.3) break;
     fraction = t;
+  }
+  // A long boom can step across a finite slab between the 42 ordinary samples.
+  // Clip its whole segment before contact, including either face and the rim.
+  if (room === null) {
+    const hit = environment.cameraSegmentHit?.(target, target.map((value, i) => value + boom[i]));
+    if (hit) fraction = Math.min(fraction, Math.max(0, hit.fraction - 0.01 / Math.hypot(...boom)));
   }
   return { position: target.map((value, index) => value + boom[index] * fraction), target, showBody: fraction > 0.18 };
 }

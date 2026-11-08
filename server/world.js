@@ -15,7 +15,8 @@ import { placesOf } from '../preview/src/places.js';
 import { APPEARANCE_COOLDOWN_MS, MOVEMENTS, canFlyAs, canUseAppearance, isJevicaOwner, permittedAppearance, sharedAppearance } from '../preview/src/shared-appearances.js';
 import { VEHICLES, vehicleKind, vehicleShared } from '../preview/src/vehicle-config.js';
 import { SEATS as RIBBONWING_SEATS } from '../preview/src/ribbonwing-design.js';
-import { RIBBONWING_MANEUVERS, MANEUVER_RECOVERY_ALTITUDE, MANEUVER_TIP_CLEARANCE, isManeuverKind, maneuverPose, maneuverSweep } from '../preview/src/ribbonwing-maneuvers.js';
+import { RIBBONWING_MANEUVERS, MANEUVER_RECOVERY_ALTITUDE, MANEUVER_TIP_CLEARANCE, isManeuverKind, maneuverPose, maneuverSweep, maneuverSample } from '../preview/src/ribbonwing-maneuvers.js';
+import { ribbonwingManeuverFromPilot } from '../preview/src/ribbonwing-clearance.js';
 import { buildKind, buildGeometry, buildYaw, buildFinish, buildRoads, buildRoomAt, checkBuildSite, BUILD_REACH, BUILD_EDIT_REACH, BUILD_PLAYER_GAP, BUILD_REASONS, MAX_SAVED_DESIGNS } from '../preview/src/shared-build.js';
 import { resolveSeat, seatYaw, SEAT_REACH } from '../preview/src/shared-seating.js';
 import { WATER_REACH, WATER_MS, benchSeats, boutiquePlanters, buildPlanters, headingTo, lanePlanters, resolveBenchSeat } from '../preview/src/world-interactions.js';
@@ -798,9 +799,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
   const AWAY_DESCENT=2;
   function descendAway(player,duration) {
     if(!awayPlayers.has(player.id)||player.maneuver||!VEHICLES[player.vehicle]?.flies||!(player.altitude>0))return;
-    const [east,north]=player.position,next=Math.max(0,player.altitude-AWAY_DESCENT*duration);
-    if(next>.1?!environment.canFly(east,environment.groundAt(east,-north)+next,-north):!environment.isFree(east,-north))return;
-    player.altitude=next>.1?next:0;revision++;
+    const flightEnvironment=environmentForLevel(player.levelId),[east,north]=player.position;
+    const next=Math.max(0,player.altitude-AWAY_DESCENT*duration),height=next>.1?next:0,ground=flightEnvironment.groundAt(east,-north);
+    // The published position is the pilot point. Away descent owns the same full
+    // aircraft and finite-canopy sweep as a normal pose, including the landing step.
+    if(height===0&&!flightEnvironment.isFree(east,-north)
+      ||!flightEnvironment.canFlyHullPilot(east,ground+height,-north,player.yaw)
+      ||flightEnvironment.canopyHullSegmentHit([east,ground+player.altitude,-north],[east,ground+height,-north],player.yaw,player.yaw))return;
+    player.altitude=height;revision++;
   }
   function settleSeat(player,time) {
     if(player.ribbonwingInvite&&(player.ribbonwingInvite.until<=time||player.vehicle!=='hover'||player.altitude>.1||player.passengerId)){delete player.ribbonwingInvite;revision++;}
@@ -853,7 +859,14 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     if([...centre,...tips].some(point=>point[2]>environment.flightCeiling))return 'maneuver_ceiling';
     for(const [east,north,up] of [...centre,...tips]) {
       if(restrictedRoomAt(east,north)&&up<=0.1)return 'private_home';
-      if(!environment.canFly(east,environment.groundAt(east,-north)+up,-north))return 'maneuver_blocked';
+      if(!environment.canFly(east,environment.groundAt(east,-north)+up,-north,{radius:1.3}))return 'maneuver_blocked';
+    }
+    let previousHull=null;
+    for(let index=0;index<centre.length;index++) {
+      const [east,north,up]=centre[index],sample=maneuverSample(plan.kind,index/(centre.length-1));
+      const hull=ribbonwingManeuverFromPilot([east,environment.groundAt(east,-north),-north],plan.heading,up,sample.pitch,sample.roll,environment.groundAt);
+      if(!environment.canopyHullClear(hull)||previousHull&&!environment.canopyHullTransitionClear(previousHull,hull))return 'maneuver_blocked';
+      previousHull=hull;
     }
     return null;
   }
@@ -943,6 +956,8 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     // Only a vehicle that flies (the landowner hover coach) carries altitude; its flight is the
     // coach's, not the rider's appearance's, but no one flies from an upper interior level.
     const flyingVehicle=Boolean(message.vehicle&&VEHICLES[message.vehicle].flies);
+    // Vehicle poses name the pilot point; the shared hull query converts it back
+    // to the craft frame. Personal flight instead checks the complete bubble.
     if (message.vehicle && altitude>0.1 && !flyingVehicle) return correction('invalid_pose');
     if (altitude>0 && (!flyingVehicle && !canFlyAs(player.id,player.appearance) || assignedUpper)) return correction('flight_not_allowed');
     const ground = movementEnvironment.groundAt(position[0],-position[1]);
@@ -959,11 +974,21 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
     const refusal = points => {
       for (let leg=1;leg<points.length;leg++) {
         const from=points[leg-1],to=points[leg],steps=Math.max(1,Math.ceil(distance(to,from)/0.15),Math.ceil(Math.abs(to[2]-from[2])/0.15));
+        let previous=[from[0],movementEnvironment.groundAt(from[0],-from[1])+from[2],-from[1]];
+        const yawFrom=Math.atan2(Math.sin(player.yaw),Math.cos(player.yaw)),yawTo=Math.atan2(Math.sin(yaw),Math.cos(yaw));
+        let previousYaw=yawFrom;
+        const turn=Math.atan2(Math.sin(yawTo-yawFrom),Math.cos(yawTo-yawFrom));
         for (let i=1;i<=steps;i++) {
           const t=i/steps, x=from[0]+(to[0]-from[0])*t, north=from[1]+(to[1]-from[1])*t, height=from[2]+(to[2]-from[2])*t;
           const privateRoom=height<=0.1 && restrictedRoomAt(x,north);
           if (privateRoom && !canEnterHome(player.id,privateRoom.storeId)) return 'private_home';
-          if (height>0.1 ? !movementEnvironment.canFly(x,movementEnvironment.groundAt(x,-north)+height,-north) : !movementEnvironment.isFree(x,-north)) return 'blocked';
+          const heading=yawFrom+turn*t;
+          if (height>0.1 ? !(flyingVehicle ? movementEnvironment.canFlyHullPilot(x,movementEnvironment.groundAt(x,-north)+height,-north,heading)
+            : movementEnvironment.canFly(x,movementEnvironment.groundAt(x,-north)+height,-north)) : !movementEnvironment.isFree(x,-north)) return 'blocked';
+          const point=[x,movementEnvironment.groundAt(x,-north)+height,-north];
+          if(Math.max(from[2],to[2])>0.1 && (flyingVehicle ? movementEnvironment.canopyHullSegmentHit(previous,point,previousYaw,heading)
+            : movementEnvironment.flightSegmentHit?.(previous,point)))return 'blocked';
+          previous=point;previousYaw=heading;
           const suite=campusLevel && movementEnvironment.roomAt(x,-north)?.supportAt?.(x,north);
           if (suite?.access==='private-suite' && !admits(player.id,suite.surfaceId)) return 'private_suite';
         }
@@ -1751,8 +1776,15 @@ export function createSharedWorld(worldData, { now = Date.now, maxPlayers = 32, 
           }
         }
         const [east,north,ground]=player.position;
+        const flyingHull=Boolean(player.vehicle&&VEHICLES[player.vehicle]?.flies);
+        if(!player.levelId && !player.sitting && player.altitude>0.1) {
+          const height=flyingHull ? playerEnvironment.recoverFlightHull(east,ground+player.altitude,-north,player.yaw)
+            : playerEnvironment.recoverCanopyFlight(east,ground+player.altitude,-north);
+          if(height!==null)player.altitude=height-ground;
+        }
         if (!nextLedgers.has(player.id) || (!player.sitting && Math.abs(ground-playerEnvironment.groundAt(east,-north))>0.2)
-          || (player.altitude>0.1?!playerEnvironment.canFly(east,ground+player.altitude,-north):!playerEnvironment.isFree(east,-north))
+          || (player.altitude>0.1?!(flyingHull ? playerEnvironment.canFlyHullPilot(east,ground+player.altitude,-north,player.yaw)
+            : playerEnvironment.canFly(east,ground+player.altitude,-north)):!playerEnvironment.isFree(east,-north))
           || player.levelId && (playerEnvironment.roomAt(east,-north)?.planId!==player.levelId
             || interiorLevels.get(player.levelId).level.index>0 && (player.altitude>0 || player.sitting || player.vehicle))) throw new Error('Invalid player position');
         if(player.sitting) {

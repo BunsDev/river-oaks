@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { framePace, presentedSpread } from '../e2e/ipic-screening-frames.js';
+import { checkScreeningEvidence, framePace, presentedSpread, screeningFrameSnapshot } from '../e2e/ipic-screening-frames.js';
 
 const frame = (wallMs, mediaTimeMs, frames, more = {}) => ({ wallMs, mediaTimeMs, frames, rate: 1, paused: false, ...more });
 
@@ -22,4 +22,40 @@ test('frame pace shows frames that actually advance, not a requested time', () =
   const frozen = framePace([frame(0, 4000, 10), frame(2000, 4000, 10)]);
   assert.deepEqual([frozen.frames, frozen.fps, frozen.mediaPerWall], [0, 0, 0], 'a frozen film presents nothing new');
   assert.deepEqual(framePace([]), { frames: 0, fps: 0, mediaPerWall: 0 });
+});
+
+test('a failed comparison retains raw frame clocks even when requested playback times agree', () => {
+  const sample = { at: 1700000010000, perfNow: 10000, currentTime: 12, paused: false, rate: 0.92, seeking: true, generation: 4,
+    presented: { mediaTimeMs: 11167, shownAt: 9900, at: 9901, frames: 20, generation: 3 },
+    source: { src: '/film?private=not-for-receipts', type: 'video/webm' }, unrelated: 'not-for-receipts' };
+  const snapshot = screeningFrameSnapshot(sample);
+  sample.presented.frames = 21;
+  assert.equal(snapshot.presented.frames, 20, 'the captured frame cannot change with later stats');
+  assert.equal(snapshot.currentTime, 12);
+  assert.equal(snapshot.presented.mediaTimeMs, 11167);
+  assert.equal(snapshot.presented.generation, 3, 'retain a stale generation for diagnosis');
+  assert.equal(snapshot.generation, 4);
+  assert.equal(snapshot.rate, 0.92);
+  assert.equal(snapshot.seeking, true);
+  assert.equal(snapshot.at - snapshot.perfNow + snapshot.presented.shownAt, 1700000009900);
+  assert.equal(snapshot.sourceType, 'video/webm');
+  assert(!JSON.stringify(snapshot).includes('not-for-receipts'));
+  const evidence = { checks: ['requested times agree'], samples: [{ hostFrame: snapshot }] };
+  assert.throws(() => checkScreeningEvidence(833 < 500, 'presented frame limit exceeded', () => evidence), error => {
+    assert.equal(error.message, 'presented frame limit exceeded');
+    assert.deepEqual(error.journeyEvidence, evidence);
+    return true;
+  });
+});
+
+test('passing checks do not invoke diagnostic collection', () => {
+  checkScreeningEvidence(true, 'passed', () => { throw new Error('must not collect'); });
+});
+
+test('failed diagnostic collection preserves the first assertion', () => {
+  assert.throws(() => checkScreeningEvidence(false, 'first failure', () => { throw new Error('observer unavailable'); }), error => {
+    assert.equal(error.message, 'first failure');
+    assert.deepEqual(error.journeyEvidence, { captureError: 'observer unavailable' });
+    return true;
+  });
 });

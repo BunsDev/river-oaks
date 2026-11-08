@@ -4,6 +4,7 @@ import { PINK_JET_AGE as P } from '../../shared/city-kit/pink-jet-age.js';
 import { KIT_MATERIALS } from '../../shared/city-kit/catalog.js';
 import { roundedRectOutline, saucerProfile, taperedColumnProfile } from '../../shared/city-kit/jet-age-forms.js';
 import { districtRibbonPlan } from './ribbon-district.js';
+import { RIBBON_CANOPY } from '../../shared/city-kit/ribbon-dimensions.js';
 import { DISTRICT_RIBBON_LANE, ribbonAppliesTo } from './ribbon-graybox.js';
 export { DISTRICT_RIBBON_LANE, ribbonAppliesTo };
 
@@ -20,7 +21,7 @@ export { DISTRICT_RIBBON_LANE, ribbonAppliesTo };
 export const RIBBON_FINISH = Object.freeze({
   // The contract's slab (five-rooms-layout.js FIVE_ROOMS_RULES.slab): 0.4 m above the clear
   // height, so the canopy top stays where the contract's crown clearance measured it.
-  slab: 0.4, overhang: 0.15, bullnose: 0.09,
+  ...RIBBON_CANOPY,
   post: Object.freeze({ foot: 0.11, head: 0.16, capital: 0.05 }),
   fanRadius: 0.45, fanDepth: 0.14, lampRadius: 0.12,
 });

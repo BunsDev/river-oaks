@@ -50,3 +50,21 @@ export function framePace(samples) {
   const first = samples[0], last = samples.at(-1), wall = last.wallMs - first.wallMs;
   return { frames: last.frames - first.frames, fps: wall > 0 ? (last.frames - first.frames) / wall * 1000 : 0, mediaPerWall: wall > 0 ? (last.mediaTimeMs - first.mediaTimeMs) / wall : 0, wallMs: wall };
 }
+
+// Keep the clocks and generation needed to interpret a failed frame comparison,
+// without copying media URLs or unrelated player state into the receipt.
+export function screeningFrameSnapshot(sample) {
+  const { at, perfNow, currentTime, paused, rate, seeking, generation, presented } = sample;
+  return { at, perfNow, currentTime, paused, rate, seeking, generation,
+    presented: presented && { ...presented }, sourceType: sample.source?.type ?? null };
+}
+
+// Evidence is collected only on failure. A diagnostic problem must never replace
+// the assertion that actually failed.
+export function checkScreeningEvidence(ok, message, evidence) {
+  if (ok) return;
+  const error = new Error(message);
+  try { error.journeyEvidence = evidence(); }
+  catch (failure) { error.journeyEvidence = { captureError: String(failure?.message ?? failure) }; }
+  throw error;
+}
