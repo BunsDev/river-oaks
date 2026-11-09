@@ -77,7 +77,7 @@ export function createOfficeDeskUI({getMultiplayer,onClose=()=>{},computer:compu
  function close(){clearTimeout(timer);hideConfirm();session++;computer?.destroy();setView('tasks');dialog.close();returnFocus?.isConnected&&returnFocus.focus({preventScroll:true});onClose();}
  async function requestClose(){clearTimeout(timer);const s=model.state;if(s.busy){confirm('A change is in progress. Wait for it to finish before closing your desk.','Stay at desk',hideConfirm);return;}if(s.dirty&&!await model.save()){confirm('This draft isn’t saved yet. Keep editing, or close the desk and keep it here until you return.','Close and keep draft',close);return;}close();}
  // Tasks and Computer (#486). One frame owner; Computer keeps its own sign-in, account, documents and saves.
- const computer=computerSettings?createComputerFrame({config:computerSettings,mount:$('computer-mount'),onChange:renderComputer,onRequestClose:()=>void leaveComputer('office')}):null;
+ const computer=computerSettings?createComputerFrame({config:computerSettings,mount:$('computer-mount'),onChange:renderComputer,onRequestClose:()=>void leaveComputer('office'),onCloseCancelled:()=>{heldTarget=null;renderComputer();computer.frame?.focus();}}):null;
  if(computer){$('views').hidden=false;$('computer-signin').href=computerSettings.signInURL;$('computer-open').href=computerSettings.openURL;
   for(const [panel,tab] of [['body','view-tasks'],['computer','view-computer']]){$(panel).setAttribute('role','tabpanel');$(panel).setAttribute('aria-labelledby',`desk-${tab}`);}}
  const text=(id,value)=>{if($(id).textContent!==value)$(id).textContent=value;};

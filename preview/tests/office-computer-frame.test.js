@@ -18,12 +18,55 @@ function setup(){
  const doc={createElement(){const f={attributes:{},events:{},removed:false,src:'',contentWindow:{postMessage(message,target){posted.push({frame:f,message:structuredClone(message),target});}},
   setAttribute(k,v){this.attributes[k]=v;},addEventListener(k,fn){(this.events[k]??=[]).push(fn);},remove(){this.removed=true;mounted.splice(mounted.indexOf(this),1);},load(){for(const fn of this.events.load??[])fn();}};frames.push(f);return f;}};
  const mount={append(f){mounted.push(f);}};
- const states=[],closeRequests=[];
- const owner=createComputerFrame({config,mount,win,doc,timers,random:()=>`instance-${String(++ids).padStart(12,'0')}`,onChange:s=>states.push(s),onRequestClose:()=>closeRequests.push(owner.state.instanceId)});
+ const states=[],closeRequests=[],closeCancellations=[];
+ const owner=createComputerFrame({config,mount,win,doc,timers,random:()=>`instance-${String(++ids).padStart(12,'0')}`,onChange:s=>states.push(s),onRequestClose:()=>closeRequests.push(owner.state.instanceId),onCloseCancelled:requestId=>closeCancellations.push(requestId)});
  const deliver=(data,{origin=ORIGIN,source=owner.frame?.contentWindow}={})=>{for(const fn of [...listeners])fn({origin,source,data});};
  const status=(state,sync='none',extra={})=>deliver(msg('status',owner.state.instanceId,{state,sync,...extra}));
- return {owner,listeners,posted,frames,mounted,timers,deliver,status,states,closeRequests};
+ return {owner,listeners,posted,frames,mounted,timers,deliver,status,states,closeRequests,closeCancellations};
 }
+
+test('the current attention decision can be cancelled once without removing its frame', async () => {
+ const t=setup();t.owner.open();t.frames[0].load();t.status('usable','failed');
+ const frame=t.owner.frame,id=t.owner.state.instanceId,departure=t.owner.depart(),requestId=t.posted.at(-1).message.requestId;
+ t.deliver(msg('close-result',id,{requestId,result:'attention'}));
+ assert.deepEqual(await departure,{outcome:'attention'});
+ t.deliver(msg('close-result',id,{requestId,result:'cancelled'}),{origin:'https://wrong.example.test'});
+ t.deliver(msg('close-result',id,{requestId,result:'cancelled'}),{source:{}});
+ t.deliver(msg('close-result',id,{requestId:'request-999999999999',result:'cancelled'}));
+ t.deliver(msg('close-result',id,{requestId,result:'ready',persistence:'saved'}));
+ assert.equal(t.owner.state.state,'attention','wrong senders/requests and a late ready cannot finish an attention decision');
+ t.deliver(msg('close-result',id,{requestId,result:'cancelled'}));
+ assert.equal(t.owner.state.state,'usable');assert.equal(t.owner.frame,frame);assert.deepEqual(t.closeCancellations,[requestId]);
+ t.deliver(msg('close-result',id,{requestId,result:'cancelled'}));
+ t.deliver(msg('close-result',id,{requestId,result:'attention'}));
+ assert.equal(t.owner.state.state,'usable');assert.deepEqual(t.closeCancellations,[requestId],'duplicates and late attention cannot reinstate the decision');
+});
+
+test('resume, replacement, navigation and destruction invalidate an attention cancellation', async () => {
+ for(const action of ['resume','replace','navigate','destroy']){
+  const t=setup();t.owner.open();t.frames[0].load();t.status('usable','failed');
+  const id=t.owner.state.instanceId,source=t.owner.frame.contentWindow,pending=t.owner.depart(),requestId=t.posted.at(-1).message.requestId;
+  t.deliver(msg('close-result',id,{requestId,result:'attention'}));await pending;
+  let next;
+  if(action==='resume')t.owner.resume();
+  if(action==='replace')next=t.owner.depart();
+  if(action==='navigate')t.frames[0].load();
+  if(action==='destroy')t.owner.destroy();
+  const before=t.owner.state;
+  t.deliver(msg('close-result',id,{requestId,result:'cancelled'}),{source});
+  assert.deepEqual(t.owner.state,before,action);assert.deepEqual(t.closeCancellations,[],action);
+  t.owner.destroy();if(next)await next;
+ }
+});
+
+test('cancelling attention restores the latest account gate rather than assuming a usable desktop', async () => {
+ const t=setup();t.owner.open();t.frames[0].load();t.status('usable','failed');
+ const departure=t.owner.depart(),requestId=t.posted.at(-1).message.requestId;
+ t.deliver(msg('close-result',t.owner.state.instanceId,{requestId,result:'attention'}));await departure;
+ t.status('account-confirmation','none');
+ t.deliver(msg('close-result',t.owner.state.instanceId,{requestId,result:'cancelled'}));
+ assert.equal(t.owner.state.state,'account-confirmation');assert.deepEqual(t.closeCancellations,[requestId]);
+});
 
 test('configuration accepts one exact public HTTPS origin and nothing else', () => {
  const place={pageOrigin:'https://typesafe.place'};

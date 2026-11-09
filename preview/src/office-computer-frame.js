@@ -4,23 +4,23 @@ import { embedId, initMessage, parseChildMessage, prepareCloseMessage } from './
 export const COMPUTER_SANDBOX='allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox';
 export const COMPUTER_PERMISSIONS="camera 'none'; microphone 'none'; geolocation 'none'; display-capture 'none'; clipboard-read 'none'; clipboard-write 'none'; payment 'none'; usb 'none'";
 export const COMPUTER_TIMEOUTS={load:15000,resend:1000,close:8000};
-export function createComputerFrame({config,mount,win=window,doc=document,timers=globalThis,random,timeouts=COMPUTER_TIMEOUTS,onChange=()=>{},onRequestClose=()=>{}}){
+export function createComputerFrame({config,mount,win=window,doc=document,timers=globalThis,random,timeouts=COMPUTER_TIMEOUTS,onChange=()=>{},onRequestClose=()=>{},onCloseCancelled=()=>{}}){
  // state is what Place shows; reported is the child's own last state, restored after a close that did not end.
- let frame=null,instanceId=null,state='idle',reported='idle',sync='none',code=null,used=false,closing=null,loadTimer=null,resendTimer=null,closeTimer=null,listening=false;
+ let frame=null,instanceId=null,state='idle',reported='idle',sync='none',code=null,used=false,closing=null,attentionRequest=null,loadTimer=null,resendTimer=null,closeTimer=null,listening=false;
  const snapshot=()=>({state,sync,code,mounted:Boolean(frame),instanceId});
  const emit=()=>onChange(snapshot());
  const clear=()=>{timers.clearTimeout(loadTimer);timers.clearInterval(resendTimer);timers.clearTimeout(closeTimer);loadTimer=resendTimer=closeTimer=null;};
  const post=message=>{try{frame?.contentWindow?.postMessage(message,config.origin);}catch{}};
  /** Removes the frame now, without asking the child. Idempotent; a later message from it is ignored. */
  function destroy(next='idle',detail=null){
-  clear();instanceId=null;used=false;const old=frame;frame=null;
+  clear();instanceId=null;used=false;attentionRequest=null;const old=frame;frame=null;
   if(listening){win.removeEventListener('message',receive);listening=false;}
   if(old){try{old.src='about:blank';}catch{}old.remove();}
   state=reported=next;code=detail;sync='none';
   const pending=closing;closing=null;pending?.resolve({outcome:'destroyed'});emit();
  }
  function start(){
-  instanceId=embedId(random);state=reported='loading';sync='none';code=null;used=false;const id=instanceId;
+  instanceId=embedId(random);state=reported='loading';sync='none';code=null;used=false;attentionRequest=null;const id=instanceId;
   timers.clearTimeout(loadTimer);loadTimer=timers.setTimeout(()=>{if(id===instanceId)destroy('failed','timeout');},timeouts.load);
  }
  // The frame's document changed under it (a reload or navigation): that is a new, ungated instance.
@@ -46,8 +46,15 @@ export function createComputerFrame({config,mount,win=window,doc=document,timers
   if(message.type==='request-close'){if(reported==='usable'||reported==='account-confirmation')onRequestClose();return;}
   if(message.type==='close-result'&&closing&&message.requestId===closing.requestId){
    const pending=closing;closing=null;timers.clearTimeout(closeTimer);closeTimer=null;
+   attentionRequest=message.result==='attention'?message.requestId:null;
    if(message.result==='ready'){destroy('idle');pending.resolve({outcome:'ready',persistence:message.persistence});return;}
    state=message.result==='cancelled'?reported:'attention';emit();pending.resolve({outcome:message.result});
+   return;
+  }
+  // Attention resolves the waiting departure but the child still owns the person's decision.
+  // Accept its cancellation once, only while this exact attention request is current.
+  if(message.type==='close-result'&&message.result==='cancelled'&&state==='attention'&&message.requestId===attentionRequest){
+   attentionRequest=null;state=reported;emit();onCloseCancelled(message.requestId);
   }
  }
  return {
@@ -74,6 +81,7 @@ export function createComputerFrame({config,mount,win=window,doc=document,timers
    */
   depart(){
    if(closing)return closing.promise;
+   attentionRequest=null;
    if(!frame||!used){destroy('idle');return Promise.resolve({outcome:'ready',persistence:null});}
    const requestId=embedId(random),token=instanceId;let resolve;const promise=new Promise(r=>{resolve=r;});
    closing={requestId,promise,resolve};state='closing';emit();
@@ -82,7 +90,7 @@ export function createComputerFrame({config,mount,win=window,doc=document,timers
    return promise;
   },
   /** Keep working after attention or an unanswered close. */
-  resume(){if(frame&&['attention','unconfirmed'].includes(state)){state=reported;emit();}},
+  resume(){attentionRequest=null;if(frame&&['attention','unconfirmed'].includes(state)){state=reported;emit();}},
   destroy,
  };
 }
