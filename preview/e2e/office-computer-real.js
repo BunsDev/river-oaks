@@ -51,9 +51,10 @@ async (page, { computerOrigin, computerRevision, computerFraming }) => {
  };
 
  await instrument(page);
- await page.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});await arrive();await openDesk();
+ await page.goto('http://127.0.0.1:5173/?motion-debug=1',{waitUntil:'commit'});await arrive();
  const listeners=await page.evaluate(()=>window.__messageListeners());
- check(await frames()===0&&computerDocuments.length===0,'Nothing loads from Computer before its tab opens');
+ check(await frames()===0&&computerDocuments.length===0,'Nothing loads from Computer before the desk opens');
+ await openDesk(page,false);await waitView('computer');
 
  // The first milestone: account gate, a note, an account-acknowledged save, real frame destruction, recreation, recovery.
  check(await openComputer(),'A fresh frame shows Computer’s real account gate, Continue and Switch, before any document');
@@ -98,7 +99,16 @@ async (page, { computerOrigin, computerRevision, computerFraming }) => {
  const leave=child().getByRole('dialog',{name:"Your latest changes aren't in your account yet"});
  check(await leave.isVisible()&&await frames()===1,'An unsaved change asks for a decision in Computer instead of closing');
  await page.screenshot({path:'output/playwright/desk-computer-real-attention.png'});
- await page.locator('#desk-computer-keep').click();await waitState('usable');
+ const retainedFrame=childFrame(),retainedLoads=computerDocuments.length;
+ for(const choice of ['Keep working','Try again','Escape']){
+  if(choice==='Escape')await leave.getByRole('button',{name:'Keep working',exact:true}).press('Escape');
+  else await leave.getByRole('button',{name:choice,exact:true}).click();
+  await leave.waitFor({state:'detached'});await waitState('usable');
+  check(childFrame()===retainedFrame&&computerDocuments.length===retainedLoads&&await noteTitle().inputValue()===LOCAL,`Child ${choice} cancels the current departure and preserves the exact live frame/draft`);
+  check(await page.locator('#desk-computer-notice').isHidden()&&await page.evaluate(()=>document.activeElement===document.querySelector('.desk-computer-frame')),`Child ${choice} clears the held departure and restores frame focus`);
+  await page.waitForFunction(()=>/^(Offline|Not saved)/.test(document.querySelector('#desk-computer-status')?.textContent??''),null,{timeout:20000});
+  await page.locator('#desk-view-tasks').click();await waitState('attention');await leave.waitFor();
+ }
  await leave.getByRole('button',{name:'Keep in this browser',exact:true}).click();await leave.waitFor({state:'detached'});
  await toTasks();
  check(await page.locator('#desk-computer-receipt').textContent()==='Computer kept unsynced changes in this browser.'&&await frames()===0,'Choosing Computer’s local copy is reported as local, not saved');
@@ -157,12 +167,20 @@ async (page, { computerOrigin, computerRevision, computerFraming }) => {
  await child().getByRole('article',{name:'Checklist widget'}).waitFor();
  check(await child().getByRole('article',{name:'Note widget'}).count()===0,'The second Computer account sees only its own desktop');
 
- // An expired Computer session hides the desktop and Place offers sign-in again.
- await page.context().addCookies([{name:'tsc_dev_signed_out',value:'1',url:computerOrigin}]);
+ // Expiry while a close awaits an account write must remove the child, never complete from its old decision.
  await child().getByRole('button',{name:'Add note',exact:true}).click();
+ await noteTitle().fill('Synthetic expiry note 487');await waitStatus('Saved to your Computer account');
+ let releaseExpiry;const expiryWrite=new Promise(resolve=>{releaseExpiry=resolve;});
+ const expireRoute=async route=>{if(route.request().method()==='PUT'){await expiryWrite;await route.fulfill({status:401,contentType:'application/json',body:'{}'});}else await route.continue();};
+ await page.route(`${computerOrigin}/api/state`,expireRoute);
+ const pendingExpiry=page.waitForRequest(request=>request.url()===`${computerOrigin}/api/state`&&request.method()==='PUT');
+ await noteTitle().fill('Synthetic expiry during close 487');await pendingExpiry;
+ await page.locator('#desk-view-tasks').click();await waitState('closing');
+ await page.context().addCookies([{name:'tsc_dev_signed_out',value:'1',url:computerOrigin}]);releaseExpiry();
  await waitState('signin',30000);
- check(await frames()===0,'An expired Computer session removes the desktop and offers sign-in');
- await page.locator('#desk-computer-tasks').click();await waitView('tasks');
+ check(await frames()===0,'An expired Computer session during a pending close removes the desktop without an old close decision reviving it');
+ await page.unroute(`${computerOrigin}/api/state`,expireRoute);
+ if(await page.locator('#office-desk').getAttribute('data-view')!=='tasks')await page.locator('#desk-computer-tasks').click();await waitView('tasks');
  await page.locator('#desk-close').click();await page.waitForFunction(()=>!document.querySelector('#office-desk').open);
 
  // Two Place accounts in another browser: a visitor, then the next Place account on the same page.
@@ -219,8 +237,8 @@ async (page, { computerOrigin, computerRevision, computerFraming }) => {
  check(await frames()===1,'Once Computer lists this Place again, the next open frames it at the account gate');
  await toTasks();
 
- check(!deskBodies.some(body=>body.includes('Synthetic real-child')||body.includes('Synthetic local-only')),'Computer notes never reach Place task requests');
- check(!/Synthetic (real-child|local-only)/.test(await page.evaluate(()=>JSON.stringify(window.__riverMultiplayer().snapshot))),'Computer notes never appear in the public world snapshot');
+ check(!deskBodies.some(body=>/Synthetic (real-child|local-only|expiry)/.test(body)),'Computer notes never reach Place task requests');
+ check(!/Synthetic (real-child|local-only|expiry)/.test(await page.evaluate(()=>JSON.stringify(window.__riverMultiplayer().snapshot))),'Computer notes never appear in the public world snapshot');
  check(await frames()===0&&await page.evaluate(()=>window.__messageListeners())===listeners,'After every departure and forced teardown, no Computer frame or listener remains');
  return {checks,computer:{origin:computerOrigin,...computerRevision}};
 }

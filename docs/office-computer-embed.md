@@ -190,9 +190,9 @@ A frame load, a closed popup or a URL parameter proves nothing.
        **Leave without confirmation**.
      - No answer: the same three choices, saying Computer did not confirm. A timeout is
        never reported as a save, and a reply after it is ignored.
-5. Computer answers `attention` at once when it needs a decision (for example, a failed
-   save) rather than holding the request. The person decides in Computer and leaves
-   again.
+5. Computer answers `attention` when it needs a decision, such as a failed save. Place resolves the waiting departure and retains that exact attention request for a subsequent `cancelled` result from the current child. Computer's Keep working, Try again or question dismissal then clears the held departure, restores its latest reported state and returns focus to the same frame. A successful local-copy choice still requires leaving again; the next close verifies the copy before reporting `ready` / `local`.
+
+The attention request is invalidated by parent Keep working, a newer close, child navigation or forced teardown. Its cancellation is consumed once; old, duplicate, wrong-instance/window/origin results and a late `ready` cannot finish or revive a different decision or frame.
 
 ### Reloads inside the frame
 
