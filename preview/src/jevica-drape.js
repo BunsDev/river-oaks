@@ -96,6 +96,15 @@ export function createJevicaDrape(avatar, waist, skirts) {
   // A flat centre covers both interpolation corners. The cosine tails spread
   // the fold continuously as a moving skin sample crosses grid boundaries.
   const influence=distance=>distance<=1?1:distance>=4?0:(1+Math.cos((distance-1)/3*Math.PI))/2;
+  // A cloth vertex reads two adjacent field rows and a contact sample spreads at
+  // most four rows either way, so a sample or field row beyond that reach changes
+  // nothing drawn. The peplum reads rows near the waist; the legs below it are skipped.
+  const readRows=shape=>{
+    let low=rows,high=-1;
+    for(const part of parts)for(const {r} of part[shape].cells){low=Math.min(low,r);high=Math.max(high,r+1);}
+    return {low,high};
+  };
+  const standingRead=readRows('standing'),seatedRead=readRows('seated');
   const angular=new Float32Array(9);
   let previous=null,wasRiding=false;
   return {
@@ -104,9 +113,10 @@ export function createJevicaDrape(avatar, waist, skirts) {
       if(poseChanged)field.fill(0);
       wasRiding=riding;
       const gridLow=riding?seatedLow:low,gridStep=riding?seatedStep:step;
+      const {low:readLow,high:readHigh}=riding?seatedRead:standingRead;
 
       const dt=previous===null?0:Math.min(.1,Math.max(0,(now-previous)/1000));previous=now;
-      required.fill(0);
+      required.fill(0,readLow*sectors,(readHigh+1)*sectors);
       // updateWorldMatrix alone bypasses SkinnedMesh's attached bind inverse.
       // Parents and bones are already current; refresh the skin before sampling.
       body.updateMatrixWorld(true);
@@ -115,6 +125,8 @@ export function createJevicaDrape(avatar, waist, skirts) {
       for(const index of contactSamples(body.geometry)) {
         sampler.getVertexPosition(index,point).applyMatrix4(matrix);
         if(point.y<(riding?-.03:low)||point.y>.085)continue;
+        const row=(point.y-gridLow)/gridStep;
+        if(row+4<readLow||row-4>readHigh)continue;
         const radius=Math.hypot(point.x,point.z),angle=(Math.atan2(point.x,point.z)+tau)%tau;
         // Tuck the waist beneath the fitted bodice; the moving legs retain
         // their wider clearance. Stopping below the waist exposed bare skin
@@ -123,10 +135,10 @@ export function createJevicaDrape(avatar, waist, skirts) {
         const resting=riding?sampleField(seatedRadii,cellAt(point,true)):restRadius(point.y,angle);
         const offset=Math.max(0,radius+clearance-resting);
         if(!offset)continue;
-        const row=(point.y-gridLow)/gridStep,sector=angle/tau*sectors;
+        const sector=angle/tau*sectors;
         const start=Math.ceil(sector-4),end=Math.floor(sector+4);
         for(let a=start;a<=end;a++)angular[a-start]=influence(Math.abs(a-sector));
-        for(let r=Math.max(0,Math.ceil(row-4));r<=Math.min(rows-1,Math.floor(row+4));r++) {
+        for(let r=Math.max(readLow,Math.ceil(row-4));r<=Math.min(readHigh,Math.floor(row+4));r++) {
           const vertical=offset*influence(Math.abs(r-row));
           for(let a=start;a<=end;a++) {
             const cell=r*sectors+wrapped(a);
@@ -136,7 +148,7 @@ export function createJevicaDrape(avatar, waist, skirts) {
       }
       const decay=Math.exp(-dt/.14);
       let changed=false;
-      for(let r=0;r<rows;r++)for(let a=0;a<sectors;a++) {
+      for(let r=readLow;r<=readHigh;r++)for(let a=0;a<sectors;a++) {
         const cell=r*sectors+a,y=gridLow+r*gridStep;
         const anchor=1-THREE.MathUtils.smoothstep(y,.085,.14);
         const next=Math.max(required[cell]*anchor,field[cell]*decay);
