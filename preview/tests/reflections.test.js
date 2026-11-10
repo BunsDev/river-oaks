@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { createStorefrontReflections } from '../src/reflections.js';
 
-function fixture(scene = new THREE.Scene()) {
+function fixture(scene = new THREE.Scene(), options = {}) {
   const material = new THREE.MeshStandardMaterial();
   const hidden = new THREE.Group(), alreadyHidden = new THREE.Group(); alreadyHidden.visible = false;
   const target = { initial: true };
@@ -25,7 +25,7 @@ function fixture(scene = new THREE.Scene()) {
     },
     dispose() { this.released = (this.released ?? 0) + 1; },
   };
-  const probe = createStorefrontReflections({ renderer, scene, materials: [material], excluded: [hidden, alreadyHidden], filter });
+  const probe = createStorefrontReflections({ renderer, scene, materials: [material], excluded: [hidden, alreadyHidden], filter, ...options });
   return { probe, renderer, material, hidden, alreadyHidden, target, resources, filter };
 }
 
@@ -356,4 +356,56 @@ test('freshly collected destroyed programs are never queried for readiness', asy
   assert.doesNotThrow(() => probe.update(17, new THREE.Vector3()));
   assert.equal(probe.stats.failed, false); assert.equal(renderer.calls, 0); assert.equal(renderer.target, target);
   probe.dispose(); mesh.geometry.dispose(); surface.dispose();
+});
+
+test('live exclusions keep later player holders out of captures and restore the main scene', () => {
+  const scene = new THREE.Scene(), world = new THREE.Group(), geometry = new THREE.BoxGeometry(), surface = new THREE.MeshStandardMaterial();
+  const staticMesh = new THREE.Mesh(geometry, surface); staticMesh.name = 'static-world'; world.add(staticMesh); scene.add(world);
+  const first = new THREE.Group(), second = new THREE.Group();
+  for (const [root, name] of [[first, 'late-actor-1'], [second, 'late-actor-2']]) { const mesh = new THREE.Mesh(geometry, surface); mesh.name = name; root.add(mesh); }
+  const { probe, renderer } = fixture(scene, { getExclusions: () => scene.children.filter(root => root !== world && !root.isLight) });
+  const render = renderer.render.bind(renderer), captures = [];
+  renderer.render = () => {
+    const drawn = []; scene.traverseVisible(object => { if (object.isMesh) drawn.push(object.name); }); captures.push(drawn); render();
+  };
+  scene.add(first); probe.update(0, new THREE.Vector3());
+  assert.deepEqual(captures, [['static-world']], 'A player holder admitted after probe creation must never enter the static capture');
+  assert.equal(first.visible, true);
+  scene.remove(first); scene.add(second); probe.update(17, new THREE.Vector3());
+  assert.deepEqual(captures, [['static-world'], ['static-world']]);
+  assert.equal(first.visible, true); assert.equal(second.visible, true);
+  probe.dispose(); geometry.dispose(); surface.dispose();
+});
+
+test('a late transmissive prop is excluded from both preparation and capture without hiding it in the main view', async () => {
+  const scene = new THREE.Scene(), { probe, renderer } = fixture(scene);
+  const crystal = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhysicalMaterial({ transmission: .8 })); crystal.name = 'late-glass'; scene.add(crystal);
+  let prepared, captureVisible;
+  renderer.compileAsync = batch => { prepared = []; batch.traverse(object => prepared.push(object.name)); return Promise.resolve(); };
+  const render = renderer.render.bind(renderer); renderer.render = () => { captureVisible = crystal.visible; render(); };
+  probe.update(0, new THREE.Vector3());
+  assert.deepEqual(prepared, [], 'New refraction materials cannot start camera-specific probe work');
+  assert.equal(crystal.visible, true); await Promise.resolve(); probe.update(17, new THREE.Vector3());
+  assert.equal(captureVisible, false); assert.equal(crystal.visible, true); assert.equal(probe.stats.failed, false);
+  probe.dispose(); crystal.geometry.dispose(); crystal.material.dispose();
+});
+
+test('a live exclusion failure preserves the prior reflection and restores hidden main-view objects', () => {
+  const { probe, renderer, material, hidden, alreadyHidden, target } = fixture(new THREE.Scene(), { getExclusions() { throw new Error('live scene unavailable'); } });
+  const previous = new THREE.Texture(); material.envMap = previous;
+  assert.doesNotThrow(() => probe.update(0, new THREE.Vector3()));
+  assert.equal(probe.stats.failed, true); assert.equal(renderer.calls, 0); assert.equal(material.envMap, previous);
+  assert.equal(hidden.visible, true); assert.equal(alreadyHidden.visible, false);
+  assert.equal(renderer.target, target); assert.equal(renderer.face, 3); assert.equal(renderer.mip, 2);
+  assert.equal(renderer.xr.enabled, true); assert.equal(renderer.shadowMap.autoUpdate, true);
+  probe.dispose(); previous.dispose();
+});
+
+test('duplicate live exclusions restore visibility and excluded uninitialized lights cannot block static shadows', () => {
+  const scene = new THREE.Scene(), actor = new THREE.Group(), light = new THREE.DirectionalLight(); light.castShadow = true; actor.add(light); scene.add(actor);
+  const { probe, renderer } = fixture(scene, { getExclusions: () => [actor, actor] });
+  probe.update(0, new THREE.Vector3());
+  assert.equal(renderer.calls, 1, 'An excluded actor light must not hold the static PCF capture');
+  assert.equal(actor.visible, true); assert.equal(light.shadow.map, null); assert.equal(probe.stats.failed, false);
+  probe.dispose(); light.dispose();
 });

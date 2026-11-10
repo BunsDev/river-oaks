@@ -2,15 +2,7 @@ import * as THREE from 'three';
 
 // One nearby probe, two reusable targets, one cube face per animation frame.
 // Static surroundings only: no frozen people or feedback from reflective panes.
-export function createStorefrontReflections({ renderer, scene, materials, excluded, filter = new THREE.PMREMGenerator(renderer) }) {
-  // Three retains transmission targets by camera ID. Probe cameras are recreated
-  // on district reload, so refractive props must stay out of their captures.
-  const captureExclusions = new Set(excluded);
-  scene.traverse(object => {
-    const materials = Array.isArray(object.material) ? object.material : [object.material];
-    if (materials.some(material => material?.transmission > 0)) captureExclusions.add(object);
-  });
-  excluded = [...captureExclusions];
+export function createStorefrontReflections({ renderer, scene, materials, excluded = [], getExclusions = () => [], filter = new THREE.PMREMGenerator(renderer) }) {
   const targets = [0, 1].map(() => new THREE.WebGLCubeRenderTarget(256, { type: THREE.HalfFloatType, generateMipmaps: false }));
   const filtered = [null, null];
   const cube = new THREE.CubeCamera(0.2, 650, targets[0]);
@@ -75,16 +67,6 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
       if (!capturing) {
         const moved = position.distanceToSquared(lastPosition) > 16 * 16;
         if (version === publishedVersion && (!moved || now - lastCapture < 2000)) return;
-        // Captures reuse the main view's shadows. Before its first render, PCF
-        // samplers have no comparison-depth texture to bind. Leave that work to
-        // the main view before starting a cube, including after district reload.
-        let shadowsReady = true;
-        if (renderer.shadowMap.enabled) scene.traverseVisible(object => {
-          if (object.isLight && object.castShadow && object.shadow && !object.shadow.map) shadowsReady = false;
-        });
-        if (!shadowsReady) return;
-        cube.position.copy(position); cube.updateMatrixWorld(true);
-        captureVersion = version; face = 0; capturing = true;
       }
       const next = active === 0 ? 1 : 0, target = targets[next];
       const saved = {
@@ -92,9 +74,32 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
         xr: renderer.xr.enabled, shadow: renderer.shadowMap.autoUpdate, shadowNeedsUpdate: renderer.shadowMap.needsUpdate,
         autoClear: renderer.autoClear, toneMapping: renderer.toneMapping,
       };
-      const visibility = excluded.map(object => object.visible);
+      const visibility = new Map();
+      const hide = object => {
+        if (!object || visibility.has(object)) return;
+        visibility.set(object, object.visible); object.visible = false;
+      };
       try {
-        excluded.forEach(object => { object.visible = false; });
+        // Player holders can arrive after probe creation. Resolve the caller's
+        // live exclusions before preparing or drawing any capture variants.
+        for (const object of excluded) hide(object);
+        for (const object of getExclusions()) hide(object);
+        // Three retains transmission targets by camera ID. Late refractive
+        // props must stay out too; inspect only the remaining visible branches.
+        scene.traverseVisible(object => {
+          if ([object.material].flat().some(material => material?.transmission > 0)) hide(object);
+        });
+        if (!capturing) {
+          // PCF samplers need the main view's initialized comparison texture.
+          // Excluded lights cannot hold an otherwise ready static capture.
+          let shadowsReady = true;
+          if (renderer.shadowMap.enabled) scene.traverseVisible(object => {
+            if (object.isLight && object.castShadow && object.shadow && !object.shadow.map) shadowsReady = false;
+          });
+          if (!shadowsReady) return;
+          cube.position.copy(position); cube.updateMatrixWorld(true);
+          captureVersion = version; face = 0; capturing = true;
+        }
         renderer.xr.enabled = false;
         renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = false;
         renderer.setRenderTarget(target, face, 0);
@@ -150,7 +155,7 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
         // Preserve the sky/last complete capture and the main view on failure.
         stats.failed = true;
       } finally {
-        excluded.forEach((object, index) => { object.visible = visibility[index]; });
+        for (const [object, visible] of visibility) object.visible = visible;
         renderer.xr.enabled = saved.xr;
         renderer.shadowMap.autoUpdate = saved.shadow; renderer.shadowMap.needsUpdate = saved.shadowNeedsUpdate;
         renderer.autoClear = saved.autoClear; renderer.toneMapping = saved.toneMapping;

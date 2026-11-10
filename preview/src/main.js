@@ -861,7 +861,7 @@ function populateWorld(data) {
   scene.add(worldGroup);
   storefrontReflections = createStorefrontReflections({
     renderer, scene, materials: buildingMesh.userData.reflectionMaterials,
-    excluded: [...buildingMesh.userData.reflectionExclusions, storePeople,
+    getExclusions: () => [...buildingMesh.userData.reflectionExclusions, storePeople,
       ...scene.children.filter(child => child !== worldGroup && !child.isLight)],
   });
   updateAtmosphere();
