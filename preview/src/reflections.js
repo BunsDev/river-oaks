@@ -2,15 +2,7 @@ import * as THREE from 'three';
 
 // One nearby probe, two reusable targets, one cube face per animation frame.
 // Static surroundings only: no frozen people or feedback from reflective panes.
-export function createStorefrontReflections({ renderer, scene, materials, excluded, filter = new THREE.PMREMGenerator(renderer) }) {
-  // Three retains transmission targets by camera ID. Probe cameras are recreated
-  // on district reload, so refractive props must stay out of their captures.
-  const captureExclusions = new Set(excluded);
-  scene.traverse(object => {
-    const materials = Array.isArray(object.material) ? object.material : [object.material];
-    if (materials.some(material => material?.transmission > 0)) captureExclusions.add(object);
-  });
-  excluded = [...captureExclusions];
+export function createStorefrontReflections({ renderer, scene, materials, excluded = [], getExclusions = () => [], filter = new THREE.PMREMGenerator(renderer) }) {
   const targets = [0, 1].map(() => new THREE.WebGLCubeRenderTarget(256, { type: THREE.HalfFloatType, generateMipmaps: false }));
   const filtered = [null, null];
   const cube = new THREE.CubeCamera(0.2, 650, targets[0]);
@@ -19,15 +11,39 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
   const previousMaps = materials.map(material => material.envMap);
   let active = -1, face = 0, captureVersion = 0, version = 1, publishedVersion = 0;
   let capturing = false, lastCapture = -Infinity, disposed = false, awaitingMainFrame = false;
+  let shaderPending = false, shaderVersion = 0, shaderGeneration = 0;
+  let preparedPrograms = [];
+  const resetPreparation = () => { shaderGeneration++; shaderPending = false; shaderVersion = 0; preparedPrograms = []; };
+  const captureBatch = () => {
+    const batch = new THREE.Group(), objects = [], captureMaterials = new Set();
+    scene.traverseVisible(object => {
+      if (!(object.isMesh || object.isPoints || object.isLine || object.isSprite) || !object.material) return;
+      objects.push(object);
+      for (const material of [object.material].flat()) captureMaterials.add(material);
+    });
+    batch.traverse = visit => { for (const object of objects) visit(object); };
+    return { batch, captureMaterials };
+  };
+  const capturePrograms = captureMaterials => {
+    const programs = new Set();
+    for (const material of captureMaterials) {
+      // The pinned renderer also uses this map for release and reuse. One
+      // material can have several object-kind or pass variants at once.
+      for (const program of renderer.properties?.get(material)?.programs?.values() ?? []) programs.add(program);
+    }
+    return [...programs];
+  };
   const stats = { captures: 0, resolution: 256, facesPerFrame: 1, failed: false };
   return {
     stats,
     invalidate() { version++; },
     releaseGraphics() {
+      resetPreparation();
       targets.forEach(target => target.dispose());
       filtered.forEach(target => target?.dispose()); filter.dispose();
     },
     resetGraphics() {
+      resetPreparation();
       // None of the cached cube/PMREM pixels survive a context loss. Never
       // publish a cube completed with faces from two different contexts.
       capturing = false; face = 0; active = -1; publishedVersion = 0; version++;
@@ -38,19 +54,19 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
     mainFrameRendered() { awaitingMainFrame = false; },
     update(now, position) {
       if (disposed || stats.failed || awaitingMainFrame) return;
+      // Three's async helper polls material.currentProgram, which the main
+      // view can replace. Retain the prepared variants, not that mutable slot.
+      try {
+        if (preparedPrograms.some(program => program.program === undefined)) {
+          // Streaming can dispose a material while its shaders are cold.
+          // Never query a deleted WebGL program or mix the old partial cube.
+          resetPreparation(); capturing = false; face = 0;
+        }
+        if (shaderPending || preparedPrograms.some(program => !program.isReady())) return;
+      } catch { stats.failed = true; return; }
       if (!capturing) {
         const moved = position.distanceToSquared(lastPosition) > 16 * 16;
         if (version === publishedVersion && (!moved || now - lastCapture < 2000)) return;
-        // Captures reuse the main view's shadows. Before its first render, PCF
-        // samplers have no comparison-depth texture to bind. Leave that work to
-        // the main view before starting a cube, including after district reload.
-        let shadowsReady = true;
-        if (renderer.shadowMap.enabled) scene.traverseVisible(object => {
-          if (object.isLight && object.castShadow && object.shadow && !object.shadow.map) shadowsReady = false;
-        });
-        if (!shadowsReady) return;
-        cube.position.copy(position); cube.updateMatrixWorld(true);
-        captureVersion = version; face = 0; capturing = true;
       }
       const next = active === 0 ? 1 : 0, target = targets[next];
       const saved = {
@@ -58,12 +74,73 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
         xr: renderer.xr.enabled, shadow: renderer.shadowMap.autoUpdate, shadowNeedsUpdate: renderer.shadowMap.needsUpdate,
         autoClear: renderer.autoClear, toneMapping: renderer.toneMapping,
       };
-      const visibility = excluded.map(object => object.visible);
+      const visibility = new Map();
+      const hide = object => {
+        if (!object || visibility.has(object)) return;
+        visibility.set(object, object.visible); object.visible = false;
+      };
       try {
-        excluded.forEach(object => { object.visible = false; });
+        // Player holders can arrive after probe creation. Resolve the caller's
+        // live exclusions before preparing or drawing any capture variants.
+        for (const object of excluded) hide(object);
+        for (const object of getExclusions()) hide(object);
+        // Three retains transmission targets by camera ID. Late refractive
+        // props must stay out too; inspect only the remaining visible branches.
+        scene.traverseVisible(object => {
+          if ([object.material].flat().some(material => material?.transmission > 0)) hide(object);
+        });
+        if (!capturing) {
+          // PCF samplers need the main view's initialized comparison texture.
+          // Excluded lights cannot hold an otherwise ready static capture.
+          let shadowsReady = true;
+          if (renderer.shadowMap.enabled) scene.traverseVisible(object => {
+            if (object.isLight && object.castShadow && object.shadow && !object.shadow.map) shadowsReady = false;
+          });
+          if (!shadowsReady) return;
+          cube.position.copy(position); cube.updateMatrixWorld(true);
+          captureVersion = version; face = 0; capturing = true;
+        }
         renderer.xr.enabled = false;
         renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = false;
         renderer.setRenderTarget(target, face, 0);
+        // A cold cubemap sees shaders the main camera has not used. Prepare
+        // them asynchronously before drawing, so a software driver cannot
+        // spend the interaction deadline linking them on the UI thread.
+        if (renderer.compileAsync && shaderVersion !== captureVersion) {
+          const generation = ++shaderGeneration, preparingVersion = captureVersion;
+          shaderPending = true;
+          // compileAsync traverses hidden nodes too. This detached batch visits
+          // only the capture's visible objects; targetScene supplies its lights.
+          const { batch, captureMaterials } = captureBatch();
+          const compilation = renderer.compileAsync(batch, cube.children[face], scene);
+          preparedPrograms = capturePrograms(captureMaterials);
+          Promise.resolve(compilation).then(() => {
+            if (disposed || generation !== shaderGeneration) return;
+            shaderPending = false; shaderVersion = preparingVersion;
+          }, () => {
+            if (disposed || generation !== shaderGeneration) return;
+            shaderPending = false; stats.failed = true;
+          });
+          return;
+        }
+        if (renderer.compile) {
+          // Streaming or visibility changes can admit another material/object
+          // kind after the asynchronous snapshot, including between faces.
+          // Queue the current variants and check them in the same synchronous
+          // step as the draw; compile() does not inspect first-use uniforms.
+          const { batch, captureMaterials } = captureBatch(), previous = new Set(preparedPrograms);
+          renderer.compile(batch, cube.children[face], scene);
+          preparedPrograms = capturePrograms(captureMaterials);
+          if (preparedPrograms.some(program => program.program === undefined)) {
+            resetPreparation(); capturing = false; face = 0; return;
+          }
+          if (face > 0 && preparedPrograms.some(program => !previous.has(program))) {
+            // Discard old partial faces rather than publish a cube whose new
+            // variants only appeared in its later faces.
+            face = 0; return;
+          }
+          if (preparedPrograms.some(program => !program.isReady())) return;
+        }
         renderer.render(scene, cube.children[face]);
         face++;
         if (face === 6 && captureVersion === version) {
@@ -78,7 +155,7 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
         // Preserve the sky/last complete capture and the main view on failure.
         stats.failed = true;
       } finally {
-        excluded.forEach((object, index) => { object.visible = visibility[index]; });
+        for (const [object, visible] of visibility) object.visible = visible;
         renderer.xr.enabled = saved.xr;
         renderer.shadowMap.autoUpdate = saved.shadow; renderer.shadowMap.needsUpdate = saved.shadowNeedsUpdate;
         renderer.autoClear = saved.autoClear; renderer.toneMapping = saved.toneMapping;
@@ -89,6 +166,7 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
     },
     dispose() {
       if (disposed) return; disposed = true;
+      resetPreparation();
       materials.forEach((material, index) => { material.envMap = previousMaps[index]; });
       targets.forEach(target => target.dispose());
       filtered.forEach(target => target?.dispose()); filter.dispose();
