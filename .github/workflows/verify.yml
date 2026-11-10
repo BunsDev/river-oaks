@@ -156,16 +156,20 @@ jobs:
         # Use the same Mesa path as shared journeys instead of headless SwiftShader.
         env:
           RIVER_OAKS_SECURITY_SOFTWARE: '1'
+          RIVER_OAKS_SECURITY_TIMELINE: '1'
           LIBGL_ALWAYS_SOFTWARE: '1'
           LP_NUM_THREADS: '2'
         run: xvfb-run -a pnpm run test:security:e2e
-      - name: Security browser failure evidence
-        if: ${{ matrix.shard == 1 && failure() && steps.security_browser.outcome == 'failure' }}
+      - name: Security browser timeline and failure evidence
+        if: ${{ matrix.shard == 1 && always() && steps.security_browser.outcome != 'skipped' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: security-browser-failure
           retention-days: 7
-          path: output/playwright/security-*-failure.png
+          path: |
+            output/playwright/security-*-failure.png
+            output/playwright/security-timeline/*.jsonl
+            output/playwright/security-timeline/health-*.json
       - run: pnpm run test:reflections:webgl
         if: ${{ matrix.shard == 1 }}
       - name: IPIC screening journey (two browsers, host controls, late join within 500 ms)

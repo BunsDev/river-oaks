@@ -13,6 +13,7 @@ import { createAuth } from '../../server/auth.js';
 import { createFileWaitlist } from '../../server/waitlist.js';
 import { createGameServer } from '../../server/app.js';
 import { createSharedWorld } from '../../server/world.js';
+import { createSecurityTimeline } from './security-timeline.js';
 
 // Actual browser, built access UI, SDK session verification, HTTP gate, and
 // persisted invitations. Only the remote identity provider is a local fixture;
@@ -48,6 +49,9 @@ test('email access: browser verification, invitation, member controls and revoca
     args: software ? ['--use-gl=angle', '--use-angle=gl', '--ignore-gpu-blocklist'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [] });
   t.after(() => browser.close());
   const context = await browser.newContext();
+  const timeline = process.env.RIVER_OAKS_SECURITY_TIMELINE === '1' ? await createSecurityTimeline() : null;
+  if (timeline) t.after(() => timeline.close());
+  await timeline?.observeContext(context);
   await context.addInitScript(() => {
     // Use the shipped laptop graphics preference; never replace game modules or
     // bypass interaction assertions to make CPU-only acceptance pass.
