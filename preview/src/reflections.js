@@ -22,6 +22,25 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
   let shaderPending = false, shaderVersion = 0, shaderGeneration = 0;
   let preparedPrograms = [];
   const resetPreparation = () => { shaderGeneration++; shaderPending = false; shaderVersion = 0; preparedPrograms = []; };
+  const captureBatch = () => {
+    const batch = new THREE.Group(), objects = [], captureMaterials = new Set();
+    scene.traverseVisible(object => {
+      if (!(object.isMesh || object.isPoints || object.isLine || object.isSprite) || !object.material) return;
+      objects.push(object);
+      for (const material of [object.material].flat()) captureMaterials.add(material);
+    });
+    batch.traverse = visit => { for (const object of objects) visit(object); };
+    return { batch, captureMaterials };
+  };
+  const capturePrograms = captureMaterials => {
+    const programs = new Set();
+    for (const material of captureMaterials) {
+      // The pinned renderer also uses this map for release and reuse. One
+      // material can have several object-kind or pass variants at once.
+      for (const program of renderer.properties?.get(material)?.programs?.values() ?? []) programs.add(program);
+    }
+    return [...programs];
+  };
   const stats = { captures: 0, resolution: 256, facesPerFrame: 1, failed: false };
   return {
     stats,
@@ -85,23 +104,11 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
         if (renderer.compileAsync && shaderVersion !== captureVersion) {
           const generation = ++shaderGeneration, preparingVersion = captureVersion;
           shaderPending = true;
-          const batch = new THREE.Group(), captureObjects = [], captureMaterials = new Set();
           // compileAsync traverses hidden nodes too. This detached batch visits
           // only the capture's visible objects; targetScene supplies its lights.
-          scene.traverseVisible(object => {
-            if (!object.material) return;
-            captureObjects.push(object);
-            for (const material of [object.material].flat()) captureMaterials.add(material);
-          });
-          batch.traverse = visit => { for (const object of captureObjects) visit(object); };
+          const { batch, captureMaterials } = captureBatch();
           const compilation = renderer.compileAsync(batch, cube.children[face], scene);
-          const programs = new Set();
-          for (const material of captureMaterials) {
-            // The pinned renderer also uses this program map for release and
-            // reuse. Keep all variants when one material serves several meshes.
-            for (const program of renderer.properties?.get(material)?.programs?.values() ?? []) programs.add(program);
-          }
-          preparedPrograms = [...programs];
+          preparedPrograms = capturePrograms(captureMaterials);
           Promise.resolve(compilation).then(() => {
             if (disposed || generation !== shaderGeneration) return;
             shaderPending = false; shaderVersion = preparingVersion;
@@ -110,6 +117,24 @@ export function createStorefrontReflections({ renderer, scene, materials, exclud
             shaderPending = false; stats.failed = true;
           });
           return;
+        }
+        if (renderer.compile) {
+          // Streaming or visibility changes can admit another material/object
+          // kind after the asynchronous snapshot, including between faces.
+          // Queue the current variants and check them in the same synchronous
+          // step as the draw; compile() does not inspect first-use uniforms.
+          const { batch, captureMaterials } = captureBatch(), previous = new Set(preparedPrograms);
+          renderer.compile(batch, cube.children[face], scene);
+          preparedPrograms = capturePrograms(captureMaterials);
+          if (preparedPrograms.some(program => program.program === undefined)) {
+            resetPreparation(); capturing = false; face = 0; return;
+          }
+          if (face > 0 && preparedPrograms.some(program => !previous.has(program))) {
+            // Discard old partial faces rather than publish a cube whose new
+            // variants only appeared in its later faces.
+            face = 0; return;
+          }
+          if (preparedPrograms.some(program => !program.isReady())) return;
         }
         renderer.render(scene, cube.children[face]);
         face++;

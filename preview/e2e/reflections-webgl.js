@@ -36,7 +36,20 @@ try {
         mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
         const pane = new THREE.MeshStandardMaterial(), position = new THREE.Vector3(0, 1, 3);
         const probe = createStorefrontReflections({ renderer, scene, materials: [pane], excluded: [] });
-        const run = { errors: [], beforeShadow: Boolean(light.shadow.map) };
+        const run = { errors: [], beforeShadow: Boolean(light.shadow.map), cubeDraws: 0, coldDraws: 0 };
+        const render = renderer.render.bind(renderer);
+        renderer.render = (subject, view) => {
+          const capture = subject === scene && renderer.getRenderTarget()?.isWebGLCubeRenderTarget;
+          const before = renderer.info.programs.length;
+          render(subject, view);
+          if (capture) { run.cubeDraws++; if (renderer.info.programs.length !== before) run.coldDraws++; }
+        };
+        const lateMaterial = new THREE.MeshStandardMaterial({ flatShading: true, vertexColors: true });
+        const lateGeometry = new THREE.BoxGeometry();
+        lateGeometry.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(lateGeometry.attributes.position.count * 3).fill(.7), 3));
+        const lateMesh = new THREE.Mesh(lateGeometry, lateMaterial), lateKind = new THREE.InstancedMesh(mesh.geometry, mesh.material, 1);
+        lateMesh.position.set(2, 0, 0); lateKind.position.set(-2, 0, 0);
+        let admitted = false;
         try {
           for (let face = 0; face < 6; face++) {
             probe.update(face * 17, position); run.errors.push(gl.getError());
@@ -49,12 +62,19 @@ try {
           const deadline = performance.now() + 5000;
           while (!probe.stats.captures && !probe.stats.failed && performance.now() < deadline) {
             probe.update(performance.now(), position); run.errors.push(gl.getError());
+            if (!admitted && run.cubeDraws === 1) {
+              // Admit a new material and a new kind sharing the old material
+              // after a face exists, without an explicit lighting invalidation.
+              scene.add(lateMesh, lateKind); admitted = true;
+            }
             await new Promise(resolve => requestAnimationFrame(resolve));
           }
-          Object.assign(run, { captures: probe.stats.captures, failed: probe.stats.failed, published: Boolean(pane.envMap) });
+          Object.assign(run, { captures: probe.stats.captures, failed: probe.stats.failed, published: Boolean(pane.envMap), admitted });
           runs.push(run);
         } finally {
+          renderer.render = render;
           probe.dispose(); pane.dispose(); mesh.geometry.dispose(); mesh.material.dispose(); light.dispose();
+          lateGeometry.dispose(); lateMaterial.dispose(); lateKind.dispose();
         }
       }
       return runs;
@@ -66,6 +86,8 @@ try {
     assert.equal(run.beforeShadow, false); assert.equal(run.earlyCaptures, 0);
     assert.equal(run.afterShadow, true); assert.equal(run.captures, 1);
     assert.equal(run.failed, false); assert.equal(run.published, true);
+    assert.equal(run.admitted, true); assert.equal(run.cubeDraws, 7, 'Late variants discard the first face and publish six fresh faces');
+    assert.equal(run.coldDraws, 0, 'The real driver must receive every capture program before its draw');
   }
-  console.log('Reflection startup and scene reload: real PCF shadows, complete captures, no WebGL errors.');
+  console.log('Reflection startup, late material/kind admission and scene reload: real PCF shadows, complete fresh captures, no cold capture draws or WebGL errors.');
 } finally { await browser?.close(); await vite.close(); }

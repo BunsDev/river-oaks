@@ -290,3 +290,70 @@ test('device readiness errors stay inside the reflection failure boundary', asyn
   assert.equal(probe.stats.failed, true); assert.equal(renderer.calls, 0); assert.equal(renderer.target, target);
   probe.dispose(); scene.children[0].geometry.dispose(); material.dispose();
 });
+
+for (const admission of ['pending preparation', 'between faces']) for (const variant of ['material', 'shared-material object kind']) {
+  test(`a late ${variant} admitted during ${admission} waits for its program and a complete fresh cube`, async () => {
+    const scene = new THREE.Scene(), geometry = new THREE.BoxGeometry(), surface = new THREE.MeshStandardMaterial();
+    scene.add(new THREE.Mesh(geometry, surface));
+    const { probe, renderer, target, material: pane } = fixture(scene);
+    const warm = { program: {}, isReady: () => true }; let lateReady = false, finish;
+    const cold = { program: {}, isReady: () => lateReady };
+    const properties = new Map([[surface, { programs: new Map([['plain', warm]]) }]]);
+    renderer.properties = { get(material) {
+      if (!properties.has(material)) properties.set(material, { programs: new Map() });
+      return properties.get(material);
+    } };
+    renderer.compileAsync = () => new Promise(resolve => { finish = resolve; });
+    renderer.compile = (batch, camera, targetScene) => {
+      assert.equal(targetScene, scene); assert.equal(camera.isPerspectiveCamera, true);
+      assert.equal(renderer.target.isWebGLCubeRenderTarget, true);
+      batch.traverse(object => {
+        if (object.material !== surface || object.isInstancedMesh) renderer.properties.get(object.material).programs.set('late', cold);
+      });
+    };
+    const position = new THREE.Vector3(); probe.update(0, position);
+    if (admission === 'between faces') { finish(); await Promise.resolve(); probe.update(17, position); assert.equal(renderer.calls, 1); }
+    const lateMaterial = variant === 'material' ? new THREE.MeshStandardMaterial({ flatShading: true }) : surface;
+    const late = variant === 'material' ? new THREE.Mesh(geometry, lateMaterial) : new THREE.InstancedMesh(geometry, lateMaterial, 1);
+    scene.add(late);
+    if (admission === 'pending preparation') { finish(); await Promise.resolve(); }
+    const drawn = renderer.calls;
+    probe.update(34, position);
+    assert.equal(renderer.calls, drawn, 'A late capture variant must compile and become ready before the face draws');
+    assert.equal(pane.envMap, null); assert.equal(probe.stats.failed, false);
+    assert.equal(renderer.target, target); assert.equal(renderer.face, 3); assert.equal(renderer.mip, 2);
+    assert.equal(renderer.xr.enabled, true); assert.equal(renderer.shadowMap.autoUpdate, true);
+    lateReady = true;
+    for (let frame = 0; frame < 5; frame++) { probe.update(100 + frame * 17, position); assert.equal(pane.envMap, null); }
+    probe.update(200, position);
+    assert.equal(probe.stats.captures, 1); assert.ok(pane.envMap);
+    assert.equal(renderer.calls - drawn, 6, 'A newly admitted variant cannot publish the earlier partial cube');
+    probe.dispose(); geometry.dispose(); surface.dispose(); if (lateMaterial !== surface) lateMaterial.dispose(); late.dispose?.();
+  });
+}
+
+test('fresh capture preparation failure retains the previous map and restores renderer state', async () => {
+  const { probe, renderer, material, target, hidden } = fixture();
+  const previous = new THREE.Texture(); material.envMap = previous;
+  renderer.compileAsync = () => Promise.resolve();
+  renderer.compile = () => { throw new Error('fresh device compile failed'); };
+  probe.update(0, new THREE.Vector3()); await Promise.resolve();
+  assert.doesNotThrow(() => probe.update(17, new THREE.Vector3()));
+  assert.equal(probe.stats.failed, true); assert.equal(renderer.calls, 0); assert.equal(material.envMap, previous);
+  assert.equal(renderer.target, target); assert.equal(renderer.face, 3); assert.equal(renderer.mip, 2);
+  assert.equal(renderer.xr.enabled, true); assert.equal(renderer.shadowMap.autoUpdate, true); assert.equal(hidden.visible, true);
+  probe.dispose(); previous.dispose();
+});
+
+test('freshly collected destroyed programs are never queried for readiness', async () => {
+  const scene = new THREE.Scene(), surface = new THREE.MeshStandardMaterial();
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(), surface); scene.add(mesh);
+  const { probe, renderer, target } = fixture(scene), properties = { programs: new Map() };
+  renderer.properties = { get: () => properties };
+  renderer.compileAsync = () => Promise.resolve();
+  renderer.compile = () => properties.programs.set('destroyed', { program: undefined, isReady() { throw new Error('deleted program queried'); } });
+  probe.update(0, new THREE.Vector3()); await Promise.resolve();
+  assert.doesNotThrow(() => probe.update(17, new THREE.Vector3()));
+  assert.equal(probe.stats.failed, false); assert.equal(renderer.calls, 0); assert.equal(renderer.target, target);
+  probe.dispose(); mesh.geometry.dispose(); surface.dispose();
+});
