@@ -48,6 +48,7 @@ import { releaseSceneGraphics } from './graphics-resources.js';
 import { createGraphicsCycleLog } from './debug-report.js';
 import './graphics-recovery.css';
 import { createRenderAudit } from './render-audit.js';
+import { surfaceProvenance } from './surface-provenance.js';
 import { createDrawCensus } from './draw-census.js';
 import { localToScene, terrainHeight } from './geometry.js';
 import { setupThemeControls } from './theme.js';
@@ -1559,7 +1560,7 @@ if (renderAudit) {
       pick(x, y, hits = 4) {
         const rect = renderer.domElement.getBoundingClientRect(), ray = new THREE.Raycaster();
         ray.setFromCamera(new THREE.Vector2((x - rect.left) / rect.width * 2 - 1, -((y - rect.top) / rect.height) * 2 + 1), camera);
-        return ray.intersectObjects(auditMeshes(), false).slice(0, hits).map(auditHit);
+        return ray.intersectObjects(auditMeshes(), false).slice(0, hits).map(hit => ({ ...auditHit(hit), provenance: surfaceProvenance(hit) }));
       },
       // What a vertical ray meets at each point of a small grid around [east, north], top down,
       // to read a spot of ground (a hole, a fight, a seam).
@@ -1567,7 +1568,7 @@ if (renderAudit) {
         const ray = new THREE.Raycaster(), down = new THREE.Vector3(0, -1, 0), meshes = auditMeshes(), probes = [];
         for (let de = -radius; de <= radius + 1e-6; de += step) for (let dn = -radius; dn <= radius + 1e-6; dn += step) {
           ray.set(new THREE.Vector3(east + de, 400, -(north + dn)), down);
-          probes.push({ at: [+(east + de).toFixed(2), +(north + dn).toFixed(2)], hits: ray.intersectObjects(meshes, false).slice(0, hits).map(auditHit) });
+          probes.push({ at: [+(east + de).toFixed(2), +(north + dn).toFixed(2)], hits: ray.intersectObjects(meshes, false).slice(0, hits).map(hit => ({ ...auditHit(hit), provenance: surfaceProvenance(hit) })) });
         }
         return probes;
       },

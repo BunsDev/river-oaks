@@ -748,7 +748,13 @@ export function buildCityKit(plan, { groundAt, ground, landscape = true, plantin
   const flat = createBatch(), signs = [], lanterns = new Map(), { trees, planters } = cityKitLandscape(plan, { groundAt, ground });
   // Ground: draped paving and lawns; overlays use polygon offset instead of height.
   // Each overlay layer sits 4 mm above the one below and is pulled further forward than it.
-  const overlay = (name, layer) => { const material = m(name).clone(); material.polygonOffset = true; material.polygonOffsetFactor = -layer; material.polygonOffsetUnits = -2 * layer; material.name = `${m(name).name}:overlay`; disposables.push(material); return material; };
+  const overlay = (name, layer) => {
+    const source = m(name), material = source.clone();
+    // Material.clone drops the authored metric UV, contrast and variation program.
+    material.onBeforeCompile = source.onBeforeCompile; material.customProgramCacheKey = source.customProgramCacheKey;
+    material.polygonOffset = true; material.polygonOffsetFactor = -layer; material.polygonOffsetUnits = -2 * layer;
+    material.name = `${source.name}:overlay`; disposables.push(material); return material;
+  };
   const groundPiece = { 'street/shared-lane': ['lane-brick', 0], 'street/intersection': ['lane-brick', 0], 'street/crosswalk': ['lane-brick', 0], 'street/sidewalk': ['paver-sidewalk', 0], 'street/court': ['plaza-stone', 0], 'landscape/lawn': ['lawn', 1], 'street/flush-curb': ['curb-granite', 2], 'street/band': ['porcelain', 2], 'street/channel': ['steel-black', 2], 'landscape/tree-pit': ['porcelain', 3] };
   // Tree pits match the District's (street-furniture.js): a cast-iron grate in a pale stone surround.
   const grateTexture = treeGrateTexture(); grateTexture.userData.owned = true;

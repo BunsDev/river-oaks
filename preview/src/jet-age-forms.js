@@ -4,6 +4,7 @@
 // non-indexed geometry, so a whole vocabulary costs one draw call per material.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { SURFACE_PROVENANCE } from './surface-provenance.js';
 import { boomerangProfile, hoopCentreline, parabolicArch, saucerProfile, starburstRays, taperedColumnProfile } from '../../shared/city-kit/jet-age-forms.js';
 
 const v2 = points => points.map(([x, y]) => new THREE.Vector2(x, y));
@@ -82,13 +83,25 @@ function mergeAll(geometries) {
 
 /**
  * Merge placed parts ({ material, geometry } with geometry already in campus space) into one
- * geometry per material key. The part geometries are consumed (disposed).
+ * geometry per material key. The part geometries are consumed (disposed). Existing venue
+ * labels survive as primitive triangle ranges; ordinals identify only this input build.
  */
 export function mergeJetAgeParts(parts) {
   const byMaterial = new Map();
-  for (const part of parts) {
+  for (const [ordinal, part] of parts.entries()) {
     if (!byMaterial.has(part.material)) byMaterial.set(part.material, []);
-    byMaterial.get(part.material).push(part.geometry);
+    byMaterial.get(part.material).push({ ...part, ordinal });
   }
-  return new Map([...byMaterial].map(([material, geometries]) => [material, mergeAll(geometries)]));
+  return new Map([...byMaterial].map(([material, entries]) => {
+    let start = 0;
+    const ranges = entries.map(({ geometry, venue, ordinal }) => {
+      const count = (geometry.index?.count ?? geometry.attributes.position.count) / 3;
+      const range = { start, count, ordinal, venue: typeof venue === 'string' ? venue : null };
+      start += count;
+      return range;
+    });
+    const merged = mergeAll(entries.map(part => part.geometry));
+    if (ranges.some(range => range.venue !== null)) merged.userData[SURFACE_PROVENANCE] = { version: 1, material: typeof material === 'string' ? material : null, ranges };
+    return [material, merged];
+  }));
 }

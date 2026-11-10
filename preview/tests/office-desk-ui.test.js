@@ -13,7 +13,7 @@ const deferred=()=>{let resolve;const promise=new Promise(done=>{resolve=done;})
 // Parse its static IDs and attributes; all state, task requests and frame ownership
 // below use the actual modules. Frames record navigation without making requests.
 class Element extends EventTarget {
- constructor(tag){super();this.tagName=tag;this.children=[];this.style={};this.dataset={};this.attributes={};this.hidden=false;this.open=false;this.value='';this.textContent='';this.parent=null;this.contentWindow={postMessage(){}};}
+ constructor(tag){super();this.tagName=tag;this.children=[];this.style={};this.dataset={};this.attributes={};this.hidden=false;this.open=false;this.value='';this.textContent='';this.parent=null;this.posted=[];this.contentWindow={postMessage:(message,target)=>this.posted.push({message,target})};}
  set innerHTML(value){
   this.nodes=new Map();
   for(const match of value.matchAll(/<([\w-]+)([^>]*\bid="([^"]+)"[^>]*)>/g)){
@@ -48,9 +48,28 @@ function setup(t,{computer,pageOrigin='https://typesafe.place',request=async()=>
  const find=id=>dialog.querySelector('#desk-'+id);
  t.after(()=>{ui.dispose();Object.assign(globalThis,original);});
  return {ui,dialog,find,calls,createdFrames,frames:()=>find('computer-mount').children,
+  deliver(frame,data){const event=new Event('message');Object.assign(event,{origin:'https://computer.typesafe.place',source:frame.contentWindow,data});window.dispatchEvent(event);},
   async click(id){find(id).dispatchEvent(new Event('click'));await tick();},
   input(id,value){find(id).value=value;find(id).dispatchEvent(new Event('input'));}};
 }
+
+test('child cancellation after attention keeps the same desk/frame and restores child focus',async t=>{
+ const f=setup(t);await f.ui.open();const frame=f.frames()[0];frame.dispatchEvent(new Event('load'));
+ const base={protocol:'typesafe-place-embed',version:1,instanceId:frame.posted.at(-1).message.instanceId};
+ f.deliver(frame,{...base,type:'status',state:'usable',sync:'offline'});
+ await f.click('computer-return');const requestId=frame.posted.at(-1).message.requestId;
+ f.deliver(frame,{...base,type:'close-result',requestId,result:'attention'});await tick();
+ assert.equal(f.dialog.dataset.computer,'attention');assert.equal(f.find('computer-keep').hidden,false);
+ f.deliver(frame,{...base,type:'close-result',requestId,result:'cancelled'});await tick();
+ assert.equal(f.dialog.open,true);assert.equal(f.frames()[0],frame);assert.equal(f.dialog.dataset.computer,'usable');
+ assert.equal(f.find('computer-keep').hidden,true);assert.equal(document.activeElement,frame);
+ // A subsequent departure is a fresh decision, not the cancelled office return.
+ await f.click('view-tasks');const next=frame.posted.at(-1).message.requestId;assert.notEqual(next,requestId);
+ f.deliver(frame,{...base,type:'close-result',requestId,result:'cancelled'});await tick();
+ assert.equal(f.dialog.dataset.computer,'closing','the old cancellation cannot finish the new departure');
+ f.deliver(frame,{...base,type:'close-result',requestId:next,result:'ready',persistence:'local'});await tick();
+ assert.equal(f.dialog.open,true);assert.equal(f.dialog.dataset.view,'tasks');assert.equal(f.frames().length,0);
+});
 
 test('opening a desk selects hosted Computer and offers its safe separate-tab link',async t=>{
  const f=setup(t);
