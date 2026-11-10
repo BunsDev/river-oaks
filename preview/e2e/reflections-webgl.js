@@ -44,8 +44,12 @@ try {
           run.earlyCaptures = probe.stats.captures;
           renderer.render(scene, camera); run.errors.push(gl.getError());
           run.afterShadow = Boolean(light.shadow.map?.depthTexture);
-          for (let face = 0; face < 6; face++) {
-            probe.update(100 + face * 17, position); run.errors.push(gl.getError());
+          // Shader preparation yields while the driver compiles. Drive the
+          // same frame updates until the complete six-face cube is published.
+          const deadline = performance.now() + 5000;
+          while (!probe.stats.captures && !probe.stats.failed && performance.now() < deadline) {
+            probe.update(performance.now(), position); run.errors.push(gl.getError());
+            await new Promise(resolve => requestAnimationFrame(resolve));
           }
           Object.assign(run, { captures: probe.stats.captures, failed: probe.stats.failed, published: Boolean(pane.envMap) });
           runs.push(run);

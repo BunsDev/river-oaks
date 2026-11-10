@@ -133,3 +133,160 @@ test('context recovery discards partial faces and invalid maps before a complete
   probe.update(400, position); assert.ok(material.envMap); assert.equal(renderer.calls - before, 6);
   probe.dispose();
 });
+
+// A slow shader compiler is an external device boundary: the real probe must
+// preserve the main view and keep every capture unpublished while it is pending.
+test('pending reflection shaders yield without drawing or retaining main-view state', async () => {
+  const { probe, renderer, hidden, alreadyHidden, target, material } = fixture();
+  let ready, preparations = 0;
+  renderer.compileAsync = (scene, camera) => {
+    preparations++;
+    assert.equal(camera.isPerspectiveCamera, true);
+    assert.equal(renderer.target.isWebGLCubeRenderTarget, true);
+    assert.equal(renderer.xr.enabled, false);
+    assert.equal(renderer.shadowMap.autoUpdate, false);
+    assert.equal(hidden.visible, false);
+    return new Promise(resolve => { ready = resolve; });
+  };
+  const position = new THREE.Vector3();
+  probe.update(0, position);
+  assert.equal(renderer.calls, 0, 'A cold capture must wait for shader readiness instead of blocking its frame');
+  assert.equal(renderer.target, target); assert.equal(renderer.face, 3); assert.equal(renderer.mip, 2);
+  assert.equal(renderer.xr.enabled, true); assert.equal(renderer.shadowMap.autoUpdate, true); assert.equal(renderer.shadowMap.needsUpdate, true);
+  assert.equal(hidden.visible, true); assert.equal(alreadyHidden.visible, false);
+  for (let frame = 1; frame <= 5; frame++) probe.update(frame * 17, position);
+  assert.equal(preparations, 1); assert.equal(renderer.calls, 0); assert.equal(material.envMap, null);
+  ready(); await Promise.resolve();
+  for (let frame = 0; frame < 5; frame++) probe.update(200 + frame * 17, position);
+  assert.equal(renderer.calls, 5); assert.equal(material.envMap, null);
+  probe.update(300, position);
+  assert.equal(renderer.calls, 6); assert.equal(probe.stats.captures, 1); assert.ok(material.envMap);
+  probe.dispose();
+});
+
+test('graphics recovery and disposal fence stale reflection shader completion', async () => {
+  for (const action of ['reset', 'release', 'dispose']) {
+    const { probe, renderer, material } = fixture();
+    const pending = []; renderer.compileAsync = () => new Promise(resolve => pending.push(resolve));
+    const position = new THREE.Vector3(); probe.update(0, position);
+    assert.equal(renderer.calls, 0);
+    if (action === 'reset') probe.resetGraphics();
+    else if (action === 'release') { probe.releaseGraphics(); probe.resetGraphics(); }
+    else probe.dispose();
+    pending[0](); await Promise.resolve();
+    probe.mainFrameRendered(); probe.update(100, position);
+    assert.equal(renderer.calls, 0, 'A stale compiler cannot unlock a new graphics generation');
+    assert.equal(material.envMap, null);
+    if (action !== 'dispose') {
+      assert.equal(pending.length, 2);
+      pending[1](); await Promise.resolve();
+      for (let frame = 0; frame < 6; frame++) probe.update(200 + frame * 17, position);
+      assert.equal(probe.stats.captures, 1);
+    }
+    probe.dispose();
+  }
+});
+
+test('rejected reflection preparation preserves the prior map and main renderer', async () => {
+  const { probe, renderer, target, material } = fixture();
+  const previous = new THREE.Texture(); material.envMap = previous;
+  let reject; renderer.compileAsync = () => new Promise((resolve, fail) => { reject = fail; });
+  probe.update(0, new THREE.Vector3());
+  assert.equal(renderer.calls, 0);
+  reject(new Error('device compile failed')); await Promise.resolve();
+  probe.update(100, new THREE.Vector3());
+  assert.equal(renderer.calls, 0); assert.equal(probe.stats.failed, true);
+  assert.equal(material.envMap, previous); assert.equal(renderer.target, target);
+  assert.equal(renderer.xr.enabled, true); assert.equal(renderer.shadowMap.autoUpdate, true);
+  probe.dispose(); previous.dispose();
+});
+
+test('main-view program changes cannot unlock a still-cold capture variant', async () => {
+  const scene = new THREE.Scene(), material = new THREE.MeshStandardMaterial();
+  scene.add(new THREE.Mesh(new THREE.BoxGeometry(), material));
+  const { probe, renderer } = fixture(scene);
+  let ready = false;
+  const captureProgram = { program: {}, isReady: () => ready }, mainProgram = { program: {}, isReady: () => true };
+  const properties = { currentProgram: captureProgram, programs: new Map([['capture', captureProgram], ['main', mainProgram]]) };
+  renderer.properties = { get: () => properties };
+  renderer.compileAsync = () => Promise.resolve();
+  probe.update(0, new THREE.Vector3());
+  properties.currentProgram = mainProgram; await Promise.resolve();
+  probe.update(17, new THREE.Vector3());
+  assert.equal(renderer.calls, 0, 'The exact capture program must be ready even after main rendering changes currentProgram');
+  ready = true;
+  for (let frame = 0; frame < 6; frame++) probe.update(100 + frame * 17, new THREE.Vector3());
+  assert.equal(probe.stats.captures, 1);
+  probe.dispose(); scene.children[0].geometry.dispose(); material.dispose();
+});
+
+test('shader preparation visits only capture-visible renderables and uses the actual scene lights', () => {
+  const scene = new THREE.Scene(), visible = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial());
+  const hidden = visible.clone(), transmission = visible.clone(); hidden.visible = false;
+  transmission.material = new THREE.MeshPhysicalMaterial({ transmission: .5 });
+  scene.add(visible, hidden, transmission, new THREE.DirectionalLight());
+  const { probe, renderer } = fixture(scene);
+  renderer.compileAsync = (batch, camera, targetScene) => {
+    const renderables = []; batch.traverse(object => { if (object.material) renderables.push(object); });
+    assert.deepEqual(renderables, [visible], 'Excluded or hidden scene branches must not add cold compilation work');
+    assert.equal(targetScene, scene, 'The original scene supplies lighting without duplicating its lights');
+    return new Promise(() => {});
+  };
+  probe.update(0, new THREE.Vector3());
+  assert.equal(probe.stats.failed, false, 'Preparation must satisfy the capture visibility and lighting contract');
+  assert.equal(renderer.calls, 0);
+  probe.dispose(); visible.geometry.dispose(); visible.material.dispose(); transmission.material.dispose();
+});
+
+test('invalidated asynchronous capture cannot publish its old lighting', async () => {
+  const { probe, renderer, material } = fixture(); let ready;
+  renderer.compileAsync = () => new Promise(resolve => { ready = resolve; });
+  const position = new THREE.Vector3(); probe.update(0, position); probe.invalidate();
+  ready(); await Promise.resolve();
+  for (let frame = 0; frame < 6; frame++) probe.update(100 + frame * 17, position);
+  assert.equal(material.envMap, null); assert.equal(probe.stats.captures, 0);
+  probe.update(200, position); ready(); await Promise.resolve();
+  for (let frame = 0; frame < 6; frame++) probe.update(300 + frame * 17, position);
+  assert.equal(probe.stats.captures, 1); assert.ok(material.envMap);
+  probe.dispose();
+});
+
+test('synchronous preparation failure restores state and retains the last map', () => {
+  const { probe, renderer, material, target, hidden } = fixture();
+  const previous = new THREE.Texture(); material.envMap = previous;
+  renderer.compileAsync = () => { throw new Error('device unavailable'); };
+  probe.update(0, new THREE.Vector3());
+  assert.equal(probe.stats.failed, true); assert.equal(material.envMap, previous);
+  assert.equal(renderer.target, target); assert.equal(renderer.xr.enabled, true);
+  assert.equal(renderer.shadowMap.autoUpdate, true); assert.equal(hidden.visible, true);
+  probe.dispose(); previous.dispose();
+});
+
+test('streamed material disposal restarts cold preparation without querying a deleted program', async () => {
+  const scene = new THREE.Scene(), material = new THREE.MeshStandardMaterial();
+  scene.add(new THREE.Mesh(new THREE.BoxGeometry(), material));
+  const { probe, renderer } = fixture(scene); let finish, preparations = 0;
+  const old = { program: {}, isReady: () => { if (!old.program) throw new Error('deleted device program'); return false; } };
+  const properties = { programs: new Map([['old', old]]) }; renderer.properties = { get: () => properties };
+  renderer.compileAsync = () => { preparations++; return new Promise(resolve => { finish = resolve; }); };
+  probe.update(0, new THREE.Vector3());
+  old.program = undefined; properties.programs.clear();
+  assert.doesNotThrow(() => probe.update(17, new THREE.Vector3()));
+  assert.equal(preparations, 2, 'Disposed cold programs must not leave preparation stuck forever');
+  finish(); await Promise.resolve();
+  for (let frame = 0; frame < 6; frame++) probe.update(100 + frame * 17, new THREE.Vector3());
+  assert.equal(probe.stats.captures, 1); assert.equal(probe.stats.failed, false);
+  probe.dispose(); scene.children[0].geometry.dispose(); material.dispose();
+});
+
+test('device readiness errors stay inside the reflection failure boundary', async () => {
+  const scene = new THREE.Scene(), material = new THREE.MeshStandardMaterial();
+  scene.add(new THREE.Mesh(new THREE.BoxGeometry(), material));
+  const { probe, renderer, target } = fixture(scene);
+  renderer.properties = { get: () => ({ programs: new Map([['capture', { program: {}, isReady() { throw new Error('device lost'); } }]]) }) };
+  renderer.compileAsync = () => Promise.resolve();
+  probe.update(0, new THREE.Vector3()); await Promise.resolve();
+  assert.doesNotThrow(() => probe.update(17, new THREE.Vector3()));
+  assert.equal(probe.stats.failed, true); assert.equal(renderer.calls, 0); assert.equal(renderer.target, target);
+  probe.dispose(); scene.children[0].geometry.dispose(); material.dispose();
+});
