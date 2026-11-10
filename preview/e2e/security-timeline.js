@@ -5,7 +5,7 @@ import { WebSocketServer } from 'ws';
 
 const browserKinds = new Set(['longtask', 'socket-construct', 'socket-open', 'socket-receive-gap', 'socket-close', 'socket-error',
   'socket-client-close-call', 'slow-gl-call', 'state-mutation-delivered', 'state-watch-start', 'sample', 'observation-bound-reached',
-  'settings-pointerdown', 'settings-click', 'visibility', 'browser-event-cap']);
+  'settings-pointerdown', 'settings-click', 'visibility', 'browser-event-cap', 'gl-capabilities']);
 const reasons = ['No town updates.', 'Moved to a fresh connection.', 'Session expired. Reconnecting securely.', 'World region updated.', 'District revision changed', 'other-or-empty-unrecorded'];
 const stateStrings = ['', 'true', 'false', 'connecting', 'joined', 'disconnected'];
 const selectors = ['.multiplayer-gate', '.app-shell', '.multiplayer-roster', '#canvas-host', '#settings-dialog', 'unavailable'];
@@ -26,14 +26,21 @@ function projectBrowserEvent(value) {
   if (!value || !browserKinds.has(value.kind) || !finite(value.documentEpoch) || !finite(value.pageAt)) return null;
   const result = { kind: value.kind, documentEpoch: value.documentEpoch, pageAt: value.pageAt };
   for (const key of ['id', 'messages', 'snapshots', 'lastReceived', 'maxReceiveGap', 'readyState', 'gap', 'code', 'reasonLength',
-    'startAt', 'duration', 'frames', 'lastFrame', 'maxFrameGap', 'timerGap', 'emitted', 'samples', 'limit']) {
+    'startAt', 'duration', 'frames', 'lastFrame', 'maxFrameGap', 'timerGap', 'emitted', 'samples', 'limit', 'glContext']) {
     if (finite(value[key]) || value[key] === null) result[key] = value[key];
   }
   if (typeof value.wasClean === 'boolean') result.wasClean = value.wasClean;
+  if (typeof value.parallelCompile === 'boolean') result.parallelCompile = value.parallelCompile;
+  if ('rendererClass' in value) result.rendererClass = choice(value.rendererClass, ['llvmpipe', 'swiftshader', 'other', 'unavailable']);
   Object.assign(result, state(value));
   if ('messageType' in value) result.messageType = choice(value.messageType, ['snapshot', 'result', 'rotate', 'other']);
   if ('reason' in value) result.reason = choice(value.reason, reasons);
   if ('name' in value) result.name = choice(value.name, ['getProgramInfoLog', 'readPixels', 'finish']);
+  if (value.kind === 'slow-gl-call' && Array.isArray(value.callers)) {
+    result.callers = value.callers.slice(0, 10).filter(frame => frame && typeof frame.asset === 'string'
+      && frame.asset.length <= 120 && /^[A-Za-z0-9_-]+-[A-Za-z0-9_-]{6,}\.js$/.test(frame.asset) && finite(frame.line) && finite(frame.column))
+      .map(({ asset, line, column }) => ({ asset, line, column }));
+  }
   if ('visibility' in value) result.visibility = choice(value.visibility, ['visible', 'hidden', 'prerender']);
   if (value.kind === 'visibility') result.value = choice(value.value, ['visible', 'hidden', 'prerender']);
   if (value.kind === 'state-mutation-delivered') {
@@ -173,14 +180,34 @@ function observeSecurityPage() {
       this.close = (...values) => { emit({ kind: 'socket-client-close-call', ...summary(), code: values[0] ?? null, reason: reasonClass(values[1]) }); return close.apply(this, values); };
     }
   };
-  let glEvents = 0; const observedMethods = new WeakSet();
+  let glEvents = 0, glContextSequence = 0; const observedMethods = new WeakSet(), observedContexts = new WeakMap();
   for (const prototype of [window.WebGLRenderingContext?.prototype, window.WebGL2RenderingContext?.prototype].filter(Boolean)) {
     for (const name of ['getProgramInfoLog', 'readPixels', 'finish']) {
       const original = prototype[name]; if (typeof original !== 'function' || observedMethods.has(original)) continue;
       prototype[name] = function (...args) {
+        if (!observedContexts.has(this)) {
+          observedContexts.set(this, ++glContextSequence);
+          let parallelCompile = false, rendererClass = 'unavailable';
+          try {
+            parallelCompile = Boolean(this.getExtension('KHR_parallel_shader_compile'));
+            const info = this.getExtension('WEBGL_debug_renderer_info'), renderer = info ? String(this.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
+            rendererClass = /llvmpipe/i.test(renderer) ? 'llvmpipe' : /swiftshader/i.test(renderer) ? 'swiftshader' : 'other';
+          } catch { /* A lost context reports unavailable, never raw driver text. */ }
+          emit({ kind: 'gl-capabilities', glContext: observedContexts.get(this), parallelCompile, rendererClass });
+        }
         const start = performance.now();
         try { return original.apply(this, args); }
-        finally { const duration = performance.now() - start; if (duration > 100 && glEvents++ < 128) emit({ kind: 'slow-gl-call', name, startAt: start, duration }); }
+        finally {
+          const duration = performance.now() - start;
+          if (duration > 100 && glEvents++ < 128) {
+            // Source positions only, never full stack strings, origins or URLs.
+            const callers = (new Error().stack ?? '').split('\n').flatMap(line => {
+              const match = line.match(/\/assets\/([A-Za-z0-9_-]+-[A-Za-z0-9_-]{6,}\.js):(\d+):(\d+)/);
+              return match ? [{ asset: match[1], line: Number(match[2]), column: Number(match[3]) }] : [];
+            }).slice(0, 10);
+            emit({ kind: 'slow-gl-call', glContext: observedContexts.get(this), name, startAt: start, duration, callers });
+          }
+        }
       };
       observedMethods.add(prototype[name]);
     }

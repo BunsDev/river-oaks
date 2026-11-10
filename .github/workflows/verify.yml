@@ -148,7 +148,9 @@ jobs:
             rm -rf "$HOME/.cache/playwright-apt"; mkdir -p "$HOME/.cache/playwright-apt"
             cp /var/cache/apt/archives/*.deb "$HOME/.cache/playwright-apt/"
           fi
-      - run: pnpm run build
+      - name: Build preview with hidden diagnostic source maps
+        # Same build commands; hidden maps add files without a sourceMappingURL.
+        run: pnpm exec node scripts/enforce-pnpm.mjs && pnpm exec vite build --config preview/vite.config.js --sourcemap hidden && node scripts/build_landing_page.js && node scripts/check-access-entry.mjs
         if: ${{ matrix.shard == 1 }}
       - name: Email access and content security browser regressions
         if: ${{ matrix.shard == 1 }}
@@ -170,6 +172,10 @@ jobs:
             output/playwright/security-*-failure.png
             output/playwright/security-timeline/*.jsonl
             output/playwright/security-timeline/health-*.json
+            dist/preview/assets/main-*.js
+            dist/preview/assets/main-*.js.map
+            dist/preview/assets/three-*.js
+            dist/preview/assets/three-*.js.map
       - run: pnpm run test:reflections:webgl
         if: ${{ matrix.shard == 1 }}
       - name: IPIC screening journey (two browsers, host controls, late join within 500 ms)

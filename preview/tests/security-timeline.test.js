@@ -107,3 +107,24 @@ test('security timeline cleanup emits health after context instrumentation fails
   assert.equal(result.writeFailure, null);
   assert.deepEqual(await health(), result);
 });
+
+test('security timeline retains bounded source positions and capability enums without raw stacks or driver text', async t => {
+  const { timeline, read } = await fixture(t);
+  let receive;
+  await timeline.observeContext({ async exposeBinding(_name, callback) { receive = callback; }, async addInitScript() {} });
+  receive({}, { kind: 'gl-capabilities', documentEpoch: 1, pageAt: 1, glContext: 2, parallelCompile: true, rendererClass: 'llvmpipe', driver: 'private-driver-marker' });
+  receive({}, { kind: 'slow-gl-call', documentEpoch: 1, pageAt: 2, glContext: 2, name: 'getProgramInfoLog', duration: 12000, stack: 'private-stack-marker', callers: [
+    { asset: 'main-abc12345.js', line: 10, column: 20, url: 'private-origin-marker' },
+    { asset: 'https://private-origin-marker/main-abc12345.js', line: 1, column: 2 },
+    { asset: 'private-origin-marker'.repeat(100), line: 1, column: 2 },
+    ...Array.from({ length: 30 }, () => ({ asset: 'three-abc12345.js', line: 3, column: 4 })),
+  ] });
+  await timeline.close();
+  const rows = await read(), capability = rows.find(row => row.event?.kind === 'gl-capabilities').event;
+  assert.equal(capability.parallelCompile, true); assert.equal(capability.rendererClass, 'llvmpipe');
+  const gl = rows.find(row => row.event?.kind === 'slow-gl-call').event;
+  assert.equal(gl.glContext, capability.glContext);
+  assert.deepEqual(gl.callers[0], { asset: 'main-abc12345.js', line: 10, column: 20 });
+  assert.ok(gl.callers.length <= 10);
+  assert.doesNotMatch(JSON.stringify(rows), /private-(?:driver|stack|origin)-marker/);
+});
