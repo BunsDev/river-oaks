@@ -4,7 +4,7 @@ import { createPedestrianNetwork } from './pedestrian-network.js';
 import { buildPlanterPlanting, matureTreePlacements } from './landscape-models.js';
 import * as THREE from 'three';
 import { groundSurfaceHeight } from './world-surface.js';
-import { RETRO } from './retro-palette.js';
+import { DISTRICT } from './district-palette.js';
 import { localToScene, routeSegments, sampleRoute, terrainHeight } from './geometry.js';
 import { distanceToRoad, clearOfRoads, laneFixtures, LAMP_SPACING } from './street-fixtures.js';
 
@@ -100,9 +100,9 @@ export function hedgeClusters(width, depth, height, seed = 7) {
 export function buildStreetFurniture(world, isFree) {
   const group = new THREE.Group(); group.name = 'Street furniture';
   const box = new THREE.BoxGeometry(1, 1, 1), disc = new THREE.CylinderGeometry(0.5, 0.5, 1, 20), post = new THREE.CylinderGeometry(0.5, 0.5, 1, 10);
-  const bronze = new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, roughness: 0.5, metalness: 0.65 });
-  const lampGlow = new THREE.MeshStandardMaterial({ color: RETRO.light, emissive: RETRO.light, emissiveIntensity: 2.2, roughness: 0.4 });
-  const stoneCast = new THREE.MeshStandardMaterial({ color: RETRO.porcelain, roughness: 0.85 });
+  const bronze = new THREE.MeshStandardMaterial({ color: DISTRICT.ink, roughness: 0.5, metalness: 0.65 });
+  const lampGlow = new THREE.MeshStandardMaterial({ color: DISTRICT.glow, emissive: DISTRICT.glowEmissive, emissiveIntensity: 2.2, roughness: 0.4 });
+  const stoneCast = new THREE.MeshStandardMaterial({ color: DISTRICT.ivory, roughness: 0.85 });
   const grate = new THREE.MeshStandardMaterial({ color: '#4a4b48', roughness: 0.6, metalness: 0.55 });
   // Dark bark mulch fills each planter top around its mixed planting.
   const mulch = new THREE.MeshStandardMaterial({ color: '#2e241b', roughness: 1 });
@@ -111,7 +111,7 @@ export function buildStreetFurniture(world, isFree) {
   const pitStone = new THREE.MeshStandardMaterial({ color: '#bdb3a2', roughness: 0.86, ...flush });
   const treeGrate = new THREE.MeshStandardMaterial({ map: treeGrateTexture(), roughness: 0.55, metalness: 0.6, ...flush });
   const orbital = new THREE.TorusGeometry(.52,.023,6,40);orbital.rotateX(Math.PI/2);
-  const canopy = new THREE.SphereGeometry(1,20,10),brass=new THREE.MeshStandardMaterial({color:RETRO.brass,metalness:.8,roughness:.28});
+  const canopy = new THREE.SphereGeometry(1,20,10),brass=new THREE.MeshStandardMaterial({color:DISTRICT.chrome,metalness:.8,roughness:.28});
   const batches = new Map(), dummy = new THREE.Object3D();
   const add = (geometry, material, position, scale, yaw = 0, color = null) => {
     const key = `${geometry.uuid}:${material.uuid}`;

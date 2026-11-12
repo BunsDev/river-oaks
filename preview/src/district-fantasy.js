@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { RETRO } from './retro-palette.js';
+import { DISTRICT } from './district-palette.js';
 import { referencePlan, visibleRoofHeight } from './reference-facades.js';
 
 // Space-age garden architecture follows the mapped facades and roof footprints.
@@ -7,9 +7,9 @@ import { referencePlan, visibleRoofHeight } from './reference-facades.js';
 export function buildDistrictFantasy(world) {
   const group=new THREE.Group();group.name='Retrofuturistic garden district';
   const enamel=color=>new THREE.MeshPhysicalMaterial({color,roughness:.30,clearcoat:.7,metalness:.12});
-  const ivory=enamel(RETRO.porcelain),accents=[RETRO.teal,RETRO.rose,RETRO.mint,RETRO.apricot].map(enamel);
-  const brass=new THREE.MeshStandardMaterial({color:RETRO.brass,roughness:.25,metalness:.83});
-  const glow=new THREE.MeshStandardMaterial({color:RETRO.light,emissive:RETRO.light,emissiveIntensity:1.4,roughness:.35});
+  const ivory=enamel(DISTRICT.ivory),accents=[DISTRICT.pink,DISTRICT.rose,DISTRICT.mint,DISTRICT.blush].map(enamel);
+  const brass=new THREE.MeshStandardMaterial({color:DISTRICT.chrome,roughness:.25,metalness:.83});
+  const glow=new THREE.MeshStandardMaterial({color:DISTRICT.glow,emissive:DISTRICT.glowEmissive,emissiveIntensity:1.4,roughness:.35});
   const warm=new THREE.MeshStandardMaterial({color:'#ffe4ba',emissive:'#ffd0a3',emissiveIntensity:1.3});
   const box=new THREE.BoxGeometry(1,1,1),dome=new THREE.SphereGeometry(1,32,12);
   // Centimeter-scale fascia beads never need the canopy's tessellation.

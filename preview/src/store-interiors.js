@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { createCartierFinishes, isCartierRoom } from './cartier-pilot.js';
-import { RETRO } from './retro-palette.js';
+import { DISTRICT } from './district-palette.js';
 import { ROOM_HEIGHT } from './store-rooms.js';
 import { createLuxeFinishes, createSurfaceCollector, flutedPanels, luxeShellPlan, luxeSuiteFor, tintEmissiveByColor } from './interior-luxe.js';
 import { buildIpicInterior } from './ipic-interior.js';
@@ -109,13 +109,13 @@ export function buildStoreInteriors(rooms, { atlas, reflectionMaterials = [], ca
   const velvet = standard({ color: '#ffffff', roughness: 1 });
   const brass = standard({ color: '#c9a866', roughness: 0.28, metalness: 0.85 });
   const chrome = standard({ color: '#d8dadf', roughness: 0.12, metalness: 1 });
-  const black = standard({ color: RETRO.deepTeal, roughness: 0.55, metalness: 0.3 });
+  const black = standard({ color: DISTRICT.ink, roughness: 0.55, metalness: 0.3 });
   const oak = standard({ color: '#b28d66', roughness: 0.6 });
-  const walnut = standard({ color: RETRO.deepTeal, roughness: 0.55 });
-  const white = standard({ color: RETRO.ivory, roughness: 0.5 });
+  const walnut = standard({ color: DISTRICT.ink, roughness: 0.55 });
+  const white = standard({ color: DISTRICT.ivory, roughness: 0.5 });
   const ceramic = standard({ color: '#ffffff', roughness: 0.3 });
   const marbleTop = standard({ map: floors.marble.map, roughness: 0.2 });
-  const stone = standard({ color: RETRO.porcelain, roughness: 0.7 });
+  const stone = standard({ color: DISTRICT.ivory, roughness: 0.7 });
   const glassCase = physical({ color: '#dfe8ea', transparent: true, opacity: 0.22, roughness: 0.04, metalness: 0, depthWrite: false, side: THREE.DoubleSide });
   const bottleGlass = physical({ color: '#ffffff', transparent: true, opacity: 0.55, roughness: 0.08, metalness: 0.05, depthWrite: false });
   const glow = standard({ color: '#fff1d6', emissive: '#ffd9a6', emissiveIntensity: 1.9, roughness: 0.4 });
