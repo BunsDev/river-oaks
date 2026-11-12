@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { RETRO } from './retro-palette.js';
+import { DISTRICT } from './district-palette.js';
 
 // Luxe finish pass for every walk-in boutique: a palette suite per store,
 // polished stone, fine terrazzo and chevron parquet, fluted back walls, and
@@ -318,7 +318,7 @@ export function createLuxeFinishes({ standard, physical, track }) {
     marble: floor(marble(11, [238, 234, 228], [150, 145, 146], [196, 170, 120]), { roughness: 0.12, envMapIntensity: 0.65 }),
     rosaMarble: floor(marble(29, [236, 218, 212], [176, 128, 128], [204, 170, 120]), { roughness: 0.13, envMapIntensity: 0.6 }),
     darkMarble: floor(marble(23, [44, 52, 54], [196, 170, 118], [226, 214, 190]), { roughness: 0.1, envMapIntensity: 0.75 }),
-    terrazzo: floor(terrazzo(3, '#dcd5c4', ['#f4efe6', '#c7bea9', '#9d988e', '#d6c8ab', '#7f7a70', '#a9b8ac', '#5f6a63'], [RETRO.teal, RETRO.mint, RETRO.rose, RETRO.brass]), { roughness: 0.22, envMapIntensity: 0.5 }),
+    terrazzo: floor(terrazzo(3, '#dcd5c4', ['#f4efe6', '#c7bea9', '#9d988e', '#d6c8ab', '#7f7a70', '#a9b8ac', '#5f6a63'], [DISTRICT.pink, DISTRICT.mint, DISTRICT.rose, DISTRICT.chrome]), { roughness: 0.22, envMapIntensity: 0.5 }),
     limestone: floor(limestone(17, [226, 216, 199]), { roughness: 0.4, envMapIntensity: 0.45 }),
     pearlTerrazzo: floor(terrazzo(5, '#ebe5db', ['#fbf8f3', '#d6cfc3', '#b5aea3', '#e4dacb', '#9c978f'], ['#cdb88d', '#aab4b8', '#6f706e']), { roughness: 0.2, envMapIntensity: 0.5 }),
     chevronOak: floor(chevron(7, ['#c49f74', '#bb966b', '#caa77d', '#b48e63', '#c19a6e']), { roughness: 0.34, envMapIntensity: 0.45 }),

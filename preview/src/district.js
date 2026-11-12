@@ -2,7 +2,7 @@ import { buildGreenRoofs } from './green-roofs.js';
 import { buildReferenceLandscape } from './reference-landscape.js';
 import { decorateWinstonDoor } from './harry-winston-facade.js';
 import * as THREE from 'three';
-import { RETRO } from './retro-palette.js';
+import { DISTRICT, DISTRICT_SIGN } from './district-palette.js';
 import { createRetailInteriors } from './retail-interiors.js';
 import { buildRetailDisplays } from './retail-displays.js';
 import { groundSurfaceHeight } from './world-surface.js';
@@ -24,17 +24,17 @@ import { officeLobbyFor, officeRetailOpenings } from './office-contract.js';
 import { buildOfficeArrival } from './office-arrival-architecture.js';
 import { ARRIVAL } from './office-arrival-model.js';
 
-// Signs are drawn once per tenant: ivory lettering on a brass-edged teal plaque
-// (the retro palette), backlit on reference-guided frontages. The plaque fills
+// Signs are drawn once per tenant: ivory lettering on a pink-edged ink plaque
+// (district-palette.js), backlit on reference-guided frontages. The plaque fills
 // the canvas, so signs are opaque and never sort against the glazing.
 function sign(name, illuminated = false, home = false) {
   const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 128;
   const context = canvas.getContext('2d');
-  context.fillStyle = home ? '#43564e' : RETRO.deepTeal; context.fillRect(0, 0, 1024, 128);
-  const ink = RETRO.ivory;
+  context.fillStyle = home ? '#43564e' : DISTRICT_SIGN.plaque; context.fillRect(0, 0, 1024, 128);
+  const ink = DISTRICT_SIGN.lettering;
   context.textAlign = 'center'; context.textBaseline = 'middle';
   context.font = `500 ${name.length > 20 ? 39 : name.length > 13 ? 47 : 57}px Futura, Avenir, sans-serif`;
-  context.strokeStyle=RETRO.brass;context.lineWidth=3;context.strokeRect(8,8,1008,112);
+  context.strokeStyle=DISTRICT_SIGN.edge;context.lineWidth=3;context.strokeRect(8,8,1008,112);
   const text = name === 'Cartier' || name === 'Le Colonial' || name === 'Steak 48' ? name : name.toUpperCase();
   context.fillStyle = ink; context.fillText(text, 512, 62, 955);
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = 8;
@@ -48,7 +48,7 @@ function sign(name, illuminated = false, home = false) {
 function cutStone() {
   const material=physicalSurface('stone',{instanced:true,tileSize:3,normalScale:new THREE.Vector2(0.035,0.035),roughness:0.36});
   const compile=material.onBeforeCompile, key=material.customProgramCacheKey;
-  const color=new THREE.Color(RETRO.ivory).toArray().map(x=>x.toFixed(4)).join(',');
+  const color=new THREE.Color(DISTRICT.ivory).toArray().map(x=>x.toFixed(4)).join(',');
   material.onBeforeCompile=shader=>{
     compile(shader);
     shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
@@ -80,11 +80,11 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
   const disc = new THREE.CylinderGeometry(0.5, 0.5, 1, 14); geometries.add(disc);
   const lobe = new THREE.IcosahedronGeometry(0.5, 1); geometries.add(lobe);
   const stone = cutStone();
-  const dark = new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, metalness: 0.58, roughness: 0.35 });
-  const bronzeFrame = new THREE.MeshStandardMaterial({ color: RETRO.brass, metalness: 0.7, roughness: 0.3 });
+  const dark = new THREE.MeshStandardMaterial({ color: DISTRICT.ink, metalness: 0.58, roughness: 0.35 });
+  const bronzeFrame = new THREE.MeshStandardMaterial({ color: DISTRICT.chrome, metalness: 0.7, roughness: 0.3 });
   const glass = thinStorefrontGlass();
-  const upperGlass = new THREE.MeshPhysicalMaterial({ color:RETRO.teal,metalness:0.35,roughness:0.08,envMapIntensity:1.6,clearcoat:0.6,clearcoatRoughness:0.08 });
-  const bulkhead = new THREE.MeshPhysicalMaterial({ color:RETRO.deepTeal,metalness:0.05,roughness:0.28,clearcoat:0.35,clearcoatRoughness:0.2 });
+  const upperGlass = new THREE.MeshPhysicalMaterial({ color:DISTRICT.glass,metalness:0.35,roughness:0.08,envMapIntensity:1.6,clearcoat:0.6,clearcoatRoughness:0.08 });
+  const bulkhead = new THREE.MeshPhysicalMaterial({ color:DISTRICT.pink,metalness:0.05,roughness:0.28,clearcoat:0.35,clearcoatRoughness:0.2 });
   const reveal = new THREE.MeshStandardMaterial({ color: '#1e2120', roughness: 0.85 });
   const interior = displayRoomSurface();
   const floor = displayRoomSurface({ floor: true });
@@ -95,13 +95,13 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
   const roof = physicalSurface('asphalt', { tileSize: 5, normalScale: new THREE.Vector2(0.15, 0.15), color: '#c9c7bf', roughness: 0.95 });
   const plant = new THREE.MeshStandardMaterial({ color: '#b9bab6', roughness: 0.55, metalness: 0.3 });
   const gold = new THREE.MeshStandardMaterial({ color: '#a68d62', roughness: 0.35, metalness: 0.75 });
-  const navy = new THREE.MeshStandardMaterial({ color:RETRO.deepTeal,roughness:0.62 });
-  const canvas = new THREE.MeshStandardMaterial({ color:RETRO.teal,roughness:0.92 });
+  const navy = new THREE.MeshStandardMaterial({ color:DISTRICT.rose,roughness:0.62 });
+  const canvas = new THREE.MeshStandardMaterial({ color:DISTRICT.pink,roughness:0.92 });
   const wood = new THREE.MeshStandardMaterial({ color:'#71543a',roughness:0.72 });
   const hedge = new THREE.MeshStandardMaterial({ color:'#31543d',roughness:0.93 });
-  const velvet = new THREE.MeshStandardMaterial({color:RETRO.rose,roughness:0.96});
+  const velvet = new THREE.MeshStandardMaterial({color:DISTRICT.rose,roughness:0.96});
   const furniture = new THREE.MeshStandardMaterial({color:'#775c40',roughness:0.65});
-  const planter = new THREE.MeshStandardMaterial({color:RETRO.porcelain,roughness:0.8});
+  const planter = new THREE.MeshStandardMaterial({color:DISTRICT.ivory,roughness:0.8});
   for (const [name, material] of Object.entries({ stone, dark, bronzeFrame, glass, upperGlass, bulkhead, reveal, interior, floor, display, light, spot, roof, plant, gold, navy, canvas, wood, hedge, velvet, furniture, planter })) { material.name = `facade-${name}`; materials.add(material); }
   const interiors = createRetailInteriors();
   interiors.materials.forEach(material => materials.add(material));
@@ -537,8 +537,8 @@ export function buildDistrictBuildings(world, { kitFinish } = {}) {
 export function buildDistrictDetail(world) {
   const group = new THREE.Group(), objects = [];
   const dummy = new THREE.Object3D();
-  const bronze = new THREE.MeshStandardMaterial({ color: RETRO.deepTeal, roughness: 0.55, metalness: 0.6 });
-  const timber = new THREE.MeshStandardMaterial({ color: RETRO.ivory, roughness: 0.85 });
+  const bronze = new THREE.MeshStandardMaterial({ color: DISTRICT.ink, roughness: 0.55, metalness: 0.6 });
+  const timber = new THREE.MeshStandardMaterial({ color: DISTRICT.ivory, roughness: 0.85 });
   const box = new THREE.BoxGeometry(1, 1, 1);
   for (const spot of storefrontBenchSpots(world)) {
     const { x, north, outward: [nx, ny] } = spot;
