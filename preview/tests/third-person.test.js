@@ -1,6 +1,62 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCameraBoom, pitchAfterSeatChange, seatedEyeView } from '../src/third-person.js';
+import { readFileSync } from 'node:fs';
+import { createCameraBoom, thirdPersonPose, pitchAfterSeatChange, seatedEyeView } from '../src/third-person.js';
+import { createWalkingEnvironment } from '../src/walking.js';
+
+test('Ribbonwing overflight keeps the chase camera outside the hull above real boutique footprints',()=>{
+  const world=JSON.parse(readFileSync(new URL('../public/data/district.json',import.meta.url)));
+  const environment=createWalkingEnvironment(world),position=[-2831.9384618692047,80,1358.439548752362];
+  assert.ok(environment.roomAt(position[0],position[2]),'a real boutique is below the flight');
+  assert.ok(environment.canFly(...position),'the aircraft clears the roof');
+  for(let heading=0;heading<8;heading++)for(const pitch of [-.6,0,.5]){
+    const pose=thirdPersonPose({position,yaw:heading*Math.PI/4,pitch,cameraDistance:10.4},environment);
+    const gap=Math.hypot(...pose.position.map((value,i)=>value-pose.target[i]));
+    assert.ok(gap>9.9,`heading ${heading}, pitch ${pitch}: camera collapsed to ${gap} m`);
+    assert.equal(pose.showBody,true);
+  }
+});
+
+test('crossing a room footprint in clear sky does not snap or hide the chase view',()=>{
+  const room={storeId:'shop',floor:2,height:4};
+  const environment={roomAt:(x,z)=>Math.abs(x)<2&&Math.abs(z)<2?room:null,groundAt:()=>2,isFree:()=>false,canPlaceCamera:()=>true};
+  const boom=createCameraBoom();let previous=null;
+  for(let frame=0;frame<=120;frame++){
+    const state={position:[-3+frame*.05,20,0],yaw:0,pitch:0,cameraDistance:10.4};
+    const pose=thirdPersonPose(state,environment),gap=Math.hypot(...pose.position.map((value,i)=>value-pose.target[i]));
+    const distance=boom.update(gap,1/60);
+    assert.ok(distance>10.4,`frame ${frame}: boom collapsed to ${distance} m`);
+    assert.equal(pose.showBody,true);
+    if(previous!==null)assert.ok(Math.abs(distance-previous)<1e-10);
+    previous=distance;
+  }
+});
+
+test('above-room cameras use outdoor obstacles and the continuous canopy segment guard',()=>{
+  const room={storeId:'shop',floor:0,height:4};
+  const environment={roomAt:()=>room,groundAt:()=>0,isFree:()=>true,canPlaceCamera:(_x,_y,z)=>z<2};
+  const state={position:[0,12,0],yaw:0,pitch:0,cameraDistance:10.4};
+  const blocked=thirdPersonPose(state,environment);
+  assert.ok(blocked.position[2]>1&&blocked.position[2]<2,'the outdoor obstacle still clips the boom');
+  environment.canPlaceCamera=()=>true;
+  let segment=null;
+  environment.cameraSegmentHit=(from,to)=>{segment={from,to};return {fraction:.5};};
+  const clipped=thirdPersonPose(state,environment);
+  assert.deepEqual(segment.from,clipped.target);
+  assert.ok(clipped.position[2]<5.2&&clipped.position[2]>5,'the finite canopy still clips between samples');
+});
+
+test('room elevation uses a varying ceiling or elevated floor and preserves indoor clearance',()=>{
+  for(const room of [
+    {storeId:'shop',floor:0,height:4,floorAt:()=>8},
+    {storeId:'shop',floor:0,height:4,ceilingAt:(_x,north)=>north<0?12:15},
+  ]){
+    const environment={roomAt:()=>room,groundAt:()=>8,isFree:()=>true,canPlaceCamera:()=>false};
+    const state={position:[0,10,0],yaw:0,pitch:0};
+    assert.ok(thirdPersonPose(state,environment).position[2]>4,'an indoor view keeps walking clearance');
+    assert.equal(thirdPersonPose({...state,position:[0,20,0]},environment).position[2],0,'above the ceiling, outdoor collision wins');
+  }
+});
 
 test('camera retracts immediately at obstructions and eases back out at any frame rate',()=>{
   const results=[];

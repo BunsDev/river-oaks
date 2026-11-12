@@ -70,8 +70,8 @@ async page => {
   await page.waitForFunction(()=>window.__riverCarriage().mechanisms.gear===1,{},{timeout:20000});
   checks.push('Above 3 m the landing feet retract');
   await page.screenshot({path:'output/playwright/hover-coach-flying.png'});
-  // Maneuvers (#777): the town admits a roll from 5 m, every snapshot carries the path, the craft
-  // rolls about its flight path and finishes level 22 m on; a dive from too low is refused with a reason.
+  // Maneuvers (#777): a dive from 5 m is refused with a reason. The roll needs clear sky
+  // for the whole tilted hull; after an ordinary climb it finishes level 22 m on.
   await host().focus();await page.keyboard.down('Space');
   try {await page.waitForFunction(()=>(window.__riverCarriage().placement.altitude??0)>5.2,{},{timeout:20000});}
   finally {await page.keyboard.up('Space');}
@@ -82,6 +82,13 @@ async page => {
   await host().focus();await page.keyboard.press('Digit3');
   await step('dive refusal',()=>page.waitForFunction(()=>document.querySelector('#player-status')?.textContent.startsWith('Climb higher first'),{},{timeout:10000}));
   check((await page.locator('#player-status').textContent()).includes('Tuck dive'),'A tuck dive from 5 m is refused: it needs room to pull out');
+  // The captured 6.4 m roll clears the old centre/tips but sweeps the wing through
+  // the Ribbon. The actual authority admits this path at 9 m; retain the unsafe
+  // refusal regression separately and settle both poses before requesting it.
+  await host().focus();await page.keyboard.down('Space');
+  try {await page.waitForFunction(()=>(window.__riverCarriage().placement.altitude??0)>9,{},{timeout:20000});}
+  finally {await page.keyboard.up('Space');}
+  await page.waitForFunction(()=>{const c=window.__riverCarriage().placement,m=window.__riverMultiplayer(),p=m.snapshot.players.find(p=>p.id===m.selfId);return p?.altitude>9&&Math.abs(p.altitude-c.altitude)<.1&&Math.abs(c.liftTarget-c.altitude)<.02&&Math.abs(c.verticalSpeed)<.02;},{},{timeout:20000});
   await host().focus();await page.keyboard.press('Digit1');
   await step('roll admitted',()=>page.waitForFunction(()=>window.__riverCarriage().maneuver?.kind==='roll',{},{timeout:10000}));
   await page.waitForFunction(()=>{const m=window.__riverMultiplayer();return m.snapshot.players.find(p=>p.id===m.selfId)?.maneuver?.kind==='roll';},{},{timeout:5000});

@@ -8,6 +8,8 @@ import { HEARTBEAT_TIMEOUT_MS, LEAVE_GRACE_MS, createRedisRoom } from '../redis-
 import { compileRegionPackage } from '../region-package.js';
 import { loadDistrictData } from '../district-data.js';
 import { beforeTowerRaise } from './district-history.js';
+import { districtRibbonPlan } from '../../preview/src/ribbon-district.js';
+import { createWalkingEnvironment } from '../../preview/src/walking.js';
 
 const enabled=Boolean(process.env.REDIS_URL);
 const testRedis=(name,fn)=>test(name,{skip:!enabled},fn);
@@ -105,6 +107,35 @@ testRedis('restart restores checkpoint and replacing an account preserves wishes
   assert.equal((await f.command(replacement,'alice',{type:'undoWish',localId:'local-00'})).error,'stale_connection');
   assert.equal((await f.command(replacement,'alice',{type:'undoWish',localId:'local-00'},'alice-new')).ok,true);
   assert.equal((await f.command(replacement,'alice',{type:'wish',localId:'local-00',kind:'dog'},'alice-new')).error,'wish_cooldown');
+});
+
+testRedis('a legacy occupied canopy pose recovers through Redis restart without losing either account',async t=>{
+  const owner='user_01M40Y914S1H4EJCEHH91DKTAY';
+  const data=JSON.parse(readFileSync(new URL('../../preview/public/data/district.json',import.meta.url),'utf8'));
+  const module=districtRibbonPlan(data).modules.find(item=>item.id==='ribbon:spine:module:013');
+  const [east,north]=module.from.map((value,i)=>(value+module.to[i])/2);
+  const world={...data,walkSpawn:[east,north,0]},environment=createWalkingEnvironment(world);
+  const f=await setup(t,{world}),first=f.create();
+  assert.equal((await f.join(first,owner)).ok,true);
+  assert.equal((await f.join(first,'bob')).ok,true);
+  const before=await first.read();await first.close();
+  const key=`${f.prefix}:state`,stored=JSON.parse(inflateSync(await f.redis.getBuffer(key)));
+  const checkpoint=stored.checkpoint,player=checkpoint.payload.players.find(item=>item.id===owner);
+  player.altitude=3.8; // Historical writer admitted a foot datum inside this slab.
+  const {checksum,...envelope}=checkpoint;
+  checkpoint.checksum=createHash('sha256').update(JSON.stringify(envelope)).digest('hex');
+  await f.redis.set(key,deflateSync(JSON.stringify(stored)));
+  const restored=f.create();
+  assert.equal((await f.join(restored,owner,'new-pilot-socket')).ok,true);
+  const after=await restored.read(),pilot=after.snapshot.players.find(item=>item.id===owner);
+  assert.equal(after.snapshot.players.length,2);
+  assert.deepEqual(pilot.position,before.snapshot.players.find(item=>item.id===owner).position);
+  assert.equal(pilot.appearance,before.snapshot.players.find(item=>item.id===owner).appearance);
+  assert.equal(environment.canFly(east,environment.groundAt(east,-north)+pilot.altitude,-north),true);
+  assert.notEqual(pilot.altitude,3.8);
+  await restored.close();
+  const again=f.create();assert.equal((await f.join(again,owner,'third-pilot-socket')).ok,true);
+  assert.deepEqual((await again.read()).snapshot.players.map(item=>[item.id,item.position,item.altitude]),after.snapshot.players.map(item=>[item.id,item.position,item.altitude]));
 });
 
 testRedis('private home invitations survive coordinator replacement and revocation ejects guests',async t=>{

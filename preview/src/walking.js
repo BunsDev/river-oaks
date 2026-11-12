@@ -1,12 +1,18 @@
 import { commonsAllows, insideRect } from '../../shared/east-garden-commons-layout.js';
 import { terrainHeight } from './geometry.js';
-import { groundSurfaceHeight } from './world-surface.js';
+import { groundSurfaceHeight, groundSurfaceRevision } from './world-surface.js';
 import { storeRoomsFor, interiorLevelRoomsFor, roomAt, roomBlocked } from './store-rooms.js';
 import { roomBlocksConversation } from './conversation-sight.js';
 import { plazaSalonFootprints } from './plaza-salon-plan.js';
 import { cityBikeRackFootprints } from './bike-racks.js';
 import { campusFlightVolumes } from './garden-campus-district.js';
-import { fiveRoomsFootprints } from './five-rooms/solids.js';
+import { fiveRoomsFootprints, fiveRoomsAppliesTo } from './five-rooms/solids.js';
+import { districtRibbonPlan } from './ribbon-district.js';
+import { RIBBON_CANOPY } from '../../shared/city-kit/ribbon-dimensions.js';
+import { ribbonCanopyVolumes, ribbonCanopyBlocks, ribbonCanopyHit, ribbonCanopyBoxHit } from '../../shared/city-kit/ribbon-canopy.js';
+import { FLIGHT_BUBBLE_CLEARANCE } from '../../shared/flight-bubble.js';
+import { hoverClear } from './hover-clearance.js';
+import { ribbonwingFromPilot, ribbonwingCanopyBox, ribbonwingRotationPadding } from './ribbonwing-clearance.js';
 import { isJevicaAccount } from './jevica-accounts.js';
 
 const RADIUS = 0.35, EYE_HEIGHT = 1.68;
@@ -75,6 +81,22 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   const groundAt = (x, z) => {
     const room = roomFor(x, z, 0);
     return room ? (room.floorAt?.(x, -z) ?? room.floor) : groundSurfaceHeight(world,x,z);
+  };
+  // Match the renderer's admitted plan and level-at-midpoint slabs. Refused or
+  // absent plans draw nothing and must not add phantom overhead collisions.
+  let canopy = [], canopyPlan = null, canopyRevision = -1;
+  if (fiveRooms && levelId === null && fiveRoomsAppliesTo(world)) {
+    let plan;
+    try { plan = districtRibbonPlan(world); } catch { /* The renderer refuses this plan too. */ }
+    canopyPlan = plan ?? null;
+  }
+  const canopyVolumes = () => {
+    const revision = groundSurfaceRevision(world);
+    if (canopyPlan && canopyRevision !== revision) canopy = ribbonCanopyVolumes(canopyPlan, groundAt, {
+      slab: RIBBON_CANOPY.slab, edgeBeyondWalk: RIBBON_CANOPY.overhang + RIBBON_CANOPY.bullnose,
+    });
+    canopyRevision = revision;
+    return canopy;
   };
   // Match the rendered roof outline, including mapped nonrectangular buildings.
   // The 3.1m margin clears the 2.6m roof bulkhead plus the bubble's lower arc.
@@ -150,7 +172,7 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
   const commonsFlightAllows=(east,north)=>commonsAllows(commons,east,north,flightRadius)
     || flightRing.every(([de,dn])=>commonsAllows(commons,east+de,north+dn,0)
       || commonsRoofsAt(east+de,north+dn).some(roof=>insideRect(roof.rect,east+de,north+dn)));
-  const canFly = (x, altitude, z) => {
+  const flightSpaceFree = (x, altitude, z) => {
     if(!commonsFlightAllows(x,-z))return false;
     if(commonsRoofsAt(x,-z).some(roof=>insideRect(roof.rect,x,-z,-flightRadius)&&altitude<=roof.top))return false;
     if(commonsFlightAt(x,-z).some(solid=>insideRect(solid.rect,x,-z,-flightRadius)&&altitude<=commons.ground+solid.height+3.1))return false;
@@ -159,6 +181,61 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     if(propAt(x,altitude,z,flightRadius) || placedObjects.some(object=>object.contains(x,altitude,z,flightRadius)))return false;
     return !roofs.some(roof=>altitude<=roof.top && x>roof.minX && x<roof.maxX && z>roof.minZ && z<roof.maxZ && overlaps(x,z,roof.ring,flightRadius));
   };
+  const canFly = (x, altitude, z, clearance = FLIGHT_BUBBLE_CLEARANCE) => flightSpaceFree(x, altitude, z)
+    && !ribbonCanopyBlocks(canopyVolumes(), [x, altitude, z], clearance);
+  const flightSegmentHit = (from, to, clearance = FLIGHT_BUBBLE_CLEARANCE) => ribbonCanopyHit(canopyVolumes(), from, to, clearance);
+  const canopyHullClear = state => {
+    const volumes = canopyVolumes();
+    return !volumes.length || !ribbonCanopyBoxHit(volumes, ribbonwingCanopyBox(state, groundAt));
+  };
+  const canopyHullTransitionClear = (from, to) => {
+    const volumes = canopyVolumes(); if (!volumes.length) return true;
+    const padding = ribbonwingRotationPadding(from, to);
+    const expanded = state => {
+      const box = ribbonwingCanopyBox(state, groundAt);
+      return { ...box, halfLength: box.halfLength + padding, halfWidth: box.halfWidth + padding, bottom: box.bottom - padding, top: box.top + padding };
+    };
+    return !ribbonCanopyBoxHit(volumes, expanded(from), expanded(to));
+  };
+  const hullAtPilot = (x, y, z, yaw) => ribbonwingFromPilot([x, y, z], yaw, y - groundAt(x, z), groundAt);
+  const canFlyHullPilot = (x, y, z, yaw) => hoverClear(hullAtPilot(x, y, z, yaw), { groundAt, isFree, canFly, canopyHullClear });
+  const canopyHullSegmentHit = (from, to, fromYaw, toYaw) => ribbonCanopyBoxHit(canopyVolumes(),
+    ribbonwingCanopyBox(hullAtPilot(...from, fromYaw), groundAt), ribbonwingCanopyBox(hullAtPilot(...to, toYaw), groundAt));
+  const recoverFlightHull = (x, y, z, yaw) => {
+    const volumes = canopyVolumes(), body = ribbonwingCanopyBox(hullAtPilot(x, y, z, yaw), groundAt);
+    // The old pilot-only writer must have admitted this position. Other invalid
+    // checkpoints still fail closed; only the newly checked hull is recoverable.
+    if (!flightSpaceFree(x, y, z) || canFlyHullPilot(x, y, z, yaw)) return null;
+    const ground = groundAt(x, z), candidates = volumes.flatMap(volume => [y + volume.bottom - body.top - 0.01, y + volume.top - body.bottom + 0.01]);
+    candidates.sort((a, b) => Math.abs(a - y) - Math.abs(b - y));
+    const nearby = candidates.find(height => height > ground + 0.1 && height <= ground + flightCeiling && canFlyHullPilot(x, height, z, yaw));
+    if (nearby !== undefined) return nearby;
+    // An old pilot-only writer could place a wing inside a neighbouring roof as
+    // well. Retain the account/vehicle at the same horizontal position, using a
+    // bounded upward search for a newly enforced full-hull clearance failure.
+    let low = y, high = ground + flightCeiling;
+    if (high <= low || !canFlyHullPilot(x, high, z, yaw)) return null;
+    for (let step = 0; step < 16; step++) {
+      const middle = (low + high) / 2;
+      if (canFlyHullPilot(x, middle, z, yaw)) high = middle; else low = middle;
+    }
+    return high;
+  };
+  // Only newly obstructed canopy poses qualify for vertical checkpoint recovery.
+  // Other invalid poses still fail closed. Choose the nearest clear face without
+  // moving the occupant through a private boundary or changing their identity.
+  const recoverCanopyFlight = (x, y, z, clearance = FLIGHT_BUBBLE_CLEARANCE) => {
+    const canopy = canopyVolumes();
+    if (!flightSpaceFree(x, y, z) || !ribbonCanopyBlocks(canopy, [x, y, z], clearance)) return null;
+    const ground = groundAt(x, z), { above = 0, below = 0 } = clearance;
+    const candidates = canopy.flatMap(volume => [volume.bottom - above - 0.01, volume.top + below + 0.01]);
+    candidates.sort((a, b) => Math.abs(a - y) - Math.abs(b - y));
+    return candidates.find(height => height > ground + 0.1 && height <= ground + flightCeiling && canFly(x, height, z, clearance)) ?? null;
+  };
+  // Camera queries retain existing building/prop clearance but use a point at
+  // the canopy, never the flight body's asymmetric vertical extent.
+  const canPlaceCamera = (x, y, z) => flightSpaceFree(x, y, z) && !ribbonCanopyBlocks(canopyVolumes(), [x, y, z]);
+  const cameraSegmentHit = (from, to) => ribbonCanopyHit(canopyVolumes(), from, to);
   // Outward horizontal contact normal for flight sliding on mapped roof walls.
   // Use the current position for the tangent: a normal at the attempted point
   // can turn the slide inward around the rounded clearance at a convex corner.
@@ -189,7 +266,9 @@ export function createWalkingEnvironment(world, placedObjects = [], levelId = nu
     return true;
   };
   // Durable creations stay on geography retained by the blockout rollback.
-  return { buildBounds: world.eastGardenCommons?.districtBounds, levelId, groundAt, isFree, isAreaFree, canFly, flightWallNormal, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
+  return { buildBounds: world.eastGardenCommons?.districtBounds, levelId, groundAt, isFree, isAreaFree, canFly, flightSegmentHit, recoverCanopyFlight,
+    canopyHullClear, canopyHullTransitionClear, canFlyHullPilot, canopyHullSegmentHit, recoverFlightHull,
+    canPlaceCamera, cameraSegmentHit, flightWallNormal, flightCeiling, hasSightLine, roomAt: (x, z) => roomFor(x, z, 0), rooms, bounds: [west, -north, east, -south], spawn: world.walkSpawn ?? [(west + east) / 2, (south + north) / 2, 0] };
 }
 
 /** One player's step view: guards(from, to) in [east, north] metres veto only this mover's own candidates. */
@@ -197,7 +276,7 @@ export function guardedStepEnvironment(environment, from, guards) {
   if (!guards.length) return environment;
   const allowed = (x, z) => guards.every(guard => guard(from, [x, -z]));
   return { ...environment, isFree: (x, z) => environment.isFree(x, z) && allowed(x, z),
-    canFly: (x, altitude, z) => environment.canFly(x, altitude, z) && allowed(x, z) };
+    canFly: (x, altitude, z, clearance) => environment.canFly(x, altitude, z, clearance) && allowed(x, z) };
 }
 
 export function createWalkingState(environment, position = environment.spawn, yaw = 0) {

@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs';
 import { createWalkingEnvironment } from '../src/walking.js';
 import { hoverClear, stepHoverLift } from '../src/carriage-motion.js';
 import { climbClear } from '../e2e/hover-landing.js';
+import { ribbonCanopyVolumes, ribbonCanopyBlocks } from '../../shared/city-kit/ribbon-canopy.js';
+import { RIBBON_CANOPY } from '../../shared/city-kit/ribbon-dimensions.js';
 
 const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url), 'utf8'));
 const environment = createWalkingEnvironment(world);
@@ -16,15 +18,30 @@ const descend = yaw => {
   return state.altitude;
 };
 
-test('the hosted stall: at this spot a few degrees of heading decide whether the craft lands', () => {
-  assert.equal(descend(0.3), 0, 'clear heading lands');
-  const stopped = descend(0.44);
-  assert.ok(stopped > 3.5 && stopped < 3.7, `the next heading stops near the hosted 3.57 m, stopped at ${stopped}`);
+test('the historical hosted stall now stops at the finite canopy at both headings', () => {
+  // The old query omitted the canopy and let yaw .3 descend through its margin.
+  // This station is no longer a legal landing route after finite overhead collision.
+  for (const yaw of [0.3, 0.44]) {
+    const stopped = descend(yaw);
+    assert.ok(stopped > 3.5 && stopped < 4.5, `yaw ${yaw} approaches but retains whole-hull clearance above the canopy, stopped at ${stopped}`);
+    assert.equal(hoverClear(craft(yaw, stopped), environment), true, 'the accepted hull remains clear');
+    assert.equal(hoverClear(craft(yaw, stopped - 0.05), environment), false, 'the next descent step would intersect the obstruction');
+  }
 });
 
-test('a spot is not clear for landing when a small turn of the hull would stop the descent', () => {
-  assert.equal([0, 1, 2, 3, 4, 5, 6].every(altitude => hoverClear(craft(0.3, altitude), environment)), true, 'the heading itself passes');
+test('the historical station is not a landing spot even at its formerly clear heading', () => {
+  assert.equal([0, 1, 2, 3, 4, 5, 6].every(altitude => hoverClear(craft(0.3, altitude), environment)), false, 'the finite canopy blocks the descent');
   assert.equal(climbClear(craft(0.3), environment), false);
+});
+
+test('the hover hull cannot straddle a finite slab between two clear height samples', () => {
+  const volumes = ribbonCanopyVolumes({ modules: [{ id: 'hull-slab', from: [-10, 0], to: [10, 0], length: 20, width: 20, clearHeight: 3.6, yaw: 0 }] }, () => 0,
+    { slab: RIBBON_CANOPY.slab, edgeBeyondWalk: RIBBON_CANOPY.overhang + RIBBON_CANOPY.bullnose });
+  const env = { groundAt: () => 0, isFree: () => true, canFly: (x, y, z, clearance) => !ribbonCanopyBlocks(volumes, [x, y, z], clearance) };
+  assert.equal(env.canFly(0, 2.4, 0), true);
+  assert.equal(env.canFly(0, 4.03, 0), true);
+  assert.equal(hoverClear({ ...craft(0, 2), position: [0, 0, 0] }, env), false, 'the actual hull span contains the slab');
+  for (const altitude of [0, 5]) assert.equal(hoverClear({ ...craft(0, altitude), position: [0, 0, 0] }, env), true, 'legal underpass and overflight stay clear');
 });
 
 test('a spot that passes lands at every heading in the band', () => {

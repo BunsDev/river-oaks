@@ -93,7 +93,14 @@ async page => {
   await bob.waitForFunction(id=>{const s=window.__riverRibbonwingSeat(),h=s.holders[id],seat=Object.values(s.seats).find(Boolean);return h?.aboard&&seat&&Math.hypot(h.position[0]-seat[0],h.position[1]-seat[1],h.position[2]-seat[2])<.05;},aliceId,{timeout:20000});
   check(true,'bob sees alice seated in Jevica\'s Ribbonwing');
   // Climb: alice cannot step out aloft.
-  await climb(5.2,'Jevica climbs with alice aboard');
+  // The full rolling hull clips spine modules000/001 at the old climbing setup
+  // (town6.24m, local6.66m). A real authority replay refuses that path and admits9m.
+  // Let the ordinary climb settle and reach the town before asking for the roll.
+  await climb(9,'Jevica climbs with alice aboard');
+  await page.waitForFunction(()=>{const c=window.__riverCarriage(),m=window.__riverMultiplayer(),p=m.snapshot.players.find(p=>p.id===m.selfId),s=c.placement;
+    return p&&p.altitude>=9&&Math.abs(p.altitude-s.altitude)<.05&&Math.abs(s.verticalSpeed)<.02&&Math.abs(s.liftTarget-s.altitude)<.02;
+  },null,{timeout:60000});
+  check(true,'The pilot and town agree on a settled clear-air altitude above9m before the passenger roll');
   await alice.waitForFunction(()=>{const m=window.__riverMultiplayer();return (m.snapshot.players.find(p=>p.id===m.selfId)?.altitude??0)>5;},{},{timeout:20000});
   check(await alice.locator('.ribbonwing-seat [data-seat-action]').isDisabled(),'Aloft, alice\'s Step out is disabled');
   const aloftGarage=await garageOf(alice);

@@ -3,8 +3,9 @@ async (host, viewer) => {
   // not. Positions are the two video elements' own currentTime, projected to a common wall
   // time, never a "playing" label. Software rendering; not a visual or device acceptance.
   const { openHudSpace } = await import('./hud-navigation.js');
-  const check = (ok, message) => { if (!ok) throw new Error(message); };
+  const { checkScreeningEvidence, screeningFrameSnapshot } = await import('./ipic-screening-frames.js');
   const checks = [], errors = [], samples = [];
+  const check = (ok, message) => checkScreeningEvidence(ok, message, () => ({ checks, errors, samples }));
   for (const page of [host, viewer]) page.on('pageerror', error => errors.push(error.message));
   const screening = page => page.evaluate(() => window.__riverScreening?.() ?? null);
   // The host's page asks for the labelled fixture in its chooser (development builds only, #499).
@@ -62,7 +63,8 @@ async (host, viewer) => {
   let converged = null;
   while (Date.now() - joined < 9000) {
     const sample = await spread();
-    samples.push({ sinceJoinMs: Date.now() - joined, spreadMs: Math.round(sample.spreadMs), presentedSpreadMs: sample.presentedSpreadMs === null ? null : Math.round(sample.presentedSpreadMs), hostDriftMs: sample.host.driftMs, viewerDriftMs: sample.viewer.driftMs, hostRate: sample.host.rate, viewerRate: sample.viewer.rate });
+    samples.push({ sinceJoinMs: Date.now() - joined, spreadMs: Math.round(sample.spreadMs), presentedSpreadMs: sample.presentedSpreadMs === null ? null : Math.round(sample.presentedSpreadMs), hostDriftMs: sample.host.driftMs, viewerDriftMs: sample.viewer.driftMs, hostRate: sample.host.rate, viewerRate: sample.viewer.rate,
+      hostFrame: screeningFrameSnapshot(sample.host), viewerFrame: screeningFrameSnapshot(sample.viewer) });
     if (sample.spreadMs < 500 && converged === null) converged = Date.now() - joined;
     await viewer.waitForTimeout(250);
   }

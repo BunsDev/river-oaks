@@ -13,15 +13,17 @@ import { createRedisLandmarks } from '../landmarks.js';
 import { createRedisSocial } from '../social.js';
 import { createRedisGroups } from '../groups.js';
 import { WORLD_PROTOCOL_VERSION } from '../../preview/src/world-contract.js';
+import { districtRibbonPlan } from '../../preview/src/ribbon-district.js';
+import { createWalkingEnvironment } from '../../preview/src/walking.js';
 
 const origin = 'https://sim.jev.works';
 const data = JSON.parse(await readFile(new URL('../../preview/public/data/district.json', import.meta.url)));
 const live = { skip: !process.env.REDIS_URL, timeout: 30_000 };
-async function fixture(t, { worldId = 'river-oaks', worldIds = [worldId, worldId], waitlist = approvedWaitlist } = {}) {
+async function fixture(t, { worldId = 'river-oaks', worldIds = [worldId, worldId], waitlist = approvedWaitlist, world = data, now = Date.now } = {}) {
   const redis = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1 });
   redis.on('error', () => {});
   const prefix = `{river-oaks:test:${randomUUID()}}`;
-  const sessions = new Map(['alice', 'bob', 'moderator',...Array.from({length:16},(_,index)=>`resident${index}`)].map(userId => [userId, {
+  const sessions = new Map(['alice', 'bob', 'moderator', 'user_01M40Y914S1H4EJCEHH91DKTAY',...Array.from({length:16},(_,index)=>`resident${index}`)].map(userId => [userId, {
     userId, name: userId, sessionId: userId + '-session', csrfToken: 'test-csrf', expiresAt: Date.now() + 60_000,
   }]));
   const nodes = [];
@@ -40,7 +42,7 @@ async function fixture(t, { worldId = 'river-oaks', worldIds = [worldId, worldId
       authenticate: async req => sessions.get(req.headers.cookie?.match(/test_session=(\w+)/)?.[1]) ?? null,
       handle: async () => false,
     };
-    const room = createRedisRoom({ redis, prefix:roomPrefix, worldId:nodeWorldId, worldData: data, isAdmin:id=>id==='alice', authorize: async identity =>
+    const room = createRedisRoom({ redis, prefix:roomPrefix, worldId:nodeWorldId, worldData: world, now, isAdmin:id=>id==='alice', authorize: async identity =>
       sessions.get(identity.userId)?.sessionId === identity.sessionId && !(await security.isBanned(identity.userId)) });
     const app = createDistributedServer({ auth, security, room, waitlist, landmarks:createRedisLandmarks({redis,prefix}), social:createRedisSocial({redis,prefix}), groups:createRedisGroups({redis,prefix}), origin, moderators: ['moderator'] });
     await new Promise(resolve => app.server.listen(0, '127.0.0.1', resolve));
@@ -277,6 +279,129 @@ test('different server instances share tickets, players, wishes, and durable ack
   assert.ok(alice.messages.indexOf(snapshot) < alice.messages.indexOf(grant));
   await bob.waitFor(message => message.locals?.some(local => local.id === 'local-00' && local.wish?.ownerId === 'alice'));
   assert.equal((await alice.command({ type: 'undoWish', localId: 'local-00' })).ok, true);
+});
+
+test('Ribbon canopy refusal is authoritative across two gateways and a reconnect', live, async t => {
+  const owner = 'user_01M40Y914S1H4EJCEHH91DKTAY'; // Existing local acceptance identity.
+  const module = districtRibbonPlan(data).modules.find(item => item.id === 'ribbon:spine:module:013');
+  const [east, north] = module.from.map((value, i) => (value + module.to[i]) / 2);
+  const world = { ...data, walkSpawn: [east, north, 0] }, environment = createWalkingEnvironment(world);
+  const f = await fixture(t, { world }), [a, b] = f.nodes;
+  const pilot = client(a, owner, await f.ticket(a, owner)), peer = client(b, 'bob', await f.ticket(b, 'bob'));
+  t.after(() => { pilot.ws.terminate(); peer.ws.terminate(); });
+  const joined = await pilot.waitFor(message => message.selfId === owner);
+  await peer.waitFor(message => message.selfId === 'bob' && message.players.length === 2);
+  const position = joined.players.find(player => player.id === owner).position;
+  let last = 0, refusal = null;
+  for (let step = 1; step <= 30; step++) {
+    await new Promise(resolve => setTimeout(resolve, 60));
+    const result = await pilot.command({ type: 'pose', position, yaw: 0, altitude: step / 10 });
+    if (!result.ok) { refusal = result.error; break; }
+    last = step / 10;
+  }
+  assert.equal(refusal, 'blocked');
+  assert.ok(last > 0.5 && last < 1.3, 'full body stops before its foot reaches the slab');
+  assert.equal(environment.canFly(east, environment.groundAt(east, -north) + last, -north), true);
+  const observed = await peer.waitFor(message => message.players?.some(player => player.id === owner && player.altitude === last));
+  assert.deepEqual(observed.players.find(player => player.id === owner).position, position);
+  assert.equal((await b.room.read()).snapshot.players.find(player => player.id === owner).altitude, last);
+  const ended = closed(pilot.ws); pilot.ws.close(); await ended;
+  const resumed = client(b, owner, await f.ticket(b, owner));
+  t.after(() => resumed.ws.terminate());
+  const snapshot = await resumed.waitFor(message => message.selfId === owner);
+  assert.equal(snapshot.players.find(player => player.id === owner).altitude, last);
+  assert.deepEqual(snapshot.players.find(player => player.id === owner).position, position);
+});
+
+test('an away aircraft holds its full hull clear for a peer and resumes across gateways', { ...live, timeout: 60_000 }, async t => {
+  const owner = 'user_01M40Y914S1H4EJCEHH91DKTAY';
+  const module = districtRibbonPlan(data).modules[0];
+  const midEast = (module.from[0] + module.to[0]) / 2, north = (module.from[1] + module.to[1]) / 2;
+  // Keep the admitted real lane and canopy, with an open departure site west of it.
+  // Motion climbs there normally, then flies over to the side of module000.
+  const world = { scene: 'district', bounds_m: data.bounds_m, buildings: [], stores: [],
+    roads: data.roads.filter(road => road.id === 'osm-way-583333526-0'), walkSpawn: [midEast - 15, north, 0] };
+  let time = Date.now();
+  const env = createWalkingEnvironment(world), f = await fixture(t, { world, now: () => time }), [a, b] = f.nodes;
+  const pilot = client(a, owner, await f.ticket(a, owner)), peer = client(b, 'bob', await f.ticket(b, 'bob'));
+  t.after(() => { pilot.ws.terminate(); peer.ws.terminate(); });
+  const joined = await pilot.waitFor(message => message.selfId === owner);
+  await peer.waitFor(message => message.selfId === 'bob' && message.players.length === 2);
+  const initial = joined.players.find(player => player.id === owner);
+  let position = initial.position;
+  assert.equal(env.canFlyHullPilot(position[0], position[2], -position[1], 0), true, 'open departure hull');
+  for (let step = 1; step <= 40; step++) {
+    time += 70;
+    const reply = await pilot.command({ type: 'pose', position, yaw: 0, altitude: step / 5, vehicle: 'hover' });
+    assert.equal(reply.ok, true, 'climb outside the canopy using the real command');
+  }
+  for (let step = 1; step <= 48; step++) {
+    time += 60;
+    const east = initial.position[0] + step / 4;
+    position = [east, north, env.groundAt(east, -north)];
+    assert.equal((await pilot.command({ type: 'pose', position, yaw: 0, altitude: 8, vehicle: 'hover' })).ok, true, 'normal overflight reaches the station');
+  }
+  const from = peer.messages.length, ended = closed(pilot.ws);
+  // A socket close alone does not prove its queued leave has committed. Observe
+  // the real request's acknowledgement before advancing the fixture clock.
+  const request = a.room.request.bind(a.room);
+  let departure;
+  const departed = new Promise(resolve => { departure = resolve; });
+  a.room.request = async operation => {
+    const result = await request(operation);
+    if (operation.type === 'leave' && operation.userId === owner) departure(result);
+    return result;
+  };
+  pilot.ws.close(); await ended;
+  assert.equal((await departed).ok, true);
+  const advance = async ms => {
+    time += ms;
+    // An automatic gateway tick may already be in flight at the previous time.
+    // Wait for the public committed timestamp, rather than consuming that tick
+    // as if it had applied this new simulation interval.
+    for (let attempt = 0; attempt < 100; attempt++) {
+      await a.room.tick(); await b.room.tick();
+      const snapshot = (await b.room.read()).snapshot;
+      if (snapshot.serverTimeMs === time) return;
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    assert.fail('controlled room time did not commit');
+  };
+  for (let tick = 0; tick < 7; tick++) await advance(250);
+  const beforeAdmission = (await b.room.read()).snapshot;
+  assert.equal(beforeAdmission.players.find(p => p.id === owner).altitude, 4.5, JSON.stringify(beforeAdmission.players));
+  const heldView = await peer.waitFor(message => message.players?.some(p => p.id === owner && p.altitude === 4.5), from);
+  const observations = peer.messages.slice(from).flatMap(message => message.players?.filter(p => p.id === owner) ?? []);
+  assert.ok(observations.length >= 2, 'the live peer observes the away descent and held craft');
+  for (const p of observations) {
+    assert.deepEqual(p.position, position);
+    assert.equal(env.canFlyHullPilot(p.position[0], p.position[2] + p.altitude, -p.position[1], p.yaw), true, 'no published away pose admits aircraft penetration');
+  }
+  const held = (await b.room.read()).snapshot.players.find(p => p.id === owner);
+  assert.equal(held.altitude, heldView.players.find(p => p.id === owner).altitude);
+  // Reproduce the hosted interleaving: a legal smaller step occurs after this
+  // earlier read, before the replacement socket is admitted on the other gateway.
+  await advance(210);
+  const resumed = client(b, owner, await f.ticket(b, owner));
+  t.after(() => resumed.ws.terminate());
+  const rejoined = (await resumed.waitFor(message => message.selfId === owner)).players.find(p => p.id === owner);
+  assert.equal(rejoined.vehicle, 'hover');
+  assert.equal(held.altitude, 4.5);
+  assert.equal(rejoined.altitude, 4.08);
+  assert.notEqual(rejoined.altitude, held.altitude, 'admission follows the intervening legal away step');
+  assert.equal(env.canFlyHullPilot(position[0], position[2] + rejoined.altitude, -position[1], rejoined.yaw), true);
+  assert.equal(rejoined.appearance, initial.appearance);
+  assert.deepEqual(rejoined.position, position);
+  await advance(400);
+  for (const node of [a, b]) assert.equal((await node.room.read()).snapshot.players.find(p => p.id === owner).altitude, rejoined.altitude, 'admission stops the away descent');
+  // Clear air makes a stale away flag observable; a canopy-blocked craft alone
+  // could appear stationary even if reconnect failed to restore its presence.
+  for (let altitude = 4.2; altitude <= 6.001; altitude += .2) {
+    time += 100;
+    assert.equal((await resumed.command({ type: 'pose', position, yaw: 0, altitude: Math.round(altitude * 10) / 10, vehicle: 'hover' })).ok, true);
+  }
+  await advance(250);
+  for (const node of [a, b]) assert.equal((await node.room.read()).snapshot.players.find(p => p.id === owner).altitude, 6, 'reconnected craft remains at its admitted clear-air pose on both gateways');
 });
 
 test('account replacement, ban, and logout cross instance boundaries', live, async t => {

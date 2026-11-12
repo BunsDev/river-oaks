@@ -56,10 +56,14 @@ export function stepFlight(state, environment, flight, input, delta) {
       const distance=Math.hypot(east-fromX,south-fromZ);
       if(distance>32||Math.abs(candidateAltitude-fromAltitude)>32)return false;
       const steps=Math.max(1,Math.ceil(distance/.15),Math.ceil(Math.abs(candidateAltitude-fromAltitude)/.15));
+      let previous=[fromX,environment.groundAt(fromX,fromZ)+fromAltitude,fromZ];
       for(let i=1;i<=steps;i++) {
         const t=i/steps,ex=fromX+(east-fromX)*t,sz=fromZ+(south-fromZ)*t;
         const altitude=fromAltitude+(candidateAltitude-fromAltitude)*t;
         if(altitude<=.1?!environment.isFree(ex,sz):!clear(ex,environment.groundAt(ex,sz)+altitude,sz))return false;
+        const point=[ex,environment.groundAt(ex,sz)+altitude,sz];
+        if(environment.flightSegmentHit?.(previous,point))return false;
+        previous=point;
       }
     }
     return true;
