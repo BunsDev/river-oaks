@@ -120,6 +120,21 @@ test('the Ribbonwing model exposes named attachments, three LOD levels within bu
   assert.ok(once > 0 && disposals === once && vehicle.ribbonwing.disposed && !vehicle.object.parent);
 });
 
+test('the near detail pass adds shut lines inside the authored envelope and the level budget', () => {
+  const craft = createRibbonwing();
+  try {
+    craft.object.updateMatrixWorld(true);
+    const box = level => new THREE.Box3().setFromObject(craft.levels[level]), near = box('near'), medium = box('medium');
+    for (const axis of ['x', 'y', 'z']) {
+      assert.ok(Math.abs(near.min[axis] - medium.min[axis]) < .02, `${axis} min ${near.min[axis]} vs ${medium.min[axis]}`);
+      assert.ok(Math.abs(near.max[axis] - medium.max[axis]) < .02, `${axis} max ${near.max[axis]} vs ${medium.max[axis]}`);
+    }
+    const { perLevel } = craft.stats();
+    assert.ok(perLevel.near.draws <= 65, `${perLevel.near.draws} draws`);
+    assert.ok(perLevel.near.triangles < 130000, `${perLevel.near.triangles} triangles`);
+  } finally { craft.dispose(); }
+});
+
 test('a parked Ribbonwing blocks walkers under its wings but not ahead of them, where its steps and exits are', async () => {
   const { carriageContains } = await import('../src/carriage-parking.js');
   const placement = { vehicle: 'hover', position: [0, 0, 0], yaw: 0, scale: 1 };
