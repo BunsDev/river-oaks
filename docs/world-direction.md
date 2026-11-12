@@ -38,7 +38,30 @@ Jevica receives starstruck greetings. Reactions observe room boundaries and
 line-of-sight checks, expire, and have a cooldown. They do not rewrite identities,
 needs or jobs. Storm response and active volunteer visits retain priority.
 
+## Pink Jet-Age, November 2026
+
+Pink Jet-Age is the look of the whole world (#738). TypeSafe pink `#F486A1` leads, with warm
+ivory, mint glass, restrained satin chrome, ink frames and gardens. Pink goes on fascias, sills,
+canopies and awnings and never covers a whole wall. Pink on ivory measures 2.13:1, so pink is
+never lettering, a focus ring or a fill under light text on a pale surface. Night pink light is
+kept for real affordances and landmarks.
+
+Classic is retired as a visitor choice: a saved Classic preference is ignored (#913). The
+Commons, Heights, Gardens, Ribbon, Five Rooms shells, IPIC lounge, offices and Studio spaces
+take the look through the city kit and their own material tables. The original District takes
+it through `preview/src/district-palette.js`: ivory stone, pink fascia bands, bulkheads and
+awnings, ink frames and lamp columns, chrome trim, grey-mint upper glass and ink tenant signs
+with ivory lettering.
+
+Still to come, each with its own issue: rounded jet-age forms on the District blocks and the
+decision on the photographed reference facades (#740), the interface rebuild (#746), resident
+fashion palettes and vehicle trim (#745), and removal of the Classic tables and the address
+parameter test harnesses still use (#913). Mapped streets, parcels, entrances, source IDs,
+collision, saved identities and permissions do not change with the look.
+
 ## Retrofuturistic environment, September 23, 2026
+
+Superseded for colour by Pink Jet-Age above; kept as the record of the forms it introduced.
 
 The space-age direction is intentional: ivory ceramic surfaces, teal glass and
 enamel, champagne brass, rose and mint accents, terrazzo interiors, rounded

@@ -5,7 +5,7 @@ and the [setup and verification workflow](docs/agent-workflow.md). Run `pnpm run
 for prerequisites and `pnpm run verify` for the core gate.
 
 
-An inhabited science-fantasy interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens, and human residents with varied romantic, gothic, futuristic and artistic fashion. This is an intentional shift toward a fantastic world rendered with believable materials, anatomy and movement. Play as **Jevica**, explore in third person, and fly in her bubble. See [the creative direction and controls](docs/world-direction.md).
+An inhabited Pink Jet-Age interpretation of Houston’s River Oaks District: mapped streets and real boutique destinations, lush gardens and human residents, in TypeSafe pink, warm ivory, mint glass and restrained chrome under rounded canopies. The world is fantastic; its materials, anatomy and movement aim to be believable. Play as **Jevica**, explore in third person, and fly in her bubble. See [the creative direction and controls](docs/world-direction.md).
 Compose and share a moment with **Commands → Camera · Photo mode**: creative lens controls,
 social crops, film looks, and clean PNG downloads. [Photo controls and sharing](docs/photo-mode.md).
 
@@ -176,10 +176,7 @@ The demo is a labeled synthetic fixture and never counts as River Oaks accuracy 
 
 Raw GIS, generated neighborhood manifests, voice weights, review queues, and Unreal binary assets remain ignored. The bundled district derivative is attributed under [ODbL](preview/public/data/README.md); surface maps and HDR lighting have [CC0 source receipts](preview/public/assets/materials/sources.json). [Data contracts and source catalog](docs/data.md) explain observed canopy inputs and attribution. [Execution ledger](docs/superpowers/plans/2026-09-17-river-oaks.md) records what still needs delivery.
 
-Jevica can also **Call carriage** and **Ride carriage** from her character
-controls. W/S rides or reverses, A/D or arrow keys steer, and **Leave carriage**
-steps onto clear ground. The ornate rose-and-gold coach, ceramic-and-teal district
-palette and human residents are intentional; see [world direction](docs/world-direction.md)
+The Pink Jet-Age palette and the human residents are intentional; see [world direction](docs/world-direction.md)
 and [character controls](docs/character-forms.md).
 
 Street geometry retains the Houston map and applies [Palo Alto street details](docs/street-standards.md).
