@@ -1,7 +1,7 @@
-/* Pink Jet-Age HUD skin (#746 under #738): opt-in, like the world finish. main.js sets
-   <html data-finish> from render-quality.js readFinishPreference (`?finish=pink-jet-age` or
-   localStorage['river-oaks-finish']); without it these rules never match and the HUD is
-   classic. Only accent roles change: the glass tints, radii and every reduced-transparency
+/* Pink Jet-Age HUD skin (#746 under #738). main.js sets <html data-finish> from
+   render-quality.js readFinishPreference, which is `pink-jet-age` unless the address names
+   another finish for a harness run (#913); under any other value these rules never match and
+   the HUD is classic. Only accent roles change: the glass tints, radii and every reduced-transparency
    and software-rendering variant stay as hud-glass.css sets them.
    Light keeps pink as a deep rose where it is text or carries light text; dark uses
    TypeSafe pink #F486A1 itself with ink labels. Every pair in

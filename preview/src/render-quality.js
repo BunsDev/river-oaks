@@ -16,24 +16,21 @@ export function normalizeQuality(value) {
   return Object.hasOwn(QUALITY_MODES, value) ? value : DEFAULT_QUALITY;
 }
 
-// The city-kit finish (shared/city-kit/catalog.js KIT_FINISHES) for the live Commons and
-// Heights (#742). Pink Jet-Age is the default presentation; no URL flag is required.
-// Read once per page load: an explicit `?finish=classic` or saved Classic preference
-// remains a comparison override. Query choices take precedence over saved choices.
+// The city-kit finish (shared/city-kit/catalog.js KIT_FINISHES) for the live world. Pink
+// Jet-Age is the look and Classic is retired (#913). A saved `river-oaks-finish` choice is no
+// longer read, so no visitor stays on Classic; the key is left in the browser, untouched.
+// `?finish=` still names a finish for one page load, as a harness parameter only: the hosted
+// depth and Five Rooms journeys pin Classic baselines, and it goes when they are re-pinned.
 // The lazily loaded scene builders validate names (catalog.js knownFinish), so an
 // unknown well-formed name still renders classic; keep the catalog out of this bundle.
 export const DEFAULT_FINISH = 'pink-jet-age';
-const finishStorageKey = 'river-oaks-finish';
 const finishName = value => typeof value === 'string' && /^[a-z][a-z0-9-]{0,31}$/.test(value) ? value : DEFAULT_FINISH;
-export function readFinishPreference({ search, storage: given } = {}) {
+export function readFinishPreference({ search } = {}) {
   try {
     const query = new URLSearchParams(search ?? globalThis.location?.search ?? '').get('finish');
     if (query !== null) return finishName(query);
-  } catch { /* An unreadable address keeps the stored or default finish. */ }
-  try {
-    const storage = given === undefined ? globalThis.localStorage : given;
-    return finishName(storage?.getItem(finishStorageKey));
-  } catch { return DEFAULT_FINISH; }
+  } catch { /* An unreadable address keeps the default finish. */ }
+  return DEFAULT_FINISH;
 }
 
 // A 60 Hz display delivers 16.7 ms frames. A window median at or above 26 ms
