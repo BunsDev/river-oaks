@@ -49,11 +49,28 @@ The documented desktop release steps were not followed, and no desktop build shi
 - Step 1: this commit is not signed with `-S`, and it lands through the GitHub merge API after
   the required checks pass, not through `pnpm run land`.
 - Step 2 (macOS build, sign, notarize): not run. No Apple credentials or macOS host here.
-- Step 3: the tag is created through the GitHub API and is unsigned. It starts the `Desktop`
-  workflow. An unsigned Windows installer from that run is not a release asset.
+- Step 3: this session could not create the tag. Its GitHub access refuses tag pushes and the
+  tag and release endpoints, so the owner creates `v0.3.0` (signed, per the documented step) and
+  the GitHub release. Pushing the tag starts the `Desktop` workflow. An unsigned Windows
+  installer from that run is not a release asset.
 - Steps 4 to 6 (keep the candidate, real-machine acceptance, publish installers): not run.
 
-The GitHub release is published as a pre-release with notes only.
+The GitHub release notes were prepared for the owner to publish as a pre-release, with notes
+only.
+
+## What happened
+
+- #915 (original District materials) merged as `060f9aa1` after 34 of 34 hosted checks passed on
+  the first attempt. Vercel deployed it to production.
+- #914 (a saved Classic choice is ignored) failed `preview shared (required-characters)` twice at
+  the same Character Studio step, which also failed on an unrelated Dependabot branch (run
+  42773510255); the record is on #914. Its commit landed inside #916.
+- #916 (this release) merged as `50f6ae01` after every hosted check passed on the first attempt
+  (36 passed, 5 desktop installer and signing jobs skipped as they are on every pull request).
+  The merge commit's tree equals the tested head's tree.
+- The owner confirmed on 2026-11-11, before the first merge, that merging deploys to production.
+- The tag should point at the merge commit of the pull request that adds this section, so the
+  tagged tree carries this record.
 
 ## Rollback
 
