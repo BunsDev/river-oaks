@@ -42,6 +42,7 @@
       "experience",
       "experience-commons",
       "experience-five-rooms",
+      "ribbon-crowns",
       "shared",
       "ipic-screening"
     ],
@@ -64,6 +65,7 @@
       "experience",
       "experience-commons",
       "experience-five-rooms",
+      "ribbon-crowns",
       "shared",
       "ipic-screening"
     ],
@@ -316,6 +318,15 @@
       "env": {
         "RIVER_OAKS_E2E_REPORT": "experience-five-rooms.json"
       },
+      "browser": true
+    },
+    {
+      "id": "ribbon-crowns",
+      "command": [
+        "pnpm",
+        "run",
+        "test:ribbon:crowns"
+      ],
       "browser": true
     },
     {

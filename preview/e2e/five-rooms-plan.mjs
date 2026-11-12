@@ -128,11 +128,13 @@ export function ribbonTraversal(contract, { standOff = 1.2 } = {}) {
   return { spine, stops, segments: contract.segments.map(({ id, points, width, status }) => ({ id, points, width, status: status ?? 'clear' })) };
 }
 
-export function inRibbonCorridor(segment, point) {
+// `body` is how far the whole player must stay inside the width: 0 for the point, the walking
+// radius on a segment documented as clear (#740), where the claim is about the body, not a path.
+export function inRibbonCorridor(segment, point, body = 0) {
   return segment.points.slice(1).some((b, i) => {
     const a = segment.points[i], dx = b[0] - a[0], dy = b[1] - a[1], length2 = dx * dx + dy * dy;
     const t = length2 ? Math.max(0, Math.min(1, ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / length2)) : 0;
-    return Math.hypot(point[0] - a[0] - t * dx, point[1] - a[1] - t * dy) <= segment.width / 2;
+    return Math.hypot(point[0] - a[0] - t * dx, point[1] - a[1] - t * dy) <= segment.width / 2 - body;
   });
 }
 

@@ -1,5 +1,5 @@
 import { winstonBed } from './reference-planting.js';
-import { storefrontBenchSpots, laneFixtures } from './street-fixtures.js';
+import { movedBenchSpots, storefrontBenchSpots, laneFixtures } from './street-fixtures.js';
 import { plazaSalonSeats } from './plaza-salon-plan.js';
 import { SEAT_REACH, resolveSeat, seatSlots } from './shared-seating.js';
 import { storeRoomsFor } from './store-rooms.js';
@@ -29,16 +29,18 @@ const offset = ([x, north], heading, forward, right = 0) =>
 
 // Two places on every storefront bench, facing the street. Townspeople and
 // players share them.
+const seatsOfBench = ({ storeId, x, north, outward: [nx, ny] }) => {
+  const heading = Math.atan2(nx, -ny);
+  return [-0.45, 0.45].map((right, slot) => {
+    const [sx, sn] = offset([x, north], heading, -0.05, right);
+    return { id: `bench:${storeId}:${slot}`, buildId: `bench:${storeId}`, slot, kind: 'bench', storeId, x: sx, north: sn, heading, height: BENCH_HEIGHT,
+      approach: offset([sx, sn], heading, 0.75) };
+  });
+};
+// Each seat of a corrected bench, where it was before: id -> [east, north] (see movedBenchSpots).
+export const movedBenchSeats = world => new Map(movedBenchSpots(world).flatMap(seatsOfBench).map(seat => [seat.id, [seat.x, seat.north]]));
 export function benchSeats(world) {
-  const seats = [];
-  for (const { storeId, x, north, outward: [nx, ny] } of storefrontBenchSpots(world)) {
-    const heading = Math.atan2(nx, -ny);
-    [-0.45, 0.45].forEach((right, slot) => {
-      const [sx, sn] = offset([x, north], heading, -0.05, right);
-      seats.push({ id: `bench:${storeId}:${slot}`, buildId: `bench:${storeId}`, slot, kind: 'bench', storeId, x: sx, north: sn, heading, height: BENCH_HEIGHT,
-        approach: offset([sx, sn], heading, 0.75) });
-    });
-  }
+  const seats = storefrontBenchSpots(world).flatMap(seatsOfBench);
   // The plaza salon's bench and café chairs are bench places too.
   return seats.concat(plazaSalonSeats(world), ipicSeatSites(storeRoomsFor(world)), campusSeatSites(world));
 }

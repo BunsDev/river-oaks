@@ -85,6 +85,7 @@ test('upper window rows fit under each mapped parapet and never float above a tw
 test('no lamp, planter, bin or storefront bench stands on any drawn road', async () => {
   const { clearOfRoads, distanceToRoad, laneFixtures } = await import('../src/street-furniture.js');
   const { storefrontBenchSpots } = await import('../src/district.js');
+  const { benchLamp } = await import('../src/street-fixtures.js');
   const world = JSON.parse(readFileSync(new URL('../public/data/district.json', import.meta.url)));
   // Service lanes narrower than a traffic lane are asphalt too.
   assert.ok(world.roads.some(road => road.width_m < 5));
@@ -96,8 +97,9 @@ test('no lamp, planter, bin or storefront bench stands on any drawn road', async
   }
   const benches = storefrontBenchSpots(world);
   assert.ok(benches.length >= 3, 'storefronts with pavement keep their bench');
-  for (const { x, north, outward: [nx, ny], storeId } of benches) {
+  for (const bench of benches) {
+    const { x, north, storeId } = bench, [lampX, lampNorth] = benchLamp(bench);
     assert.ok(clearOfRoads(world, x, -north, 1.2), `bench at ${storeId}`);
-    assert.ok(clearOfRoads(world, x + nx * 1.2, -(north + ny * 1.2), 0.9), `lamp column at ${storeId}`);
+    assert.ok(clearOfRoads(world, lampX, -lampNorth, 0.9), `lamp column at ${storeId}`);
   }
 });

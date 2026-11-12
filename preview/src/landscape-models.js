@@ -1,3 +1,4 @@
+import { clearCrownsAlongRibbon, reachesRibbonClearance, ribbonCrownClearance } from './ribbon-crown-clearance.js';
 import { treeSupports } from './tree-placements.js';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -36,6 +37,7 @@ export function matureTreePlacements(world) {
     height:Math.max(7.5,Math.min(16,tree.height_m)),
     radius:tree.referencePlacement ? tree.radius_m : Math.max(3.1,Math.min(5.2,(tree.radius_m ?? tree.crown_radius_m)*1.3)),
     yaw:index*2.399963,
+    ...(tree.crownBase===undefined?{}:{crownBase:tree.crownBase}),
   }));
 }
 
@@ -85,6 +87,7 @@ function shownAncestors(object) {
 // shadowTile: the District's fixed trees batch coarsely. A streamed kit keeps the crowns' tile,
 // because its sites attach and evict by batch and a wider one would straddle them.
 export function buildMatureTrees(world, placements=matureTreePlacements(world), { shadowTile=TREE_DETAIL_TILE_M }={}) {
+  const crownClearance=ribbonCrownClearance(world);
   const group=new THREE.Group();group.name='Mature urban shade trees';
   const levels=[],shadowProxies=[];
   group.userData.shadowProxies=shadowProxies;
@@ -102,13 +105,14 @@ export function buildMatureTrees(world, placements=matureTreePlacements(world), 
       const out=[];source.traverse(item=>{if(item.isMesh){
         const geometry=item.geometry.clone().applyMatrix4(item.matrixWorld);
         const leafy=/leav/i.test(item.material.name);
-        if(!materials.has(item.material.name)) materials.set(item.material.name,materialFrom(item.material,leafy,true));
+        if(!materials.has(item.material.name)) materials.set(item.material.name,clearCrownsAlongRibbon(materialFrom(item.material,leafy,true),crownClearance));
         out.push({geometry,material:materials.get(item.material.name),leafy});
       }});return out;
     });
     // Twelve-meter batches limit offscreen instances without making each tree
     // a separate draw call. Stem positions stay fixed.
     const dummy=new THREE.Object3D();
+    const carves=trees=>Boolean(crownClearance)&&trees.some(tree=>reachesRibbonClearance(crownClearance,tree.position,tree.radius));
     const instance=(trees,level,index,shadow)=>level.map(part=>{
       const copies=part.leafy?TREE_LEAF_LAYERS[shadow?0:index]:1;
       const mesh=new THREE.InstancedMesh(part.geometry,part.material,trees.length*copies);
@@ -121,7 +125,8 @@ export function buildMatureTrees(world, placements=matureTreePlacements(world), 
       }});
       if(shadow){mesh.castShadow=true;mesh.receiveShadow=false;mesh.visible=false;mesh.onAfterShadow=hideAfterShadow;shadowProxies.push(mesh);}
       else {mesh.castShadow=false;mesh.receiveShadow=true;mesh.visible=index===0;}
-      if(part.leafy)mesh.userData.aoExclude=true;
+      // A batch whose crowns reach the Ribbon's carved volume stays out of AO: its bark would draw there.
+      if(part.leafy||carves(trees))mesh.userData.aoExclude=true;
       mesh.computeBoundingSphere();group.add(mesh);return mesh;
     });
     for(const trees of treeTiles(placements,TREE_DETAIL_TILE_M).values()) {

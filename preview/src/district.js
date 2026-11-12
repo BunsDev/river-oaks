@@ -9,7 +9,7 @@ import { groundSurfaceHeight } from './world-surface.js';
 import { physicalSurface } from './materials.js';
 import { thinStorefrontGlass, displayRoomSurface } from './storefront-materials.js';
 import { hedgeClusters } from './street-furniture.js';
-import { storefrontBenchSpots } from './street-fixtures.js';
+import { benchLamp, storefrontBenchSpots } from './street-fixtures.js';
 export { storefrontBenchSpots };
 import { storeRoomsFor, interiorLevelRoomsFor, uncoveredBay, coveringRoom, roomAt } from './store-rooms.js';
 import { venueDoorSites } from './venue-rooms.js';
@@ -545,8 +545,9 @@ export function buildDistrictDetail(world) {
     const ground = groundSurfaceHeight(world,x,-north), yaw = Math.atan2(nx, -ny);
     for (let i = 0; i < 5; i++) objects.push({ material: timber, p: [x+nx*(i-2)*0.11, ground+0.5, -north-ny*(i-2)*0.11], s: [1.8, 0.06, 0.09], yaw });
     for (const side of [-1, 1]) objects.push({ material: bronze, p: [x+ny*side*0.65, ground+0.25, -north+nx*side*0.65], s: [0.1, 0.5, 0.5], yaw });
-    objects.push({ material: bronze, p: [x+nx*1.2, ground+2.6, -north-ny*1.2], s: [0.1, 5.2, 0.1], yaw });
-    objects.push({ material: bronze, p: [x+nx*1.2, ground+5.25, -north-ny*1.2], s: [0.55, 0.12, 0.65], yaw });
+    const [lampX, lampNorth] = benchLamp(spot), lampGround = spot.lamp ? groundSurfaceHeight(world,lampX,-lampNorth) : ground;
+    objects.push({ material: bronze, p: [lampX, lampGround+2.6, -lampNorth], s: [0.1, 5.2, 0.1], yaw });
+    objects.push({ material: bronze, p: [lampX, lampGround+5.25, -lampNorth], s: [0.55, 0.12, 0.65], yaw });
   }
   for (const material of [bronze, timber]) {
     const parts = objects.filter(p => p.material === material), mesh = new THREE.InstancedMesh(box, material, parts.length);

@@ -1,6 +1,6 @@
 {
   "id": "five-rooms",
-  "version": "five-rooms-v2",
+  "version": "five-rooms-v3",
   "kit": "ribbon-1",
   "seed": 825,
   "world": {
@@ -800,34 +800,8 @@
         "clearHeight": 3.6,
         "style": "canopy",
         "maxSpan": 6,
-        "status": "blocked",
-        "source": "config/ribbon/district-spine.json (#827, widened to 2.4 m by #865), unchanged",
-        "blocked": {
-          "reason": "the walk of spine runs over tree-pit-103, tree-pit-76, tree-pit-84, tree-pit-152, bench-5-body, tree-pit-126, tree-pit-27, tree-pit-83, tree-pit-171",
-          "blockers": [
-            "bench-5-body",
-            "tree-104",
-            "tree-127",
-            "tree-153",
-            "tree-37",
-            "tree-77",
-            "tree-84",
-            "tree-85",
-            "tree-pit-103",
-            "tree-pit-126",
-            "tree-pit-152",
-            "tree-pit-171",
-            "tree-pit-27",
-            "tree-pit-76",
-            "tree-pit-83",
-            "tree-pit-84"
-          ],
-          "moves": [
-            "Street-tree pits in the walk (tree-pit-27, -76, -83, -84, -103, -126, -152, and -171 since #865 widened the walk to 2.4 m; -76 and -103 are also under posts): move each pit out of the walk. Landscape (#840) owns tree moves (decision 2).",
-            "Crowns below the canopy top (3.6 m clear + 0.4 m slab = 4.0 m): tree-104 at 3.19 m, tree-153 3.53, tree-84 3.62, tree-37 3.72, tree-127 3.79, tree-77 3.82, tree-85 3.89. Lift each crown to at least 4.0 m, or lower this segment's clearHeight to 3.0 m (the kit minimum), which clears all but tree-104.",
-            "Van Cleef & Arpels bench body (bench-5-body) under modules 018-019: move the bench out of the walk (it stays a seat-access zone the canopy spans), or retire it with the Atelier bay."
-          ]
-        }
+        "status": "clear",
+        "source": "config/ribbon/district-spine.json (#827, widened to 2.4 m by #865), unchanged"
       },
       {
         "id": "south",
@@ -955,7 +929,7 @@
     "v1 (2026-11-01, #838) published the first draft. Every retirement is proposed, not decided: Val chooses from the options in docs/design/five-rooms/layout.md.",
     "Exclusions are rebuilt from the live District by siteExclusions(); this list holds only authored additions.",
     "v2 (2026-11-01): the spine is re-carried from #827 after #853 moved its start north of the side lane; the south segment now ends at the side lane south kerb and meets the spine by a marked crossing of osm-way-625330795 (join kind crossing); link-studios tees off the south segment.",
-    "All three segments are blocked by street trees, a bench body and the REF-HW-01 bed. Each blocked record names what must move; the validator confirms every name against the site.",
+    "v3 (2026-11-04, #740): eight spine pits and the Van Cleef & Arpels bench moved out of the walk (at most 1.9 m, no id changed) and crowns cleared along it (preview/src/tree-placements.js, street-fixtures.js, ribbon-crown-clearance.js), so the spine is clear. Its geometry did not change. South and link-studios stay blocked: each blocked record names what must move; the validator confirms every name against the site.",
     "Entrances sit midway between two edge posts of their segment so no post is left out at a door."
   ]
 }

@@ -1,14 +1,14 @@
 # Five Rooms layout (#838): the measured District and the proposed mapping
 
-Contract: [`config/ribbon/five-rooms.json`](../../../config/ribbon/five-rooms.json) (`five-rooms-v2`),
+Contract: [`config/ribbon/five-rooms.json`](../../../config/ribbon/five-rooms.json) (`five-rooms-v3`),
 validator: [`shared/city-kit/five-rooms-layout.js`](../../../shared/city-kit/five-rooms-layout.js),
 test: [`preview/tests/five-rooms-layout.test.js`](../../../preview/tests/five-rooms-layout.test.js).
 Every number below comes from `node docs/design/five-rooms/measure.mjs` on the live
-`preview/public/data/district.json` (plan hash `06f53958f6f8f2a6`). Units are metres, site-local
+`preview/public/data/district.json` (plan hash `a499d517e0bc3241`). Units are metres, site-local
 x east, y north; floors are district-datum altitudes from `groundSurfaceHeight`.
 
 **Status: proposed.** No retirement here is decided. Each venue carries `retire.status: "proposed"`
-and its alternatives; Val chooses (decision 5) and v2 records the choice.
+and its alternatives; Val chooses (decision 5) and a later version records the choice.
 
 ![Plan of the east block: venues, Ribbon, door zones, link reaches and blockers](plan.svg)
 
@@ -92,7 +92,7 @@ and one or two role anchors such as counter, display frame, screen, bed or seat 
 
 | Segment | Status | Length (m) | Width (m) | Clear (m) | Modules | Posts | Blockers |
 |---|---|---|---|---|---|---|---|
-| spine | blocked | 87.88 | 2.4 | 3.6 | 30 | 62 | bench-5-body, tree-104, tree-127, tree-153, tree-37, tree-77, tree-84, tree-85, tree-pit-103, tree-pit-126, tree-pit-152, tree-pit-171, tree-pit-27, tree-pit-76, tree-pit-83, tree-pit-84 |
+| spine | clear | 87.88 | 2.4 | 3.6 | 30 | 60 |  |
 | south | blocked | 76.51 | 2 | 3.6 | 26 | 54 | harry-winston-south-bed, tree-108, tree-pit-107, tree-pit-130, tree-pit-16, tree-pit-165, tree-pit-3, tree-pit-96 |
 | link-studios | blocked | 35.85 | 2 | 3.6 | 12 | 26 | tree-118, tree-48 |
 
@@ -101,30 +101,30 @@ The spine is carried from #827 as it stands after #853 and #865 (2.4 m wide, cen
 **marked crossing** (join kind `crossing`, 9.5 m, no canopy) that may cross only that road.
 `link-studios` tees off the south segment.
 
-All three segments are **blocked**, and the contract says so: each blocked record names the zones
+The spine is **clear**; south and link-studios are **blocked**, and the contract says so: each blocked record names the zones
 that must move, and the validator refuses a record that names a zone the site does not confirm, or
 leaves one out. What blocks them:
 
 - **Side-lane mouth (fixed).** In v1 the spine started inside the carriageway of
   `osm-way-625330795` (modules 001-004 crossed it, posts 002-004 stood in it). #853, folded into #827
   with Val's OK, moved the start north of the kerb; v2 carries that spine.
-- **Street trees.** The east pavement is lined with trees at 6-10 m spacing. Pits 27, 76, 83, 84,
-  103, 126, 152 and (since the 2.4 m walk of #865) 171 are in the spine's walk (76 and 103 also under posts); pits 3, 16, 96, 107, 130
+- **The spine (cleared by #740).** Eight pits and the Van Cleef & Arpels bench moved out of its walk,
+  and the crowns are cleared over it. See [spine-boundary.md](spine-boundary.md). The rest of this list
+  is what still blocks the other two segments.
+- **Street trees.** The east pavement is lined with trees at 6-10 m spacing. Pits 3, 16, 96, 107, 130
   and 165 are in the south walk (3 also under a post).
-  Crowns with a lowest branch below the 4.0 m canopy top (3.6 m clear + 0.4 m slab): tree-104 at
-  3.19 m, -153 3.53, -84 3.62, -37 3.72, -127 3.79, -77 3.82, -85 3.89, -108 3.78, -118 3.46 and
-  -48 3.83. Measured: at the kit's 3.0 m clear height, link-studios clears, the south segment loses
-  tree-108 and the spine keeps only tree-104.
-- **Van Cleef & Arpels bench body** (`bench-5-body`) under spine modules 018-019.
+  Crowns with a lowest branch below the 4.0 m canopy top (3.6 m clear + 0.4 m slab): tree-108 at
+  3.78 m, tree-118 3.46 and tree-48 3.83. Measured: at the kit's 3.0 m clear height, link-studios
+  clears and the south segment loses tree-108.
 - **REF-HW-01 bed** under south modules 001-003.
 
 The crown model is data, not the drawn mesh: a crown is a disc of the tree's radius whose
 underside is its lowest LiDAR branch end (or 55% of its height). The rendered EZ oak carries leaves
 from about 12% of its height, so lifting crowns in data clears the drawn tree only if the renderer
-honours `crownBase` (measured by the #840 worker, which also finds tree-28, -124 and -172 over the
-spine walk in the drawn mesh). The slab is 0.4 m here; the #828 graybox draws 0.12 m.
+honours `crownBase` (measured by the #840 worker). Over the spine it now does:
+`preview/src/ribbon-crown-clearance.js` clears the drawn crown there. South and link-studios have no such clearance. The slab is 0.4 m here; the #828 graybox draws 0.12 m.
 
-Walk width is 2.0 m on every segment (the #827 window); nothing here widens it.
+Walk width is 2.4 m on the spine (#865) and 2.0 m on the other two segments.
 
 ## Decisions for Val
 
@@ -132,14 +132,12 @@ Walk width is 2.0 m on every segment (the #827 window); nothing here widens it.
    Studios + Overlook at the Gardens) or pick an alternative per venue from the table above.
 2. **Shade Garden court (decision 6).** Confirm the Hermès bay (or the chosen alternative) may open
    as a court inside its mapped building.
-3. **Street trees (decision 2).** Move the 13 pits named above out of the walks and lift the 10
-   crowns above 4.0 m (Landscape, #840), or lower the canopy to 3.0 m clear, which leaves only
-   tree-104 and the pits.
+3. **Street trees (decision 2).** Spine done (#740). For south and link-studios: move the pits named
+   above out of the walk and clear the crowns the same way, or lower those segments to 3.0 m clear.
 4. **Side-lane crossing (resolved).** #853 moved the spine start; v2 crosses `osm-way-625330795`
    at a marked crossing between the south segment and the spine. Confirm a crossing without canopy
    is acceptable there.
-5. **Bench and bed.** Move the Van Cleef & Arpels bench out of the spine walk (or retire it with the
-   Atelier), and move or trim the REF-HW-01 bed clear of the south walk (or end the south segment
+5. **Bed.** Move or trim the REF-HW-01 bed clear of the south walk (or end the south segment
    north of it and reach Le Colonial across `osm-way-627662384`).
 6. **Door clearance.** The 2.4 x 2 m door zone is still the #827 working value; confirm it or have a
    door measured.
