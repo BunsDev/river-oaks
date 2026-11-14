@@ -276,6 +276,11 @@ export function createGameServer({ debugReports = createMemoryDebugReports(), au
         const result=await leaderboard.read(identity);
         return json(res,result.status,result.value);
       }
+      if (pathname.startsWith('/api/leaderboards/') && req.method==='GET') {
+        const identity=await approvedIdentity(req,res);if(!identity)return;
+        const result=await leaderboard.board(identity,pathname.slice('/api/leaderboards/'.length));
+        return json(res,result.status,result.value);
+      }
       if (pathname.startsWith('/api/profile/') && req.method==='POST') {
         const identity=await authorized(req,res);if(!identity)return;
         if(!matchesWorld(new URL(req.url,'http://localhost')))return json(res,404,{error:'World not found.'});

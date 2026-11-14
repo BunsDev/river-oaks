@@ -25,6 +25,12 @@ async page => {
       throw new Error(`heading hold timed out · state ${JSON.stringify(await cycling(p))}`);
     } finally { await set(false, false); }
   };
+  // The board lives in the Play dock's Leaderboards tab and is open only while that tab shows.
+  const showBoard = async p => {
+    if (!await p.locator('.visit-tools').evaluate(node => node.open)) await p.locator('.visit-tools-toggle').click();
+    await p.locator('#play-tab-cycling').click();
+    await p.waitForFunction(() => document.querySelector('.cycling-board')?.open === true, null, { timeout: 15000 });
+  };
   const ready = async p => { await p.goto(origin + '/?motion-debug=1', { waitUntil: 'commit' }); await p.waitForFunction(() => document.querySelector('#canvas-host')?.dataset.playerReady === 'true' && window.__riverCycling?.() && window.__riverCyclingBoard?.() && window.__riverMultiplayer?.().connected, null, { timeout: 90000 }); };
   await page.setViewportSize({ width: 1440, height: 900 });
   await ready(page);
@@ -33,9 +39,9 @@ async page => {
     await other.addCookies([{ name: 'fixture_session', value: 'bob', url: origin }]);
     const bob = await other.newPage();
     await ready(bob);
-    // Bob opens the board before anyone has ridden: the empty state.
-    await bob.evaluate(() => window.__riverCyclingBoard().open(true));
-    await waitOn(bob, 'empty board', () => { const b = window.__riverCyclingBoard(); return b.open && b.rows.length === 0 && b.status === null; }, null, 15000);
+    // Bob opens the Leaderboards tab before anyone has ridden: the empty state.
+    await showBoard(bob);
+    await waitOn(bob, 'empty board', () => { const b = window.__riverCyclingBoard(); return b.open && b.loaded && b.rows.length === 0 && b.status === null; }, null, 15000);
     await bob.locator('#play-tab-cycling').click();
     check(await bob.locator('.cycling-board-empty').isVisible(), 'An empty board says to take a bike from any rack');
     // The rider takes a bike, rides west past the bench, and steps off.
@@ -70,7 +76,7 @@ async page => {
     check((await board(bob)).me === null && (await board(bob)).footer === null, 'Bob, who has not ridden, has no row of his own');
     await bob.screenshot({ path: 'output/playwright/cycling-leaderboard.png' });
     // The rider's own board shows their rank, and the rack prompt carries their lifetime miles.
-    await page.evaluate(() => window.__riverCyclingBoard().open(true));
+    await showBoard(page);
     await waitOn(page, 'own rank', () => window.__riverCyclingBoard().me?.rank === 1, null, 20000);
     await ranked(page, 'own board');
     check(await page.locator('.cycling-board-row-mine').count() === 1, 'The rider\'s own row is highlighted');
@@ -78,6 +84,23 @@ async page => {
     await waitOn(page, 'prompt with miles', () => /Take a bike · [\d.]+ mi so far/.test(document.querySelector('#walking-interact')?.textContent ?? ''), null, 15000);
     check(true, 'The rack prompt shows lifetime miles');
     await page.screenshot({ path: 'output/playwright/cycling-leaderboard-rider.png' });
+    // The other boards (2026-11-01): both accounts have been in town and moving, so Hours played
+    // lists them, the rider's own row highlighted; Walking opens with its own label.
+    await page.evaluate(() => window.__riverCyclingBoard().show('played'));
+    for (let attempt = 0; attempt < 15; attempt++) {
+      await page.evaluate(() => window.__riverCyclingBoard().refresh());
+      await page.waitForTimeout(2000);
+      const state = await board(page);
+      if (state.board === 'played' && state.rows.length >= 1 && state.rows.every(row => / h$/.test(row))) break;
+    }
+    const hours = await board(page);
+    check(hours.board === 'played' && hours.rows.length >= 1 && hours.me?.rank >= 1, `Hours played ranks the rider: ${JSON.stringify(hours.rows)}`);
+    check(await page.locator('.cycling-board-row-mine').count() === 1, 'The rider\'s own hours row is highlighted');
+    await page.screenshot({ path: 'output/playwright/leaderboard-hours.png' });
+    await page.evaluate(() => window.__riverCyclingBoard().show('walking'));
+    await waitOn(page, 'walking board', () => window.__riverCyclingBoard().board === 'walking' && /On foot/.test(document.querySelector('.cycling-board-eyebrow')?.textContent ?? ''), null, 15000);
+    check(true, 'The board picker switches to Walking');
+    await page.screenshot({ path: 'output/playwright/leaderboard-walking.png' });
   } finally { for (const key of ['ShiftLeft', 'ArrowRight', 'KeyW']) await page.keyboard.up(key); await other.close(); }
   return { checks };
 }

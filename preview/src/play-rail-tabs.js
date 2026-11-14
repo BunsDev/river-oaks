@@ -5,7 +5,7 @@ export const PLAY_PANES = Object.freeze([
   { id: 'character', label: 'Character', selector: '.player-controls', icon: icon('<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/>') },
   { id: 'rides', label: 'Rides', selector: '.player-settings', icon: icon('<path d="M5 16h14M6.5 9.5 8 6h8l1.5 3.5M4 16v-3.5c0-1.7 1.3-3 3-3h10c1.7 0 3 1.3 3 3V16"/><circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/>') },
   { id: 'photo', label: 'Photo', selector: '.photo-tools', icon: icon('<path d="M4 8.5h3.2L9 6h6l1.8 2.5H20v10H4z"/><circle cx="12" cy="13" r="3.2"/>') },
-  { id: 'cycling', label: 'Cycling', selector: '.cycling-board', icon: icon('<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-7h5l3 7M10 9l2.5 7H6M13 6h3"/>') },
+  { id: 'cycling', label: 'Leaderboards', selector: '.cycling-board', icon: icon('<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5v1.5A3 3 0 0 0 8 10.5M16 6h3v1.5a3 3 0 0 1-3 3M12 13v3.5M8.5 20h7M10 16.5h4V20h-4z"/>') },
   { id: 'birds', label: 'Birds', selector: '.bird-cams', icon: icon('<path d="M3 13c3-1 5.5-.5 7.5 1.5C12 11 15 8.5 21 8c-2.5 1.2-4 3-4.6 5.5C15.5 17 12.7 18.5 9 18c-2.3-.3-4.4-2-6-5z"/>') },
   { id: 'guide', label: 'Game guide', selector: '.salon-guide-entry', icon: icon('<path d="M4 5.5C6.5 4.5 9.5 4.5 12 6c2.5-1.5 5.5-1.5 8-.5V18c-2.5-1-5.5-1-8 .5-2.5-1.5-5.5-1.5-8-.5z"/><path d="M12 6v12.5"/>') },
   { id: 'build', label: 'Build', selector: '.shared-build-controls', icon: icon('<path d="M4 14h7v6H4zM13 14h7v6h-7zM8.5 8h7v6h-7z"/>') },

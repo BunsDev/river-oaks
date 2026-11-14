@@ -340,6 +340,13 @@ export function createDistributedServer({ auth, room, protocolVersion: worldProt
         const result = await leaderboard.read(identity);
         return json(res, result.status, result.value);
       }
+      // Every board shares the cycling read budget: 60 reads a minute per account.
+      if (path.startsWith('/api/leaderboards/') && req.method === 'GET') {
+        const identity = await approvedIdentity(req, res); if (!identity) return;
+        if (!security.allow('cycling', identity.userId, 60, 60_000)) return json(res, 429, { error: 'Please wait before reading the leaderboard again.' });
+        const result = await leaderboard.board(identity, path.slice('/api/leaderboards/'.length));
+        return json(res, result.status, result.value);
+      }
       if (path.startsWith('/api/profile/') && req.method === 'POST') {
         const identity = await authorized(req, res); if (!identity) return;
         if (!matchesWorld(url)) return json(res, 404, { error: 'World not found.' });

@@ -25,7 +25,7 @@ async page => {
  await capture('dark');
  if((await tabs()).includes('cycling')){
   await page.locator('#play-tab-cycling').click();
-  check(await page.locator('.cycling-board').evaluate(board=>board.open),'The Cycling tab shows its board open');
+  check(await page.locator('.cycling-board').evaluate(board=>board.open),'The Leaderboards tab shows its board open');
   await page.locator('#play-tab-character').click();
   check(!await page.locator('.cycling-board').evaluate(board=>board.open),'The board closes (and stops refreshing) when another tab shows');
  }
