@@ -9,6 +9,7 @@ import { attachGardenCampus, DISTRICT_REVISION_GARDENS } from '../../preview/src
 import { validateWorldManifest, localToWorld } from '../../preview/src/world-manifest.js';
 
 const read = name => JSON.parse(readFileSync(new URL(`../../preview/public/data/${name}.json`, import.meta.url)));
+const readManifest = () => JSON.parse(readFileSync(new URL('../../preview/src/data/world-manifest.json', import.meta.url)));
 const legacyData = () => ({ ...read('district'), vegetation: read('district-vegetation'),
   buildingInteriors: [read('building-interiors/river-oaks-gallery-v2')] });
 
@@ -33,7 +34,7 @@ for (const revision of [undefined, DISTRICT_REVISION_GARDENS]) {
 }
 
 test('a registered location cannot grant movement or expand authoritative bounds in a revision that does not compose it', async () => {
-  const manifest = validateWorldManifest(read('world-manifest'));
+  const manifest = validateWorldManifest(readManifest());
   // No reserved land remains (the Bayou Terraces authored the last strips), so this uses an
   // authored location the default revision does not compose: registration alone grants nothing.
   const reservation = manifest.locations.find(location => location.status === 'reserved') ?? manifest.locations.find(location => location.id === 'bayou-terrace-north');

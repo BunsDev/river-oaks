@@ -1,5 +1,5 @@
 import { Box3, Frustum, Group, Matrix4, Vector3 } from 'three';
-import manifest from '../public/data/world-manifest.json' with { type: 'json' };
+import manifest from './data/world-manifest.json' with { type: 'json' };
 import { locationWorldBounds } from './world-manifest.js';
 import { validateHeightsRegistration } from './bayou-heights-world.js';
 import { commonsBaseLayout } from '../../shared/bayou-heights.js';

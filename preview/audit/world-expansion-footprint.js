@@ -14,7 +14,7 @@ import { WOODLAND_REVISION } from '../../shared/woodland-heights-layout.js';
 import { TYPESAFE_REVISION } from '../../shared/typesafe-place-layout.js';
 const districtBytes = await readFile(new URL('../public/data/district.json', import.meta.url));
 const world = await loadDistrictData({ districtRevision: DISTRICT_REVISION_GARDENS });
-const manifest = validateWorldManifest(JSON.parse(await readFile(new URL('../public/data/world-manifest.json', import.meta.url))));
+const manifest = validateWorldManifest(JSON.parse(await readFile(new URL('../src/data/world-manifest.json', import.meta.url))));
 const area = ([w,s,e,n]) => (e-w)*(n-s);
 const polygonArea = ring => Math.abs(ring.reduce((sum, a, i) => {
   const b = ring[(i+1)%ring.length]; return sum + a[0]*b[1] - b[0]*a[1];
