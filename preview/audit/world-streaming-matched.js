@@ -109,9 +109,11 @@ try {
         await owner.page.evaluate(() => window.__riverRenderAudit.start());
         await owner.page.waitForTimeout(report.sampleDurationMs);
         const data = await owner.page.evaluate(() => ({ timing: window.__riverRenderAudit.stop(), graphics: window.__riverRenderAudit.graphics(),
-          stream: window.__riverSpatialStream?.() ?? null, network: { ...window.__matchedNetwork, timeMs: performance.now() }, players: window.__riverMultiplayer().snapshot.players.length, heap: performance.memory ? { usedJSHeapSize: performance.memory.usedJSHeapSize, totalJSHeapSize: performance.memory.totalJSHeapSize } : null }));
+          stream: window.__riverSpatialStream?.() ?? null, network: { ...window.__matchedNetwork, timeMs: performance.now() }, town: (() => { const town = window.__riverMultiplayer(); return { connected: town.connected, players: town.snapshot?.players.length ?? null, sockets: window.__expansionSockets?.length ?? null }; })(), heap: performance.memory ? { usedJSHeapSize: performance.memory.usedJSHeapSize, totalJSHeapSize: performance.memory.totalJSHeapSize } : null }));
         assert.equal(data.timing.overflow, false); assert.equal(data.timing.discontinuities ?? 0, 0);
-        assert.equal(data.players, count); assert.ok(data.graphics.render.calls > 0);
+        // A socket lost during the window clears the town snapshot; say so instead of failing on a null read.
+        assert.ok(data.town.connected && data.town.players !== null, `Town connection lost during the ${count}-player window ${windowIndex}: ${JSON.stringify(data.town)}`);
+        assert.equal(data.town.players, count); assert.ok(data.graphics.render.calls > 0);
         const screenshot = `${profile.name}-${profile.revision}-${count}-players-${windowIndex}.png`;
         await owner.page.screenshot({ path: join(output, screenshot) });
         row.samples.push({ players: count, windowIndex, network: { durationMs: data.network.timeMs - networkBefore.timeMs, receivedBytes: data.network.receivedBytes - networkBefore.receivedBytes, sentBytes: data.network.sentBytes - networkBefore.sentBytes }, before, after: data.graphics, heap: data.heap,
@@ -122,8 +124,8 @@ try {
       };
       for (let windowIndex = 0; windowIndex < report.windowsPerPlayerCount; windowIndex++) await sample(1, windowIndex);
       const peer = await joinPlayer('alice'); row.peerJoinReadyMs = peer.joinReadyMs;
-      await owner.page.waitForFunction(() => window.__riverMultiplayer().snapshot.players.length === 2);
-      await peer.page.waitForFunction(() => window.__riverMultiplayer().snapshot.players.length === 2);
+      await owner.page.waitForFunction(() => window.__riverMultiplayer().snapshot?.players.length === 2);
+      await peer.page.waitForFunction(() => window.__riverMultiplayer().snapshot?.players.length === 2);
       for (let windowIndex = 0; windowIndex < report.windowsPerPlayerCount; windowIndex++) await sample(2, windowIndex);
       row.reconnects = [];
       for (let index = 0; index < report.reconnectSamples; index++) {

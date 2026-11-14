@@ -1,0 +1,55 @@
+{
+  "at": "2026-10-26T23:45:47.613Z",
+  "runtime": "v24.22.0",
+  "samples": [
+    {
+      "revision": "river-oaks-gardens-3",
+      "players": 2,
+      "locals": 98,
+      "stepP50Ms": 0.6293749999999818,
+      "stepP95Ms": 32.531375000000025,
+      "stepMaxMs": 241.79379199999994,
+      "ticksOver50Ms": 4,
+      "snapshotP95Ms": 0.32937500000025466,
+      "snapshotBytes": 60381,
+      "checkpointBytes": 142561
+    },
+    {
+      "revision": "east-garden-commons-market-1",
+      "players": 2,
+      "locals": 98,
+      "stepP50Ms": 0.8784999999998035,
+      "stepP95Ms": 50.100666000000274,
+      "stepMaxMs": 336.42820800000027,
+      "ticksOver50Ms": 5,
+      "snapshotP95Ms": 0.29233300000032614,
+      "snapshotBytes": 60911,
+      "checkpointBytes": 142613
+    },
+    {
+      "revision": "river-oaks-gardens-3",
+      "players": 32,
+      "locals": 98,
+      "stepP50Ms": 0.8939999999993233,
+      "stepP95Ms": 38.783416000000216,
+      "stepMaxMs": 276.85350000000017,
+      "ticksOver50Ms": 3,
+      "snapshotP95Ms": 0.48529099999996106,
+      "snapshotBytes": 72756,
+      "checkpointBytes": 159630
+    },
+    {
+      "revision": "east-garden-commons-market-1",
+      "players": 32,
+      "locals": 98,
+      "stepP50Ms": 1.2287919999998849,
+      "stepP95Ms": 97.28720799999974,
+      "stepMaxMs": 429.21929199999977,
+      "ticksOver50Ms": 6,
+      "snapshotP95Ms": 1.1258749999997235,
+      "snapshotBytes": 73286,
+      "checkpointBytes": 159682
+    }
+  ],
+  "scope": "Same-process real shared simulation, 2 and 32 synthetic players, existing Gardens versus Commons expansion; 100 warmed 50ms ticks per case including accepted movement from every player. No regional partitioning, hosted network, Redis or production capacity claim."
+}
